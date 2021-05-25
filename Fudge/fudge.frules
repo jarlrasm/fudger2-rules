@@ -1,0 +1,116 @@
+
+fudgevalues= ["Terrible","Poor","Mediocre","Fair","Good","Great","Superb" ]
+
+characterTable = ruleset
+{
+    Attributes = keyvalues
+        {
+            singular = "Attribute" 
+            editablekeys = campaign
+            keys = ["Str","Dex","Con","Int" ]
+            value = enum
+            {
+                default = "Fair"
+                possiblevalues = fudgevalues
+                valuedice=4df
+            }
+        }
+    Skills = keyvalues
+        {
+            singular = "Skill" 
+            editablekeys = character
+            keys = []
+            value = enum
+            {
+                default = "Fair"
+                possiblevalues = fudgevalues
+                valuedice=4df
+            }
+        }
+    Gifts = list
+    {
+        singular = "Gift"
+        editable = character
+        value = nameanddescription
+    }
+    Faults = list
+    {
+        singular = "Fault"
+        editable = character 
+        value = nameanddescription
+    }
+    'Important stuff'= ruleset
+    {
+        Fudgepoints = integer
+        {
+            minvalue=0
+        }
+        Experiencepoints = integer
+        {
+            minvalue=0 
+        }
+    }
+    Damage = ruleset
+    {
+        Scratch = slots 
+        {
+            number = 3
+            allowedchange = increase
+            overflow=  allow
+            overflowValue = (max 0 (Scratch.realvalue - Scratch.number))
+            }
+        Hurt = slots 
+        {
+            number = 1
+            value = (Hurt.realvalue + Scratch.overflowValue)
+            allowedchange = increase
+            overflow=  allow
+            overflowValue = (max 0 (Hurt.value - Hurt.number))
+        }
+        'Very hurt' = slots 
+            {number = 1
+            value = ('Very hurt'.realvalue + Hurt.overflowValue)
+            allowedchange = increase
+            overflow=  allow
+            overflowValue = (max 0 ('Very hurt'.value - 'Very hurt'.number))
+            }
+        Incapacitated = slots 
+            {number = 1
+            value = (Incapacitated.realvalue + 'Very hurt'.overflowValue)
+            allowedchange = increase
+            overflow=  allow
+            overflowValue = (max 0 (Incapacitated.value - Incapacitated.number))
+            }
+        'Near death' = slots 
+            {number = 1
+            value =('Near death'.realvalue + Incapacitated.overflowValue)
+            allowedchange = increase}
+        Heal = button
+            {onClick = updates
+                {Scratch.realvalue = Hurt.realvalue
+                Hurt.realvalue = 'Very hurt'.realvalue
+                'Very hurt'.realvalue = Incapacitated.realvalue
+                Incapacitated.realvalue = 'Near death'.realvalue
+                'Near death'.realvalue = 0}}
+    }
+}
+
+Fudge = system
+{
+    characters = characterTable
+    creatures = characterTable
+    rangedweapons= ruleset
+        {Damage=modifier
+            {min = -6
+            max = +6}}
+    meleeweapons= ruleset
+        {Damage=modifier
+            {min = -6
+            max = +6}}
+    armour= ruleset
+        {'Damage Capacity'=modifier
+            {min = -6
+            max = +6}}
+    description="Simple Fudge rules"
+}
+
