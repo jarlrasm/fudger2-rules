@@ -7,7 +7,7 @@ characterTable = ruleset
             singular = "Attribute" 
             editablekeys = campaign
             keys = ["Str","Dex","Con","Int" ]
-            value = enum
+            valueType = enum
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
@@ -19,7 +19,7 @@ characterTable = ruleset
             singular = "Skill" 
             editablekeys = character
             keys = []
-            value = enum
+            valueType = enum
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
@@ -30,13 +30,13 @@ characterTable = ruleset
     {
         singular = "Gift"
         editable = character
-        value = nameanddescription
+        valueType = nameAndDescription
     }
     Faults = list
     {
         singular = "Fault"
         editable = character 
-        value = nameanddescription
+        valueType = nameAndDescription
     }
     'Important stuff'= table
     {
@@ -93,6 +93,18 @@ characterTable = ruleset
                 'Very hurt'.realvalue = Incapacitated.realvalue
                 Incapacitated.realvalue = 'Near death'.realvalue
                 'Near death'.realvalue = 0}}
+    }
+    Items = list
+    {
+        source=secondary.items
+        singular = "Item"
+        editable = character 
+    }
+    Spells = list
+    {
+        source=secondary.spells
+        singular = "Spell"
+        editable = character 
     }
 }
 weaponStats =ruleset
