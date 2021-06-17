@@ -1,0 +1,108 @@
+
+characterTable = ruleset
+{
+  Basics = table
+  {
+    Race = string {}
+    XP  = integer
+        {
+            default=0
+            minvalue=0 
+        }
+    'Armor Class'=integer
+              {
+                default=10
+                minvalue=10
+              }
+    'Initiative'=integer
+              {
+              }
+    'Proficiency bonus'=integer
+              {
+              }
+
+  }
+  Class = table
+    {
+      MainClass = custom
+      {
+          Name = string {}
+          Levels = integer
+          {
+                minvalue=1
+          }
+      }
+    }
+  'Ability scores' = keyvalues
+      {
+          singular = "Ability score" 
+          keys = ["Str","Dex","Con","Int","Wis","Cha" ]
+          valueType = custom
+          {
+              Score=integer
+              {
+                default=10
+                minvalue=3
+                maxvalue=25
+              }
+              Modifier=modifier
+              {
+                value=((Score/2)-5)
+                valuedice=1d20
+              }
+
+          }
+      } 
+  'Saving throws' = keyvalues
+      {
+          singular = "Saving throw" 
+          keys = ["Str","Dex","Con","Int","Wis","Cha" ]
+          valueType = custom
+          {
+              Modifier=modifier
+              {
+              }
+
+          }
+      } 
+  Skills = keyvalues
+      {
+          singular = "Saving throw" 
+          keys = ["Acrobatics","Animal Handling","Arcana","Athletics","Deception","History","Insight","Intimidation","Investigation",
+            "Medicine","Nature","Perception","Performance","Persuasion","Religion","Sleight of Hand","Stealth","Survival" ]
+          valueType = custom
+          {
+              Modifier=modifier
+              {
+              }
+              Proficient=bool
+              {
+              }
+
+
+          }
+      } 
+  'Hitpoints' = table
+  {
+    Current=integer
+              {
+              }
+    Max=integer
+              {
+              }
+  }
+
+  'Features and Traits' = 
+  list
+    {
+        singular = "Gift"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+DND = system
+{
+    characters = characterTable
+    creatures = characterTable
+    description="DND 5e rules"
+}
