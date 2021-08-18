@@ -1,4 +1,5 @@
 
+
 characterTable = ruleset
 {
   Basics = table
@@ -26,7 +27,10 @@ characterTable = ruleset
     {
       MainClass = custom
       {
-          Name = string {}
+          Name = string
+          {
+            keys = ["Bard","Barbarian" ]
+          }
           Levels = integer
           {
                 minvalue=1
@@ -508,10 +512,71 @@ characterTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
+    Items = list
+    {
+        source=secondary.items
+        singular = "Item"
+        editable = character 
+    }
+    Spells = list
+    {
+        source=secondary.spells
+        singular = "Spell"
+        editable = character 
+    }
 }
+weaponStats =ruleset
+        {
+            Stats= table
+            {
+                Damage=string
+                {}
+                Weight=string
+                {}
+                Properties=string
+                {}
+            }
+        }
+armourStats= ruleset
+        {
+            Stats= table
+            {
+                AC=string
+                {}
+                'Max dex modifier'=modifier
+                {}
+                'Minimum strength'=integer
+                {}
+                'Stealth disadvantage'=bool
+                {}
+                Weight=string
+                {}
+            }
+        }
+spellStats =ruleset
+        {
+            Stats= table
+            {
+                level=integer
+                {}
+                'Casting time'=string
+                {}
+                'Range'=string
+                {}
+                'Components'=string
+                {}
+                'Duration'=string
+                {}
+            }
+        }
 DND = system
 {
     characters = characterTable
     creatures = characterTable
+    rangedweapons= weaponStats
+    meleeweapons= weaponStats
+    armour= armourStats
+    spells = spellStats
     description="DND 5e rules"
 }
+
