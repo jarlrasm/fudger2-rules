@@ -8,9 +8,10 @@ creatureTable = ruleset
                 default=10
                 minvalue=10
               }
-    'Initiative'=integer
+    'Initiative'=modifier
               {
                 default=0
+                valuedice=1d20
               }
   }
   'Ability scores' = keyvalues
