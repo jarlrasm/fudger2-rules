@@ -1,0 +1,226 @@
+clearancelevels = ["Alpha", "Beta", "Gamma", "Delta", "Omega"]
+
+characterTable = ruleset
+{
+  Basics = table
+  {
+    Race = string {}
+    'Total XP'  = integer
+        {
+            default=0
+            minvalue=0 
+        }
+    'Unspent'=integer
+              {
+                default=0
+                minvalue=0
+              }
+  }
+
+  Axioms = table
+  {
+    Magic = integer {}
+    Social = integer {}
+    Spirit = integer {}
+    Tech = integer {}
+  }
+
+  'Clearance Level' = keyvalues
+        {
+            singular = "Attribute" 
+            editablekeys = campaign
+            keys = ["Clearance Level"]
+            valueType = enum
+            {
+                default = "Alpha"
+                possiblevalues = clearancelevels
+            }
+        }
+  'Attributes' = keyvalues
+      {
+          singular = "Attribute" 
+          keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
+          valueType = custom 
+          {
+            Score=integer
+            {
+              default=10
+            }
+          }
+      }
+  'Defenses' = keyvalues
+      {
+          singular = "Defense" 
+          keys = ["Movement","Run","Total Toughness","Armor","Dodge", "Melee Defense","Unarmed Defense"]
+          valueType = custom {
+            Score=integer
+              {}}}
+  'Shock and Wounds' = keyvalues
+      {
+          singular = "Shock" 
+          keys = ["Shock","Wounds"]
+          valueType = custom {
+            Score=integer
+              {}}
+      } 
+  'Combat Skills' = table 
+    {
+      'Energy Weapons' = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+        }
+        'Fire Combat' = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+        }
+        'Melee Weapons' = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+        }
+        'Missile Weapons' = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+        }
+        'Unarmed Combat' = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+        }
+    }
+  'Interaction Skills' = table
+    {
+      Intimidation = custom
+        {
+          Attribute = string { value = "Spi"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Spirit'.'Score' + Adds) }
+        }
+      Maneuver = custom
+        {
+          Attribute = string { value = "Dex"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Dexterity'.'Score' + Adds) }
+        }
+      Taunt = custom
+        {
+          Attribute = string { value = "Cha"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Charisma'.'Score' + Adds) }
+        }
+      Trick = custom
+        {
+          Attribute = string { value = "Mind"}
+          Adds = integer {}
+          'Skill value' = integer 
+            { value = ('Attributes'.'Mind'.'Score' + Adds) }
+        }
+      
+    }
+  Skills = table
+  {
+
+  } 
+
+  Perks = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Perk"
+        editable = character 
+    }
+  'Magic spells' = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Spell"
+        editable = character 
+    }
+  Miracles = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Miracle"
+        editable = character 
+    }
+  'Psionic powers' = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Power"
+        editable = character 
+    }
+  
+}
+weaponStats =ruleset
+        {
+            Stats= table
+            {
+                Damage=string
+                {}
+                Weight=string
+                {}
+                Properties=string
+                {}
+            }
+        }
+armourStats= ruleset
+        {
+            Stats= table
+            {
+                AC=string
+                {}
+                'Max dex modifier'=modifier
+                {}
+                'Minimum strength'=integer
+                {}
+                'Stealth disadvantage'=bool
+                {}
+                Weight=string
+                {}
+            }
+        }
+spellStats =ruleset
+        {
+            Stats= table
+            {
+                'Axiom level'=integer
+                {}
+                'Skill'=string
+                {}
+                'Casting time'=string
+                {}
+                'DN'=string
+                {}
+                'Range'=string
+                {}
+                'Duration'=string
+                {}
+            }
+        }
+TORG = system
+{
+    characters = characterTable
+    creatures = characterTable
+    rangedweapons= weaponStats
+    meleeweapons= weaponStats
+    armour= armourStats
+    spells = spellStats
+    description="TORG Eternity"
+}
