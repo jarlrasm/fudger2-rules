@@ -15,8 +15,6 @@ characterTable = ruleset
                 default=0
                 minvalue=0
               }
-    
-
   }
 
   Axioms = table
@@ -42,12 +40,13 @@ characterTable = ruleset
       {
           singular = "Attribute" 
           keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
-          valueType = custom {
+          valueType = custom 
+          {
             Score=integer
-              {
-                default=10
-              }}
-          
+            {
+              default=10
+            }
+          }
       }
   'Defenses' = keyvalues
       {
@@ -143,7 +142,7 @@ characterTable = ruleset
     {
         size = wide
         source=secondary.spells
-        singular = "Spell"
+        singular = "Perk"
         editable = character 
     }
   'Magic spells' = list
@@ -157,14 +156,14 @@ characterTable = ruleset
     {
         size = wide
         source=secondary.spells
-        singular = "Spell"
+        singular = "Miracle"
         editable = character 
     }
   'Psionic powers' = list
     {
         size = wide
         source=secondary.spells
-        singular = "Spell"
+        singular = "Power"
         editable = character 
     }
   
@@ -201,13 +200,15 @@ spellStats =ruleset
         {
             Stats= table
             {
-                level=integer
+                'Axiom level'=integer
+                {}
+                'Skill'=string
                 {}
                 'Casting time'=string
                 {}
-                'Range'=string
+                'DN'=string
                 {}
-                'Components'=string
+                'Range'=string
                 {}
                 'Duration'=string
                 {}
@@ -216,6 +217,7 @@ spellStats =ruleset
 TORG = system
 {
     characters = characterTable
+    creatures = characterTable
     rangedweapons= weaponStats
     meleeweapons= weaponStats
     armour= armourStats
