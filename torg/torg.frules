@@ -43,7 +43,7 @@ characterTable = ruleset
   'Shock and Wounds' = keyvalues
       {
           singular = "Shock" 
-          keys = ["Shock","Wounds"]
+          keys = ["Shock","Wounds","Toughness"]
           valueType = custom {
             Score=integer
               {}}
@@ -342,37 +342,6 @@ characterTable = ruleset
         { value = ('Attributes'.'Spirit'.'Score' + Adds) }
     }
   } 
-  'Misc' = table
-  {
-    'Movement' = custom
-    {
-      move = integer { value = ('Attributes'.'Dexterity'.'Score' + 0)}
-    }
-    'Run' = custom
-    {
-      run = integer { value = ( 3 * 'Attributes'.'Dexterity'.'Score')}
-    }
-    'Armor' = custom
-    {
-      val = integer { default = 0 }
-    }
-    'Toughness' = custom
-    {
-      Attribute = integer { value = ('Attributes'.'Strength'.'Score' + 'Armor'.val)}
-    }
-    'Dodge' = custom
-    {
-      val = integer { value = ('Skills'.'Dodge'.'Skill value' + 0) }
-    }
-    'Melee defense' = custom
-    {
-      val = integer { value = ('Combat Skills'.'Melee Weapons'.Adds + 'Attributes'.'Dexterity'.'Score') }
-    }
-    'Unarmed defense' = custom
-    {
-      val = integer { value = ('Combat Skills'.'Unarmed Combat'.'Skill value' + 0) }
-    }
-  }
   'Features and Traits' = list
     {
         size = wide
