@@ -1,6 +1,10 @@
 characterTable = ruleset
 {
-  Basics = table
+  Character = table
+  {
+    size = wide
+
+    Basics = table
   {
     Race = string {}
     'Total XP'  = integer
@@ -36,15 +40,38 @@ characterTable = ruleset
             }
           }
       }
+  }
+  
+
+  Axioms = table
+  {
+    Magic = integer {}
+    Social = integer {}
+    Spirit = integer {}
+    Tech = integer {}
+  }
+  'Attributes' = keyvalues
+      {
+          singular = "Attribute" 
+          keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
+          valueType = custom 
+          {
+            Score=integer
+            {
+              default=8
+            }
+          }
+      }
   
       
-  'Shock and Wounds' = keyvalues
+  'Shock and Wounds' = table
       {
-          singular = "Shock" 
-          keys = ["Shock","Wounds","Toughness"]
-          valueType = custom {
-            Score=integer
-              {}}
+          Shock = integer
+          { editable=live }
+          Wounds = integer
+          { editable=live }
+          Toughness = integer 
+          {}
       } 
   'Possibilities' = table 
   {
@@ -359,12 +386,29 @@ characterTable = ruleset
         singular = "Perk"
         editable = character 
     }
-  'Magic miracles and psionics' = list
+  'Magic' = list
     {
         size = wide
         source=secondary.spells
         singular = "Spell"
         editable = character 
+        filter = (spellStats.Stats.Type == "Magic")
+    }
+    'Miracles' = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Miracle"
+        editable = character 
+        filter = (spellStats.Stats.Type == "Miracle")
+    }
+    'Psionics' = list
+    {
+        size = wide
+        source=secondary.spells
+        singular = "Power"
+        editable = character 
+        filter = (spellStats.Stats.Type == "Psionic")
     }
 }
 weaponStats =ruleset
@@ -400,6 +444,8 @@ spellStats =ruleset
   Stats= table
   {
       'Axiom level'=integer
+      {}
+      'Type'=string
       {}
       'Skill'=string
       {}
