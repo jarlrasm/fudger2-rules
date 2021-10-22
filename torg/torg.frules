@@ -41,8 +41,33 @@ characterTable = ruleset
           }
       }
   }
-  
 
+  'Bonus Chart' = table
+  {
+    'Die roll' = string { value = "Bonus"}
+    '1' = string { value = "-10"}
+    '2' = string { value = "-8"}
+    '3 4' = string { value = "-6"}
+    '5 6' = string { value = "-4"}
+    '7 8' = string { value = "-2"}
+    '9 10' = string { value = "-1"}
+    '11 12' = string { value = "0"}
+    '13 14' = string { value = "1"}
+    '15' = string { value = "2"}
+    '16' = string { value = "3"}
+    '17' = string { value = "4"}
+    '18' = string { value = "5"}
+    '19' = string { value = "6"}
+    '20' = string { value = "7"}
+    '21 25' = string { value = "8"}
+    '26 30' = string { value = "9"}
+    '31 35' = string { value = "10"}
+    '36 40' = string { value = "11"}
+    '41 45' = string { value = "12"}
+    '46 50' = string { value = "13"}
+  }  
+
+  
   Axioms = table
   {
     Magic = integer {}
