@@ -5,13 +5,11 @@ characterTable = ruleset
     Race = string {}
     'Total XP'  = integer
         {
-            default=0
-            minvalue=0 
+              editable=live
         }
     'Unspent'=integer
               {
-                default=0
-                minvalue=0
+                editable=live
               }
     'Clearance Level' = string
     {
@@ -50,7 +48,11 @@ characterTable = ruleset
       } 
   'Possibilities' = table 
   {
-    Possibilities = integer { default = 3 }
+    Possibilities = integer 
+    { 
+      default = 3 
+      editable=live
+      }
   }
   'Combat Skills' = table 
     {
