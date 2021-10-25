@@ -65,6 +65,7 @@ characterTable = ruleset
     '36 40' = string { value = "11"}
     '41 45' = string { value = "12"}
     '46 50' = string { value = "13"}
+    'every 5' = string { value = "add 1"}
   }  
 
   
@@ -89,13 +90,16 @@ characterTable = ruleset
       }
   
       
-  'Shock and Wounds' = table
+  'Damage' = table
       {
           Shock = integer
           { editable=live }
-          Wounds = integer
-          { editable=live }
-          Toughness = integer 
+          Wounds = slots
+          { 
+            number = 6
+            allowedchange = increaseAndClear
+           }
+          Toughness = string 
           {}
       } 
   'Possibilities' = table 
@@ -113,7 +117,9 @@ characterTable = ruleset
           Attribute = string { value = "Dex"}
           Adds = integer {}
           'Skill value' = integer 
-            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+            { 
+              value = ('Attributes'.'Dexterity'.'Score' + Adds)
+            }
         }
         'Fire Combat' = custom
         {
@@ -395,7 +401,14 @@ characterTable = ruleset
       'Skill value' = integer 
         { value = ('Attributes'.'Spirit'.'Score' + Adds) }
     }
-  } 
+  }
+  Items = list
+    {
+        size = wide
+        source=secondary.items
+        singular = "Item"
+        editable = character 
+    } 
   'Features and Traits' = list
     {
         size = wide
@@ -411,40 +424,27 @@ characterTable = ruleset
         singular = "Perk"
         editable = character 
     }
-  'Magic' = list
+  'Magic Miracles Psionics' = list
     {
         size = wide
         source=secondary.spells
         singular = "Spell"
-        editable = character 
-        filter = (spellStats.Stats.Type == "Magic")
-    }
-    'Miracles' = list
-    {
-        size = wide
-        source=secondary.spells
-        singular = "Miracle"
-        editable = character 
-        filter = (spellStats.Stats.Type == "Miracle")
-    }
-    'Psionics' = list
-    {
-        size = wide
-        source=secondary.spells
-        singular = "Power"
-        editable = character 
-        filter = (spellStats.Stats.Type == "Psionic")
+        editable = character
     }
 }
 weaponStats =ruleset
         {
             Stats= table
             {
+                Tech=integer
+                {}
                 Damage=string
                 {}
-                Weight=string
+                Ammo=integer
                 {}
-                Properties=string
+                Range=string
+                {}
+                Notes=string
                 {}
             }
         }
@@ -452,15 +452,13 @@ armourStats= ruleset
         {
             Stats= table
             {
-                AC=string
+                Tech=integer
                 {}
-                'Max dex modifier'=modifier
+                Bonus=string
                 {}
-                'Minimum strength'=integer
+                'Max dex'=integer
                 {}
-                'Stealth disadvantage'=bool
-                {}
-                Weight=string
+                Notes=string
                 {}
             }
         }
