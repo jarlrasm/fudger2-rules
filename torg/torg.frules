@@ -1,17 +1,19 @@
 characterTable = ruleset
 {
-  Basics = table
+  Character = table
+  {
+    size = wide
+
+    Basics = table
   {
     Race = string {}
     'Total XP'  = integer
         {
-            default=0
-            minvalue=0 
+              editable=live
         }
     'Unspent'=integer
               {
-                default=0
-                minvalue=0
+                editable=live
               }
     'Clearance Level' = string
     {
@@ -38,19 +40,75 @@ characterTable = ruleset
             }
           }
       }
+  }
+
+  'Bonus Chart' = table
+  {
+    'Die roll' = string { value = "Bonus"}
+    '1' = string { value = "-10"}
+    '2' = string { value = "-8"}
+    '3 4' = string { value = "-6"}
+    '5 6' = string { value = "-4"}
+    '7 8' = string { value = "-2"}
+    '9 10' = string { value = "-1"}
+    '11 12' = string { value = "0"}
+    '13 14' = string { value = "1"}
+    '15' = string { value = "2"}
+    '16' = string { value = "3"}
+    '17' = string { value = "4"}
+    '18' = string { value = "5"}
+    '19' = string { value = "6"}
+    '20' = string { value = "7"}
+    '21 25' = string { value = "8"}
+    '26 30' = string { value = "9"}
+    '31 35' = string { value = "10"}
+    '36 40' = string { value = "11"}
+    '41 45' = string { value = "12"}
+    '46 50' = string { value = "13"}
+    'every 5' = string { value = "add 1"}
+  }  
+
+  
+  Axioms = table
+  {
+    Magic = integer {}
+    Social = integer {}
+    Spirit = integer {}
+    Tech = integer {}
+  }
+  'Attributes' = keyvalues
+      {
+          singular = "Attribute" 
+          keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
+          valueType = custom 
+          {
+            Score=integer
+            {
+              default=8
+            }
+          }
+      }
   
       
-  'Shock and Wounds' = keyvalues
+  'Damage' = table
       {
-          singular = "Shock" 
-          keys = ["Shock","Wounds","Toughness"]
-          valueType = custom {
-            Score=integer
-              {}}
+          Shock = integer
+          { editable=live }
+          Wounds = slots
+          { 
+            number = 6
+            allowedchange = increaseAndClear
+           }
+          Toughness = string 
+          {}
       } 
   'Possibilities' = table 
   {
-    Possibilities = integer { default = 3 }
+    Possibilities = integer 
+    { 
+      default = 3 
+      editable=live
+      }
   }
   'Combat Skills' = table 
     {
@@ -59,7 +117,9 @@ characterTable = ruleset
           Attribute = string { value = "Dex"}
           Adds = integer {}
           'Skill value' = integer 
-            { value = ('Attributes'.'Dexterity'.'Score' + Adds)}
+            { 
+              value = ('Attributes'.'Dexterity'.'Score' + Adds)
+            }
         }
         'Fire Combat' = custom
         {
@@ -341,7 +401,14 @@ characterTable = ruleset
       'Skill value' = integer 
         { value = ('Attributes'.'Spirit'.'Score' + Adds) }
     }
-  } 
+  }
+  Items = list
+    {
+        size = wide
+        source=secondary.items
+        singular = "Item"
+        editable = character 
+    } 
   'Features and Traits' = list
     {
         size = wide
@@ -357,23 +424,27 @@ characterTable = ruleset
         singular = "Perk"
         editable = character 
     }
-  'Magic miracles and psionics' = list
+  'Magic Miracles Psionics' = list
     {
         size = wide
         source=secondary.spells
         singular = "Spell"
-        editable = character 
+        editable = character
     }
 }
 weaponStats =ruleset
         {
             Stats= table
             {
+                Tech=integer
+                {}
                 Damage=string
                 {}
-                Weight=string
+                Ammo=integer
                 {}
-                Properties=string
+                Range=string
+                {}
+                Notes=string
                 {}
             }
         }
@@ -381,15 +452,13 @@ armourStats= ruleset
         {
             Stats= table
             {
-                AC=string
+                Tech=integer
                 {}
-                'Max dex modifier'=modifier
+                Bonus=string
                 {}
-                'Minimum strength'=integer
+                'Max dex'=integer
                 {}
-                'Stealth disadvantage'=bool
-                {}
-                Weight=string
+                Notes=string
                 {}
             }
         }
@@ -398,6 +467,8 @@ spellStats =ruleset
   Stats= table
   {
       'Axiom level'=integer
+      {}
+      'Type'=string
       {}
       'Skill'=string
       {}
