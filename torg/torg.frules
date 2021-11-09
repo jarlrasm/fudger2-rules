@@ -2,7 +2,10 @@ characterTable = ruleset
 {
   Character = table
   {
-    size = wide
+    tableLayout = layout
+    {
+      size = wide
+    }
 
     Basics = table
   {
@@ -44,6 +47,10 @@ characterTable = ruleset
 
   'Bonus Chart' = table
   {
+      tableLayout = layout
+      {
+        columns = 3
+      }
     'Die roll' = string { value = "Bonus"}
     '1' = string { value = "-10"}
     '2' = string { value = "-8"}
@@ -404,14 +411,20 @@ characterTable = ruleset
   }
   Items = list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         source=secondary.items
         singular = "Item"
         editable = character 
     } 
   'Features and Traits' = list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         singular = "Feature"
         editable = character
         valueType = nameAndDescription
@@ -419,14 +432,20 @@ characterTable = ruleset
 
   Perks = list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         source=secondary.perks
         singular = "Perk"
         editable = character 
     }
   'Magic Miracles Psionics' = list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         source=secondary.spells
         singular = "Spell"
         editable = character
