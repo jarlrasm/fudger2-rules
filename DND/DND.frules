@@ -81,6 +81,10 @@ creatureTable = ruleset
       } 
   Skills = table
       {
+        tableLayout = layout
+        {
+          columns = 2
+        }
           Acrobatics = custom
           {
               Modifier=modifier
@@ -210,8 +214,11 @@ creatureTable = ruleset
       } 
   'Features and Traits' = 
   list
-    {
-        size = wide
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
         singular = "Feature"
         editable = character
         valueType = nameAndDescription
@@ -728,21 +735,30 @@ characterTable = ruleset
   'Features and Traits' = 
   list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         singular = "Gift"
         editable = character
         valueType = nameAndDescription
     }
     Items = list
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         source=secondary.items
         singular = "Item"
         editable = character 
     }
     'Cantrips' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -750,7 +766,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -759,7 +778,10 @@ characterTable = ruleset
     }
     '1st Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -767,7 +789,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -776,7 +801,10 @@ characterTable = ruleset
     }
     '2nd Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -784,7 +812,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -793,7 +824,10 @@ characterTable = ruleset
     }
     '3rd Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -801,7 +835,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -810,7 +847,10 @@ characterTable = ruleset
     }
     '4th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -818,7 +858,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -827,7 +870,10 @@ characterTable = ruleset
     }
     '5th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -835,7 +881,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -844,7 +893,10 @@ characterTable = ruleset
     }
     '6th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -852,7 +904,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -861,7 +916,10 @@ characterTable = ruleset
     }
     '7th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -869,7 +927,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -878,7 +939,10 @@ characterTable = ruleset
     }
     '8th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -886,7 +950,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
@@ -895,7 +962,10 @@ characterTable = ruleset
     }
     '9th Level Spells' = table
     {
-        size = wide
+        tableLayout = layout
+        {
+          size = wide
+        }
         Slots = slots 
         {
             number = 10
@@ -903,7 +973,10 @@ characterTable = ruleset
         }
         Spells = list
         {
-          size = wide
+          tableLayout = layout
+          {
+            size = wide
+          }
           source=secondary.spells
           singular = "Spell"
           editable = character 
