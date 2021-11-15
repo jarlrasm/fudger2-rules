@@ -1,3 +1,4 @@
+
 creatureTable = ruleset
 {
   Basics = table
@@ -743,11 +744,37 @@ characterTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
-    Items = list
+    'Melee weapons' = list
     {
         tableLayout = layout
         {
-          size = wide
+        }
+        source=secondary.meleeweapons
+        singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=secondary.rangedweapons
+        singular = "Ranged weapon"
+        editable = character 
+    }
+    'Armour' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=secondary.armour
+        singular = "armour"
+        editable = character 
+    }
+    'Other items' = list
+    {
+        tableLayout = layout
+        {
         }
         source=secondary.items
         singular = "Item"
@@ -1038,4 +1065,3 @@ DND5e = system
     spells = spellStats
     description="DND 5e rules"
 }
-
