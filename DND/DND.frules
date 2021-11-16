@@ -14,6 +14,17 @@ creatureTable = ruleset
                 default=0
                 valuedice=1d20
               }
+    Challenge = string {}
+  }
+  'Hitpoints' = table
+  {
+    Current=integer
+              {
+                editable=live
+              }
+    Max=integer
+              {
+              }
   }
   'Ability scores' = keyvalues
       {
