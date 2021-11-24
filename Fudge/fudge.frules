@@ -94,8 +94,38 @@ characterTable = ruleset
                 Incapacitated.realvalue = 'Near death'.realvalue
                 'Near death'.realvalue = 0}}
     }
-    Items = list
+    'Melee weapons' = list
     {
+        tableLayout = layout
+        {
+        }
+        source=secondary.meleeweapons
+        singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=secondary.rangedweapons
+        singular = "Ranged weapon"
+        editable = character 
+    }
+    'Armour' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=secondary.armour
+        singular = "armour"
+        editable = character 
+    }
+    'Other items' = list
+    {
+        tableLayout = layout
+        {
+        }
         source=secondary.items
         singular = "Item"
         editable = character 
