@@ -1,12 +1,5 @@
 characterTable = ruleset
 {
-  Character = table
-  {
-    tableLayout = layout
-    {
-      size = wide
-    }
-
     Basics = table
   {
     Race = string {}
@@ -43,13 +36,38 @@ characterTable = ruleset
             }
           }
       }
+  'Damage' = table
+      {
+          Shock = integer
+          { editable=live }
+          Wounds = slots
+          { 
+            number = 6
+            allowedchange = increaseAndClear
+           }
+          Toughness = string 
+          {}
+      }
+
+  'Possibilities' = table 
+  {
+    Possibilities = integer 
+    { 
+      default = 3 
+      editable=live
+      }
+    'Cosm Possibilities' = integer
+    {
+      editable=live
+    }
   }
 
   'Bonus Chart' = table
   {
       tableLayout = layout
-      {
-        columns = 3
+      { 
+        size = wide
+        columns = 4
       }
     'Die roll' = string { value = "Bonus"}
     '1' = string { value = "-10"}
@@ -76,49 +94,12 @@ characterTable = ruleset
   }  
 
   
-  Axioms = table
-  {
-    Magic = integer {}
-    Social = integer {}
-    Spirit = integer {}
-    Tech = integer {}
-  }
-  'Attributes' = keyvalues
-      {
-          singular = "Attribute" 
-          keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
-          valueType = custom 
-          {
-            Score=integer
-            {
-              default=8
-            }
-          }
-      }
-  
+    
       
-  'Damage' = table
-      {
-          Shock = integer
-          { editable=live }
-          Wounds = slots
-          { 
-            number = 6
-            allowedchange = increaseAndClear
-           }
-          Toughness = string 
-          {}
-      } 
-  'Possibilities' = table 
-  {
-    Possibilities = integer 
-    { 
-      default = 3 
-      editable=live
-      }
-  }
+  
   'Combat Skills' = table 
     {
+      
       'Energy Weapons' = custom
         {
           Attribute = string { value = "Dex"}
@@ -198,6 +179,10 @@ characterTable = ruleset
     }
   Skills = table
   {
+    tableLayout = layout
+      { 
+        columns = 4
+      }
     'Air Vehicles' = custom
     {
       Attribute = string { value = "Dex"}
@@ -413,6 +398,7 @@ characterTable = ruleset
     {
         tableLayout = layout
         {
+          size = wide
         }
         source=secondary.meleeweapons
         singular = "Melee weapon"
@@ -422,6 +408,7 @@ characterTable = ruleset
     {
         tableLayout = layout
         {
+          size = wide
         }
         source=secondary.rangedweapons
         singular = "Ranged weapon"
@@ -431,6 +418,7 @@ characterTable = ruleset
     {
         tableLayout = layout
         {
+          size = wide
         }
         source=secondary.armour
         singular = "armour"
@@ -440,6 +428,7 @@ characterTable = ruleset
     {
         tableLayout = layout
         {
+          size =wide
         }
         source=secondary.items
         singular = "Item"
