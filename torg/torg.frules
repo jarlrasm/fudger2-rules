@@ -394,7 +394,7 @@ characterTable = ruleset
         { value = ('Attributes'.'Spirit'.'Score' + Adds) }
     }
   }
-  'Melee weapons' = list
+    'Weapons' = list
     {
         tableLayout = layout
         {
@@ -404,15 +404,38 @@ characterTable = ruleset
         singular = "Melee weapon"
         editable = character 
     }
-    'Ranged weapons' = list
+    'Magic Miracles Psionics' = list
     {
         tableLayout = layout
         {
           size = wide
         }
-        source=secondary.rangedweapons
-        singular = "Ranged weapon"
+        source=secondary.spells
+        singular = "Spell"
+        editable = character
+    }
+    
+  
+
+  Perks = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source=secondary.perks
+        singular = "Perk"
         editable = character 
+    }
+    'Features and Traits' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
     }
     'Armour' = list
     {
@@ -434,37 +457,7 @@ characterTable = ruleset
         singular = "Item"
         editable = character 
     }
-  'Features and Traits' = list
-    {
-        tableLayout = layout
-        {
-          size = wide
-        }
-        singular = "Feature"
-        editable = character
-        valueType = nameAndDescription
-    }
-
-  Perks = list
-    {
-        tableLayout = layout
-        {
-          size = wide
-        }
-        source=secondary.perks
-        singular = "Perk"
-        editable = character 
-    }
-  'Magic Miracles Psionics' = list
-    {
-        tableLayout = layout
-        {
-          size = wide
-        }
-        source=secondary.spells
-        singular = "Spell"
-        editable = character
-    }
+  
 }
 weaponStats =ruleset
         {
