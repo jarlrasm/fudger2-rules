@@ -1,6 +1,11 @@
+#include "/systems/common.frules"
 
 creatureTable = ruleset
 {
+  rulesetConfiguration = configuration
+  {
+    initative=Basics.'Initiative'
+  }
   Basics = table
   {
     'Armor Class'=integer
@@ -239,6 +244,10 @@ creatureTable = ruleset
 
 characterTable = ruleset
 {
+  rulesetConfiguration = configuration
+  {
+    initative=Basics.'Initiative'
+  }
   Basics = table
   {
     Race = string {}
@@ -252,8 +261,10 @@ characterTable = ruleset
                 default=10
                 minvalue=10
               }
-    'Initiative'=integer
+    'Initiative'=modifier
               {
+                default=0
+                valuedice=1d20
               }
     'Proficiency bonus'=integer
               {
@@ -1073,9 +1084,15 @@ DND5e = system
 {
     characters = characterTable
     creatures = creatureTable
+
     rangedweapons= weaponStats
     meleeweapons= weaponStats
     armour= armourStats
     spells = spellStats
+
     description="DND 5e rules"
+    library = "/systems/DND/dndsrd.json"
+
+    initiativeCompare(item1,item2) = (compare (item1 ,item2))
+
 }
