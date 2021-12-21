@@ -1091,7 +1091,7 @@ DND5e = system
     spells = spellStats
 
     description="DND 5e rules"
-    library = "/systems/DND/dndsrd.json"
+    libraries= ["/systems/DND/dndsrd.json"]
 
     initiativeCompare(item1,item2) = (compare (item1 ,item2))
 
