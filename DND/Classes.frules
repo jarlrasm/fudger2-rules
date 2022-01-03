@@ -1,0 +1,41 @@
+#include "/systems/DND/Generated/CharacterClasses.frules"
+class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels)=ruleset
+{
+    Name=name
+    HitDie=hitdie
+    SavingThrows=savingThrows
+    SpellcastingAbilityModifier=spellcastingAbilityModifier
+    Features=features
+    SpellLevels=spellevels
+}
+classFeature(level, name, description)=ruleset
+{
+    Level=level
+    Name=name
+    Description=description
+}
+classSpellevel(spellLevel,spellsForLevelList)=ruleset
+{
+    spellLevel=spellLevel
+    SpellsForLevelList=spellsForLevelList
+}
+spellsForLevel(characterLevel,spells)=
+{
+    SharacterLevel=characterLevel
+    Spells=spells
+}
+
+classTable=table
+    {
+      MainClass = custom
+      {
+          Name = string
+          {
+            keys = (map (((x)->(x:Name)), classInfo))
+          }
+          Levels = integer
+          {
+                minvalue=1
+          }
+      }
+    }

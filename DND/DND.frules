@@ -1,4 +1,5 @@
 #include "/systems/common.frules"
+#include "/systems/DND/Classes.frules"
 
 creatureTable = ruleset
 {
@@ -271,20 +272,8 @@ characterTable = ruleset
               }
 
   }
-  Class = table
-    {
-      MainClass = custom
-      {
-          Name = string
-          {
-            keys = ["Barbarian","Bard", "Cleric", "Druid", "Fighter","Monk","Paladin","Ranger","Rogue","Sorcerer","Warlock","Wizard" ]
-          }
-          Levels = integer
-          {
-                minvalue=1
-          }
-      }
-    }
+  Class = classTable{}
+  
   'Ability scores' = keyvalues
       {
           singular = "Ability score" 
