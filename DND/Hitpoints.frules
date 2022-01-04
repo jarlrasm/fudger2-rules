@@ -1,0 +1,23 @@
+hitDie(classname,level)=((first ((filter (((class)->((class:Name) == classname)), classInfo)))):HitDie)
+
+maxHitpoints(classname,level,conModifier) = 
+    (if((((hitDie(classname,level))/2)*2) < (hitdie(classname,level))) then
+        (((((hitDie(classname,level))/2)+1)*(level+1))+(conModifier*level))
+      else
+        ((((hitDie(classname,level))/2)*(level+1))+(conModifier*level))
+      )
+
+hitpoints = table
+  {
+    Current=integer
+              {
+                editable=live
+                default=Max
+              }
+    Max=integer
+              {
+                  value=(maxHitpoints (classTable.Main.Name, classTable.Main.Levels, characterTable.'Ability scores'.'Con'.Modifier ))
+                  editable=none
+              }
+    HitDie=(hitDie(classTable.Main.Name, classTable.Main.Levels))
+  }

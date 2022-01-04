@@ -2,6 +2,7 @@
 
 #include "/systems/DND/Classes.frules"
 #include "/systems/DND/Features.frules"
+#include "/systems/DND/Hitpoints.frules"
 characterTable = ruleset
 {
   rulesetConfiguration = configuration
@@ -495,16 +496,7 @@ characterTable = ruleset
               }
             }
       } 
-  'Hitpoints' = table
-  {
-    Current=integer
-              {
-                editable=live
-              }
-    Max=integer
-              {
-              }
-  }
+  'Hitpoints' = hitpoints{}
 
   'Features and Traits' = features{}
     'Melee weapons' = list
