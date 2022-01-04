@@ -25,9 +25,9 @@ spellsForLevel(characterLevel,spells)=
     Spells=spells
 }
 
-classTable=table
+Class=table
     {
-      MainClass = custom
+      Main = custom
       {
           Name = string
           {
@@ -36,6 +36,7 @@ classTable=table
           Levels = integer
           {
                 minvalue=1
+                default=1
           }
       }
     }

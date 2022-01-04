@@ -1,0 +1,241 @@
+
+creatureTable = ruleset
+{
+  rulesetConfiguration = configuration
+  {
+    initative=Basics.'Initiative'
+  }
+  Basics = table
+  {
+    'Armor Class'=integer
+              {
+                default=10
+                minvalue=10
+              }
+    'Initiative'=modifier
+              {
+                default=0
+                valuedice=1d20
+              }
+    Challenge = string {}
+  }
+  'Hitpoints' = table
+  {
+    Current=integer
+              {
+                editable=live
+              }
+    Max=integer
+              {
+              }
+  }
+  'Ability scores' = keyvalues
+      {
+          singular = "Ability score" 
+          keys = ["Str","Dex","Con","Int","Wis","Cha" ]
+          valueType = custom
+          {
+              Score=integer
+              {
+                default=10
+                minvalue=3
+                maxvalue=25
+              }
+              Modifier=modifier
+              {
+                value=((Score/2)-5)
+                valuedice=1d20
+              }
+
+          }
+      } 
+  'Saving throws' = table
+      {
+          Str=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Dex=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Con=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Int=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Wis=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Cha=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+      } 
+  Skills = table
+      {
+        tableLayout = layout
+        {
+          columns = 2
+        }
+          Acrobatics = custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          'Animal Handling' =custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Arcana =custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Athletics = custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Deception =custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          History=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Insight=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Intimidation=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Investigation=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Medicine=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Nature=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Perception=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Performance=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Persuasion=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Religion=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          'Sleight of Hand'=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Stealth=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+          Survival=custom
+          {
+              Modifier=modifier
+              {
+                valuedice=1d20
+              }
+            }
+      } 
+  'Features and Traits' = 
+  list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+}

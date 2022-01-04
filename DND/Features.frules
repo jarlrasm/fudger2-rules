@@ -1,0 +1,35 @@
+classFeatures(classname,level) = 
+    (map 
+        (
+            ((feature)->(nameAndDescription((feature:Name),(feature:Description)))),
+              (filter( ((f)->((f:Level)<(level+1))),
+                ((first ((filter (((class)->((class:Name) == classname)), classInfo))))
+                :Features)))
+                )
+        )
+
+
+
+features= table
+{
+    tableLayout = layout
+    {
+        size = wide
+    }
+    'Class features'=list
+    {
+          source=(classFeatures (classTable.Main.Name, classTable.Main.Levels))
+          singular = "Feature"
+          editable = none 
+    }
+    'Other features'=list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
