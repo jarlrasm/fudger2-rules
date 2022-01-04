@@ -19,6 +19,11 @@ features= table
     }
     'Class features'=list
     {
+        tableLayout = layout
+        {
+            size = wide
+            rowTitle = hidden
+        }
           source=(classFeatures (classTable.Main.Name, classTable.Main.Levels))
           singular = "Feature"
           editable = none 
