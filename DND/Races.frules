@@ -1,0 +1,34 @@
+#include "/systems/DND/Generated/CharacterRaces.frules"
+
+subrace(name,features) = {
+    Name=name
+    Features=features
+}
+raceFeature(name, description)=ruleset
+{
+    Name=name
+    Description=description
+}
+race(name,features,subraces) = {
+    Name=name
+    Features=features
+    Subraces=subraces
+}
+getRace(racename)=(first ((filter (((race)->((race:Name) == racename)), raceInfo))))
+subraceNames(race)=(concat ((map (((x)->(x:Name)), (race:Subraces))),["Standard"]))
+getSubrace(racename,subraceName)=(first ((filter (((race)->((race:Name) == subraceName)), ((getRace(racename)):Subraces)))))
+
+raceTable=table
+    {
+          Main = string
+          {
+            keys = (map (((x)->(x:Name)), raceInfo))
+            default="Unknown"
+          }
+          Subrace = string
+          {
+            keys =  (subraceNames((getRace(Main))))  
+            default="Standard"
+          }
+
+    }

@@ -3,6 +3,7 @@
 #include "/systems/DND/Classes.frules"
 #include "/systems/DND/Features.frules"
 #include "/systems/DND/Hitpoints.frules"
+#include "/systems/DND/Races.frules"
 characterTable = ruleset
 {
   rulesetConfiguration = configuration
@@ -11,7 +12,6 @@ characterTable = ruleset
   }
   Basics = table
   {
-    Race = string {}
     XP  = integer
         {
             default=0
@@ -32,7 +32,8 @@ characterTable = ruleset
               }
 
   }
-  classTable = Class{}
+  Race = raceTable {}
+  Class = classTable{}
   
   'Ability scores' = keyvalues
       {

@@ -8,7 +8,11 @@ classFeatures(classname,level) =
                 )
         )
 
-
+raceFeatures(main, subrace)=
+   (if (subrace=="Standard") then
+    ((getRace(main)):Features)
+   else
+    ((getSubrace(main,subrace)):Features))
 
 features= table
 {
@@ -24,7 +28,18 @@ features= table
             size = wide
             rowTitle = hidden
         }
-          source=(classFeatures (classTable.Main.Name, classTable.Main.Levels))
+          source=(classFeatures (Class.Main.Name, Class.Main.Levels))
+          singular = "Feature"
+          editable = none 
+    }
+    'Race features'=list
+    {
+        tableLayout = layout
+        {
+            size = wide
+            rowTitle = hidden
+        }
+          source=(raceFeatures (Race.Main, Race.Subrace))
           singular = "Feature"
           editable = none 
     }

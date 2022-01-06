@@ -16,8 +16,8 @@ hitpoints = table
               }
     Max=integer
               {
-                  value=(maxHitpoints (classTable.Main.Name, classTable.Main.Levels, characterTable.'Ability scores'.'Con'.Modifier ))
+                  value=(maxHitpoints (Class.Main.Name, Class.Main.Levels, characterTable.'Ability scores'.'Con'.Modifier ))
                   editable=none
               }
-    HitDie=(hitDie(classTable.Main.Name, classTable.Main.Levels))
+    HitDie=(hitDie(Class.Main.Name, Class.Main.Levels))
   }
