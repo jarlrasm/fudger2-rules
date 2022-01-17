@@ -62,7 +62,8 @@ characterTable = ruleset
     }
   }
 
-  'Bonus Chart' = table
+  
+'Bonus Chart' = table
   {
       tableLayout = layout
       { 
@@ -70,7 +71,7 @@ characterTable = ruleset
         columns = 4
       }
     'Die roll' = string { value = "Bonus"}
-    '1' = string { value = "-10"}
+    '1' = string { value = "Mishap"}
     '2' = string { value = "-8"}
     '3 4' = string { value = "-6"}
     '5 6' = string { value = "-4"}
@@ -92,7 +93,6 @@ characterTable = ruleset
     '46 50' = string { value = "13"}
     'every 5' = string { value = "add 1"}
   }  
-
   
     
       
@@ -100,7 +100,7 @@ characterTable = ruleset
   'Combat Skills' = table 
     {
       
-      'Energy Weapons' = custom
+      'Energy Weapons  dex' = custom
         {
           Attribute = string { value = "Dex"}
           Adds = integer {}
@@ -531,4 +531,5 @@ TORG = system
     spells = spellStats
     perks = perkStats
     description="TORG Eternity"
+    libraries= ["/systems/torg/torg.json"]
 }
