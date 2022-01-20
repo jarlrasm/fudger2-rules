@@ -60,48 +60,48 @@ characterTable = ruleset
             number = 3
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 (Scratch.realvalue - Scratch.number))
+            overflowValue = (max 0 ((Scratch.realvalue) - (Scratch.number)))
             }
         Hurt = slots 
         {
             number = 1
-            value = (Hurt.realvalue + Scratch.overflowValue)
+            value = ((Hurt.realvalue) + (Scratch.overflowValue))
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 (Hurt.value - Hurt.number))
+            overflowValue = (max 0 ((Hurt.value) - (Hurt.number)))
         }
         'Very hurt' = slots 
             {number = 1
-            value = ('Very hurt'.realvalue + Hurt.overflowValue)
+            value = (('Very hurt'.realvalue) + (Hurt.overflowValue))
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 ('Very hurt'.value - 'Very hurt'.number))
+            overflowValue = (max 0 (('Very hurt'.value) - ('Very hurt'.number)))
             }
         Incapacitated = slots 
             {number = 1
-            value = (Incapacitated.realvalue + 'Very hurt'.overflowValue)
+            value = ((Incapacitated.realvalue) + ('Very hurt'.overflowValue))
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 (Incapacitated.value - Incapacitated.number))
+            overflowValue = (max 0 ((Incapacitated.value) - (Incapacitated.number)))
             }
         'Near death' = slots 
             {number = 1
-            value =('Near death'.realvalue + Incapacitated.overflowValue)
+            value =(('Near death'.realvalue) + (Incapacitated.overflowValue))
             allowedchange = increase}
         Heal = button
             {onClick = updates
-                {Scratch.realvalue = Hurt.realvalue
-                Hurt.realvalue = 'Very hurt'.realvalue
-                'Very hurt'.realvalue = Incapacitated.realvalue
-                Incapacitated.realvalue = 'Near death'.realvalue
-                'Near death'.realvalue = 0}}
+                {(Scratch.realvalue) = (Hurt.realvalue)
+                (Hurt.realvalue) = ('Very hurt'.realvalue)
+                ('Very hurt'.realvalue) = (Incapacitated.realvalue)
+                (Incapacitated.realvalue) = ('Near death'.realvalue)
+                ('Near death'.realvalue) = 0}}
     }
     'Melee weapons' = list
     {
         tableLayout = layout
         {
         }
-        source=secondary.meleeweapons
+        source=(secondary.meleeweapons)
         singular = "Melee weapon"
         editable = character 
     }
@@ -110,7 +110,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.rangedweapons
+        source=(secondary.rangedweapons)
         singular = "Ranged weapon"
         editable = character 
     }
@@ -119,7 +119,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.armour
+        source=(secondary.armour)
         singular = "armour"
         editable = character 
     }
@@ -128,13 +128,13 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.items
+        source=(secondary.items)
         singular = "Item"
         editable = character 
     }
     Spells = list
     {
-        source=secondary.spells
+        source=(secondary.spells)
         singular = "Spell"
         editable = character 
     }

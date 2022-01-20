@@ -3,35 +3,17 @@
 #include "/systems/DND/Classes.frules"
 #include "/systems/DND/Features.frules"
 #include "/systems/DND/Hitpoints.frules"
+#include "/systems/DND/Basics.frules"
 #include "/systems/DND/Races.frules"
+#include "/systems/DND/SavingThrows.frules"
+
 characterTable = ruleset
 {
   rulesetConfiguration = configuration
   {
-    initative=Basics.'Initiative'
+    initative=((characterTable.Basics).'Initiative')
   }
-  Basics = table
-  {
-    XP  = integer
-        {
-            default=0
-            minvalue=0 
-        }
-    'Armor Class'=integer
-              {
-                default=10
-                minvalue=10
-              }
-    'Initiative'=modifier
-              {
-                default=0
-                valuedice=1d20
-              }
-    'Proficiency bonus'=integer
-              {
-              }
-
-  }
+  Basics = basicsTable{}
   Race = raceTable {}
   Class = classTable{}
   
@@ -55,117 +37,7 @@ characterTable = ruleset
 
           }
       } 
-  'Saving throws' = table
-      {
-          Str=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Str'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-          Dex=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Dex'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-          Con=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Con'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-          Int=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Int'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-          Wis=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Wis'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-          Cha=custom
-          {
-              Modifier=modifier
-              {
-                value= 
-                 ('Ability scores'.'Cha'.Modifier + 
-                  (if Proficient then 
-                    Basics.'Proficiency bonus'
-                   else 
-                    0)
-                 )
-                valuedice=1d20
-              }
-              Proficient = bool
-              {
-
-              }
-            }
-      } 
+  'Saving throws' = savingThrowsTable {}
   Skills = table
       {
         tableLayout = layout
@@ -177,9 +49,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Dex'.Modifier + 
+                 ((('Ability scores'.'Dex').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -195,9 +67,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Wis'.Modifier + 
+                 ((('Ability scores'.'Wis').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -213,9 +85,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Int'.Modifier + 
+                 ((('Ability scores'.'Int').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -231,9 +103,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Str'.Modifier + 
+                 ((('Ability scores'.'Str').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -249,9 +121,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Cha'.Modifier + 
+                 ((('Ability scores'.'Cha').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -267,9 +139,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Int'.Modifier + 
+                 ((('Ability scores'.'Int').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -285,9 +157,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Wis'.Modifier + 
+                 ((('Ability scores'.'Wis').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -303,9 +175,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Cha'.Modifier + 
+                 ((('Ability scores'.'Cha').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -321,9 +193,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Int'.Modifier + 
+                 ((('Ability scores'.'Int').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -339,9 +211,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Wis'.Modifier + 
+                 ((('Ability scores'.'Wis').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -357,9 +229,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Int'.Modifier + 
+                 ((('Ability scores'.'Int').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -375,9 +247,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Wis'.Modifier + 
+                 ((('Ability scores'.'Wis').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -393,9 +265,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Cha'.Modifier + 
+                 ((('Ability scores'.'Cha').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -411,9 +283,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Cha'.Modifier + 
+                 ((('Ability scores'.'Cha').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -429,9 +301,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Int'.Modifier + 
+                 ((('Ability scores'.'Int').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -447,9 +319,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Dex'.Modifier + 
+                 ((('Ability scores'.'Dex').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -465,9 +337,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Dex'.Modifier + 
+                 ((('Ability scores'.'Dex').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -483,9 +355,9 @@ characterTable = ruleset
               Modifier=modifier
               {
                 value= 
-                 ('Ability scores'.'Wis'.Modifier + 
+                 ((('Ability scores'.'Wis').Modifier) + 
                   (if Proficient then 
-                    Basics.'Proficiency bonus'
+                    ((characterTable.Basics).'Proficiency bonus')
                    else 
                     0)
                  )
@@ -505,7 +377,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.meleeweapons
+        source=(secondary.meleeweapons)
         singular = "Melee weapon"
         editable = character 
     }
@@ -514,7 +386,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.rangedweapons
+        source=(secondary.rangedweapons)
         singular = "Ranged weapon"
         editable = character 
     }
@@ -523,7 +395,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.armour
+        source=(secondary.armour)
         singular = "armour"
         editable = character 
     }
@@ -532,7 +404,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=secondary.items
+        source=(secondary.items)
         singular = "Item"
         editable = character 
     }
@@ -553,10 +425,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 0)
+          filter = (((spellStats.Stats).level) == 0)
         }
     }
     '1st Level Spells' = table
@@ -576,10 +448,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 1)
+          filter = (((spellStats.Stats).level) == 1)
         }
     }
     '2nd Level Spells' = table
@@ -599,10 +471,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 2)
+          filter = (((spellStats.Stats).level) == 2)
         }
     }
     '3rd Level Spells' = table
@@ -622,10 +494,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 3)
+          filter = (((spellStats.Stats).level) == 3)
         }
     }
     '4th Level Spells' = table
@@ -645,10 +517,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 4)
+          filter = (((spellStats.Stats).level) == 4)
         }
     }
     '5th Level Spells' = table
@@ -668,10 +540,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 5)
+          filter = (((spellStats.Stats).level) == 5)
         }
     }
     '6th Level Spells' = table
@@ -691,10 +563,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 6)
+          filter = (((spellStats.Stats).level) == 6)
         }
     }
     '7th Level Spells' = table
@@ -714,10 +586,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 7)
+          filter = (((spellStats.Stats).level) == 7)
         }
     }
     '8th Level Spells' = table
@@ -737,10 +609,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 8)
+          filter = (((spellStats.Stats).level) == 8)
         }
     }
     '9th Level Spells' = table
@@ -760,10 +632,10 @@ characterTable = ruleset
           {
             size = wide
           }
-          source=secondary.spells
+          source=(secondary.spells) 
           singular = "Spell"
           editable = character 
-          filter = (spellStats.Stats.level == 9)
+          filter = (((spellStats.Stats).level) == 9)
         }
     }
 }

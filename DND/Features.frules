@@ -1,18 +1,18 @@
 classFeatures(classname,level) = 
     (map 
         (
-            ((feature)->(nameAndDescription((feature:Name),(feature:Description)))),
-              (filter( ((f)->((f:Level)<(level+1))),
-                ((first ((filter (((class)->((class:Name) == classname)), classInfo))))
-                :Features)))
+            ((feature)->(nameAndDescription((feature.Name),(feature.Description)))),
+              (filter( ((f)->((f.Level)<(level+1))),
+                ((first ((filter (((class)->((class.Name) == classname)), classInfo))))
+                .Features)))
                 )
         )
 
 raceFeatures(main, subrace)=
    (if (subrace=="Standard") then
-    ((getRace(main)):Features)
+    ((getRace(main)).Features)
    else
-    ((getSubrace(main,subrace)):Features))
+    ((getSubrace(main,subrace)).Features))
 
 features= table
 {
@@ -28,7 +28,7 @@ features= table
             size = wide
             rowTitle = hidden
         }
-          source=(classFeatures (Class.Main.Name, Class.Main.Levels))
+          source=(classFeatures (((Class.Main).Name), ((Class.Main).Levels)))
           singular = "Feature"
           editable = none 
     }
@@ -39,7 +39,7 @@ features= table
             size = wide
             rowTitle = hidden
         }
-          source=(raceFeatures (Race.Main, Race.Subrace))
+          source=(raceFeatures ((Race.Main), (Race.Subrace)))
           singular = "Feature"
           editable = none 
     }
@@ -53,4 +53,5 @@ features= table
         editable = character
         valueType = nameAndDescription
     }
+
 }

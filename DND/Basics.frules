@@ -1,0 +1,55 @@
+experienceLevelAndProficiencyBonus(xp,lvl,bonus) =
+    {
+        XP=xp
+        Level=lvl
+        ProficiencyBonus=bonus
+    }
+levelTable =
+    [
+        (experienceLevelAndProficiencyBonus( 355000, 20, 6 ))
+        , (experienceLevelAndProficiencyBonus( 305000, 19, 6 ))
+        , (experienceLevelAndProficiencyBonus( 265000, 18, 6 ))
+        , (experienceLevelAndProficiencyBonus( 225000, 17, 6 ))
+        , (experienceLevelAndProficiencyBonus( 195000, 16, 5 ))
+        , (experienceLevelAndProficiencyBonus( 165000, 15, 5 ))
+        , (experienceLevelAndProficiencyBonus( 140000, 14, 5 ))
+        , (experienceLevelAndProficiencyBonus( 120000, 13, 5 ))
+        , (experienceLevelAndProficiencyBonus( 100000, 12, 4 ))
+        , (experienceLevelAndProficiencyBonus( 85000, 11, 4 ))
+        , (experienceLevelAndProficiencyBonus( 64000, 10, 4 ))
+        , (experienceLevelAndProficiencyBonus( 48000, 9, 4 ))
+        , (experienceLevelAndProficiencyBonus( 34000, 8, 3 ))
+        , (experienceLevelAndProficiencyBonus( 23000, 7, 3 ))
+        , (experienceLevelAndProficiencyBonus( 14000, 6, 3 ))
+        , (experienceLevelAndProficiencyBonus(6500, 5, 3 ))
+        , (experienceLevelAndProficiencyBonus(2700, 4, 2 ))
+        , (experienceLevelAndProficiencyBonus(900, 3, 2 ))
+        , (experienceLevelAndProficiencyBonus(300, 2, 2 ))
+        , (experienceLevelAndProficiencyBonus( 0, 1, 2 ))
+    ]
+basicsTable =table
+  {
+    XP  = integer
+        {
+            default=0
+            minvalue=0 
+        }
+    'Armor Class'=integer
+              {
+                default=10
+                minvalue=10
+              }
+    'Initiative'=modifier
+              {
+                default=0
+                valuedice=1d20
+              }
+    'Proficiency bonus'= integer
+        {value= ((first
+         ((filter
+          (((x)->((x.Level) < (((Class.Main).Levels) + 1))),levelTable)
+          ))).ProficiencyBonus)
+          editable=none
+        }
+
+  }

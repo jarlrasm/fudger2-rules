@@ -31,7 +31,8 @@ classTable=table
       {
           Name = string
           {
-            keys = (map (((x)->(x:Name)), classInfo))
+            keys = (map (((x)->(x.Name)), classInfo))
+            default="Unknown"
           }
           Levels = integer
           {
