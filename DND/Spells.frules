@@ -1,0 +1,254 @@
+getSpellLevelForClass (classname) =
+  ((first ((filter (((class)->((class.Name) == classname)), classInfo)))).SpellLevels)
+
+getClassLevlesForSpellLevels (spelllevels, spellevel)=
+  ((first ((filter (((spl)->((spl.SpellLevel) == spellevel)), spelllevels)))).SpellsForLevelList)
+
+getSpellsAtLevelForClassAndLevel(classname, level, spellevel)=
+  ((first((filter (((x)->((x.CharacterLevel) == level)), 
+    (getClassLevlesForSpellLevels ((getSpellLevelForClass (classname)),spellevel ))
+  )))).Spells)
+
+spellTable= table
+{
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        'Cantrips' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 0)
+        }
+    }
+    '1st Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 1))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 1)
+        }
+    }
+    '2nd Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 2))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 2)
+        }
+    }
+    '3rd Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 3))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 3)
+        }
+    }
+    '4th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 4))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 4)
+        }
+    }
+    '5th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 5))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 5)
+        }
+    }
+    '6th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+          size = wide
+        rowTitle = hidden
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 6))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 6)
+        }
+    }
+    '7th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 7))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 7)
+        }
+    }
+    '8th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 8))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 8)
+        }
+    }
+    '9th Level Spells' = table
+    {
+        tableLayout = layout
+        {
+        rowTitle = hidden
+          size = wide
+        }
+        Slots = slots 
+        {
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 8))
+            allowedchange = increaseAndClear
+        }
+        Spells = list
+        {
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source=(secondary.spells) 
+          singular = "Spell"
+          editable = character 
+          filter = (((spellStats.Stats).level) == 9)
+        }
+    }
+}

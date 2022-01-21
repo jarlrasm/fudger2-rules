@@ -1,0 +1,48 @@
+equipmentTable= table
+{
+        tableLayout = layout
+        {
+        rowTitle = hidden
+        size = wide
+        }
+'Melee weapons' = list
+    {
+        tableLayout = layout
+        {
+        size = wide
+        }
+        source=(secondary.meleeweapons)
+        singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged weapons' = list
+    {
+        tableLayout = layout
+        {
+        size = wide
+        }
+        source=(secondary.rangedweapons)
+        singular = "Ranged weapon"
+        editable = character 
+    }
+    'Armour' = list
+    {
+        tableLayout = layout
+        {
+        size = wide
+        }
+        source=(secondary.armour)
+        singular = "armour"
+        editable = character 
+    }
+    'Other items' = list
+    {
+        tableLayout = layout
+        {
+        size = wide
+        }
+        source=(secondary.items)
+        singular = "Item"
+        editable = character 
+    }
+}

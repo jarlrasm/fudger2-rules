@@ -1,0 +1,331 @@
+skillTable = table
+      {
+        tableLayout = layout
+        {
+          columns = 2
+        }
+          Acrobatics = custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Dex').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          'Animal Handling' =custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Wis').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Arcana =custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Int').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Athletics = custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Str').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Deception =custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Cha').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          History=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Int').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Insight=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Wis').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Intimidation=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Cha').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Investigation=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Int').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Medicine=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Wis').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Nature=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Int').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Perception=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Wis').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Performance=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Cha').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Persuasion=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Cha').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Religion=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Int').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          'Sleight of Hand'=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Dex').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Stealth=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Dex').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+          Survival=custom
+          {
+              Modifier=modifier
+              {
+                value= 
+                 ((('Ability scores'.'Wis').Modifier) + 
+                  (if Proficient then 
+                    ((characterTable.Basics).'Proficiency bonus')
+                   else 
+                    0)
+                 )
+                valuedice=1d20
+              }
+              Proficient = bool
+              {
+
+              }
+            }
+      } 
