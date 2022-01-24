@@ -9,8 +9,15 @@ getSpellsAtLevelForClassAndLevel(classname, level, spellevel)=
     (getClassLevlesForSpellLevels ((getSpellLevelForClass (classname)),spellevel ))
   )))).Spells)
 
+getSpellVisibility (classname, level, spellevel) =
+  (if ((getSpellsAtLevelForClassAndLevel(classname, level, spellevel)) > 0)
+     then visible
+   else 
+      none)
+
 spellTable= table
 {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 1)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -37,6 +44,7 @@ spellTable= table
     }
     '1st Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 1)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -61,6 +69,7 @@ spellTable= table
     }
     '2nd Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 2)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -85,6 +94,7 @@ spellTable= table
     }
     '3rd Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 3)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -109,6 +119,7 @@ spellTable= table
     }
     '4th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 4)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -133,6 +144,7 @@ spellTable= table
     }
     '5th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 5)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -157,6 +169,7 @@ spellTable= table
     }
     '6th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 6)) 
         tableLayout = layout
         {
           size = wide
@@ -181,6 +194,7 @@ spellTable= table
     }
     '7th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 7)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -205,6 +219,7 @@ spellTable= table
     }
     '8th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels),8)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -229,6 +244,7 @@ spellTable= table
     }
     '9th Level Spells' = table
     {
+      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels),9)) 
         tableLayout = layout
         {
         rowTitle = hidden
@@ -236,7 +252,7 @@ spellTable= table
         }
         Slots = slots 
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 8))
+            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 9))
             allowedchange = increaseAndClear
         }
         Spells = list
