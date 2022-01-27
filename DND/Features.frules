@@ -14,6 +14,12 @@ raceFeatures(main, subrace)=
    else
     ((getSubrace(main,subrace)).Features))
 
+jackBonus(char) = (bonusFrom (
+                    [
+                      (map ( ((x)->(x.Name)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
+                      (map ( ((x)->(x.Name)) ,(raceFeatures (((char.Race).Main), ((char.Race).Subrace))))),
+                      (map ( ((x)->(x.Name)) ,((char.'Features and Traits').'Other features')))
+                    ],"Jack of All Trades", (((char.Basics).'Proficiency bonus') / 2)))
 features= table
 {
     tableLayout = layout

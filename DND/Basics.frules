@@ -27,6 +27,11 @@ levelTable =
         , (experienceLevelAndProficiencyBonus(300, 2, 2 ))
         , (experienceLevelAndProficiencyBonus( 0, 1, 2 ))
     ]
+allSources(char) = [
+                      (map ( ((x)->(x.Description)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
+                      (map ( ((x)->(x.Description)) ,(raceFeatures (((char.Race).Main), ((char.Race).Subrace))))),
+                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Other features')))
+                    ]
 basicsTable =table
   {
     XP  = integer
@@ -36,13 +41,20 @@ basicsTable =table
         }
     'Armor Class'=integer
               {
+                value =(
+                        (10 + 
+                        (bonusWithValue ((allSources(characterTable)), "\+([0-9])\s*AC\b" ))) +
+                        (bonusWithValue ((allSources(characterTable)), "\bAC\s*\+([0-9])\b" ))
+                        )
                 default=10
                 minvalue=10
               }
     'Initiative'=modifier
               {
-                default=0
+                value=((('Ability scores'.'Dex').Modifier) + 
+                  (jackBonus(characterTable)))
                 valuedice=1d20
+                editable=none
               }
     'Proficiency bonus'= integer
         {value= ((first
