@@ -147,7 +147,7 @@ characterTable = ruleset
     }
   'Interaction Skills' = table
     {
-      Intimidation = custom
+      Intimidation = table
         {
           Attribute = string { value = "Spi"}
           Adds = integer {}
@@ -394,7 +394,7 @@ characterTable = ruleset
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
   }
-    'Weapons' = list
+    'Melee Weapons' = list
     {
         tableLayout = layout
         {
@@ -402,6 +402,16 @@ characterTable = ruleset
         }
         source=(secondary.meleeweapons)
         singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged Weapons' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source=(secondary.rangedweapons)
+        singular = "Ranged weapon"
         editable = character 
     }
     'Magic Miracles Psionics' = list
@@ -459,7 +469,7 @@ characterTable = ruleset
     }
   
 }
-weaponStats =ruleset
+rangedStats =ruleset
         {
             Stats= table
             {
@@ -470,6 +480,22 @@ weaponStats =ruleset
                 Ammo=integer
                 {}
                 Range=string
+                {}
+                Price=string
+                {}
+                Notes=string
+                {}
+            }
+        }
+meleeStats =ruleset
+        {
+            Stats= table
+            {
+                Tech=integer
+                {}
+                Damage=string
+                {}
+                Price=string
                 {}
                 Notes=string
                 {}
@@ -493,13 +519,13 @@ spellStats =ruleset
 {
   Stats= table
   {
-      'Axiom level'=integer
+      'Axiom Level'=integer
       {}
       'Type'=string
       {}
       'Skill'=string
       {}
-      'Casting time'=string
+      'Casting Time'=string
       {}
       'DN'=string
       {}
@@ -525,8 +551,8 @@ TORG = system
 {
     characters = characterTable
     creatures = characterTable
-    rangedweapons= weaponStats
-    meleeweapons= weaponStats
+    rangedweapons= rangedStats
+    meleeweapons= meleeStats
     armour= armourStats
     spells = spellStats
     perks = perkStats
