@@ -30,8 +30,31 @@ levelTable =
 allSources(char) = [
                       (map ( ((x)->(x.Description)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
                       (map ( ((x)->(x.Description)) ,(raceFeatures (((char.Race).Main), ((char.Race).Subrace))))),
-                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Other features')))
+                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Other features'))),
+                      
+                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Melee weapons'))),
+                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Ranged weapons'))),
+                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Armour'))),
+                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Other items')))
                     ]
+acForArmour(char, armour)=
+  (((((armour.data).armourStats).Stats).AC) +
+    (min
+     ((((armour.data).armourStats).Stats).'Max dex modifier')
+      (((char.'Ability scores').'Dex').Modifier)
+   ))
+
+ac(char) = 
+  (max 
+   10
+    (first ( (reverse ((sort 
+    (
+      (map ( ((x)->(acForArmour (char, x))) ,((char.'Equipment').'Armour')))
+    )
+  ))) )
+  )
+)
+
 basicsTable =table
   {
     XP  = integer
@@ -39,10 +62,10 @@ basicsTable =table
             default=0
             minvalue=0 
         }
-    'Armor Class'=integer
+    'Armour Class'=integer
               {
                 value =(
-                        (10 + 
+                        ((ac(characterTable)) + 
                         (bonusWithValue ((allSources(characterTable)), "\+([0-9])\s*AC\b" ))) +
                         (bonusWithValue ((allSources(characterTable)), "\bAC\s*\+([0-9])\b" ))
                         )
