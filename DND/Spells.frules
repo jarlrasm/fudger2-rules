@@ -1,3 +1,4 @@
+
 getSpellLevelForClass (classname) =
   ((first ((filter (((class)->((class.Name) == classname)), classInfo)))).SpellLevels)
 
@@ -15,6 +16,43 @@ getSpellVisibility (classname, level, spellevel) =
    else 
       none)
 
+spellCastingAbilty(class, char) = 
+(
+  (if ((class.SpellcastingAbilityModifier) == "Charisma") then
+    (((char.'Ability scores').'Cha').Modifier)
+  else 
+   (if ((class.SpellcastingAbilityModifier) == "Intelligence") then
+    (((char.'Ability scores').'Int').Modifier)
+    else
+     (if ((class.SpellcastingAbilityModifier) == "Wisdom") then
+      (((char.'Ability scores').'Wis').Modifier)
+      else
+      (if ((class.SpellcastingAbilityModifier) == "Constitution") then
+        (((char.'Ability scores').'Con').Modifier)
+        else
+        (if ((class.SpellcastingAbilityModifier) == "Dexterity") then
+          (((char.'Ability scores').'Dex').Modifier)
+          else
+            (if ((class.SpellcastingAbilityModifier) == "Strength") then
+              (((char.'Ability scores').'Str').Modifier)
+              else
+              0
+              )
+          )
+        )
+      )
+    )
+  )
+  +(bonusWithValue ((allSources(char)),"[S|s]pell casting ability.*(increase by |\+)([0-9])"))
+  
+)
+spellCastingDC (class, char) =
+  (((8+(spellCastingAbilty(class, char)))+((char.Basics).'Proficiency bonus'))
+  +(bonusWithValue ((allSources(char)),"[S|s]pell save DC.*(increase by |\+)([0-9])")))
+spellAttackModifier (class, char) =
+  (((spellCastingAbilty(class, char))+((char.Basics).'Proficiency bonus'))
+  +(bonusWithValue ((allSources(char)),"[S|s]pell attack.*(increase by |\+)([0-9])")) )
+
 spellTable= table
 {
       visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 1)) 
@@ -23,8 +61,31 @@ spellTable= table
         rowTitle = hidden
           size = wide
         }
+        Ability = table
+        {
+          'Spellcasting ability' = modifier
+                {
+                  value=(spellCastingAbilty ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+
+                  valuedice=1d20
+                  editable=none
+                }
+                'Spell save DC' = integer
+                {
+                  value=(spellCastingDC ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+
+                  editable=none
+                }
+                'Spell attack bonus' = modifier
+                {
+                  value=(spellAttackModifier ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+
+                  valuedice=1d20
+                  editable=none
+                }
+        }
         'Cantrips' = table
-    {
+      {
         tableLayout = layout
         {
         rowTitle = hidden
