@@ -32,7 +32,7 @@ characterTable = ruleset
           {
             Score=integer
             {
-              default=0
+              default=8
             }
           }
       }
@@ -81,7 +81,8 @@ characterTable = ruleset
       'Energy Weapons  dex' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { 
               value = ((('Attributes'.'Dexterity').'Score') + Adds)
@@ -93,14 +94,16 @@ characterTable = ruleset
         'Fire Combat' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
         }
         'Heavy Weapons' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds)
               default = 0}
@@ -108,21 +111,24 @@ characterTable = ruleset
         'Melee Weapons' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score')+ Adds)}
         }
         'Missile Weapons' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
         }
         'Unarmed Combat' = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
         }
@@ -133,28 +139,32 @@ characterTable = ruleset
       Intimidation = custom
         {
           Attribute = string { value = "Spi"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Spirit').'Score') + Adds) }
           }
       Maneuver = custom
         {
           Attribute = string { value = "Dex"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds) }
         }
       Taunt = custom
         {
           Attribute = string { value = "Cha"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Charisma').'Score') + Adds) }
         }
       Trick = custom
         {
           Attribute = string { value = "Mind"}
-          Adds = integer {}
+          Adds = integer 
+          { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Mind').'Score') + Adds) }
         }
@@ -166,213 +176,244 @@ characterTable = ruleset
       { 
         columns = 4
       }
+      editable = character
     'Air Vehicles' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Alteration' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Apportation' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
     'Beast Riding' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Computers' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Conjuration' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
     'Divination' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Dodge' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Evidence Analysis' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Faith' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
     'Find' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'First Aid' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Kinesis' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
     'Land Vehicles' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Language' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Lockpicking' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Medicine' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Persuasion' = custom
     {
       Attribute = string { value = "Cha"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
     }
     'Precognition' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Profession' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Reality' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
     'Scholar' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Science' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Stealth' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Streetwise' = custom
     {
       Attribute = string { value = "Cha"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
     }
     'Survival' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Telepathy' = custom
     {
       Attribute = string { value = "Cha"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
     }
     'Tracking' = custom
     {
       Attribute = string { value = "Mind"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
     }
     'Water Vehicles' = custom
     {
       Attribute = string { value = "Dex"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
     }
     'Willpower' = custom
     {
       Attribute = string { value = "Spi"}
-      Adds = integer {}
+      Adds = integer 
+          { default = 0 }
       'Skill value' = integer 
         { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
     }
