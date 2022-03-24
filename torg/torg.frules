@@ -424,7 +424,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.meleeweapons)
+        source=(secondary.'Melee weapons')
         singular = "Melee weapon"
         editable = character 
     }
@@ -434,7 +434,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.rangedweapons)
+        source=(secondary.'Ranged weapons')
         singular = "Ranged weapon"
         editable = character 
     }
@@ -444,7 +444,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.spells)
+        source=(secondary.Spells)
         singular = "Spell"
         editable = character
     }
@@ -457,7 +457,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.perks)
+        source=(secondary.Perks)
         singular = "Perk"
         editable = character 
     }
@@ -477,8 +477,8 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.armour)
-        singular = "armour"
+        source=(secondary.Armour)
+        singular = "Armour"
         editable = character 
     }
     'Other items' = list
@@ -612,10 +612,11 @@ TORG = system
 {
     characters = characterTable
     creatures = characterTable
-    rangedweapons= rangedStats
-    meleeweapons= meleeStats
-    armour= armourStats
-    spells = perkStats
-    perks = spellStats
+    'Ranged weapons'= rangedStats
+    'Melee weapons'= meleeStats
+    Armour= armourStats
+    Spells = spellStats
+    Perks = perkStats
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells","Perks", "Other items"]
     description="TORG Eternity"
 }

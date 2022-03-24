@@ -52,13 +52,14 @@ DND5e = system
     characters = characterTable
     creatures = creatureTable
 
-    rangedweapons= weaponStats
-    meleeweapons= weaponStats
-    armour= armourStats
-    spells = spellStats
+    'Ranged weapons'= weaponStats
+    'Melee weapons'= weaponStats
+    Armour= armourStats
+    Spells = spellStats
 
     description="DND 5e rules"
     libraries= ["/systems/DND/dndsrd.json"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items"]
 
     initiativeCompare(item1,item2) = (compare (item1 ,item2))
 

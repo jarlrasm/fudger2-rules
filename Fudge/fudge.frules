@@ -101,7 +101,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.meleeweapons)
+        source=(secondary.'Melee weapons')
         singular = "Melee weapon"
         editable = character 
     }
@@ -110,7 +110,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.rangedweapons)
+        source=(secondary.'Ranged weapons')
         singular = "Ranged weapon"
         editable = character 
     }
@@ -119,8 +119,8 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.armour)
-        singular = "armour"
+        source=(secondary.Armour)
+        singular = "Armour"
         editable = character 
     }
     'Other items' = list
@@ -134,7 +134,7 @@ characterTable = ruleset
     }
     Spells = list
     {
-        source=(secondary.spells)
+        source=(secondary.Spells)
         singular = "Spell"
         editable = character 
     }
@@ -161,10 +161,11 @@ Fudge = system
 {
     characters = characterTable
     creatures = characterTable
-    rangedweapons= weaponStats
-    meleeweapons= weaponStats
-    armour= armourStats
+    'Ranged weapons'= weaponStats
+    'Melee weapons'= weaponStats
+    Armour= armourStats
     description="Simple Fudge rules"
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items"]
     initiativeCompare(item1,item2) = (compare ((intValueFromEnumString (fudgevalues,item1)), (intValueFromEnumString (fudgevalues,item2))))
 }
 
