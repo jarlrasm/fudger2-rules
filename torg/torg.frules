@@ -1,3 +1,352 @@
+creatureTable = ruleset
+{
+  'Attributes' = keyvalues
+  {
+    singular = "Attribute" 
+    keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
+    valueType = custom 
+    {
+      Score=integer
+      {
+        default=8
+        valuedice=1d20
+      }
+    }
+  }
+  Basics = table
+  {
+    Move = integer {}
+    Tough = string {}
+    Shock = integer {}
+    'Shocks taken' = integer { editable = live}
+    Wounds = integer {}
+    'Wounds taken' = slots
+    { 
+      number = 8
+      allowedchange = increaseAndClear
+    }
+    Stymied = slots
+    { 
+      number = 2
+      allowedchange = increaseAndClear
+    }
+    Weakened = slots
+    { 
+      number = 2
+      allowedchange = increaseAndClear
+    }
+  }
+  Other = table
+  {
+    Equipment = string {}
+    Perks = string {}
+    Possibilities = string {}
+  }
+  'Combat skills' = table
+  {
+    'Energy Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Fire Combat' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Heavy Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Melee Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Missile Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Unarmed Combat' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+  }
+  'Interaction skills' = table
+  {
+    Intimidation = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Maneuver = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Taunt = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Trick = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+  }
+  Skills = table
+  {
+   tableLayout = layout
+    { 
+      columns = 4
+    }
+    'Air Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Alteration = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Apportation = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Beast Riding' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Computers = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Conjuration = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Divination = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Dodge = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Evidence Analysis' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Faith = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Find = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'First Aid' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Kinesis = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Land Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Language = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Lockpicking = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Medicine = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Persuasion = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Precognition = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Profession = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Reality = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Scholar = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Science = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Stealth = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Streetwise = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Survival = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Telepathy = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Tracking = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Water Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Willpower = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    } 
+  }
+  
+  'Special Abilities' = list
+  { 
+      tableLayout = layout
+      {
+        size = wide
+      }
+      singular = "Special"
+      valueType = nameAndDescription
+  }
+}
+
 characterTable = ruleset
 {
     Basics = table
@@ -609,7 +958,7 @@ perkStats =ruleset
 TORG = system
 {
     characters = characterTable
-    creatures = characterTable
+    creatures = creatureTable
     'Ranged weapons'= rangedStats
     'Melee weapons'= meleeStats
     Armour= armourStats
