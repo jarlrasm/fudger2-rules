@@ -382,6 +382,7 @@ characterTable = ruleset
             Score=integer
             {
               default=8
+              valuedice=1d20
             }
           }
       }
@@ -405,7 +406,12 @@ characterTable = ruleset
           { 
             number = 2
             allowedchange = increaseAndClear
-           }
+          }
+          'Smack that' = integer 
+          { 
+            value = 0
+            valuedice = 1d6
+          }
       }
 
   'Possibilities' = table 
