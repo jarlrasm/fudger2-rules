@@ -1,3 +1,352 @@
+creatureTable = ruleset
+{
+  'Attributes' = keyvalues
+  {
+    singular = "Attribute" 
+    keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
+    valueType = custom 
+    {
+      Score=integer
+      {
+        default=8
+        valuedice=1d20
+      }
+    }
+  }
+  Basics = table
+  {
+    Move = integer {}
+    Tough = string {}
+    Shock = integer {}
+    'Shocks taken' = integer { editable = live}
+    Wounds = integer {}
+    'Wounds taken' = slots
+    { 
+      number = 8
+      allowedchange = increaseAndClear
+    }
+    Stymied = slots
+    { 
+      number = 2
+      allowedchange = increaseAndClear
+    }
+    Weakened = slots
+    { 
+      number = 2
+      allowedchange = increaseAndClear
+    }
+  }
+  Other = table
+  {
+    Equipment = string {}
+    Perks = string {}
+    Possibilities = string {}
+  }
+  'Combat skills' = table
+  {
+    'Energy Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Fire Combat' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Heavy Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Melee Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Missile Weapons' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Unarmed Combat' = custom
+    {
+      Modifier=modifier
+      {
+        valuedice=1d20
+      }
+    }
+  }
+  'Interaction skills' = table
+  {
+    Intimidation = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Maneuver = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Taunt = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Trick = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+  }
+  Skills = table
+  {
+   tableLayout = layout
+    { 
+      columns = 4
+    }
+    'Air Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Alteration = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Apportation = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Beast Riding' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Computers = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Conjuration = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Divination = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Dodge = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Evidence Analysis' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Faith = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Find = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'First Aid' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Kinesis = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Land Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Language = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Lockpicking = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Medicine = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Persuasion = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Precognition = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Profession = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Reality = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Scholar = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Science = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Stealth = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Streetwise = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Survival = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Telepathy = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Tracking = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    'Water Vehicles' = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    }
+    Willpower = custom
+    {
+      Modifier = modifier
+      {
+        valuedice=1d20
+      }
+    } 
+  }
+  
+  'Special Abilities' = list
+  { 
+      tableLayout = layout
+      {
+        size = wide
+      }
+      singular = "Special"
+      valueType = nameAndDescription
+  }
+}
+
 characterTable = ruleset
 {
     Basics = table
@@ -19,6 +368,7 @@ characterTable = ruleset
 
   Axioms = table
   {
+    Cosm = string {}
     Magic = integer {}
     Social = integer {}
     Spirit = integer {}
@@ -33,6 +383,7 @@ characterTable = ruleset
             Score=integer
             {
               default=8
+              valuedice=1d20
             }
           }
       }
@@ -56,7 +407,12 @@ characterTable = ruleset
           { 
             number = 2
             allowedchange = increaseAndClear
-           }
+          }
+          'Smack that' = integer 
+          { 
+            value = 0
+            valuedice = 1d6
+          }
       }
 
   'Possibilities' = table 
@@ -72,15 +428,19 @@ characterTable = ruleset
     }
   }
 
-  
-      
+  Adds = table
+  {
+    visible = none
+    editable = character
+
+    'Energy Weapons' = integer { default = 0}
+  }
   
   'Combat Skills' = table 
     {
             
-      'Energy Weapons  dex' = custom
+      'Energy Weapons' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
@@ -93,44 +453,47 @@ characterTable = ruleset
         }
         'Fire Combat' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
+            { 
+              value = ((('Attributes'.'Dexterity').'Score') + Adds)
+              valuedice = 1d20
+            }
         }
         'Heavy Weapons' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
             { value = ((('Attributes'.'Dexterity').'Score') + Adds)
-              default = 0}
+              valuedice = 1d20
+            }
         }
         'Melee Weapons' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score')+ Adds)}
+            { value = ((('Attributes'.'Dexterity').'Score')+ Adds)
+              valuedice = 1d20
+              }
         }
         'Missile Weapons' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
+            { value = ((('Attributes'.'Dexterity').'Score') + Adds)
+            valuedice = 1d20}
         }
         'Unarmed Combat' = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)}
+            { value = ((('Attributes'.'Dexterity').'Score') + Adds)
+            valuedice = 1d20}
         }
     }
   'Interaction Skills' = table
@@ -138,38 +501,39 @@ characterTable = ruleset
       
       Intimidation = custom
         {
-          Attribute = string { value = "Spi"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Spirit').'Score') + Adds) }
+            { value = ((('Attributes'.'Spirit').'Score') + Adds) 
+            valuedice = 1d20}
           }
       Maneuver = custom
         {
-          Attribute = string { value = "Dex"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds) }
+            { value = ((('Attributes'.'Dexterity').'Score') + Adds) 
+            valuedice = 1d20}
         }
       Taunt = custom
         {
-          Attribute = string { value = "Cha"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Charisma').'Score') + Adds) }
+            { value = ((('Attributes'.'Charisma').'Score') + Adds) 
+            valuedice = 1d20}
         }
       Trick = custom
         {
-          Attribute = string { value = "Mind"}
           Adds = integer 
           { default = 0 }
           'Skill value' = integer 
-            { value = ((('Attributes'.'Mind').'Score') + Adds) }
+            { value = ((('Attributes'.'Mind').'Score') + Adds) 
+            valuedice = 1d20}
         }
       
     }
+  
   Skills = table
   {
     tableLayout = layout
@@ -179,245 +543,247 @@ characterTable = ruleset
       editable = character
     'Air Vehicles' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Alteration' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Apportation' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Beast Riding' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Computers' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Conjuration' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Divination' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Dodge' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Evidence Analysis' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Faith' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Find' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'First Aid' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Kinesis' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Land Vehicles' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds)
+        valuedice = 1d20 }
     }
     'Language' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Lockpicking' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Medicine' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Persuasion' = custom
     {
-      Attribute = string { value = "Cha"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Precognition' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Profession' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Reality' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Scholar' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Science' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Stealth' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Streetwise' = custom
     {
-      Attribute = string { value = "Cha"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Survival' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds)
+        valuedice = 1d20 }
     }
     'Telepathy' = custom
     {
-      Attribute = string { value = "Cha"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Tracking' = custom
     {
-      Attribute = string { value = "Mind"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Water Vehicles' = custom
     {
-      Attribute = string { value = "Dex"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+        valuedice = 1d20}
     }
     'Willpower' = custom
     {
-      Attribute = string { value = "Spi"}
       Adds = integer 
           { default = 0 }
       'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) }
+        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+        valuedice = 1d20}
     }
+    
   }
+  
     'Melee Weapons' = list
     {
         tableLayout = layout
@@ -499,28 +865,31 @@ characterTable = ruleset
         size = wide
         columns = 4
       }
-    'Die roll' = string { value = "Bonus"}
-    '1' = string { value = "Mishap"}
-    '2' = string { value = "-8"}
-    '3 4' = string { value = "-6"}
-    '5 6' = string { value = "-4"}
-    '7 8' = string { value = "-2"}
-    '9 10' = string { value = "-1"}
-    '11 12' = string { value = "0"}
-    '13 14' = string { value = "1"}
-    '15' = string { value = "2"}
-    '16' = string { value = "3"}
-    '17' = string { value = "4"}
-    '18' = string { value = "5"}
-    '19' = string { value = "6"}
-    '20' = string { value = "7"}
-    '21 25' = string { value = "8"}
-    '26 30' = string { value = "9"}
-    '31 35' = string { value = "10"}
-    '36 40' = string { value = "11"}
-    '41 45' = string { value = "12"}
-    '46 50' = string { value = "13"}
-    'every 5' = string { value = "add 1"}
+      
+    'Die roll' = string { value = "Bonus"
+    editable = none}
+    '1' = string { value = "Mishap"
+    editable = none}
+    '2' = string { value = "-8" editable = none}
+    '3 4' = string { value = "-6" editable = none}
+    '5 6' = string { value = "-4" editable = none}
+    '7 8' = string { value = "-2" editable = none}
+    '9 10' = string { value = "-1" editable = none}
+    '11 12' = string { value = "0" editable = none}
+    '13 14' = string { value = "1" editable = none}
+    '15' = string { value = "2" editable = none}
+    '16' = string { value = "3" editable = none}
+    '17' = string { value = "4" editable = none}
+    '18' = string { value = "5" editable = none}
+    '19' = string { value = "6" editable = none}
+    '20' = string { value = "7" editable = none}
+    '21 25' = string { value = "8" editable = none}
+    '26 30' = string { value = "9" editable = none}
+    '31 35' = string { value = "10" editable = none}
+    '36 40' = string { value = "11" editable = none}
+    '41 45' = string { value = "12" editable = none}
+    '46 50' = string { value = "13" editable = none}
+    'every 5' = string { value = "add 1" editable = none}
   }  
   
 }
@@ -570,8 +939,6 @@ armourStats= ruleset
                 {}
                 Bonus=string
                 {}
-                'Max dex'=integer
-                {}
                 Price=string
                 {}
                 Notes=string
@@ -611,7 +978,7 @@ perkStats =ruleset
 TORG = system
 {
     characters = characterTable
-    creatures = characterTable
+    creatures = creatureTable
     'Ranged weapons'= rangedStats
     'Melee weapons'= meleeStats
     Armour= armourStats
