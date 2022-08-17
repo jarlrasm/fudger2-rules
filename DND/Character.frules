@@ -9,6 +9,7 @@
 #include "/systems/DND/Equipment.frules"
 #include "/systems/DND/Skills.frules"
 #include "/systems/DND/Spells.frules"
+#include "/systems/DND/Attacks.frules"
 
 characterTable = ruleset
 {
@@ -43,6 +44,7 @@ characterTable = ruleset
   'Saving throws' = savingThrowsTable {}
   Skills=skillTable{}
   Hitpoints = hitpoints{}
+  Attacks=attackTable{}
 
   'Features and Traits' = features{}
   Equipment = equipmentTable{}

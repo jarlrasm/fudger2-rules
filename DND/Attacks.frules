@@ -1,0 +1,33 @@
+
+attack (name, tohit, damage, damagebonus )=custom
+{
+    Name= name
+    Tohit = modifier {
+        value=tohit
+        valuedice=1d20
+    }
+    Damage= string {
+        value=damage
+        bonus=damagebonus
+    }
+}
+
+attacksFor (char) =
+    (map 
+     (((weapon)->
+      (attack((weapon.Name),
+       0,
+        ((((weapon.data).weaponStats).Stats).Damage),2))), ((char.'Equipment').'Melee weapons')))
+
+
+attackTable = list
+  {
+        tableLayout = layout
+        {
+            rowTitle = hidden
+        }
+      source = (attacksFor( characterTable))
+        singular = "Attack"
+        editable = none 
+        valueType = attack
+  }
