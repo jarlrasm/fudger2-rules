@@ -82,7 +82,7 @@ basicsTable =table
     'Proficiency bonus'= integer
         {value= ((first
          ((filter
-          (((x)->((x.Level) < (((Class.Main).Levels) + 1))),levelTable)
+          (((x)->((x.Level) < ((((characterTable.Class).Main).Levels) + 1))),levelTable)
           ))).ProficiencyBonus)
           editable=none
         }

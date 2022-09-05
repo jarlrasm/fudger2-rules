@@ -14,6 +14,7 @@ equipmentTable= table
         source=(secondary.'Melee weapons')
         singular = "Melee weapon"
         editable = character 
+        autocomplete = weaponAutoCompletes
     }
     'Ranged weapons' = list
     {
@@ -24,6 +25,7 @@ equipmentTable= table
         source=(secondary.'Ranged weapons')
         singular = "Ranged weapon"
         editable = character 
+        autocomplete = weaponAutoCompletes
     }
     'Armour' = list
     {
@@ -47,3 +49,10 @@ equipmentTable= table
         autocomplete = autoCompletes
     }
 }
+weaponAutoCompletes=[
+   "+1 to hit"
+    , "+2 to hit"
+    , "+3 to hit"
+    , "+4 to hit"
+    , "+5 to hit"
+]

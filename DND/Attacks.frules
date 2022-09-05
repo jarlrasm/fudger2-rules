@@ -1,5 +1,19 @@
+toHitBonus (description) = 
+    (bonusWithValue ([[description]], "\+s*([0-9]|[1-9][0-9])\s+to\shit\b" ))
 
-attack (name, tohit, damage, damagebonus )=custom
+abiltyBonusForMeleeWeapon (weapon, char) =
+    (if (contains((toLower(((((weapon.data).weaponStats).Stats).Properties))), "finesse")) then
+        (max (((char.'Ability scores').'Dex').Modifier) (((char.'Ability scores').'Str').Modifier))
+    else
+     (((char.'Ability scores').'Str').Modifier))
+
+abiltyBonusForRangedWeapon (weapon, char) =
+    (if (contains((toLower(((((weapon.data).weaponStats).Stats).Properties))), "thrown")) then
+         (((char.'Ability scores').'Str').Modifier)
+    else
+     (((char.'Ability scores').'Dex').Modifier))
+
+attack (name, tohit, damage, damagebonus ) = custom
 {
     Name= name
     Tohit = modifier {
@@ -13,20 +27,28 @@ attack (name, tohit, damage, damagebonus )=custom
 }
 
 attacksFor (char) =
+  (concat (
     (map 
      (((weapon)->
       (attack((weapon.Name),
-       0,
-        ((((weapon.data).weaponStats).Stats).Damage),2))), ((char.'Equipment').'Melee weapons')))
-
+       (
+        ((toHitBonus((weapon.Description))) +
+           (abiltyBonusForMeleeWeapon (weapon, char)))
+         + ((characterTable.Basics).'Proficiency bonus')),
+        ((((weapon.data).weaponStats).Stats).Damage),(abiltyBonusForMeleeWeapon (weapon, char))))), ((char.'Equipment').'Melee weapons'))),
+    (map 
+     (((weapon)->
+      (attack((weapon.Name),
+       (
+        ((toHitBonus((weapon.Description))) +
+           (abiltyBonusForRangedWeapon (weapon, char)))
+         + ((characterTable.Basics).'Proficiency bonus')),
+        ((((weapon.data).weaponStats).Stats).Damage),(abiltyBonusForRangedWeapon (weapon, char))))), ((char.'Equipment').'Ranged weapons')))
+    ))
 
 attackTable = list
   {
-        tableLayout = layout
-        {
-            rowTitle = hidden
-        }
-      source = (attacksFor( characterTable))
+        source = (attacksFor( characterTable))
         singular = "Attack"
         editable = none 
         valueType = attack
