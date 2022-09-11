@@ -76,7 +76,7 @@ basicsTable =table
               {
                 value=((('Ability scores'.'Dex').Modifier) + 
                   (jackBonus(characterTable)))
-                valuedice=1d20
+                valuedice= (D20Roll (characterTable))
                 editable=none
               }
     'Proficiency bonus'= integer
@@ -86,6 +86,39 @@ basicsTable =table
           ))).ProficiencyBonus)
           editable=none
         }
-
+    'Normal'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup='rolltype'
+        }
+    'Advantage'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup='rolltype'
+        }
+    'Disadvantage'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup='rolltype'
+        }
   }
 
+
+D20Roll (char) = (if ((char.Basics).'Advantage') then ([1d20,1d20],((baseline,throws)-> 
+      (baseline +
+      (max 
+        (((first (throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((first (throws)).rolls))))
+        (((item (1,throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((item (1,throws)).rolls))))
+        ))
+       )) else 
+        (if ((char.Basics).'Disadvantage') then ([1d20,1d20],((baseline,throws)-> 
+         (baseline +
+          (min 
+            (((first (throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((first (throws)).rolls))))
+            (((item (1,throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((item (1,throws)).rolls))))
+            ))
+          )) else 
+        1d20))

@@ -18,7 +18,7 @@ attack (name, tohit, damage, damagebonus ) = custom
     Name= name
     Tohit = modifier {
         value=tohit
-        valuedice=1d20
+        valuedice= (D20Roll (characterTable))
     }
     Damage= string {
         value=damage

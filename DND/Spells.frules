@@ -67,7 +67,7 @@ spellTable= table
                 {
                   value=(spellCastingAbilty ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
 
-                  valuedice=1d20
+                  valuedice= (D20Roll (characterTable))
                   editable=none
                 }
                 'Spell save DC' = integer
@@ -80,7 +80,7 @@ spellTable= table
                 {
                   value=(spellAttackModifier ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
 
-                  valuedice=1d20
+                  valuedice= (D20Roll (characterTable))
                   editable=none
                 }
         }
