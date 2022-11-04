@@ -1,14 +1,29 @@
-D20Roll  = ([1d20],((baseline,throws)-> 
-         (baseline +
-          (
-            calculate
-          ((
-          first(
-            ((first (throws))
-            .rolls))))
-          )))
-          )
+D20Roll  = (D20RollImpl (0))
 
+D20RollImpl (extra) = ([1d20],((baseline,throws)-> 
+  (if ((first(
+            ((first (throws))
+            .rolls))) == 10) then
+            (D20RollImpl ((extra + 10)))
+         else
+         
+    (if ((first(
+            ((first (throws))
+            .rolls))) == 20) then
+            (D20RollImpl ((extra + 20)))
+         else
+             (baseline +
+              (
+                calculate
+              ( (extra + (
+              first(
+                ((first (throws))
+                .rolls))))
+              )))
+          )
+          )))
+          
+          
 calculate(n)=
  (if (n == 1) then "Mishap" else 
  (if (n < 3) then -8 else 
