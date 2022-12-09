@@ -1,0 +1,295 @@
+pointsToSkill(points)=
+ (if((points-((points/3)*3)) > 0) then (
+                         ((toString((points/3)))+"d6+")+(toString((points-((points/3)*3))))
+                        ) 
+                        else ((toString((points/3)))+"d6")
+                        )
+
+characterTable = ruleset
+{
+    
+  'Attributes' = keyvalues
+      {
+          singular = "Attribute" 
+          keys = ["Dexterity","Knowledge","Mechanical","Perception","Strength","Technical" ]
+          valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=9
+                minvalue=1
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill(Points))
+              }
+
+          }
+      } 
+    'Dexterity Skills' = keyvalues
+        {
+            singular = "Dex Skill" 
+            editablekeys = character
+            keys = ["Blaster", "Dodge", "Grenade", "Lightsaber","Melee", "Pick pocket"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Dexterity').Points))))
+              }
+
+          }
+        }
+    'Knowledge Skills' = keyvalues
+        {
+            singular = "Knowledge Skill" 
+            editablekeys = character
+            keys = ["Alien species", "Bureaucracy", "Cultures", "Languages","Planetary systems", "Streetwise", "Survival"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Knowledge').Points))))
+              }
+
+          }
+        }
+    'Mechanical Skills' = keyvalues
+        {
+            singular = "Mechanical Skill" 
+            editablekeys = character
+            keys = ["Astrogation", "Beast riding", "Com scan", "Gunnery","Repulsorlift operation", "Shields", "Starship piloting"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Mechanical').Points))))
+              }
+
+          }
+        }
+    'Perception Skills' = keyvalues
+        {
+            singular = "Perception Skill" 
+            editablekeys = character
+            keys = ["Bargain", "Beast riding", "Con", "Gambling","Search", "Sneak"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Perception').Points))))
+              }
+
+          }
+        }
+    'Strength Skills' = keyvalues
+        {
+            singular = "Perception Skill" 
+            editablekeys = character
+            keys = ["Brawling", "Climbing jumping", "Lifting", "Swimming"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Strength').Points))))
+              }
+
+          }
+        }
+    'Technical Skills' = keyvalues
+        {
+            singular = "Technical Skill" 
+            editablekeys = character
+            keys = ["Computer programming and repair", "Demolitions", "Droid programming and repair", "First aid", "Repulsorlift repair","Security","Starship repair"]
+            valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill((Points + ((Attributes.'Technical').Points))))
+              }
+
+          }
+        }
+    'Jedi skills' = keyvalues
+        {
+          visible=(boolToVisible ((General.'Force sensitive')))
+          singular = "Jedi skill" 
+          keys = ["Control","Sense","Alter"]
+          valueType = custom
+          {
+              Points=integer
+              {
+                visible = editor
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+              Throw=string
+              {
+                
+                value=(pointsToSkill(Points))
+              }
+
+          }
+        }
+     General = table{
+              'Force Points'=integer
+              {
+                default=0
+                minvalue=0
+              }
+              'Dark Side Points'=integer
+              {
+                default=0
+                minvalue=0
+              }
+              'Character Points'=integer
+              {
+                default=0
+                minvalue=0
+              }
+              'Force sensitive' = bool
+              {
+
+              }
+     }
+
+    'Melee weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.'Melee weapons')
+        singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.'Ranged weapons')
+        singular = "Ranged weapon"
+        editable = character 
+    }
+    'Armour' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.Armour)
+        singular = "Armour"
+        editable = character 
+    }
+    'Other items' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.items)
+        singular = "Item"
+        editable = character 
+    }
+}
+
+meleeWeaponStats =ruleset
+        {
+            Stats= table
+            {
+                Damage=string
+                {}
+            }
+        }
+rangedWeaponStats =ruleset
+        {
+            Stats= table
+            {
+                Damage=string
+                {}
+                Ammo=string
+                {}
+                Range=string
+                {}
+            }
+        }
+armourStats= ruleset
+        {
+            Stats= table
+            {
+                'Armor Value'=string{}
+            }
+        }
+otherStats= ruleset
+        {
+            Stats= table
+            {
+            }
+        }
+boolToVisible (flag)=
+  (if flag
+    then visible
+   else 
+      none)
+Starwars = system
+{
+    characters = characterTable
+    creatures = characterTable
+    'Ranged weapons'= rangedWeaponStats
+    'Melee weapons'= meleeWeaponStats
+    Armour= armourStats
+    'Other items'= otherStats
+    description="Starwars d6"
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
+    quickdice =[1d6]
+}
