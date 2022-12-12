@@ -1,0 +1,121 @@
+.entityView pre{
+    white-space: pre-wrap;
+}
+.entityView a {
+    color: blue;
+    text-decoration: none;
+  }
+.entityView button{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: black;
+    border-radius: 5px;
+}
+.entityView button.dicethrow{
+    padding: 0;
+    margin: 0;
+    background-color: black;
+    color: white;
+}
+.entityView button:hover{
+    background-color: darkblue;
+}
+.entityView .entityTable:hover {
+    filter: drop-shadow(1px 1px 5px grey);
+}
+.entityView .entityTable  {
+    border-radius: 10px;
+    background-color: black;
+    color: wheat;
+    margin: 5px;
+    display: inline-table;
+    filter: drop-shadow(1px 1px 3px grey);
+}
+.entityView .wide {
+    width: 100%;
+}
+.entityView .wide>table {
+    width: 100%;
+    table-layout: fixed;
+}
+.entityView .split2 {
+    display: inline-block;
+    column-count: 2;
+    column-rule: 4px solid white;
+}
+.entityView .split3 {
+    display: inline-block;
+    column-count: 3;
+    column-rule: 4px solid white;
+}
+.entityView .split4 {
+    display: inline-block;
+    column-count: 4;
+    column-rule: 4px solid white;
+}
+.entityView .split5 {
+    display: inline-block;
+    column-count: 5;
+    column-rule: 4px solid white;
+}
+.entityView thead {
+    font-size: 110%;
+    padding-top: 15px;
+    font-style: italic;
+    color: darkslategray;
+    margin: 0;
+}
+.entityView  {
+    max-width: 95%;
+    flex-wrap: wrap;
+    display: flex;
+    background-size: cover;
+    background-image: url(/systems/starwars/background.png);
+}
+.entityView .slots
+{
+    display: inline;
+}
+.entityView .slots .used
+{
+    display: inline;
+}
+.entityView .slots .unused
+{
+    display: inline;
+}
+.entityView .slot-buttons
+{
+    display: inline;
+}
+.entityView .slot-button
+{
+    display: inline;
+    padding: 0;
+}
+.entityView .slots:hover
+{
+    position: relative;
+    background-color: red;
+    z-index: 1;
+}
+.entityView .namedescription {
+    display: flex;
+    flex-flow: column;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.entityView .namedescription autocompleting-input{
+    width: 100%;
+}
+
+.entityView .editbutton{
+    flex-basis: 100%;
+}
+
+
+.entityView .customtype div {
+    margin-right: 5px;
+    display: inline;
+}
