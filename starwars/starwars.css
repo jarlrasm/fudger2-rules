@@ -1,3 +1,7 @@
+@font-face {
+    font-family: starjedi;
+    src: url(/systems/starwars/StarJedi.woff);
+  }
 .entityView pre{
     white-space: pre-wrap;
 }
@@ -59,11 +63,12 @@
     column-rule: 4px solid white;
 }
 .entityView thead {
-    font-size: 110%;
     padding-top: 15px;
-    font-style: italic;
-    color: darkslategray;
+    font-family: starjedi;
+    color: darkgray;
     margin: 0;
+    text-align: left;
+
 }
 .entityView  {
     max-width: 95%;
