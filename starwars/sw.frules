@@ -4,7 +4,32 @@ pointsToSkill(points)=
                         ) 
                         else ((toString((points/3)))+"d6")
                         )
+pointsToDice(points)=
+ dice
+  {
+    number=(points/3)
+    sides=6
+    bonus=(points-((points/3)*3))
+  }
 
+starDice (dice,extra) = ([dice],((baseline,throws)-> 
+  (if ((first(
+            ((first (throws))
+            .rolls))) == 6) then
+            (starDice (1d6,(extra + ((sum(((first (throws))
+            .rolls))) + ((first (throws))
+            .bonus)
+            ))))
+         else
+              (extra + ((
+              sum(
+                ((first (throws))
+                .rolls))) + ((first (throws))
+            .bonus)) )
+              )))
+              
+              
+              
 characterTable = ruleset
 {
     
@@ -16,15 +41,11 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
                 default=9
                 minvalue=1
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill(Points))
+                valuedice=(starDice((pointsToDice(Points)), 0))
+                render=(pointsToSkill(Points))
               }
 
           }
@@ -38,15 +59,11 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Dexterity').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Dexterity').Points))))
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Dexterity').Points))))
               }
 
           }
@@ -60,15 +77,12 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Knowledge').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Knowledge').Points))))
+                
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Knowledge').Points))))
               }
 
           }
@@ -82,15 +96,12 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Mechanical').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Mechanical').Points))))
+                
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Mechanical').Points))))
               }
 
           }
@@ -104,17 +115,13 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Perception').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Perception').Points))))
+                
                 default=0
                 minvalue=0
                 maxvalue=25
               }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Perception').Points))))
-              }
-
           }
         }
     'Strength Skills' = keyvalues
@@ -126,15 +133,12 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Strength').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Strength').Points))))
+                
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Strength').Points))))
               }
 
           }
@@ -148,15 +152,12 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Technical').Points)))), 0))
+                render=(pointsToSkill((Points + ((Attributes.'Technical').Points))))
+                
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill((Points + ((Attributes.'Technical').Points))))
               }
 
           }
@@ -170,15 +171,11 @@ characterTable = ruleset
           {
               Points=integer
               {
-                visible = editor
+                valuedice=(starDice((pointsToDice(Points)), 0))
+                render=(pointsToSkill(Points))
                 default=0
                 minvalue=0
                 maxvalue=25
-              }
-              Throw=string
-              {
-                
-                value=(pointsToSkill(Points))
               }
 
           }
@@ -326,3 +323,4 @@ Starwars = system
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]
 }
+
