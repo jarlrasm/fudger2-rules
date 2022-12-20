@@ -1,3 +1,5 @@
+#include "/systems/common.frules"
+
 pointsToSkill(points)=
  (if((points-((points/3)*3)) > 0) then (
                          ((toString((points/3)))+"d6+")+(toString((points-((points/3)*3))))
@@ -12,21 +14,52 @@ pointsToDice(points)=
     bonus=(points-((points/3)*3))
   }
 
-starDice (dice,extra) = ([dice],((baseline,throws)-> 
+rethrow (extra) = ([1d6],((baseline,throws)-> 
   (if ((first(
             ((first (throws))
             .rolls))) == 6) then
-            (starDice (1d6,(extra + ((sum(((first (throws))
+            (rethrow ((extra + (sum(((first (throws))
+            .rolls))))))
+         else
+              (extra + (
+              sum(
+                ((first (throws))
+                .rolls)))  )
+              )))
+
+
+oneOnWild(rolls) = 
+  (if((count(rolls)) == 1) then
+    0
+   else
+    ((( sum(rolls)) - 1) - (max(rolls)))
+  )                
+
+starDice (dice) = ([dice],((baseline,throws)-> 
+  (if ((first(
+            ((first (throws))
+            .rolls))) == 6) then
+            (rethrow ( ((sum(((first (throws))
             .rolls))) + ((first (throws))
             .bonus)
-            ))))
+            )))
          else
-              (extra + ((
+        (if ((first(
+            ((first (throws))
+            .rolls))) == 1) then
+              ((
+              oneOnWild(
+                ((first (throws))
+                .rolls))) + ((first (throws))
+            .bonus) 
+              )
+         else
+              ((
               sum(
                 ((first (throws))
                 .rolls))) + ((first (throws))
-            .bonus)) )
-              )))
+            .bonus)) 
+              ))))
               
               
               
