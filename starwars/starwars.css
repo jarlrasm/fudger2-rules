@@ -2,6 +2,15 @@
     font-family: starjedi;
     src: url(/systems/starwars/StarJedi.woff);
   }
+.main-menu{
+    background-image: url(/systems/starwars/background.png);
+}
+.tab-button{
+    background-color: wheat;
+}
+.tab-button.active{
+    background-color: lightgoldenrodyellow;
+}
 .entityView pre{
     white-space: pre-wrap;
 }
@@ -30,7 +39,6 @@
 .entityView .entityTable  {
     border-radius: 10px;
     background-color: black;
-    color: wheat;
     margin: 5px;
     display: inline-table;
     filter: drop-shadow(1px 1px 3px grey);
@@ -74,6 +82,9 @@
     max-width: 95%;
     flex-wrap: wrap;
     display: flex;
+}
+.entitypicker.wide {
+    color: wheat;
     background-size: cover;
     background-image: url(/systems/starwars/background.png);
 }
@@ -123,4 +134,64 @@
 .entityView .customtype div {
     margin-right: 5px;
     display: inline;
+}
+.editorbuttons {
+
+    background-color: rgba(0,0,0,0);
+}
+button {
+    background-color: wheat;
+    filter: drop-shadow(1px 1px 3px black);
+}
+button.entitypicker {
+    background-color: wheat;
+}
+.related-entities .entitylink {
+    background-color: wheat;
+    filter: drop-shadow(1px 1px 3px black);
+}
+.entitypicker {
+    background-color: wheat;
+}
+
+.popin {
+    background-size: cover;
+    background-image: url(/systems/starwars/background.png);
+}
+.popinbuttons {
+    border: none;
+    background-color: rgba(0,0,0,0);
+}
+.contentview{
+    background-color: #1c121c;
+    color: wheat;
+}
+.library-entity{
+    color: black;
+    background-color: wheat;
+}
+.library-entity .entityTable{
+    color: black;
+    background-color: wheat;
+}
+.chat {
+    color: black;
+}
+.session {
+    background-color: lightgoldenrodyellow;
+}
+.wide.entitypicker.current 
+{
+    background: green;
+}
+.commentcontent {
+    color: black;
+    background-color: wheat;
+}
+.comment{
+    background-color: wheat;
+}
+.add-comment-button{
+    background-color: wheat;
+
 }
