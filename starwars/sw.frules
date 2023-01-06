@@ -124,7 +124,7 @@ characterTable = ruleset
         {
             singular = "Mechanical Skill" 
             editablekeys = character
-            keys = ["Astrogation", "Beast riding", "Com scan", "Gunnery","Repulsorlift operation", "Shields", "Starship piloting"]
+            keys = ["Astrogation", "Beast riding", "Com scan", "Gunnery","Repulsorlift operation", "Shields", "Spaceship piloting"]
             valueType = custom
           {
               Points=integer
@@ -180,7 +180,7 @@ characterTable = ruleset
         {
             singular = "Technical Skill" 
             editablekeys = character
-            keys = ["Computer programming and repair", "Demolitions", "Droid programming and repair", "First aid", "Repulsorlift repair","Security","Starship repair"]
+            keys = ["Computer programming and repair", "Demolitions", "Droid programming and repair", "First aid", "Repulsorlift repair","Security","Spaceship repair"]
             valueType = custom
           {
               Points=integer
@@ -299,8 +299,17 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.items)
+        source=(secondary.'Other items')
         singular = "Item"
+        editable = character 
+    }
+    'Spaceships' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.Spaceships)
+        singular = "Spaceship"
         editable = character 
     }
 }
@@ -343,16 +352,85 @@ boolToVisible (flag)=
     then visible
    else 
       none)
+
+spaceshipTable= ruleset
+        {
+          Basics = table {
+            Type =string{}
+            Scale =string{}
+            Length =string{}
+            Skill =string{}
+            crew =integer{}
+            Maneuverability = string{}
+            Space=integer{}
+            Atmosphere= string{}
+            Hull= string{}
+            Shields= string{}
+            Hyperdrive= string{}
+          }
+          Sensors = 
+            table
+            {
+              Passive = table {
+                  Range=integer
+                  {
+                  }
+                  Value=string
+                  {
+                  }}
+              Scan = table {
+                  Range=integer
+                  {
+                  }
+                  Value=string
+                  {
+                  }}
+              Search = table {
+                  Range=integer
+                  {
+                  }
+                  Value=string
+                  {
+                  }}
+              Focus = table {
+                  Range=integer
+                  {
+                  }
+                  Value=string
+                  {
+                  }}
+            }
+          Weapons = 
+            list
+            {
+              singular = "Weapon"
+              editable = character 
+              source=(secondary.ShipWeapons)
+                  }
+              }
+      shipWeaponStats =ruleset
+              {
+            Stats= table
+            {
+                Skill= string{}
+                'Fire Control'= string{}
+                'Space Range'= string{}
+                'Atmosphere Range'= string{}
+                Damage= string{}
+            }
+        }
 Starwars = system
 {
     characters = characterTable
     creatures = characterTable
+    Spaceships = spaceshipTable
+    ShipWeapons = shipWeaponStats
     'Ranged weapons'= rangedWeaponStats
     'Melee weapons'= meleeWeaponStats
     Armour= armourStats
     'Other items'= otherStats
     description="Starwars d6"
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items"]
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]
 }
