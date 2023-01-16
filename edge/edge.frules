@@ -1,0 +1,105 @@
+#include "/systems/common.frules"
+
+
+edgeRoll = ([2d6], ((baseline,throws)->
+  (sum(
+       (
+        (first (throws)).rolls
+       )
+      )
+  )
+))
+
+characterTable = ruleset
+{
+  Traits = table
+  {
+    tableLayout = layout
+    {
+      columns = 1
+      rowTitle = hidden
+    }
+
+    'Main trait' = keyvalues
+    {
+      singular = "Main"
+      editablekeys = character
+      keys = ["Beskrivelse av main trait, editable by player"]
+      valueType = custom 
+      { 
+        Score = integer
+        { 
+          default = 0 
+          valuedice =  edgeRoll
+        }
+      }
+    }
+    'Side trait' = keyvalues
+    {
+      singular = "Side"
+      editablekeys = character
+      keys = ["Beskrivelse av side trait, editable by player"]
+      valueType = custom 
+      { 
+        Score = integer
+        { 
+          default = 0 
+          valuedice =  edgeRoll
+        }
+      }
+    }
+    'Trouble' = keyvalues
+    {
+      singular = "Trouble"
+      editablekeys = character
+      keys = ["Beskrivelse av trouble, editable by player"]
+    }
+  }
+
+
+  Basics = table
+  {
+    Fight = integer 
+    { 
+      default=0 
+      valuedice = edgeRoll
+    }
+    Sway = integer 
+    { 
+      default=0
+      valuedice=edgeRoll
+    }
+    Weird = integer 
+    { 
+      default=0
+      valuedice=edgeRoll
+    }
+    Strikes = slots
+    { 
+      number = 3
+      allowedchange = increaseAndClear
+    }
+  }
+}
+
+
+
+
+boolToVisible (flag)=
+  (if flag
+    then visible
+   else 
+      none)
+
+
+edge = system
+
+
+{
+    characters = characterTable
+    creatures = characterTable
+    description="Over The Edge"
+    secondaryTypes = []
+    quickdice =[2d6, 1d6]
+}
+
