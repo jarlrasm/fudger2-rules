@@ -1,9 +1,7 @@
 #include "/systems/common.frules"
 
 
-edgeRoll = (edgeRollImpl (0) )
-
-edgeRollImpl (in) = ([2d6], ((baseline,throws)->
+edgeRoll = ([2d6], ((baseline,throws)->
   (sum(
        (
         (first (throws)).rolls
