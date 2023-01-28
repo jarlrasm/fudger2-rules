@@ -12,7 +12,7 @@ edgeRoll = ([2d6], ((baseline,throws)->
 
 characterTable = ruleset
 {
-  Traits = table
+  'Main trait' = table
   {
     tableLayout = layout
     {
@@ -20,40 +20,48 @@ characterTable = ruleset
       rowTitle = hidden
     }
 
-    'Main trait' = keyvalues
+    'Name' = string
     {
-      singular = "Main"
-      editablekeys = character
-      keys = ["Beskrivelse av main trait, editable by player"]
-      valueType = custom 
-      { 
-        Score = integer
-        { 
-          default = 0 
-          valuedice =  edgeRoll
-        }
+      multiline = ( 1 == 1 )
+    }
+    Score = integer
+    { 
+      default = 0 
+      valuedice =  edgeRoll
+    }
+  }
+  
+  'Side trait' = table
+  {
+    tableLayout = layout
+    {
+      columns = 1
+      rowTitle = hidden
+    }
+
+    'Name' = string
+    {
+      multiline = ( 1 == 1 )
+    }
+    Score = integer
+    { 
+      default = 0 
+      valuedice =  edgeRoll
+    }
+  }
+  
+  'Trouble' = table
+  {
+    tableLayout = layout
+    {
+      columns = 1
+      rowTitle = hidden
+    }
+
+      'Name' = string
+      {
+        multiline = ( 1 == 1 )
       }
-    }
-    'Side trait' = keyvalues
-    {
-      singular = "Side"
-      editablekeys = character
-      keys = ["Beskrivelse av side trait, editable by player"]
-      valueType = custom 
-      { 
-        Score = integer
-        { 
-          default = 0 
-          valuedice =  edgeRoll
-        }
-      }
-    }
-    'Trouble' = keyvalues
-    {
-      singular = "Trouble"
-      editablekeys = character
-      keys = ["Beskrivelse av trouble, editable by player"]
-    }
   }
 
 
@@ -81,7 +89,6 @@ characterTable = ruleset
     }
   }
 }
-
 
 
 
