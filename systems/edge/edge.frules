@@ -48,11 +48,19 @@ characterTable = ruleset
         }
       }
     }
-    'Trouble' = keyvalues
+
+    'Trouble' = table
     {
-      singular = "Trouble"
-      editablekeys = character
-      keys = ["Beskrivelse av trouble, editable by player"]
+      tableLayout = layout
+      {
+        columns = 1
+        rowTitle = hidden
+      }
+
+        'Name' = string
+        {
+          multiline = ( 1 == 1 )
+        }
     }
   }
 
