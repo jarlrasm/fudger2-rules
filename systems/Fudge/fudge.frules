@@ -96,6 +96,15 @@ characterTable = ruleset
                 (Incapacitated.realvalue) = ('Near death'.realvalue)
                 ('Near death'.realvalue) = 0}}
     }
+
+       'Injury Levels' = table
+        {
+            Scratch ="1 - 3"
+            Hurt="4 - 6"
+            'Very hurt'="7 - 9"
+            Incapacitated ="10 - 12"
+            'Near death' ="13 +"
+        }
     'Melee weapons' = list
     {
         tableLayout = layout

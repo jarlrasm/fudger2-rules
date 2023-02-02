@@ -213,6 +213,13 @@ characterTable = ruleset
 
           }
         }
+    'Force powers' = list
+        {
+          visible=(boolToVisible ((General.'Force sensitive')))
+          singular = "Force Power" 
+          source=(secondary.'Force powers')
+          editable = character 
+        }
      General = table{
               'Force Points'=integer
               {
@@ -265,6 +272,22 @@ characterTable = ruleset
                   editable=live
                   radiogroup="injury"
           }
+    }
+       'Injury Levels'= table
+        {
+          'Stunned'="0 - 3"
+          'Wounded'="4 - 8"
+          'Incapacitated'="9 - 12"
+          'Mortally wounded'="13 - 15"
+          'Killed'="16+"
+        }
+    Difficulty=table{
+      'Very Easy' = "1 - 5"
+      Easy = "6 - 10"
+      Moderate = "11 - 15"
+      Difficult = "16 - 20"
+      'Very Difficult' = "21 - 30"
+      Heroic = "31+"
     }
 
     'Melee weapons' = list
@@ -347,6 +370,7 @@ otherStats= ruleset
             {
             }
         }
+
 boolToVisible (flag)=
   (if flag
     then visible
@@ -419,6 +443,38 @@ spaceshipTable= ruleset
                 Damage= string{}
             }
         }
+
+forcePowerStats= ruleset
+        {
+                'Power'=keyvalues{
+                  keys=["Sense","Control", "Alter"]
+                  valueType = custom 
+                  { 
+                    Used = bool
+                    { 
+                      default = 0 
+                      valuedice =  edgeRoll
+                    }
+                    Difficulty = string
+                    { 
+                      visible=(boolToVisible (Used))
+                      keys=["Very Easy","Easy", "Moderate","Difficult","Very Difficult","Heroic"]
+                    }
+                  }
+                }
+                Details = table
+                {
+                  Effect=string{
+                    multiline = ( 1 == 1 )}
+                  'Required Powers' = string
+                  {
+                  }
+                  'Time to Use' = string{}
+                  'Keep Up' = bool{}
+                }
+
+        }
+
 Starwars = system
 {
     characters = characterTable
@@ -427,10 +483,11 @@ Starwars = system
     ShipWeapons = shipWeaponStats
     'Ranged weapons'= rangedWeaponStats
     'Melee weapons'= meleeWeaponStats
+    'Force powers' = forcePowerStats
     Armour= armourStats
     'Other items'= otherStats
     description="Starwars d6"
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items","Force powers"]
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]
 }
