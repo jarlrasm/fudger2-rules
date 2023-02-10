@@ -15,6 +15,16 @@ nameAndDescription(name,description)=ruleset
     Description=description
 }
 
+
+entityTypeDescription(name,singular,forEncounters, image, secondaries)=ruleset
+{
+    Name=name
+    Singular=singular
+    ForEncounters=forEncounters
+    Image=image
+    Secondaries=secondaries
+}
+
 max (list)=
     (first ( (reverse ((sort 
     (list))))))

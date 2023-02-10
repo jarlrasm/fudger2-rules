@@ -488,6 +488,9 @@ Starwars = system
     'Other items'= otherStats
     description="Starwars d6"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items","Force powers"]
+    extraEntityTypes = [
+      (entityTypeDescription("Spaceships","spaceship",(1 == 1), "/systems/starwars/spaceship-entity.png", ["ShipWeapons"]))
+      ]
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]
 }
