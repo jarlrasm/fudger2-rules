@@ -465,7 +465,7 @@ forcePowerStats= ruleset
                 Details = table
                 {
                   Effect=string{
-                    multiline = ( 1 == 1 )}
+                    multiline = true}
                   'Required Powers' = string
                   {
                   }
@@ -489,7 +489,7 @@ Starwars = system
     description="Starwars d6"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items","Force powers"]
     extraEntityTypes = [
-      (entityTypeDescription("Spaceships","spaceship",(1 == 1), "/systems/starwars/spaceship-entity.png", ["ShipWeapons"]))
+      (entityTypeDescription("Spaceships","spaceship",true, "/systems/starwars/spaceship-entity.png", ["ShipWeapons"]))
       ]
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]
