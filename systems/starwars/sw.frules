@@ -339,6 +339,10 @@ characterTable = ruleset
 
 meleeWeaponStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Damage=string
@@ -347,6 +351,10 @@ meleeWeaponStats =ruleset
         }
 rangedWeaponStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Damage=string
@@ -359,6 +367,10 @@ rangedWeaponStats =ruleset
         }
 armourStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 'Armor Value'=string{}
@@ -446,6 +458,10 @@ spaceshipTable= ruleset
 
 forcePowerStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/spell.svg"
+            }
                 'Power'=keyvalues{
                   keys=["Sense","Control", "Alter"]
                   valueType = custom 

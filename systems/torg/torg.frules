@@ -922,7 +922,7 @@ characterTable = ruleset
         {
           size =wide
         }
-        source=(secondary.items)
+        source=(secondary.'Other items')
         singular = "Item"
         editable = character 
     }
@@ -970,6 +970,10 @@ characterTable = ruleset
 
 rangedStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Tech=integer
@@ -988,6 +992,10 @@ rangedStats =ruleset
         }
 meleeStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Tech=integer
@@ -1002,6 +1010,10 @@ meleeStats =ruleset
         }
 armourStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Tech=integer
@@ -1016,6 +1028,10 @@ armourStats= ruleset
         }
 spellStats =ruleset
 {
+  rulesetConfiguration =
+  {
+      defaultImage = "/images/spell.svg"
+  }
   Stats= table
   {
       'Axiom Level'=integer
@@ -1036,6 +1052,10 @@ spellStats =ruleset
 }
 perkStats =ruleset
 {
+  rulesetConfiguration =
+  {
+      defaultImage = "/images/spell.svg"
+  }
   Stats= table
   {
       'Cosm'=string

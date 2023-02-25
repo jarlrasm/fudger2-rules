@@ -5,6 +5,10 @@
 
 weaponStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Damage=string
@@ -17,6 +21,10 @@ weaponStats =ruleset
         }
 armourStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 AC=integer
@@ -41,6 +49,7 @@ spellStats =ruleset
                     sort=(Stats.level)
                     }
                 filters= [(Stats.level)]
+                defaultImage = "/images/spell.svg"
             }
             Stats= table
             {

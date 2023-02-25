@@ -137,7 +137,7 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.items)
+        source=(secondary.'Other items')
         singular = "Item"
         editable = character 
     }
@@ -150,6 +150,10 @@ characterTable = ruleset
 }
 weaponStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 Damage=modifier
@@ -159,11 +163,22 @@ weaponStats =ruleset
         }
 armourStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
             Stats= table
             {
                 'Damage Capacity'=modifier
                 {minvalue = -6
                 maxvalue = +6}
+            }
+        }
+spellStats= ruleset
+        {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/spell.svg"
             }
         }
 Fudge = system
@@ -172,6 +187,7 @@ Fudge = system
     creatures = characterTable
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats
+    'Spells'= spellStats
     Armour= armourStats
     description="Simple Fudge rules"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items"]
