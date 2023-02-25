@@ -4,6 +4,12 @@ creatureTable = ruleset
   rulesetConfiguration = configuration
   {
     initative=(Basics.'Initiative')
+    sortedBy = sort
+    {
+        prefix="Challenge rating "
+        sort=(Basics.Challenge)
+        }
+    filters= [(Stats.level)]
   }
   Basics = table
   {

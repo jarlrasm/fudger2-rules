@@ -33,10 +33,19 @@ armourStats= ruleset
         }
 spellStats =ruleset
         {
+            rulesetConfiguration =
+            {
+                sortedBy = sort
+                {
+                    prefix="Level"
+                    sort=(Stats.level)
+                    }
+                filters= [(Stats.level)]
+            }
             Stats= table
             {
                 level=integer
-                {default=0, sortable= true }
+                {default=0}
                 'Casting time'=string
                 {}
                 'Range'=string
