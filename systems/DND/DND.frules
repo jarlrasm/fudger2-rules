@@ -48,7 +48,11 @@ spellStats =ruleset
                     prefix="Level"
                     sort=(Stats.level)
                     }
-                filters= [(Stats.level)]
+                filters= [
+                    filter {
+                        name="Level"
+                        prefix="Level"
+                        filter=(Stats.level)}]
                 defaultImage = "/images/spell.svg"
             }
             Stats= table

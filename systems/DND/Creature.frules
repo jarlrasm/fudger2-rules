@@ -9,7 +9,11 @@ creatureTable = ruleset
         prefix="Challenge rating "
         sort=(Basics.Challenge)
         }
-    filters= [(Stats.level)]
+                filters= [
+                    filter {
+                        name="Challenge"
+                        prefix=""
+                        filter=(Basics.Challenge)}]
   }
   Basics = table
   {
