@@ -1031,6 +1031,21 @@ spellStats =ruleset
   rulesetConfiguration =
   {
       defaultImage = "/images/spell.svg"
+      sortedBy = sort
+      {
+          prefix="Axiom Level"
+          sort=(Stats.'Axiom Level')
+      }
+      filters= [
+          filter {
+              name="Axiom Level"
+              prefix=""
+              filter=(Stats.'Axiom Level')},
+          filter {
+              name="Type"
+              prefix=""
+              filter=(Stats.Type)}
+              ]
   }
   Stats= table
   {
@@ -1054,6 +1069,16 @@ perkStats =ruleset
 {
   rulesetConfiguration =
   {
+      sortedBy = sort
+      {
+          prefix=""
+          sort=(Stats.level)
+      }
+      filters= [
+          filter {
+              name="Cosm"
+              prefix=""
+              filter=(Stats.Cosm)}]
       defaultImage = "/images/spell.svg"
   }
   Stats= table
