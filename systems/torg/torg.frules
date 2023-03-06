@@ -1040,7 +1040,7 @@ spellStats =ruleset
           filter {
               name="Lists"
               prefix=""
-              filter=(Stats.Lists)},
+              filter=(split (",", (Stats.Lists)))},
           filter {
               name="Type"
               prefix=""
@@ -1080,9 +1080,14 @@ perkStats =ruleset
       }
       filters= [
           filter {
+              name="Type"
+              prefix=""
+              filter=(Stats.Type)},
+          filter {
               name="Cosm"
               prefix=""
-              filter=(split (",",(replace("*", "" ,(Stats.Cosm)))))}]
+              filter=(split (",",(replace("*", "" ,(Stats.Cosm)))))}
+          ]
       defaultImage = "/images/spell.svg"
   }
   Stats= table
@@ -1090,6 +1095,10 @@ perkStats =ruleset
       'Cosm'=string
       {}
       'Prereq'=string
+      {}
+      'Type'=string
+      {}
+      'Source'=string
       {}
   }
 }
