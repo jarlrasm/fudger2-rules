@@ -1039,6 +1039,7 @@ spellStats =ruleset
       filters= [
           filter {
               name="Lists"
+              name="Lists"
               prefix=""
               filter=(split (",", (Stats.Lists)))},
           filter {
@@ -1062,6 +1063,10 @@ spellStats =ruleset
       'Range'=string
       {}
       'Duration'=string
+      {}
+      'Lists'=string
+      {}
+      'Source'=string
       {}
       'Lists'=string
       {}
