@@ -1087,7 +1087,7 @@ perkStats =ruleset
           filter {
               name="Cosm"
               prefix=""
-              filter=(split (",",(replace("*", "" ,(Stats.Cosm)))))}
+              filter=(split (",", (Stats.Cosm)))}
           ]
       defaultImage = "/images/spell.svg"
   }
