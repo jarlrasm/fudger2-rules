@@ -1038,9 +1038,9 @@ spellStats =ruleset
       }
       filters= [
           filter {
-              name="Axiom Level"
+              name="Lists"
               prefix=""
-              filter=(Stats.'Axiom Level')},
+              filter=(split (",", (Stats.Lists)))},
           filter {
               name="Type"
               prefix=""
@@ -1063,6 +1063,11 @@ spellStats =ruleset
       {}
       'Duration'=string
       {}
+      'Lists'=string
+      {}
+      'Source'=string
+      {}
+      
   }
 }
 perkStats =ruleset
@@ -1076,9 +1081,14 @@ perkStats =ruleset
       }
       filters= [
           filter {
+              name="Type"
+              prefix=""
+              filter=(Stats.Type)},
+          filter {
               name="Cosm"
               prefix=""
-              filter=(split (",",(replace("*", "" ,(Stats.Cosm)))))}]
+              filter=(split (",", (Stats.Cosm)))}
+          ]
       defaultImage = "/images/spell.svg"
   }
   Stats= table
@@ -1086,6 +1096,10 @@ perkStats =ruleset
       'Cosm'=string
       {}
       'Prereq'=string
+      {}
+      'Type'=string
+      {}
+      'Source'=string
       {}
   }
 }
