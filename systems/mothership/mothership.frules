@@ -1,0 +1,403 @@
+#include "/systems/common.frules"
+
+
+edgeRoll = ([1d100], ((baseline,throws)->
+  (sum(
+       (
+        (first (throws)).rolls
+       )
+      )
+  )
+))
+
+characterTable = ruleset
+{
+  Traits = table
+  {
+    tableLayout = layout
+    {
+      columns = 1
+      rowTitle = hidden
+    }
+
+    'Main trait' = keyvalues
+    {
+      singular = "Main"
+      editablekeys = character
+      keys = ["Beskrivelse av main trait, editable by player"]
+      valueType = custom 
+      { 
+        Score = integer
+        { 
+          default = 0 
+          valuedice =  edgeRoll
+        }
+      }
+    }
+    'Side trait' = keyvalues
+    {
+      singular = "Side"
+      editablekeys = character
+      keys = ["Beskrivelse av side trait, editable by player"]
+      valueType = custom 
+      { 
+        Score = integer
+        { 
+          default = 0 
+          valuedice =  edgeRoll
+        }
+      }
+    }
+
+    'Trouble' = table
+    {
+      tableLayout = layout
+      {
+        columns = 1
+        rowTitle = hidden
+      }
+
+        'Name' = string
+        {
+          multiline = true
+        }
+    }
+  }
+
+
+  Stats = table
+  {
+    Strength = integer 
+    { 
+      default=0 
+      valuedice = edgeRoll
+    }
+    Speed = integer 
+    { 
+      default=0
+      valuedice=edgeRoll
+    }
+    Intelect = integer 
+    { 
+      default=0
+      valuedice=edgeRoll
+    }
+    Combat = integer
+    { 
+      default=0
+      valuedice = edgeRoll
+    }
+  }
+
+  Saves = table
+  {
+    Sanity = integer
+    {
+      default=0
+      valuedice=edgeRoll
+    }
+    Fear = integer
+    {
+      default=0
+      valuedice=edgeRoll
+    }
+    Body = integer
+    {
+      default=0
+      valuedice=edgeRoll
+    }
+  }
+
+  Health = table
+  { 
+    tableLayout = layout
+    {
+      columns = 1
+      rowTitle = hidden
+    }
+    Health = table
+    {
+      Current = integer
+      {
+        default = 0
+      }
+      Maximum = integer
+      {
+        default = 0
+      }
+    }
+    Wounds = table
+    {
+      Current = integer
+      {
+        default = 0
+      }
+      Maximum = integer
+      {
+        default = 2
+      }
+    }
+    Stress = table
+    {
+      Current = integer
+      {
+        default = 2
+      }
+      Minimum = integer
+      {
+        default = 2
+      }
+    }
+  }
+
+  Skills = table
+  {
+    tableLayout = layout
+    { 
+      columns = 3
+      rowTitle=hidden
+    }
+    Trained = table
+    {
+      Linguistics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Zoology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Botany = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Geology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Industrial Equipment' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Jury Rigging' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Chemistry = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Computers = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Zero G' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Mathematics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Art = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Archaeology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Theology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Military Training' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Rimwise = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Athletics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      
+    }
+    Expert = table
+    {
+      Psychology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Pathology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Field Medicine' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Ecology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Asteroid Mining' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Mechanical Repair' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Explosives = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Pharmacology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Hacking = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Piloting = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Physics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Mysticism = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Wilderness Survival' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Firearms = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Hand to hand Combat' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+    }
+    Master = table
+    {
+      Sophontology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Exobiology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Surgery = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Planetology = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Robotics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Engineering = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Cybernetics = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      'Artificial Intelligence' = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Hyperspace = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Xenoesotericism = custom
+      { 
+        Proficient = bool
+        {}
+      }
+      Command = custom
+      { 
+        Proficient = bool
+        {}
+      }
+    }
+  }
+}
+
+
+
+
+boolToVisible (flag)=
+  (if flag
+    then visible
+   else 
+      none)
+
+
+mothership = system
+
+
+{
+    characters = characterTable
+    creatures = characterTable
+    description="Mothership"
+    secondaryTypes = []
+    quickdice =[1d100, 1d20]
+}
+
