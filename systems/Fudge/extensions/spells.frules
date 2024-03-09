@@ -1,0 +1,24 @@
+
+Fudge = system
+{
+    'Spells'= spellStats
+    secondaryTypes = ["Spells"]
+}
+
+spellStats= ruleset
+        {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/spell.svg"
+            }
+        }
+        
+characterTable = ruleset
+{
+    Spells = list
+    {
+        source=(secondary.Spells)
+        singular = "Spell"
+        editable = character 
+    }
+}

@@ -141,12 +141,6 @@ characterTable = ruleset
         singular = "Item"
         editable = character 
     }
-    Spells = list
-    {
-        source=(secondary.Spells)
-        singular = "Spell"
-        editable = character 
-    }
 }
 weaponStats =ruleset
         {
@@ -174,23 +168,15 @@ armourStats= ruleset
                 maxvalue = +6}
             }
         }
-spellStats= ruleset
-        {
-            rulesetConfiguration =
-            {
-                defaultImage = "/images/spell.svg"
-            }
-        }
 Fudge = system
 {
     characters = characterTable
     creatures = characterTable
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats
-    'Spells'= spellStats
     Armour= armourStats
     description="Simple Fudge rules"
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
     initiativeCompare(item1,item2) = (compare ((intValueFromEnumString (fudgevalues,item1)), (intValueFromEnumString (fudgevalues,item2))))
     quickdice =[4df]
 }
