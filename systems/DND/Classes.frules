@@ -1,4 +1,11 @@
 #include "/systems/DND/Generated/CharacterClasses.frules"
+
+libraryClasses =
+    (map ( ((x)->(class((x.Name),(x.HitDie), [],(x.SpellcastingAbilityModifier),[ ],[]))) 
+    ,(library.'Classes')))
+
+classInfo = (concat(generatedClasses,libraryClasses))
+
 class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels)=ruleset
 {
     Name=name
