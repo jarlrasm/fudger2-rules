@@ -1,11 +1,8 @@
 hitDie(classname,level)=((first ((filter (((class)->((class.Name) == classname)), classInfo)))).HitDie)
 
 maxHitpoints(classname,level,conModifier) = 
-    ((if((((hitDie(classname,level))/2)*2) < (hitdie(classname,level))) then
-        (((((hitDie(classname,level))/2)+1)*(level+1))+(conModifier*level))
-      else
-        ((((hitDie(classname,level))/2)*(level+1))+(conModifier*level))
-      ) + (bonusWithValue ((allSources(characterTable)), "\HitPoints\s*\+([0-9])\b" )))
+    (((((((hitDie(classname,level))/2)+1)*(level-1))+(hitDie(classname,level)))+(conModifier*level))
+      + (bonusWithValue ((allSources(characterTable)), "\HitPoints\s*\+([0-9])\b" )))
 
 hitpoints = table
   {
