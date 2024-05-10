@@ -74,8 +74,8 @@ basicsTable =table
               }
     'Initiative'=modifier
               {
-                value=((('Ability scores'.'Dex').Modifier) + 
-                  (jackBonus(characterTable)))
+                value=(((('Ability scores'.'Dex').Modifier) + 
+                  (jackBonus(characterTable))) +(bonusWithValue ((allSources(characterTable)), "\bInitiative\s*\+([0-9])\b" )))
                 valuedice= (D20Roll (characterTable))
                 editable=none
               }

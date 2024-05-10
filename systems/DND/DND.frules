@@ -69,6 +69,28 @@ spellStats =ruleset
                 {}
             }
         }
+
+
+classStats = ruleset {
+    Stats=table
+    {
+        Name =string {}
+        HitDie = integer
+                    {default=6}
+        SavingThrows=list
+            {
+                valueType = name
+            }
+        SpellcastingAbilityModifier=string{}
+        Features=list{
+                valueType = nameAndDescription
+                }
+        Spellevels=list
+            {
+                valueType = classSpellevel
+            }
+    }
+}
 DND5e = system
 {
     characters = characterTable
@@ -76,12 +98,13 @@ DND5e = system
 
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats
+    Classes = classStats
     Armour= armourStats
     Spells = spellStats
 
     description="DND 5e rules"
     libraries= ["/systems/DND/dndsrd.json"]
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features"]
 
     initiativeCompare(item1,item2) = (compare (item1 ,item2))
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
