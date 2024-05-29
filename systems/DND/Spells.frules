@@ -1,6 +1,6 @@
 
 getSpellLevelForClass (classname) =
-  ((first ((filter (((class)->((class.Name) == classname)), classInfo)))).SpellLevels)
+  ((first ((filter (((class)->((class.Name) == classname)), (classInfo (libraryClasses)))))).SpellLevels)
 
 getClassLevlesForSpellLevels (spelllevels, spellevel)=
   ((first ((filter (((spl)->((spl.SpellLevel) == spellevel)), spelllevels)))).SpellsForLevelList)
@@ -65,20 +65,20 @@ spellTable= table
         {
           'Spellcasting ability' = modifier
                 {
-                  value=(spellCastingAbilty ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+                  value=(spellCastingAbilty ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
 
                   valuedice= (D20Roll (characterTable))
                   editable=none
                 }
                 'Spell save DC' = integer
                 {
-                  value=(spellCastingDC ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+                  value=(spellCastingDC ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
 
                   editable=none
                 }
                 'Spell attack bonus' = modifier
                 {
-                  value=(spellAttackModifier ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), classInfo)))), characterTable) )
+                  value=(spellAttackModifier ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
 
                   valuedice= (D20Roll (characterTable))
                   editable=none

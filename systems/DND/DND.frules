@@ -74,20 +74,35 @@ spellStats =ruleset
 classStats = ruleset {
     Stats=table
     {
-        Name =string {}
         HitDie = integer
                     {default=6}
         SavingThrows=list
             {
-                valueType = name
+                valueType = custom{Attr=string{
+                  keys=["Str","Dex", "Con","Int","Wis","Cha"]}}
             }
-        SpellcastingAbilityModifier=string{}
+        SpellcastingAbilityModifier=string{
+                  keys=["None","Str","Dex", "Con","Int","Wis","Cha"]}
         Features=list{
-                valueType = nameAndDescription
+                valueType = custom
+                    {
+                        Level=integer{}
+                        Name=string{}
+                        Description=string{}
+                    }
                 }
-        Spellevels=list
+        Spellevels=keyvalues
             {
-                valueType = classSpellevel
+                keys=["1","2", "3", "4","5","6","7","8","9"]
+                valueType = custom{
+                    levels = keyvalues {
+                            keys=["1","2", "3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"]
+                            valueType=custom{
+                                'Number of spells' =integer {default=0}
+                            }
+                        
+                    }
+                }
             }
     }
 }
@@ -105,7 +120,7 @@ DND5e = system
     description="DND 5e rules"
     libraries= ["/systems/DND/dndsrd.json"]
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features"]
-
+    otherLibararyTypes = ["Classes"]
     initiativeCompare(item1,item2) = (compare (item1 ,item2))
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
 

@@ -1,10 +1,5 @@
 #include "/systems/DND/Generated/CharacterClasses.frules"
 
-libraryClasses =
-    (map ( ((x)->(class((x.Name),(x.HitDie), [],(x.SpellcastingAbilityModifier),[ ],[]))) 
-    ,(library.'Classes')))
-
-classInfo = (concat(generatedClasses,libraryClasses))
 
 class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels)=ruleset
 {
@@ -38,7 +33,7 @@ classTable=table
       {
           Name = string
           {
-            keys = (map (((x)->(x.Name)), classInfo))
+            keys = (map (((x)->(x.Name)), (classInfo (libraryClasses))))
             default="Unknown"
           }
           Levels = integer
