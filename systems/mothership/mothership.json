@@ -1,0 +1,70 @@
+{
+    "name": "Mothershipstuff",
+    "description": "Stuff for mothership",
+    "entities": [
+        {
+            "type": "Weapons",
+            "name": "Boarding Axe",
+            "description": "",
+            "rulesets": [
+                {
+                    "system": "mothership",
+                    "implementation": {
+                        "weaponStats": {
+                            "Stats": {
+                                "Cost": "150cr",
+                                "Range": "Adjacent",
+                                "Damage": "2d10",
+                                "Shots": "N/A",
+                                "Wound": "Gore [+]",
+                                "Special": ""
+
+                            }
+                        }
+                    }
+                }
+            ]
+
+        },
+        {
+            "type": "Armor",
+            "name": "Vaccsuit",
+            "description": "Designet for outer space operation.",
+            "rulesets": [
+                {
+                    "system": "mothership",
+                    "implementation": {
+                        "armorStats": {
+                            "Stats": {
+                                "Cost": "10kcr",
+                                "AP": 3,
+                                "O2": "12 hrs",
+                                "Speed": "[-]",
+                                "Special": "Includes short-range comms, headlamp, and radiation shielding. Decompression within 1d5 rounds if punctured."
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Traits",
+            "name": "Marine",
+            "description": "are handy in a fight, but whenever they Panic it may cause problems for the rest of the crew.",
+            "rulesets": [
+                {
+                    "system": "mothership",
+                    "implementation": {
+                        "traitStats": {
+                            "Stats": {
+                                "Adjust": "+10 combat, +10 body save, +20 fear save, +1 max wounds",
+                                "Trauma response": "Whenever you panic, every close friendly player must make a fear save.",
+                                "Skills": "Military training, Athletics. Bonus: 1 Expert Skill OR 2 Trained Skills."
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
