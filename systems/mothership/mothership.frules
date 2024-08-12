@@ -1,55 +1,27 @@
 #include "/systems/common.frules"
 
 
-edgeRoll = ([1d100], ((baseline,throws)->
+hundred = ([1d100], ((baseline,throws)->
   (sum(
        (
         (first (throws)).rolls
        )
-      )
-  )
-))
+))))
+
+
+
 
 characterTable = ruleset
 {
-  Traits = table
+  Basics = table
   {
     tableLayout = layout
-    {
-      columns = 1
-      rowTitle = hidden
-    }
-
-    'Main trait' = keyvalues
-    {
-      singular = "Main"
-      editablekeys = character
-      keys = ["Beskrivelse av main trait, editable by player"]
-      valueType = custom 
-      { 
-        Score = integer
-        { 
-          default = 0 
-          valuedice =  edgeRoll
-        }
+      {
+        columns = 1
+        rowTitle = hidden
       }
-    }
-    'Side trait' = keyvalues
-    {
-      singular = "Side"
-      editablekeys = character
-      keys = ["Beskrivelse av side trait, editable by player"]
-      valueType = custom 
-      { 
-        Score = integer
-        { 
-          default = 0 
-          valuedice =  edgeRoll
-        }
-      }
-    }
-
-    'Trouble' = table
+    
+    'High Score' = table
     {
       tableLayout = layout
       {
@@ -57,35 +29,64 @@ characterTable = ruleset
         rowTitle = hidden
       }
 
-        'Name' = string
-        {
-          multiline = true
-        }
+      'High Score' = integer
+      {
+        default=0
+        editable=live
+      }
+    }
+
+    Class = table
+    {
+      tableLayout = layout
+      {
+        columns = 1
+      }
+      
+      Marine = bool
+      {
+        editable=live
+        radiogroup="class"
+      }
+      Android = bool
+      {
+        editable=live
+        radiogroup="class"
+      }
+      Scientist = bool
+      {
+        editable=live
+        radiogroup="class"
+      }
+      Teamster = bool
+      {
+        editable=live
+        radiogroup="class"
+      }
     }
   }
-
-
+  
   Stats = table
   {
     Strength = integer 
-    { 
-      default=0 
-      valuedice = edgeRoll
+    {
+      default = 0
+      valuedice = hundred
     }
     Speed = integer 
     { 
       default=0
-      valuedice=edgeRoll
+      valuedice=hundred
     }
-    Intelect = integer 
+    Intellect = integer 
     { 
       default=0
-      valuedice=edgeRoll
+      valuedice=hundred
     }
     Combat = integer
     { 
       default=0
-      valuedice = edgeRoll
+      valuedice = hundred
     }
   }
 
@@ -94,17 +95,17 @@ characterTable = ruleset
     Sanity = integer
     {
       default=0
-      valuedice=edgeRoll
+      valuedice=hundred
     }
     Fear = integer
     {
       default=0
-      valuedice=edgeRoll
+      valuedice=hundred
     }
     Body = integer
     {
       default=0
-      valuedice=edgeRoll
+      valuedice=hundred
     }
   }
 
@@ -120,6 +121,7 @@ characterTable = ruleset
       Current = integer
       {
         default = 0
+        editable = live
       }
       Maximum = integer
       {
@@ -131,6 +133,7 @@ characterTable = ruleset
       Current = integer
       {
         default = 0
+        editable = live
       }
       Maximum = integer
       {
@@ -142,6 +145,7 @@ characterTable = ruleset
       Current = integer
       {
         default = 2
+        editable = live
       }
       Minimum = integer
       {
@@ -150,14 +154,7 @@ characterTable = ruleset
     }
   }
 
-  Skills = table
-  {
-    tableLayout = layout
-    { 
-      columns = 3
-      rowTitle=hidden
-    }
-    Trained = table
+  'Trained 10' = table
     {
       Linguistics = custom
       { 
@@ -239,9 +236,9 @@ characterTable = ruleset
         Proficient = bool
         {}
       }
-      
     }
-    Expert = table
+
+    'Expert 15' = table
     {
       Psychology = custom
       { 
@@ -319,7 +316,8 @@ characterTable = ruleset
         {}
       }
     }
-    Master = table
+
+    'Master 20' = table
     {
       Sophontology = custom
       { 
@@ -377,11 +375,142 @@ characterTable = ruleset
         {}
       }
     }
+  
+  Traits = list
+  {
+    tableLayout = layout
+    {
+        size = wide
+    }
+          source=(secondary.Traits)
+          singular = "Trait"
+          editable = character 
+  }
+
+  'Weapons' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source=(secondary.Weapons)
+        singular = "Weapon"
+        editable = character 
+    }
+
+  'Armor' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source=(secondary.Armor)
+        singular = "Armor"
+        editable = character 
+    }
+  
+  'Equipment' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source=(secondary.Equipment)
+        singular = "Equipment"
+        editable = character 
+    }
+  
+}
+
+creatureTable = ruleset
+{
+  rulesetConfiguration =
+  {
+      defaultImage = "/images/armour.svg"
+  }
+  Stats = table
+  {
+    Combat = integer {}
+    Attack = string {}
+    Instinct = integer {}
+    AP = integer {}
+    Wounds = integer {}
+    'Current Wounds' = integer { editable=live }
+    Health = integer {}
+    'Current Health' = integer { editable=live }
+    Special = string {}
   }
 }
 
+weaponStats =ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+    }
+    Stats= table
+    {
+        Cost=string
+        {}
+        Range=string
+        {}
+        Damage=string
+        {}
+        Shots=string
+        {}
+        Wound=string
+        {}
+        Special=string
+        {}
+    }
+}
 
+armorStats = ruleset
+{
+  rulesetConfiguration = 
+  {
+    defaultImage = "/images/armour.svg"
+  }
+  Stats = table
+  {
+    Cost=string
+    {}
+    AP = integer
+    {}
+    O2 = string
+    {}
+    Speed = string
+    {}
+    Special = string
+    {}
+  }
+}
 
+equipmentStats = ruleset 
+{
+  rulesetConfiguration =
+  {
+    defaultImage = "/images/armour.svg"
+  }
+  Stats = table
+  {
+    Cost=string {}
+  }
+}
+
+traitStats = ruleset
+{
+  rulesetConfiguration =
+  {
+    defaultImage = "/images/armour.svg"
+  }
+  Stats = table
+  {
+    Adjust = string {}
+    'Trauma response' = string {}
+    Skills = string {}
+  }
+}
 
 boolToVisible (flag)=
   (if flag
@@ -395,9 +524,13 @@ mothership = system
 
 {
     characters = characterTable
-    creatures = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Equipment = equipmentStats
+    Traits = traitStats
     description="Mothership"
-    secondaryTypes = []
-    quickdice =[1d100, 1d20]
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Traits"]
+    quickdice =[1d100, 1d20, 1d10]
 }
 
