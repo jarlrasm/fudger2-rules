@@ -1,0 +1,178 @@
+bonus(points,difficulty)=
+     ((if (points < 1) then -4
+      else 
+      (if (points < 2) then   0
+      else
+      (if (points < 3) then   1
+      else
+       (if (points < 5) then  2
+      else
+       (if (points < 9) then 3
+      else 
+      (if (points < 13) then   4
+      else 
+      (if (points < 17) then   5
+      else 
+        6
+      ))))))) - 
+      (if (difficulty == "Easy") then 0
+      else (if (difficulty == "Average") then 1
+      else 2 )
+      ))
+fromAttribute(attribute) =
+    (if (attribute == "ST") then ((((characterTable.Attributes).ST)/10)+10)
+     else (if (attribute == "DX") then ((((characterTable.Attributes).DX)/20)+10)
+     else (if (attribute == "IQ") then ((((characterTable.Attributes).IQ)/20)+10)
+     else ((((characterTable.Attributes).HT)/10)+10)
+    )
+    )
+    )
+skillvalue(points,attribute,difficulty) =((fromAttribute(attribute))+(bonus(points,difficulty)))
+
+characterTable = ruleset
+{
+    Attributes = table
+        {
+            ST = integer {
+                valuedice=3d6
+                render=(toString(((ST/10)+10)))
+            }
+            DX=integer{
+                valuedice=3d6
+                render=(toString(((DX/20)+10)))
+            }
+            IQ=integer{
+                valuedice=3d6
+                render=(toString(((IQ/20)+10)))
+            }
+            HT=integer{
+                valuedice=3d6
+                render=(toString(((HT/10)+10)))
+            }
+        }
+
+    Skills = keyvalues
+        {
+            singular = "Skill" 
+            editablekeys = character
+            valueType = custom {
+                Name=string{}
+                Value=integer {
+                 value=(skillvalue((Details.Points), (Details.'Based on'),(Details.'Difficulty')))
+                valuedice=3d6
+
+                }
+                Details=table{
+                    visible=editor
+                Points=integer{}
+                'Based on'=string {
+                    keys = ["ST","DX","IQ","HT"]
+                    }
+                'Difficulty'=string {
+                    keys = ["Easy","Average","Hard"]
+                }}
+            }
+        }
+    Advantages = list
+    {
+        singular = "Advantage"
+        editable = character
+        source=(secondary.'Advantage')
+    }
+    Disadvantages = list
+    {
+        singular = "Disadvantage"
+        editable = character
+        source=(secondary.'Disadvantage')
+    }
+    'Melee weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.'Melee weapons')
+        singular = "Melee weapon"
+        editable = character 
+    }
+    'Ranged weapons' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.'Ranged weapons')
+        singular = "Ranged weapon"
+        editable = character 
+    }
+    'Armour' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.Armour)
+        singular = "Armour"
+        editable = character 
+    }
+    'Other items' = list
+    {
+        tableLayout = layout
+        {
+        }
+        source=(secondary.'Other items')
+        singular = "Item"
+        editable = character 
+    }
+}
+weaponStats =ruleset
+        {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
+            Stats= table
+            {
+            }
+        }
+armourStats= ruleset
+        {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+            }
+            Stats= table
+            {
+            }
+        }
+advantageStats= ruleset
+        {
+            rulesetConfiguration =
+            {
+            }
+            Stats= table
+            {
+                Points =integer{}
+            }
+        }
+disadvantageStats= ruleset
+        {
+            rulesetConfiguration =
+            {
+            }
+            Stats= table
+            {
+                Points =integer{}
+            }
+        }
+Fudge = system
+{
+    characters = characterTable
+    creatures = characterTable
+    'Ranged weapons'= weaponStats
+    'Melee weapons'= weaponStats
+    Advantage = advantageStats
+    Disadvantage = disadvantageStats
+    Armour= armourStats
+    description="Gurps lite"
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage"]
+    quickdice =[3d6]
+}
+
