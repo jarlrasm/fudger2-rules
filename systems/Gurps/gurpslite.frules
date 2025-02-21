@@ -50,9 +50,53 @@ characterTable = ruleset
                 render=(toString(((HT/10)+10)))
             }
         }
-
+    'Secondary characteristics' = table
+    {
+        HP = table
+        {
+            Current=integer
+                    {
+                        editable=live
+                        maxvalue=Max
+                        default=Max
+                    }
+            Max=integer
+                    {
+                        value=(fromAttribute("ST"))
+                        editable=none
+                    }
+        }
+            Will=integer
+                    {
+                        value=(fromAttribute("IQ"))
+                        editable=none
+                    }
+            Perception=integer
+                    {
+                        value=(fromAttribute("IQ"))
+                        editable=none
+                    }
+        'Fatigue Points' = table
+        {
+            Current=integer
+                    {
+                        editable=live
+                        maxvalue=Max
+                        default=Max
+                    }
+            Max=integer
+                    {
+                        value=(fromAttribute("GT"))
+                        editable=none
+                    }
+        }
+    }
     Skills = keyvalues
         {
+        tableLayout = layout
+        {
+          size = wide
+        }
             singular = "Skill" 
             editablekeys = character
             valueType = custom {
@@ -75,12 +119,20 @@ characterTable = ruleset
         }
     Advantages = list
     {
+        tableLayout = layout
+        {
+          size = wide
+        }
         singular = "Advantage"
         editable = character
         source=(secondary.'Advantage')
     }
     Disadvantages = list
     {
+        tableLayout = layout
+        {
+          size = wide
+        }
         singular = "Disadvantage"
         editable = character
         source=(secondary.'Disadvantage')
