@@ -27,6 +27,10 @@ fromAttribute(attribute) =
     )
     )
     )
+
+divideWithPrecision(x,divisor,precision) =
+  (((toString((x/divisor))) + ".") +(toString(((precision/divisor)*(x-((x/divisor)*divisor))))))
+  
 skillvalue(points,attribute,difficulty) =((fromAttribute(attribute))+(bonus(points,difficulty)))
 
 characterTable = ruleset
@@ -90,6 +94,8 @@ characterTable = ruleset
                         editable=none
                     }
         }
+            'Basic speed'=(divideWithPrecision(((fromAttribute("HT"))+(fromAttribute("DX"))),4,100))
+            'Move'=(((fromAttribute("HT"))+(fromAttribute("DX"))) /4)
     }
     Skills = keyvalues
         {
