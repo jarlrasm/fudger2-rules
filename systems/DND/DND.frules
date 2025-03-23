@@ -106,6 +106,17 @@ classStats = ruleset {
             }
     }
 }
+
+featStats =ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+    }
+    Type = string {}
+}
+
+
 DND5e = system
 {
     characters = characterTable
@@ -116,10 +127,11 @@ DND5e = system
     Classes = classStats
     Armour= armourStats
     Spells = spellStats
+    Feats = featStats
 
     description="DND 5e rules"
     
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features", "Feats"]
     otherLibararyTypes = ["Classes"]
     initiativeCompare(item1,item2) = (compare (item1 ,item2))
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
