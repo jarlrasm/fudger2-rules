@@ -27,6 +27,13 @@ creatureTable = ruleset
                 default=0
                 valuedice=1d20
               }
+    Speed = string {}
+    Immunities = string {}
+    Resistances = string {}
+    Gear = string {}
+    Senses = string {}
+    'Passive Perception' = integer {}
+    Languages = string {}
     Challenge = string {}
   }
   'Hitpoints' = table
@@ -237,7 +244,51 @@ creatureTable = ruleset
               }
             }
       } 
-  'Features and Traits' = 
+  'Traits' = 
+  list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+  Actions = 
+  list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+  'Bonus Actions' = 
+  list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+  Reactions = 
+  list
+    { 
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+  'Legendary Actions' = 
   list
     { 
         tableLayout = layout

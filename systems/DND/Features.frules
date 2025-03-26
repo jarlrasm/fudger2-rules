@@ -69,17 +69,19 @@ features= table
           singular = "Feature"
           editable = none 
     }
-    'Race features'=list
-    {
+    
+    'Feats'=list
+    { 
         tableLayout = layout
         {
-            size = wide
-            rowTitle = hidden
+          size = wide
         }
-          source=(raceFeatures ((Race.Main), (Race.Subrace)))
-          singular = "Feature"
-          editable = none 
+        singular = "Feat"
+        editable = character
+        autocomplete = autoCompletes
+        source=(secondary.Feats)
     }
+
     'Other features'=list
     { 
         tableLayout = layout
