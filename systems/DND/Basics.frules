@@ -29,7 +29,7 @@ levelTable =
     ]
 allSources(char) = [
                       (map ( ((x)->(x.Description)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
-                      (map ( ((x)->(x.Description)) ,(raceFeatures (((char.Race).Main), ((char.Race).Subrace))))),
+                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Feats'))),
                       (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Other features'))),
                       
                       (map ( ((x)->(x.Description)) ,((char.'Equipment').'Melee weapons'))),
