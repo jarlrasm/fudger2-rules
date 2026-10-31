@@ -5,14 +5,14 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Str').Modifier) + 
-                  (if Proficient then 
-                    (Basics.'Proficiency bonus')
-                   else 
+                value=
+                 'Ability scores'.'Str'.Modifier +
+                  (if Proficient then
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -23,14 +23,14 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Dex').Modifier) + 
+                value=
+                 'Ability scores'.'Dex'.Modifier +
                   (if Proficient then
-                    (Basics.'Proficiency bonus')
-                   else 
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -41,14 +41,14 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Con').Modifier) + 
-                  (if Proficient then 
-                    (Basics.'Proficiency bonus')
-                   else 
+                value=
+                 'Ability scores'.'Con'.Modifier +
+                  (if Proficient then
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -59,14 +59,14 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    (Basics.'Proficiency bonus')
-                   else 
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -77,14 +77,14 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    (Basics.'Proficiency bonus')
-                   else 
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -95,18 +95,18 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Cha').Modifier) + 
-                  (if Proficient then 
-                    (Basics.'Proficiency bonus')
-                   else 
+                value=
+                 'Ability scores'.'Cha'.Modifier +
+                  (if Proficient then
+                    Basics.'Proficiency bonus'
+                   else
                     0)
-                 )
-                valuedice= (D20Roll (characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
 
               }
             }
-      } 
+      }

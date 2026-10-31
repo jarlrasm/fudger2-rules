@@ -1,79 +1,79 @@
-D20Roll  = (D20RollImpl (0))
+D20Roll  = D20RollImpl (0)
 
-D20RollImpl (extra) = ([1d20],((baseline,throws)-> 
-  (if ((first(
-            ((first (throws))
-            .rolls))) == 10) then
-            (D20RollImpl ((extra + 10)))
+D20RollImpl (extra) = ([1d20],((baseline,throws)->
+  if first(
+            first (throws)
+            .rolls) == 10 then
+            D20RollImpl (extra + 10)
          else
          
-    (if ((first(
-            ((first (throws))
-            .rolls))) == 20) then
-            (D20RollImpl ((extra + 20)))
+    if first(
+            first (throws)
+            .rolls) == 20 then
+            D20RollImpl (extra + 20)
          else
-             (baseline +
-              (
+             baseline +
+              
                 calculate
-              ( (extra + (
+               (extra +
               first(
-                ((first (throws))
-                .rolls))))
-              )))
-          )
-          )))
+                first (throws)
+                .rolls))
+              
+          
+          ))
           
           
 calculate(n)=
- (if (n == 1) then "Mishap" else 
- (if (n < 3) then -8 else 
- (if (n < 5) then -6 else 
- (if (n < 7) then -4 else 
- (if (n < 9) then -2 else 
- (if (n < 11) then -1 else 
- (if (n < 13) then 0 else 
- (if (n < 15) then 1 else 
- (if (n < 16) then 2 else 
- (if (n < 17) then 3 else 
- (if (n < 18) then 4 else 
- (if (n < 19) then 5 else 
- (if (n < 20) then 6 else 
- (if (n < 21) then 7 else 
- (if (n < 26) then 8 else 
- (if (n < 31) then 9 else 
- (if (n < 36) then 10 else 
- (if (n < 41) then 11 else 
- (if (n < 46) then 12 else 
- (if (n < 51) then 13 else 
-  (13 + ((n - 50)/5))
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
- )
-)
+ if n == 1 then "Mishap" else
+ if n < 3 then -8 else
+ if n < 5 then -6 else
+ if n < 7 then -4 else
+ if n < 9 then -2 else
+ if n < 11 then -1 else
+ if n < 13 then 0 else
+ if n < 15 then 1 else
+ if n < 16 then 2 else
+ if n < 17 then 3 else
+ if n < 18 then 4 else
+ if n < 19 then 5 else
+ if n < 20 then 6 else
+ if n < 21 then 7 else
+ if n < 26 then 8 else
+ if n < 31 then 9 else
+ if n < 36 then 10 else
+ if n < 41 then 11 else
+ if n < 46 then 12 else
+ if n < 51 then 13 else
+  13 + (n - 50)/5
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
 
 creatureTable = ruleset
 {
   'Attributes' = keyvalues
   {
-    singular = "Attribute" 
+    singular = "Attribute"
     keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
-    valueType = custom 
+    valueType = custom
     {
       Score=integer
       {
@@ -90,17 +90,17 @@ creatureTable = ruleset
     'Shocks taken' = integer { editable = live}
     Wounds = integer {}
     'Wounds taken' = slots
-    { 
+    {
       number = 8
       allowedchange = increaseAndClear
     }
     Stymied = slots
-    { 
+    {
       number = 2
       allowedchange = increaseAndClear
     }
     Weakened = slots
-    { 
+    {
       number = 2
       allowedchange = increaseAndClear
     }
@@ -190,7 +190,7 @@ creatureTable = ruleset
   Skills = table
   {
    tableLayout = layout
-    { 
+    {
       columns = 4
     }
     'Air Vehicles' = custom
@@ -402,11 +402,11 @@ creatureTable = ruleset
       {
         valuedice=D20Roll
       }
-    } 
+    }
   }
   
   'Special Abilities' = list
-  { 
+  {
       tableLayout = layout
       {
         size = wide
@@ -445,9 +445,9 @@ characterTable = ruleset
   }
   'Attributes' = keyvalues
       {
-          singular = "Attribute" 
+          singular = "Attribute"
           keys = ["Charisma","Dexterity","Mind","Spirit","Strength"]
-          valueType = custom 
+          valueType = custom
           {
             Score=integer
             {
@@ -461,34 +461,34 @@ characterTable = ruleset
           Shock = integer
           { editable=live }
           Wounds = slots
-          { 
+          {
             number = 6
             allowedchange = increaseAndClear
            }
-          Toughness = string 
+          Toughness = string
           {}
           Stymied = slots
-          { 
+          {
             number = 2
             allowedchange = increaseAndClear
            }
           Weakened = slots
-          { 
+          {
             number = 2
             allowedchange = increaseAndClear
           }
-          'Smack that' = integer 
-          { 
+          'Smack that' = integer
+          {
             value = 0
             valuedice = 1d6
           }
       }
 
-  'Possibilities' = table 
+  'Possibilities' = table
   {
-    Possibilities = integer 
-    { 
-      default = 3 
+    Possibilities = integer
+    {
+      default = 3
       editable=live
       }
     'Cosm Possibilities' = integer
@@ -505,16 +505,16 @@ characterTable = ruleset
     'Energy Weapons' = integer { default = 0}
   }
   
-  'Combat Skills' = table 
+  'Combat Skills' = table
     {
             
       'Energy Weapons' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { 
-              value = ((('Attributes'.'Dexterity').'Score') + Adds)
+          'Skill value' = integer
+            {
+              value = 'Attributes'.'Dexterity'.'Score' + Adds
               valuedice = D20Roll
             }
             
@@ -522,46 +522,46 @@ characterTable = ruleset
         }
         'Fire Combat' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { 
-              value = ((('Attributes'.'Dexterity').'Score') + Adds)
+          'Skill value' = integer
+            {
+              value = 'Attributes'.'Dexterity'.'Score' + Adds
               valuedice = D20Roll
             }
         }
         'Heavy Weapons' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)
+          'Skill value' = integer
+            { value = 'Attributes'.'Dexterity'.'Score' + Adds
               valuedice = D20Roll
             }
         }
         'Melee Weapons' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score')+ Adds)
+          'Skill value' = integer
+            { value = 'Attributes'.'Dexterity'.'Score'+ Adds
               valuedice = D20Roll
               }
         }
         'Missile Weapons' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)
+          'Skill value' = integer
+            { value = 'Attributes'.'Dexterity'.'Score' + Adds
             valuedice = D20Roll}
         }
         'Unarmed Combat' = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds)
+          'Skill value' = integer
+            { value = 'Attributes'.'Dexterity'.'Score' + Adds
             valuedice = D20Roll}
         }
     }
@@ -570,34 +570,34 @@ characterTable = ruleset
       
       Intimidation = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Spirit').'Score') + Adds) 
+          'Skill value' = integer
+            { value = 'Attributes'.'Spirit'.'Score' + Adds
             valuedice = D20Roll}
           }
       Maneuver = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Dexterity').'Score') + Adds) 
+          'Skill value' = integer
+            { value = 'Attributes'.'Dexterity'.'Score' + Adds
             valuedice = D20Roll}
         }
       Taunt = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Charisma').'Score') + Adds) 
+          'Skill value' = integer
+            { value = 'Attributes'.'Charisma'.'Score' + Adds
             valuedice = D20Roll}
         }
       Trick = custom
         {
-          Adds = integer 
+          Adds = integer
           { default = 0 }
-          'Skill value' = integer 
-            { value = ((('Attributes'.'Mind').'Score') + Adds) 
+          'Skill value' = integer
+            { value = 'Attributes'.'Mind'.'Score' + Adds
             valuedice = D20Roll}
         }
       
@@ -606,248 +606,248 @@ characterTable = ruleset
   Skills = table
   {
     tableLayout = layout
-      { 
+      {
         columns = 4
       }
       editable = character
     'Air Vehicles' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Alteration' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Apportation' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Beast Riding' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Computers' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Conjuration' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Divination' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Dodge' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Evidence Analysis' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Faith' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Find' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'First Aid' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Kinesis' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Land Vehicles' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds)
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll }
     }
     'Language' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Lockpicking' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Medicine' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Persuasion' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Charisma'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Precognition' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Profession' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Reality' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Scholar' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Science' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Stealth' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Streetwise' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Charisma'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Survival' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds)
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll }
     }
     'Telepathy' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Charisma').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Charisma'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Tracking' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Mind').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Mind'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Water Vehicles' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Dexterity').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Dexterity'.'Score'+ Adds
         valuedice = D20Roll}
     }
     'Willpower' = custom
     {
-      Adds = integer 
+      Adds = integer
           { default = 0 }
-      'Skill value' = integer 
-        { value =(( ('Attributes'.'Spirit').'Score')+ Adds) 
+      'Skill value' = integer
+        { value = 'Attributes'.'Spirit'.'Score'+ Adds
         valuedice = D20Roll}
     }
     
@@ -859,9 +859,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.'Melee weapons')
+        source=secondary.'Melee weapons'
         singular = "Melee weapon"
-        editable = character 
+        editable = character
     }
     'Ranged Weapons' = list
     {
@@ -869,9 +869,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.'Ranged weapons')
+        source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
-        editable = character 
+        editable = character
     }
     'Perks' = list
     {
@@ -879,7 +879,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Perks)
+        source=secondary.Perks
         singular = "Perk"
         editable = character
     }
@@ -892,9 +892,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Spells)
+        source=secondary.Spells
         singular = "Spell"
-        editable = character 
+        editable = character
     }
     'Features and Traits' = list
     {
@@ -912,9 +912,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Armour)
+        source=secondary.Armour
         singular = "Armour"
-        editable = character 
+        editable = character
     }
     'Other items' = list
     {
@@ -922,15 +922,15 @@ characterTable = ruleset
         {
           size =wide
         }
-        source=(secondary.'Other items')
+        source=secondary.'Other items'
         singular = "Item"
-        editable = character 
+        editable = character
     }
 
     'Bonus Chart' = table
   {
       tableLayout = layout
-      { 
+      {
         size = wide
         columns = 4
       }
@@ -959,7 +959,7 @@ characterTable = ruleset
     '41 45' = string { value = "12" editable = none}
     '46 50' = string { value = "13" editable = none}
     'every 5' = string { value = "add 1" editable = none}
-  }  
+  }
   
 }
 
@@ -1034,17 +1034,17 @@ spellStats =ruleset
       sortedBy = sort
       {
           prefix="Axiom Level"
-          sort=(Stats.'Axiom Level')
+          sort=Stats.'Axiom Level'
       }
       filters= [
           filter {
               name="Lists"
               prefix=""
-              filter=(split (",", (Stats.Lists)))},
+              filter=split (",", Stats.Lists)},
           filter {
               name="Type"
               prefix=""
-              filter=(Stats.Type)}
+              filter=Stats.Type}
               ]
   }
   Stats= table
@@ -1077,17 +1077,17 @@ perkStats =ruleset
       sortedBy = sort
       {
           prefix=""
-          sort=(Stats.level)
+          sort=Stats.level
       }
       filters= [
           filter {
               name="Type"
               prefix=""
-              filter=(Stats.Type)},
+              filter=Stats.Type},
           filter {
               name="Cosm"
               prefix=""
-              filter=(split (",", (Stats.Cosm)))}
+              filter=split (",", Stats.Cosm)}
           ]
       defaultImage = "/images/spell.svg"
   }

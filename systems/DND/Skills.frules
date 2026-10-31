@@ -8,14 +8,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Dex').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Dex'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -26,14 +26,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -44,14 +44,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -62,14 +62,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Str').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Str'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -80,14 +80,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Cha').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Cha'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -98,14 +98,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -116,14 +116,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -134,14 +134,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Cha').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Cha'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -152,14 +152,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -170,14 +170,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -188,14 +188,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -206,14 +206,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -224,14 +224,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Cha').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Cha'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -242,14 +242,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Cha').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Cha'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -260,14 +260,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Int').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Int'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -278,14 +278,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Dex').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Dex'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -296,14 +296,14 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Dex').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Dex'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
@@ -314,18 +314,18 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value= 
-                 ((('Ability scores'.'Wis').Modifier) + 
-                  (if Proficient then 
-                    ((characterTable.Basics).'Proficiency bonus')
-                   else 
-                    (jackBonus(characterTable)))
-                 )
-                valuedice= (D20Roll (characterTable))
+                value=
+                 'Ability scores'.'Wis'.Modifier +
+                  (if Proficient then
+                    characterTable.Basics.'Proficiency bonus'
+                   else
+                    jackBonus(characterTable))
+                 
+                valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
 
               }
             }
-      } 
+      }

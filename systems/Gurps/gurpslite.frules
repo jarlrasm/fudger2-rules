@@ -1,37 +1,37 @@
 bonus(points,difficulty)=
-     ((if (points < 1) then -4
-      else 
-      (if (points < 2) then   0
+     (if points < 1 then -4
       else
-      (if (points < 3) then   1
+      if points < 2 then   0
       else
-       (if (points < 5) then  2
+      if points < 3 then   1
       else
-       (if (points < 9) then 3
-      else 
-      (if (points < 13) then   4
-      else 
-      (if (points < 17) then   5
-      else 
+       if points < 5 then  2
+      else
+       if points < 9 then 3
+      else
+      if points < 13 then   4
+      else
+      if points < 17 then   5
+      else
         6
-      ))))))) - 
-      (if (difficulty == "Easy") then 0
-      else (if (difficulty == "Average") then 1
-      else 2 )
-      ))
+      ) -
+      (if difficulty == "Easy" then 0
+      else if difficulty == "Average" then 1
+      else 2
+      )
 fromAttribute(attribute) =
-    (if (attribute == "ST") then ((((characterTable.Attributes).ST)/10)+10)
-     else (if (attribute == "DX") then ((((characterTable.Attributes).DX)/20)+10)
-     else (if (attribute == "IQ") then ((((characterTable.Attributes).IQ)/20)+10)
-     else ((((characterTable.Attributes).HT)/10)+10)
-    )
-    )
-    )
+    if attribute == "ST" then characterTable.Attributes.ST/10+10
+     else if attribute == "DX" then characterTable.Attributes.DX/20+10
+     else if attribute == "IQ" then characterTable.Attributes.IQ/20+10
+     else characterTable.Attributes.HT/10+10
+    
+    
+    
 
 divideWithPrecision(x,divisor,precision) =
-  (((toString((x/divisor))) + ".") +(toString(((precision/divisor)*(x-((x/divisor)*divisor))))))
+  toString(x/divisor) + "." +toString(precision/divisor*(x-x/divisor*divisor))
   
-skillvalue(points,attribute,difficulty) =((fromAttribute(attribute))+(bonus(points,difficulty)))
+skillvalue(points,attribute,difficulty) =fromAttribute(attribute)+bonus(points,difficulty)
 
 characterTable = ruleset
 {
@@ -39,19 +39,19 @@ characterTable = ruleset
         {
             ST = integer {
                 valuedice=3d6
-                render=(toString(((ST/10)+10)))
+                render=toString(ST/10+10)
             }
             DX=integer{
                 valuedice=3d6
-                render=(toString(((DX/20)+10)))
+                render=toString(DX/20+10)
             }
             IQ=integer{
                 valuedice=3d6
-                render=(toString(((IQ/20)+10)))
+                render=toString(IQ/20+10)
             }
             HT=integer{
                 valuedice=3d6
-                render=(toString(((HT/10)+10)))
+                render=toString(HT/10+10)
             }
         }
     'Secondary characteristics' = table
@@ -66,18 +66,18 @@ characterTable = ruleset
                     }
             Max=integer
                     {
-                        value=(fromAttribute("ST"))
+                        value=fromAttribute("ST")
                         editable=none
                     }
         }
             Will=integer
                     {
-                        value=(fromAttribute("IQ"))
+                        value=fromAttribute("IQ")
                         editable=none
                     }
             Perception=integer
                     {
-                        value=(fromAttribute("IQ"))
+                        value=fromAttribute("IQ")
                         editable=none
                     }
         'Fatigue Points' = table
@@ -90,12 +90,12 @@ characterTable = ruleset
                     }
             Max=integer
                     {
-                        value=(fromAttribute("GT"))
+                        value=fromAttribute("GT")
                         editable=none
                     }
         }
-            'Basic speed'=(divideWithPrecision(((fromAttribute("HT"))+(fromAttribute("DX"))),4,100))
-            'Move'=(((fromAttribute("HT"))+(fromAttribute("DX"))) /4)
+            'Basic speed'=divideWithPrecision(fromAttribute("HT")+fromAttribute("DX"),4,100)
+            'Move'=(fromAttribute("HT")+fromAttribute("DX")) /4
     }
     Skills = keyvalues
         {
@@ -103,12 +103,12 @@ characterTable = ruleset
         {
           size = wide
         }
-            singular = "Skill" 
+            singular = "Skill"
             editablekeys = character
             valueType = custom {
                 Name=string{}
                 Value=integer {
-                 value=(skillvalue((Details.Points), (Details.'Based on'),(Details.'Difficulty')))
+                 value=skillvalue(Details.Points, Details.'Based on',Details.'Difficulty')
                 valuedice=3d6
 
                 }
@@ -131,7 +131,7 @@ characterTable = ruleset
         }
         singular = "Advantage"
         editable = character
-        source=(secondary.'Advantage')
+        source=secondary.'Advantage'
     }
     Disadvantages = list
     {
@@ -141,43 +141,43 @@ characterTable = ruleset
         }
         singular = "Disadvantage"
         editable = character
-        source=(secondary.'Disadvantage')
+        source=secondary.'Disadvantage'
     }
     'Melee weapons' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Melee weapons')
+        source=secondary.'Melee weapons'
         singular = "Melee weapon"
-        editable = character 
+        editable = character
     }
     'Ranged weapons' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Ranged weapons')
+        source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
-        editable = character 
+        editable = character
     }
     'Armour' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.Armour)
+        source=secondary.Armour
         singular = "Armour"
-        editable = character 
+        editable = character
     }
     'Other items' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Other items')
+        source=secondary.'Other items'
         singular = "Item"
-        editable = character 
+        editable = character
     }
 }
 weaponStats =ruleset

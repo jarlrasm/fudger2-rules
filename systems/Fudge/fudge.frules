@@ -6,7 +6,7 @@ characterTable = ruleset
 {
     Attributes = keyvalues
         {
-            singular = "Attribute" 
+            singular = "Attribute"
             editablekeys = campaign
             keys = ["Str","Dex","Con","Int" ]
             valueType = enum
@@ -18,7 +18,7 @@ characterTable = ruleset
         }
     Skills = keyvalues
         {
-            singular = "Skill" 
+            singular = "Skill"
             editablekeys = character
             keys = []
             valueType = enum
@@ -37,7 +37,7 @@ characterTable = ruleset
     Faults = list
     {
         singular = "Fault"
-        editable = character 
+        editable = character
         valueType = nameAndDescription
     }
     'Important stuff'= table
@@ -50,50 +50,50 @@ characterTable = ruleset
         Experiencepoints = integer
         {
             default=0
-            minvalue=0 
+            minvalue=0
         }
     }
     Damage = table
     {
-        Scratch = slots 
+        Scratch = slots
         {
             number = 3
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 ((Scratch.realvalue) - (Scratch.number)))
+            overflowValue = max 0 (Scratch.realvalue - Scratch.number)
             }
-        Hurt = slots 
+        Hurt = slots
         {
             number = 1
-            value = ((Hurt.realvalue) + (Scratch.overflowValue))
+            value = Hurt.realvalue + Scratch.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 ((Hurt.value) - (Hurt.number)))
+            overflowValue = max 0 (Hurt.value - Hurt.number)
         }
-        'Very hurt' = slots 
+        'Very hurt' = slots
             {number = 1
-            value = (('Very hurt'.realvalue) + (Hurt.overflowValue))
+            value = 'Very hurt'.realvalue + Hurt.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 (('Very hurt'.value) - ('Very hurt'.number)))
+            overflowValue = max 0 ('Very hurt'.value - 'Very hurt'.number)
             }
-        Incapacitated = slots 
+        Incapacitated = slots
             {number = 1
-            value = ((Incapacitated.realvalue) + ('Very hurt'.overflowValue))
+            value = Incapacitated.realvalue + 'Very hurt'.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = (max 0 ((Incapacitated.value) - (Incapacitated.number)))
+            overflowValue = max 0 (Incapacitated.value - Incapacitated.number)
             }
-        'Near death' = slots 
+        'Near death' = slots
             {number = 1
-            value =(('Near death'.realvalue) + (Incapacitated.overflowValue))
+            value ='Near death'.realvalue + Incapacitated.overflowValue
             allowedchange = increase}
         Heal = button
             {onClick = updates
-                {(Scratch.realvalue) = (Hurt.realvalue)
-                (Hurt.realvalue) = ('Very hurt'.realvalue)
-                ('Very hurt'.realvalue) = (Incapacitated.realvalue)
-                (Incapacitated.realvalue) = ('Near death'.realvalue)
+                {(Scratch.realvalue) = Hurt.realvalue
+                (Hurt.realvalue) = 'Very hurt'.realvalue
+                ('Very hurt'.realvalue) = Incapacitated.realvalue
+                (Incapacitated.realvalue) = 'Near death'.realvalue
                 ('Near death'.realvalue) = 0}}
     }
 
@@ -110,36 +110,36 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.'Melee weapons')
+        source=secondary.'Melee weapons'
         singular = "Melee weapon"
-        editable = character 
+        editable = character
     }
     'Ranged weapons' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Ranged weapons')
+        source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
-        editable = character 
+        editable = character
     }
     'Armour' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.Armour)
+        source=secondary.Armour
         singular = "Armour"
-        editable = character 
+        editable = character
     }
     'Other items' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Other items')
+        source=secondary.'Other items'
         singular = "Item"
-        editable = character 
+        editable = character
     }
 }
 weaponStats =ruleset
@@ -177,7 +177,7 @@ Fudge = system
     Armour= armourStats
     description="Simple Fudge rules"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
-    initiativeCompare(item1,item2) = (compare ((intValueFromEnumString (fudgevalues,item1)), (intValueFromEnumString (fudgevalues,item2))))
+    initiativeCompare(item1,item2) = compare (intValueFromEnumString (fudgevalues,item1), intValueFromEnumString (fudgevalues,item2))
     quickdice =[4df]
 }
 

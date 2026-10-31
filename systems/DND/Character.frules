@@ -15,14 +15,14 @@ characterTable = ruleset
 {
   rulesetConfiguration = configuration
   {
-    initative=((characterTable.Basics).'Initiative')
+    initative=characterTable.Basics.'Initiative'
   }
   Basics = basicsTable{}
   Class = classTable{}
   
   'Ability scores' = keyvalues
       {
-          singular = "Ability score" 
+          singular = "Ability score"
           keys = ["Str","Dex","Con","Int","Wis","Cha" ]
           valueType = custom
           {
@@ -34,12 +34,12 @@ characterTable = ruleset
               }
               Modifier=modifier
               {
-                value=((Score/2)-5)
-                valuedice= (D20Roll (characterTable))
+                value=Score/2-5
+                valuedice= D20Roll (characterTable)
               }
 
           }
-      } 
+      }
   'Saving throws' = savingThrowsTable {}
   Skills=skillTable{}
   Hitpoints = hitpoints{}

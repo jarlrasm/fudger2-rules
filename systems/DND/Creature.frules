@@ -3,17 +3,17 @@ creatureTable = ruleset
 {
   rulesetConfiguration = configuration
   {
-    initative=(Basics.'Initiative')
+    initative=Basics.'Initiative'
     sortedBy = sort
     {
         prefix="Challenge rating "
-        sort=(Basics.Challenge)
+        sort=Basics.Challenge
         }
                 filters= [
                     filter {
                         name="Challenge"
                         prefix=""
-                        filter=(Basics.Challenge)}]
+                        filter=Basics.Challenge}]
   }
   Basics = table
   {
@@ -48,7 +48,7 @@ creatureTable = ruleset
   }
   'Ability scores' = keyvalues
       {
-          singular = "Ability score" 
+          singular = "Ability score"
           keys = ["Str","Dex","Con","Int","Wis","Cha" ]
           valueType = custom
           {
@@ -60,12 +60,12 @@ creatureTable = ruleset
               }
               Modifier=modifier
               {
-                value=((Score/2)-5)
+                value=Score/2-5
                 valuedice=1d20
               }
 
           }
-      } 
+      }
   'Saving throws' = table
       {
           Str=custom
@@ -110,7 +110,7 @@ creatureTable = ruleset
                 valuedice=1d20
               }
             }
-      } 
+      }
   Skills = table
       {
         tableLayout = layout
@@ -243,10 +243,10 @@ creatureTable = ruleset
                 valuedice=1d20
               }
             }
-      } 
-  'Traits' = 
+      }
+  'Traits' =
   list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -255,9 +255,9 @@ creatureTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
-  Actions = 
+  Actions =
   list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -266,9 +266,9 @@ creatureTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
-  'Bonus Actions' = 
+  'Bonus Actions' =
   list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -277,9 +277,9 @@ creatureTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
-  Reactions = 
+  Reactions =
   list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -288,9 +288,9 @@ creatureTable = ruleset
         editable = character
         valueType = nameAndDescription
     }
-  'Legendary Actions' = 
+  'Legendary Actions' =
   list
-    { 
+    {
         tableLayout = layout
         {
           size = wide

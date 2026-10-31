@@ -6,52 +6,52 @@ experienceLevelAndProficiencyBonus(xp,lvl,bonus) =
     }
 levelTable =
     [
-        (experienceLevelAndProficiencyBonus( 355000, 20, 6 ))
-        , (experienceLevelAndProficiencyBonus( 305000, 19, 6 ))
-        , (experienceLevelAndProficiencyBonus( 265000, 18, 6 ))
-        , (experienceLevelAndProficiencyBonus( 225000, 17, 6 ))
-        , (experienceLevelAndProficiencyBonus( 195000, 16, 5 ))
-        , (experienceLevelAndProficiencyBonus( 165000, 15, 5 ))
-        , (experienceLevelAndProficiencyBonus( 140000, 14, 5 ))
-        , (experienceLevelAndProficiencyBonus( 120000, 13, 5 ))
-        , (experienceLevelAndProficiencyBonus( 100000, 12, 4 ))
-        , (experienceLevelAndProficiencyBonus( 85000, 11, 4 ))
-        , (experienceLevelAndProficiencyBonus( 64000, 10, 4 ))
-        , (experienceLevelAndProficiencyBonus( 48000, 9, 4 ))
-        , (experienceLevelAndProficiencyBonus( 34000, 8, 3 ))
-        , (experienceLevelAndProficiencyBonus( 23000, 7, 3 ))
-        , (experienceLevelAndProficiencyBonus( 14000, 6, 3 ))
-        , (experienceLevelAndProficiencyBonus(6500, 5, 3 ))
-        , (experienceLevelAndProficiencyBonus(2700, 4, 2 ))
-        , (experienceLevelAndProficiencyBonus(900, 3, 2 ))
-        , (experienceLevelAndProficiencyBonus(300, 2, 2 ))
-        , (experienceLevelAndProficiencyBonus( 0, 1, 2 ))
+        experienceLevelAndProficiencyBonus(355000, 20, 6)
+        , experienceLevelAndProficiencyBonus(305000, 19, 6)
+        , experienceLevelAndProficiencyBonus(265000, 18, 6)
+        , experienceLevelAndProficiencyBonus(225000, 17, 6)
+        , experienceLevelAndProficiencyBonus(195000, 16, 5)
+        , experienceLevelAndProficiencyBonus(165000, 15, 5)
+        , experienceLevelAndProficiencyBonus(140000, 14, 5)
+        , experienceLevelAndProficiencyBonus(120000, 13, 5)
+        , experienceLevelAndProficiencyBonus(100000, 12, 4)
+        , experienceLevelAndProficiencyBonus(85000, 11, 4)
+        , experienceLevelAndProficiencyBonus(64000, 10, 4)
+        , experienceLevelAndProficiencyBonus(48000, 9, 4)
+        , experienceLevelAndProficiencyBonus(34000, 8, 3)
+        , experienceLevelAndProficiencyBonus(23000, 7, 3)
+        , experienceLevelAndProficiencyBonus(14000, 6, 3)
+        , experienceLevelAndProficiencyBonus(6500, 5, 3)
+        , experienceLevelAndProficiencyBonus(2700, 4, 2)
+        , experienceLevelAndProficiencyBonus(900, 3, 2)
+        , experienceLevelAndProficiencyBonus(300, 2, 2)
+        , experienceLevelAndProficiencyBonus(0, 1, 2)
     ]
 allSources(char) = [
-                      (map ( ((x)->(x.Description)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
-                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Feats'))),
-                      (map ( ((x)->(x.Description)) ,((char.'Features and Traits').'Other features'))),
+                      map ((x)->x.Description ,classFeatures (char.Class.Main.Name, char.Class.Main.Levels)),
+                      map ((x)->x.Description ,char.'Features and Traits'.'Feats'),
+                      map ((x)->x.Description ,char.'Features and Traits'.'Other features'),
                       
-                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Melee weapons'))),
-                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Ranged weapons'))),
-                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Armour'))),
-                      (map ( ((x)->(x.Description)) ,((char.'Equipment').'Other items')))
+                      map ((x)->x.Description ,char.'Equipment'.'Melee weapons'),
+                      map ((x)->x.Description ,char.'Equipment'.'Ranged weapons'),
+                      map ((x)->x.Description ,char.'Equipment'.'Armour'),
+                      map ((x)->x.Description ,char.'Equipment'.'Other items')
                     ]
 acForArmour(char, armour)=
-  (((((armour.data).armourStats).Stats).AC) +
+  armour.data.armourStats.Stats.AC +
     (min
-     ((((armour.data).armourStats).Stats).'Max dex modifier')
-      (((char.'Ability scores').'Dex').Modifier)
-   ))
+     armour.data.armourStats.Stats.'Max dex modifier'
+      char.'Ability scores'.'Dex'.Modifier
+   )
 
-ac(char) = 
-  (max 
+ac(char) =
+  (max
    10
-    (first ( (reverse ((sort 
-    (
-      (map ( ((x)->(acForArmour (char, x))) ,((char.'Equipment').'Armour')))
-    )
-  ))) )
+    (first (reverse (sort
+    
+      (map ((x)->acForArmour (char, x) ,char.'Equipment'.'Armour'))
+    
+  ))
   )
 )
 
@@ -60,30 +60,30 @@ basicsTable =table
     XP  = integer
         {
             default=0
-            minvalue=0 
+            minvalue=0
         }
     'Armour Class'=integer
               {
-                value =(
-                        ((ac(characterTable)) + 
-                        (bonusWithValue ((allSources(characterTable)), "\+([0-9])\s*AC\b" ))) +
-                        (bonusWithValue ((allSources(characterTable)), "\bAC\s*\+([0-9])\b" ))
-                        )
+                value =
+                        ac(characterTable) +
+                        bonusWithValue (allSources(characterTable), "\+([0-9])\s*AC\b") +
+                        bonusWithValue (allSources(characterTable), "\bAC\s*\+([0-9])\b")
+                        
                 default=10
                 minvalue=10
               }
     'Initiative'=modifier
               {
-                value=(((('Ability scores'.'Dex').Modifier) + 
-                  (jackBonus(characterTable))) +(bonusWithValue ((allSources(characterTable)), "\bInitiative\s*\+([0-9])\b" )))
-                valuedice= (D20Roll (characterTable))
+                value='Ability scores'.'Dex'.Modifier +
+                  jackBonus(characterTable) +bonusWithValue (allSources(characterTable), "\bInitiative\s*\+([0-9])\b")
+                valuedice= D20Roll (characterTable)
                 editable=none
               }
     'Proficiency bonus'= integer
-        {value= ((first
-         ((filter
-          (((x)->((x.Level) < ((((characterTable.Class).Main).Levels) + 1))),levelTable)
-          ))).ProficiencyBonus)
+        {value= (first
+         (filter
+          ((x)->x.Level < characterTable.Class.Main.Levels + 1,levelTable)
+          )).ProficiencyBonus
           editable=none
         }
     'Normal'= bool
@@ -107,18 +107,18 @@ basicsTable =table
   }
 
 
-D20Roll (char) = (if ((char.Basics).'Advantage') then ([1d20,1d20],((baseline,throws)-> 
-      (baseline +
-      (max 
-        (((first (throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((first (throws)).rolls))))
-        (((item (1,throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((item (1,throws)).rolls))))
-        ))
-       )) else 
-        (if ((char.Basics).'Disadvantage') then ([1d20,1d20],((baseline,throws)-> 
-         (baseline +
-          (min 
-            (((first (throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((first (throws)).rolls))))
-            (((item (1,throws)).bonus) + (fold (0, ((x1,x2)->(x1+x2)), ((item (1,throws)).rolls))))
-            ))
-          )) else 
-        1d20))
+D20Roll (char) = if char.Basics.'Advantage' then ([1d20,1d20],((baseline,throws)->
+      baseline +
+      max
+        (first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls))
+        (item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls))
+        
+       )) else
+        if char.Basics.'Disadvantage' then ([1d20,1d20],((baseline,throws)->
+         baseline +
+          min
+            (first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls))
+            (item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls))
+            
+          )) else
+        1d20

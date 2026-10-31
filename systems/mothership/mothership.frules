@@ -2,11 +2,11 @@
 
 
 hundred = ([1d100], ((baseline,throws)->
-  (sum(
-       (
-        (first (throws)).rolls
-       )
-))))
+  sum(
+       
+        first (throws).rolls
+       
+)))
 
 
 
@@ -68,23 +68,23 @@ characterTable = ruleset
   
   Stats = table
   {
-    Strength = integer 
+    Strength = integer
     {
       default = 0
       valuedice = hundred
     }
-    Speed = integer 
-    { 
+    Speed = integer
+    {
       default=0
       valuedice=hundred
     }
-    Intellect = integer 
-    { 
+    Intellect = integer
+    {
       default=0
       valuedice=hundred
     }
     Combat = integer
-    { 
+    {
       default=0
       valuedice = hundred
     }
@@ -110,7 +110,7 @@ characterTable = ruleset
   }
 
   Health = table
-  { 
+  {
     tableLayout = layout
     {
       columns = 1
@@ -157,82 +157,82 @@ characterTable = ruleset
   'Trained 10' = table
     {
       Linguistics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Zoology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Botany = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Geology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Industrial Equipment' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Jury Rigging' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Chemistry = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Computers = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Zero G' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Mathematics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Art = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Archaeology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Theology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Military Training' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Rimwise = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Athletics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
@@ -241,77 +241,77 @@ characterTable = ruleset
     'Expert 15' = table
     {
       Psychology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Pathology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Field Medicine' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Ecology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Asteroid Mining' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Mechanical Repair' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Explosives = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Pharmacology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Hacking = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Piloting = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Physics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Mysticism = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Wilderness Survival' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Firearms = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Hand to hand Combat' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
@@ -320,57 +320,57 @@ characterTable = ruleset
     'Master 20' = table
     {
       Sophontology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Exobiology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Surgery = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Planetology = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Robotics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Engineering = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Cybernetics = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       'Artificial Intelligence' = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Hyperspace = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Xenoesotericism = custom
-      { 
+      {
         Proficient = bool
         {}
       }
       Command = custom
-      { 
+      {
         Proficient = bool
         {}
       }
@@ -382,9 +382,9 @@ characterTable = ruleset
     {
         size = wide
     }
-          source=(secondary.Traits)
+          source=secondary.Traits
           singular = "Trait"
-          editable = character 
+          editable = character
   }
 
   'Weapons' = list
@@ -393,9 +393,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Weapons)
+        source=secondary.Weapons
         singular = "Weapon"
-        editable = character 
+        editable = character
     }
 
   'Armor' = list
@@ -404,9 +404,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Armor)
+        source=secondary.Armor
         singular = "Armor"
-        editable = character 
+        editable = character
     }
   
   'Equipment' = list
@@ -415,9 +415,9 @@ characterTable = ruleset
         {
           size = wide
         }
-        source=(secondary.Equipment)
+        source=secondary.Equipment
         singular = "Equipment"
-        editable = character 
+        editable = character
     }
   
 }
@@ -467,7 +467,7 @@ weaponStats =ruleset
 
 armorStats = ruleset
 {
-  rulesetConfiguration = 
+  rulesetConfiguration =
   {
     defaultImage = "/images/armour.svg"
   }
@@ -486,7 +486,7 @@ armorStats = ruleset
   }
 }
 
-equipmentStats = ruleset 
+equipmentStats = ruleset
 {
   rulesetConfiguration =
   {
@@ -513,10 +513,10 @@ traitStats = ruleset
 }
 
 boolToVisible (flag)=
-  (if flag
+  if flag
     then visible
-   else 
-      none)
+   else
+      none
 
 
 mothership = system

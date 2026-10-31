@@ -1,61 +1,61 @@
 
 getSpellLevelForClass (classname) =
-  ((first ((filter (((class)->((class.Name) == classname)), (classInfo (libraryClasses)))))).SpellLevels)
+  first (filter ((class)->class.Name == classname, classInfo (libraryClasses))).SpellLevels
 
 getClassLevlesForSpellLevels (spelllevels, spellevel)=
-  ((first ((filter (((spl)->((spl.SpellLevel) == spellevel)), spelllevels)))).SpellsForLevelList)
+  first (filter ((spl)->spl.SpellLevel == spellevel, spelllevels)).SpellsForLevelList
 
 getSpellsAtLevelForClassAndLevel(classname, level, spellevel)=
-  ((first((filter (((x)->((x.CharacterLevel) == level)), 
-    (getClassLevlesForSpellLevels ((getSpellLevelForClass (classname)),spellevel ))
-  )))).Spells)
+  first(filter ((x)->x.CharacterLevel == level,
+    getClassLevlesForSpellLevels (getSpellLevelForClass (classname),spellevel)
+  )).Spells
 
 getSpellVisibility (classname, level, spellevel) =
-  (if ((getSpellsAtLevelForClassAndLevel(classname, level, spellevel)) > 0)
+  if getSpellsAtLevelForClassAndLevel(classname, level, spellevel) > 0
      then visible
-   else 
-      none)
+   else
+      none
 
-spellCastingAbilty(class, char) = 
-(
-  (if ((class.SpellcastingAbilityModifier) == "Charisma") then
-    (((char.'Ability scores').'Cha').Modifier)
-  else 
-   (if ((class.SpellcastingAbilityModifier) == "Intelligence") then
-    (((char.'Ability scores').'Int').Modifier)
+spellCastingAbilty(class, char) =
+
+  (if class.SpellcastingAbilityModifier == "Charisma" then
+    char.'Ability scores'.'Cha'.Modifier
+  else
+   if class.SpellcastingAbilityModifier == "Intelligence" then
+    char.'Ability scores'.'Int'.Modifier
     else
-     (if ((class.SpellcastingAbilityModifier) == "Wisdom") then
-      (((char.'Ability scores').'Wis').Modifier)
+     if class.SpellcastingAbilityModifier == "Wisdom" then
+      char.'Ability scores'.'Wis'.Modifier
       else
-      (if ((class.SpellcastingAbilityModifier) == "Constitution") then
-        (((char.'Ability scores').'Con').Modifier)
+      if class.SpellcastingAbilityModifier == "Constitution" then
+        char.'Ability scores'.'Con'.Modifier
         else
-        (if ((class.SpellcastingAbilityModifier) == "Dexterity") then
-          (((char.'Ability scores').'Dex').Modifier)
+        if class.SpellcastingAbilityModifier == "Dexterity" then
+          char.'Ability scores'.'Dex'.Modifier
           else
-            (if ((class.SpellcastingAbilityModifier) == "Strength") then
-              (((char.'Ability scores').'Str').Modifier)
+            if class.SpellcastingAbilityModifier == "Strength" then
+              char.'Ability scores'.'Str'.Modifier
               else
               0
-              )
-          )
-        )
-      )
-    )
+              
+          
+        
+      
+    
   )
-  +(bonusWithValue ((allSources(char)),"[S|s]pell casting ability.*(increase by |\+)([0-9])"))
+  +bonusWithValue (allSources(char),"[S|s]pell casting ability.*(increase by |\+)([0-9])")
   
-)
+
 spellCastingDC (class, char) =
-  (((8+(spellCastingAbilty(class, char)))+((char.Basics).'Proficiency bonus'))
-  +(bonusWithValue ((allSources(char)),"[S|s]pell save DC.*(increase by |\+)([0-9])")))
+  8+spellCastingAbilty(class, char)+char.Basics.'Proficiency bonus'
+  +bonusWithValue (allSources(char),"[S|s]pell save DC.*(increase by |\+)([0-9])")
 spellAttackModifier (class, char) =
-  (((spellCastingAbilty(class, char))+((char.Basics).'Proficiency bonus'))
-  +(bonusWithValue ((allSources(char)),"[S|s]pell attack.*(increase by |\+)([0-9])")) )
+  spellCastingAbilty(class, char)+char.Basics.'Proficiency bonus'
+  +bonusWithValue (allSources(char),"[S|s]pell attack.*(increase by |\+)([0-9])")
 
 spellTable= table
 {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 1)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 1)
         tableLayout = layout
         {
         rowTitle = hidden
@@ -65,22 +65,22 @@ spellTable= table
         {
           'Spellcasting ability' = modifier
                 {
-                  value=(spellCastingAbilty ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
+                  value=spellCastingAbilty (first (filter ((class)->class.Name == Class.Main.Name, classInfo (libraryClasses))), characterTable)
 
-                  valuedice= (D20Roll (characterTable))
+                  valuedice= D20Roll (characterTable)
                   editable=none
                 }
                 'Spell save DC' = integer
                 {
-                  value=(spellCastingDC ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
+                  value=spellCastingDC (first (filter ((class)->class.Name == Class.Main.Name, classInfo (libraryClasses))), characterTable)
 
                   editable=none
                 }
                 'Spell attack bonus' = modifier
                 {
-                  value=(spellAttackModifier ((first ((filter (((class)->((class.Name) == ((Class.Main).Name))), (classInfo (libraryClasses)))))), characterTable) )
+                  value=spellAttackModifier (first (filter ((class)->class.Name == Class.Main.Name, classInfo (libraryClasses))), characterTable)
 
-                  valuedice= (D20Roll (characterTable))
+                  valuedice= D20Roll (characterTable)
                   editable=none
                 }
         }
@@ -97,23 +97,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 0)
+          editable = character
+          filter = spellStats.Stats.level == 0
         }
     }
     '1st Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 1)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 1)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 1))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 1)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -122,23 +122,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 1)
+          editable = character
+          filter = spellStats.Stats.level == 1
         }
     }
     '2nd Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 2)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 2)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 2))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 2)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -147,23 +147,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 2)
+          editable = character
+          filter = spellStats.Stats.level == 2
         }
     }
     '3rd Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 3)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 3)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 3))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 3)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -172,23 +172,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 3)
+          editable = character
+          filter = spellStats.Stats.level == 3
         }
     }
     '4th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 4)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 4)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 4))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 4)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -197,23 +197,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 4)
+          editable = character
+          filter = spellStats.Stats.level == 4
         }
     }
     '5th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 5)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 5)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 5))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 5)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -222,23 +222,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 5)
+          editable = character
+          filter = spellStats.Stats.level == 5
         }
     }
     '6th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 6)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 6)
         tableLayout = layout
         {
           size = wide
         rowTitle = hidden
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 6))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 6)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -247,23 +247,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 6)
+          editable = character
+          filter = spellStats.Stats.level == 6
         }
     }
     '7th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels), 7)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 7)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 7))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 7)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -272,23 +272,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 7)
+          editable = character
+          filter = spellStats.Stats.level == 7
         }
     }
     '8th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels),8)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels,8)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 8))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 8)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -297,23 +297,23 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 8)
+          editable = character
+          filter = spellStats.Stats.level == 8
         }
     }
     '9th Level Spells' = table
     {
-      visible=(getSpellVisibility(((Class.Main).Name), ((Class.Main).Levels),9)) 
+      visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels,9)
         tableLayout = layout
         {
         rowTitle = hidden
           size = wide
         }
-        Slots = slots 
+        Slots = slots
         {
-            number = (getSpellsAtLevelForClassAndLevel(((Class.Main).Name), ((Class.Main).Levels), 9))
+            number = getSpellsAtLevelForClassAndLevel(Class.Main.Name, Class.Main.Levels, 9)
             allowedchange = increaseAndClear
         }
         Spells = list
@@ -322,10 +322,10 @@ spellTable= table
           {
             size = wide
           }
-          source=(secondary.Spells) 
+          source=secondary.Spells
           singular = "Spell"
-          editable = character 
-          filter = (((spellStats.Stats).level) == 9)
+          editable = character
+          filter = spellStats.Stats.level == 9
         }
     }
 }

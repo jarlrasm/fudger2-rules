@@ -1,65 +1,65 @@
 #include "/systems/common.frules"
 
 pointsToSkill(points)=
- (if((points-((points/3)*3)) > 0) then (
-                         ((toString((points/3)))+"d6+")+(toString((points-((points/3)*3))))
-                        ) 
-                        else ((toString((points/3)))+"d6")
-                        )
+ if points-points/3*3 > 0 then
+                         toString(points/3)+"d6+"+toString(points-points/3*3)
+                         
+                        else toString(points/3)+"d6"
+                        
 pointsToDice(points)=
  dice
   {
-    number=(points/3)
+    number=points/3
     sides=6
-    bonus=(points-((points/3)*3))
+    bonus=points-points/3*3
   }
 
-rethrow (extra) = ([1d6],((baseline,throws)-> 
-  (if ((first(
-            ((first (throws))
-            .rolls))) == 6) then
-            (rethrow ((extra + (sum(((first (throws))
-            .rolls))))))
+rethrow (extra) = ([1d6],((baseline,throws)->
+  if first(
+            first (throws)
+            .rolls) == 6 then
+            rethrow (extra + sum(first (throws)
+            .rolls))
          else
-              (extra + (
+              extra +
               sum(
-                ((first (throws))
-                .rolls)))  )
-              )))
+                first (throws)
+                .rolls)
+              ))
 
 
-oneOnWild(rolls) = 
-  (if((count(rolls)) == 1) then
+oneOnWild(rolls) =
+  if count(rolls) == 1 then
     0
    else
-    ((( sum(rolls)) - 1) - (max(rolls)))
-  )                
+     sum(rolls) - 1 - max(rolls)
+                  
 
-starDice (dice) = ([dice],((baseline,throws)-> 
-  (if ((first(
-            ((first (throws))
-            .rolls))) == 6) then
-            (rethrow ( ((sum(((first (throws))
-            .rolls))) + ((first (throws))
-            .bonus)
-            )))
+starDice (dice) = ([dice],((baseline,throws)->
+  if first(
+            first (throws)
+            .rolls) == 6 then
+            rethrow (sum(first (throws)
+            .rolls) + first (throws)
+            .bonus
+            )
          else
-        (if ((first(
-            ((first (throws))
-            .rolls))) == 1) then
-              ((
+        if first(
+            first (throws)
+            .rolls) == 1 then
+              
               oneOnWild(
-                ((first (throws))
-                .rolls))) + ((first (throws))
-            .bonus) 
-              )
+                first (throws)
+                .rolls) + first (throws)
+            .bonus
+              
          else
-              ((
+              
               sum(
-                ((first (throws))
-                .rolls))) + ((first (throws))
-            .bonus)) 
-              ))))
+                first (throws)
+                .rolls) + first (throws)
+            .bonus
+              ))
               
               
               
@@ -68,7 +68,7 @@ characterTable = ruleset
     
   'Attributes' = keyvalues
       {
-          singular = "Attribute" 
+          singular = "Attribute"
           keys = ["Dexterity","Knowledge","Mechanical","Perception","Strength","Technical" ]
           valueType = custom
           {
@@ -77,23 +77,23 @@ characterTable = ruleset
                 default=9
                 minvalue=1
                 maxvalue=25
-                valuedice=(starDice((pointsToDice(Points)), 0))
-                render=(pointsToSkill(Points))
+                valuedice=starDice(pointsToDice(Points), 0)
+                render=pointsToSkill(Points)
               }
 
           }
-      } 
+      }
     'Dexterity Skills' = keyvalues
         {
-            singular = "Dex Skill" 
+            singular = "Dex Skill"
             editablekeys = character
             keys = ["Blaster", "Dodge", "Grenade", "Lightsaber","Melee", "Pick pocket"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Dexterity').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Dexterity').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Dexterity'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Dexterity'.Points)
                 default=0
                 minvalue=0
                 maxvalue=25
@@ -103,15 +103,15 @@ characterTable = ruleset
         }
     'Knowledge Skills' = keyvalues
         {
-            singular = "Knowledge Skill" 
+            singular = "Knowledge Skill"
             editablekeys = character
             keys = ["Alien species", "Bureaucracy", "Cultures", "Languages","Planetary systems", "Streetwise", "Survival"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Knowledge').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Knowledge').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Knowledge'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Knowledge'.Points)
                 
                 default=0
                 minvalue=0
@@ -122,15 +122,15 @@ characterTable = ruleset
         }
     'Mechanical Skills' = keyvalues
         {
-            singular = "Mechanical Skill" 
+            singular = "Mechanical Skill"
             editablekeys = character
             keys = ["Astrogation", "Beast riding", "Com scan", "Gunnery","Repulsorlift operation", "Shields", "Spaceship piloting"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Mechanical').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Mechanical').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Mechanical'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Mechanical'.Points)
                 
                 default=0
                 minvalue=0
@@ -141,15 +141,15 @@ characterTable = ruleset
         }
     'Perception Skills' = keyvalues
         {
-            singular = "Perception Skill" 
+            singular = "Perception Skill"
             editablekeys = character
             keys = ["Bargain", "Beast riding", "Con", "Gambling","Search", "Sneak"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Perception').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Perception').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Perception'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Perception'.Points)
                 
                 default=0
                 minvalue=0
@@ -159,15 +159,15 @@ characterTable = ruleset
         }
     'Strength Skills' = keyvalues
         {
-            singular = "Perception Skill" 
+            singular = "Perception Skill"
             editablekeys = character
             keys = ["Brawling", "Climbing jumping", "Lifting", "Swimming"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Strength').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Strength').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Strength'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Strength'.Points)
                 
                 default=0
                 minvalue=0
@@ -178,15 +178,15 @@ characterTable = ruleset
         }
     'Technical Skills' = keyvalues
         {
-            singular = "Technical Skill" 
+            singular = "Technical Skill"
             editablekeys = character
             keys = ["Computer programming and repair", "Demolitions", "Droid programming and repair", "First aid", "Repulsorlift repair","Security","Spaceship repair"]
             valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice((Points + ((Attributes.'Technical').Points)))), 0))
-                render=(pointsToSkill((Points + ((Attributes.'Technical').Points))))
+                valuedice=starDice(pointsToDice(Points + Attributes.'Technical'.Points), 0)
+                render=pointsToSkill(Points + Attributes.'Technical'.Points)
                 
                 default=0
                 minvalue=0
@@ -197,15 +197,15 @@ characterTable = ruleset
         }
     'Jedi skills' = keyvalues
         {
-          visible=(boolToVisible ((General.'Force sensitive')))
-          singular = "Jedi skill" 
+          visible=boolToVisible (General.'Force sensitive')
+          singular = "Jedi skill"
           keys = ["Control","Sense","Alter"]
           valueType = custom
           {
               Points=integer
               {
-                valuedice=(starDice((pointsToDice(Points)), 0))
-                render=(pointsToSkill(Points))
+                valuedice=starDice(pointsToDice(Points), 0)
+                render=pointsToSkill(Points)
                 default=0
                 minvalue=0
                 maxvalue=25
@@ -215,10 +215,10 @@ characterTable = ruleset
         }
     'Force powers' = list
         {
-          visible=(boolToVisible ((General.'Force sensitive')))
-          singular = "Force Power" 
-          source=(secondary.'Force powers')
-          editable = character 
+          visible=boolToVisible (General.'Force sensitive')
+          singular = "Force Power"
+          source=secondary.'Force powers'
+          editable = character
         }
      General = table{
               'Force Points'=integer
@@ -295,45 +295,45 @@ characterTable = ruleset
         tableLayout = layout
         {
         }
-        source=(secondary.'Melee weapons')
+        source=secondary.'Melee weapons'
         singular = "Melee weapon"
-        editable = character 
+        editable = character
     }
     'Ranged weapons' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Ranged weapons')
+        source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
-        editable = character 
+        editable = character
     }
     'Armour' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.Armour)
+        source=secondary.Armour
         singular = "Armour"
-        editable = character 
+        editable = character
     }
     'Other items' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.'Other items')
+        source=secondary.'Other items'
         singular = "Item"
-        editable = character 
+        editable = character
     }
     'Spaceships' = list
     {
         tableLayout = layout
         {
         }
-        source=(secondary.Spaceships)
+        source=secondary.Spaceships
         singular = "Spaceship"
-        editable = character 
+        editable = character
     }
 }
 
@@ -384,10 +384,10 @@ otherStats= ruleset
         }
 
 boolToVisible (flag)=
-  (if flag
+  if flag
     then visible
-   else 
-      none)
+   else
+      none
 
 spaceshipTable= ruleset
         {
@@ -404,7 +404,7 @@ spaceshipTable= ruleset
             Shields= string{}
             Hyperdrive= string{}
           }
-          Sensors = 
+          Sensors =
             table
             {
               Passive = table {
@@ -436,12 +436,12 @@ spaceshipTable= ruleset
                   {
                   }}
             }
-          Weapons = 
+          Weapons =
             list
             {
               singular = "Weapon"
-              editable = character 
-              source=(secondary.ShipWeapons)
+              editable = character
+              source=secondary.ShipWeapons
                   }
               }
       shipWeaponStats =ruleset
@@ -464,16 +464,16 @@ forcePowerStats= ruleset
             }
                 'Power'=keyvalues{
                   keys=["Sense","Control", "Alter"]
-                  valueType = custom 
-                  { 
+                  valueType = custom
+                  {
                     Used = bool
-                    { 
-                      default = 0 
+                    {
+                      default = 0
                       valuedice =  edgeRoll
                     }
                     Difficulty = string
-                    { 
-                      visible=(boolToVisible (Used))
+                    {
+                      visible=boolToVisible (Used)
                       keys=["Very Easy","Easy", "Moderate","Difficult","Very Difficult","Heroic"]
                     }
                   }
@@ -505,7 +505,7 @@ Starwars = system
     description="Starwars d6"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spaceships","Other items","Force powers"]
     extraEntityTypes = [
-      (entityTypeDescription("Spaceships","spaceship",true, "/systems/starwars/spaceship-entity.png", ["ShipWeapons"]))
+      entityTypeDescription("Spaceships","spaceship",true, "/systems/starwars/spaceship-entity.png", ["ShipWeapons"])
       ]
     cssFiles = ["/systems/starwars/starwars.css"]
     quickdice =[1d6]

@@ -2,12 +2,12 @@
 
 
 edgeRoll = ([2d6], ((baseline,throws)->
-  (sum(
-       (
-        (first (throws)).rolls
-       )
+  sum(
+       
+        first (throws).rolls
+       
       )
-  )
+  
 ))
 
 characterTable = ruleset
@@ -25,11 +25,11 @@ characterTable = ruleset
       singular = "Main"
       editablekeys = character
       keys = ["Beskrivelse av main trait, editable by player"]
-      valueType = custom 
-      { 
+      valueType = custom
+      {
         Score = integer
-        { 
-          default = 0 
+        {
+          default = 0
           valuedice =  edgeRoll
         }
       }
@@ -39,11 +39,11 @@ characterTable = ruleset
       singular = "Side"
       editablekeys = character
       keys = ["Beskrivelse av side trait, editable by player"]
-      valueType = custom 
-      { 
+      valueType = custom
+      {
         Score = integer
-        { 
-          default = 0 
+        {
+          default = 0
           valuedice =  edgeRoll
         }
       }
@@ -67,23 +67,23 @@ characterTable = ruleset
 
   Basics = table
   {
-    Fight = integer 
-    { 
-      default=0 
+    Fight = integer
+    {
+      default=0
       valuedice = edgeRoll
     }
-    Sway = integer 
-    { 
+    Sway = integer
+    {
       default=0
       valuedice=edgeRoll
     }
-    Weird = integer 
-    { 
+    Weird = integer
+    {
       default=0
       valuedice=edgeRoll
     }
     Strikes = slots
-    { 
+    {
       number = 3
       allowedchange = increaseAndClear
     }
@@ -94,10 +94,10 @@ characterTable = ruleset
 
 
 boolToVisible (flag)=
-  (if flag
+  if flag
     then visible
-   else 
-      none)
+   else
+      none
 
 
 edge = system

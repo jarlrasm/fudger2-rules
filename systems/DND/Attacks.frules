@@ -1,24 +1,24 @@
-toHitBonus (description) = 
-    (bonusWithValue ([[description]], "\+s*([0-9]|[1-9][0-9])\s+to\shit\b" ))
+toHitBonus (description) =
+    bonusWithValue ([[description]], "\+s*([0-9]|[1-9][0-9])\s+to\shit\b")
 
 abiltyBonusForMeleeWeapon (weapon, char) =
-    (if (contains((toLower(((((weapon.data).weaponStats).Stats).Properties))), "finesse")) then
-        (max (((char.'Ability scores').'Dex').Modifier) (((char.'Ability scores').'Str').Modifier))
+    if contains(toLower(weapon.data.weaponStats.Stats.Properties), "finesse") then
+        max char.'Ability scores'.'Dex'.Modifier (char.'Ability scores'.'Str'.Modifier)
     else
-     (((char.'Ability scores').'Str').Modifier))
+     char.'Ability scores'.'Str'.Modifier
 
 abiltyBonusForRangedWeapon (weapon, char) =
-    (if (contains((toLower(((((weapon.data).weaponStats).Stats).Properties))), "thrown")) then
-         (((char.'Ability scores').'Str').Modifier)
+    if contains(toLower(weapon.data.weaponStats.Stats.Properties), "thrown") then
+         char.'Ability scores'.'Str'.Modifier
     else
-     (((char.'Ability scores').'Dex').Modifier))
+     char.'Ability scores'.'Dex'.Modifier
 
-attack (name, tohit, damage, damagebonus ) = custom
+attack (name, tohit, damage, damagebonus) = custom
 {
     Name= name
     Tohit = modifier {
         value=tohit
-        valuedice= (D20Roll (characterTable))
+        valuedice= D20Roll (characterTable)
     }
     Damage= string {
         value=damage
@@ -27,29 +27,29 @@ attack (name, tohit, damage, damagebonus ) = custom
 }
 
 attacksFor (char) =
-  (concat (
-    (map 
-     (((weapon)->
-      (attack((weapon.Name),
-       (
-        ((toHitBonus((weapon.Description))) +
-           (abiltyBonusForMeleeWeapon (weapon, char)))
-         + ((characterTable.Basics).'Proficiency bonus')),
-        ((((weapon.data).weaponStats).Stats).Damage),(abiltyBonusForMeleeWeapon (weapon, char))))), ((char.'Equipment').'Melee weapons'))),
-    (map 
-     (((weapon)->
-      (attack((weapon.Name),
-       (
-        ((toHitBonus((weapon.Description))) +
-           (abiltyBonusForRangedWeapon (weapon, char)))
-         + ((characterTable.Basics).'Proficiency bonus')),
-        ((((weapon.data).weaponStats).Stats).Damage),(abiltyBonusForRangedWeapon (weapon, char))))), ((char.'Equipment').'Ranged weapons')))
-    ))
+  concat (
+    map
+     ((weapon)->
+      attack(weapon.Name,
+       
+        toHitBonus(weapon.Description) +
+           abiltyBonusForMeleeWeapon (weapon, char)
+         + characterTable.Basics.'Proficiency bonus',
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char)), char.'Equipment'.'Melee weapons'),
+    map
+     ((weapon)->
+      attack(weapon.Name,
+       
+        toHitBonus(weapon.Description) +
+           abiltyBonusForRangedWeapon (weapon, char)
+         + characterTable.Basics.'Proficiency bonus',
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char)), char.'Equipment'.'Ranged weapons')
+    )
 
 attackTable = list
   {
-        source = (attacksFor( characterTable))
+        source = attacksFor(characterTable)
         singular = "Attack"
-        editable = none 
+        editable = none
         valueType = attack
   }

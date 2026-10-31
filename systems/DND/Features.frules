@@ -1,25 +1,25 @@
-classFeatures(classname,level) = 
-    (map 
+classFeatures(classname,level) =
+    (map
         (
-            ((feature)->(nameAndDescription((feature.Name),(feature.Description)))),
-              (filter( ((f)->((f.Level)<(level+1))),
-                ((first ((filter (((class)->((class.Name) == classname)), (classInfo (libraryClasses))))))
-                .Features)))
+            (feature)->nameAndDescription(feature.Name,feature.Description),
+              filter((f)->f.Level<level+1,
+                first (filter ((class)->class.Name == classname, classInfo (libraryClasses)))
+                .Features)
                 )
         )
 
 raceFeatures(main, subrace)=
-   (if (subrace=="Standard") then
-    ((getRace(main)).Features)
+   if subrace=="Standard" then
+    getRace(main).Features
    else
-    ((getSubrace(main,subrace)).Features))
+    getSubrace(main,subrace).Features
 
-jackBonus(char) = (bonusFrom (
+jackBonus(char) = bonusFrom (
                     [
-                      (map ( ((x)->(x.Name)) ,(classFeatures ((((char.Class).Main).Name), (((char.Class).Main).Levels))))),
-                      (map ( ((x)->(x.Name)) ,((char.'Features and Traits').'Feats'))),
-                      (map ( ((x)->(x.Name)) ,((char.'Features and Traits').'Other features')))
-                    ],"Jack of All Trades", (((char.Basics).'Proficiency bonus') / 2)))
+                      map ((x)->x.Name ,classFeatures (char.Class.Main.Name, char.Class.Main.Levels)),
+                      map ((x)->x.Name ,char.'Features and Traits'.'Feats'),
+                      map ((x)->x.Name ,char.'Features and Traits'.'Other features')
+                    ],"Jack of All Trades", char.Basics.'Proficiency bonus' / 2)
 
 autoCompletes=[
    "AC +1"
@@ -65,13 +65,13 @@ features= table
             size = wide
             rowTitle = hidden
         }
-          source=(classFeatures (((Class.Main).Name), ((Class.Main).Levels)))
+          source=classFeatures (Class.Main.Name, Class.Main.Levels)
           singular = "Feature"
-          editable = none 
+          editable = none
     }
     
     'Feats'=list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -79,11 +79,11 @@ features= table
         singular = "Feat"
         editable = character
         autocomplete = autoCompletes
-        source=(secondary.Feats)
+        source=secondary.Feats
     }
 
     'Other features'=list
-    { 
+    {
         tableLayout = layout
         {
           size = wide
@@ -91,7 +91,7 @@ features= table
         singular = "Feature"
         editable = character
         autocomplete = autoCompletes
-        source=(secondary.'Other features')
+        source=secondary.'Other features'
     }
 
 }

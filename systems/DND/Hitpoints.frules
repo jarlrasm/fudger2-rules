@@ -1,8 +1,8 @@
-hitDie(classname,level)=((first ((filter (((class)->((class.Name) == classname)), (classInfo (libraryClasses)))))).HitDie)
+hitDie(classname,level)=first (filter ((class)->class.Name == classname, classInfo (libraryClasses))).HitDie
 
-maxHitpoints(classname,level,conModifier) = 
-    (((((((hitDie(classname,level))/2)+1)*(level-1))+(hitDie(classname,level)))+(conModifier*level))
-      + (bonusWithValue ((allSources(characterTable)), "\HitPoints\s*\+([0-9])\b" )))
+maxHitpoints(classname,level,conModifier) =
+    (hitDie(classname,level)/2+1)*(level-1)+hitDie(classname,level)+conModifier*level
+      + bonusWithValue (allSources(characterTable), "\HitPoints\s*\+([0-9])\b")
 
 hitpoints = table
   {
@@ -13,8 +13,8 @@ hitpoints = table
               }
     Max=integer
               {
-                  value=(maxHitpoints (((Class.Main).Name), ((Class.Main).Levels), (('Ability scores'.'Con').Modifier) ))
+                  value=maxHitpoints (Class.Main.Name, Class.Main.Levels, 'Ability scores'.'Con'.Modifier)
                   editable=none
               }
-    HitDie=(hitDie(((Class.Main).Name), ((Class.Main).Levels)))
+    HitDie=hitDie(Class.Main.Name, Class.Main.Levels)
   }

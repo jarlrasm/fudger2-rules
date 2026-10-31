@@ -46,13 +46,13 @@ spellStats =ruleset
                 sortedBy = sort
                 {
                     prefix="Level"
-                    sort=(Stats.level)
+                    sort=Stats.level
                     }
                 filters= [
                     filter {
                         name="Level"
                         prefix="Level"
-                        filter=(Stats.level)}]
+                        filter=Stats.level}]
                 defaultImage = "/images/spell.svg"
             }
             Stats= table
@@ -133,7 +133,7 @@ DND5e = system
     
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features", "Feats"]
     otherLibararyTypes = ["Classes"]
-    initiativeCompare(item1,item2) = (compare (item1 ,item2))
+    initiativeCompare(item1,item2) = compare (item1 ,item2)
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
 
 }
