@@ -27,17 +27,107 @@ fromAttribute(attribute) =
       case "ST" then characterTable.Attributes.ST/10+10
       case "DX" then characterTable.Attributes.DX/20+10
       case "IQ" then characterTable.Attributes.IQ/20+10
-      case "Per" then characterTable.Attributes.IQ/20+10
-      case "Will" then characterTable.Attributes.IQ/20+10
+      case "Per" then characterTable.Attributes.IQ/20+10+characterTable.'Bought secondary'.Perception/5
+      case "Will" then characterTable.Attributes.IQ/20+10+characterTable.'Bought secondary'.Will/5
       else characterTable.Attributes.HT/10+10
-    
-    
-    
 
-divideWithPrecision(x,divisor,precision) =
-  toString(x/divisor) + "." +toString(precision/divisor*(x-x/divisor*divisor))
-  
+signedText(n) = if n > 0 then "+" + toString (n) else toString (n)
+
+quarterText(q) = toString (q / 4) + item (q - q / 4 * 4, [".00", ".25", ".50", ".75"])
+
+signedQuarterText(q) = if q < 0 then "-" + quarterText (0 - q) else "+" + quarterText (q)
+
+speedQuarters(char) =
+    fromAttribute ("HT") + fromAttribute ("DX") + char.'Bought secondary'.'Basic speed' / 5
+
+basicMove(char) = speedQuarters (char) / 4 + char.'Bought secondary'.'Basic move' / 5
+
+secondaryPoints(char) =
+    char.'Bought secondary'.HP + char.'Bought secondary'.Will + char.'Bought secondary'.Perception +
+    char.'Bought secondary'.FP + char.'Bought secondary'.'Basic speed' + char.'Bought secondary'.'Basic move'
+
+weightFraction(text) =
+    if contains ("x" + text, "x0") then
+        toInt (text)
+    else
+        if toInt (text) < 10 then toInt (text) * 10 else toInt (text)
+
+weightOf(text) =
+    toInt (first (split (".", first (split (" ", text))))) * 100 +
+    (if count (split (".", first (split (" ", text)))) > 1 then
+        weightFraction (item (1, split (".", first (split (" ", text)))))
+    else
+        0)
+
+basicLift(st) = if st * st > 49 then (st * st + 2) / 5 * 100 else st * st * 20
+
+poundsText(h) =
+    toString (h / 100) +
+    (if h - h / 100 * 100 == 0 then
+        ""
+    else
+        if h - h / 100 * 100 < 10 then
+            ".0" + toString (h - h / 100 * 100)
+        else
+            if h - h / 10 * 10 == 0 then
+                "." + toString ((h - h / 100 * 100) / 10)
+            else
+                "." + toString (h - h / 100 * 100)) +
+    " lb."
+
+encumbranceLevel(weight, lift) =
+    if weight < lift + 1 then 0
+    else if weight < 2 * lift + 1 then 1
+    else if weight < 3 * lift + 1 then 2
+    else if weight < 6 * lift + 1 then 3
+    else if weight < 10 * lift + 1 then 4
+    else 5
+
+encumbranceNames = ["None", "Light", "Medium", "Heavy", "Extra-Heavy", "Overloaded"]
+
+encumberedMove(move, level) = if level > 4 then 0 else max 1 (move * (5 - level) / 5)
+
+statsWeight(stats) = weightOf (valueOr (stats, "Weight", "0"))
+
+carriedWeight(char) =
+    sum (map ((x)->statsWeight (x.data.meleeWeaponStats.Stats), char.'Melee weapons')) +
+    sum (map ((x)->statsWeight (x.data.rangedWeaponStats.Stats), char.'Ranged weapons')) +
+    sum (map ((x)->statsWeight (x.data.armourStats.Stats), char.Armour)) +
+    sum (map ((x)->statsWeight (x.data.itemStats.Stats), char.'Other items'))
+
+encumbranceOf(char) = encumbranceLevel (carriedWeight (char), basicLift (fromAttribute ("ST")))
+
+hasTrait(traits, name) = count (filter ((x)->x.Name == name, traits)) > 0
+
+combatReflexes(char) = if hasTrait (char.Advantages, "Combat Reflexes") then 1 else 0
+
+shieldBonus(char) =
+    first (reverse (sort (concat ([0], map ((a)->valueOr (a.data.armourStats.Stats, "DB", 0), char.Armour)))))
+
+defenseBonus(char) = combatReflexes (char) + shieldBonus (char)
+
+dodge(char) = speedQuarters (char) / 4 + 3 - encumbranceOf (char) + defenseBonus (char)
+
+block(char) = 3 + weaponLevel ("Shield") / 2 + defenseBonus (char)
+
+hasShield(char) = if shieldBonus (char) > 0 then visible else none
+
+drMain(text) = toInt (first (split ("/", text)))
+
+drCrushing(text) = if contains (text, "/") then toInt (item (1, split ("/", text))) else drMain (text)
+
+drText(main, crushing) = if main == crushing then toString (main) else toString (main) + "/" + toString (crushing)
+
+drTotal(texts) = drText (sum (map ((t)->drMain (t), texts)), sum (map ((t)->drCrushing (t), texts)))
+
+drAt(char, location) =
+    drTotal (map (
+        (a)->a.data.armourStats.Stats.DR,
+        filter ((a)->contains (toLower (a.data.armourStats.Stats.Location), location), char.Armour)))
+
 skillvalue(points,attribute,difficulty) =fromAttribute(attribute)+bonus(points,difficulty)
+
+boolToVisible(flag) = if flag then visible else none
 
 skillLevel(name, level, points) = custom
 {
@@ -144,11 +234,11 @@ weaponLevel(text) =
     else
         defaultWeaponLevel (text)
 
-parryFor(level, text) =
+parryFor(level, text, bonus) =
     if contains (text, "No") then
         "No"
     else
-        toString (3 + level / 2 + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
+        toString (3 + level / 2 + bonus + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
 
 attack(name, level, mode, parry, reach) = custom
 {
@@ -175,7 +265,7 @@ meleeAttacks(weapon) =
             weapon.Name,
             weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
             mode,
-            "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry),
+            "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry, defenseBonus (characterTable)),
             "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach),
         split (" / ", weapon.data.meleeWeaponStats.Stats.Damage))
 
@@ -197,7 +287,9 @@ attacksFor(char) =
 attributePoints(char) =
     char.Attributes.ST + char.Attributes.DX + char.Attributes.IQ + char.Attributes.HT
 
-traitPoints(stats) = valueOr (stats, "Points", 0)
+traitLevels(stats) = if valueOr (stats, "Per level", false) then valueOr (stats, "Levels", 1) else 1
+
+traitPoints(stats) = valueOr (stats, "Points", 0) * traitLevels (stats)
 
 advantagePoints(char) = sum (map ((a)->traitPoints (a.data.advantageStats.Stats), char.Advantages))
 
@@ -242,18 +334,18 @@ characterTable = ruleset
                     }
             Max=integer
                     {
-                        value=fromAttribute("ST")
+                        value=fromAttribute("ST")+characterTable.'Bought secondary'.HP/2
                         editable=none
                     }
         }
             Will=integer
                     {
-                        value=fromAttribute("IQ")
+                        value=fromAttribute("Will")
                         editable=none
                     }
             Perception=integer
                     {
-                        value=fromAttribute("IQ")
+                        value=fromAttribute("Per")
                         editable=none
                     }
         'Fatigue Points' = table
@@ -266,20 +358,65 @@ characterTable = ruleset
                     }
             Max=integer
                     {
-                        value=fromAttribute("HT")
+                        value=fromAttribute("HT")+characterTable.'Bought secondary'.FP/3
                         editable=none
                     }
         }
-            'Basic speed'=divideWithPrecision(fromAttribute("HT")+fromAttribute("DX"),4,100)
-            'Move'=(fromAttribute("HT")+fromAttribute("DX")) /4
+            'Basic speed'=quarterText (speedQuarters (characterTable))
+            'Basic move'=basicMove (characterTable)
+            'Basic lift'=poundsText (basicLift (fromAttribute ("ST")))
+    }
+    'Bought secondary' = table
+    {
+        visible = editor
+        HP = integer { step = 2 render = signedText (HP / 2) }
+        Will = integer { step = 5 render = signedText (Will / 5) }
+        Perception = integer { step = 5 render = signedText (Perception / 5) }
+        FP = integer { step = 3 render = signedText (FP / 3) }
+        'Basic speed' = integer { step = 5 render = signedQuarterText ('Basic speed' / 5) }
+        'Basic move' = integer { step = 5 render = signedText ('Basic move' / 5) }
+    }
+    Encumbrance = table
+    {
+        'Carried weight' = poundsText (carriedWeight (characterTable))
+        Level = item (encumbranceOf (characterTable), encumbranceNames)
+        Move = encumberedMove (basicMove (characterTable), encumbranceOf (characterTable))
+    }
+    'Active defenses' = table
+    {
+        Dodge = integer
+        {
+            value = dodge (characterTable)
+            valuedice = 3d6
+        }
+        Block = integer
+        {
+            visible = hasShield (characterTable)
+            value = block (characterTable)
+            valuedice = 3d6
+        }
+    }
+    'Damage resistance' = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skull = drAt (characterTable, "skull")
+        Face = drAt (characterTable, "face")
+        Neck = drAt (characterTable, "neck")
+        Torso = drAt (characterTable, "torso")
+        Groin = drAt (characterTable, "groin")
+        Arms = drAt (characterTable, "arms")
+        Hands = drAt (characterTable, "hands")
+        Legs = drAt (characterTable, "legs")
+        Feet = drAt (characterTable, "feet")
     }
     'Spent points' = table
     {
         Attributes = attributePoints (characterTable)
+        Secondary = secondaryPoints (characterTable)
         Advantages = advantagePoints (characterTable)
         Disadvantages = disadvantagePoints (characterTable)
         Skills = skillPoints (characterTable)
-        Total = attributePoints (characterTable) + advantagePoints (characterTable) + disadvantagePoints (characterTable) + skillPoints (characterTable)
+        Total = attributePoints (characterTable) + secondaryPoints (characterTable) + advantagePoints (characterTable) + disadvantagePoints (characterTable) + skillPoints (characterTable)
     }
     'Learned skills' = list
     {
@@ -461,6 +598,7 @@ advantageStats = ruleset
             {
                 Points = integer {}
                 'Per level' = bool {}
+                Levels = integer { default = 1 minvalue = 1 visible = boolToVisible ('Per level') }
                 Type = string { keys = traitTypes }
             }
         }
@@ -477,6 +615,7 @@ disadvantageStats = ruleset
             {
                 Points = integer {}
                 'Per level' = bool {}
+                Levels = integer { default = 1 minvalue = 1 visible = boolToVisible ('Per level') }
                 'Self control' = bool {}
                 Type = string { keys = traitTypes }
             }
