@@ -18,30 +18,14 @@ getSpellVisibility (classname, level, spellevel) =
 
 spellCastingAbilty(class, char) =
 
-  (if class.SpellcastingAbilityModifier == "Charisma" then
-    char.'Ability scores'.'Cha'.Modifier
-  else
-   if class.SpellcastingAbilityModifier == "Intelligence" then
-    char.'Ability scores'.'Int'.Modifier
-    else
-     if class.SpellcastingAbilityModifier == "Wisdom" then
-      char.'Ability scores'.'Wis'.Modifier
-      else
-      if class.SpellcastingAbilityModifier == "Constitution" then
-        char.'Ability scores'.'Con'.Modifier
-        else
-        if class.SpellcastingAbilityModifier == "Dexterity" then
-          char.'Ability scores'.'Dex'.Modifier
-          else
-            if class.SpellcastingAbilityModifier == "Strength" then
-              char.'Ability scores'.'Str'.Modifier
-              else
-              0
-              
-          
-        
-      
-    
+  (switch class.SpellcastingAbilityModifier
+    case "Charisma" then char.'Ability scores'.'Cha'.Modifier
+    case "Intelligence" then char.'Ability scores'.'Int'.Modifier
+    case "Wisdom" then char.'Ability scores'.'Wis'.Modifier
+    case "Constitution" then char.'Ability scores'.'Con'.Modifier
+    case "Dexterity" then char.'Ability scores'.'Dex'.Modifier
+    case "Strength" then char.'Ability scores'.'Str'.Modifier
+    else 0
   )
   +bonusWithValue (allSources(char),"[S|s]pell casting ability.*(increase by |\+)([0-9])")
   

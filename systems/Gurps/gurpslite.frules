@@ -15,15 +15,17 @@ bonus(points,difficulty)=
       else
         6
       ) -
-      (if difficulty == "Easy" then 0
-      else if difficulty == "Average" then 1
-      else 2
+      (switch difficulty
+        case "Easy" then 0
+        case "Average" then 1
+        else 2
       )
 fromAttribute(attribute) =
-    if attribute == "ST" then characterTable.Attributes.ST/10+10
-     else if attribute == "DX" then characterTable.Attributes.DX/20+10
-     else if attribute == "IQ" then characterTable.Attributes.IQ/20+10
-     else characterTable.Attributes.HT/10+10
+    switch attribute
+      case "ST" then characterTable.Attributes.ST/10+10
+      case "DX" then characterTable.Attributes.DX/20+10
+      case "IQ" then characterTable.Attributes.IQ/20+10
+      else characterTable.Attributes.HT/10+10
     
     
     

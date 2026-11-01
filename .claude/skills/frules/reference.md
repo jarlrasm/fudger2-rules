@@ -41,6 +41,14 @@ TypeName = constructor { field = value  other = value }
 - Arithmetic: `+ - * /` (integer division), parentheses for grouping.
 - Comparison: `==`, `>`, `<`. Returns a bool.
 - Conditional: `if cond then a else b`. Chain with nested `if`s. `else` is required.
+- Switch: `switch value case x then a case y then b else c`. Compares `value` to each case with `==` in order and returns the first match, or the `else` value. At least one `case` and the `else` are required. Cases can go on their own lines:
+
+  ```
+  Size = switch Category
+      case "small" then 1
+      case "medium" then 2
+      else 3
+  ```
 - `max a b`, `min a b`: two operands, no commas. Wrap compound operands in parentheses: `max 0 (Scratch.realvalue - Scratch.number)`. `max (a, b)` is not this; it calls a user function named `max`.
 - Function call: `f (a, b)`. A call with one argument is still `f (x)`.
 - Lambda: `(x)->x.Name`, `(a, b)->a + b`. Parameters always in parentheses.

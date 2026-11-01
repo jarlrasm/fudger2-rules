@@ -36,29 +36,10 @@ oneOnWild(rolls) =
                   
 
 starDice (dice) = ([dice],((baseline,throws)->
-  if first(
-            first (throws)
-            .rolls) == 6 then
-            rethrow (sum(first (throws)
-            .rolls) + first (throws)
-            .bonus
-            )
-         else
-        if first(
-            first (throws)
-            .rolls) == 1 then
-              
-              oneOnWild(
-                first (throws)
-                .rolls) + first (throws)
-            .bonus
-              
-         else
-              
-              sum(
-                first (throws)
-                .rolls) + first (throws)
-            .bonus
+  switch first(first (throws).rolls)
+    case 6 then rethrow (sum(first (throws).rolls) + first (throws).bonus)
+    case 1 then oneOnWild(first (throws).rolls) + first (throws).bonus
+    else sum(first (throws).rolls) + first (throws).bonus
               ))
               
               
