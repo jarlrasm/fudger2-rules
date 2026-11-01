@@ -42,5 +42,14 @@ classTable=table
                 default=1
           }
       }
-      Race = string {}
+      Race = string
+      {
+        keys = map ((x)->x.Name, allRaces)
+        default="Unknown"
+      }
+      Subrace = string
+      {
+        keys = subraceNames (getRace (Race))
+        default="Standard"
+      }
     }

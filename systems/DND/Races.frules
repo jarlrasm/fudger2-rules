@@ -14,20 +14,18 @@ race(name,features,subraces) = {
     Features=features
     Subraces=subraces
 }
-getRace(racename)=first (filter ((race)->race.Name == racename, raceInfo))
+libraryRaces =
+    map (
+        (x)->race (
+            x.name,
+            map ((f)->raceFeature (f.Name, f.Description), x.data.raceStats.Stats.Features),
+            map (
+                (s)->subrace (s.Name, map ((f)->raceFeature (f.Name, f.Description), s.Features)),
+                x.data.raceStats.Stats.Subraces)),
+        library.'Races')
+
+allRaces = concat (libraryRaces, raceInfo)
+
+getRace(racename)=first (filter ((race)->race.Name == racename, allRaces))
 subraceNames(race)=concat (map ((x)->x.Name, race.Subraces),["Standard"])
 getSubrace(racename,subraceName)=first (filter ((race)->race.Name == subraceName, getRace(racename).Subraces))
-
-raceTable=table
-    {
-          Main = string
-          {
-            keys = map ((x)->x.Name, raceInfo)
-            default="Unknown"
-          }
-          Subrace = string
-          {
-            keys =  subraceNames(getRace(Main))
-            default="Standard"
-          }
-    }

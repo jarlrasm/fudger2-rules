@@ -9,10 +9,12 @@ classFeatures(classname,level) =
         )
 
 raceFeatures(main, subrace)=
-   if subrace=="Standard" then
-    getRace(main).Features
-   else
-    getSubrace(main,subrace).Features
+   map (
+     (feature)->nameAndDescription (feature.Name, feature.Description),
+     if subrace=="Standard" then
+       getRace(main).Features
+     else
+       concat (getRace(main).Features, getSubrace(main,subrace).Features))
 
 jackBonus(char) = bonusFrom (
                     [
@@ -69,7 +71,18 @@ features= table
           singular = "Feature"
           editable = none
     }
-    
+    'Race features'=list
+    {
+        tableLayout = layout
+        {
+            size = wide
+            rowTitle = hidden
+        }
+          source=raceFeatures (Class.Race, Class.Subrace)
+          singular = "Feature"
+          editable = none
+    }
+
     'Feats'=list
     {
         tableLayout = layout

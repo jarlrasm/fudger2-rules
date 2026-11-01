@@ -107,6 +107,39 @@ classStats = ruleset {
     }
 }
 
+raceStats = ruleset
+{
+    Stats=table
+    {
+        Features=list
+        {
+            singular = "Feature"
+            valueType = custom
+            {
+                Name=string{}
+                Description=string{multiline = true}
+            }
+        }
+        Subraces=list
+        {
+            singular = "Subrace"
+            valueType = custom
+            {
+                Name=string{}
+                Features=list
+                {
+                    singular = "Feature"
+                    valueType = custom
+                    {
+                        Name=string{}
+                        Description=string{multiline = true}
+                    }
+                }
+            }
+        }
+    }
+}
+
 featStats =ruleset
 {
     rulesetConfiguration =
@@ -125,6 +158,7 @@ DND5e = system
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats
     Classes = classStats
+    Races = raceStats
     Armour= armourStats
     Spells = spellStats
     Feats = featStats
@@ -132,7 +166,7 @@ DND5e = system
     description="DND 5e rules"
     
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features", "Feats"]
-    otherLibararyTypes = ["Classes"]
+    otherLibararyTypes = ["Classes", "Races"]
     initiativeCompare(item1,item2) = compare (item1 ,item2)
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
 
