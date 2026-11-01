@@ -49,14 +49,20 @@ skillLevel(name, level, points) = custom
     Points = points
 }
 
+trainingPoints(stats) =
+    if count (filter ((x)->x.Key == "Training", toList (stats))) > 0 then
+        valueOr (stats.Training, "Points", 1)
+    else
+        1
+
 skillLevelFor(skill) =
     skillLevel(
         skill.Name,
         skillvalue(
-            valueOr (skill.data.skillStats, "Points", 1),
+            trainingPoints (skill.data.skillStats),
             valueOr (skill.data.skillStats.Stats, "Attribute", "IQ"),
             valueOr (skill.data.skillStats.Stats, "Difficulty", "Average")),
-        valueOr (skill.data.skillStats, "Points", 1))
+        trainingPoints (skill.data.skillStats))
 
 characterTable = ruleset
 {
@@ -126,32 +132,6 @@ characterTable = ruleset
             'Basic speed'=divideWithPrecision(fromAttribute("HT")+fromAttribute("DX"),4,100)
             'Move'=(fromAttribute("HT")+fromAttribute("DX")) /4
     }
-    Skills = keyvalues
-        {
-        tableLayout = layout
-        {
-          size = wide
-        }
-            singular = "Skill"
-            editablekeys = character
-            valueType = custom {
-                Name=string{}
-                Value=integer {
-                 value=skillvalue(Details.Points, Details.'Based on',Details.'Difficulty')
-                valuedice=3d6
-
-                }
-                Details=table{
-                    visible=editor
-                Points=integer{}
-                'Based on'=string {
-                    keys = ["ST","DX","IQ","HT","Per","Will"]
-                    }
-                'Difficulty'=string {
-                    keys = ["Easy","Average","Hard","Very Hard"]
-                }}
-            }
-        }
     'Learned skills' = list
     {
         tableLayout = layout
@@ -163,7 +143,7 @@ characterTable = ruleset
         editable = character
         visible = editor
     }
-    'Skill levels' = list
+    Skills = list
     {
         tableLayout = layout
         {
@@ -350,7 +330,10 @@ skillStats = ruleset
                     filter { name = "Difficulty" prefix = "" filter = Stats.Difficulty }
                 ]
             }
-            Points = integer { default = 1 }
+            Training = table
+            {
+                Points = integer { default = 1 }
+            }
             Stats = table
             {
                 Attribute = string { keys = ["ST","DX","IQ","HT","Per","Will"] }

@@ -350,7 +350,7 @@ def build():
     for name, attribute, difficulty, defaults in SKILLS:
         short = {"Easy": "E", "Average": "A", "Hard": "H", "Very Hard": "VH"}[difficulty]
         entities.append(entity("Skills", name, f"{attribute}/{short}. Defaults: {defaults}.", {
-            "skillStats": {"Stats": {"Attribute": attribute, "Difficulty": difficulty, "Defaults": defaults}}
+            "skillStats": {"Training": {"Points": 1}, "Stats": {"Attribute": attribute, "Difficulty": difficulty, "Defaults": defaults}}
         }))
     return {
         "name": "GURPS Lite",
