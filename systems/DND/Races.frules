@@ -1,5 +1,3 @@
-#include "/systems/DND/Generated/CharacterRaces.frules"
-
 subrace(name,features) = {
     Name=name
     Features=features
@@ -24,8 +22,6 @@ libraryRaces =
                 x.data.raceStats.Stats.Subraces)),
         library.'Races')
 
-allRaces = concat (libraryRaces, raceInfo)
-
-getRace(racename)=first (filter ((race)->race.Name == racename, allRaces))
+getRace(racename)=first (filter ((race)->race.Name == racename, libraryRaces))
 subraceNames(race)=concat (map ((x)->x.Name, race.Subraces),["Standard"])
 getSubrace(racename,subraceName)=first (filter ((race)->race.Name == subraceName, getRace(racename).Subraces))

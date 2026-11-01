@@ -1,6 +1,3 @@
-#include "/systems/DND/Generated/CharacterClasses.frules"
-
-
 class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels)=ruleset
 {
     Name=name
@@ -27,13 +24,31 @@ spellsForLevel(characterLevel,spells)=
     Spells=spells
 }
 
+mapSpellevels(spellevels)=
+    map (
+        (x)->classSpellevel (
+            toInt (x.Key),
+            map ((y)->spellsForLevel (toInt (y.Key), y.Value.'Number of spells'), toList (x.Value.levels))),
+        toList (spellevels))
+
+libraryClasses =
+    map (
+        (x)->class (
+            x.name,
+            x.data.classStats.Stats.HitDie,
+            map ((sav)->sav.Attr, x.data.classStats.Stats.SavingThrows),
+            x.data.classStats.Stats.SpellcastingAbilityModifier,
+            map ((feat)->classFeature (feat.Level, feat.Name, feat.Description), x.data.classStats.Stats.Features),
+            mapSpellevels (x.data.classStats.Stats.Spellevels)),
+        library.'Classes')
+
 classTable=table
     {
       Main = custom
       {
           Name = string
           {
-            keys = map ((x)->x.Name, classInfo (libraryClasses))
+            keys = map ((x)->x.Name, libraryClasses)
             default="Unknown"
           }
           Levels = integer
@@ -44,7 +59,7 @@ classTable=table
       }
       Race = string
       {
-        keys = map ((x)->x.Name, allRaces)
+        keys = map ((x)->x.Name, libraryRaces)
         default="Unknown"
       }
       Subrace = string
