@@ -131,33 +131,24 @@ parryFor(level, text) =
     else
         toString (3 + level / 2 + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
 
-attack(name, level, damage, parry, reach) = custom
+attack(name, damage, parry) = custom
 {
     Name = name
-    'To hit' = integer {
-        value = level
-        valuedice = 3d6
-    }
-    Damage = damage
+    Damage = "Damage: " + damage
     Parry = parry
-    'Reach or range' = reach
 }
 
 meleeAttack(weapon) =
     attack (
         weapon.Name,
-        weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
         weaponDamage (weapon.data.meleeWeaponStats.Stats.Damage),
-        parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry),
-        weapon.data.meleeWeaponStats.Stats.Reach)
+        "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry))
 
 rangedAttack(weapon) =
     attack (
         weapon.Name,
-        weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
         weaponDamage (weapon.data.rangedWeaponStats.Stats.Damage),
-        "-",
-        weapon.data.rangedWeaponStats.Stats.Range)
+        "")
 
 attacksFor(char) =
     concat (
