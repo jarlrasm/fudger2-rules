@@ -406,6 +406,30 @@ def action_name(a):
     return name
 
 
+ATTACK_ROLL = re.compile(r"(Melee or Ranged|Melee|Ranged) Attack Roll: \+(\d+), ([^.]*?ft\.(?: or range [^.]*?ft\.)?)")
+DAMAGE = re.compile(r"(\d+) \((\d+d\d+(?: [+-] \d+)?)\) (\w+) damage|\b(\d+) (\w+) damage")
+
+
+def attack(a):
+    m = ATTACK_ROLL.search(a["Description"])
+    if not m:
+        return None
+    rest = a["Description"][m.end():]
+    first = re.split(r"\.(?:\s|$)", rest, maxsplit=1)[0]
+    parts = []
+    for d in DAMAGE.finditer(first):
+        if d.group(2):
+            parts.append(f"{d.group(2)} {d.group(3)}")
+        else:
+            parts.append(f"{d.group(4)} {d.group(5)}")
+    return {
+        "Name": a["Name"],
+        "To hit": int(m.group(2)),
+        "Reach": f"{m.group(1)}, {m.group(3)}",
+        "Damage": " plus ".join(parts),
+    }
+
+
 def creatures():
     result = []
     for c in sorted(load("creatures"), key=lambda x: x["name"]):
@@ -457,6 +481,7 @@ def creatures():
             "Bonus Actions": lists["BONUS_ACTION"],
             "Reactions": lists["REACTION"],
             "Legendary Actions": lists["LEGENDARY_ACTION"],
+            "Attacks": [x for x in (attack(a) for a in lists["ACTION"] + lists["BONUS_ACTION"] + lists["REACTION"]) if x],
         }
         hp = f"HP {c['hit_points']} ({c['hit_dice']})" if c.get("hit_dice") else ""
         ac = f"AC {c['armor_class']}" + (f" ({c['armor_detail']})" if c.get("armor_detail") else "")

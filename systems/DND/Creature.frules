@@ -25,7 +25,7 @@ creatureTable = ruleset
     'Initiative'=modifier
               {
                 default=0
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
     Speed = string {}
     Immunities = string {}
@@ -35,6 +35,24 @@ creatureTable = ruleset
     'Passive Perception' = integer {}
     Languages = string {}
     Challenge = string {}
+    'Normal'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup="rolltype"
+        }
+    'Advantage'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup="rolltype"
+        }
+    'Disadvantage'= bool
+        {
+                editable=live
+                save = nosave
+                radiogroup="rolltype"
+        }
   }
   'Hitpoints' = table
   {
@@ -61,7 +79,7 @@ creatureTable = ruleset
               Modifier=modifier
               {
                 value=Score/2-5
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
 
           }
@@ -72,42 +90,42 @@ creatureTable = ruleset
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Dex=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Con=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Int=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Wis=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Cha=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
       }
@@ -121,129 +139,149 @@ creatureTable = ruleset
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           'Animal Handling' =custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Arcana =custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Athletics = custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Deception =custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           History=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Insight=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Intimidation=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Investigation=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Medicine=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Nature=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Perception=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Performance=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Persuasion=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Religion=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           'Sleight of Hand'=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Stealth=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
           Survival=custom
           {
               Modifier=modifier
               {
-                valuedice=1d20
+                valuedice= D20Roll (creatureTable)
               }
             }
       }
+  Attacks =
+  list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            'To hit' = modifier
+            {
+                valuedice = D20Roll (creatureTable)
+            }
+            Reach = string {}
+            Damage = string {}
+        }
+    }
   'Traits' =
   list
     {

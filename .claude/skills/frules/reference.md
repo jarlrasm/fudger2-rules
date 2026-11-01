@@ -265,7 +265,7 @@ characterTable = ruleset { Hitpoints = hitpoints {} }
 | `string` | `default`, `multiline = true`, `keys = [...]` (dropdown), `bonus` |
 | `bool` | `default`, `radiogroup = "name"` (bools sharing a group act as radio buttons) |
 | `slots` | Checkboxes. `number` (how many), `value` (computed fill), `allowedchange = increase` or `increaseAndClear`, `overflow = allow`, `overflowValue` (what spills into the next track). The stored count is `Name.realvalue`. |
-| `button` | `onClick = updates { (Field.realvalue) = expr ... }`. Each line sets the field on the left. Targets are relative to the button's table; start a target with `root.` to reach any table, e.g. `(root.Hitpoints.Current) = Hitpoints.Max`. |
+| `button` | `onClick = updates { (Field.realvalue) = expr ... }`. Each line sets the field on the left. Targets are relative to the button's table; start a target with `root.` to reach any table of the entity, e.g. `(root.Hitpoints.Current) = Hitpoints.Max`. |
 
 ### Options on any section or field
 
