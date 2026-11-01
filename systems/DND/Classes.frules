@@ -28,17 +28,19 @@ mapSpellevels(spellevels)=
     map (
         (x)->classSpellevel (
             toInt (x.Key),
-            map ((y)->spellsForLevel (toInt (y.Key), y.Value.'Number of spells'), toList (x.Value.levels))),
+            map ((y)->spellsForLevel (toInt (y.Key), valueOr (y.Value, "Number of spells", 0)), toList (x.Value.levels))),
         toList (spellevels))
 
 libraryClasses =
     map (
         (x)->class (
             x.name,
-            x.data.classStats.Stats.HitDie,
-            map ((sav)->sav.Attr, x.data.classStats.Stats.SavingThrows),
-            x.data.classStats.Stats.SpellcastingAbilityModifier,
-            map ((feat)->classFeature (feat.Level, feat.Name, feat.Description), x.data.classStats.Stats.Features),
+            valueOr (x.data.classStats.Stats, "HitDie", 6),
+            map ((sav)->valueOr (sav, "Attr", ""), valueOr (x.data.classStats.Stats, "SavingThrows", [])),
+            valueOr (x.data.classStats.Stats, "SpellcastingAbilityModifier", "None"),
+            map (
+                (feat)->classFeature (valueOr (feat, "Level", 1), valueOr (feat, "Name", ""), valueOr (feat, "Description", "")),
+                valueOr (x.data.classStats.Stats, "Features", [])),
             mapSpellevels (x.data.classStats.Stats.Spellevels)),
         library.'Classes')
 

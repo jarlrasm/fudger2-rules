@@ -12,14 +12,16 @@ race(name,features,subraces) = {
     Features=features
     Subraces=subraces
 }
+raceFeatureFrom(f)=raceFeature (valueOr (f, "Name", ""), valueOr (f, "Description", ""))
+
 libraryRaces =
     map (
         (x)->race (
             x.name,
-            map ((f)->raceFeature (f.Name, f.Description), x.data.raceStats.Stats.Features),
+            map ((f)->raceFeatureFrom (f), valueOr (x.data.raceStats.Stats, "Features", [])),
             map (
-                (s)->subrace (s.Name, map ((f)->raceFeature (f.Name, f.Description), s.Features)),
-                x.data.raceStats.Stats.Subraces)),
+                (s)->subrace (valueOr (s, "Name", ""), map ((f)->raceFeatureFrom (f), valueOr (s, "Features", []))),
+                valueOr (x.data.raceStats.Stats, "Subraces", []))),
         library.'Races')
 
 getRace(racename)=first (filter ((race)->race.Name == racename, libraryRaces))
