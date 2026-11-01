@@ -55,14 +55,125 @@ trainingPoints(stats) =
     else
         1
 
+learnedLevel(skill) =
+    skillvalue(
+        trainingPoints (skill.data.skillStats),
+        valueOr (skill.data.skillStats.Stats, "Attribute", "IQ"),
+        valueOr (skill.data.skillStats.Stats, "Difficulty", "Average"))
+
 skillLevelFor(skill) =
-    skillLevel(
-        skill.Name,
-        skillvalue(
-            trainingPoints (skill.data.skillStats),
-            valueOr (skill.data.skillStats.Stats, "Attribute", "IQ"),
-            valueOr (skill.data.skillStats.Stats, "Difficulty", "Average")),
-        trainingPoints (skill.data.skillStats))
+    skillLevel(skill.Name, learnedLevel (skill), trainingPoints (skill.data.skillStats))
+
+thrustDice = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2]
+thrustAdds = [-6,-6,-5,-5,-4,-4,-3,-3,-2,-2,-1,-1,0,0,1,1,2,2,-1,-1,0,0,1,1,2,2]
+swingDice = [1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5]
+swingAdds = [-5,-5,-4,-4,-3,-3,-2,-2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0]
+
+strengthIndex = (min 26 (max 1 (fromAttribute ("ST")))) - 1
+
+diceText(dice, adds) =
+    toString (dice) + "d" +
+    (if adds > 0 then "+" + toString (adds) else if adds < 0 then toString (adds) else "")
+
+modifierOf(text) = toInt (replace ("+", "", text))
+
+basedDamage(token, rest) =
+    if contains (token, "sw") then
+        diceText (item (strengthIndex, swingDice), item (strengthIndex, swingAdds) + modifierOf (replace ("sw", "", token))) + rest
+    else
+        if contains (token, "thr") then
+            diceText (item (strengthIndex, thrustDice), item (strengthIndex, thrustAdds) + modifierOf (replace ("thr", "", token))) + rest
+        else
+            token + rest
+
+damageMode(mode) =
+    basedDamage (first (split (" ", mode)), replace (first (split (" ", mode)), "", mode))
+
+joinModes(list) =
+    fold ("", (acc, x)->if acc == "" then x else acc + " / " + x, list)
+
+weaponDamage(text) = joinModes (map ((mode)->damageMode (mode), split (" / ", text)))
+
+skillCandidates(text) =
+    split (",", replace (" or ", ",", replace (", ", ",", first (split (" (", text)))))
+
+isCandidate(name, text) = count (filter ((c)->c == name, skillCandidates (text))) > 0
+
+learnedWeaponLevels(text) =
+    map ((s)->learnedLevel (s), filter ((s)->isCandidate (s.Name, text), characterTable.'Learned skills'))
+
+defaultPenalty(difficulty) =
+    switch difficulty
+        case "Easy" then 4
+        case "Average" then 5
+        case "Hard" then 6
+        else 7
+
+librarySkillsFor(text) = filter ((x)->isCandidate (x.name, text), library.Skills)
+
+defaultFromSkill(stats) = fromAttribute (stats.Attribute) - defaultPenalty (stats.Difficulty)
+
+defaultWeaponLevel(text) =
+    if count (librarySkillsFor (text)) > 0 then
+        defaultFromSkill (first (librarySkillsFor (text)).data.skillStats.Stats)
+    else
+        fromAttribute ("DX") - 5
+
+weaponLevel(text) =
+    if count (learnedWeaponLevels (text)) > 0 then
+        first (reverse (sort (learnedWeaponLevels (text))))
+    else
+        defaultWeaponLevel (text)
+
+parryFor(level, text) =
+    if contains (text, "No") then
+        "No"
+    else
+        toString (3 + level / 2 + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
+
+attack(name, level, damage, parry, reach) = custom
+{
+    Name = name
+    'To hit' = integer {
+        value = level
+        valuedice = 3d6
+    }
+    Damage = damage
+    Parry = parry
+    'Reach or range' = reach
+}
+
+meleeAttack(weapon) =
+    attack (
+        weapon.Name,
+        weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
+        weaponDamage (weapon.data.meleeWeaponStats.Stats.Damage),
+        parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry),
+        weapon.data.meleeWeaponStats.Stats.Reach)
+
+rangedAttack(weapon) =
+    attack (
+        weapon.Name,
+        weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
+        weaponDamage (weapon.data.rangedWeaponStats.Stats.Damage),
+        "-",
+        weapon.data.rangedWeaponStats.Stats.Range)
+
+attacks =
+    concat (
+        map ((weapon)->meleeAttack (weapon), characterTable.'Melee weapons'),
+        map ((weapon)->rangedAttack (weapon), characterTable.'Ranged weapons'))
+
+attributePoints =
+    characterTable.Attributes.ST + characterTable.Attributes.DX + characterTable.Attributes.IQ + characterTable.Attributes.HT
+
+traitPoints(stats) = valueOr (stats, "Points", 0)
+
+advantagePoints = sum (map ((a)->traitPoints (a.data.advantageStats.Stats), characterTable.Advantages))
+
+disadvantagePoints = sum (map ((d)->traitPoints (d.data.disadvantageStats.Stats), characterTable.Disadvantages))
+
+skillPoints = sum (map ((s)->trainingPoints (s.data.skillStats), characterTable.'Learned skills'))
 
 characterTable = ruleset
 {
@@ -132,6 +243,14 @@ characterTable = ruleset
             'Basic speed'=divideWithPrecision(fromAttribute("HT")+fromAttribute("DX"),4,100)
             'Move'=(fromAttribute("HT")+fromAttribute("DX")) /4
     }
+    'Spent points' = table
+    {
+        Attributes = attributePoints
+        Advantages = advantagePoints
+        Disadvantages = disadvantagePoints
+        Skills = skillPoints
+        Total = attributePoints + advantagePoints + disadvantagePoints + skillPoints
+    }
     'Learned skills' = list
     {
         tableLayout = layout
@@ -153,6 +272,17 @@ characterTable = ruleset
         singular = "Skill"
         editable = none
         valueType = skillLevel
+    }
+    Attacks = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = attacks
+        singular = "Attack"
+        editable = none
+        valueType = attack
     }
     Advantages = list
     {
