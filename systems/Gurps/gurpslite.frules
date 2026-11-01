@@ -69,7 +69,7 @@ thrustAdds = [-6,-6,-5,-5,-4,-4,-3,-3,-2,-2,-1,-1,0,0,1,1,2,2,-1,-1,0,0,1,1,2,2]
 swingDice = [1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5]
 swingAdds = [-5,-5,-4,-4,-3,-3,-2,-2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0]
 
-strengthIndex = (min 26 (max 1 (fromAttribute ("ST")))) - 1
+strengthIndex(st) = (min 26 (max 1 st)) - 1
 
 diceText(dice, adds) =
     toString (dice) + "d" +
@@ -79,10 +79,10 @@ modifierOf(text) = toInt (replace ("+", "", text))
 
 basedDamage(token, rest) =
     if contains (token, "sw") then
-        diceText (item (strengthIndex, swingDice), item (strengthIndex, swingAdds) + modifierOf (replace ("sw", "", token))) + rest
+        diceText (item (strengthIndex (fromAttribute ("ST")), swingDice), item (strengthIndex (fromAttribute ("ST")), swingAdds) + modifierOf (replace ("sw", "", token))) + rest
     else
         if contains (token, "thr") then
-            diceText (item (strengthIndex, thrustDice), item (strengthIndex, thrustAdds) + modifierOf (replace ("thr", "", token))) + rest
+            diceText (item (strengthIndex (fromAttribute ("ST")), thrustDice), item (strengthIndex (fromAttribute ("ST")), thrustAdds) + modifierOf (replace ("thr", "", token))) + rest
         else
             token + rest
 
@@ -159,21 +159,21 @@ rangedAttack(weapon) =
         "-",
         weapon.data.rangedWeaponStats.Stats.Range)
 
-attacks =
+attacksFor(char) =
     concat (
-        map ((weapon)->meleeAttack (weapon), characterTable.'Melee weapons'),
-        map ((weapon)->rangedAttack (weapon), characterTable.'Ranged weapons'))
+        map ((weapon)->meleeAttack (weapon), char.'Melee weapons'),
+        map ((weapon)->rangedAttack (weapon), char.'Ranged weapons'))
 
-attributePoints =
-    characterTable.Attributes.ST + characterTable.Attributes.DX + characterTable.Attributes.IQ + characterTable.Attributes.HT
+attributePoints(char) =
+    char.Attributes.ST + char.Attributes.DX + char.Attributes.IQ + char.Attributes.HT
 
 traitPoints(stats) = valueOr (stats, "Points", 0)
 
-advantagePoints = sum (map ((a)->traitPoints (a.data.advantageStats.Stats), characterTable.Advantages))
+advantagePoints(char) = sum (map ((a)->traitPoints (a.data.advantageStats.Stats), char.Advantages))
 
-disadvantagePoints = sum (map ((d)->traitPoints (d.data.disadvantageStats.Stats), characterTable.Disadvantages))
+disadvantagePoints(char) = sum (map ((d)->traitPoints (d.data.disadvantageStats.Stats), char.Disadvantages))
 
-skillPoints = sum (map ((s)->trainingPoints (s.data.skillStats), characterTable.'Learned skills'))
+skillPoints(char) = sum (map ((s)->trainingPoints (s.data.skillStats), char.'Learned skills'))
 
 characterTable = ruleset
 {
@@ -245,11 +245,11 @@ characterTable = ruleset
     }
     'Spent points' = table
     {
-        Attributes = attributePoints
-        Advantages = advantagePoints
-        Disadvantages = disadvantagePoints
-        Skills = skillPoints
-        Total = attributePoints + advantagePoints + disadvantagePoints + skillPoints
+        Attributes = attributePoints (characterTable)
+        Advantages = advantagePoints (characterTable)
+        Disadvantages = disadvantagePoints (characterTable)
+        Skills = skillPoints (characterTable)
+        Total = attributePoints (characterTable) + advantagePoints (characterTable) + disadvantagePoints (characterTable) + skillPoints (characterTable)
     }
     'Learned skills' = list
     {
@@ -279,7 +279,7 @@ characterTable = ruleset
         {
           size = wide
         }
-        source = attacks
+        source = attacksFor (characterTable)
         singular = "Attack"
         editable = none
         valueType = attack
