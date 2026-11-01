@@ -17,7 +17,7 @@ Read [reference.md](reference.md) for the full language before writing anything 
 ## Workflow
 
 1. Read `rules.json` and a similar existing system.
-2. Write the file(s). Start with `#include "/systems/common.frules"` if you need `compare`, `max (list)`, `nameAndDescription` or `entityTypeDescription`.
+2. Write the file(s). Start with `#include "/systems/common.frules"` if you need `compare`, `nameAndDescription` or `entityTypeDescription`.
 3. Define one `system` at the top level, and point `characters`, `creatures` and every name in `secondaryTypes` at a `ruleset`.
 4. Register a new system (or extension) in `rules.json`.
 5. Validate by parsing (see below). Fix and repeat until it passes.
@@ -41,7 +41,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Bare names are letters and digits only.** No `_` or `-`. Anything else needs single quotes: `'Very hurt'`. Quoted names allow only letters, digits and spaces.
 - **Strings use double quotes and have no escapes.** A string can't contain `"`. Backslashes are kept as-is, which is handy for regexes.
 - **Operators:** `+ - * /`, `==`, `>`, `<`. There is no `>=`, `<=`, `!=`, `and`, `or` or `not`; nest `if`s instead. `if` and `switch` always need `else`.
-- **`max a b` and `min a b`** take two operands without commas. `max (a, b)` parses but calls a function named `max` instead, and the one in `common.frules` takes a single list: `max ([a, b])`. Every other function is called as `f (a, b)`.
+- **Every function is called as `f (a, b)`**, including the built-in `max` and `min`.
 - **A call at the top level must have its `(` on the same line as the function name.** Inside parentheses, newlines are fine.
 - **Same-named definitions merge.** Two `characterTable = ruleset {...}` blocks combine their fields, and two lists concatenate. This is how extensions and multi-file systems add to a base system, but it also means an accidental duplicate name silently merges.
 - **`otherLibararyTypes` is spelled with the typo.** The code reads that exact name.

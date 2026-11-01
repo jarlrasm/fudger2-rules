@@ -60,7 +60,7 @@ characterTable = ruleset
             number = 3
             allowedchange = increase
             overflow=  allow
-            overflowValue = max 0 (Scratch.realvalue - Scratch.number)
+            overflowValue = max(0, Scratch.realvalue - Scratch.number)
             }
         Hurt = slots
         {
@@ -68,21 +68,21 @@ characterTable = ruleset
             value = Hurt.realvalue + Scratch.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = max 0 (Hurt.value - Hurt.number)
+            overflowValue = max(0, Hurt.value - Hurt.number)
         }
         'Very hurt' = slots
             {number = 1
             value = 'Very hurt'.realvalue + Hurt.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = max 0 ('Very hurt'.value - 'Very hurt'.number)
+            overflowValue = max(0, 'Very hurt'.value - 'Very hurt'.number)
             }
         Incapacitated = slots
             {number = 1
             value = Incapacitated.realvalue + 'Very hurt'.overflowValue
             allowedchange = increase
             overflow=  allow
-            overflowValue = max 0 (Incapacitated.value - Incapacitated.number)
+            overflowValue = max(0, Incapacitated.value - Incapacitated.number)
             }
         'Near death' = slots
             {number = 1

@@ -25,10 +25,6 @@ entityTypeDescription(name,singular,forEncounters, image, secondaries)=ruleset
     Secondaries=secondaries
 }
 
-max (list)=
-    first (reverse (sort
-    (list)))
-
 valueOr(item, key, fallback)=
     if count (filter ((x)->x.Key == key, toList (item))) > 0 then
         first (filter ((x)->x.Key == key, toList (item))).Value

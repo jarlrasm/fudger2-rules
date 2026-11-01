@@ -6,9 +6,9 @@ resourceAt (char, n) = item (n, resourceList (char))
 
 usesAtLevel (char, uses, level) =
   switch uses
-    case "Cha" then max 1 char.'Ability scores'.'Cha'.Modifier
-    case "Wis" then max 1 char.'Ability scores'.'Wis'.Modifier
-    case "Int" then max 1 char.'Ability scores'.'Int'.Modifier
+    case "Cha" then max(1, char.'Ability scores'.'Cha'.Modifier)
+    case "Wis" then max(1, char.'Ability scores'.'Wis'.Modifier)
+    case "Int" then max(1, char.'Ability scores'.'Int'.Modifier)
     else toInt (item (level - 1, split (",", uses)))
 
 resourceUses (char, n) =
@@ -33,7 +33,7 @@ shortRestUsed (char, n, used) =
     else
       switch resourceAt (char, n).ShortRest
         case "All" then 0
-        case "One" then max 0 (used - 1)
+        case "One" then max(0, used - 1)
         else used
   else
     used
@@ -42,7 +42,7 @@ isWarlock (char) = contains (char.Class.Main.Name, "Warlock")
 
 pactSlotsAfterShortRest (char, used) = if isWarlock (char) then 0 else used
 
-hitDiceAfterLongRest (char, used) = max 0 (used - (max 1 (char.Class.Main.Levels / 2)))
+hitDiceAfterLongRest (char, used) = max(0, used - max(1, char.Class.Main.Levels / 2))
 
 classResourcesTable = table
 {

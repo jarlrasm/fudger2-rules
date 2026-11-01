@@ -39,10 +39,10 @@ allSources(char) = [
                     ]
 acForArmour(char, armour)=
   armour.data.armourStats.Stats.AC +
-    (min
-     (valueOr (armour.data.armourStats.Stats, "Max dex modifier", 10))
+    min(
+      valueOr (armour.data.armourStats.Stats, "Max dex modifier", 10),
       char.'Ability scores'.'Dex'.Modifier
-   )
+    )
 
 unarmouredAC(char) =
   10 + char.'Ability scores'.'Dex'.Modifier +
@@ -129,16 +129,16 @@ basicsTable =table
 
 D20Roll (char) = if char.Basics.'Advantage' then ([1d20,1d20],((baseline,throws)->
       baseline +
-      max
-        (first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls))
-        (item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls))
-        
+      max(
+        first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls),
+        item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls)
+      )
        )) else
         if char.Basics.'Disadvantage' then ([1d20,1d20],((baseline,throws)->
          baseline +
-          min
-            (first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls))
-            (item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls))
-            
+          min(
+            first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls),
+            item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls)
+          )
           )) else
         1d20

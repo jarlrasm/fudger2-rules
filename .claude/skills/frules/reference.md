@@ -49,7 +49,6 @@ TypeName = constructor { field = value  other = value }
       case "medium" then 2
       else 3
   ```
-- `max a b`, `min a b`: two operands, no commas. Wrap compound operands in parentheses: `max 0 (Scratch.realvalue - Scratch.number)`. `max (a, b)` is not this; it calls a user function named `max`.
 - Function call: `f (a, b)`. A call with one argument is still `f (x)`.
 - Lambda: `(x)->x.Name`, `(a, b)->a + b`. Parameters always in parentheses.
 - Property access: `expr.field`, works on any record, e.g. `first (list).Name`.
@@ -77,6 +76,7 @@ A reference is looked up in the current table first, then each enclosing table, 
 | `filter (fn, list)` | Keep items where `fn` returns `true` |
 | `fold (start, (acc, x)->..., list)` | Left fold |
 | `sum (list)` | Sum of numbers |
+| `max (a, b, ...)`, `min (a, b, ...)` | Largest or smallest number. Arguments can be numbers or lists of numbers: `max (0, hp - damage)`, `max (rolls)`. Missing values are skipped; with no numbers at all the result is 0 |
 | `count (list)` | Length |
 | `first (list)` | First item |
 | `item (n, list)` | Item at index `n` (0-based) |
@@ -95,7 +95,7 @@ A reference is looked up in the current table first, then each enclosing table, 
 
 Built-in references: `character`, `campaign`, `live`, `editor`, `none` (used as option values), `secondary` (the entity's attached library items), `library` (the campaign library).
 
-From `common.frules`: `compare (a, b)`, `max (list)`, `nameAndDescription (name, description)`, `entityTypeDescription (name, singular, forEncounters, image, secondaries)`.
+From `common.frules`: `compare (a, b)`, `nameAndDescription (name, description)`, `entityTypeDescription (name, singular, forEncounters, image, secondaries)`.
 
 ## Dice
 
@@ -109,9 +109,9 @@ edgeRoll = ([2d6], ((baseline, throws)->
     sum (first (throws).rolls)))
 
 advantage = ([1d20, 1d20], ((baseline, throws)->
-    baseline + max
-        (first (throws).bonus + sum (first (throws).rolls))
-        (item (1, throws).bonus + sum (item (1, throws).rolls))))
+    baseline + max (
+        first (throws).bonus + sum (first (throws).rolls),
+        item (1, throws).bonus + sum (item (1, throws).rolls))))
 ```
 
 `valuedice` can be any expression, e.g. a function that picks a roll from the character's state (see `D20Roll` in `DND/Basics.frules`).

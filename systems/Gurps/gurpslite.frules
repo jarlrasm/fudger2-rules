@@ -85,7 +85,7 @@ encumbranceLevel(weight, lift) =
 
 encumbranceNames = ["None", "Light", "Medium", "Heavy", "Extra-Heavy", "Overloaded"]
 
-encumberedMove(move, level) = if level > 4 then 0 else max 1 (move * (5 - level) / 5)
+encumberedMove(move, level) = if level > 4 then 0 else max(1, move * (5 - level) / 5)
 
 statsWeight(stats) = weightOf (valueOr (stats, "Weight", "0"))
 
@@ -159,7 +159,7 @@ thrustAdds = [-6,-6,-5,-5,-4,-4,-3,-3,-2,-2,-1,-1,0,0,1,1,2,2,-1,-1,0,0,1,1,2,2]
 swingDice = [1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5]
 swingAdds = [-5,-5,-4,-4,-3,-3,-2,-2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0,1,2,-1,0]
 
-strengthIndex(st) = (min 26 (max 1 st)) - 1
+strengthIndex(st) = min(26, max(1, st)) - 1
 
 diceText(dice, adds) =
     toString (dice) + "d" +

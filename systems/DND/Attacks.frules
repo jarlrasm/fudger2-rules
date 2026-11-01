@@ -3,7 +3,7 @@ toHitBonus (description) =
 
 abiltyBonusForMeleeWeapon (weapon, char) =
     if contains(toLower(weapon.data.weaponStats.Stats.Properties), "finesse") then
-        max char.'Ability scores'.'Dex'.Modifier (char.'Ability scores'.'Str'.Modifier)
+        max(char.'Ability scores'.'Dex'.Modifier, char.'Ability scores'.'Str'.Modifier)
     else
      char.'Ability scores'.'Str'.Modifier
 
