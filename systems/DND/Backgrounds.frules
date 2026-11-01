@@ -27,7 +27,7 @@ backgroundSkills (char) =
 backgroundFeatures (name) =
     map (
         (b)->nameAndDescription (b.Name,
-            "Ability scores: +2 and +1, or +1 to all three of " + b.Abilities + ". Use the Bonus column under Ability scores." +
+            "Ability scores: +2 and +1, or +1 to all three of " + b.Abilities + ". Add it to the Score under Ability scores." +
             " Skill proficiencies: " + b.Skills + "." +
             " Tool proficiency: " + b.Tool + "." +
             " Origin feat: " + b.Feat + ". Add it under Feats."),

@@ -34,15 +34,9 @@ characterTable = ruleset
                 minvalue=3
                 maxvalue=25
               }
-              Bonus=integer
-              {
-                default=0
-                minvalue=0
-                maxvalue=2
-              }
               Modifier=modifier
               {
-                value=(Score+Bonus)/2-5
+                value=Score/2-5
                 valuedice= D20Roll (characterTable)
               }
 
