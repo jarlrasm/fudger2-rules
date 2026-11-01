@@ -40,18 +40,22 @@ characterTable = ruleset
             ST = integer {
                 valuedice=3d6
                 render=toString(ST/10+10)
+                step=10
             }
             DX=integer{
                 valuedice=3d6
                 render=toString(DX/20+10)
+                step=20
             }
             IQ=integer{
                 valuedice=3d6
                 render=toString(IQ/20+10)
+                step=20
             }
             HT=integer{
                 valuedice=3d6
                 render=toString(HT/10+10)
+                step=10
             }
         }
     'Secondary characteristics' = table

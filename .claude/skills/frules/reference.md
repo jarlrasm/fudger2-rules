@@ -252,7 +252,7 @@ characterTable = ruleset { Hitpoints = hitpoints {} }
 
 | Type | Options |
 |---|---|
-| `integer` | `default`, `minvalue`, `maxvalue`, `value` (computed, read-only), `valuedice`, `render` (text shown instead of the number) |
+| `integer` | `default`, `minvalue`, `maxvalue`, `value` (computed, read-only), `valuedice`, `render` (text shown instead of the number; the editor then shows −/+ buttons around it), `step` (how much each −/+ click changes the stored number, default 1) |
 | `modifier` | Like `integer`, shown with a sign (`+2`) |
 | `string` | `default`, `multiline = true`, `keys = [...]` (dropdown), `bonus` |
 | `bool` | `default`, `radiogroup = "name"` (bools sharing a group act as radio buttons) |
