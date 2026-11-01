@@ -104,6 +104,17 @@ classStats = ruleset {
                     }
                 }
             }
+        Resources=list
+            {
+                singular = "Resource"
+                valueType = custom
+                    {
+                        Name=string{}
+                        Uses=string{}
+                        'Short rest'=string{keys=["None","One","All"]}
+                        'Short rest level'=integer{default=1}
+                    }
+            }
     }
 }
 
@@ -137,6 +148,20 @@ raceStats = ruleset
                 }
             }
         }
+        Size=string{}
+        Speed=integer{default=30}
+        Darkvision=integer{default=0}
+    }
+}
+
+backgroundStats = ruleset
+{
+    Stats=table
+    {
+        Abilities=string{}
+        Feat=string{}
+        Skills=string{}
+        Tool=string{}
     }
 }
 
@@ -159,6 +184,7 @@ DND5e = system
     'Melee weapons'= weaponStats
     Classes = classStats
     Races = raceStats
+    Backgrounds = backgroundStats
     Armour= armourStats
     Spells = spellStats
     Feats = featStats
@@ -166,7 +192,7 @@ DND5e = system
     description="DND 5e rules"
     
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features", "Feats"]
-    otherLibararyTypes = ["Classes", "Races"]
+    otherLibararyTypes = ["Classes", "Races", "Backgrounds"]
     libraries = ["/systems/DND/dndsrd2024.json"]
     initiativeCompare(item1,item2) = compare (item1 ,item2)
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]

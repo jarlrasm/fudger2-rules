@@ -1,0 +1,145 @@
+resourceList (char) = currentClass (char).Resources
+
+hasResource (char, n) = count (resourceList (char)) > n
+
+resourceAt (char, n) = item (n, resourceList (char))
+
+usesAtLevel (char, uses, level) =
+  switch uses
+    case "Cha" then max 1 char.'Ability scores'.'Cha'.Modifier
+    case "Wis" then max 1 char.'Ability scores'.'Wis'.Modifier
+    case "Int" then max 1 char.'Ability scores'.'Int'.Modifier
+    else toInt (item (level - 1, split (",", uses)))
+
+resourceUses (char, n) =
+  if hasResource (char, n) then
+    usesAtLevel (char, resourceAt (char, n).Uses, char.Class.Main.Levels)
+  else
+    0
+
+resourceName (char, n) =
+  if hasResource (char, n) then resourceAt (char, n).Name else ""
+
+resourceVisible (char, n) =
+  if resourceUses (char, n) > 0 then visible else none
+
+classResourcesVisible (char) =
+  if count (filter ((n)->resourceUses (char, n) > 0, [0, 1, 2, 3])) > 0 then visible else none
+
+shortRestUsed (char, n, used) =
+  if hasResource (char, n) then
+    if char.Class.Main.Levels < resourceAt (char, n).ShortRestLevel then
+      used
+    else
+      switch resourceAt (char, n).ShortRest
+        case "All" then 0
+        case "One" then max 0 (used - 1)
+        else used
+  else
+    used
+
+isWarlock (char) = contains (char.Class.Main.Name, "Warlock")
+
+pactSlotsAfterShortRest (char, used) = if isWarlock (char) then 0 else used
+
+hitDiceAfterLongRest (char, used) = max 0 (used - (max 1 (char.Class.Main.Levels / 2)))
+
+classResourcesTable = table
+{
+    visible = classResourcesVisible (characterTable)
+    tableLayout = layout
+    {
+        rowTitle = hidden
+    }
+    'Resource 1' = custom
+    {
+        visible = resourceVisible (characterTable, 0)
+        Name = resourceName (characterTable, 0)
+        Uses = slots
+        {
+            number = resourceUses (characterTable, 0)
+            allowedchange = increaseAndClear
+        }
+    }
+    'Resource 2' = custom
+    {
+        visible = resourceVisible (characterTable, 1)
+        Name = resourceName (characterTable, 1)
+        Uses = slots
+        {
+            number = resourceUses (characterTable, 1)
+            allowedchange = increaseAndClear
+        }
+    }
+    'Resource 3' = custom
+    {
+        visible = resourceVisible (characterTable, 2)
+        Name = resourceName (characterTable, 2)
+        Uses = slots
+        {
+            number = resourceUses (characterTable, 2)
+            allowedchange = increaseAndClear
+        }
+    }
+    'Resource 4' = custom
+    {
+        visible = resourceVisible (characterTable, 3)
+        Name = resourceName (characterTable, 3)
+        Uses = slots
+        {
+            number = resourceUses (characterTable, 3)
+            allowedchange = increaseAndClear
+        }
+    }
+}
+
+restTable = table
+{
+    tableLayout = layout
+    {
+        rowTitle = hidden
+    }
+    'Short rest' = button
+    {
+        onClick = updates
+            {
+                (root.'Class resources'.'Resource 1'.Uses.realvalue) = shortRestUsed (characterTable, 0, 'Class resources'.'Resource 1'.Uses.realvalue)
+                (root.'Class resources'.'Resource 2'.Uses.realvalue) = shortRestUsed (characterTable, 1, 'Class resources'.'Resource 2'.Uses.realvalue)
+                (root.'Class resources'.'Resource 3'.Uses.realvalue) = shortRestUsed (characterTable, 2, 'Class resources'.'Resource 3'.Uses.realvalue)
+                (root.'Class resources'.'Resource 4'.Uses.realvalue) = shortRestUsed (characterTable, 3, 'Class resources'.'Resource 4'.Uses.realvalue)
+                (root.Spells.'1st Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'1st Level Spells'.Slots.realvalue)
+                (root.Spells.'2nd Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'2nd Level Spells'.Slots.realvalue)
+                (root.Spells.'3rd Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'3rd Level Spells'.Slots.realvalue)
+                (root.Spells.'4th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'4th Level Spells'.Slots.realvalue)
+                (root.Spells.'5th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'5th Level Spells'.Slots.realvalue)
+                (root.Spells.'6th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'6th Level Spells'.Slots.realvalue)
+                (root.Spells.'7th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'7th Level Spells'.Slots.realvalue)
+                (root.Spells.'8th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'8th Level Spells'.Slots.realvalue)
+                (root.Spells.'9th Level Spells'.Slots.realvalue) = pactSlotsAfterShortRest (characterTable, Spells.'9th Level Spells'.Slots.realvalue)
+            }
+    }
+    'Long rest' = button
+    {
+        onClick = updates
+            {
+                (root.Hitpoints.Current) = Hitpoints.Max
+                (root.Hitpoints.Temporary) = 0
+                (root.Hitpoints.'Death save successes'.realvalue) = 0
+                (root.Hitpoints.'Death save failures'.realvalue) = 0
+                (root.Hitpoints.'Hit dice'.realvalue) = hitDiceAfterLongRest (characterTable, Hitpoints.'Hit dice'.realvalue)
+                (root.'Class resources'.'Resource 1'.Uses.realvalue) = 0
+                (root.'Class resources'.'Resource 2'.Uses.realvalue) = 0
+                (root.'Class resources'.'Resource 3'.Uses.realvalue) = 0
+                (root.'Class resources'.'Resource 4'.Uses.realvalue) = 0
+                (root.Spells.'1st Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'2nd Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'3rd Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'4th Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'5th Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'6th Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'7th Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'8th Level Spells'.Slots.realvalue) = 0
+                (root.Spells.'9th Level Spells'.Slots.realvalue) = 0
+            }
+    }
+}

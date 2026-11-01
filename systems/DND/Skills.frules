@@ -1,3 +1,18 @@
+backgroundSkill (char, skillName) = contains (backgroundSkills (char), skillName)
+
+skillModifier (char, abilityMod, proficient, expertise, skillName) =
+  abilityMod +
+    (if expertise then
+      2 * char.Basics.'Proficiency bonus'
+    else
+      if proficient then
+        char.Basics.'Proficiency bonus'
+      else
+        if backgroundSkill (char, skillName) then
+          char.Basics.'Proficiency bonus'
+        else
+          jackBonus (char))
+
 skillTable = table
       {
         tableLayout = layout
@@ -8,324 +23,252 @@ skillTable = table
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Dex'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Acrobatics")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          'Animal Handling' =custom
+          'Animal Handling' = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Animal Handling")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Arcana =custom
+          Arcana = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Arcana")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
           Athletics = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Str'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Str'.Modifier, Proficient, Expertise, "Athletics")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Deception =custom
+          Deception = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Cha'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Deception")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          History=custom
+          History = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "History")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Insight=custom
+          Insight = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Insight")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Intimidation=custom
+          Intimidation = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Cha'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Intimidation")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Investigation=custom
+          Investigation = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Investigation")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Medicine=custom
+          Medicine = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Medicine")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Nature=custom
+          Nature = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Nature")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Perception=custom
+          Perception = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Perception")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Performance=custom
+          Performance = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Cha'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Performance")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Persuasion=custom
+          Persuasion = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Cha'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Persuasion")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Religion=custom
+          Religion = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Religion")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          'Sleight of Hand'=custom
+          'Sleight of Hand' = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Dex'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Sleight of Hand")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Stealth=custom
+          Stealth = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Dex'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Stealth")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
-          Survival=custom
+          Survival = custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    characterTable.Basics.'Proficiency bonus'
-                   else
-                    jackBonus(characterTable))
-                 
+                value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Survival")
                 valuedice= D20Roll (characterTable)
               }
               Proficient = bool
               {
-
+              }
+              Expertise = bool
+              {
               }
             }
       }

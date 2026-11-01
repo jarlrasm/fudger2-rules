@@ -1,3 +1,14 @@
+classSave (char, attr) = count (filter ((s)->s == attr, currentClass (char).SavingThrows)) > 0
+
+saveModifier (char, attr, abilityMod, proficient) =
+  abilityMod +
+    (if classSave (char, attr) then
+      char.Basics.'Proficiency bonus'
+    else
+      if proficient then
+        char.Basics.'Proficiency bonus'
+      else
+        0)
 
 savingThrowsTable = table
       {
@@ -5,108 +16,72 @@ savingThrowsTable = table
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Str'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Str", 'Ability scores'.'Str'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Str")
               Proficient = bool
               {
-
               }
             }
           Dex=custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Dex'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Dex", 'Ability scores'.'Dex'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Dex")
               Proficient = bool
               {
-
               }
             }
           Con=custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Con'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Con", 'Ability scores'.'Con'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Con")
               Proficient = bool
               {
-
               }
             }
           Int=custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Int'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Int", 'Ability scores'.'Int'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Int")
               Proficient = bool
               {
-
               }
             }
           Wis=custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Wis'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Wis", 'Ability scores'.'Wis'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Wis")
               Proficient = bool
               {
-
               }
             }
           Cha=custom
           {
               Modifier=modifier
               {
-                value=
-                 'Ability scores'.'Cha'.Modifier +
-                  (if Proficient then
-                    Basics.'Proficiency bonus'
-                   else
-                    0)
-                 
+                value=saveModifier (characterTable, "Cha", 'Ability scores'.'Cha'.Modifier, Proficient)
                 valuedice= D20Roll (characterTable)
               }
+              'Class proficiency' = classSave (characterTable, "Cha")
               Proficient = bool
               {
-
               }
             }
       }

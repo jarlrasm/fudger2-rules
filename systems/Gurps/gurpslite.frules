@@ -1,3 +1,4 @@
+#include "/systems/common.frules"
 bonus(points,difficulty)=
      (if points < 1 then -4
       else
@@ -37,6 +38,25 @@ divideWithPrecision(x,divisor,precision) =
   toString(x/divisor) + "." +toString(precision/divisor*(x-x/divisor*divisor))
   
 skillvalue(points,attribute,difficulty) =fromAttribute(attribute)+bonus(points,difficulty)
+
+skillLevel(name, level, points) = custom
+{
+    Name = name
+    Level = integer {
+        value = level
+        valuedice = 3d6
+    }
+    Points = points
+}
+
+skillLevelFor(skill) =
+    skillLevel(
+        skill.Name,
+        skillvalue(
+            valueOr (skill.data.skillStats, "Points", 1),
+            valueOr (skill.data.skillStats.Stats, "Attribute", "IQ"),
+            valueOr (skill.data.skillStats.Stats, "Difficulty", "Average")),
+        valueOr (skill.data.skillStats, "Points", 1))
 
 characterTable = ruleset
 {
@@ -132,6 +152,28 @@ characterTable = ruleset
                 }}
             }
         }
+    'Learned skills' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = secondary.Skills
+        singular = "Skill"
+        editable = character
+        visible = editor
+    }
+    'Skill levels' = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = map ((skill)->skillLevelFor (skill), characterTable.'Learned skills')
+        singular = "Skill"
+        editable = none
+        valueType = skillLevel
+    }
     Advantages = list
     {
         tableLayout = layout
@@ -308,6 +350,7 @@ skillStats = ruleset
                     filter { name = "Difficulty" prefix = "" filter = Stats.Difficulty }
                 ]
             }
+            Points = integer { default = 1 }
             Stats = table
             {
                 Attribute = string { keys = ["ST","DX","IQ","HT","Per","Will"] }
@@ -327,8 +370,7 @@ GURPSLite = system
     'Other items' = itemStats
     Skills = skillStats
     description = "Gurps lite"
-    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage"]
-    otherLibararyTypes = ["Skills"]
+    secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage","Skills"]
     libraries = ["/systems/Gurps/gurpslite.json"]
     quickdice = [3d6]
 }

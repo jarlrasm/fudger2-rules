@@ -7,10 +7,13 @@ raceFeature(name, description)=ruleset
     Name=name
     Description=description
 }
-race(name,features,subraces) = {
+race(name,features,subraces,size,speed,darkvision) = {
     Name=name
     Features=features
     Subraces=subraces
+    Size=size
+    Speed=speed
+    Darkvision=darkvision
 }
 raceFeatureFrom(f)=raceFeature (valueOr (f, "Name", ""), valueOr (f, "Description", ""))
 
@@ -21,9 +24,18 @@ libraryRaces =
             map ((f)->raceFeatureFrom (f), valueOr (x.data.raceStats.Stats, "Features", [])),
             map (
                 (s)->subrace (valueOr (s, "Name", ""), map ((f)->raceFeatureFrom (f), valueOr (s, "Features", []))),
-                valueOr (x.data.raceStats.Stats, "Subraces", []))),
+                valueOr (x.data.raceStats.Stats, "Subraces", [])),
+            valueOr (x.data.raceStats.Stats, "Size", "Medium"),
+            valueOr (x.data.raceStats.Stats, "Speed", 30),
+            valueOr (x.data.raceStats.Stats, "Darkvision", 0)),
         library.'Races')
 
 getRace(racename)=first (filter ((race)->race.Name == racename, libraryRaces))
 subraceNames(race)=concat (map ((x)->x.Name, race.Subraces),["Standard"])
 getSubrace(racename,subraceName)=first (filter ((race)->race.Name == subraceName, getRace(racename).Subraces))
+
+racesNamed (racename) = filter ((race)->race.Name == racename, libraryRaces)
+
+raceSpeed (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Speed else 30
+raceSize (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Size else "Medium"
+raceDarkvision (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Darkvision else 0

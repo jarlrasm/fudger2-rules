@@ -1,5 +1,6 @@
-class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels)=ruleset
+class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels, resources)=ruleset
 {
+    Resources=resources
     Name=name
     HitDie=hitdie
     SavingThrows=savingThrows
@@ -12,6 +13,13 @@ classFeature(level, name, description)=ruleset
     Level=level
     Name=name
     Description=description
+}
+classResource(name, uses, shortRest, shortRestLevel)=ruleset
+{
+    Name=name
+    Uses=uses
+    ShortRest=shortRest
+    ShortRestLevel=shortRestLevel
 }
 classSpellevel(spellLevel,spellsForLevelList)=ruleset
 {
@@ -41,8 +49,15 @@ libraryClasses =
             map (
                 (feat)->classFeature (valueOr (feat, "Level", 1), valueOr (feat, "Name", ""), valueOr (feat, "Description", "")),
                 valueOr (x.data.classStats.Stats, "Features", [])),
-            mapSpellevels (x.data.classStats.Stats.Spellevels)),
+            mapSpellevels (x.data.classStats.Stats.Spellevels),
+            map (
+                (res)->classResource (valueOr (res, "Name", ""), valueOr (res, "Uses", ""), valueOr (res, "Short rest", "None"), valueOr (res, "Short rest level", 1)),
+                valueOr (x.data.classStats.Stats, "Resources", []))),
         library.'Classes')
+
+classNamed (classname) = first (filter ((class)->class.Name == classname, libraryClasses))
+
+currentClass (char) = classNamed (char.Class.Main.Name)
 
 classTable=table
     {
@@ -68,5 +83,10 @@ classTable=table
       {
         keys = subraceNames (getRace (Race))
         default="Standard"
+      }
+      Background = string
+      {
+        keys = concat (["None"], map ((x)->x.Name, libraryBackgrounds))
+        default="None"
       }
     }

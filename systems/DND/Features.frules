@@ -3,8 +3,7 @@ classFeatures(classname,level) =
         (
             (feature)->nameAndDescription(feature.Name,feature.Description),
               filter((f)->f.Level<level+1,
-                first (filter ((class)->class.Name == classname, libraryClasses))
-                .Features)
+                classNamed (classname).Features)
                 )
         )
 
@@ -22,6 +21,10 @@ jackBonus(char) = bonusFrom (
                       map ((x)->x.Name ,char.'Features and Traits'.'Feats'),
                       map ((x)->x.Name ,char.'Features and Traits'.'Other features')
                     ],"Jack of All Trades", char.Basics.'Proficiency bonus' / 2)
+
+featNames(char) = map ((x)->x.Name ,char.'Features and Traits'.'Feats')
+
+alertBonus(char) = bonusFrom ([featNames (char)], "^Alert$", char.Basics.'Proficiency bonus')
 
 autoCompletes=[
    "AC +1"
@@ -79,6 +82,18 @@ features= table
             rowTitle = hidden
         }
           source=raceFeatures (Class.Race, Class.Subrace)
+          singular = "Feature"
+          editable = none
+    }
+
+    'Background features'=list
+    {
+        tableLayout = layout
+        {
+            size = wide
+            rowTitle = hidden
+        }
+          source=backgroundFeatures (Class.Background)
           singular = "Feature"
           editable = none
     }

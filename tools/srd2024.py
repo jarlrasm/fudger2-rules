@@ -201,7 +201,18 @@ def species():
             {"Name": t["name"], "Description": clean(t["desc"])}
             for t in sorted(s["traits"], key=lambda t: t["order"] or 0)
         ]
-        stats = {"Features": features, "Subraces": []}
+        traits = {t["name"]: clean(t["desc"]) for t in s["traits"]}
+        size = traits.get("Size", "Medium")
+        sizes = [x for x in ["Medium", "Small", "Large"] if x in size]
+        speed = re.search(r"(\d+)", traits.get("Speed", "30"))
+        darkvision = re.search(r"range of (\d+)", traits.get("Darkvision", ""))
+        stats = {
+            "Features": features,
+            "Subraces": [],
+            "Size": " or ".join(sizes) or "Medium",
+            "Speed": int(speed.group(1)) if speed else 30,
+            "Darkvision": int(darkvision.group(1)) if darkvision else 0,
+        }
         result.append(entity("Races", s["name"], clean(s.get("desc", "")), {"raceStats": {"Stats": stats}}))
     return result
 
@@ -269,6 +280,49 @@ def spell_levels(c):
     return table if found else {}
 
 
+def by_level(values):
+    table = [0] * 20
+    for level, value in values.items():
+        for l in range(level, 21):
+            table[l - 1] = value
+    return ",".join(str(v) for v in table)
+
+
+RESOURCE_COLUMNS = {
+    "Rages": ("One", 1),
+    "Channel Divinity": ("One", 1),
+    "Second Wind": ("One", 1),
+    "Focus Points": ("All", 1),
+    "Favored Enemy": ("None", 1),
+    "Sorcery Points": ("None", 1),
+}
+
+EXTRA_RESOURCES = {
+    "Bard": [{"Name": "Bardic Inspiration", "Uses": "Cha", "Short rest": "All", "Short rest level": 5}],
+    "Druid": [{"Name": "Wild Shape", "Uses": by_level({2: 2, 6: 3, 17: 4}), "Short rest": "One", "Short rest level": 1}],
+    "Fighter": [
+        {"Name": "Action Surge", "Uses": by_level({2: 1, 17: 2}), "Short rest": "All", "Short rest level": 1},
+        {"Name": "Indomitable", "Uses": by_level({9: 1, 13: 2, 17: 3}), "Short rest": "None", "Short rest level": 1},
+    ],
+    "Warlock": [{"Name": "Magical Cunning", "Uses": by_level({2: 1}), "Short rest": "None", "Short rest level": 1}],
+    "Wizard": [{"Name": "Arcane Recovery", "Uses": by_level({1: 1}), "Short rest": "None", "Short rest level": 1}],
+}
+
+
+def class_resources(c):
+    out = []
+    for f in c["features"]:
+        if f["feature_type"] != "CLASS_TABLE_DATA" or f["name"] not in RESOURCE_COLUMNS:
+            continue
+        uses = [0] * 20
+        for r in f["data_for_class_table"]:
+            value = r["column_value"].strip()
+            uses[r["level"] - 1] = int(value) if value.isdigit() else 0
+        short, level = RESOURCE_COLUMNS[f["name"]]
+        out.append({"Name": f["name"], "Uses": ",".join(str(u) for u in uses), "Short rest": short, "Short rest level": level})
+    return out + EXTRA_RESOURCES.get(c["name"], [])
+
+
 def classes():
     raw = load("classes")
     base = {c["name"]: c for c in raw if not c["subclass_of"]}
@@ -282,6 +336,7 @@ def classes():
             "SpellcastingAbilityModifier": SPELLCASTING.get(c["name"], "None"),
             "Features": features,
             "Spellevels": spell_levels(c),
+            "Resources": class_resources(c),
         }
         return entity("Classes", name, clean(c.get("desc", "")), {"classStats": {"Stats": stats}})
 
@@ -309,6 +364,26 @@ ABILITY_KEYS = {
     "strength": "Str", "dexterity": "Dex", "constitution": "Con",
     "intelligence": "Int", "wisdom": "Wis", "charisma": "Cha",
 }
+
+
+def background_benefit(b, kind):
+    return next((x["desc"] for x in b["benefits"] if x["type"] == kind), "")
+
+
+def backgrounds():
+    result = []
+    for b in sorted(load("backgrounds"), key=lambda x: x["name"]):
+        abilities = ", ".join(ABILITY.get(a.strip(), a.strip()) for a in background_benefit(b, "ability_score").split(","))
+        skills = background_benefit(b, "skill_proficiency").replace(" and ", ", ")
+        stats = {
+            "Abilities": abilities,
+            "Feat": background_benefit(b, "feat"),
+            "Skills": skills,
+            "Tool": background_benefit(b, "tool_proficiency"),
+        }
+        parts = [clean(b.get("desc", ""))] + [f"{x['name']}: {clean(x['desc'])}" for x in b["benefits"]]
+        result.append(entity("Backgrounds", b["name"], "\n\n".join(p for p in parts if p), {"backgroundStats": {"Stats": stats}}))
+    return result
 
 
 def cr_text(cr):
@@ -409,7 +484,7 @@ def main():
             items[i["armor"]["key"]] = i
         items.setdefault(i["key"], i)
     entities = (
-        spells() + creatures() + weapons(items) + armour(items) + feats() + species() + classes()
+        spells() + creatures() + weapons(items) + armour(items) + feats() + species() + classes() + backgrounds()
     )
     library = {
         "name": "DND SRD 5.2",

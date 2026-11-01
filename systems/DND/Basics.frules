@@ -40,20 +40,25 @@ allSources(char) = [
 acForArmour(char, armour)=
   armour.data.armourStats.Stats.AC +
     (min
-     armour.data.armourStats.Stats.'Max dex modifier'
+     (valueOr (armour.data.armourStats.Stats, "Max dex modifier", 10))
       char.'Ability scores'.'Dex'.Modifier
    )
 
+unarmouredAC(char) =
+  10 + char.'Ability scores'.'Dex'.Modifier +
+    (if contains (char.Class.Main.Name, "Barbarian") then
+      char.'Ability scores'.'Con'.Modifier
+    else
+      if contains (char.Class.Main.Name, "Monk") then
+        char.'Ability scores'.'Wis'.Modifier
+      else
+        0)
+
 ac(char) =
-  (max
-   10
-    (first (reverse (sort
-    
-      (map ((x)->acForArmour (char, x) ,char.'Equipment'.'Armour'))
-    
-  ))
-  )
-)
+  if count (char.'Equipment'.'Armour') > 0 then
+    first (reverse (sort (map ((x)->acForArmour (char, x), char.'Equipment'.'Armour'))))
+  else
+    unarmouredAC (char)
 
 basicsTable =table
   {
@@ -70,15 +75,30 @@ basicsTable =table
                         bonusWithValue (allSources(characterTable), "\bAC\s*\+([0-9])\b")
                         
                 default=10
-                minvalue=10
               }
     'Initiative'=modifier
               {
                 value='Ability scores'.'Dex'.Modifier +
-                  jackBonus(characterTable) +bonusWithValue (allSources(characterTable), "\bInitiative\s*\+([0-9])\b")
+                  jackBonus(characterTable) + alertBonus(characterTable) +bonusWithValue (allSources(characterTable), "\bInitiative\s*\+([0-9])\b")
                 valuedice= D20Roll (characterTable)
                 editable=none
               }
+    'Passive Perception' = integer
+        {
+          value = 10 + Skills.Perception.Modifier
+          editable=none
+        }
+    Speed = integer
+        {
+          value = raceSpeed (Class.Race)
+          editable=none
+        }
+    Size = raceSize (Class.Race)
+    Darkvision = integer
+        {
+          value = raceDarkvision (Class.Race)
+          editable=none
+        }
     'Proficiency bonus'= integer
         {value= (first
          (filter

@@ -1,0 +1,34 @@
+background(name, abilities, feat, skills, tool) = {
+    Name=name
+    Abilities=abilities
+    Feat=feat
+    Skills=skills
+    Tool=tool
+}
+
+libraryBackgrounds =
+    map (
+        (x)->background (
+            x.name,
+            valueOr (x.data.backgroundStats.Stats, "Abilities", ""),
+            valueOr (x.data.backgroundStats.Stats, "Feat", ""),
+            valueOr (x.data.backgroundStats.Stats, "Skills", ""),
+            valueOr (x.data.backgroundStats.Stats, "Tool", "")),
+        library.'Backgrounds')
+
+backgroundsNamed (name) = filter ((b)->b.Name == name, libraryBackgrounds)
+
+backgroundSkills (char) =
+    if count (backgroundsNamed (char.Class.Background)) > 0 then
+        first (backgroundsNamed (char.Class.Background)).Skills
+    else
+        ""
+
+backgroundFeatures (name) =
+    map (
+        (b)->nameAndDescription (b.Name,
+            "Ability scores: +2 and +1, or +1 to all three of " + b.Abilities + ". Use the Bonus column under Ability scores." +
+            " Skill proficiencies: " + b.Skills + "." +
+            " Tool proficiency: " + b.Tool + "." +
+            " Origin feat: " + b.Feat + ". Add it under Feats."),
+        backgroundsNamed (name))

@@ -5,6 +5,8 @@
 #include "/systems/DND/Hitpoints.frules"
 #include "/systems/DND/Basics.frules"
 #include "/systems/DND/Races.frules"
+#include "/systems/DND/Backgrounds.frules"
+#include "/systems/DND/Resources.frules"
 #include "/systems/DND/SavingThrows.frules"
 #include "/systems/DND/Equipment.frules"
 #include "/systems/DND/Skills.frules"
@@ -32,9 +34,15 @@ characterTable = ruleset
                 minvalue=3
                 maxvalue=25
               }
+              Bonus=integer
+              {
+                default=0
+                minvalue=0
+                maxvalue=2
+              }
               Modifier=modifier
               {
-                value=Score/2-5
+                value=(Score+Bonus)/2-5
                 valuedice= D20Roll (characterTable)
               }
 
@@ -43,6 +51,8 @@ characterTable = ruleset
   'Saving throws' = savingThrowsTable {}
   Skills=skillTable{}
   Hitpoints = hitpoints{}
+  'Class resources' = classResourcesTable{}
+  Rest = restTable{}
   Attacks=attackTable{}
 
   'Features and Traits' = features{}
