@@ -1,5 +1,11 @@
 toHitBonus (description) =
-    bonusWithValue ([[description]], "\+\s*([0-9]|[1-9][0-9])\s+to\shit\b")
+    bonusWithValue ([[description]], "\+\s*([0-9]+)\s*(?:to hit\b|bonus to attack)")
+
+damageBonus (description) =
+    bonusWithValue ([[description]], "\+\s*([0-9]+)\s*(?:to damage\b|bonus to (?:attack and )?damage)")
+
+rangedAttackBonus (char) =
+    bonusWithValue (allSources (char), "\+([0-9]+) bonus to attack rolls (?:you make )?with Ranged weapons")
 
 abiltyBonusForMeleeWeapon (weapon, char) =
     if contains(toLower(weapon.data.weaponStats.Stats.Properties), "finesse") then
@@ -35,15 +41,16 @@ attacksFor (char) =
         toHitBonus(weapon.Description) +
            abiltyBonusForMeleeWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus',
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char)), char.'Equipment'.'Melee weapons'),
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description)), char.'Equipment'.'Melee weapons'),
     map
      ((weapon)->
       attack(weapon.Name,
        
         toHitBonus(weapon.Description) +
            abiltyBonusForRangedWeapon (weapon, char)
-         + characterTable.Basics.'Proficiency bonus',
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char)), char.'Equipment'.'Ranged weapons')
+         + characterTable.Basics.'Proficiency bonus'
+         + rangedAttackBonus (char),
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char) + damageBonus (weapon.Description)), char.'Equipment'.'Ranged weapons')
     )
 
 attackTable = list

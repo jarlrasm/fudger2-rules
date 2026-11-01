@@ -2,7 +2,9 @@ hitDie(classname,level)=classNamed (classname).HitDie
 
 maxHitpoints(classname,level,conModifier) =
     (hitDie(classname,level)/2+1)*(level-1)+hitDie(classname,level)+conModifier*level
-      + bonusWithValue (allSources(characterTable), "\bHitPoints\s*\+([0-9])\b")
+      + bonusWithValue (allSources(characterTable), "\b(?:HitPoints|Hit Points)\s*\+([0-9]+)")
+      + bonusWithValue (allSources(characterTable), "Hit Point maximum increases by ([0-9]+)(?![0-9]|, and it increases)")
+      + level * bonusWithValue (allSources(characterTable), "Hit Point maximum increases by [0-9]+, and it increases by ([0-9]+)[^.]*whenever you gain")
 
 hitpoints = table
   {

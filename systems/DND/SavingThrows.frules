@@ -1,7 +1,14 @@
 classSave (char, attr) = count (filter ((s)->s == attr, currentClass (char).SavingThrows)) > 0
 
+auraOfProtection (char) =
+  if hasClassFeature (char, "Aura of Protection") then max(1, char.'Ability scores'.'Cha'.Modifier) else 0
+
+saveBonus (char) =
+  bonusWithValue (allSources (char), "\+([0-9]+) bonus to (?:AC and |Armou?r Class and |your )?(?:all )?saving throws") +
+  auraOfProtection (char)
+
 saveModifier (char, attr, abilityMod, proficient) =
-  abilityMod +
+  abilityMod + saveBonus (char) +
     (if classSave (char, attr) then
       char.Basics.'Proficiency bonus'
     else

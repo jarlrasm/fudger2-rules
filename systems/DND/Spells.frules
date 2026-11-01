@@ -27,15 +27,18 @@ spellCastingAbilty(class, char) =
     case "Strength" then char.'Ability scores'.'Str'.Modifier
     else 0
   )
-  +bonusWithValue (allSources(char),"[S|s]pell casting ability.*(increase by |\+)([0-9])")
+  +bonusWithValue (allSources(char),"[Ss]pell ?casting ability (?:increases? by \+?|\+)([0-9]+)")
   
 
 spellCastingDC (class, char) =
   8+spellCastingAbilty(class, char)+char.Basics.'Proficiency bonus'
-  +bonusWithValue (allSources(char),"[S|s]pell save DC.*(increase by |\+)([0-9])")
+  +bonusWithValue (allSources(char),"[Ss]pell save DCs? (?:increases? by \+?|\+)([0-9]+)")
+  +bonusWithValue (allSources(char),"\+([0-9]+) bonus to (?:your )?spell save DCs?")
+  +bonusWithValue (allSources(char),"\+([0-9]+) bonus to spell attack rolls and (?:to )?the saving throw DCs of your spells")
 spellAttackModifier (class, char) =
   spellCastingAbilty(class, char)+char.Basics.'Proficiency bonus'
-  +bonusWithValue (allSources(char),"[S|s]pell attack.*(increase by |\+)([0-9])")
+  +bonusWithValue (allSources(char),"[Ss]pell attacks?(?: rolls?| bonus)? (?:increases? by \+?|\+)([0-9]+)")
+  +bonusWithValue (allSources(char),"\+([0-9]+) bonus to (?:your )?spell attack rolls")
 
 spellTable= table
 {

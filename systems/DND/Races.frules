@@ -36,6 +36,9 @@ getSubrace(racename,subraceName)=first (filter ((race)->race.Name == subraceName
 
 racesNamed (racename) = filter ((race)->race.Name == racename, libraryRaces)
 
+safeRaceFeatures (char) =
+  if count (racesNamed (char.Class.Race)) > 0 then raceFeatures (char.Class.Race, char.Class.Subrace) else []
+
 raceSpeed (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Speed else 30
 raceSize (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Size else "Medium"
 raceDarkvision (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Darkvision else 0

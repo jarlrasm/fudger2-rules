@@ -35,8 +35,27 @@ allSources(char) = [
                       map ((x)->x.Description ,char.'Equipment'.'Melee weapons'),
                       map ((x)->x.Description ,char.'Equipment'.'Ranged weapons'),
                       map ((x)->x.Description ,char.'Equipment'.'Armour'),
-                      map ((x)->x.Description ,char.'Equipment'.'Other items')
+                      map ((x)->x.Description ,char.'Equipment'.'Other items'),
+                      map ((x)->x.Description ,safeRaceFeatures (char))
                     ]
+
+hasClassFeature(char, name) =
+  count (filter ((f)->f.Name == name, classFeatures (char.Class.Main.Name, char.Class.Main.Levels))) > 0
+
+acBonus(char) =
+  bonusWithValue (allSources(char), "\+([0-9]+)\s*(?:bonus to (?:your )?)?(?:AC|Armou?r Class)\b") +
+  bonusWithValue (allSources(char), "\b(?:AC|Armou?r Class)\s*\+([0-9]+)")
+
+initiativeBonus(char) =
+  bonusWithValue (allSources(char), "\bInitiative\s*\+([0-9]+)") +
+  bonusWithValue (allSources(char), "\+([0-9]+)\s*(?:bonus to (?:your )?)?Initiative\b")
+
+monkMovement(level) =
+  if level > 17 then 30 else if level > 13 then 25 else if level > 9 then 20 else if level > 5 then 15 else 10
+
+speedBonus(char) =
+  bonusWithValue (allSources(char), "\bYour [Ss]peed increases by ([0-9]+) feet") +
+  (if hasClassFeature (char, "Unarmoed Movement") then monkMovement (char.Class.Main.Levels) - 10 else 0)
 acForArmour(char, armour)=
   armour.data.armourStats.Stats.AC +
     min(
@@ -52,7 +71,10 @@ unarmouredAC(char) =
       if contains (char.Class.Main.Name, "Monk") then
         char.'Ability scores'.'Wis'.Modifier
       else
-        0)
+        if hasClassFeature (char, "Draconic Resilience") then
+          char.'Ability scores'.'Cha'.Modifier
+        else
+          0)
 
 ac(char) =
   if count (char.'Equipment'.'Armour') > 0 then
@@ -70,16 +92,14 @@ basicsTable =table
     'Armour Class'=integer
               {
                 value =
-                        ac(characterTable) +
-                        bonusWithValue (allSources(characterTable), "\+([0-9])\s*AC\b") +
-                        bonusWithValue (allSources(characterTable), "\bAC\s*\+([0-9])\b")
-                        
+                        ac(characterTable) + acBonus(characterTable)
+
                 default=10
               }
     'Initiative'=modifier
               {
                 value='Ability scores'.'Dex'.Modifier +
-                  jackBonus(characterTable) + alertBonus(characterTable) +bonusWithValue (allSources(characterTable), "\bInitiative\s*\+([0-9])\b")
+                  jackBonus(characterTable) + alertBonus(characterTable) + initiativeBonus(characterTable)
                 valuedice= D20Roll (characterTable)
                 editable=none
               }
@@ -90,7 +110,7 @@ basicsTable =table
         }
     Speed = integer
         {
-          value = raceSpeed (Class.Race)
+          value = raceSpeed (Class.Race) + speedBonus (characterTable)
           editable=none
         }
     Size = raceSize (Class.Race)
