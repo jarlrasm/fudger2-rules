@@ -77,22 +77,41 @@ diceText(dice, adds) =
 
 modifierOf(text) = toInt (replace ("+", "", text))
 
-basedDamage(token, rest) =
-    if contains (token, "sw") then
-        diceText (item (strengthIndex (fromAttribute ("ST")), swingDice), item (strengthIndex (fromAttribute ("ST")), swingAdds) + modifierOf (replace ("sw", "", token))) + rest
+modeToken(mode) = first (split (" ", mode))
+
+modeRest(mode) = replace (modeToken (mode), "", mode)
+
+modeDiceCount(mode) =
+    if contains (modeToken (mode), "sw") then
+        item (strengthIndex (fromAttribute ("ST")), swingDice)
     else
-        if contains (token, "thr") then
-            diceText (item (strengthIndex (fromAttribute ("ST")), thrustDice), item (strengthIndex (fromAttribute ("ST")), thrustAdds) + modifierOf (replace ("thr", "", token))) + rest
+        if contains (modeToken (mode), "thr") then
+            item (strengthIndex (fromAttribute ("ST")), thrustDice)
         else
-            token + rest
+            toInt (first (split ("d", modeToken (mode))))
 
-damageMode(mode) =
-    basedDamage (first (split (" ", mode)), replace (first (split (" ", mode)), "", mode))
+modeAdds(mode) =
+    if contains (modeToken (mode), "sw") then
+        item (strengthIndex (fromAttribute ("ST")), swingAdds) + modifierOf (replace ("sw", "", modeToken (mode)))
+    else
+        if contains (modeToken (mode), "thr") then
+            item (strengthIndex (fromAttribute ("ST")), thrustAdds) + modifierOf (replace ("thr", "", modeToken (mode)))
+        else
+            modifierOf (item (1, split ("d", modeToken (mode))))
 
-joinModes(list) =
-    fold ("", (acc, x)->if acc == "" then x else acc + " / " + x, list)
+modeText(mode) = diceText (modeDiceCount (mode), modeAdds (mode)) + modeRest (mode)
 
-weaponDamage(text) = joinModes (map ((mode)->damageMode (mode), split (" / ", text)))
+damageDice(count) =
+    switch count
+        case 1 then 1d6
+        case 2 then 2d6
+        case 3 then 3d6
+        case 4 then 4d6
+        case 5 then 5d6
+        case 6 then 6d6
+        case 7 then 7d6
+        case 8 then 8d6
+        else 1d6
 
 skillCandidates(text) =
     split (",", replace (" or ", ",", replace (", ", ",", first (split (" (", text)))))
@@ -131,7 +150,7 @@ parryFor(level, text) =
     else
         toString (3 + level / 2 + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
 
-attack(name, level, damage, parry, reach) = custom
+attack(name, level, mode, parry, reach) = custom
 {
     Name = name
     'To hit' = integer {
@@ -139,31 +158,41 @@ attack(name, level, damage, parry, reach) = custom
         render = "To hit: " + toString (level)
         valuedice = 3d6
     }
-    Damage = "Damage: " + damage
+    Damage = integer {
+        value = modeAdds (mode)
+        render = "Damage: " + modeText (mode)
+        valuedice = damageDice (modeDiceCount (mode))
+    }
     Parry = parry
     'Reach or range' = reach
 }
 
-meleeAttack(weapon) =
-    attack (
-        weapon.Name,
-        weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
-        weaponDamage (weapon.data.meleeWeaponStats.Stats.Damage),
-        "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry),
-        "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach)
+flatten(lists) = fold ([], (acc, x)->concat (acc, x), lists)
 
-rangedAttack(weapon) =
-    attack (
-        weapon.Name,
-        weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
-        weaponDamage (weapon.data.rangedWeaponStats.Stats.Damage),
-        "",
-        "Range: " + weapon.data.rangedWeaponStats.Stats.Range)
+meleeAttacks(weapon) =
+    map (
+        (mode)->attack (
+            weapon.Name,
+            weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
+            mode,
+            "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry),
+            "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach),
+        split (" / ", weapon.data.meleeWeaponStats.Stats.Damage))
+
+rangedAttacks(weapon) =
+    map (
+        (mode)->attack (
+            weapon.Name,
+            weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
+            mode,
+            "",
+            "Range: " + weapon.data.rangedWeaponStats.Stats.Range),
+        split (" / ", weapon.data.rangedWeaponStats.Stats.Damage))
 
 attacksFor(char) =
     concat (
-        map ((weapon)->meleeAttack (weapon), char.'Melee weapons'),
-        map ((weapon)->rangedAttack (weapon), char.'Ranged weapons'))
+        flatten (map ((weapon)->meleeAttacks (weapon), char.'Melee weapons')),
+        flatten (map ((weapon)->rangedAttacks (weapon), char.'Ranged weapons')))
 
 attributePoints(char) =
     char.Attributes.ST + char.Attributes.DX + char.Attributes.IQ + char.Attributes.HT
