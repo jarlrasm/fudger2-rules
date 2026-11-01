@@ -18,13 +18,16 @@ bonus(points,difficulty)=
       (switch difficulty
         case "Easy" then 0
         case "Average" then 1
-        else 2
+        case "Hard" then 2
+        else 3
       )
 fromAttribute(attribute) =
     switch attribute
       case "ST" then characterTable.Attributes.ST/10+10
       case "DX" then characterTable.Attributes.DX/20+10
       case "IQ" then characterTable.Attributes.IQ/20+10
+      case "Per" then characterTable.Attributes.IQ/20+10
+      case "Will" then characterTable.Attributes.IQ/20+10
       else characterTable.Attributes.HT/10+10
     
     
@@ -96,7 +99,7 @@ characterTable = ruleset
                     }
             Max=integer
                     {
-                        value=fromAttribute("GT")
+                        value=fromAttribute("HT")
                         editable=none
                     }
         }
@@ -122,10 +125,10 @@ characterTable = ruleset
                     visible=editor
                 Points=integer{}
                 'Based on'=string {
-                    keys = ["ST","DX","IQ","HT"]
+                    keys = ["ST","DX","IQ","HT","Per","Will"]
                     }
                 'Difficulty'=string {
-                    keys = ["Easy","Average","Hard"]
+                    keys = ["Easy","Average","Hard","Very Hard"]
                 }}
             }
         }
@@ -186,57 +189,146 @@ characterTable = ruleset
         editable = character
     }
 }
-weaponStats =ruleset
+meleeWeaponStats = ruleset
         {
             rulesetConfiguration =
             {
                 defaultImage = "/images/armour.svg"
+                filters = [
+                    filter { name = "Skill" prefix = "" filter = Stats.Skill }
+                ]
             }
-            Stats= table
+            Stats = table
             {
+                Damage = string {}
+                Reach = string {}
+                Parry = string {}
+                ST = string {}
+                Skill = string {}
+                Cost = string {}
+                Weight = string {}
+                Notes = string { multiline = true }
             }
         }
-armourStats= ruleset
+rangedWeaponStats = ruleset
         {
             rulesetConfiguration =
             {
                 defaultImage = "/images/armour.svg"
+                filters = [
+                    filter { name = "Skill" prefix = "" filter = Stats.Skill }
+                ]
             }
-            Stats= table
+            Stats = table
             {
+                Damage = string {}
+                Acc = string {}
+                Range = string {}
+                RoF = string {}
+                Shots = string {}
+                ST = string {}
+                Bulk = string {}
+                Rcl = string {}
+                Skill = string {}
+                Cost = string {}
+                Weight = string {}
+                Notes = string { multiline = true }
             }
         }
-advantageStats= ruleset
+armourStats = ruleset
+        {
+            rulesetConfiguration =
+            {
+                defaultImage = "/images/armour.svg"
+                filters = [
+                    filter { name = "Location" prefix = "" filter = Stats.Location }
+                ]
+            }
+            Stats = table
+            {
+                DR = string {}
+                DB = integer {}
+                Location = string {}
+                Cost = string {}
+                Weight = string {}
+                Notes = string { multiline = true }
+            }
+        }
+itemStats = ruleset
         {
             rulesetConfiguration =
             {
             }
-            Stats= table
+            Stats = table
             {
-                Points =integer{}
+                Cost = string {}
+                Weight = string {}
             }
         }
-disadvantageStats= ruleset
+traitTypes = ["Mental", "Physical", "Social", "Mundane", "Supernatural"]
+advantageStats = ruleset
         {
             rulesetConfiguration =
             {
+                sortedBy = sort { prefix = "Points" sort = Stats.Points }
+                filters = [
+                    filter { name = "Type" prefix = "" filter = Stats.Type }
+                ]
             }
-            Stats= table
+            Stats = table
             {
-                Points =integer{}
+                Points = integer {}
+                'Per level' = bool {}
+                Type = string { keys = traitTypes }
             }
         }
-Fudge = system
+disadvantageStats = ruleset
+        {
+            rulesetConfiguration =
+            {
+                sortedBy = sort { prefix = "Points" sort = Stats.Points }
+                filters = [
+                    filter { name = "Type" prefix = "" filter = Stats.Type }
+                ]
+            }
+            Stats = table
+            {
+                Points = integer {}
+                'Per level' = bool {}
+                'Self control' = bool {}
+                Type = string { keys = traitTypes }
+            }
+        }
+skillStats = ruleset
+        {
+            rulesetConfiguration =
+            {
+                filters = [
+                    filter { name = "Attribute" prefix = "" filter = Stats.Attribute },
+                    filter { name = "Difficulty" prefix = "" filter = Stats.Difficulty }
+                ]
+            }
+            Stats = table
+            {
+                Attribute = string { keys = ["ST","DX","IQ","HT","Per","Will"] }
+                Difficulty = string { keys = ["Easy","Average","Hard","Very Hard"] }
+                Defaults = string {}
+            }
+        }
+GURPSLite = system
 {
     characters = characterTable
     creatures = characterTable
-    'Ranged weapons'= weaponStats
-    'Melee weapons'= weaponStats
+    'Ranged weapons' = rangedWeaponStats
+    'Melee weapons' = meleeWeaponStats
     Advantage = advantageStats
     Disadvantage = disadvantageStats
-    Armour= armourStats
-    description="Gurps lite"
+    Armour = armourStats
+    'Other items' = itemStats
+    Skills = skillStats
+    description = "Gurps lite"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage"]
-    quickdice =[3d6]
+    otherLibararyTypes = ["Skills"]
+    libraries = ["/systems/Gurps/gurpslite.json"]
+    quickdice = [3d6]
 }
-
