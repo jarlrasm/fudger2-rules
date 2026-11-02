@@ -59,6 +59,25 @@
     background-color: var(--accent);
 }
 
+.entitypicker,
+button.entitypicker {
+    background-color: #4d4130;
+    color: var(--text);
+}
+.entitypicker:hover,
+button.entitypicker:hover {
+    background-color: #66563b;
+}
+.entitypicker.closed,
+button.entitypicker.closed {
+    background-color: var(--surface-muted);
+}
+.entitypicker.current,
+button.entitypicker.current {
+    background-color: var(--accent);
+    color: var(--on-accent);
+}
+
 .entityView pre {
     white-space: pre-wrap;
 }
