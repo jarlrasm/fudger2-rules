@@ -59,6 +59,7 @@ characterTable = ruleset
         {
             number = 3
             allowedchange = increase
+            editable = live
             overflow=  allow
             overflowValue = max(0, Scratch.realvalue - Scratch.number)
             }
@@ -67,6 +68,7 @@ characterTable = ruleset
             number = 1
             value = Hurt.realvalue + Scratch.overflowValue
             allowedchange = increase
+            editable = live
             overflow=  allow
             overflowValue = max(0, Hurt.value - Hurt.number)
         }
@@ -74,6 +76,7 @@ characterTable = ruleset
             {number = 1
             value = 'Very hurt'.realvalue + Hurt.overflowValue
             allowedchange = increase
+            editable = live
             overflow=  allow
             overflowValue = max(0, 'Very hurt'.value - 'Very hurt'.number)
             }
@@ -81,13 +84,15 @@ characterTable = ruleset
             {number = 1
             value = Incapacitated.realvalue + 'Very hurt'.overflowValue
             allowedchange = increase
+            editable = live
             overflow=  allow
             overflowValue = max(0, Incapacitated.value - Incapacitated.number)
             }
         'Near death' = slots
             {number = 1
             value ='Near death'.realvalue + Incapacitated.overflowValue
-            allowedchange = increase}
+            allowedchange = increase
+            editable = live}
         Heal = button
             {onClick = updates
                 {(Scratch.realvalue) = Hurt.realvalue
