@@ -105,6 +105,7 @@ restTable = table
     }
     'Short rest' = button
     {
+        editable = live
         onClick = updates
             {
                 (root.'Class resources'.'Resource 1'.Uses.realvalue) = shortRestUsed (characterTable, 0, 'Class resources'.'Resource 1'.Uses.realvalue)
@@ -124,6 +125,7 @@ restTable = table
     }
     'Long rest' = button
     {
+        editable = live
         onClick = updates
             {
                 (root.Hitpoints.Current) = Hitpoints.Max
