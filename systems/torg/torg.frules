@@ -4,6 +4,7 @@ D20RollImpl (extra) = ([1d20],((baseline,throws)->
   switch first(first (throws).rolls)
     case 10 then D20RollImpl (extra + 10)
     case 20 then D20RollImpl (extra + 20)
+    else if extra + first(first (throws).rolls) == 1 then "Mishap"
     else baseline + calculate (extra + first(first (throws).rolls))
           ))
           

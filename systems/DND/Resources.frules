@@ -42,8 +42,6 @@ isWarlock (char) = contains (char.Class.Main.Name, "Warlock")
 
 pactSlotsAfterShortRest (char, used) = if isWarlock (char) then 0 else used
 
-hitDiceAfterLongRest (char, used) = max(0, used - max(1, char.Class.Main.Levels / 2))
-
 classResourcesTable = table
 {
     visible = classResourcesVisible (characterTable)
@@ -132,7 +130,7 @@ restTable = table
                 (root.Hitpoints.Temporary) = 0
                 (root.Hitpoints.'Death save successes'.realvalue) = 0
                 (root.Hitpoints.'Death save failures'.realvalue) = 0
-                (root.Hitpoints.'Hit dice'.realvalue) = hitDiceAfterLongRest (characterTable, Hitpoints.'Hit dice'.realvalue)
+                (root.Hitpoints.'Hit dice'.realvalue) = 0
                 (root.'Class resources'.'Resource 1'.Uses.realvalue) = 0
                 (root.'Class resources'.'Resource 2'.Uses.realvalue) = 0
                 (root.'Class resources'.'Resource 3'.Uses.realvalue) = 0
