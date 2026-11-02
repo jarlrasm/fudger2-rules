@@ -1,49 +1,96 @@
 @font-face {
     font-family: starjedi;
     src: url(/systems/starwars/starjedi-fixed.woff);
-  }
-.header-menu{
-    background-image: url(/systems/starwars/background.png);
 }
-.tab-button{
-    color: gold;
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #0b0b10;
+    --surface: #15161d;
+    --surface-alt: #1d1f28;
+    --surface-sunken: #101117;
+    --surface-muted: #2c2f3b;
+    --text: #f1e6c8;
+    --text-muted: #c9b98f;
+    --text-faint: #8a8270;
+    --on-accent: #0b0b10;
+    --border: #3a3726;
+    --border-strong: #c9a227;
+    --accent: #ffe81f;
+    --accent-hover: #fff27a;
+    --accent-soft: #4a4214;
+    --link: #ffd84a;
+    --danger: #e53935;
+    --danger-hover: #b71c1c;
+    --danger-soft: #5c1f1c;
+    --success: #43a047;
+    --success-hover: #5cbf60;
+    --current: #2e4a1e;
+    --highlight: #6a5d10;
+    --card-bg: #221f16;
+    --gm-bg: #18241b;
+    --dice-bg: #0b0b10;
+    --dice-text: #ffe81f;
+    --paper: #f4f4f4;
+    --shadow: rgba(0, 0, 0, 0.8);
+    --backdrop: rgba(0, 0, 0, 0.7);
+    --focus-ring: #ffe81f;
+    --toast-success: #2f7d40;
+    --toast-error: #c0392b;
+    --toast-info: #2b2a1f;
+    --skeleton: #22232c;
+    --skeleton-shine: #2e3039;
+}
+
+.header-menu {
+    background: var(--bg) url(/systems/starwars/background.png);
+}
+.tab-button {
     font-family: starjedi;
-    background-color: rgba(0,0,0,0);
+    color: var(--accent);
+    background-color: transparent;
 }
-.tab-button.active{
-    background-color: gray;
+.tab-button:hover {
+    background-color: var(--accent-soft);
 }
-.entityView pre{
+.tab-button.active,
+.tab-button.active:hover {
+    color: var(--on-accent);
+    background-color: var(--accent);
+}
+
+.entityView pre {
     white-space: pre-wrap;
 }
 .entityView a {
-    color: blue;
+    color: var(--link);
     text-decoration: none;
-  }
-.entityView button{
+}
+.entityView button {
     padding-top: 10px;
     padding-bottom: 10px;
-    color: black;
+    color: var(--text);
     border-radius: 5px;
 }
-.entityView button.dicethrow{
+.entityView button.dicethrow {
     padding: 0;
     margin: 0;
-    background-color: black;
-    color: white;
+    background-color: var(--dice-bg);
+    color: var(--dice-text);
 }
-.entityView button:hover{
-    background-color: darkblue;
+.entityView button:hover {
+    background-color: var(--accent-soft);
 }
 .entityView .entityTable:hover {
-    filter: drop-shadow(1px 1px 5px grey);
+    filter: drop-shadow(0 0 5px var(--accent-soft));
 }
-.entityView .entityTable  {
+.entityView .entityTable {
     border-radius: 10px;
-    background-color: black;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
     margin: 5px;
     display: inline-table;
-    filter: drop-shadow(1px 1px 3px grey);
+    filter: drop-shadow(1px 1px 3px var(--shadow));
 }
 .entityView .wide {
     width: 100%;
@@ -55,166 +102,70 @@
 .entityView .split2 {
     display: inline-block;
     column-count: 2;
-    column-rule: 4px solid white;
+    column-rule: 4px solid var(--surface);
 }
 .entityView .split3 {
     display: inline-block;
     column-count: 3;
-    column-rule: 4px solid white;
+    column-rule: 4px solid var(--surface);
 }
 .entityView .split4 {
     display: inline-block;
     column-count: 4;
-    column-rule: 4px solid white;
+    column-rule: 4px solid var(--surface);
 }
 .entityView .split5 {
     display: inline-block;
     column-count: 5;
-    column-rule: 4px solid white;
+    column-rule: 4px solid var(--surface);
 }
 .entityView thead {
     padding-top: 15px;
     font-family: starjedi;
-    color: yellow;
+    color: var(--accent);
     margin: 0;
     text-align: left;
-
 }
-.entityView  {
+.entityView {
     max-width: 95%;
     flex-wrap: wrap;
     display: flex;
 }
-.entitypicker.wide {
-    color: wheat;
-    background-image: url(/systems/starwars/background.png);
-}
-.entityView .slots
-{
+.entityView .slots {
     display: inline;
 }
-.entityView .slots .used
-{
+.entityView .slots .used {
     display: inline;
 }
-.entityView .slots .unused
-{
+.entityView .slots .unused {
     display: inline;
 }
-.entityView .slot-buttons
-{
+.entityView .slot-buttons {
     display: inline;
 }
-.entityView .slot-button
-{
+.entityView .slot-button {
     display: inline;
     padding: 0;
 }
-.entityView .slots:hover
-{
+.entityView .slots.clickable:hover {
     position: relative;
-    background-color: red;
+    background-color: var(--danger);
     z-index: 1;
 }
 .entityView .namedescription {
+    background: var(--surface-alt);
     display: flex;
     flex-flow: column;
     border-radius: 5px;
     padding: 10px;
 }
-.focus{
-    background-color: wheat;
-}
-
-.entityView .namedescription autocompleting-input{
+.entityView .namedescription autocompleting-input {
     width: 100%;
 }
-
-.entityView .editbutton{
+.entityView .editbutton {
     flex-basis: 100%;
 }
-
-
 .entityView .customtype div {
     margin-right: 5px;
     display: inline;
-}
-.editorbuttons {
-
-    background-color: rgba(0,0,0,0);
-}
-button {
-    background-color: wheat;
-    filter: drop-shadow(1px 1px 3px black);
-}
-.popinshower
-{
-    background-color: wheat;
-}
-button.entitypicker {
-    background-color: wheat;
-}
-.related-entities .entitylink {
-    background-color: wheat;
-    filter: drop-shadow(1px 1px 3px black);
-}
-.entitypicker {
-    background-color: wheat;
-}
-
-.entitypicker.closed .entitywrapper{
-    background-color: dimgrey;
-}
-.popin {
-    background-image: url(/systems/starwars/background.png);
-}
-.popinbuttons {
-    border: none;
-    background-color: rgba(0,0,0,0);
-}
-.contentview{
-    background-color: black;
-    color: wheat;
-}
-.library-entity{
-    color: black;
-    background-color: wheat;
-}
-.library-entity .entityTable{
-    color: black;
-    background-color: wheat;
-}
-.chat {
-    color: black;
-}
-.session {
-    background-color: lightgoldenrodyellow;
-}
-.wide.entitypicker.current 
-{
-    background: green;
-}
-.commentcontent {
-    color: black;
-    background-color: wheat;
-}
-.comment{
-    background-color: wheat;
-}
-.add-comment-button{
-    background-color: wheat;
-
-}
-.entityheader .mainimage {
-    background-color: tan;
-}
-.entitypicker.current{
-
-    background-color: bisque;
-
-}
-.entitypicker:hover{
-
-    background-color: darkgoldenrod;
-
 }
