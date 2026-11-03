@@ -116,7 +116,7 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 
 `valuedice` can be any expression, e.g. a function that picks a roll from the character's state (see `D20Roll` in `DND/Basics.frules`).
 
-A roll whose field name matches one of the campaign's initiative rolls (any case) feeds the encounter initiative tracker. The list defaults to the system's `initiativeRolls` (or `Initiative` when it is not set), and the GM can change it per campaign in the campaign settings. Names can be any attribute or skill, matched by name. The Call for initiative button rolls the first enum `keyvalues` entry the character has from that list, else the ruleset's `rulesetConfiguration.initiative` field.
+A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
 ## The system
 
@@ -133,7 +133,6 @@ Fudge = system
     secondaryTypes = ["Ranged weapons", "Armour", "Other items"]
     otherLibararyTypes = ["Classes"]
     extraEntityTypes = [entityTypeDescription ("Spaceships", "spaceship", true, "/systems/starwars/spaceship-entity.png", ["ShipWeapons"])]
-    initiativeRolls = ["Dex"]
     initiativeCompare (item1, item2) = compare (item1, item2)
     quickdice = [1d20, 1d6]
     cssFiles = ["/systems/starwars/starwars.css"]
@@ -147,7 +146,7 @@ Fudge = system
 | `secondaryTypes` | Library item types that can be attached to an entity. Names without a ruleset get just name and description. |
 | `otherLibararyTypes` | Library-only types, not attached to entities (typo is required) |
 | `extraEntityTypes` | Extra top-level entity types, built with `entityTypeDescription` |
-| `initiativeRolls` | Default names of rolls that count as initiative, e.g. `["Dex", "Alertness"]`. Each campaign can change the list. Defaults to `["Initiative"]`. |
+| `initiativeRolls` | Optional. Makes initiative rolls a per-campaign setting with these names as the default, e.g. `["Dex", "Alertness"]`. Leave it out to use the `Initiative` field only. |
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
 | `quickdice` | Dice buttons shown in sessions |
 | `cssFiles` | Extra stylesheets |
