@@ -183,6 +183,7 @@ Fudge = system
     Armour= armourStats
     description="Simple Fudge rules"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
+    initiativeRolls = ["Dex"]
     initiativeCompare(item1,item2) = compare (intValueFromEnumString (fudgevalues,item1), intValueFromEnumString (fudgevalues,item2))
     quickdice =[4df]
 }
