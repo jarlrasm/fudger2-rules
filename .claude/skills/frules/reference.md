@@ -227,10 +227,13 @@ Gifts = list { singular = "Gift"  editable = character  valueType = nameAndDescr
 }
 
 Features = list { valueType = custom { Level = integer {}  Name = string {}  Description = string {} } }
+
+Languages = list { singular = "Language"  editable = character  valueType = string }
 ```
 
 - `valueType = nameAndDescription`: name plus description rows.
 - `valueType = custom { fields }`: one column per field.
+- `valueType = string`: one line of text per row, stored as a plain list of strings. `singular` is the placeholder. Enter adds the next row, and Backspace on an empty row removes it. Use `valueType = string { multiline = true }` for longer texts with formatting and `autocomplete` suggestions.
 - `source = secondary.TypeName`: show library items of that type attached to the entity. Leave out `valueType`.
 - `filter = expr`: for secondary lists, only show items where `expr` is true, e.g. `filter = spellStats.Stats.level == 1`.
 - `autocomplete = listOfStrings`: suggestions when adding.
