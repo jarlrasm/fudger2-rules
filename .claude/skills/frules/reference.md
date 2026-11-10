@@ -173,7 +173,8 @@ A deck item in a library JSON file:
 
 | Field | Meaning |
 |---|---|
-| `images` | The item's images, `{ "url": "image/png" }`. The first (by URL) is the back of every card; with none the backs show the Fudger logo. |
+| `images` | The item's images, `{ "url": "image/png" }`. The main image is the back of every card; with no images the backs show the Fudger logo. |
+| `mainImage` | Optional: which of `images` is the main one. Without it the first by URL is. |
 | `rulesets` | Always `[]`. Decks need none, but apps from before decks only read items that have it. |
 | `cards` | `name` is required. `text` defaults to empty, `copies` to 1. `image` is an optional picture for the card's face. |
 | `settings.whoDraws` | `anyone` (the default) or `gamemaster` |
