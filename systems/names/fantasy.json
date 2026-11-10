@@ -44,6 +44,7 @@
           "orcStart": ["Grom", "Krug", "Ur", "Thrak", "Gash", "Skar", "Bol", "Drog", "Mog", "Zug", "Nar", "Rok", "Gor", "Lug", "Shak", "Vrak"],
           "orcEnd": ["ash", "ak", "ug", "rim", "gar", "nak", "oth", "uk", "dush", "ga", "ra", "gol"],
           "orc": { "syllables": ["orcStart", "orcEnd"] },
+          "orcish": { "markov": ["Gromdak", "Durgash", "Ushnak", "Krugg", "Mozgar", "Bolgrim", "Gorzug", "Lugrash", "Shagdul", "Muzgash", "Rokthar", "Zugnar", "Ghorbak", "Thraknar", "Skarnak", "Brugdar", "Narzug", "Vorgash", "Drogmar", "Hurzak"], "order": 2, "length": [4, 9] },
           "orcByname": ["the Cruel", "Skullsplitter", "Bonebreaker", "Ironjaw", "the Grim", "One-eye", "Blacktooth", "the Butcher", "Gutripper", "the Loud"],
           "monsterStart": ["Grim", "Rot", "Gore", "Bile", "Ash", "Night", "Blood", "Bone", "Moss", "Ghast", "Murk", "Thorn"],
           "monsterEnd": ["fang", "maw", "claw", "hide", "jaw", "spine", "gut", "wing", "tusk", "eye"],
@@ -56,7 +57,7 @@
           "Dwarf": ["{dwarf} {clan}"],
           "Halfling": ["{halflingFirst} {halflingFamily}"],
           "Gnome": ["{gnome} {gnomeFamily}"],
-          "Orc": ["{orc}:3", "{orc} {orcByname}:2"],
+          "Orc": ["{orc}:2", "{orcish}:3", "{orc} {orcByname}:1", "{orcish} {orcByname}:1"],
           "Monster": ["{monster}:2", "{monster} {monsterTitle}:1"]
         }
       }
