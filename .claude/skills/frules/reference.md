@@ -93,7 +93,7 @@ A reference is looked up in the current table first, then each enclosing table, 
 | `bonusFrom (listOfTextLists, regex, n)` | `n` if any text matches `regex`, else `0` |
 | `bonusWithValue (listOfTextLists, regex)` | Sum of the numbers captured by `regex` across all texts |
 
-Built-in references: `character`, `campaign`, `live`, `editor`, `none` (used as option values), `secondary` (the entity's attached library items), `library` (the campaign library).
+Built-in references: `character`, `campaign`, `live`, `editor`, `none` (used as option values), `secondary` (the entity's attached library items), `library` (the campaign library), `cards` (the campaign's card decks, see [Card decks](#card-decks)).
 
 From `common.frules`: `compare (a, b)`, `nameAndDescription (name, description)`, `entityTypeDescription (name, singular, forEncounters, image, secondaries)`.
 
@@ -150,7 +150,54 @@ Fudge = system
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
 | `quickdice` | Dice buttons shown in sessions |
 | `cssFiles` | Extra stylesheets |
+| `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
 | `description` | Text shown for the system |
+
+### Card decks
+
+Card decks are a library type called `Decks` that every system has, so they need no ruleset. A GM makes decks in their own libraries. A system ships decks by putting them in a built-in library listed in `libraries`. In a running session the GM adds a deck from the library. The server then shuffles it and keeps the draw pile, discard pile, table and each person's hand for the whole campaign.
+
+A deck item in a library JSON file:
+
+```json
+{
+  "type": "Decks",
+  "name": "Deck of Many Things",
+  "description": "How to use the deck.",
+  "images": {},
+  "cards": [{ "name": "Balance", "text": "What the card does.", "copies": 1, "image": "/uploads/..." }],
+  "settings": { "whoDraws": "anyone", "drawTo": "table", "gmSeesHands": true }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `cards` | `name` is required. `text` defaults to empty, `copies` to 1. `image` is optional. |
+| `settings.whoDraws` | `anyone` (the default) or `gamemaster` |
+| `settings.drawTo` | Where a player's draw goes: `hand` (the default, kept secret) or `table` (face up for everyone) |
+| `settings.gmSeesHands` | `true` (the default) lets the GM see every hand. Use `false` for games like poker, where the GM plays too. |
+
+See `systems/DND/manythings.json`.
+
+Each deck has a draw pile, a face-up discard pile, the table, a face-down pile (for folded and burnt cards) and a hand for each person. The GM can deal a number of cards to every player at once.
+
+#### Reading cards in rules
+
+`cards.'Deck name'` is what the person looking at the sheet may see of that deck. The server decides this, so rules never see hidden cards:
+
+| Field | Value |
+|---|---|
+| `Name` | The deck's name |
+| `Draw`, `FaceDown` | Number of cards in the draw pile and in the face-down pile |
+| `Table`, `Discard` | Lists of cards, each with `Name` and `Text` |
+| `Mine` | The viewer's own hand. On a player's sheet that is the player's hand, but on a sheet the GM looks at it is the GM's. |
+| `Hands` | One entry per hand: `Player` (username), `Count`, and `Cards` (empty when the viewer may not see that hand) |
+
+`cards` has no value outside a running session, or before a deck is added. Rules that use it should cope with a missing value. For example, a sheet field for Texas hold'em that passes the hole and community cards to `pokerRank`, a function the system would define itself:
+
+```
+'Best hand' = pokerRank(concat(map((c)->c.Name, cards.'Poker'.Mine), map((c)->c.Name, cards.'Poker'.Table)))
+```
 
 ## Rulesets
 
