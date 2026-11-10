@@ -352,7 +352,6 @@ Register it under its base system in `rules.json`:
 {
   "name": "Fudge",
   "location": "/systems/Fudge/fudge.frules",
-  "image": "/systems/Fudge/fudge.jpeg",
   "description": "Simple Fudge rules",
   "extensions": [
     { "name": "Spells", "location": "/systems/Fudge/extensions/spells.frules", "description": "Simple rule-less spells" }
