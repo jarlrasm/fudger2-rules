@@ -176,7 +176,7 @@ A deck item in a library JSON file:
 | `images` | The item's images, `{ "url": "image/png" }`. The main image is the back of every card; with no images the backs show the Fudger logo. |
 | `mainImage` | Optional: which of `images` is the main one. Without it the first by URL is. |
 | `rulesets` | Always `[]`. Decks need none, but apps from before decks only read items that have it. |
-| `cards` | `name` is required. `text` defaults to empty, `copies` to 1. `image` is an optional picture for the card's face. |
+| `cards` | `name` is required. `text` defaults to empty, `copies` to 1. `image` is an optional picture for the card's face. `fullImage: true` makes it cover the whole card, for card art with the name and text in it. |
 | `settings.whoDraws` | `anyone` (the default) or `gamemaster` |
 | `settings.drawTo` | Where a player's draw goes: `hand` (the default, kept secret) or `table` (face up for everyone) |
 | `settings.gmSeesHands` | `true` (the default) lets the GM see every hand. Use `false` for games like poker, where the GM plays too. |
