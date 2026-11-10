@@ -1,0 +1,33 @@
+{
+  "name": "Chinese names",
+  "description": "Chinese names for people and places, written in pinyin or in characters.",
+  "url": "/systems/names/chinese.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Chinese",
+      "description": "Surname first, then a given name of one or two syllables. Choose pinyin or characters.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Person", "Place"],
+      "generator": {
+        "variants": ["Male", "Female", "Place"],
+        "scripts": ["Pinyin", "Characters"],
+        "joiner": { "Characters": "" },
+        "parts": {
+          "surname": ["Wang|王:10", "Li|李:10", "Zhang|张:9", "Liu|刘:7", "Chen|陈:6", "Yang|杨:4", "Huang|黄:3", "Zhao|赵:3", "Wu|吴:3", "Zhou|周:3", "Xu|徐:2", "Sun|孙:2", "Ma|马:2", "Zhu|朱:2", "Hu|胡:2", "Guo|郭:2", "He|何:2", "Lin|林:2", "Gao|高:2", "Luo|罗:2", "Zheng|郑", "Liang|梁", "Xie|谢", "Song|宋", "Tang|唐", "Han|韩", "Feng|冯", "Deng|邓", "Cao|曹", "Peng|彭", "Zeng|曾", "Xiao|肖", "Tian|田", "Dong|董", "Pan|潘", "Yuan|袁", "Cai|蔡", "Jiang|蒋", "Yu|余", "Du|杜", "Ye|叶", "Cheng|程", "Wei|魏", "Su|苏", "Ding|丁", "Ren|任", "Shen|沈", "Yao|姚", "Lu|卢", "Cui|崔", "Zhong|钟", "Tan|谭", "Fan|范", "Shi|石", "Liao|廖", "Jin|金", "Jia|贾", "Xia|夏", "Fang|方", "Zou|邹", "Xiong|熊", "Bai|白", "Meng|孟", "Qin|秦", "Qiu|邱", "Hou|侯", "Xue|薛", "Lei|雷", "Long|龙", "Tao|陶", "Mao|毛", "Gu|顾", "Qian|钱", "Ouyang|欧阳", "Sima|司马", "Zhuge|诸葛", "Shangguan|上官"],
+          "maleSyl": ["Wei|伟", "Jun|军", "Hao|浩", "Ming|明", "Qiang|强", "Lei|磊", "Yang|洋", "Yong|勇", "Jie|杰", "Tao|涛", "Bin|斌", "Chao|超", "Hui|辉", "Peng|鹏", "Hua|华", "Gang|刚", "Jian|建", "Feng|峰", "Long|龙", "Bo|博", "Yu|宇", "Xuan|轩", "Zhi|志", "Wen|文", "Kai|凯", "Rui|睿", "Tian|天", "Cheng|成", "Guo|国", "Dong|东", "Hai|海", "Lin|林", "Xiang|翔", "Zhen|振", "De|德", "Shan|山", "Yi|毅", "Ze|泽", "Hong|宏", "Liang|亮"],
+          "femaleSyl": ["Mei|美", "Fang|芳", "Li|丽", "Xiu|秀", "Ying|英", "Min|敏", "Jing|静", "Yan|燕", "Hong|红", "Xia|霞", "Juan|娟", "Ling|玲", "Qian|倩", "Ting|婷", "Xue|雪", "Lan|兰", "Hui|慧", "Na|娜", "Yun|云", "Zhen|珍", "Lu|璐", "Yue|月", "Xin|欣", "Yu|雨", "Qing|晴", "Shu|淑", "Hua|华", "Wei|薇", "Yi|怡", "Jia|佳", "Lian|莲", "Fei|菲", "Rong|蓉", "Ning|宁", "Xi|曦", "Han|涵", "Zi|紫", "Shan|珊", "Ya|雅", "Qiao|巧"],
+          "placeStart": ["He|河", "Shan|山", "Hu|湖", "Jiang|江", "Dong|东", "Nan|南", "Xi|西", "Bei|北", "Long|龙", "Yun|云", "Qing|青", "Bai|白", "Hong|红", "Jin|金", "Shi|石", "Song|松", "Feng|丰", "Tai|泰", "Ping|平", "Chang|长", "Xin|新", "Hua|华", "Ning|宁", "Yong|永", "Fu|福", "Gui|桂", "Lu|鹿", "Ma|马", "Tao|桃", "Liu|柳"],
+          "placeEnd": ["Zhou|州:4", "Cheng|城:3", "Shan|山:2", "He|河:2", "Jiang|江:2", "Kou|口:2", "Ling|岭", "Gu|谷", "Ping|坪", "Yang|阳:2", "Ning|宁", "Men|门", "Qiao|桥", "Tan|潭", "Du|都", "Zhen|镇:2", "Cun|村:2", "Tang|塘", "Po|坡", "Wan|湾"]
+        },
+        "templates": {
+          "Male": ["{surname} {maleSyl}{maleSyl|lower}:3", "{surname} {maleSyl}:1"],
+          "Female": ["{surname} {femaleSyl}{femaleSyl|lower}:3", "{surname} {femaleSyl}:1"],
+          "Place": ["{placeStart}{placeEnd|lower}"]
+        }
+      }
+    }
+  ]
+}

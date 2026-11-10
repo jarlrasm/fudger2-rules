@@ -1,0 +1,40 @@
+{
+  "name": "Norwegian names",
+  "description": "Modern and Viking-era Norwegian names for people, farms and villages.",
+  "url": "/systems/names/norwegian.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Norwegian",
+      "description": "Common modern Norwegian names, Viking-era names with patronymics and bynames, and farm and village names.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Person", "Place"],
+      "generator": {
+        "variants": ["Male", "Female", "Viking man", "Viking woman", "Farm", "Village"],
+        "parts": {
+          "male": ["Jan:5", "Per:5", "Bjørn:4", "Ole:4", "Lars:4", "Kjell:3", "Knut:3", "Arne:3", "Svein:3", "Thomas:3", "Hans:3", "Geir:3", "Tor:3", "Morten:2", "Terje:2", "Odd:2", "Erik:3", "Martin:3", "Andreas:3", "Rune:2", "Trond:2", "Anders:2", "Harald:2", "Magnus:3", "Jonas:2", "Henrik:2", "Sindre:2", "Eirik:2", "Håkon:2", "Sander:2", "Emil:2", "Kristian:2", "Olav:2", "Even", "Vegard", "Aksel", "Filip", "Johannes", "Mathias", "Tobias", "Jakob", "Lukas", "Ivar", "Sigurd", "Halvor", "Torbjørn", "Øystein", "Steinar", "Asbjørn", "Gunnar"],
+          "female": ["Anne:5", "Inger:4", "Kari:4", "Marit:4", "Ingrid:4", "Liv:3", "Eva:3", "Berit:3", "Astrid:3", "Bjørg:2", "Hilde:3", "Anna:3", "Solveig:2", "Marianne:2", "Randi:2", "Ida:3", "Nina:2", "Ragnhild:2", "Elisabeth:2", "Kristin:2", "Silje:2", "Ingeborg:2", "Tone:2", "Hanne:2", "Mari:2", "Nora:3", "Emma:3", "Sara:2", "Thea:2", "Ingvild", "Maja", "Ella", "Sofie", "Hedda", "Tuva", "Live", "Frida", "Guro", "Synnøve", "Sigrid", "Åse", "Gro", "Turid", "Torill", "Unni", "Vigdis", "Aud", "Brit", "Signe", "Oda"],
+          "surname": ["Hansen:8", "Johansen:7", "Olsen:7", "Larsen:6", "Andersen:6", "Pedersen:6", "Nilsen:6", "Kristiansen:5", "Jensen:5", "Karlsen:4", "Johnsen:4", "Pettersen:4", "Eriksen:4", "Berg:4", "Haugen:3", "Hagen:3", "Johannessen:3", "Andreassen:3", "Jacobsen:3", "Dahl:3", "Jørgensen:2", "Halvorsen:2", "Henriksen:2", "Lund:2", "Sørensen:2", "Moen:2", "Gundersen:2", "Iversen:2", "Strand:2", "Solberg:2", "Svendsen:2", "Eide:2", "Knutsen:2", "Martinsen:2", "Paulsen:2", "Bakken:2", "Kristoffersen:2", "Mathisen", "Lie", "Amundsen", "Rasmussen", "Lunde", "Solheim", "Berge", "Moe", "Nygård", "Bakke", "Fredriksen", "Holm", "Lien", "Hauge", "Myhre", "Sæther", "Aas", "Haugland", "Evensen", "Tangen", "Vik", "Ødegård", "Brekke"],
+          "farmStart": ["Hau", "Bak", "Myr", "Ås", "Li", "Berg", "Holm", "Nord", "Sør", "Vest", "Øst", "Bre", "Fjell", "Skog", "Sol", "Stor", "Vik", "Lund", "Hov", "Tveit", "Øver", "Ner", "Mel", "Rø", "Grø", "Lang", "Hol", "Ny", "Mo", "Aa"],
+          "farmEnd": ["gen", "ken", "voll", "rud", "stad", "eng", "heim", "dal", "berg", "bø", "nes", "vik", "land", "li", "haug", "set", "sæter", "tun", "gard", "mo", "by", "rød", "seth", "brekke", "lien"],
+          "farm": { "syllables": ["farmStart", "farmEnd"] },
+          "villageEnd": ["vik:3", "dal:3", "heim:2", "fjord:2", "øy:2", "sund:2", "nes:2", "hamn", "strand", "våg", "kroken", "stad"],
+          "vikingMale": ["Ragnar", "Bjørn", "Harald", "Olav", "Sigurd", "Ivar", "Leiv", "Erik", "Gunnar", "Hallvard", "Torstein", "Ulv", "Halvdan", "Sverre", "Håkon", "Einar", "Steinar", "Asbjørn", "Toralv", "Ketil", "Grim", "Orm", "Arnbjørn", "Egil", "Rolv", "Torgrim", "Skule", "Vemund", "Øyvind", "Snorre", "Tjodolv", "Gissur"],
+          "vikingFemale": ["Astrid", "Gudrun", "Ragnhild", "Sigrid", "Tora", "Ingrid", "Gunnhild", "Åsa", "Helga", "Frøydis", "Ragna", "Ylva", "Torunn", "Ingeborg", "Solveig", "Bodil", "Gyda", "Alfhild", "Rannveig", "Hallgerd", "Tyra", "Sigrun", "Ase", "Dagny", "Halldis", "Jorunn", "Ragnfrid", "Tordis"],
+          "father": ["Harald", "Olav", "Sigurd", "Ivar", "Erik", "Gunnar", "Torstein", "Halvdan", "Håkon", "Einar", "Ketil", "Grim", "Orm", "Egil", "Bjørn", "Toralv", "Ulv", "Rolv"],
+          "byname": ["the Bold", "the Fair-haired", "Bloodaxe", "the Old", "the Quiet", "Ironside", "the Tall", "the Red", "the Strong", "the Wise", "Forkbeard", "the Peaceful", "the Far-travelled", "Snake-eye", "the Stout", "the Black"]
+        },
+        "templates": {
+          "Male": ["{male} {surname}:6", "{male} {farm}:3", "{male} {male} {surname}:1"],
+          "Female": ["{female} {surname}:6", "{female} {farm}:3", "{female} {female} {surname}:1"],
+          "Viking man": ["{vikingMale} {father|sson}:6", "{vikingMale} {byname}:3", "{vikingMale} {father|sson} {byname}:1"],
+          "Viking woman": ["{vikingFemale} {father|sdatter}:6", "{vikingFemale} {byname}:3", "{vikingFemale} {father|sdatter} {byname}:1"],
+          "Farm": ["{farm}"],
+          "Village": ["{farmStart}{villageEnd}:4", "{farm}{villageEnd}:1"]
+        }
+      }
+    }
+  ]
+}

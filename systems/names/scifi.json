@@ -1,0 +1,85 @@
+{
+  "name": "Galaxy names",
+  "description": "Original space opera names for people, aliens, droids, worlds and starships.",
+  "url": "/systems/names/scifi.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Galaxy people",
+      "description": "Humans of the core worlds, aliens and droids.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Person"],
+      "generator": {
+        "variants": ["Human", "Alien", "Droid"],
+        "parts": {
+          "first": ["Ados", "Bren", "Cael", "Davin", "Eris", "Fenn", "Garo", "Holt", "Ilsa", "Jace", "Kesh", "Lira", "Mako", "Nyla", "Oren", "Pell", "Quin", "Rhea", "Tamsin", "Ulric", "Vela", "Wyn", "Xan", "Yara", "Zev", "Corla", "Dessa", "Iven", "Marek", "Sela", "Tova", "Rook"],
+          "last": ["Vantor", "Dray", "Okonra", "Selvane", "Marr", "Talvo", "Arvane", "Bastor", "Corvel", "Dorrin", "Estan", "Farro", "Halcy", "Ivrel", "Jenko", "Kade", "Lorn", "Morrow", "Nadir", "Orlan", "Quarry", "Raske", "Tarn", "Ulver", "Varga", "Wrenn", "Yost", "Zayne"],
+          "alienStart": ["Zor", "Kae", "Vex", "Tal", "Ruu", "Gha", "Ibo", "Kri", "Mon", "Ny", "Oolo", "Pra", "Shi", "Tyk", "Ux", "Wha", "Yee", "Zhu"],
+          "alienMid": ["ba", "ek", "ix", "on", "aa", "ru", "zi", "lo", "kka", "ma"],
+          "alienEnd": ["", "k", "sh", "ra", "th", "x", "lu", "zz", "ok", "ee"],
+          "alien": { "syllables": ["alienStart", "alienMid", "alienEnd"], "count": [2, 3] },
+          "droid": { "pattern": "LD-LD" },
+          "probe": { "pattern": "LL-DDD" },
+          "unit": { "pattern": "DL-LDL" },
+          "droidNickname": ["Sparks", "Rivet", "Beeper", "Clank", "Patch", "Whirr", "Dusty", "Tock"]
+        },
+        "templates": {
+          "Human": ["{first} {last}"],
+          "Alien": ["{alien|cap}:3", "{alien|cap} {alien|cap}:1", "{alien|cap} of {alien|cap}:1"],
+          "Droid": ["{droid}:3", "{probe}:2", "{unit}:1", "{droidNickname} ({droid}):1"]
+        }
+      }
+    },
+    {
+      "type": "Names",
+      "name": "Galaxy places",
+      "description": "Planets, moons, stations and cantinas.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Place"],
+      "generator": {
+        "variants": ["Planet", "Station", "Cantina"],
+        "parts": {
+          "planetStart": ["Kor", "Vel", "Tar", "Ese", "Mal", "Ryl", "Ost", "Bes", "Dra", "Ulo", "Zan", "Cy", "Hel", "Ith", "Nor", "Ques", "Ari", "Sor"],
+          "planetEnd": ["os", "ara", "ion", "eth", "una", "ix", "ar", "ado", "enne", "ia", "on", "ul", "is", "ath"],
+          "planet": { "syllables": ["planetStart", "planetEnd"] },
+          "numeral": ["II", "III", "IV", "V", "VII", "IX"],
+          "code": { "pattern": "LL-DD" },
+          "stationKind": ["Station", "Outpost", "Relay", "Depot", "Spire", "Yards"],
+          "cantinaAdjective": ["Rusty", "Last", "Lucky", "Blue", "Broken", "Drifting", "Silent", "Burning", "Twin", "Cold"],
+          "cantinaNoun": ["Moon", "Nebula", "Thruster", "Comet", "Credit", "Star", "Pilot", "Asteroid", "Airlock", "Orbit"]
+        },
+        "templates": {
+          "Planet": ["{planet}:4", "{planet} {numeral}:2", "{planet} Prime:1", "{planet} Minor:1"],
+          "Station": ["{planet} {stationKind}:3", "{stationKind} {code}:2"],
+          "Cantina": ["The {cantinaAdjective} {cantinaNoun}"]
+        }
+      }
+    },
+    {
+      "type": "Names",
+      "name": "Galaxy ships",
+      "description": "Starship names and ship weapon models.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Ship", "Item"],
+      "generator": {
+        "variants": ["Ship", "Weapon"],
+        "parts": {
+          "shipAdjective": ["Crimson", "Silent", "Last", "Wandering", "Distant", "Iron", "Restless", "Bright", "Lucky", "Defiant", "Hollow", "Endless"],
+          "shipNoun": ["Comet", "Fortune", "Wraith", "Promise", "Horizon", "Vigil", "Lance", "Ember", "Gambit", "Voyager", "Shadow", "Harbinger"],
+          "captain": ["Davin", "Eris", "Kesh", "Lira", "Nyla", "Oren", "Vela", "Yara"],
+          "maker": ["Corvel", "Arvane", "Talvo", "Halcy", "Orlan", "Varga"],
+          "model": { "pattern": "LL-D" },
+          "weaponKind": ["laser cannon", "ion cannon", "missile pod", "blaster turret", "torpedo launcher", "point-defence array"]
+        },
+        "templates": {
+          "Ship": ["{shipAdjective} {shipNoun}:4", "The {shipAdjective} {shipNoun}:2", "{captain}'s {shipNoun}:1"],
+          "Weapon": ["{maker} {model} {weaponKind}"]
+        }
+      }
+    }
+  ]
+}

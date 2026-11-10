@@ -1,0 +1,121 @@
+{
+  "name": "Fantasy names",
+  "description": "Original names for fantasy folk, places and things.",
+  "url": "/systems/names/fantasy.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Fantasy folk",
+      "description": "Humans, elves, dwarves, halflings, gnomes, orcs and monsters.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Person"],
+      "generator": {
+        "variants": ["Human", "Elf", "Dwarf", "Halfling", "Gnome", "Orc", "Monster"],
+        "parts": {
+          "humanFirst": ["Aldric", "Bran", "Doran", "Edric", "Faron", "Garrick", "Hale", "Ivo", "Jory", "Kellan", "Lucan", "Merrick", "Niall", "Osric", "Roderic", "Soren", "Tobias", "Ulric", "Varek", "Wystan", "Adela", "Brynn", "Celia", "Delia", "Elspeth", "Fiora", "Gwen", "Helena", "Isolde", "Jessa", "Kira", "Liora", "Maren", "Nessa", "Odette", "Rowena", "Sabine", "Talia", "Una", "Wren", "Ysolde", "Tamsin"],
+          "surStart": ["Ash", "Black", "Bright", "Brook", "Cold", "Fair", "Glen", "Green", "Hart", "High", "Holt", "Long", "Mill", "Oak", "Red", "Stone", "Thorn", "White", "Wood", "Wolf", "Elder", "Marsh", "Raven", "Sand"],
+          "surEnd": ["ford", "field", "wood", "well", "ridge", "brook", "hill", "wick", "wright", "ton", "by", "more", "stead", "ley", "croft", "hollow", "gate", "worth"],
+          "humanSurname": { "syllables": ["surStart", "surEnd"] },
+          "elfStart": ["Ae", "Thal", "Syl", "Ela", "Fae", "Ith", "Lae", "Cael", "Ny", "Rha", "Ser", "Vae", "Ili", "Mir", "Oro", "Ten"],
+          "elfMid": ["la", "ri", "nae", "va", "lo", "the", "ndi", "sa", "ra", "le"],
+          "elfEnd": ["ion", "riel", "las", "wyn", "thir", "rae", "dor", "lis", "nor", "wen", "rith", "mar", "ael", "anna"],
+          "elf": { "syllables": ["elfStart", "elfMid", "elfEnd"], "count": [2, 3] },
+          "elfFamilyStart": ["Moon", "Star", "Leaf", "Silver", "Dawn", "Mist", "Wind", "Sun", "Night", "Amber", "Willow", "Frost"],
+          "elfFamilyEnd": ["whisper", "song", "shade", "bough", "glade", "brook", "petal", "fall", "light", "weaver", "bloom"],
+          "elfFamily": { "syllables": ["elfFamilyStart", "elfFamilyEnd"] },
+          "dwarfStart": ["Bal", "Bor", "Dar", "Dur", "Grom", "Hal", "Kor", "Mor", "Nor", "Thar", "Ulf", "Vor", "Bru", "Dag", "Hel", "Ing", "Kel", "Rur", "Tor", "Gun"],
+          "dwarfEnd": ["din", "dor", "gar", "grim", "mund", "nar", "rik", "rin", "ton", "ra", "da", "hild", "na", "wyn", "dis", "vi", "bek"],
+          "dwarf": { "syllables": ["dwarfStart", "dwarfEnd"] },
+          "clanStart": ["Iron", "Stone", "Deep", "Ember", "Frost", "Gold", "Granite", "Coal", "Anvil", "Copper", "Flint", "Silver"],
+          "clanEnd": ["forge", "beard", "hammer", "delve", "fist", "shield", "helm", "braid", "mantle", "vein", "axe"],
+          "clan": { "syllables": ["clanStart", "clanEnd"] },
+          "halflingFirst": ["Pip", "Tansy", "Bramble", "Clover", "Dill", "Fennel", "Hazel", "Juniper", "Marigold", "Nettle", "Poppy", "Sorrel", "Basil", "Barley", "Cobb", "Huxley", "Jasper", "Ludo", "Nib", "Otto", "Rufus", "Tobin", "Wendel", "Myrtle", "Petunia", "Rosie"],
+          "halflingStart": ["Under", "Over", "Green", "Tea", "Honey", "Apple", "Thistle", "Good", "Mug", "Barrel", "Bush", "Warm", "Puddle", "Mossy"],
+          "halflingEnd": ["hill", "bottom", "leaf", "foot", "bough", "kettle", "barrow", "wort", "bank", "wick", "pot", "crumb"],
+          "halflingFamily": { "syllables": ["halflingStart", "halflingEnd"] },
+          "gnomeStart": ["Bim", "Fizz", "Nack", "Orry", "Pock", "Tink", "Wiz", "Zook", "Dabb", "Fen", "Gim", "Nim", "Bop", "Quib"],
+          "gnomeEnd": ["ble", "wick", "en", "o", "le", "ix", "addle", "er", "ston"],
+          "gnome": { "syllables": ["gnomeStart", "gnomeEnd"] },
+          "gnomeFamilyStart": ["Cog", "Gear", "Spark", "Copper", "Fiddle", "Tumble", "Whistle", "Bolt", "Sprocket", "Gizmo"],
+          "gnomeFamilyEnd": ["wick", "spinner", "gauge", "nose", "bottom", "widget", "twist", "fuse", "bell"],
+          "gnomeFamily": { "syllables": ["gnomeFamilyStart", "gnomeFamilyEnd"] },
+          "orcStart": ["Grom", "Krug", "Ur", "Thrak", "Gash", "Skar", "Bol", "Drog", "Mog", "Zug", "Nar", "Rok", "Gor", "Lug", "Shak", "Vrak"],
+          "orcEnd": ["ash", "ak", "ug", "rim", "gar", "nak", "oth", "uk", "dush", "ga", "ra", "gol"],
+          "orc": { "syllables": ["orcStart", "orcEnd"] },
+          "orcByname": ["the Cruel", "Skullsplitter", "Bonebreaker", "Ironjaw", "the Grim", "One-eye", "Blacktooth", "the Butcher", "Gutripper", "the Loud"],
+          "monsterStart": ["Grim", "Rot", "Gore", "Bile", "Ash", "Night", "Blood", "Bone", "Moss", "Ghast", "Murk", "Thorn"],
+          "monsterEnd": ["fang", "maw", "claw", "hide", "jaw", "spine", "gut", "wing", "tusk", "eye"],
+          "monster": { "syllables": ["monsterStart", "monsterEnd"] },
+          "monsterTitle": ["of the Deep Wood", "of the Marsh", "the Hungry", "the Old", "the Unseen", "of the Barrows", "the Many-eyed"]
+        },
+        "templates": {
+          "Human": ["{humanFirst} {humanSurname}"],
+          "Elf": ["{elf}:2", "{elf} {elfFamily}:2"],
+          "Dwarf": ["{dwarf} {clan}"],
+          "Halfling": ["{halflingFirst} {halflingFamily}"],
+          "Gnome": ["{gnome} {gnomeFamily}"],
+          "Orc": ["{orc}:3", "{orc} {orcByname}:2"],
+          "Monster": ["{monster}:2", "{monster} {monsterTitle}:1"]
+        }
+      }
+    },
+    {
+      "type": "Names",
+      "name": "Fantasy places",
+      "description": "Villages, towns, taverns and wild places.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Place"],
+      "generator": {
+        "variants": ["Village", "Town", "Tavern", "Wilds"],
+        "parts": {
+          "placeStart": ["Ash", "Thorn", "Brack", "Elm", "Fern", "Glim", "Hollow", "Kings", "Lark", "Mill", "Oak", "Raven", "Salt", "Stag", "Wolf", "Wynd", "Bram", "Cold", "Dun", "Pen"],
+          "placeEnd": ["ford", "wick", "by", "ton", "stead", "dale", "mere", "holt", "bridge", "well", "moor", "haven", "barrow", "march", "combe", "fell"],
+          "place": { "syllables": ["placeStart", "placeEnd"] },
+          "townPrefix": ["Port", "Fort", "Castle", "North", "South", "Upper", "Lower", "Old", "New"],
+          "adjective": ["Rusty", "Prancing", "Drunken", "Golden", "Sleeping", "Laughing", "Crooked", "Silver", "Wandering", "Broken", "Jolly", "Howling", "Blind", "Green", "Copper", "Hungry"],
+          "animal": ["Griffon", "Dragon", "Stag", "Boar", "Fox", "Goose", "Hound", "Owl", "Pony", "Raven", "Badger", "Wyvern", "Mermaid", "Toad", "Bear", "Hare"],
+          "object": ["Tankard", "Lantern", "Crown", "Anvil", "Barrel", "Kettle", "Shield", "Plough", "Harp", "Key"],
+          "owner": ["Old Tom", "Mother Hulda", "Bram", "Widow Ash", "One-eyed Jory", "Mags", "Fat Osric", "Nessa"],
+          "building": ["Rest", "Hearth", "Lodge", "Taproom", "Alehouse", "Den"],
+          "wildStart": ["Black", "Grey", "Whisper", "Dragon", "Shadow", "Iron", "Mist", "Bone", "Storm", "Wild"],
+          "wildEnd": ["wood", "fen", "peaks", "downs", "moor", "vale", "reach", "wastes", "mire", "crags"]
+        },
+        "templates": {
+          "Village": ["{place}"],
+          "Town": ["{place}:3", "{townPrefix} {place}:2"],
+          "Tavern": ["The {adjective} {animal}:4", "The {animal} and {object}:2", "{owner}'s {building}:1"],
+          "Wilds": ["The {wildStart}{wildEnd}:3", "{place} {wildEnd|cap}:1"]
+        }
+      }
+    },
+    {
+      "type": "Names",
+      "name": "Fantasy things",
+      "description": "Named weapons, ships and shops.",
+      "images": {},
+      "rulesets": [],
+      "kinds": ["Item", "Ship"],
+      "generator": {
+        "variants": ["Weapon", "Ship", "Shop"],
+        "parts": {
+          "weaponStart": ["Dawn", "Storm", "Frost", "Soul", "Night", "Ember", "Grave", "Star", "Thunder", "Oath", "Wyrm", "Doom"],
+          "weaponEnd": ["bringer", "cleaver", "fang", "brand", "edge", "song", "biter", "caller", "keeper", "reaver"],
+          "foe": ["Troll", "Goblin", "Dragon", "Giant", "Wolf", "Witch", "Orc", "Serpent"],
+          "shipAdjective": ["Gallant", "Salty", "Grey", "Restless", "Merry", "Proud", "Swift", "Lonely"],
+          "shipNoun": ["Gull", "Maiden", "Wave", "Wanderer", "Kraken", "Promise", "Tide", "Fortune"],
+          "trade": ["Smithy", "Apothecary", "Curios", "Provisions", "Arms and Armour", "Scrolls", "Tailor"],
+          "port": ["Saltmere", "Ravenhaven", "Dunmoor", "Penwick", "Gullford", "Ashby"],
+          "shopOwner": ["Hulda", "Bram", "Tamsin", "Osric", "Ludo", "Maren", "Dagna", "Pip"]
+        },
+        "templates": {
+          "Weapon": ["{weaponStart}{weaponEnd}:3", "{foe}bane:1"],
+          "Ship": ["The {shipAdjective} {shipNoun}:3", "{shipNoun} of {port}:1"],
+          "Shop": ["{shopOwner}'s {trade}"]
+        }
+      }
+    }
+  ]
+}
