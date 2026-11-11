@@ -1,4 +1,5 @@
 #include "/systems/common.frules"
+#include "/systems/names/settings.frules"
 
 pointsToSkill(points)=
  if points-points/3*3 > 0 then
@@ -475,6 +476,7 @@ forcePowerStats= ruleset
 Starwars = system
 {
     libraries = ["/systems/names/scifi.json"]
+    nameSettings = [spaceNameSetting]
     characters = characterTable
     creatures = characterTable
     Spaceships = spaceshipTable

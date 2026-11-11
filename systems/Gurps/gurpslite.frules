@@ -1,4 +1,5 @@
 #include "/systems/common.frules"
+#include "/systems/names/settings.frules"
 bonus(points,difficulty)=
      (if points < 1 then -4
       else
@@ -654,5 +655,6 @@ GURPSLite = system
     description = "Gurps lite"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage","Skills"]
     libraries = ["/systems/Gurps/gurpslite.json", "/systems/names/norwegian.json", "/systems/names/chinese.json", "/systems/names/fantasy.json", "/systems/names/scifi.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, modernNorwayNameSetting, easternNameSetting, spaceNameSetting]
     quickdice = [3d6]
 }

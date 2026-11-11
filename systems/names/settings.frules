@@ -1,0 +1,43 @@
+fantasyNameSetting = nameSetting
+{
+    name = "Classic fantasy"
+    characters = [generator { library = "Fantasy folk" variant = "Human" }, generator { library = "Fantasy folk" variant = "Elf" }, generator { library = "Fantasy folk" variant = "Dwarf" }, generator { library = "Fantasy folk" variant = "Halfling" }]
+    creatures = [generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Fantasy folk" variant = "Orc" }]
+    Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Town" }, generator { library = "Fantasy places" variant = "Tavern" }, generator { library = "Fantasy places" variant = "Wilds" }]
+    'Melee weapons' = generator { library = "Fantasy things" variant = "Weapon" }
+    'Ranged weapons' = generator { library = "Fantasy things" variant = "Weapon" }
+}
+
+norseNameSetting = nameSetting
+{
+    name = "Norse saga"
+    characters = [generator { library = "Norwegian" variant = "Viking man" }, generator { library = "Norwegian" variant = "Viking woman" }]
+    creatures = [generator { library = "Norwegian" variant = "Viking man" }, generator { library = "Norwegian" variant = "Viking woman" }]
+    Location = [generator { library = "Norwegian" variant = "Farm" }, generator { library = "Norwegian" variant = "Village" }]
+}
+
+modernNorwayNameSetting = nameSetting
+{
+    name = "Modern Norway"
+    characters = [generator { library = "Norwegian" variant = "Male" }, generator { library = "Norwegian" variant = "Female" }]
+    creatures = [generator { library = "Norwegian" variant = "Male" }, generator { library = "Norwegian" variant = "Female" }]
+    Location = [generator { library = "Norwegian" variant = "Village" }, generator { library = "Norwegian" variant = "Farm" }]
+}
+
+easternNameSetting = nameSetting
+{
+    name = "Eastern empire"
+    characters = [generator { library = "Chinese" variant = "Male" }, generator { library = "Chinese" variant = "Female" }]
+    creatures = [generator { library = "Chinese" variant = "Male" }, generator { library = "Chinese" variant = "Female" }]
+    Location = generator { library = "Chinese" variant = "Place" }
+}
+
+spaceNameSetting = nameSetting
+{
+    name = "Space opera"
+    characters = [generator { library = "Galaxy people" variant = "Human" }, generator { library = "Galaxy people" variant = "Alien" }]
+    creatures = [generator { library = "Galaxy people" variant = "Alien" }, generator { library = "Galaxy people" variant = "Droid" }]
+    Location = [generator { library = "Galaxy places" variant = "Planet" }, generator { library = "Galaxy places" variant = "Station" }, generator { library = "Galaxy places" variant = "Cantina" }]
+    Spaceships = generator { library = "Galaxy ships" variant = "Ship" }
+    ShipWeapons = generator { library = "Galaxy ships" variant = "Weapon" }
+}
