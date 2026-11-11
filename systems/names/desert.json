@@ -1,0 +1,38 @@
+{
+  "name": "Desert realms names",
+  "description": "Names, city-states, oases and caravans for desert sword and sorcery.",
+  "url": "/systems/names/desert.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Desert realms",
+      "description": "Burning sands and walled city-states: names with patronymics and bynames, cities, oases and the caravans that cross between them.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Man", "Woman", "City-state", "Oasis", "Caravan"],
+        "parts": {
+          "male": ["Rashid", "Kadir", "Tarek", "Hamza", "Idris", "Zahir", "Faris", "Samir", "Malik", "Nasir", "Yusuf", "Jabir", "Harun", "Qasim", "Bashir", "Daud", "Karim", "Munir", "Sadiq", "Tariq", "Wasim", "Zayd", "Anwar", "Fadil", "Ilyas", "Kamal", "Arkan", "Bahram", "Dariush", "Kaveh", "Ramin", "Sohrab", "Taymur", "Uzair", "Azhar", "Hakim", "Mansur", "Nizar", "Rustam", "Suhail"],
+          "female": ["Amira", "Layla", "Samira", "Zahra", "Yasmin", "Nadia", "Farida", "Halima", "Jamila", "Leena", "Maryam", "Noor", "Rania", "Safiya", "Salma", "Zaynab", "Aisha", "Dalia", "Hana", "Inaya", "Kamila", "Lubna", "Nasrin", "Parisa", "Shirin", "Thurayya", "Anahita", "Banu", "Golnar", "Mahsa", "Roxana", "Soraya", "Yalda", "Zarina", "Huda", "Ruqayya"],
+          "epithet": ["the Sand-Walker", "the Scorched", "the Wanderer", "Dune-Born", "the Glass-Eyed", "the Scorpion", "the Unthirsting", "the Faithful", "the Merchant", "the Lion", "the Silver-Tongued", "the Veiled", "of the Seven Wells", "the Exile", "the Falcon", "the Sandstorm"],
+          "cityStart": ["Qar", "Zal", "Ash", "Tam", "Kes", "Haz", "Sur", "Nar", "Bal", "Dah", "Ras", "Mir", "Sab", "Kha", "Tir", "Jar", "Ird", "Mak", "Sar", "Zub", "Al", "Bir"],
+          "cityEnd": ["ab", "ash", "akar", "ira", "un", "ezz", "ad", "iya", "ar", "oum", "eth", "abad", "ara", "esh", "ina", "und"],
+          "cityEp": ["Thousand Spires", "Brass Gates", "Bitter Wells", "Burning Sands", "Seven Towers", "Glass Dunes", "Red Sun", "Golden Domes", "Silent Sphinx", "Hanging Gardens", "Obsidian Walls", "Last Rain"],
+          "oasisKind": ["Well:3", "Spring:2", "Pool", "Oasis:3", "Cistern", "Palms:2", "Waters"],
+          "oasisAdj": ["Bitter", "Sweet", "Hidden", "Silver", "Last", "Singing", "Shaded", "Green", "Weeping", "Moon", "Jackal", "Mirage", "Seven", "Copper", "Dying", "Blessed"],
+          "caravanAdj": ["Golden", "Swift", "Silent", "Sun-Bleached", "Salt", "Spice", "Copper", "Patient", "Wandering", "Thousand-Camel", "Silk", "Amber", "Saffron", "Iron", "Lucky"],
+          "caravanNoun": ["Road", "Wind", "Star", "Jackals", "Lanterns", "Hooves", "Mirage", "Path", "Company", "Caravan", "Riders", "Bells", "Wheel", "Scarab"]
+        },
+        "templates": {
+          "Man": ["{male} ibn {male}:4", "{male} {epithet}:3", "{male} of {cityStart}{cityEnd}:2", "{male} ibn {male} {epithet}:1"],
+          "Woman": ["{female} bint {male}:4", "{female} {epithet}:3", "{female} of {cityStart}{cityEnd}:2", "{female} bint {male} {epithet}:1"],
+          "City-state": ["{cityStart}{cityEnd}:5", "{cityStart}{cityEnd} of the {cityEp}:3", "{cityStart}-{cityStart}{cityEnd}:1"],
+          "Oasis": ["The {oasisAdj} {oasisKind}:4", "{oasisKind} of {male}:3", "{oasisKind} of {female}:2", "{cityStart}{cityEnd} {oasisKind}:1"],
+          "Caravan": ["The {caravanAdj} {caravanNoun}:4", "Caravan of {male} ibn {male}:2", "The {caravanNoun} of {cityStart}{cityEnd}:2", "{female}'s {caravanNoun}:1"]
+        }
+      }
+    }
+  ]
+}

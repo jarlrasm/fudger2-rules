@@ -1,0 +1,43 @@
+{
+  "name": "Feudal Japan names",
+  "description": "Japanese names, clans, castles, shrines and ronin for samurai drama, in romaji or kanji.",
+  "url": "/systems/names/samurai.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Feudal Japan",
+      "description": "An age of samurai and warring clans: family and given names, clans, castles, shrines and temples, and wandering ronin. Written in romaji or kanji.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Male", "Female", "Ronin", "Clan", "Castle", "Shrine", "Village"],
+        "scripts": ["Romaji", "Kanji"],
+        "joiner": {"Kanji": ""},
+        "parts": {
+          "surname": ["Tanaka|田中", "Yamamoto|山本", "Takahashi|高橋", "Watanabe|渡辺", "Kobayashi|小林", "Nakamura|中村", "Ito|伊藤", "Sasaki|佐々木", "Matsumoto|松本", "Inoue|井上", "Kimura|木村", "Hayashi|林", "Shimizu|清水", "Yamazaki|山崎", "Mori|森", "Ikeda|池田", "Hashimoto|橋本", "Ishikawa|石川", "Ogawa|小川", "Okada|岡田", "Fujita|藤田", "Goto|後藤", "Murakami|村上", "Kondo|近藤", "Sakamoto|坂本", "Endo|遠藤", "Aoki|青木", "Fujii|藤井", "Nishimura|西村", "Fukuda|福田", "Ota|太田", "Miura|三浦", "Okamoto|岡本", "Matsuda|松田", "Nakagawa|中川", "Kuroda|黒田", "Hosokawa|細川", "Sanada|真田", "Ikoma|生駒", "Wakizaka|脇坂"],
+          "male": ["Takeshi|武", "Hiroshi|博", "Kenji|健二", "Masaru|勝", "Tadashi|正", "Yoshiro|義郎", "Ichiro|一郎", "Jiro|次郎", "Saburo|三郎", "Shiro|四郎", "Goro|五郎", "Hideo|英雄", "Kazuo|和夫", "Makoto|誠", "Isamu|勇", "Minoru|実", "Osamu|治", "Satoru|悟", "Shigeru|茂", "Takashi|隆", "Toshio|敏夫", "Yasuo|康夫", "Katsuro|勝郎", "Masahiro|正博", "Nobuyuki|信之", "Tadamasa|忠正", "Yoshitaka|義隆", "Shigetaka|重隆", "Hidetaka|秀隆", "Morinaga|守長", "Kagemori|景盛", "Sadatoshi|貞俊", "Tomonori|友則", "Munehisa|宗久", "Naotaka|直隆"],
+          "female": ["Aiko|愛子", "Akiko|明子", "Chiyo|千代", "Emiko|恵美子", "Fumiko|文子", "Haruko|春子", "Kiyoko|清子", "Michiko|美智子", "Natsuko|夏子", "Sachiko|幸子", "Tomoe|巴", "Yoshiko|良子", "Yuki|雪", "Kaede|楓", "Sakura|桜", "Hana|花", "Ayame|菖蒲", "Kiku|菊", "Masako|雅子", "Noriko|典子", "Reiko|麗子", "Shizuka|静", "Sumiko|澄子", "Tsuru|鶴", "Ume|梅", "Kaguya|輝夜", "Momiji|紅葉", "Oriko|織子", "Setsuko|節子", "Tamako|玉子"],
+          "ronNick": ["Sekigan|隻眼", "Kaze|風", "Kage|影", "Oni|鬼", "Kitsune|狐", "Kumo|雲", "Ame|雨", "Kiri|霧", "Kuro|黒", "Yami|闇", "Hagane|鋼", "Tsurugi|剣", "Nagare|流れ", "Yūrei|幽霊", "Hotaru|蛍", "Karasu|烏"],
+          "no": ["no|の"],
+          "clanStart": ["Taka|高", "Kuro|黒", "Aka|赤", "Shira|白", "Ao|青", "Kita|北", "Higashi|東", "Nishi|西", "Ishi|石", "Mizu|水", "Kawa|川", "Yama|山", "Hoshi|星", "Tsuki|月", "Kane|金", "Kiri|霧", "Matsu|松", "Take|竹", "Ume|梅", "Sakura|桜", "Kaze|風", "Tora|虎", "Taka|鷹", "Tatsu|竜"],
+          "clanEnd": ["mura|村", "ta|田", "moto|本", "kawa|川", "yama|山", "saki|崎", "hara|原", "no|野", "oka|岡", "mori|森", "shima|島", "hashi|橋", "zawa|沢", "ishi|石"],
+          "clanWord": ["clan|氏"],
+          "castleWord": ["Castle|城"],
+          "shrineWord": ["Shrine|神社:3", "Temple|寺:3", "Monastery|院", "Grand Shrine|大社"],
+          "villageWord": ["Village|村:3", "Town|町", "Post Town|宿"]
+        },
+        "templates": {
+          "Male": ["{surname} {male}:6", "{male}:1"],
+          "Female": ["{surname} {female}:6", "{female}:1"],
+          "Ronin": ["{ronNick} {no} {male}:4", "{male}:2", "{ronNick} {no} {female}:1"],
+          "Clan": ["{surname} {clanWord}:3", "{clanStart}{clanEnd|lower} {clanWord}:4"],
+          "Castle": ["{clanStart}{clanEnd|lower} {castleWord}:4", "{surname} {castleWord}:1"],
+          "Shrine": ["{clanStart}{clanEnd|lower} {shrineWord}:4", "{clanStart}{clanStart|lower} {shrineWord}:2"],
+          "Village": ["{clanStart}{clanEnd|lower}:4", "{clanStart}{clanEnd|lower} {villageWord}:2"]
+        }
+      }
+    }
+  ]
+}

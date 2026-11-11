@@ -1,4 +1,5 @@
 #include "/systems/common.frules"
+#include "/systems/names/settings.frules"
 
 
 edgeRoll = ([2d6], ((baseline,throws)->
@@ -105,7 +106,8 @@ edge = system
 
 
 {
-    libraries = ["/systems/names/norwegian.json", "/systems/names/chinese.json"]
+    libraries = ["/systems/names/norwegian.json", "/systems/names/chinese.json", "/systems/names/nightworld.json", "/systems/names/spies.json", "/systems/names/cosmic.json", "/systems/names/cyberpunk.json"]
+    nameSettings = [nightWorldNameSetting, spyThrillerNameSetting, cosmicHorrorNameSetting, neonStreetsNameSetting]
     characters = characterTable
     creatures = characterTable
     description="Over The Edge"

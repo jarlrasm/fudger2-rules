@@ -1,0 +1,46 @@
+{
+  "name": "Gothic horror names",
+  "description": "Nobles, villagers, cursed domains and manors for gothic horror.",
+  "url": "/systems/names/gothic.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Gothic horror",
+      "description": "A mist-shrouded land of old blood: nobles and their titles, frightened villagers, cursed domains, manors and villages.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Noble", "Villager", "Domain", "Manor", "Village"],
+        "parts": {
+          "male": ["Vasil", "Anton", "Dragan", "Mircea", "Bogdan", "Lucian", "Stefan", "Radu", "Viktor", "Emeric", "Casimir", "Florin", "Teodor", "Matthias", "Grigor", "Ilie", "Konstantin", "Ludovic", "Oskar", "Sorin", "Valentin", "Andrei", "Dorian", "Ferenc", "Lazar", "Milos", "Petru", "Silviu", "Tibor", "Zoltan", "Augustin", "Benedek", "Corvin", "Damian", "Kasimir", "Leopold", "Nikolai", "Severin", "Vladislav", "Wenzel"],
+          "female": ["Ilona", "Mirela", "Anca", "Elisabeta", "Irina", "Katalin", "Ludmila", "Marta", "Natalia", "Oana", "Roxana", "Sabina", "Tereza", "Vesna", "Zora", "Agata", "Dorina", "Esther", "Ileana", "Livia", "Magda", "Rozalia", "Simona", "Vera", "Adela", "Cosmina", "Erzsebet", "Jolana", "Lenuta", "Valeria", "Anastasia", "Clothilde", "Dragomira", "Ecaterina", "Honorata", "Ksenia", "Melisande", "Ottilie", "Sidonie", "Viorica"],
+          "nobleStart": ["Vor", "Kral", "Drak", "Moro", "Stra", "Zel", "Bal", "Ost", "Var", "Grav", "Mal", "Sev", "Kast", "Vel", "Tor", "Dur", "Mor", "Zar", "Ruth", "Nev", "Kor", "Sang", "Lup", "Cern"],
+          "nobleEnd": ["ovich", "escu", "ovan", "enko", "avar", "ari", "ozny", "eszky", "anu", "imir", "ach", "eny", "ovar", "ici", "ak", "ul", "ocz", "ath"],
+          "noble": {"syllables": ["nobleStart", "nobleEnd"]},
+          "titleM": ["Count:4", "Baron:3", "Lord:3", "Duke", "Margrave", "Boyar:2", "Prince", "Viscount"],
+          "titleF": ["Countess:4", "Baroness:3", "Lady:3", "Duchess", "Margravine", "Princess", "Viscountess", "Dowager"],
+          "nobleEpithet": ["the Pale", "the Cruel", "the Mourning", "the Undying", "the Mad", "the Hungry", "the Pious", "the Bloodless", "the Last", "the Silent", "the Widower", "the Sleepless"],
+          "peasant": ["Kovac", "Tkach", "Bednar", "Ciobanu", "Fierar", "Lupu", "Morar", "Popa", "Rotaru", "Sasu", "Kolar", "Mlynar", "Ribar", "Krcmar", "Sitar", "Lovas", "Juhasz", "Szabo", "Horvath", "Rusu", "Dobre", "Stan", "Bodnar", "Hrubý", "Kalina", "Mazur", "Olar", "Pescaru", "Soltan", "Vaduva"],
+          "peasantNick": ["Old", "Little", "Lame", "One-Hand", "Mad", "Toothless", "Blind", "Widow", "Young", "Hunchback"],
+          "domainStart": ["Vol", "Mor", "Kar", "Gul", "Zar", "Dar", "Sil", "Vas", "Nev", "Tar", "Grim", "Mord", "Ost", "Lan", "Kev", "Sor", "Drav", "Hal", "Ulm", "Vesk", "Rav", "Brod", "Nyr"],
+          "domainEnd": ["ovia", "ania", "avia", "essa", "mark", "grad", "oth", "enya", "ara", "uria", "orsk", "abad", "izia", "ovna"],
+          "gloomAdj": ["Weeping", "Shrouded", "Hollow", "Grey", "Drowned", "Sunless", "Withered", "Silent", "Crimson", "Ashen", "Pale", "Bleak", "Howling", "Forsaken", "Moonless", "Starving", "Cursed", "Mourning"],
+          "domainLand": ["Vale", "Marches", "Moor", "Fens", "Reach", "Barony", "Woods", "Coast", "Highlands", "Lands", "Hills", "Downs", "Steppe", "Principality"],
+          "gloomFirst": ["Raven", "Crow", "Thorn", "Black", "Grave", "Wolf", "Ash", "Mourn", "Bone", "Shadow", "Night", "Hollow", "Dusk", "Blood", "Moth", "Grey", "Wither", "Gallow", "Cold", "Mist"],
+          "gloomLast": ["wood", "moor", "crest", "hollow", "fell", "mere", "gate", "holme", "ridge", "cliff", "haven", "wick", "mire", "barrow", "field", "stone"],
+          "manorKind": ["Manor:4", "Abbey:2", "Hall:3", "Keep:2", "Asylum", "Chapel", "Mausoleum", "House:3", "Tower:2", "Priory", "Castle:3", "Sanatorium", "Lodge", "Orphanage"],
+          "villageEnd": ["ovo", "eni", "any", "ice", "ova", "esti", "ograd", "ovka", "avec", "ani", "ena", "isht"]
+        },
+        "templates": {
+          "Noble": ["{titleM} {male} {noble}:4", "{titleF} {female} {noble}:4", "{male} {noble} {nobleEpithet}:1", "{female} {noble} {nobleEpithet}:1", "{titleM} {male} of {domainStart}{domainEnd}:1", "{titleF} {female} of {domainStart}{domainEnd}:1"],
+          "Villager": ["{male} {peasant}:5", "{female} {peasant}:5", "{peasantNick} {male}:1", "{peasantNick} {female}:1"],
+          "Domain": ["{domainStart}{domainEnd}:5", "The {gloomAdj} {domainLand}:3", "{domainStart}{domainEnd} {domainLand}:1"],
+          "Manor": ["{noble} {manorKind}:3", "{gloomFirst}{gloomLast} {manorKind}:4", "{manorKind} {domainStart}{domainEnd}:1", "The {gloomAdj} {manorKind}:1"],
+          "Village": ["{domainStart}{villageEnd}:4", "{gloomFirst}{gloomLast}:3", "{gloomAdj} {gloomFirst}{gloomLast}:1"]
+        }
+      }
+    }
+  ]
+}

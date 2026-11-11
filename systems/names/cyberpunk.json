@@ -1,0 +1,50 @@
+{
+  "name": "Neon streets names",
+  "description": "Street handles, corporations, gangs and districts for a neon-lit future city.",
+  "url": "/systems/names/cyberpunk.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Neon streets",
+      "description": "A rain-soaked megacity: street handles, wage slaves, executives, megacorporations, gangs, districts and nightclubs.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Runner", "Citizen", "Exec", "Corporation", "Gang", "District", "Club"],
+        "parts": {
+          "first": ["Kenji", "Mara", "Dex", "Rosa", "Ivan", "Priya", "Tomas", "Lena", "Jun", "Ada", "Malik", "Nadia", "Omar", "Yuki", "Rafael", "Selin", "Kofi", "Mei", "Viktor", "Zara", "Leon", "Ines", "Dmitri", "Aiko", "Mateo", "Sanna", "Teo", "Noor", "Felix", "Hana", "Bram", "Lucia", "Ravi", "Elif", "Sasha", "Kai", "Ingrid", "Diego", "Femi", "Anya", "Jin", "Marisol", "Tariq", "Wren", "Oksana", "Hiro", "Jade", "Nikolai", "Paz", "Soren"],
+          "last": ["Okafor", "Tanaka", "Reyes", "Volkov", "Chen", "Nakamura", "Moreau", "Kowalski", "Haddad", "Silva", "Petrov", "Nguyen", "Osei", "Lindqvist", "Park", "Mendoza", "Kaur", "Ivanova", "Brandt", "Sato", "Ferreira", "Adeyemi", "Kim", "Novak", "Castillo", "Takeda", "Orlov", "Mbeki", "Jansen", "Rossi", "Halloran", "Dubrovsky", "Aguilar", "Yilmaz", "Ishida", "Varga", "Quispe", "Achebe", "Lund", "Morales"],
+          "handle": ["Zero:2", "Glitch:2", "Chrome:2", "Static", "Neon", "Razor:2", "Ghost:2", "Hex", "Jacks", "Byte", "Volt", "Cipher", "Echo", "Ratchet", "Spike", "Null", "Wire", "Fuse", "Smoke", "Shard", "Lucky", "Rook", "Vandal", "Juice", "Dice", "Patch", "Sable", "Torque", "Blitz", "Halo", "Socket", "Panic", "Mirage", "Pixel", "Rust", "Venom", "Wraith", "Nova", "Crash", "Kitsune", "Stray", "Lockjaw", "Mantis", "Vapor", "Proxy", "Burner", "Quicksilver", "Tinman", "Ozone", "Sugar"],
+          "handleEnd": ["Jack", "Kid", "Queen", "Baby", "Boy", "Girl", "Dog", "Eyes", "Hands", "Mouth", "Teeth", "Fingers", "Heart", "Saint", "Witch", "Ronin", "Angel", "Rabbit", "Wolf", "Ace"],
+          "digits": {"pattern": "DD"},
+          "initial": {"pattern": "L"},
+          "execSuffix": ["Jr.", "III", "IV", "Sr."],
+          "corpStart": ["Kessler", "Omni", "Tetra", "Helix", "Sora", "Vantage", "Nexa", "Kuro", "Zenith", "Obsidian", "Meridian", "Halcyon", "Tsuru", "Krona", "Aegis", "Polaris", "Orbis", "Daisen", "Valkyr", "Monolith", "Sunrise", "Tessaract", "Kazama", "Ouroboros", "Paragon", "Silverline", "Yamaguchi", "Novak", "Blackglass"],
+          "corpEnd": ["Dynamics:3", "Systems:3", "Biotech:2", "Industries:3", "Holdings:2", "Heavy Industries", "Neurotech:2", "Logistics", "Security:2", "Pharmaceuticals", "Media:2", "Aerospace", "Microsystems", "Group", "Consolidated", "Cybernetics:2", "Arms", "Genomics", "Infrastructure", "Financial"],
+          "corpTail": ["tek", "corp", "gen", "net", "sys", "ware", "dyne", "tron", "cell", "mech", "soft", "link", "star", "med", "core"],
+          "gangAdj": ["Chrome", "Black", "Blood", "Neon", "Rust", "Iron", "Static", "Broken", "Burning", "Hollow", "Red", "Toxic", "Silent", "Mad", "Glass", "Dead", "Electric", "Wild", "Saint", "Acid", "Paper", "Velvet", "Rotten", "Plastic", "Midnight"],
+          "gangNoun": ["Jackals", "Saints", "Dolls", "Wolves", "Ravens", "Razors", "Kings", "Ghosts", "Vipers", "Angels", "Hounds", "Skulls", "Fangs", "Machines", "Mothers", "Rats", "Lotus", "Tigers", "Orphans", "Prophets", "Pistons", "Nuns", "Clowns", "Daughters", "Monks"],
+          "districtStart": ["Old", "New", "Little", "Upper", "Lower", "North", "South", "East", "West"],
+          "districtBase": ["Ash", "Cinder", "Glass", "Rust", "Copper", "Salt", "Iron", "Smoke", "Silver", "Market", "Dock", "Canal", "Tower", "Spire", "Crane", "Lantern", "Mill", "Arc", "Neon", "Static", "Junction", "Chimney", "Signal", "Pylon", "Foundry", "Reservoir"],
+          "districtEnd": ["Heights", "Flats", "Row", "Yards", "Mile", "Sprawl", "Point", "Gardens", "Quarter", "Ward", "Strip", "Hollow", "Park", "Docks", "Block", "Stacks", "Terraces"],
+          "districtSuffix": ["town", "side", "field", "gate", "water", "ville", "burg", "wick"],
+          "zoneCode": {"pattern": "LD"},
+          "clubAdj": ["Velvet", "Pink", "Electric", "Hollow", "Broken", "Neon", "Chrome", "Midnight", "Sugar", "Paper", "Golden", "Rabid", "Lucky", "Blue", "Plastic", "Drowned", "Silver", "Burning", "Laughing", "Nine Tailed"],
+          "clubNoun": ["Coffin", "Lotus", "Dragon", "Mirror", "Halo", "Static", "Tiger", "Moon", "Heart", "Cage", "Garden", "Circuit", "Lounge", "Monkey", "Rose", "Geisha", "Jukebox", "Engine", "Oyster", "Tooth"],
+          "clubOne": ["Synapse", "Overdrive", "Pulse", "Voltage", "Euphoria", "Hexagon", "Ultraviolet", "Karma", "Mainframe", "Paradox", "Reboot", "Satori", "Strobe", "Vertigo", "Zero Point", "Bassline", "Kaleidoscope", "Feedback", "Redshift", "Black Ice"]
+        },
+        "templates": {
+          "Runner": ["{handle}:5", "{handle} {handleEnd}:3", "{handle}{digits}:1", "{first} '{handle}' {last}:2", "{handleEnd} {first}:1"],
+          "Citizen": ["{first} {last}:6", "{first} {initial}. {last}:2", "{first} {last}-{last}:1"],
+          "Exec": ["{first} {last} {execSuffix}:2", "{first} {initial}. {last}:3", "{first} {last}-{last}:3", "{first} {last}:2"],
+          "Corporation": ["{corpStart} {corpEnd}:5", "{corpStart}{corpTail}:3", "{last}-{last} {corpEnd}:2", "{corpStart}{corpTail} {corpEnd}:1"],
+          "Gang": ["The {gangAdj} {gangNoun}:5", "{gangAdj} {gangNoun}:2", "The {handle} {gangNoun}:2", "{gangNoun} of {districtBase}{districtSuffix}:1"],
+          "District": ["{districtStart?} {districtBase} {districtEnd}:5", "{districtBase}{districtSuffix}:3", "Zone {zoneCode}:1", "{districtStart} {districtBase}{districtSuffix}:2"],
+          "Club": ["The {clubAdj} {clubNoun}:4", "Club {clubOne}:2", "{clubOne}:3", "{clubAdj} {clubNoun}:1"]
+        }
+      }
+    }
+  ]
+}

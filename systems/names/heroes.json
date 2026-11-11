@@ -1,0 +1,43 @@
+{
+  "name": "Superhero names",
+  "description": "Heroes, villains, secret identities, teams and organisations for superhero games.",
+  "url": "/systems/names/heroes.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Superheroes",
+      "description": "Capes and cowls: hero and villain code names, civilian secret identities, super teams and shadowy organisations.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Hero", "Villain", "Civilian", "Team", "Organisation"],
+        "parts": {
+          "heroA": ["Volt", "Quantum", "Solar", "Gravity", "Blaze", "Frost", "Echo", "Prism", "Titan", "Vortex", "Radiant", "Atomic", "Shadow", "Cyclone", "Crimson", "Mega", "Turbo", "Neon", "Lunar", "Omega", "Tempest", "Arc", "Granite", "Velvet", "Photon", "Kinetic", "Meteor", "Cobalt", "Ember", "Zephyr", "Aegis", "Rocket", "Ion"],
+          "heroB": ["Knight", "Guardian", "Sentinel", "Spark", "Fist", "Lance", "Shield", "Wing", "Storm", "Ranger", "Blade", "Strike", "Ace", "Fury", "Flare", "Jet", "Wave", "Rider", "Vanguard", "Comet", "Siren", "Ward"],
+          "heroPrefix": ["Captain:3", "Doctor:2", "Miss", "Lady", "Professor", "Agent", "Kid", "Mister", "Major", "Madame"],
+          "villPrefix": ["Doctor:3", "Baron:2", "Count", "Lord", "Madame", "Professor", "General", "Mister", "Queen", "King"],
+          "villA": ["Malice", "Dread", "Entropy", "Gloom", "Hex", "Rot", "Scourge", "Plague", "Blight", "Nihil", "Mayhem", "Ruin", "Cinder", "Despair", "Mortis", "Tyrant", "Vex", "Wrath", "Chaos", "Grim", "Vermin", "Shiver", "Oblivion", "Eclipse", "Paradox", "Leech", "Inferno", "Toxin", "Frostbite", "Static"],
+          "villAdj": ["Crimson", "Masked", "Laughing", "Hollow", "Silver", "Ninth", "Shrieking", "Silent", "Rotting", "Gilded", "Iron", "Faceless", "Mechanical"],
+          "villNoun": ["Mind", "Hand", "Serpent", "Engine", "Puppeteer", "Shade", "Collector", "Jester", "Locust", "Choir", "Tide", "Brain", "Monarch", "Surgeon", "Shadow"],
+          "first": ["Alex", "Beth", "Carlos", "Dana", "Eddie", "Fiona", "Gabe", "Hannah", "Isaac", "Jenna", "Kyle", "Leah", "Miguel", "Nora", "Owen", "Priya", "Quentin", "Rosa", "Sam", "Tara", "Victor", "Wendy", "Yasmin", "Zack", "Ben", "Carol", "Darius", "Elena", "Felix", "Gwen", "Hector", "Iris", "Jamal", "Kara", "Lionel", "Maya", "Nate", "Olivia"],
+          "last": ["Adams", "Becker", "Castro", "Dawson", "Ellis", "Foster", "Garcia", "Hayes", "Ingram", "Jordan", "Klein", "Lambert", "Mendez", "Nash", "Ortiz", "Pierce", "Russo", "Shaw", "Torres", "Underwood", "Vaughn", "Webb", "Bryant", "Chung", "Delgado", "Fairbanks", "Hart", "Mbeki", "Novak", "Quinlan", "Reyes", "Sterling", "Tanaka", "Walsh"],
+          "teamAdj": ["Liberty", "Steel", "Star", "Omega", "Prime", "Paragon", "Titan", "Dawn", "Thunder", "Atomic", "Sentinel", "Aurora", "Cosmic", "Vanguard", "Eagle", "Horizon", "Zenith"],
+          "teamNoun": ["Squad", "Brigade", "Patrol", "Alliance", "Corps", "Guard", "Collective", "Initiative", "Union", "Division", "Six", "Seven"],
+          "orgAdj": ["Global", "Shadow", "Paranormal", "Metahuman", "Strategic", "Covert", "Orbital", "Quantum", "Special", "Unified", "Black", "Supernormal"],
+          "orgNoun": ["Directorate", "Bureau", "Agency", "Division", "Command", "Institute", "Foundation", "Council", "Syndicate", "Cabal", "Consortium", "Response Unit", "Task Force"],
+          "acronym": {"pattern": "L.L.L.L."},
+          "acronym3": {"pattern": "L.L.L."}
+        },
+        "templates": {
+          "Hero": ["{heroA} {heroB}:3", "{heroA}{heroB|lower}:3", "{heroPrefix} {heroA}:3"],
+          "Villain": ["{villPrefix} {villA}:4", "{villA}:2", "The {villAdj} {villNoun}:3", "{villA} {villNoun}:1"],
+          "Civilian": ["{first} {last}:8", "{first} {first} {last}:1", "Dr. {first} {last}:1"],
+          "Team": ["The {teamAdj} {teamNoun}:4", "{teamAdj} {teamNoun}:3", "The {last} {teamNoun}:1"],
+          "Organisation": ["{acronym}:3", "{acronym3}:2", "The {orgAdj} {orgNoun}:4", "{orgAdj} {orgAdj} {orgNoun}:1"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Faerie courts names",
+  "description": "Fey folk and nobles, changelings, courts and glades for games of the fair folk.",
+  "url": "/systems/names/faerie.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Faerie courts",
+      "description": "The perilous realm of the fair folk: fey names, fey nobles and their titles, changelings with mortal and fey names, the courts and the glades where they dance.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Fey", "Fey noble", "Changeling", "Court", "Glade"],
+        "parts": {
+          "feyA": ["Thistle", "Bramble", "Moth", "Willow", "Fern", "Glimmer", "Ash", "Briar", "Nettle", "Rowan", "Hazel", "Dew", "Frost", "Ember", "Moss", "Reed", "Sorrel", "Wren", "Hollow", "Mist", "Acorn", "Clover", "Foxglove", "Mallow", "Puck", "Rush", "Sloe", "Tansy", "Yarrow", "Lark"],
+          "feyB": ["down", "wing", "thorn", "whisper", "light", "shade", "song", "leaf", "bloom", "dancer", "glass", "twig", "fall", "silk", "cap", "kin", "heart", "foot", "bell", "tongue"],
+          "feyCompound": {"syllables": ["feyA", "feyB"]},
+          "lyrical": {"syllables": [["Sy", "Ae", "Lu", "Ny", "Ma", "Ili", "Ori", "Thae", "Vae", "El", "Qui", "Zeph", "Ca", "Fi", "Ise", "Mor"], ["la", "ri", "the", "va", "ne", "sel", "wy", "lo", "nai"], ["wen", "ra", "lis", "rien", "ael", "ith", "ys", "enne", "ora", "iel", "an", "aine"]], "count": [2, 3]},
+          "feyTitleM": ["Lord", "Prince", "Knight", "Duke", "Earl", "King", "Old", "Grandfather", "Master"],
+          "feyTitleF": ["Lady", "Princess", "Duchess", "Countess", "Queen", "Dame", "Mother", "Grandmother", "Mistress"],
+          "feyEp": ["of Falling Leaves", "of the Briar Gate", "of Unkept Promises", "of the Hollow Hill", "of Silver Bells", "of Long Shadows", "of Stolen Names", "of the Last Frost", "of Moonlit Pools", "of the Thousand Thorns", "Who Laughs at Iron", "Who Never Sleeps"],
+          "mortFirst": ["Ellie", "Tom", "Maeve", "Owen", "Rose", "Finn", "Ivy", "Rory", "Nell", "Jack", "Bridget", "Callum", "Daisy", "Euan", "Freya", "George", "Hattie", "Isla", "Jamie", "Kirsty", "Liam", "Molly", "Niamh", "Oscar", "Poppy", "Seamus", "Tilly", "Will"],
+          "mortLast": ["Abernethy", "Brennan", "Carr", "Doyle", "Elwood", "Fairley", "Goodfellow", "Hale", "Kerr", "Lennox", "MacLeod", "Neary", "Ogden", "Penrose", "Quinlan", "Rowe", "Shaw", "Tierney", "Underwood", "Walsh"],
+          "courtAdj": ["Seelie", "Unseelie", "Thorned", "Moonlit", "Autumn", "Winter", "Summer", "Spring", "Twilight", "Hollow", "Gloaming", "Midnight", "Ivory", "Silver", "Bramble", "Dew", "Ashen", "Starlit"],
+          "courtThing": ["Fallen Leaves", "Broken Mirrors", "Ten Thousand Thorns", "the Pale Moon", "Whispers", "Frost and Ember", "Stolen Hours", "the Last Bell", "Lanterns", "Amber Dreams", "Hollow Crowns", "Drowned Bells"],
+          "gladeKind": ["Glade:3", "Hollow:2", "Ring:2", "Dell", "Mound", "Barrow", "Pool", "Grove:2", "Knoll", "Bower"],
+          "gladeAdj": ["Singing", "Dreaming", "Silver", "Crooked", "Weeping", "Lost", "Laughing", "Mirrored", "Toadstool", "Starlit", "Sleeping", "Whispering", "Hidden", "Mossy"]
+        },
+        "templates": {
+          "Fey": ["{feyCompound|cap}:4", "{lyrical|cap}:4", "{lyrical|cap} {feyCompound|cap}:2"],
+          "Fey noble": ["{feyTitleM} {lyrical|cap} {feyEp}:3", "{feyTitleF} {lyrical|cap} {feyEp}:3", "{feyTitleM} {feyCompound|cap}:2", "{feyTitleF} {feyCompound|cap}:2", "The {feyCompound|cap} {feyTitleM}:1"],
+          "Changeling": ["{mortFirst} {mortLast}:2", "{mortFirst} '{feyCompound|cap}' {mortLast}:3", "{mortFirst}, called {feyCompound|cap}:2"],
+          "Court": ["The {courtAdj} Court:4", "The Court of {courtThing}:4", "The {courtAdj} Court of {courtThing}:1"],
+          "Glade": ["{feyA} {gladeKind}:3", "The {gladeAdj} {gladeKind}:4", "{lyrical|cap}'s {gladeKind}:1"]
+        }
+      }
+    }
+  ]
+}

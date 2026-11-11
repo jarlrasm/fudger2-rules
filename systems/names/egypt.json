@@ -1,0 +1,45 @@
+{
+  "name": "Ancient Egypt names",
+  "description": "Egyptian names, pharaohs, cities, tombs and gods for adventures along the Nile.",
+  "url": "/systems/names/egypt.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Ancient Egypt",
+      "description": "The land of the Nile: men and women with names honouring the gods, pharaohs and their regnal numbers, cities, tombs and gods.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Man", "Woman", "Pharaoh", "City", "Tomb", "God"],
+        "parts": {
+          "maleStart": ["Amen", "Ra", "Ptah", "Khnum", "Sobek", "Hor", "Min", "Mont", "Neb", "Senu", "Djed", "Kha", "Sen", "Nakht", "Mer", "Ankh", "Pa", "Iry"],
+          "maleEnd": ["hotep:2", "mose:2", "emhat", "nakht", "ankh", "kare", "mes", "sen", "ef", "ankhu", "nefer", "iry", "kheper", "wosret", "em-saf"],
+          "maleName": {"syllables": ["maleStart", "maleEnd"]},
+          "femStart": ["Nefer", "Meryt", "Ankhes", "Sat", "Neb", "Hent", "Tak", "Iset", "Khen", "Ta", "Mut", "Bas", "Wer", "Tiy"],
+          "femEnd": ["tari", "iti", "amun", "hathor", "ra", "ankh", "et", "ipet", "nefer", "sut", "mut", "neith"],
+          "femaleName": {"syllables": ["femStart", "femEnd"]},
+          "mTitle": ["Scribe", "Overseer", "Embalmer", "Charioteer", "Physician", "Builder", "Steward", "Priest", "Vizier", "Fisherman", "Potter", "Tomb Robber"],
+          "fTitle": ["Priestess", "Weaver", "Singer of Amun", "Physician", "Mistress of the House", "Dancer", "Chantress", "Brewer"],
+          "regnal": ["I:3", "II:3", "III:2", "IV", "V", "VI"],
+          "god": ["Amun", "Ra", "Ptah", "Sobek", "Hathor", "Thoth", "Bastet", "Anubis", "Horus", "Osiris", "Isis", "Khonsu", "Montu", "Sekhmet", "Wadjet", "Neith", "Khnum", "Set"],
+          "cityStart": ["Per", "Hut", "Pa", "Ta", "Neb"],
+          "citySyl": {"syllables": [["Khem", "Nekh", "Djed", "Sau", "Iun", "Abu", "Wad", "Tje", "Shed", "Mennu", "Dje", "Ka"], ["en", "et", "u", "ebu", "ut", "enef", "ty", "ab"]]},
+          "tombKind": ["Tomb:3", "Pyramid:2", "Mastaba", "Necropolis", "Mortuary Temple", "Sepulchre", "Burial Chamber", "Valley Tomb"],
+          "tombAdj": ["Sunken", "Golden", "Sealed", "Hidden", "Black", "Silent", "Forgotten", "Sand-Swallowed", "Jackal-Guarded", "Lost", "Painted", "Accursed"],
+          "newGod": {"syllables": [["Shez", "Nek", "Ah", "Wep", "Ma", "Hed", "Ken", "Sef", "Ten", "Ur", "Nehe", "Ap"], ["et", "mut", "ra", "enu", "ek", "hor", "amun", "is", "ut", "emet"]]},
+          "godTitle": ["Lord of the Reeds", "She Who Weighs Hearts", "the Jackal of the West", "Keeper of the Ninth Gate", "the Scarab Who Rises", "Mistress of Sand", "the Eye of the Dusk", "Lord of the Flood", "the Devourer of the Unjust", "She of the Burning Mouth", "the Ferryman of Night", "Guardian of the Horizon"]
+        },
+        "templates": {
+          "Man": ["{maleName}:4", "{maleName}, son of {maleName}:2", "{maleName} the {mTitle}:2"],
+          "Woman": ["{femaleName}:4", "{femaleName}, daughter of {maleName}:2", "{femaleName} the {fTitle}:2"],
+          "Pharaoh": ["{maleName} {regnal}:5", "{femaleName} {regnal}:1", "{maleName} {regnal}, Beloved of {god}:2", "{maleName}, Son of {god}:1"],
+          "City": ["{cityStart}-{god}:3", "{citySyl}:3", "{god}opolis:2", "{citySyl} of {god}:1"],
+          "Tomb": ["Tomb of {maleName}:3", "The {tombAdj} {tombKind} of {maleName}:3", "The {tombAdj} {tombKind}:2", "{tombKind} of {femaleName}:1"],
+          "God": ["{god}:2", "{newGod}, {godTitle}:4", "{newGod}:1", "{god}-{newGod}:1"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Old world names",
+  "description": "Gritty early modern names, rogues, towns and inns of a grim old empire.",
+  "url": "/systems/names/oldworld.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Old world",
+      "description": "A grim, muddy old empire of burghers and witch hunters: names, rogues with trade bynames, towns and coaching inns.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Man", "Woman", "Rogue", "Town", "Inn"],
+        "parts": {
+          "male": ["Dieter", "Johann:2", "Klaus", "Wilhelm", "Heinrich:2", "Otto", "Gunther", "Konrad", "Ulrich", "Lothar", "Rudolf", "Matthias", "Friedrich", "Werner", "Albrecht", "Bernhard", "Emil", "Gerhard", "Hans:3", "Jakob", "Kaspar", "Leopold", "Ludwig", "Manfred", "Siegfried", "Stefan", "Viktor", "Wolfgang", "Anselm", "Detlef", "Egon", "Gottfried", "Helmut", "Ingo", "Jörg", "Kurt", "Magnus", "Reinhold", "Theobald", "Volker"],
+          "female": ["Greta:2", "Hilde", "Ilse", "Katarina", "Liesel", "Magda", "Ottilie", "Ursula", "Elsa", "Adelheid", "Agnes", "Anna:3", "Berta", "Elke", "Frieda", "Gisela", "Hedwig", "Irmgard", "Johanna", "Klara", "Lene", "Marlene", "Petra", "Renate", "Sabine", "Theresa", "Walburga", "Ulrike", "Wilhelmina", "Gertrud", "Margarethe:2", "Roswitha", "Sieglinde", "Hannelore", "Brigitte"],
+          "surStart": ["Stein", "Rot", "Schwarz", "Wald", "Hoch", "Eisen", "Grau", "Breit", "Kalt", "Wolf", "Berg", "Brand", "Dunkel", "Gold", "Hart", "Lang", "Mittel", "Neu", "Kessel", "Linden", "Moor", "Ross", "Weiss", "Fuchs"],
+          "surEnd": ["bauer:2", "mann:2", "berg", "hof", "feld", "hausen", "bach", "dorf", "meyer", "schmidt", "burg", "stein", "horst", "brunn", "maier", "ecker"],
+          "sur": {"syllables": ["surStart", "surEnd"]},
+          "plainSur": ["Müller", "Schmidt", "Fischer", "Weber", "Wagner", "Becker", "Hoffmann", "Koch", "Richter", "Klein", "Schröder", "Neumann", "Zimmermann", "Krüger", "Hartmann", "Lange", "Werner", "Krause", "Vogel", "Jäger"],
+          "trade": ["the Ratcatcher", "the Tanner", "the Watchman", "the Smuggler", "the Bone Picker", "the Grave Robber", "the Toll-keeper", "the Flagellant", "the Pit Fighter", "the Coachman", "the Bailiff", "the Witch Hunter", "the Barber", "the Hedge Witch", "the Burgher", "the Pedlar", "the Mercenary", "the Boatman", "the Fence", "the Body Snatcher", "the Charlatan", "the Rat Eater"],
+          "rogueNick": ["Lucky", "Fingers", "One-Eye", "Knuckles", "Weasel", "Grubby", "Sly", "Hook", "Mouse", "Ratface", "Crooked", "Toothless", "Sharp", "Greasy", "Long", "Little", "Old", "Mad", "Stinking", "Two-Pence", "Squinty", "Shifty"],
+          "townStart": ["Bogel", "Dunkel", "Eis", "Gries", "Hoch", "Kessel", "Linden", "Mark", "Ober", "Rot", "Schwarz", "Stein", "Unter", "Wolf", "Kalt", "Moor", "Asch", "Kreuz", "Rabe", "Salz", "Brunn", "Eber", "Fels", "Wurm"],
+          "townEnd": ["dorf:2", "heim:2", "burg:2", "hausen", "stadt:2", "bruck", "feld", "furt", "au", "berg", "tal", "wald", "mund", "kirchen"],
+          "innAdj": ["Crooked", "Drowned", "Jolly", "Laughing", "Black", "Golden", "Rusty", "Three-legged", "Blind", "Hanged", "Singing", "Gutted", "Fat", "Leaping", "Drunken", "Grinning", "Mangy", "Headless", "Old", "Pious"],
+          "innNoun": ["Boar", "Goose", "Pig", "Hound", "Lantern", "Barrel", "Bishop", "Goat", "Wheel", "Kettle", "Crow", "Ox", "Ferret", "Trout", "Pikeman", "Rat", "Griffon", "Flagon", "Witch", "Halberd"],
+          "innKind": ["Inn", "Coaching Inn", "Tavern", "Alehouse", "Rest"]
+        },
+        "templates": {
+          "Man": ["{male} {sur}:5", "{male} {plainSur}:3", "{male} von {townStart}{townEnd}:1", "{male} {male} {sur}:1"],
+          "Woman": ["{female} {sur}:5", "{female} {plainSur}:3", "{female} von {townStart}{townEnd}:1", "{female} {female} {sur}:1"],
+          "Rogue": ["{rogueNick} {male}:3", "{rogueNick} {female}:2", "{male} {plainSur}, {trade}:2", "{female} {plainSur}, {trade}:1", "{male} {trade}:2"],
+          "Town": ["{townStart}{townEnd}:6", "{townStart}{townEnd} am {townStart}:1", "Alt-{townStart}{townEnd}:1", "Neu-{townStart}{townEnd}:1"],
+          "Inn": ["The {innAdj} {innNoun}:5", "The {innNoun} and {innNoun}:3", "The {innNoun} {innKind}:1"]
+        }
+      }
+    }
+  ]
+}

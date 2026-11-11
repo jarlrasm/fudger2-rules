@@ -43,3 +43,169 @@ spaceNameSetting = nameSetting
     Spaceships = [generator { library = "Galaxy ships" variant = "Ship" }, generator { library = "Galaxy ships" variant = "Warship" }, generator { library = "Galaxy ships" variant = "Freighter" }, generator { library = "Galaxy ships" variant = "Fighter" }]
     ShipWeapons = generator { library = "Galaxy ships" variant = "Weapon" }
 }
+
+neonStreetsNameSetting = nameSetting
+{
+    name = "Neon streets"
+    characters = [generator { library = "Neon streets" variant = "Runner" }, generator { library = "Neon streets" variant = "Citizen" }, generator { library = "Neon streets" variant = "Exec" }]
+    creatures = [generator { library = "Neon streets" variant = "Runner" }, generator { library = "Neon streets" variant = "Citizen" }, generator { library = "Neon streets" variant = "Gang" }]
+    Location = [generator { library = "Neon streets" variant = "District" }, generator { library = "Neon streets" variant = "Club" }, generator { library = "Neon streets" variant = "Corporation" }, generator { library = "Neon streets" variant = "Gang" }]
+}
+
+gothicHorrorNameSetting = nameSetting
+{
+    name = "Gothic horror"
+    characters = [generator { library = "Gothic horror" variant = "Noble" }, generator { library = "Gothic horror" variant = "Villager" }]
+    creatures = [generator { library = "Gothic horror" variant = "Villager" }, generator { library = "Gothic horror" variant = "Noble" }]
+    Location = [generator { library = "Gothic horror" variant = "Domain" }, generator { library = "Gothic horror" variant = "Manor" }, generator { library = "Gothic horror" variant = "Village" }]
+}
+
+cosmicHorrorNameSetting = nameSetting
+{
+    name = "Cosmic horror"
+    characters = [generator { library = "Cosmic horror" variant = "Man" }, generator { library = "Cosmic horror" variant = "Woman" }]
+    creatures = [generator { library = "Cosmic horror" variant = "Entity" }, generator { library = "Cosmic horror" variant = "Man" }, generator { library = "Cosmic horror" variant = "Woman" }]
+    Location = [generator { library = "Cosmic horror" variant = "Town" }, generator { library = "Cosmic horror" variant = "Cult" }]
+    'Other items' = generator { library = "Cosmic horror" variant = "Tome" }
+}
+
+grimdarkNameSetting = nameSetting
+{
+    name = "Grimdark imperium"
+    characters = generator { library = "Grimdark imperium" variant = "Imperial" }
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Order" }]
+    Spaceships = generator { library = "Grimdark imperium" variant = "Voidship" }
+}
+
+oldWorldNameSetting = nameSetting
+{
+    name = "Old world"
+    characters = [generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }, generator { library = "Old world" variant = "Rogue" }]
+    creatures = [generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }, generator { library = "Old world" variant = "Rogue" }]
+    Location = [generator { library = "Old world" variant = "Town" }, generator { library = "Old world" variant = "Inn" }]
+}
+
+nightWorldNameSetting = nameSetting
+{
+    name = "Night world"
+    characters = [generator { library = "Night world" variant = "Mortal" }, generator { library = "Night world" variant = "Undying" }]
+    creatures = [generator { library = "Night world" variant = "Undying" }, generator { library = "Night world" variant = "Mortal" }]
+    Location = [generator { library = "Night world" variant = "Club" }, generator { library = "Night world" variant = "Coterie" }]
+}
+
+desertRealmsNameSetting = nameSetting
+{
+    name = "Desert realms"
+    characters = [generator { library = "Desert realms" variant = "Man" }, generator { library = "Desert realms" variant = "Woman" }]
+    creatures = [generator { library = "Desert realms" variant = "Man" }, generator { library = "Desert realms" variant = "Woman" }]
+    Location = [generator { library = "Desert realms" variant = "City-state" }, generator { library = "Desert realms" variant = "Oasis" }, generator { library = "Desert realms" variant = "Caravan" }]
+}
+
+swordAndSorceryNameSetting = nameSetting
+{
+    name = "Sword and sorcery"
+    characters = [generator { library = "Sword and sorcery" variant = "Barbarian" }, generator { library = "Sword and sorcery" variant = "Sorcerer" }]
+    creatures = [generator { library = "Sword and sorcery" variant = "Demon" }, generator { library = "Sword and sorcery" variant = "Sorcerer" }, generator { library = "Sword and sorcery" variant = "Barbarian" }]
+    Location = [generator { library = "Sword and sorcery" variant = "Kingdom" }, generator { library = "Sword and sorcery" variant = "Ruin" }]
+}
+
+wastelandNameSetting = nameSetting
+{
+    name = "Wasteland"
+    characters = [generator { library = "Wasteland" variant = "Survivor" }, generator { library = "Wasteland" variant = "Mutant" }]
+    creatures = [generator { library = "Wasteland" variant = "Mutant" }, generator { library = "Wasteland" variant = "Survivor" }]
+    Location = [generator { library = "Wasteland" variant = "Settlement" }, generator { library = "Wasteland" variant = "Ruin" }, generator { library = "Wasteland" variant = "Raiders" }]
+    'Melee weapons' = generator { library = "Wasteland" variant = "Scrap weapon" }
+    'Ranged weapons' = generator { library = "Wasteland" variant = "Scrap weapon" }
+}
+
+weirdWestNameSetting = nameSetting
+{
+    name = "Weird west"
+    characters = [generator { library = "Weird west" variant = "Gunslinger" }, generator { library = "Weird west" variant = "Townsfolk" }]
+    creatures = [generator { library = "Weird west" variant = "Gunslinger" }, generator { library = "Weird west" variant = "Townsfolk" }]
+    Location = [generator { library = "Weird west" variant = "Town" }, generator { library = "Weird west" variant = "Saloon" }, generator { library = "Weird west" variant = "Mine" }, generator { library = "Weird west" variant = "Gang" }]
+}
+
+highSeasNameSetting = nameSetting
+{
+    name = "High seas"
+    characters = [generator { library = "High seas" variant = "Pirate" }, generator { library = "High seas" variant = "Captain" }]
+    creatures = [generator { library = "High seas" variant = "Pirate" }, generator { library = "High seas" variant = "Captain" }]
+    Location = [generator { library = "High seas" variant = "Port" }, generator { library = "High seas" variant = "Island" }, generator { library = "High seas" variant = "Ship" }]
+}
+
+feudalJapanNameSetting = nameSetting
+{
+    name = "Feudal Japan"
+    characters = [generator { library = "Feudal Japan" variant = "Male" }, generator { library = "Feudal Japan" variant = "Female" }, generator { library = "Feudal Japan" variant = "Ronin" }]
+    creatures = [generator { library = "Feudal Japan" variant = "Male" }, generator { library = "Feudal Japan" variant = "Female" }, generator { library = "Feudal Japan" variant = "Ronin" }]
+    Location = [generator { library = "Feudal Japan" variant = "Castle" }, generator { library = "Feudal Japan" variant = "Shrine" }, generator { library = "Feudal Japan" variant = "Village" }, generator { library = "Feudal Japan" variant = "Clan" }]
+}
+
+gaslightNameSetting = nameSetting
+{
+    name = "Gaslight"
+    characters = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    creatures = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    Location = [generator { library = "Gaslight" variant = "Street" }, generator { library = "Gaslight" variant = "Club" }]
+    'Other items' = generator { library = "Gaslight" variant = "Invention" }
+}
+
+blueCollarSpaceNameSetting = nameSetting
+{
+    name = "Blue-collar space"
+    characters = generator { library = "Blue-collar space" variant = "Crew" }
+    creatures = generator { library = "Blue-collar space" variant = "Crew" }
+    Location = [generator { library = "Blue-collar space" variant = "Outpost" }, generator { library = "Blue-collar space" variant = "Ship" }, generator { library = "Blue-collar space" variant = "Company" }]
+    Spaceships = generator { library = "Blue-collar space" variant = "Ship" }
+}
+
+mythicGreeceNameSetting = nameSetting
+{
+    name = "Mythic Greece"
+    characters = [generator { library = "Mythic Greece" variant = "Hero" }, generator { library = "Mythic Greece" variant = "Heroine" }]
+    creatures = [generator { library = "Mythic Greece" variant = "Monster" }, generator { library = "Mythic Greece" variant = "Hero" }, generator { library = "Mythic Greece" variant = "Heroine" }]
+    Location = [generator { library = "Mythic Greece" variant = "Polis" }, generator { library = "Mythic Greece" variant = "Ship" }]
+}
+
+arthurianNameSetting = nameSetting
+{
+    name = "Arthurian"
+    characters = [generator { library = "Arthurian" variant = "Knight" }, generator { library = "Arthurian" variant = "Lady" }]
+    creatures = [generator { library = "Arthurian" variant = "Knight" }, generator { library = "Arthurian" variant = "Lady" }]
+    Location = [generator { library = "Arthurian" variant = "Castle" }, generator { library = "Arthurian" variant = "Manor" }, generator { library = "Arthurian" variant = "Forest" }]
+}
+
+ancientEgyptNameSetting = nameSetting
+{
+    name = "Ancient Egypt"
+    characters = [generator { library = "Ancient Egypt" variant = "Man" }, generator { library = "Ancient Egypt" variant = "Woman" }, generator { library = "Ancient Egypt" variant = "Pharaoh" }]
+    creatures = [generator { library = "Ancient Egypt" variant = "God" }, generator { library = "Ancient Egypt" variant = "Man" }, generator { library = "Ancient Egypt" variant = "Woman" }]
+    Location = [generator { library = "Ancient Egypt" variant = "City" }, generator { library = "Ancient Egypt" variant = "Tomb" }]
+}
+
+superheroesNameSetting = nameSetting
+{
+    name = "Superheroes"
+    characters = [generator { library = "Superheroes" variant = "Hero" }, generator { library = "Superheroes" variant = "Civilian" }]
+    creatures = [generator { library = "Superheroes" variant = "Villain" }, generator { library = "Superheroes" variant = "Hero" }, generator { library = "Superheroes" variant = "Civilian" }]
+    Location = [generator { library = "Superheroes" variant = "Team" }, generator { library = "Superheroes" variant = "Organisation" }]
+}
+
+spyThrillerNameSetting = nameSetting
+{
+    name = "Spy thriller"
+    characters = [generator { library = "Spy thriller" variant = "Agent" }, generator { library = "Spy thriller" variant = "Codename" }]
+    creatures = [generator { library = "Spy thriller" variant = "Agent" }, generator { library = "Spy thriller" variant = "Codename" }]
+    Location = [generator { library = "Spy thriller" variant = "Safehouse" }, generator { library = "Spy thriller" variant = "Agency" }, generator { library = "Spy thriller" variant = "Operation" }]
+}
+
+faerieCourtsNameSetting = nameSetting
+{
+    name = "Faerie courts"
+    characters = [generator { library = "Faerie courts" variant = "Fey" }, generator { library = "Faerie courts" variant = "Changeling" }, generator { library = "Faerie courts" variant = "Fey noble" }]
+    creatures = [generator { library = "Faerie courts" variant = "Fey" }, generator { library = "Faerie courts" variant = "Fey noble" }]
+    Location = [generator { library = "Faerie courts" variant = "Court" }, generator { library = "Faerie courts" variant = "Glade" }]
+}

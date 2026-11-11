@@ -1,0 +1,42 @@
+{
+  "name": "High seas names",
+  "description": "Pirates, captains, ships, ports and islands for swashbuckling adventure.",
+  "url": "/systems/names/pirates.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "High seas",
+      "description": "The golden age of sail: pirates and their nicknames, captains, ships, harbour towns and uncharted islands.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Ship"],
+        "variants": ["Pirate", "Captain", "Ship", "Port", "Island"],
+        "parts": {
+          "male": ["Bartholomew", "Edward", "Henry", "William", "Thomas", "Jonas", "Silas", "Tobias", "Nathaniel", "Rafael", "Diego", "Esteban", "Pierre", "Jacques", "Willem", "Pieter", "Barnaby", "Ebenezer", "Ignatius", "Roderick", "Ned", "Tom", "Ben", "Will", "Sam", "Jem", "Kit", "Alonso", "Mateo", "Luc", "Absalom", "Bastien", "Cornelis", "Elias", "Gaspard", "Hob", "Joaquín", "Lars", "Osric", "Ruben"],
+          "female": ["Mary", "Grace", "Isabella", "Catalina", "Marguerite", "Jacquetta", "Elena", "Bess", "Moll", "Nell", "Peg", "Sally", "Rosalind", "Esperanza", "Colette", "Margit", "Ines", "Teodora", "Lucia", "Joan", "Aveline", "Bridget", "Constanza", "Dolores", "Frances", "Hester", "Ysabel", "Kate", "Lisette", "Nan"],
+          "surname": ["Hawkes", "Morrow", "Crane", "Gully", "Blackmoor", "Saltash", "Fairweather", "Harrow", "Keel", "Lark", "Marlowe", "Pyke", "Quill", "Rook", "Scarlett", "Tallow", "Wick", "de la Cruz", "Moreau", "van Doorn", "Grimsby", "Carrow", "Sallow", "Barlow", "Cutter", "Drummond", "Fletcher", "Garnet", "Holloway", "Lockhart", "Mallory", "Ravel", "Shackleford", "Teller", "Varga"],
+          "nick": ["Red", "Black", "One-Eyed", "Peg-Leg", "Mad", "Gentleman", "Bloody", "Iron", "Silver", "Lucky", "Salty", "Barnacle", "Long", "Cutlass", "Gunpowder", "Squid", "Smiling", "Three-Fingered", "Grog", "Bilge", "Stormy", "Ironjaw", "Gallows", "Shark-Tooth"],
+          "captainRank": ["Captain:8", "Commodore", "Admiral", "Quartermaster:2", "First Mate:2"],
+          "shipAdj": ["Black", "Crimson", "Salty", "Drunken", "Silver", "Wicked", "Laughing", "Restless", "Golden", "Merry", "Bloody", "Howling", "Midnight", "Wandering", "Jolly", "Weeping", "Scarlet", "Defiant", "Gallant", "Fickle"],
+          "shipNoun": ["Gull", "Serpent", "Widow", "Siren", "Kraken", "Shark", "Wench", "Hound", "Rose", "Fortune", "Maiden", "Albatross", "Lantern", "Mermaid", "Crow", "Corsair", "Tempest", "Dolphin", "Swallow", "Gallows"],
+          "shipRevenge": ["Revenge:2", "Ransom", "Folly", "Fancy", "Grudge", "Lament", "Delight", "Promise", "Pride", "Wrath", "Secret", "Kiss"],
+          "portStart": ["Salt", "Coral", "Gull", "Rum", "Cutlass", "Bone", "Shark", "Gallows", "Brine", "Mangrove", "Anchor", "Cannon", "Parrot", "Tortoise", "Silver", "Hangman's"],
+          "portEnd": ["haven:2", "harbour:2", "bay:2", "cove", "key", "point", "port", "town", "reach", "landing", "wharf"],
+          "portSaint": ["San Esteban", "Santa Catalina", "San Mateo", "Santa Lucia", "Saint-Luc", "San Alonso", "Santa Ines", "Saint-Pierre", "Santa Elena", "San Rafael", "Saint-Bastien", "Santa Teodora"],
+          "islandAdj": ["Devil's", "Dead Man's", "Smuggler's", "Parrot", "Turtle", "Mermaid", "Bonefish", "Thunder", "Hangman's", "Lantern", "Widow's", "Cannon", "Rum", "Serpent", "Gull", "Coffin", "Hurricane"],
+          "islandKind": ["Isle:3", "Island:2", "Key:2", "Rock", "Cay", "Atoll", "Reef", "Shoals"],
+          "islandEs": ["del Sol", "de las Tortugas", "Perdida", "Negra", "de Sangre", "Esmeralda", "de la Luna", "de los Ladrones", "Sin Nombre", "del Diablo", "de las Sirenas", "de Plata"]
+        },
+        "templates": {
+          "Pirate": ["{nick} {male}:3", "{male} '{nick}' {surname}:2", "{female} {surname}:2", "{male} {surname}:2", "{nick} {female}:2", "{nick} {surname}:1"],
+          "Captain": ["{captainRank} {male} {surname}:3", "{captainRank} {female} {surname}:2", "{captainRank} {nick} {surname}:2", "{captainRank} {surname}:1"],
+          "Ship": ["The {shipAdj} {shipNoun}:4", "{female}'s {shipRevenge}:2", "The {shipNoun}'s {shipRevenge}:2", "{shipAdj} {female}:1"],
+          "Port": ["{portStart} {portEnd|cap}:3", "{portStart}{portEnd}:2", "Port {surname}:2", "{portSaint}:2"],
+          "Island": ["{islandAdj} {islandKind}:5", "Isla {islandEs}:3", "{surname}'s {islandKind}:1"]
+        }
+      }
+    }
+  ]
+}

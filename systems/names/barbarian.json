@@ -1,0 +1,44 @@
+{
+  "name": "Sword and sorcery names",
+  "description": "Barbarians, sorcerers, decadent kingdoms, cursed ruins and demons for pulp sword and sorcery.",
+  "url": "/systems/names/barbarian.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Sword and sorcery",
+      "description": "A savage age of thews and dark magic: barbarians, sorcerers, decadent kingdoms, cursed ruins and the demons that sleep in them.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Barbarian", "Sorcerer", "Kingdom", "Ruin", "Demon"],
+        "parts": {
+          "barbStart": ["Kor", "Thar", "Bru", "Grom", "Vul", "Hal", "Ruk", "Dar", "Mor", "Tor", "Bal", "Kra", "Ul", "Zan", "Gor", "Har", "Skor", "Ska", "Val", "Ygg", "Rag", "Tyr", "Sva", "Ash"],
+          "barbEnd": ["ax", "an", "dar", "gar", "ok", "rik", "th", "on", "ug", "ar", "ek", "ulf", "nar", "da", "ra", "ga", "ja", "ith"],
+          "barbarian": {"syllables": ["barbStart", "barbEnd"]},
+          "barbEp": ["Reaver", "Grim", "Wanderer", "Red-Handed", "Unchained", "Iron-Thewed", "Mighty", "Wolf", "Exile", "Slayer", "Bold", "Thief", "Mercenary", "Bear", "Cutthroat", "Reaper", "Lion", "Raider", "Black", "Fearless"],
+          "sorcerer": {"syllables": [["Xal", "Zor", "Mal", "Az", "Ith", "Vex", "Sar", "Ny", "Kha", "Ozy", "Ul", "Ser", "Yth", "Thu", "Ash", "Mor", "Nek"], ["a", "o", "e", "i", "ra", "tha", "ze", "ul"], ["thar", "mon", "zul", "rax", "eth", "imos", "oth", "ash", "andrus", "egon", "akhet", "iel"]], "count": [2, 3]},
+          "sorcEp": ["Black", "Undying", "Serpent-Tongued", "Pale", "Many-Faced", "Accursed", "Wise", "Bloodless", "Veiled", "Star-Eyed", "Faceless", "Ageless", "Damned", "Grey", "Hollow-Eyed"],
+          "sorcPlace": ["Black Ring", "Scarlet Tower", "Ninth Gate", "Burning Sands", "Ivory Throne", "Jade Serpent", "Weeping Stars", "Bone Citadel", "Shadow Lotus", "Bronze Mirror", "Endless Night"],
+          "kStart": ["Thal", "Mer", "Bel", "Orn", "Kesh", "Zor", "Ulth", "Varn", "Dravi", "Sar", "Ister", "Khem", "Vol", "Tar", "Ash", "Gal", "Pel", "Rhu", "Ombr", "Quil", "Hesp", "Yzar"],
+          "kEnd": ["ania", "oria", "ith", "ar", "essa", "ennia", "umbra", "akh", "os", "ead", "onia", "uun", "ir", "eth"],
+          "kAdj": ["Border", "Black", "Iron", "Pirate", "Sunken", "Shattered", "Jade", "Barbarian", "Ivory", "Burning", "Frozen", "Hidden"],
+          "kKind": ["Kingdoms", "Isles", "Coast", "Marches", "Wastes", "Empire", "Principalities"],
+          "ruinKind": ["Tower", "Temple", "Ziggurat", "Tomb", "Citadel", "Pits", "City", "Vaults", "Halls", "Throne", "Monolith", "Labyrinth", "Necropolis", "Palace"],
+          "ruinAdj": ["Shunned", "Sunken", "Black", "Forgotten", "Crimson", "Jade", "Serpent", "Drowned", "Silent", "Ivory", "Bone", "Shattered", "Nameless", "Accursed", "Coiled"],
+          "ruinGod": ["Toad God", "Serpent King", "Ape Lords", "Moon", "Spider Queen", "Faceless One", "Worm", "Black Lotus", "Eyeless Priests", "First Kings"],
+          "demon": {"syllables": [["Ygg", "Zhar", "Khal", "Mor", "Ur", "Bael", "Gol", "Xu", "Vor", "Nok", "Rha", "Tzal", "Qeth"], ["oth", "ug", "ash", "zul", "rax", "goth", "akk", "ur", "eel", "imm", "aggath"]]},
+          "demonTitle": ["Eater of Stars", "Lord of the Pit", "the Coiled Hunger", "Who Waits Below", "the Crawling Shadow", "Devourer of Kings", "the Thing in the Well", "Prince of Flies", "the Smiling Dark", "Mother of Worms", "the Hollow King", "Drinker of Souls"]
+        },
+        "templates": {
+          "Barbarian": ["{barbarian}:3", "{barbarian} of {kStart}{kEnd}:3", "{barbarian} the {barbEp}:3", "{barbarian} {barbarian}son:1"],
+          "Sorcerer": ["{sorcerer}:2", "{sorcerer} the {sorcEp}:3", "{sorcerer} of the {sorcPlace}:2", "{sorcerer} of {kStart}{kEnd}:1"],
+          "Kingdom": ["{kStart}{kEnd}:6", "The {kAdj} {kKind}:2", "The {kAdj} {kKind} of {kStart}{kEnd}:1"],
+          "Ruin": ["The {ruinAdj} {ruinKind}:3", "The {ruinKind} of {sorcerer}:2", "{ruinKind} of the {ruinGod}:3", "The {ruinAdj} {ruinKind} of {kStart}{kEnd}:1"],
+          "Demon": ["{demon}:2", "{demon}, {demonTitle}:4", "{demonTitle|cap}:1"]
+        }
+      }
+    }
+  ]
+}

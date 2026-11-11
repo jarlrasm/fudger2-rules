@@ -1,0 +1,41 @@
+{
+  "name": "Arthurian names",
+  "description": "Knights, ladies, castles, manors and enchanted forests for Arthurian romance.",
+  "url": "/systems/names/arthurian.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Arthurian",
+      "description": "The age of chivalry and enchantment: knights and their epithets, ladies, castles, manors and perilous forests, in Welsh, Breton and Anglo-Norman styles.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Knight", "Lady", "Castle", "Manor", "Forest"],
+        "parts": {
+          "male": ["Aldric", "Bran", "Cadoc", "Corentin", "Elidir", "Hywel", "Idris", "Iorwerth", "Madoc", "Rhodri", "Tegid", "Brioc", "Alain", "Amaury", "Bertrand", "Godfrey", "Hugo", "Guy", "Raoul", "Thibault", "Eustace", "Baldwin", "Reynold", "Simon", "Walter", "Roger", "Aymer", "Fulk", "Osric", "Rhys", "Dafydd", "Cynan", "Anselm", "Brychan", "Cadfael", "Gilbert", "Herve", "Meurig", "Robert", "Urien"],
+          "female": ["Aelis", "Alienor", "Amice", "Cecily", "Ermengarde", "Gwenllian", "Hawise", "Ida", "Joan", "Mabel", "Maud", "Nest", "Petronilla", "Rohese", "Sybil", "Tangwystl", "Yolande", "Angharad", "Heledd", "Morfudd", "Avice", "Basilia", "Emma", "Isabel", "Margery", "Philippa", "Aliz", "Clarice", "Elinor", "Gwladys", "Melisent", "Rozenn"],
+          "knEp": ["of the White Heron", "of the Red Lance", "of the Lonely Tower", "of the Golden Spur", "of the Thorn", "of the Ashen Shield", "of the Silent Vale", "of the Burning Brand", "of the Hawk", "of the Silver Stag", "of the Broken Sword", "of the Mist", "of the Hollow Oak", "of the Black Boar", "of the Green Sleeve"],
+          "knFr": ["Hardi", "Blanc", "Noir", "Fort", "Sage", "Gai", "Fier", "Vaillant", "Courtois", "Petit", "Sauvage", "Beau"],
+          "ladyEp": ["of the Mere", "of the Hollow Hills", "of the Orchard", "of the Silver Well", "of the Thorn Hedge", "of the White Hart", "of the Fair Tower", "of the Hawthorn", "of the Dove", "of the Seven Swans"],
+          "cymStart": ["Gwyn", "Mor", "Llan", "Dun", "Pen", "Aber", "Tre", "Bryn", "Glyn", "Cor", "Ar", "Tal", "Din", "Llys", "Rhos", "Mai"],
+          "cymEnd": ["ydd", "wen", "os", "ion", "ant", "och", "ath", "wys", "an", "edd", "gell", "wy"],
+          "normStart": ["Bel", "Mont", "Roche", "Beau", "Clair", "Haut", "Mal", "Gar", "Ros", "Blanche", "Gris", "Noir", "Fier", "Douce"],
+          "normEnd": ["fort", "mont", "garde", "ville", "lis", "val", "roc", "pré", "mare", "bois"],
+          "manorStart": ["Ash", "Oak", "Brook", "Thorn", "Wick", "Hay", "Ald", "Stan", "Wulf", "Elm", "Fern", "Mere", "Cran", "Hart", "Rush", "Wil"],
+          "manorEnd": ["ley", "ford", "ham", "ton", "field", "wood", "cote", "stead", "hurst", "combe", "bury", "well"],
+          "forAdj": ["Perilous", "Whispering", "Enchanted", "Dolorous", "Wild", "Weeping", "Hollow", "Grey", "Thorny", "Moonlit", "Ancient", "Shadowed", "Sleeping", "Wandering", "Forbidden", "Silver"],
+          "forKind": ["Wood:3", "Forest:3", "Weald", "Chase", "Thicket", "Glade", "Holt"]
+        },
+        "templates": {
+          "Knight": ["Sir {male} of {normStart}{normEnd}:3", "Sir {male} {knEp}:3", "Sir {male} le {knFr}:2", "Sir {male} of Caer {cymStart}{cymEnd}:1", "Sir {male}:1"],
+          "Lady": ["Lady {female} of {normStart}{normEnd}:3", "{female} {ladyEp}:2", "Lady {female} of {manorStart}{manorEnd}:2", "Lady {female}:1"],
+          "Castle": ["Caer {cymStart}{cymEnd}:3", "Castle {normStart}{normEnd}:3", "{normStart}{normEnd}:2", "Dinas {cymStart}{cymEnd}:1"],
+          "Manor": ["{manorStart}{manorEnd}:6", "{manorStart}{manorEnd} Manor:2", "Little {manorStart}{manorEnd}:1"],
+          "Forest": ["The {forAdj} {forKind}:4", "{manorStart}{manorEnd} {forKind}:2", "The Forest of {normStart}{normEnd}:1", "Coed {cymStart}{cymEnd}:1"]
+        }
+      }
+    }
+  ]
+}

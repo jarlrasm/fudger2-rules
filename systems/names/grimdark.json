@@ -1,0 +1,46 @@
+{
+  "name": "Grimdark imperium names",
+  "description": "High gothic names, hive worlds, voidships, militant orders and heretics for a grim far future.",
+  "url": "/systems/names/grimdark.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Grimdark imperium",
+      "description": "A vast, decaying star empire of faith and war: high gothic names and ranks, hive worlds, cathedral-like voidships, militant orders and heretics.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Ship"],
+        "variants": ["Imperial", "Hive world", "Voidship", "Order", "Heretic"],
+        "parts": {
+          "given": ["Aurelian", "Castor", "Varro", "Septimus", "Lucan", "Tiberon", "Marius", "Cassian", "Drusus", "Hadrian", "Severus", "Octavian", "Quintus", "Corvus", "Gallus", "Valerian", "Thaddeus", "Gideon", "Ezekiel", "Malachi", "Tobias", "Ignatius", "Augustin", "Leontius", "Felix", "Seraphine", "Lucia", "Agathe", "Cassia", "Livia", "Octavia", "Valeria", "Junia", "Helena", "Ophelia", "Vivienne", "Constantia", "Drusilla", "Aurelia", "Severine", "Theodora", "Ysolde", "Marcella", "Benedikt", "Cyprian", "Absalom", "Josephus", "Lysander", "Remus", "Sabine"],
+          "family": ["Vorne", "Haskell", "Drey", "Malvaux", "Tarsus", "Kell", "Varnholt", "Strand", "Graven", "Morrow", "Ashgrave", "Venn", "Sarkov", "Thule", "Orlan", "Brannoch", "Ferrin", "Ravel", "Castellus", "Dravik", "Holt", "Kassar", "Lorne", "Mordecai", "Quill", "Sabbath", "Talvane", "Vex", "Winterbourne", "Zane"],
+          "rank": ["Inquisitor:3", "Commissar:2", "Confessor:2", "Lord-Captain", "Prioress", "Archdeacon", "Arbitrator", "Colonel", "Sister:2", "Brother:2", "Deacon", "Prefect", "Castellan", "Governor", "Lector", "Cardinal", "Sergeant", "Adept", "Lord-General", "Interrogator"],
+          "ordinal": ["II", "III", "IV", "VII", "IX", "XI"],
+          "worldStart": ["Hel", "Var", "Ost", "Kal", "Mor", "Ner", "Ar", "Vol", "Sol", "Gor", "Thar", "Mal", "Sev", "Drac", "Ker", "Lux", "Bel", "Sar", "Ix", "Tor", "Phar", "Urd", "Zeb", "Cath"],
+          "worldEnd": ["ax", "ion", "ora", "enta", "us", "ar", "ium", "ox", "essa", "oth", "amar", "ine", "ovia", "uth", "ex", "anis"],
+          "roman": ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XII", "XIV"],
+          "worldSuffix": ["Prime:3", "Secundus:2", "Tertius", "Minoris", "Majoris", "Ultima"],
+          "shipAdj": ["Unyielding", "Eternal", "Righteous", "Implacable", "Vengeful", "Merciless", "Unbroken", "Sanctified", "Iron", "Pale", "Blessed", "Silent", "Glorious", "Wrathful", "Vigilant", "Penitent"],
+          "shipVirtue": ["Fidelity", "Zeal", "Vigil", "Penitence", "Judgement", "Devotion", "Fury", "Resolve", "Absolution", "Obedience", "Sorrow", "Wrath", "Duty", "Contrition", "Retribution", "Faith"],
+          "shipNoun": ["Hammer", "Wrath", "Lance", "Mercy", "Light", "Sword", "Shield", "Fist", "Voice", "Torch", "Oath", "Spear", "Lament", "Censer", "Bell"],
+          "orderAdj": ["Ashen", "Iron", "Crimson", "Silent", "Ebon", "Gilded", "Thorned", "Penitent", "Ninth", "Sable", "Bleeding", "Burning", "Grey", "Weeping", "Ivory", "Hallowed"],
+          "orderNoun": ["Lances", "Wardens", "Sentinels", "Templars", "Hammers", "Shields", "Martyrs", "Lions", "Ravens", "Crusaders", "Hounds", "Vigil", "Heralds", "Gryphons", "Pilgrims", "Penitents"],
+          "orderObj": ["Withered Lily", "Broken Chain", "Iron Chalice", "Last Candle", "Ashen Star", "Seventh Seal", "Burning Book", "Silver Thorn", "Weeping Saint", "Hollow Crown", "Black Lantern", "Eternal Flame"],
+          "hereticStart": ["Ka", "Vorr", "Xa", "Uzh", "Mal", "Skar", "Ghor", "Az", "Yr", "Zhul", "Nek", "Drav", "Ith", "Vash"],
+          "hereticEnd": ["ax", "oth", "eel", "uun", "ragh", "esh", "ith", "arr", "oz", "ekh"],
+          "heretic": {"syllables": ["hereticStart", "hereticEnd"]},
+          "hereticEpithet": ["Defiled", "Faithless", "Unmade", "Hollow", "Many-Mouthed", "Oathbreaker", "Betrayer", "Corrupt", "Flayer", "Burned", "Twice-Born", "Whisperer", "Unclean", "Smiling"]
+        },
+        "templates": {
+          "Imperial": ["{given} {family}:4", "{rank} {given} {family}:4", "{given} {family} {ordinal}:1", "{rank} {family}:1"],
+          "Hive world": ["{worldStart}{worldEnd} {roman}:4", "{worldStart}{worldEnd} {worldSuffix}:3", "{worldStart}{worldEnd}:2"],
+          "Voidship": ["{shipAdj} {shipVirtue}:4", "{shipNoun} of Saint {given}:2", "{shipVirtue} of {worldStart}{worldEnd}:1", "Saint {given}'s {shipNoun}:1", "{shipAdj} {shipNoun}:2"],
+          "Order": ["The {orderAdj} {orderNoun}:4", "Order of the {orderObj}:3", "{orderNoun} of Saint {given}:2", "Sisters of the {orderObj}:1"],
+          "Heretic": ["{heretic|cap} the {hereticEpithet}:3", "{given} the {hereticEpithet}:3", "{heretic|cap}:2", "{given} {family}, the {hereticEpithet}:1"]
+        }
+      }
+    }
+  ]
+}

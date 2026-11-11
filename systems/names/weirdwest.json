@@ -1,0 +1,44 @@
+{
+  "name": "Weird west names",
+  "description": "Gunslingers, townsfolk, frontier towns, saloons, outlaw gangs and mines for a haunted frontier.",
+  "url": "/systems/names/weirdwest.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Weird west",
+      "description": "A haunted frontier of six-guns and sinister secrets: gunslingers, townsfolk, boomtowns, saloons, outlaw gangs and mines.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Gunslinger", "Townsfolk", "Town", "Saloon", "Gang", "Mine"],
+        "parts": {
+          "male": ["Jedediah", "Ezekiel", "Silas", "Amos", "Josiah", "Caleb", "Elijah", "Hiram", "Levi", "Obadiah", "Wyatt", "Jesse", "Cole", "Clay", "Boone", "Hank", "Luther", "Virgil", "Abel", "Asa", "Eli", "Gideon", "Jeb", "Morgan", "Rufus", "Seth", "Thaddeus", "Zeb", "Ike", "Nate", "Wade", "Augustus", "Bart", "Cyrus", "Ephraim", "Homer", "Lyle", "Moses", "Otis", "Tobias"],
+          "female": ["Abigail", "Clementine", "Delilah", "Eliza", "Hattie", "Josephine", "Lottie", "Mae", "Nellie", "Prudence", "Ruby", "Sadie", "Tabitha", "Winnie", "Ada", "Belle", "Cora", "Dora", "Etta", "Flora", "Ida", "Jenny", "Kate", "Lula", "Mattie", "Ora", "Pearl", "Rose", "Susannah", "Viola", "Adeline", "Birdie", "Charity", "Emmaline", "Hester", "Louisa"],
+          "surname": ["McCall", "Tate", "Barlow", "Crowley", "Hollis", "Jessup", "Kincaid", "Lomax", "Pruitt", "Rawlins", "Sloane", "Tolliver", "Wheeler", "Yates", "Boggs", "Caine", "Dunne", "Garrett", "Harlan", "Maddox", "Pike", "Quaid", "Sutter", "Vance", "Whitlock", "Coburn", "Fenn", "Hatch", "Larkin", "Abernathy", "Beckett", "Calhoun", "Dobbs", "Esterhaus", "Gentry", "Holloway", "McCready", "Ortega", "Redfield", "Stroud"],
+          "nick": ["Deadeye", "Kid", "Doc", "Two-Gun", "Lucky", "Preacher", "Snake", "Slim", "Mad Dog", "Whiskey", "Sundown", "Crow", "Black Jack", "Lefty", "Tin Star", "Dutch", "Shotgun", "Ghost", "Rattlesnake", "Dynamite", "Gentleman", "Coffin", "Hangman", "Sidewinder"],
+          "townTitle": ["Sheriff:3", "Doc:2", "Parson:2", "Judge", "Widow:2", "Marshal", "Mayor", "Ma", "Old Man", "Deputy", "Professor", "Undertaker"],
+          "townStart": ["Dead", "Dry", "Bone", "Coyote", "Copper", "Silver", "Rattle", "Buzzard", "Gallows", "Lone", "Red", "Shadow", "Whiskey", "Sulphur", "Cutter", "Hangman", "Lost", "Widow", "Bitter", "Black"],
+          "townEnd": ["gulch", "creek", "ridge", "rock", "springs", "wells", "flats", "bluff", "mesa", "butte", "canyon", "crossing", "junction", "hollow", "gap", "draw"],
+          "townShort": ["rock", "creek", "wells", "gap", "ridge", "bluff", "springs", "butte"],
+          "saloonAdj": ["Golden", "Lucky", "Last", "Rusty", "Silver", "Crooked", "Thirsty", "Lonesome", "Painted", "Blind", "Dusty", "Red", "Brass", "Wicked", "Laughing"],
+          "saloonNoun": ["Nugget", "Spur", "Horseshoe", "Chance", "Garter", "Coyote", "Mule", "Ace", "Lady", "Buffalo", "Rattler", "Dollar", "Bucket", "Pistol", "Steer"],
+          "saloonKind": ["Saloon:3", "Palace", "Parlor", "Hall", "Emporium", "Hotel"],
+          "gangAdj": ["Black", "Red", "Hellfire", "Gallows", "Rattlesnake", "Midnight", "Bloody", "Iron", "Lonesome", "Dead Man's", "Coyote", "Smoking"],
+          "gangNoun": ["Riders", "Boys", "Raiders", "Hand", "Brothers", "Gang", "Posse", "Regulators", "Kings", "Wolves"],
+          "mineAdj": ["Lost", "Widow's", "Lucky", "Dead Man's", "Hungry", "Glory", "Black", "Silver", "Golden", "Sorrow", "Devil's", "Bitter", "Last Chance", "Screaming", "Old"],
+          "mineNoun": ["Hole", "Lode", "Strike", "Shaft", "Hope", "Vein", "Dig", "Pit", "Claim", "Bonanza"]
+        },
+        "templates": {
+          "Gunslinger": ["{male} '{nick}' {surname}:3", "{nick} {surname}:2", "{female} '{nick}' {surname}:1", "{nick} {male}:2", "The {nick} Kid:1"],
+          "Townsfolk": ["{male} {surname}:4", "{female} {surname}:4", "{townTitle} {surname}:2", "{townTitle} {male}:1"],
+          "Town": ["{townStart} {townEnd|cap}:4", "{townStart}{townShort}:2", "Fort {surname}:1", "{surname}ville:1", "{surname}'s {townEnd|cap}:1"],
+          "Saloon": ["The {saloonAdj} {saloonNoun}:4", "{female}'s {saloonKind}:2", "The {saloonNoun} {saloonKind}:2", "{surname}'s {saloonKind}:1"],
+          "Gang": ["The {surname} Gang:3", "The {gangAdj} {gangNoun}:3", "The {surname} Brothers:1", "{nick} {surname}'s {gangNoun}:1"],
+          "Mine": ["{mineAdj} {mineNoun} Mine:4", "The {surname} {mineNoun}:2", "The {mineAdj} {mineNoun}:2"]
+        }
+      }
+    }
+  ]
+}

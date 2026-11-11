@@ -1,0 +1,46 @@
+{
+  "name": "Cosmic horror names",
+  "description": "1920s investigators, sleepy coastal towns, nameless entities, forbidden tomes and cults.",
+  "url": "/systems/names/cosmic.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Cosmic horror",
+      "description": "The 1920s, when things best left alone stir: investigators, New England-style towns, entities from beyond, forbidden books and the cults that read them.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Item"],
+        "variants": ["Man", "Woman", "Town", "Entity", "Tome", "Cult"],
+        "parts": {
+          "male": ["Arthur:3", "Walter:3", "Harold:3", "Edward:2", "Herbert:2", "Clarence", "Howard", "Albert:2", "Henry:3", "Frank:2", "Charles:3", "George:3", "Ernest", "Raymond", "Lionel", "Silas", "Ambrose", "Jeremiah", "Thaddeus", "Wilbur", "Elmer", "Roscoe", "Virgil", "Chester", "Leland", "Horace", "Oscar", "Rufus", "Cyrus", "Percival", "Milton", "Everett", "Harlan", "Ira", "Lloyd", "Morris", "Nathaniel", "Orville", "Stanley", "Warren"],
+          "female": ["Mildred:2", "Edith:2", "Dorothy:3", "Ruth:2", "Helen:3", "Margaret:3", "Evelyn:2", "Florence:2", "Beatrice", "Agnes", "Mabel", "Gertrude", "Irene", "Lillian", "Hazel", "Clara:2", "Winifred", "Josephine", "Harriet", "Eleanor:2", "Ada", "Lucinda", "Opal", "Pearl", "Vera", "Viola", "Ethel", "Lavinia", "Constance", "Theodora", "Alma", "Bernice", "Cora", "Delia", "Esther", "Frances", "Grace", "Inez", "Louise", "Marjorie"],
+          "surname": ["Whitmore", "Pickett", "Hale", "Ashby", "Corwin", "Thorne", "Blackwood", "Pell", "Crane", "Abbott", "Dunmore", "Holloway", "Sexton", "Merrill", "Carver", "Fenwick", "Lowell", "Prescott", "Sutton", "Bramwell", "Tolliver", "Garrity", "Hargrove", "Kimball", "Mercer", "Oakes", "Quimby", "Rourke", "Stanhope", "Underhill", "Beckett", "Coffin", "Eldridge", "Gorham", "Jessup", "Lathrop", "Nickerson", "Pruitt", "Starbuck", "Winslow"],
+          "initial": {"pattern": "L"},
+          "maleTitle": ["Dr.:3", "Prof.:2", "Rev.", "Det.", "Capt.", "Mr.:2"],
+          "femaleTitle": ["Dr.", "Prof.", "Miss:3", "Mrs.:3", "Sister"],
+          "townStart": ["Mill", "Ash", "Salt", "Bleak", "Hollow", "Grey", "Fen", "Crook", "Black", "Wex", "Fox", "Cold", "Hart", "Lynn", "Stone", "Gull", "Marl", "Sedge", "Thorn", "Wick", "Brack", "Pike", "Cran", "Tide"],
+          "townEnd": ["port:2", "ham", "wich", "field", "ford", "mouth:2", "bury", "haven:2", "ton", "ville", "borough", "wick", "cove", "mere"],
+          "townKind": ["Falls", "Harbor", "Junction", "Corners", "Hollow", "Landing", "Crossing", "Point", "Notch", "Center"],
+          "entity": {"syllables": [["Y'", "Zh", "Q'", "Ngh", "Ul", "Xo", "Vh", "Sh'", "Ghl", "Ith", "M'", "Ombr", "Phl"], ["aa", "ul", "oth", "ug", "ha", "aq", "yr", "ee", "ua", "or", "ith", "ek"], ["oth", "ugga", "ath", "ul", "eth", "ophra", "uun", "ar", "ix", "orr", "aggon", "ephra"]], "count": [2, 3]},
+          "eTitleAdj": ["Sleeping", "Hungering", "Faceless", "Thousand-Eyed", "Nameless", "Drowned", "Silent", "Crawling", "Burning", "Hollow", "Endless", "Dreaming", "Pallid", "Spiral", "Unborn", "Lidless", "Hidden", "Coiling"],
+          "eTitleNoun": ["One:3", "Prince", "Mother:2", "Choir", "Maw", "Star", "Shepherd", "Tide", "Hive", "Spiral", "Watcher", "Gate", "Sovereign", "Swarm", "Eye", "Mouth", "Throne", "Seed"],
+          "tomeKind": ["Codex", "Book:3", "Testament", "Psalms", "Fragments:2", "Revelations", "Chronicle", "Liturgy", "Cantos", "Apocrypha", "Litany", "Diary", "Gospel", "Sermons", "Annals"],
+          "tomeLatin": ["Liber Umbrarum", "Codex Abyssi", "Opus Tenebrarum", "Liber Profundis", "Sermones Noctis", "Liber Stellarum Mortuarum", "Cantica Abyssi", "Tractatus Vacui", "Liber Dentium", "Arcana Maris", "Codex Silentii", "Liber Ossium"],
+          "tomeAdj": ["Black", "Drowned", "Sunken", "Pallid", "Forbidden", "Whispering", "Seventh", "Lost", "Crimson", "Silent", "Nameless", "Yellowed", "Unbound", "Worm-Eaten"],
+          "cultAdj": ["Silver", "Hidden", "Drowned", "Midnight", "Ninth", "Pale", "Eternal", "Hermetic", "Inner", "Ancient", "Deep", "Sunless", "Hollow"],
+          "cultNoun": ["Order", "Brotherhood", "Lodge", "Circle", "Fellowship", "Society", "Church", "Congregation", "Covenant", "Sisterhood", "Temple", "Assembly"]
+        },
+        "templates": {
+          "Man": ["{male} {surname}:4", "{male} {initial}. {surname}:3", "{maleTitle} {male} {surname}:2", "{male} {surname} {surname}:1"],
+          "Woman": ["{female} {surname}:4", "{female} {initial}. {surname}:2", "{femaleTitle} {female} {surname}:2", "{female} {surname} {surname}:1"],
+          "Town": ["{townStart}{townEnd}:5", "{townStart}{townEnd} {townKind}:2", "{surname} {townKind}:1", "{surname}{townEnd}:1"],
+          "Entity": ["{entity|cap}:3", "{entity|cap}, the {eTitleAdj} {eTitleNoun}:3", "The {eTitleAdj} {eTitleNoun}:2"],
+          "Tome": ["The {tomeKind} of {entity|cap}:2", "{tomeLatin}:3", "The {tomeAdj} {tomeKind}:3", "The {tomeKind} of {male} {surname}:1"],
+          "Cult": ["The {cultAdj} {cultNoun}:3", "Children of {entity|cap}:2", "{cultNoun} of the {eTitleAdj} {eTitleNoun}:3", "The {townStart}{townEnd} {cultNoun}:1"]
+        }
+      }
+    }
+  ]
+}

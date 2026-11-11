@@ -1,0 +1,39 @@
+{
+  "name": "Night world names",
+  "description": "Modern mortals, centuries-old undying, coteries and nightclubs for urban gothic horror.",
+  "url": "/systems/names/nightworld.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Night world",
+      "description": "The modern city after dark: mortals, undying predators with old names and epithets, the coteries they form and the clubs where they hunt.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Mortal", "Undying", "Coterie", "Club"],
+        "parts": {
+          "first": ["Jessica", "Michael", "Sarah", "David", "Ashley", "Daniel", "Megan", "Chris", "Rachel", "Kevin", "Amanda", "Jason", "Nicole", "Ryan", "Laura", "Marcus", "Tasha", "Luis", "Erin", "Derek", "Monica", "Tyler", "Grace", "Andre", "Holly", "Sean", "Vanessa", "Brandon", "Kim", "Eddie", "Dominic", "Jasmine", "Malcolm", "Paige", "Trevor", "Lena", "Rico", "Simone", "Wade", "Zoe"],
+          "last": ["Miller", "Johnson", "Rivera", "Walsh", "Carter", "Brooks", "Diaz", "Fletcher", "Grant", "Hughes", "Keller", "Lopez", "Morgan", "Novak", "Parker", "Quinn", "Reed", "Santos", "Turner", "Ward", "Young", "Bishop", "Coleman", "Dunn", "Flynn", "Gallagher", "Huang", "Jennings", "Kowalski", "Mahoney", "Okoro", "Petrakis", "Romero", "Sullivan", "Vega"],
+          "oldFirst": ["Ambrose", "Bartholomew", "Cornelius", "Desmond", "Evangeline", "Isolde", "Lucretia", "Marguerite", "Octavius", "Philippa", "Rosalind", "Sebastian", "Theodric", "Valentina", "Wolfram", "Adrienne", "Benedikt", "Celestine", "Domitian", "Esmeralda", "Gideon", "Honoria", "Leopold", "Mercy", "Nathaniel", "Ottoline", "Perpetua", "Silas", "Temperance", "Ulric", "Aurelio", "Bathsheba", "Constantin", "Delphine", "Ezekiel", "Fiammetta", "Hieronymus", "Ignatia", "Lazarus", "Seraphina"],
+          "oldSur": ["Valcourt", "de Lisle", "Ashcombe", "Blackthorne", "Castellane", "Delacroix", "Harrowgate", "Montague", "Sinclair", "Vandermeer", "Whitlock", "Mortimer", "Severin", "Thorne", "d'Aubigny", "Rothenberg", "Calloway", "Maravelli", "Ostrander", "Penhallow", "Ravensworth", "Vasquez de Leon", "Wyndham", "Zelenko"],
+          "epAdj": ["Pale", "Silent", "Smiling", "Thirsting", "Unbowed", "Elder", "Velvet", "Withered", "Patient", "Weeping", "Gilded", "Starving", "Hollow", "Beautiful", "Merciless", "Laughing", "Faithful", "Drowned", "Nameless", "Lovely"],
+          "streetName": ["Lucky", "Doll", "Sugar", "Spider", "Saint", "Wolf", "Moth", "Razor", "Lily", "Shadow", "Vinyl", "Smoke"],
+          "cotAdj": ["Velvet", "Midnight", "Crimson", "Ashen", "Silver", "Hollow", "Last", "Seventh", "Gilded", "Thorned", "Weeping", "Quiet", "Black", "Scarlet", "Broken", "Pale"],
+          "cotNoun": ["Court", "Circle", "Salon", "Covenant", "Pack", "Choir", "Table", "Hand", "Mask", "Thorn", "Rose", "Lantern", "Communion", "Assembly", "Kin", "Brood"],
+          "clubAdj": ["Black", "Red", "Velvet", "Crimson", "Sunless", "Last", "Silent", "Iron", "Hollow", "Bleeding", "Midnight", "Glass", "Violet", "Seventh"],
+          "clubNoun": ["Rose", "Chapel", "Cellar", "Kiss", "Room", "Orchid", "Lily", "Vault", "Lounge", "Garden", "Mirror", "Bell", "Cathedral", "Coffin", "Heart", "Veil"],
+          "clubOne": ["Sanguine", "Nocturne", "Vesper", "Lacuna", "Umbra", "Eclipse", "Mausoleum", "Obsidian", "Twilight", "Crypt", "Limbo", "Lamentation", "Absinthe", "Catacomb", "Reliquary", "Ossuary"],
+          "district": ["Old Town", "the Docks", "Downtown", "the Warehouse District", "Chinatown", "the East Side", "the Riverside", "Midtown", "the Financial District", "the Old Quarter"]
+        },
+        "templates": {
+          "Mortal": ["{first} {last}:8", "{first} {last}-{last}:1", "{streetName} {last}:1"],
+          "Undying": ["{oldFirst} {oldSur}:3", "{oldFirst} the {epAdj}:3", "{oldFirst} {oldSur}, called the {epAdj}:2", "The {epAdj} {oldSur}:1"],
+          "Coterie": ["The {cotAdj} {cotNoun}:5", "{cotNoun} of {oldFirst}:2", "The {cotNoun} of {district}:1"],
+          "Club": ["The {clubAdj} {clubNoun}:4", "{clubOne}:4", "Club {clubOne}:1", "The {clubNoun} in {district}:1"]
+        }
+      }
+    }
+  ]
+}

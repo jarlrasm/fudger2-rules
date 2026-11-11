@@ -1,0 +1,39 @@
+{
+  "name": "Mythic Greece names",
+  "description": "Heroes, heroines, city-states, monsters and ships for adventures in a mythic ancient Greece.",
+  "url": "/systems/names/mythicgreece.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Mythic Greece",
+      "description": "The age of heroes: men and women with patronymics and epithets, city-states, monsters of the wild places, and swift black ships.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Ship"],
+        "variants": ["Hero", "Heroine", "Polis", "Monster", "Ship"],
+        "parts": {
+          "male": ["Aristides", "Demetrios", "Kleon", "Lysandros", "Nikias", "Philon", "Theron", "Xanthos", "Kallias", "Damon", "Menon", "Dion", "Timon", "Eudoros", "Hippias", "Kritias", "Lykos", "Meleas", "Polydoros", "Sostratos", "Thrasyllos", "Zenon", "Agathon", "Kallistratos", "Diodoros", "Philokles", "Anaxis", "Brasidos", "Dexios", "Euphranor", "Hagnon", "Iphitos", "Kleitos", "Mnesarchos", "Nikandros", "Pamphilos", "Stratokles", "Telamonos", "Xenokles"],
+          "female": ["Agathe", "Chloe", "Daphne", "Eirene", "Kleio", "Lysandra", "Melitta", "Myrrhine", "Nikaia", "Thais", "Theano", "Xanthe", "Zoe", "Doris", "Euphemia", "Ione", "Kallirhoe", "Lampito", "Philinna", "Rhodope", "Thaleia", "Timandra", "Hagne", "Arete", "Damaris", "Eurydike", "Glykera", "Korinna", "Nausikleia", "Praxilla", "Simaitha", "Theodote"],
+          "heroEp": ["Bold", "Swift-Footed", "Bronze-Armed", "Wise", "Lion-Hearted", "Far-Wanderer", "Spear-Famed", "Unconquered", "Horse-Tamer", "Cunning", "Grey-Eyed", "Godlike", "Sea-Born", "Twice-Blessed", "Bright-Shield", "Oath-Keeper"],
+          "heroineEp": ["Wise", "Swift", "Grey-Eyed", "White-Armed", "Far-Seeing", "Bold", "Silver-Tongued", "Unwed", "Huntress", "Weaver", "Oracle", "Lovely-Haired", "Fearless"],
+          "polStart": ["Kal", "Mel", "Lyk", "Ar", "Pel", "Eph", "Hal", "Myr", "Thes", "Pyl", "Kyr", "Ster", "Olyn", "Akr", "Thal", "Ner", "Dor", "Ith", "Phok", "Zel"],
+          "polEnd": ["os", "ion", "ai", "ene", "assos", "ope", "ia", "ikon", "ara", "onia", "ethos", "ymna", "ousa", "inthos", "eia", "amos"],
+          "polKind": ["Isle", "Harbour", "Acropolis", "Plain", "Vale", "Strait"],
+          "monsterName": {"syllables": [["Thal", "Ech", "Lam", "Krat", "Mor", "Pyr", "Ophi", "Ster", "Kel", "Xer", "Bron", "Aig", "Gry", "Skel", "Mnem", "Lyss"], ["os", "on", "ia", "ax", "ope", "eia", "ys", "is", "ara", "ethon"]]},
+          "monsterKind": ["the Bronze Bull", "the Serpent of the Spring", "the Many-Headed", "the Sea-Hound", "the Stone-Eyed", "the Crag Lion", "the Winged Hag", "the Shade", "the Earth-Born", "the Boar of the Mountain", "the Sleepless Dragon", "the Bird of Iron Feathers", "the Riddler", "the Cave Giant", "the Eater of Ships"],
+          "shipAdj": ["Swift", "Black", "Bronze-Beaked", "Red-Cheeked", "Wine-Dark", "Hollow", "Far-Sailing", "Fifty-Oared", "Golden", "Proud", "Sea-Grey", "Bright"],
+          "shipNoun": ["Dolphin", "Gull", "Wind", "Wave", "Hawk", "Spear", "Maiden", "Star", "Oar", "Horse", "Shield", "Dawn", "Swan", "Trident"]
+        },
+        "templates": {
+          "Hero": ["{male}, son of {male}:4", "{male} of {polStart}{polEnd}:3", "{male} the {heroEp}:2", "{male}:1"],
+          "Heroine": ["{female}, daughter of {male}:4", "{female} of {polStart}{polEnd}:3", "{female} the {heroineEp}:2", "{female}:1"],
+          "Polis": ["{polStart}{polEnd}:6", "{polStart}{polEnd} {polKind}:1", "New {polStart}{polEnd}:1"],
+          "Monster": ["{monsterName}, {monsterKind}:4", "{monsterKind|cap} of {polStart}{polEnd}:3", "{monsterName}:1"],
+          "Ship": ["The {shipAdj} {shipNoun}:4", "{female}:2", "{shipNoun} of {polStart}{polEnd}:2", "The {shipAdj} {female}:1"]
+        }
+      }
+    }
+  ]
+}

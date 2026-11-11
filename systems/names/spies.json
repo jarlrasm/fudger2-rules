@@ -1,0 +1,42 @@
+{
+  "name": "Spy thriller names",
+  "description": "Agents, codenames, operations, agencies and safehouses for espionage and conspiracy games.",
+  "url": "/systems/names/spies.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Spy thriller",
+      "description": "Cold wars and dark conspiracies: agents, codenames, covert operations, intelligence agencies and safehouses.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Agent", "Codename", "Operation", "Agency", "Safehouse"],
+        "parts": {
+          "first": ["Anna", "Boris", "Claire", "Daniel", "Elena", "Frank", "Greta", "Hassan", "Irina", "Katya", "Leon", "Marta", "Nikolai", "Olivia", "Pavel", "Rachel", "Stefan", "Tatiana", "Viktor", "Yusuf", "Zofia", "Adrian", "Ben", "Celine", "Dmitri", "Farah", "Gregor", "Helena", "Ivo", "Jonas", "Klaus", "Lena", "Mikhail", "Nadia", "Oskar", "Renata", "Sergei", "Teresa", "Ulla", "Walter"],
+          "last": ["Albrecht", "Baranov", "Calloway", "Dubois", "Engel", "Farrow", "Galloway", "Hartmann", "Ivanov", "Jaeger", "Keane", "Lazar", "Mercer", "Novak", "Orlov", "Pryce", "Quaid", "Reyes", "Sorensen", "Thorne", "Ulrich", "Varga", "Weller", "Zane", "Ashdown", "Brandt", "Chernov", "Dorsey", "Ekdahl", "Fontaine", "Grieve", "Holm", "Kessler", "Lindqvist", "Moreau", "Petrov", "Sato", "Whitfield"],
+          "initial": {"pattern": "L"},
+          "codeAdj": ["Silent", "Grey", "Black", "Iron", "Glass", "Winter", "Pale", "Broken", "Crooked", "Hollow", "Northern", "Velvet", "Cold", "Paper", "Blue", "Second", "Quiet", "Last"],
+          "codeNoun": ["Heron", "Fox", "Sparrow", "Cardinal", "Magpie", "Lantern", "Bishop", "Mantis", "Orchid", "Viper", "Wolf", "Raven", "Echo", "Harbor", "Anvil", "Thistle", "Ferryman", "Lark", "Kestrel", "Juniper", "Chess", "Pilgrim", "Shepherd", "Locksmith", "Nightingale", "Saturn", "Mistral"],
+          "opA": ["Northern", "Iron", "Crimson", "Silent", "Burning", "Velvet", "Midnight", "Pale", "Glass", "Broken", "Bright", "Hollow", "Winter", "Sunken"],
+          "opB": ["Lantern", "Anvil", "Tempest", "Harvest", "Meridian", "Cobalt", "Gambit", "Bastion", "Chimera", "Whisper", "Nightfall", "Sundial", "Labyrinth", "Overture", "Vesper", "Juniper", "Mirror", "Fulcrum", "Kingfisher", "Citadel", "Paperweight", "Undertow", "Tinderbox", "Requiem"],
+          "agAdj": ["Foreign", "Joint", "Special", "Strategic", "Signals", "Internal", "Federal", "Continental", "Overseas", "Covert", "Technical", "Counterintelligence"],
+          "agNoun": ["Liaison Office", "Research Group", "Directorate", "Bureau", "Executive", "Service", "Section", "Committee", "Programme", "Annex", "Analysis Unit", "Coordination Staff"],
+          "secNum": {"pattern": "D"},
+          "secLetter": {"pattern": "L"},
+          "shPlace": ["Bakery", "Laundromat", "Bookshop", "Pawnshop", "Dentist", "Flat", "Garage", "Warehouse", "Chapel", "Boathouse", "Pharmacy", "Tailor", "Florist", "Cinema", "Bathhouse", "Clock Shop", "Travel Agency", "Funeral Home"],
+          "shStreet": ["Linden", "Harbour", "Station", "Mill", "Church", "Kings", "Cedar", "Bridge", "Canal", "Market", "Embassy", "Tannery", "Rose", "Gate", "Chestnut", "Ferry"],
+          "shStreetKind": ["Street", "Road", "Lane", "Avenue", "Square", "Quay"]
+        },
+        "templates": {
+          "Agent": ["{first} {last}:6", "{first} {initial}. {last}:2", "{last}:1", "{first} '{codeNoun}' {last}:1"],
+          "Codename": ["{codeAdj|upper} {codeNoun|upper}:3", "{codeNoun|upper}:3", "{codeNoun|upper} {secNum}:1"],
+          "Operation": ["Operation {opB}:4", "Operation {opA} {opB}:3", "Project {opB|upper}:1", "Operation {codeNoun}:1"],
+          "Agency": ["The {agAdj} {agNoun}:4", "Section {secNum}:2", "Department {secLetter}:1", "{agAdj} {agAdj} {agNoun}:1"],
+          "Safehouse": ["The {shPlace} on {shStreet} {shStreetKind}:5", "Safehouse {codeNoun|upper}:2", "{shStreet} {shStreetKind} {secNum}:1"]
+        }
+      }
+    }
+  ]
+}

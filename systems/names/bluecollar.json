@@ -1,0 +1,42 @@
+{
+  "name": "Blue-collar space names",
+  "description": "Working crews, corporations, haulers, outposts and corporate codes for gritty space horror.",
+  "url": "/systems/names/bluecollar.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Blue-collar space",
+      "description": "Truckers in space: crew members, the companies that own them, workhorse ships, mining outposts and the corporate codes nobody reads.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Ship", "Spaceships"],
+        "variants": ["Crew", "Company", "Ship", "Outpost", "Code"],
+        "parts": {
+          "first": ["Jo", "Mack", "Dee", "Rook", "Hollis", "Petra", "Sam", "Teo", "Lucy", "Bo", "Cruz", "Dana", "Elle", "Fitz", "Gina", "Hank", "Ines", "Jax", "Kofi", "Lars", "Mina", "Nils", "Oona", "Pavel", "Rhea", "Sol", "Tamsin", "Uri", "Wen", "Yara", "Zed", "Abe", "Bea", "Carl", "Dov", "Ezra", "Faye", "Mo", "Sigrid", "Tomas"],
+          "last": ["Okonkwo", "Brennan", "Szabo", "Haugen", "Ruiz", "Tran", "Kowalczyk", "Murphy", "Abara", "Lindgren", "Yamada", "Pereira", "O'Neill", "Hollister", "Krause", "Marquez", "Novak", "Petrosyan", "Rask", "Sandoval", "Toivonen", "Udeh", "Varga", "Whitaker", "Zhou", "Baptiste", "Castellano", "Dahl", "Ferro", "Ivanenko"],
+          "crewNick": ["Tiny", "Doc", "Sparks", "Grease", "Chief", "Mouse", "Boots", "Lucky", "Old Man", "Pops", "Hotshot", "Slim", "Cookie", "Gramps", "Kid", "Wrench"],
+          "coStart": ["Ashcroft", "Brightline", "Deepcore", "Farside", "Greywater", "Halvorsen", "Ironvein", "Longhaul", "Northstar", "Orecrest", "Pallas", "Redline", "Sable", "Vantor", "Vosk", "Kepler-Ross", "Slatefield", "Coldiron", "Hesper", "Lodestone", "Marrow", "Sunder", "Talos"],
+          "coEnd": ["Mining:3", "Extraction:2", "Haulage:2", "Logistics:2", "Salvage:2", "Interstellar", "Holdings", "Freight:2", "Colonial", "Terraforming", "Ore and Gas", "Deep Space", "Biotech", "Consolidated"],
+          "coTail": ["Ltd.", "Corp.", "Inc.", "Group", "plc"],
+          "prefix": ["MV", "ISV", "CSV", "HTV", "MCV", "UMV"],
+          "shipName": ["Persistence", "Long Haul", "Dutiful", "Kestrel", "Old Mule", "Ox", "Grindstone", "Patience", "Lodestar", "Plodder", "Brick", "Margaret Ann", "Steady On", "Heavy Lift", "Bellwether", "Slow Burn", "Night Shift", "Overtime", "Tin Can", "Rust Bucket", "Second Chance", "Paycheck", "Union Rose", "Hard Bargain", "Ironclad", "Cold Comfort", "Quota", "Graveyard Shift", "Lucky Seven", "Sweet Annie"],
+          "outpostKind": ["Station:3", "Relay", "Depot", "Colony:2", "Rig:2", "Platform", "Outpost:2", "Refinery", "Habitat", "Dig Site", "Mine:2"],
+          "rockName": ["Grimsby", "Dunlin", "Cobalt", "Fennick", "Prosper", "Bleak Rock", "Last Light", "Coldwater", "Halfway", "Moraine", "Tarn", "Scree", "Borealis", "Gravel", "Slagheap", "Hope", "Tundra", "Cinder"],
+          "code": {"pattern": "LL-DD"},
+          "bigCode": {"pattern": "LLL-DDDD"},
+          "codeNum": {"pattern": "DDD"},
+          "codePrefix": ["Directive", "Project", "Protocol", "Contract", "Clause", "Manifest", "Work Order", "Subsection", "Amendment", "Priority"]
+        },
+        "templates": {
+          "Crew": ["{first} {last}:6", "{last}:1", "'{crewNick}' {last}:1", "{crewNick} {first}:1"],
+          "Company": ["{coStart} {coEnd}:4", "{last}-{last} {coEnd}:2", "{coStart} {coEnd} {coTail}:2", "{coStart}-{last} {coTail}:1"],
+          "Ship": ["{prefix} {shipName}:4", "{shipName}:3", "{prefix} {last}:1", "{prefix} {coStart} {codeNum}:1"],
+          "Outpost": ["{coStart} {outpostKind}:3", "{outpostKind} {code}:2", "{rockName} {outpostKind}:3", "{rockName}:1"],
+          "Code": ["{codePrefix} {codeNum}:4", "{bigCode}:3", "{codePrefix} {code}:2"]
+        }
+      }
+    }
+  ]
+}

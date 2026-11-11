@@ -1,0 +1,43 @@
+{
+  "name": "Gaslight names",
+  "description": "Victorian ladies and gentlemen, street urchins, foggy streets, clubs and fantastical inventions.",
+  "url": "/systems/names/victorian.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Gaslight",
+      "description": "Fog, gaslamps and brass: Victorian ladies and gentlemen, street urchins, streets, gentlemen's clubs and learned societies, and patent inventions.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Item"],
+        "variants": ["Gentleman", "Lady", "Urchin", "Street", "Club", "Invention"],
+        "parts": {
+          "male": ["Albert", "Archibald", "Arthur", "Augustus", "Bertram", "Cecil", "Charles", "Edmund", "Edward", "Frederick", "Godfrey", "Horatio", "Hugh", "Jasper", "Lionel", "Montague", "Neville", "Percival", "Reginald", "Rupert", "Septimus", "Theodore", "Wilfred", "Algernon", "Barnabas", "Cuthbert", "Ignatius", "Phineas", "Roderick", "Sebastian", "Ambrose", "Clement", "Erasmus", "Fitzroy", "Gilbert", "Lucius", "Mortimer", "Octavius", "Silas", "Thaddeus"],
+          "female": ["Adelaide", "Beatrice", "Charlotte", "Cordelia", "Edwina", "Eleanor", "Florence", "Georgiana", "Harriet", "Henrietta", "Imogen", "Lavinia", "Lucinda", "Matilda", "Octavia", "Philippa", "Rosamund", "Victoria", "Winifred", "Arabella", "Clementine", "Dorothea", "Eugenie", "Felicity", "Honoria", "Letitia", "Prudence", "Theodosia", "Violet", "Wilhelmina", "Agatha", "Constance", "Euphemia", "Gwendolyn", "Isadora", "Millicent"],
+          "surname": ["Ashworth", "Blackstone", "Carrington", "Danvers", "Ellsworth", "Fairfax", "Grantham", "Hargreaves", "Pemberton", "Quarrington", "Ravenscroft", "Stanhope", "Thistlewood", "Upton", "Vane", "Waverley", "Worthington", "Fothergill", "Bellingham", "Cholmondeley", "Dashwood", "Featherstone", "Gascoigne", "Hawthorne", "Lockwood", "Merriweather", "Nethercott", "Pennyfeather", "Ramsbottom", "Smythe", "Templeton", "Whitcombe"],
+          "gTitle": ["Sir:2", "Lord:2", "Dr.:2", "Professor:2", "Colonel", "Captain", "Mr.:3", "Reverend", "Inspector"],
+          "lTitle": ["Lady:3", "Miss:3", "Mrs.:3", "Dr.", "Dame", "Duchess", "Countess", "Professor"],
+          "urchinFirst": ["Pip", "Alfie", "Ned", "Tommy", "Bess", "Kit", "Nell", "Sid", "Archie", "Bert", "Charlie", "Dolly", "Fanny", "Georgie", "Jem", "Lottie", "Mags", "Sukey", "Wally", "Ozzy", "Polly", "Reg", "Tilly", "Wilf"],
+          "urchinNick": ["Sooty", "Nimble", "Quick", "Tiny", "Lucky", "Smudge", "Sparrow", "Ginger", "Squint", "Mudlark", "Whistle", "Ha'penny", "Tuppence", "Soapy", "Chimney", "Button", "Patches", "Magpie"],
+          "streetStart": ["Cinder", "Lantern", "Tallow", "Mill", "Pudding", "Gallows", "Rook", "Copper", "Fog", "Thimble", "Brimstone", "Ravens", "Crown", "Coal", "Hatter's", "Weaver's", "Cobbler's", "Lamplighter's", "Ironmonger's", "Bishop's", "Sparrow", "Gin"],
+          "streetKind": ["Lane:3", "Street:3", "Row:2", "Alley:2", "Court", "Yard", "Mews", "Square", "Close", "Walk", "Crescent", "Place"],
+          "clubAdj": ["Royal", "Brass", "Ebony", "Crimson", "Copper", "Ivory", "Unseen", "Athenian", "Antiquarian", "Aetheric", "Mesmeric", "Electric", "Midnight", "Gilded", "Lunar", "Imperial"],
+          "clubNoun": ["Lantern", "Cog", "Owl", "Compass", "Lion", "Telescope", "Key", "Phoenix", "Raven", "Gear", "Lamp", "Orrery", "Sextant", "Hourglass", "Cogwheel", "Quill"],
+          "clubPursuit": ["Natural Philosophy", "Psychical Research", "Arcane Inquiry", "Antiquities", "Exploration", "Aeronautics", "Mesmerism", "the Unexplained", "Lunar Studies", "Electrical Wonders", "Cryptozoology", "Spiritualism"],
+          "invAdj": ["Patent", "Galvanic", "Aetheric", "Steam-Powered", "Clockwork", "Analytical", "Pneumatic", "Luminiferous", "Electro-Magnetic", "Mechanical", "Calorific", "Hydraulic", "Improved", "Marvellous", "Automatic", "Phlogistonic"],
+          "invNoun": ["Engine", "Apparatus", "Automaton", "Contraption", "Ornithopter", "Dirigible", "Tonic", "Lens", "Carriage", "Loom", "Velocipede", "Spectacles", "Cannon", "Harness", "Submersible", "Calculator", "Telescope", "Diving Suit"]
+        },
+        "templates": {
+          "Gentleman": ["{gTitle} {male} {surname}:5", "{male} {surname}:3", "{male} {surname}-{surname}:1", "{gTitle} {male} {male} {surname}:1"],
+          "Lady": ["{lTitle} {female} {surname}:5", "{female} {surname}:3", "{female} {surname}-{surname}:1"],
+          "Urchin": ["{urchinNick} {urchinFirst}:4", "{urchinFirst} the {urchinNick}:2", "{urchinFirst}:1", "Little {urchinFirst}:1"],
+          "Street": ["{streetStart} {streetKind}:6", "{surname} {streetKind}:2", "Old {streetStart} {streetKind}:1"],
+          "Club": ["The {clubAdj} {clubNoun} Club:3", "The {surname} Society:2", "The {clubAdj} Society for {clubPursuit}:2", "The {clubNoun} and {clubNoun}:1"],
+          "Invention": ["{surname}'s {invAdj} {invNoun}:4", "The {invAdj} {invNoun}:3", "{surname}'s {invNoun}:1", "{surname}-{surname} {invAdj} {invNoun}:1"]
+        }
+      }
+    }
+  ]
+}

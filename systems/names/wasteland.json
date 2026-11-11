@@ -1,0 +1,44 @@
+{
+  "name": "Wasteland names",
+  "description": "Survivors, mutants, settlements, ruins, raider gangs and scrap weapons after the end of the world.",
+  "url": "/systems/names/wasteland.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Wasteland",
+      "description": "After the bombs: survivors and their nicknames, mutants, settlements, ruins of the old world, raider gangs and jury-rigged weapons.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Item"],
+        "variants": ["Survivor", "Mutant", "Settlement", "Ruin", "Raiders", "Scrap weapon"],
+        "parts": {
+          "first": ["Jo", "Tex", "Rosie", "Cass", "Buck", "Dot", "Hank", "Lu", "Moe", "Nell", "Ray", "Sal", "Tess", "Vic", "Wes", "Ziggy", "Ace", "Bea", "Cal", "Dee", "Eli", "Fay", "Gus", "Ivy", "Jett", "Kit", "Lou", "Mags", "Ned", "Opal", "Pip", "Quinn", "Rex", "Sky", "Abe", "Birdie", "Cooper", "Dawn", "Flint", "Hope", "June", "Mercy"],
+          "nick": ["Rust", "Scrap", "Dusty", "Geiger", "Patch", "Sprocket", "Two-Toes", "Bolt", "Ashes", "Coyote", "Tin", "Rad", "Junk", "Cinder", "Grit", "Socket", "Hubcap", "Wrench", "Slag", "Static", "Mole", "Buzz", "Dingo", "Gasket", "Fuse", "Roach", "Bones", "Sparky", "Tumbleweed", "Spoon", "Ratchet", "Lucky", "Chalk", "Crow"],
+          "mutant": {"syllables": [["Gl", "Bor", "Snik", "Zz", "Urk", "Mub", "Fl", "Krr", "Gub", "Plo", "Sk", "Gr", "Thw", "Bl"], ["ub", "ix", "orp", "ag", "ee", "umm", "atch", "izz", "oog", "erk", "ulp", "ank"]]},
+          "mutantTrait": ["Three-Eyes", "Glowskin", "Longarm", "Scaleback", "Many-Teeth", "Bigbrain", "Spines", "Hollowbones", "Gills", "Twotongue", "Fourarms", "Noface", "Shellback", "Bugeye", "Stalkears", "Greenblood"],
+          "setStart": ["Rust", "Scrap", "Bone", "Ash", "Glow", "Dust", "Tin", "Salt", "Slag", "Lead", "Dry", "Rad", "Sun", "Rot", "Tire", "Crater", "Tar", "Copper"],
+          "setEnd": ["town:3", "water:2", "ville", "burg", "hole", "heap", "pit", "field", "crossing", "ridge", "gulch", "haven", "wells", "stop", "end"],
+          "setPrefix": ["Fort", "New", "Old", "Camp", "Last", "Little", "Free", "Saint", "Mother", "Lower"],
+          "setKind": ["Bunker", "Shelter", "Silo", "Depot", "Sector", "Outpost", "Station"],
+          "num": {"pattern": "DD"},
+          "ruinAdj": ["Sunken", "Burned", "Glowing", "Dead", "Broken", "Screaming", "Silent", "Melted", "Old", "Crooked", "Hollow", "Black", "Flooded", "Overgrown", "Rattling", "Upside-Down"],
+          "ruinThing": ["Mall", "Hospital", "Overpass", "Stadium", "Factory", "Dam", "Airport", "Tower", "Subway", "Reactor", "Highway", "Motel", "Station", "Library", "Refinery", "Car Park", "Water Park", "Prison", "Supermarket", "Megachurch"],
+          "gangAdj": ["Rust", "Bone", "Skull", "Scorched", "Blood", "Road", "Gas", "Iron", "Rad", "Dust", "Mad", "Chrome", "Gutter", "Rabid", "Tar", "Spike"],
+          "gangNoun": ["Reapers", "Vultures", "Jackals", "Maggots", "Buzzards", "Wheels", "Spikes", "Butchers", "Hyenas", "Scorpions", "Mutts", "Kings", "Choppers", "Ghouls", "Lords", "Weasels"],
+          "weaponAdj": ["Rusty", "Spiked", "Duct-Taped", "Jury-Rigged", "Sawn-Off", "Rebar", "Bolt-Action", "Rad-Tipped", "Electrified", "Barbed", "Scrap", "Homemade", "Nail", "Flaming", "Bent", "Sharpened"],
+          "weaponBase": ["Pipe", "Bat", "Cleaver", "Crossbow", "Shotgun", "Rifle", "Hammer", "Saw", "Chain", "Spear", "Launcher", "Machete", "Shovel", "Flail", "Revolver", "Harpoon", "Sign", "Golf Club"]
+        },
+        "templates": {
+          "Survivor": ["{first} {nick}:4", "{nick}:3", "{first} of {setStart}{setEnd}:2", "Old {nick}:1", "{first}:1"],
+          "Mutant": ["{mutant|cap}:3", "{mutant|cap} {mutantTrait}:3", "{mutantTrait}:2", "{first} {mutantTrait}:1"],
+          "Settlement": ["{setStart}{setEnd}:5", "{setPrefix} {setStart}:2", "{setKind} {num}:2", "{setPrefix} {setStart}{setEnd}:1"],
+          "Ruin": ["The {ruinAdj} {ruinThing}:5", "{setStart}{setEnd} {ruinThing}:2", "{ruinThing} {num}:1"],
+          "Raiders": ["The {gangAdj} {gangNoun}:5", "{nick}'s {gangNoun}:2", "{gangNoun} of {setStart}{setEnd}:1"],
+          "Scrap weapon": ["{weaponAdj} {weaponBase}:5", "{nick}'s {weaponBase}:2", "{weaponAdj} {weaponAdj} {weaponBase}:1", "The {nick}-{weaponBase}:1"]
+        }
+      }
+    }
+  ]
+}
