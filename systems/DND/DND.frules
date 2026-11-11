@@ -206,7 +206,9 @@ dndNameSetting = nameSetting
     name = "Classic fantasy"
     characters = generator { library = "Fantasy folk" variant = Class.Race }
     creatures = [generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Fantasy folk" variant = "Orc" }]
-    Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Town" }, generator { library = "Fantasy places" variant = "Tavern" }, generator { library = "Fantasy places" variant = "Wilds" }]
+    Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Town" }, generator { library = "Fantasy places" variant = "Tavern" }, generator { library = "Fantasy places" variant = "Castle" }, generator { library = "Fantasy places" variant = "Temple" }, generator { library = "Fantasy places" variant = "Dungeon" }, generator { library = "Fantasy places" variant = "Wilds" }]
     'Melee weapons' = generator { library = "Fantasy things" variant = "Weapon" }
     'Ranged weapons' = generator { library = "Fantasy things" variant = "Weapon" }
+    Armour = generator { library = "Fantasy things" variant = "Armour" }
+    'Other items' = [generator { library = "Fantasy things" variant = "Artifact" }, generator { library = "Fantasy things" variant = "Potion" }]
 }

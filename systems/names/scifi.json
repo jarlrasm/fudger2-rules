@@ -12,23 +12,34 @@
       "rulesets": [],
       "generator": {
         "kinds": ["Person"],
-        "variants": ["Human", "Alien", "Droid"],
+        "variants": ["Human", "Alien", "Droid", "Callsign", "Noble", "Gang"],
         "parts": {
-          "first": ["Ados", "Bren", "Cael", "Davin", "Eris", "Fenn", "Garo", "Holt", "Ilsa", "Jace", "Kesh", "Lira", "Mako", "Nyla", "Oren", "Pell", "Quin", "Rhea", "Tamsin", "Ulric", "Vela", "Wyn", "Xan", "Yara", "Zev", "Corla", "Dessa", "Iven", "Marek", "Sela", "Tova", "Rook"],
-          "last": ["Vantor", "Dray", "Okonra", "Selvane", "Marr", "Talvo", "Arvane", "Bastor", "Corvel", "Dorrin", "Estan", "Farro", "Halcy", "Ivrel", "Jenko", "Kade", "Lorn", "Morrow", "Nadir", "Orlan", "Quarry", "Raske", "Tarn", "Ulver", "Varga", "Wrenn", "Yost", "Zayne"],
-          "alienStart": ["Zor", "Kae", "Vex", "Tal", "Ruu", "Gha", "Ibo", "Kri", "Mon", "Ny", "Oolo", "Pra", "Shi", "Tyk", "Ux", "Wha", "Yee", "Zhu"],
-          "alienMid": ["ba", "ek", "ix", "on", "aa", "ru", "zi", "lo", "kka", "ma"],
-          "alienEnd": ["", "k", "sh", "ra", "th", "x", "lu", "zz", "ok", "ee"],
+          "first": ["Ados", "Bren", "Cael", "Davin", "Eris", "Fenn", "Garo", "Holt", "Ilsa", "Jace", "Kesh", "Lira", "Mako", "Nyla", "Oren", "Pell", "Quin", "Rhea", "Tamsin", "Ulric", "Vela", "Wyn", "Xan", "Yara", "Zev", "Corla", "Dessa", "Iven", "Marek", "Sela", "Tova", "Rook", "Aren", "Brix", "Calla", "Dax", "Elan", "Fira", "Galen", "Hask", "Isa", "Jory", "Kira", "Lux", "Mira", "Nash", "Orla", "Pax", "Quell", "Rena", "Sable", "Tycho", "Uma", "Vance", "Wes", "Xyla", "Yoren", "Zora", "Ash", "Bex", "Cass", "Dane", "Echo", "Faye", "Gage", "Hana", "Ivo", "Juno", "Kael", "Lenna", "Milo", "Niko", "Odessa", "Pria", "Remy", "Sol", "Tess", "Vik", "Wren", "Yuki", "Zane", "Ari", "Bram", "Cyra", "Dorian", "Eska", "Flint", "Greer", "Halle", "Indra", "Jett", "Kai", "Lark", "Mace", "Nova", "Otto", "Petra", "Raya", "Silas", "Talia", "Vesper"],
+          "last": ["Vantor", "Dray", "Okonra", "Selvane", "Marr", "Talvo", "Arvane", "Bastor", "Corvel", "Dorrin", "Estan", "Farro", "Halcy", "Ivrel", "Jenko", "Kade", "Lorn", "Morrow", "Nadir", "Orlan", "Quarry", "Raske", "Tarn", "Ulver", "Varga", "Wrenn", "Yost", "Zayne", "Ashcroft", "Blackwell", "Crane", "Drexel", "Ember", "Falk", "Graves", "Hale", "Ironside", "Jarro", "Kessler", "Locke", "Maddox", "Novak", "Orsen", "Pryce", "Quade", "Rourke", "Sterling", "Thorne", "Ursa", "Voss", "Whitlock", "Xander", "Yarrow", "Zell", "Achebe", "Brannock", "Castellan", "Delacroix", "Esperanza", "Fairweather", "Galloway", "Holloway", "Ishikawa", "Juarez", "Kovac", "Lindqvist", "Mbeki", "Nakamura", "Okafor", "Petrov", "Quintero", "Rahman", "Sandoval", "Takeda", "Underhill", "Valdez", "Winterbourne", "Yilmaz", "Zhao", "Arkwright", "Bellamy", "Corso", "Draven", "Everhart", "Fenwick", "Grimaldi", "Hawthorne", "Iyer"],
+          "alienStart": ["Zor", "Kae", "Vex", "Tal", "Ruu", "Gha", "Ibo", "Kri", "Mon", "Ny", "Oolo", "Pra", "Shi", "Tyk", "Ux", "Wha", "Yee", "Zhu", "Ah", "Bru", "Cha", "Dro", "Eek", "Fyr", "Gro", "Hux", "Iss", "Jho", "Klu", "Lor", "Mmu", "Nax", "Oog", "Pfo", "Qua", "Rra", "Ssi", "Tchu", "Uul", "Vrr", "Wex", "Xo", "Yaz", "Zii", "Bok", "Glo", "Kss", "Thu"],
+          "alienMid": ["ba", "ek", "ix", "on", "aa", "ru", "zi", "lo", "kka", "ma", "ka", "lu", "ni", "ro", "sa", "ti", "vu", "xa", "yo", "zu", "quo", "rr", "ss", "gga", "hhi", "mmo", "tz", "ul", "ap", "ir"],
+          "alienEnd": ["", "k", "sh", "ra", "th", "x", "lu", "zz", "ok", "ee", "a", "an", "ax", "eth", "ia", "ik", "iz", "oon", "or", "uk", "yx", "sk", "tch", "ll", "rr", "nn", "aal", "osh", "uun", "ix"],
           "alien": { "syllables": ["alienStart", "alienMid", "alienEnd"], "count": [2, 3] },
           "droid": { "pattern": "LD-LD" },
           "probe": { "pattern": "LL-DDD" },
           "unit": { "pattern": "DL-LDL" },
-          "droidNickname": ["Sparks", "Rivet", "Beeper", "Clank", "Patch", "Whirr", "Dusty", "Tock"]
+          "droidNickname": ["Sparks", "Rivet", "Beeper", "Clank", "Patch", "Whirr", "Dusty", "Tock", "Bolt", "Chirp", "Dash", "Fuse", "Gizmo", "Hum", "Jinx", "Ketch", "Loop", "Mote", "Nib", "Ping", "Quark", "Socket", "Tinker", "Volt", "Widget", "Zip", "Cog", "Blink", "Glitch", "Scrap", "Sprocket", "Buzz"],
+          "droid2": { "pattern": "LL-LD" },
+          "serial": { "pattern": "DDDD" },
+          "droidModel": ["Courier", "Servitor", "Labor", "Medic", "Sentinel", "Astro", "Protocol", "Loader", "Scout", "Maintenance", "Survey", "Navigator"],
+          "callsign": ["Ace", "Blaze", "Ghost", "Viper", "Hawk", "Nova", "Rook", "Jinx", "Echo", "Flint", "Raven", "Saber", "Spike", "Talon", "Vector", "Wildcard", "Zero", "Static", "Torque", "Comet", "Dart", "Gremlin", "Halo", "Kestrel", "Lynx", "Mirage", "Nomad", "Onyx", "Phantom", "Quasar", "Rattler", "Shrike", "Sundog", "Tempest", "Vandal", "Wisp", "Hex", "Banshee", "Cinder", "Doc"],
+          "digit": { "pattern": "D" },
+          "nobleTitle": ["Baron", "Baroness", "Count", "Countess", "Duke", "Duchess", "Lord:2", "Lady:2", "Viceroy", "Magistrate", "Senator", "Prince", "Princess", "Regent", "Archon", "Matriarch", "Patriarch"],
+          "gangAdj": ["Red", "Black", "Iron", "Void", "Blood", "Chrome", "Rust", "Neon", "Ghost", "Hollow", "Twin", "Silent", "Scarlet", "Cobalt", "Broken", "Seventh"],
+          "gangNoun": ["Fangs", "Jackals", "Syndicate", "Cartel", "Claws", "Vipers", "Talons", "Kings", "Hounds", "Wolves", "Brotherhood", "Collective", "Circle", "Hand", "Crows", "Saints", "Knives", "Comets"]
         },
         "templates": {
-          "Human": ["{first} {last}"],
+          "Human": ["{first} {last}:6", "{first} {last}-{last}:1"],
           "Alien": ["{alien|cap}:3", "{alien|cap} {alien|cap}:1", "{alien|cap} of {alien|cap}:1"],
-          "Droid": ["{droid}:3", "{probe}:2", "{unit}:1", "{droidNickname} ({droid}):1"]
+          "Droid": ["{droid}:3", "{probe}:2", "{unit}:1", "{droid2}:2", "{droidNickname} ({droid}):1", "{droidModel} unit {serial}:1"],
+          "Callsign": ["{callsign}:3", "{first} \"{callsign}\" {last}:2", "{callsign}-{digit}:1"],
+          "Noble": ["{nobleTitle} {first} of House {last}:3", "{nobleTitle} {first} {last}:2"],
+          "Gang": ["The {gangAdj} {gangNoun}:3", "{gangAdj} {gangNoun}:1", "{last}'s {gangNoun}:1"]
         }
       }
     },
@@ -40,21 +51,30 @@
       "rulesets": [],
       "generator": {
         "kinds": ["Place"],
-        "variants": ["Planet", "Station", "Cantina"],
+        "variants": ["Planet", "Moon", "Station", "City", "Nebula", "Cantina"],
         "parts": {
-          "planetStart": ["Kor", "Vel", "Tar", "Ese", "Mal", "Ryl", "Ost", "Bes", "Dra", "Ulo", "Zan", "Cy", "Hel", "Ith", "Nor", "Ques", "Ari", "Sor"],
-          "planetEnd": ["os", "ara", "ion", "eth", "una", "ix", "ar", "ado", "enne", "ia", "on", "ul", "is", "ath"],
+          "planetStart": ["Kor", "Vel", "Tar", "Ese", "Mal", "Ryl", "Ost", "Bes", "Dra", "Ulo", "Zan", "Cy", "Hel", "Ith", "Nor", "Ques", "Ari", "Sor", "Aeg", "Bor", "Cal", "Dex", "Eph", "Fal", "Gar", "Hyd", "Ilo", "Jas", "Kep", "Lyr", "Myr", "Nex", "Ory", "Pyr", "Rho", "Syl", "Thal", "Uth", "Vex", "Wyr", "Xen", "Yll", "Zeph", "Ast", "Cor", "Dun", "Kal", "Mor", "Ves", "Sel", "Tyr", "Orb"],
+          "planetEnd": ["os", "ara", "ion", "eth", "una", "ix", "ar", "ado", "enne", "ia", "on", "ul", "is", "ath", "ax", "ea", "ein", "era", "ess", "ica", "ida", "ine", "ira", "ium", "ius", "ora", "oth", "ova", "ris", "rion", "tis", "us", "yra", "yx", "ani", "elle"],
           "planet": { "syllables": ["planetStart", "planetEnd"] },
-          "numeral": ["II", "III", "IV", "V", "VII", "IX"],
+          "numeral": ["II", "III", "IV", "V", "VII", "IX", "VI", "VIII", "X", "XI", "XII", "Major"],
           "code": { "pattern": "LL-DD" },
-          "stationKind": ["Station", "Outpost", "Relay", "Depot", "Spire", "Yards"],
-          "cantinaAdjective": ["Rusty", "Last", "Lucky", "Blue", "Broken", "Drifting", "Silent", "Burning", "Twin", "Cold"],
-          "cantinaNoun": ["Moon", "Nebula", "Thruster", "Comet", "Credit", "Star", "Pilot", "Asteroid", "Airlock", "Orbit"]
+          "stationKind": ["Station", "Outpost", "Relay", "Depot", "Spire", "Yards", "Platform", "Waypoint", "Dock", "Citadel", "Habitat", "Hub", "Anchorage", "Beacon", "Refinery", "Lab", "Exchange", "Bastion"],
+          "cantinaAdjective": ["Rusty", "Last", "Lucky", "Blue", "Broken", "Drifting", "Silent", "Burning", "Twin", "Cold", "Rusted", "Crooked", "Thirsty", "Lonely", "Smoky", "Neon", "Golden", "Dusty", "Black", "Red", "Grinning", "Dead", "Wandering", "Spinning", "Frozen"],
+          "cantinaNoun": ["Moon", "Nebula", "Thruster", "Comet", "Credit", "Star", "Pilot", "Asteroid", "Airlock", "Orbit", "Engine", "Hyperlane", "Bolt", "Wrench", "Sun", "Void", "Beacon", "Spanner", "Satellite", "Quasar", "Gravity", "Dock", "Pulsar", "Meteor", "Parsec"],
+          "cantinaOwner": ["Old Pell", "Mama Rhea", "Ugly Joss", "Three-arm Kesh", "Big Ados", "Lucky Vela", "Grim Davin", "One-eye Sable", "Auntie Mira", "Quiet Bram"],
+          "moonCode": { "pattern": "L" },
+          "cityEnd": ["haven", "port", "polis", "spire", "dome", "reach", "fall", "deep", "crest", "hold", "town", "grad", "gate", "rock", "vale"],
+          "nebulaAdj": ["Crimson", "Shattered", "Weeping", "Pale", "Burning", "Whispering", "Veiled", "Golden", "Drowned", "Silent", "Bleeding", "Cobalt", "Hungry", "Frozen"],
+          "nebulaNoun": ["Veil", "Expanse", "Maw", "Drift", "Reach", "Shroud", "Cloud", "Rift", "Gulf", "Tide", "Wound", "Eye", "Crown", "Sea"],
+          "nebulaKind": ["Nebula:3", "Cluster:2", "Belt", "Rift", "Expanse", "Void", "Drift", "Corridor"]
         },
         "templates": {
-          "Planet": ["{planet}:4", "{planet} {numeral}:2", "{planet} Prime:1", "{planet} Minor:1"],
-          "Station": ["{planet} {stationKind}:3", "{stationKind} {code}:2"],
-          "Cantina": ["The {cantinaAdjective} {cantinaNoun}"]
+          "Planet": ["{planet}:4", "{planet} {numeral}:2", "{planet} Prime:1", "{planet} Minor:1", "{code}:1"],
+          "Moon": ["{planet}:2", "{planet} {moonCode}:1", "Moon of {planet}:1"],
+          "Station": ["{planet} {stationKind}:3", "{stationKind} {code}:2", "{planet} {stationKind} {numeral}:1"],
+          "City": ["{planet} City:2", "Port {planet}:2", "New {planet}:1", "{planetStart}{cityEnd}:3"],
+          "Nebula": ["The {nebulaAdj} {nebulaNoun}:3", "The {planet} {nebulaKind}:2"],
+          "Cantina": ["The {cantinaAdjective} {cantinaNoun}:4", "{cantinaOwner}'s Place:1"]
         }
       }
     },
@@ -66,18 +86,28 @@
       "rulesets": [],
       "generator": {
         "kinds": ["Ship", "Spaceships", "Item"],
-        "variants": ["Ship", "Weapon"],
+        "variants": ["Ship", "Warship", "Freighter", "Fighter", "Weapon"],
         "parts": {
-          "shipAdjective": ["Crimson", "Silent", "Last", "Wandering", "Distant", "Iron", "Restless", "Bright", "Lucky", "Defiant", "Hollow", "Endless"],
-          "shipNoun": ["Comet", "Fortune", "Wraith", "Promise", "Horizon", "Vigil", "Lance", "Ember", "Gambit", "Voyager", "Shadow", "Harbinger"],
-          "captain": ["Davin", "Eris", "Kesh", "Lira", "Nyla", "Oren", "Vela", "Yara"],
-          "maker": ["Corvel", "Arvane", "Talvo", "Halcy", "Orlan", "Varga"],
+          "shipAdjective": ["Crimson", "Silent", "Last", "Wandering", "Distant", "Iron", "Restless", "Bright", "Lucky", "Defiant", "Hollow", "Endless", "Burning", "Cold", "Dauntless", "Errant", "Fallen", "Gilded", "Hidden", "Infinite", "Jagged", "Lonely", "Midnight", "Nameless", "Patient", "Quiet", "Radiant", "Stellar", "Tireless", "Unbroken", "Vagrant", "Wayward", "Wild", "Brave", "Crooked", "Second"],
+          "shipNoun": ["Comet", "Fortune", "Wraith", "Promise", "Horizon", "Vigil", "Lance", "Ember", "Gambit", "Voyager", "Shadow", "Harbinger", "Arrow", "Blade", "Crown", "Drifter", "Echo", "Falcon", "Ghost", "Hammer", "Idol", "Jewel", "Kestrel", "Legacy", "Meridian", "Nomad", "Oracle", "Pilgrim", "Quill", "Raven", "Sparrow", "Tempest", "Untamed", "Venture", "Wanderer", "Zenith", "Mercy", "Rebel", "Hope", "Starling"],
+          "captain": ["Davin", "Eris", "Kesh", "Lira", "Nyla", "Oren", "Vela", "Yara", "Aren", "Brix", "Calla", "Dax", "Fira", "Galen", "Hask", "Jory", "Kira", "Mira", "Nash", "Pax", "Rena", "Sable", "Tycho", "Vesper", "Wren", "Zora"],
+          "maker": ["Corvel", "Arvane", "Talvo", "Halcy", "Orlan", "Varga", "Kessler", "Drexel", "Novak", "Sterling", "Castellan", "Yarrow", "Okafor", "Ishikawa", "Graves", "Zell", "Pryce", "Voss"],
           "model": { "pattern": "LL-D" },
-          "weaponKind": ["laser cannon", "ion cannon", "missile pod", "blaster turret", "torpedo launcher", "point-defence array"]
+          "weaponKind": ["laser cannon", "ion cannon", "missile pod", "blaster turret", "torpedo launcher", "point-defence array", "railgun", "plasma lance", "flak battery", "mass driver", "particle beam", "mine layer", "tractor projector", "graviton bomb", "pulse laser", "autocannon"],
+          "weaponAdj": ["Heavy", "Twin", "Quad", "Light", "Rapid-fire", "Long-range", "Experimental", "Surplus", "Modified", "Military"],
+          "registry": { "pattern": "LLS" },
+          "warName": ["Relentless", "Indomitable", "Vengeance", "Resolute", "Sovereign", "Tyrant", "Judgement", "Retribution", "Dominion", "Fury", "Ironclad", "Warden", "Bulwark", "Inexorable", "Onslaught", "Sentinel", "Valor", "Righteous", "Annihilator", "Conqueror", "Vigilant", "Aegis", "Hammerfall", "Ascendant"],
+          "freightAdj": ["Rusty", "Patched", "Old", "Stubborn", "Lucky", "Leaky", "Slow", "Faithful", "Honest", "Creaky", "Lazy", "Mighty"],
+          "freightNoun": ["Mule", "Barge", "Ox", "Tortoise", "Bucket", "Hauler", "Wagon", "Lady", "Turtle", "Mare", "Kettle", "Brick"],
+          "fighterName": ["Talon", "Dart", "Wasp", "Hornet", "Kestrel", "Needle", "Razor", "Stinger", "Shrike", "Arrow", "Javelin", "Spark", "Scythe", "Mantis", "Lancer", "Harrier"],
+          "fighterKind": ["fighter:3", "interceptor:2", "bomber", "scout", "gunship", "starfighter:2"]
         },
         "templates": {
-          "Ship": ["{shipAdjective} {shipNoun}:4", "The {shipAdjective} {shipNoun}:2", "{captain}'s {shipNoun}:1"],
-          "Weapon": ["{maker} {model} {weaponKind}"]
+          "Ship": ["{shipAdjective} {shipNoun}:4", "The {shipAdjective} {shipNoun}:2", "{captain}'s {shipNoun}:1", "{shipNoun} of {captain}:1"],
+          "Warship": ["{warName}:2", "{registry} {warName}:3", "{registry} {shipAdjective} {shipNoun}:1"],
+          "Freighter": ["{freightAdj} {freightNoun}:3", "The {freightAdj} {freightNoun}:2", "{captain}'s {freightNoun}:1"],
+          "Fighter": ["{fighterName}-class {fighterKind}:3", "{maker} {model} {fighterName}:1"],
+          "Weapon": ["{maker} {model} {weaponKind}:2", "{weaponAdj} {weaponKind}:2", "{maker} {weaponAdj|lower} {weaponKind}:1"]
         }
       }
     }
