@@ -151,6 +151,7 @@ Fudge = system
 | `quickdice` | Dice buttons shown in sessions |
 | `cssFiles` | Extra stylesheets |
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
+| `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
 
 ### Card decks
@@ -202,6 +203,110 @@ Each deck has a draw pile, a face-up discard pile, the table, a face-down pile (
 ```
 'Best hand' = pokerRank(concat(map((c)->c.Name, cards.'Poker'.Mine), map((c)->c.Name, cards.'Poker'.Table)))
 ```
+
+### Name generators
+
+Name generators are a library type called `Names` that every system has, so they need no ruleset. A d20 button next to the name field of an entity or library item suggests names, and `/name` in the session chat shows names to whoever typed it. A system ships generators by listing their JSON files in `libraries`. The shared ones are in `systems/names/`: `norwegian.json`, `chinese.json`, `fantasy.json` and `scifi.json`. A `Names` item in a campaign's own library replaces a built-in one with the same name (any case).
+
+A Names item in a library JSON file:
+
+```json
+{
+  "type": "Names",
+  "name": "Norwegian",
+  "description": "Modern and Viking-era Norwegian names.",
+  "images": {},
+  "rulesets": [],
+  "generator": {
+    "kinds": ["Person", "Place"],
+    "variants": ["Male", "Female", "Farm"],
+    "parts": {
+      "male": ["Ola:5", "Lars:4", "Magnus", "Håkon"],
+      "female": ["Kari:5", "Ingrid", "Silje"],
+      "surname": ["Hansen:6", "Olsen", "Haugen"],
+      "father": ["Sigurd", "Olav"],
+      "farm": { "syllables": [["Hau", "Bak", "Myr"], ["gen", "voll", "rud"]] }
+    },
+    "templates": {
+      "Male": ["{male} {surname}:6", "{male} {farm}:3", "{male} {father|sen}:1"],
+      "Female": ["{female} {surname}:6", "{female} {father|sdatter}:1"],
+      "Farm": ["{farm}"]
+    }
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `generator.variants` | The variants a GM picks from, in order. The first is the default. Variants that aren't listed but have templates come after. |
+| `generator.templates` | For each variant, a list of templates. One is picked at random, by weight. |
+| `generator.parts` | Named parts that templates fill in, see below |
+| `generator.kinds` | Optional. What the names are for: `Person` (characters and creatures), `Place` (locations), `Item` (library items), or an entity type name such as `Spaceships`. Without a name setting, the picker offers only the generators whose kinds fit, or all of them when none fit. |
+| `generator.scripts` | Optional. Ways of writing the same names, e.g. `["Pinyin", "Characters"]`. Words then hold one spelling per script, separated by `\|`: `"Wang\|王"`. |
+| `generator.joiner` | Optional. Per script, what replaces the spaces in templates, e.g. `{ "Characters": "" }` |
+
+Weights: any word or template can end in `:number`, e.g. `"Ola:5"`. The default is 1, and 0 means never. `{ "v": "Ola", "w": 5 }` works too.
+
+A part is one of:
+
+| Part | Example | Makes |
+|---|---|---|
+| Word list | `["Ola:5", "Lars"]` | One word, picked by weight |
+| Syllables | `{ "syllables": [["Ae", "Syl"], "elfMid", ["ion", "riel"]], "count": [2, 4] }` | A word built from 2 to 4 syllables: the first from the first pool, the last from the last pool, the ones in between from the middle pools in turn. A pool is a list of words or the name of a word part. `count` defaults to the number of pools, at most 12. |
+| Pattern | `{ "pattern": "LD-LD" }` | `L` is a random capital letter, `D` a digit, anything else stays as it is: `T4-Q9` |
+| Sample names | `{ "markov": ["Gromdak", "Durgash", "Ushnak"], "order": 2, "length": [4, 9] }` | New names that sound like the samples. It learns which letter follows each `order` letters (1 to 4, default 2). `length` defaults to `[3, 12]`. Names that copy a sample are avoided. Use 10 or more samples. |
+
+A template is text with `{part}` slots. Spaces are tidied, so an empty slot leaves no double space. Slot options go after the part name:
+
+| Slot | Meaning |
+|---|---|
+| `{surname}` | Fill in the part |
+| `{father\|sen}` | Add a suffix: `Sigurdsen` |
+| `{clan\|cap}`, `{x\|lower}`, `{x\|upper}` | Capitalise, lower case, upper case |
+| `{title?}` | Optional: left out half the time |
+| `{title?\|cap}` | Options combine |
+
+A slot naming a part that doesn't exist stays in the name as `{part}`, so mistakes show.
+
+GMs can see a preview of every variant when they edit a Names item in a library. The test suite generates names for every variant and script of every file in `systems/names/` and fails on empty names or leftover `{`.
+
+### Name settings
+
+`nameSettings` says which generator a system uses for each of its types. A system with one world has one setting. A system with many worlds has several, and each campaign chooses one when it is created and can switch later in its settings. The first setting is the default. A campaign can also turn name suggestions off.
+
+```
+DND = system
+{
+    libraries = ["/systems/names/fantasy.json", "/systems/names/norwegian.json"]
+    nameSettings = [
+        nameSetting
+        {
+            name = "Classic fantasy"
+            characters = generator { library = "Fantasy folk" variant = Class.Race }
+            creatures = [generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Fantasy folk" variant = "Orc" }]
+            Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Tavern" }]
+            'Melee weapons' = generator { library = "Fantasy things" variant = "Weapon" }
+        },
+        nameSetting
+        {
+            name = "Norse saga"
+            characters = [generator { library = "Norwegian" variant = "Viking man" }, generator { library = "Norwegian" variant = "Viking woman" }]
+            Location = generator { library = "Norwegian" variant = "Farm" }
+        }
+    ]
+}
+```
+
+- Keys are type names: `characters`, `creatures`, `Location`, `Other`, an `extraEntityTypes` name, or a library type such as `'Melee weapons'`. Library creatures use `creatures`.
+- A value is one `generator` or a list. A list shows as buttons in the picker, and the first is chosen when it opens.
+- `library` is the name of a `Names` item. It must be in one of the system's `libraries`, or in the campaign's own libraries.
+- `variant` is optional and is an expression. It is evaluated against the entity being named, in that type's ruleset, so `Class.Race` gives a D&D dwarf dwarf names. A result that isn't one of the generator's variants, an empty one (a new entity) or a missing `variant` uses the generator's first variant.
+- Types a setting leaves out get the generators whose `kinds` fit, as when there is no setting.
+- Lists merge, so an extension can add settings with its own `nameSettings = [...]`, listed in its own `rules.json` entry.
+- `systems/names/settings.frules` has shared settings (`fantasyNameSetting`, `norseNameSetting`, `modernNorwayNameSetting`, `easternNameSetting`, `spaceNameSetting`). Include it and list the ones that fit: `nameSettings = [fantasyNameSetting, spaceNameSetting]`. Define your own setting rather than merging into a shared one, because same-named definitions merge and lists would add up.
+- List the same setting names, in order, in the system's `rules.json` entry as `"nameSettings"`. The create campaign dialog reads them from there. For main systems a test fails when the two lists differ.
+
+The campaign stores its choice in its configuration as `names`: `["Norse saga"]` for a setting, `[]` for off. Without it the campaign uses the first setting. An unknown name also falls back to the first.
 
 ## Rulesets
 
