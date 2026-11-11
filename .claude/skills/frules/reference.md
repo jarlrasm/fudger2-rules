@@ -206,7 +206,7 @@ Each deck has a draw pile, a face-up discard pile, the table, a face-down pile (
 
 ### Name generators
 
-Name generators are a library type called `Names` that every system has, so they need no ruleset. A d20 button next to the name field of an entity or library item suggests names, and `/name` in the session chat shows names to whoever typed it. A system ships generators by listing their JSON files in `libraries`. The shared ones are in `systems/names/`: `norwegian.json`, `chinese.json`, `fantasy.json` and `scifi.json`. A `Names` item in a campaign's own library replaces a built-in one with the same name (any case).
+Name generators are a library type called `Names` that every system has, so they need no ruleset. A d20 button next to the name field of an entity or library item suggests names, and `/name` in the session chat shows names to whoever typed it. A system ships generators by listing their JSON files in `libraries`. The shared ones are in `systems/names/`: `norwegian.json`, `viking.json`, `chinese.json`, `fantasy.json` and `scifi.json`. A `Names` item in a campaign's own library replaces a built-in one with the same name (any case).
 
 A Names item in a library JSON file:
 
@@ -214,7 +214,7 @@ A Names item in a library JSON file:
 {
   "type": "Names",
   "name": "Norwegian",
-  "description": "Modern and Viking-era Norwegian names.",
+  "description": "Modern Norwegian names.",
   "images": {},
   "rulesets": [],
   "generator": {
@@ -242,7 +242,7 @@ A Names item in a library JSON file:
 | `generator.templates` | For each variant, a list of templates. One is picked at random, by weight. |
 | `generator.parts` | Named parts that templates fill in, see below |
 | `generator.kinds` | Optional. What the names are for: `Person` (characters and creatures), `Place` (locations), `Item` (library items), or an entity type name such as `Spaceships`. Without a name setting, the picker offers only the generators whose kinds fit, or all of them when none fit. |
-| `generator.scripts` | Optional. Ways of writing the same names, e.g. `["Pinyin", "Characters"]`. Words then hold one spelling per script, separated by `\|`: `"Wang\|王"`. |
+| `generator.scripts` | Optional. Ways of writing the same names, e.g. `["Pinyin", "Characters"]`, or the five languages of `viking.json`. The first is the default. Words then hold one spelling per script, separated by `\|`: `"Wang\|王"`. |
 | `generator.joiner` | Optional. Per script, what replaces the spaces in templates, e.g. `{ "Characters": "" }` |
 
 Weights: any word or template can end in `:number`, e.g. `"Ola:5"`. The default is 1, and 0 means never. `{ "v": "Ola", "w": 5 }` works too.
@@ -277,7 +277,7 @@ GMs can see a preview of every variant when they edit a Names item in a library.
 ```
 DND = system
 {
-    libraries = ["/systems/names/fantasy.json", "/systems/names/norwegian.json"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/norwegian.json", "/systems/names/viking.json"]
     nameSettings = [
         nameSetting
         {
@@ -290,7 +290,7 @@ DND = system
         nameSetting
         {
             name = "Norse saga"
-            characters = [generator { library = "Norwegian" variant = "Viking man" }, generator { library = "Norwegian" variant = "Viking woman" }]
+            characters = [generator { library = "Viking" variant = "Man" }, generator { library = "Viking" variant = "Woman" }]
             Location = generator { library = "Norwegian" variant = "Farm" }
         }
     ]
