@@ -154,6 +154,27 @@ Fudge = system
 | `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
 
+### PDFs
+
+A library can hold PDFs, such as a rulebook, and its items can refer to a page in one. A reference shows on the item and opens the PDF at that page. A built-in library's PDF lives in this repo next to the library JSON file and is referred to by its `/systems/...` path:
+
+```json
+{
+  "name": "DND SRD 5.2",
+  "documents": [{ "key": "srd", "name": "SRD 5.2.1", "url": "/systems/DND/SRD_CC_v5.2.1.pdf", "public": true }],
+  "entities": [{ "type": "Spells", "name": "Fireball", "references": [{ "document": "srd", "page": 131 }] }]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `documents[].key` | What references in this library call the PDF |
+| `documents[].public` | `true` lets players see the PDF and references to it. The default `false` keeps it for the GM. |
+| `references[].page` | Optional: the PDF page to open at, counted from 1 |
+| `references[].label` | Optional: text shown with the reference, such as `Stats` |
+
+`tools/srd_references.py` adds `SRD_CC_v5.2.1.pdf` to `dndsrd2024.json` and finds each item's page in it. Run it again after regenerating the library.
+
 ### Card decks
 
 Card decks are a library type called `Decks` that every system has, so they need no ruleset. A GM makes decks in their own libraries. A system ships decks by putting them in a built-in library listed in `libraries`. In a running session the GM adds a deck from the library. The server then shuffles it and keeps the draw pile, discard pile, table and each person's hand for the whole campaign.
