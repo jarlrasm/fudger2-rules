@@ -1,0 +1,267 @@
+/* Stark printed-form look: black ink on white paper, thick rules, caps
+   monospace headings, stats/saves as big circled numbers, health/wounds/stress
+   as boxed trackers. Uses the system monospace stack, no shipped fonts. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --ms-ink: #000;
+    --ms-paper: #fff;
+    --ms-mono: "Courier Prime", "Courier New", Courier, ui-monospace, "DejaVu Sans Mono", monospace;
+    --bg: #e9e9e6;
+    --surface: #fff;
+    --surface-alt: #f2f2f0;
+    --surface-sunken: #fff;
+    --surface-muted: #d8d8d4;
+    --text: #000;
+    --text-muted: #333;
+    --text-faint: #6b6b6b;
+    --on-accent: #fff;
+    --border: #000;
+    --border-strong: #000;
+    --accent: #000;
+    --accent-hover: #333;
+    --accent-soft: #e0e0dc;
+    --link: #000;
+    --danger: #c8102e;
+    --danger-hover: #8f0b21;
+    --danger-soft: #f6d5da;
+    --success: #1f6b35;
+    --success-hover: #2a8a46;
+    --current: #ececec;
+    --highlight: #ffe36e;
+    --card-bg: #fff;
+    --gm-bg: #f2f2f0;
+    --dice-bg: #000;
+    --dice-text: #fff;
+    --paper: #fff;
+    --shadow: rgba(0, 0, 0, 0.25);
+    --backdrop: rgba(0, 0, 0, 0.6);
+    --focus-ring: #c8102e;
+    --toast-success: #1f6b35;
+    --toast-error: #c8102e;
+    --toast-info: #000;
+    --skeleton: #e4e4e0;
+    --skeleton-shine: #f0f0ec;
+}
+
+.tab-button {
+    font-family: var(--ms-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ms-ink);
+    background-color: transparent;
+    border-radius: 0;
+}
+.tab-button:hover {
+    background-color: var(--accent-soft);
+}
+.tab-button.active,
+.tab-button.active:hover {
+    color: var(--ms-paper);
+    background-color: var(--ms-ink);
+}
+
+/* ---- Sheet blocks ---- */
+
+.entityView {
+    max-width: 95%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    font-family: var(--ms-mono);
+    color: var(--ms-ink);
+}
+.entityView a {
+    color: var(--ms-ink);
+}
+.entityView .entityTable {
+    display: inline-table;
+    margin: 6px;
+    background: var(--ms-paper);
+    border: 3px solid var(--ms-ink);
+    border-radius: 0;
+    box-shadow: none;
+}
+.entityView .wide {
+    width: 100%;
+}
+.entityView .wide > table {
+    width: 100%;
+    table-layout: fixed;
+}
+.entityView .split2 { display: inline-block; column-count: 2; column-rule: 2px solid var(--ms-ink); }
+.entityView .split3 { display: inline-block; column-count: 3; column-rule: 2px solid var(--ms-ink); }
+.entityView .split4 { display: inline-block; column-count: 4; column-rule: 2px solid var(--ms-ink); }
+.entityView .split5 { display: inline-block; column-count: 5; column-rule: 2px solid var(--ms-ink); }
+
+/* Block title: solid black bar with reversed caps, like a form section label. */
+.entityView .entityTable > table > thead th {
+    background: var(--ms-ink);
+    color: var(--ms-paper);
+    font-family: var(--ms-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    text-align: left;
+    padding: 4px 8px;
+}
+.entityView td {
+    padding: 3px 6px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+}
+.entityView input,
+.entityView select,
+.entityView textarea {
+    font-family: var(--ms-mono);
+    color: var(--ms-ink);
+    background: var(--ms-paper);
+    border: 2px solid var(--ms-ink);
+    border-radius: 0;
+}
+.entityView button {
+    font-family: var(--ms-mono);
+    text-transform: uppercase;
+    color: var(--ms-ink);
+    background: var(--ms-paper);
+    border: 2px solid var(--ms-ink);
+    border-radius: 0;
+}
+.entityView button:hover {
+    background: var(--ms-ink);
+    color: var(--ms-paper);
+}
+.entityView button.dicethrow {
+    padding: 0 4px;
+    margin: 0;
+    background: var(--dice-bg);
+    color: var(--dice-text);
+}
+
+/* Nested sub-blocks (High Score, Class, Health, Wounds, Stress) sit inside a
+   parent box, so drop to a thinner rule and a lighter title bar. */
+.entityView .entityTable .entityTable {
+    border-width: 2px;
+    margin: 4px;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    background: var(--ms-paper);
+    color: var(--ms-ink);
+    border-bottom: 2px solid var(--ms-ink);
+    padding: 2px 6px;
+}
+
+/* ---- Stats and saves: big circled numbers ---- */
+
+.entityView .table-stats input,
+.entityView .table-saves input {
+    width: 2.6em;
+    height: 2.6em;
+    border: 3px solid var(--ms-ink);
+    border-radius: 50%;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 700;
+    padding: 0;
+}
+.entityView .table-saves input {
+    /* Saves are boxed on the form rather than circled. */
+    border-radius: 0;
+}
+.entityView .table-stats td,
+.entityView .table-saves td {
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* ---- Health / Wounds / Stress: boxed trackers ---- */
+
+.entityView .table-health input,
+.entityView .table-wounds input,
+.entityView .table-stress input {
+    width: 2.2em;
+    height: 2.2em;
+    border: 3px solid var(--ms-ink);
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: 700;
+    padding: 0;
+}
+.entityView .table-stress > table > thead th {
+    /* Stress is the panic engine: mark it in the one accent colour. */
+    background: var(--danger);
+    color: var(--ms-paper);
+    border-bottom-color: var(--danger);
+}
+
+/* ---- Class: checkbox row ---- */
+
+.entityView .table-class input[type="checkbox"],
+.entityView .table-class input[type="radio"],
+.entityView [class*="table-trained"] input[type="checkbox"],
+.entityView [class*="table-expert"] input[type="checkbox"],
+.entityView [class*="table-master"] input[type="checkbox"] {
+    appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 2px solid var(--ms-ink);
+    border-radius: 0;
+    vertical-align: middle;
+}
+.entityView .table-class input:checked,
+.entityView [class*="table-trained"] input:checked,
+.entityView [class*="table-expert"] input:checked,
+.entityView [class*="table-master"] input:checked {
+    background: var(--ms-ink);
+}
+
+/* ---- Skill tiers: heavier rule per tier ---- */
+
+.entityView .table-expert-15 {
+    border-width: 4px;
+}
+.entityView .table-master-20 {
+    border-width: 5px;
+}
+
+/* ---- Misc sheet chrome ---- */
+
+.entityView pre {
+    white-space: pre-wrap;
+}
+.entityView .namedescription {
+    display: flex;
+    flex-flow: column;
+    background: var(--ms-paper);
+    border: 3px solid var(--ms-ink);
+    border-radius: 0;
+    padding: 10px;
+    text-transform: uppercase;
+}
+.entityView .namedescription autocompleting-input {
+    width: 100%;
+}
+.entityView .editbutton {
+    flex-basis: 100%;
+}
+.entityView .customtype div {
+    margin-right: 5px;
+    display: inline;
+}
+.entityView .slots,
+.entityView .slots .used,
+.entityView .slots .unused,
+.entityView .slot-buttons,
+.entityView .slot-button {
+    display: inline;
+}
+.entityView .slot-button {
+    padding: 0;
+}
+.entityView .slots.clickable:hover {
+    position: relative;
+    background-color: var(--danger);
+    z-index: 1;
+}
