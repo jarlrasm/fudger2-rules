@@ -86,20 +86,30 @@
 }
 
 /* Angular framed panel: an orange frame with clipped top-left and
-   bottom-right corners, drawn as a gradient border behind the navy body. */
+   bottom-right corners, drawn as a gradient border behind the navy body.
+   Panels stretch to the height of their row, so the body is a layer
+   covering the whole panel rather than the table's own background;
+   otherwise the stretched part shows the frame gradient. */
 .entityView .entityTable {
     position: relative;
     margin: 6px;
     padding: 2px;
-    display: inline-table;
+    display: block;
     background: linear-gradient(135deg, var(--torg-orange), var(--torg-gold) 40%, var(--border) 70%, var(--torg-orange));
     clip-path: polygon(var(--torg-cut) 0, 100% 0, 100% calc(100% - var(--torg-cut)), calc(100% - var(--torg-cut)) 100%, 0 100%, 0 var(--torg-cut));
     border: none;
     border-radius: 0;
 }
-.entityView .entityTable > table {
-    background: linear-gradient(180deg, var(--surface-alt), var(--surface) 60%);
+.entityView .entityTable::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(180deg, var(--surface-alt), var(--surface) 120px);
     clip-path: polygon(calc(var(--torg-cut) - 1px) 0, 100% 0, 100% calc(100% - var(--torg-cut) + 1px), calc(100% - var(--torg-cut) + 1px) 100%, 0 100%, 0 calc(var(--torg-cut) - 1px));
+    pointer-events: none;
+}
+.entityView .entityTable > table {
+    position: relative;
     border-collapse: collapse;
     width: 100%;
 }
