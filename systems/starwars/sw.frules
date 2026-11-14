@@ -87,10 +87,13 @@ weaponAttack (name, points, damage, kind, distance) = custom
     }
 }
 
+attackPoints (char, skill) =
+    withActions (dexterityPoints (char, skill), valueOr (char.General, "Actions", "1"))
+
 attacksFor (char) =
     concat (
-        map ((weapon)->weaponAttack (weapon.Name, dexterityPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0), char.'Melee weapons'),
-        map ((weapon)->weaponAttack (weapon.Name, dexterityPoints (char, rangedSkill (weapon)), valueOr (weapon.data.rangedWeaponStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedWeaponStats.Stats, "Range", ""))), char.'Ranged weapons'))
+        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0), char.'Melee weapons'),
+        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, rangedSkill (weapon)), valueOr (weapon.data.rangedWeaponStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedWeaponStats.Stats, "Range", ""))), char.'Ranged weapons'))
 
 characterTable = ruleset
 {
