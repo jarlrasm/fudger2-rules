@@ -15,7 +15,7 @@ Roll against a difficulty number: Very Easy 1-5, Easy 6-10, Moderate 11-15, Diff
 Doing several things in a round costs 1D per extra action on every roll.
 
 ## Movement
-Humans move about 10 metres a round at a walk and still act. Hurrying doubles that and counts as an extra action (−1D on everything that round). Running all out, about four times that, uses the whole round. Rough ground halves movement. On a 2-metre grid that is about 5 squares at a walk.
+Humans move about 10 metres a round at a walk and still act (the Move value on the sheet). Hurrying doubles that and counts as an extra action (−1D on everything that round). Running all out, about four times that, uses the whole round. Rough ground halves movement. On a 2-metre grid that is about 5 squares at a walk.
 
 ## Points
 Force Points double all dice for one round. Character Points add a die to a roll after it is made. A Dark Side Point comes from using the Force in anger or doing evil.
