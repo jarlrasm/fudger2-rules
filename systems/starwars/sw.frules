@@ -3,9 +3,9 @@
 
 pointsToSkill(points)=
  if points-points/3*3 > 0 then
-                         toString(points/3)+"d6+"+toString(points-points/3*3)
+                         toString(points/3)+"D+"+toString(points-points/3*3)
                          
-                        else toString(points/3)+"d6"
+                        else toString(points/3)+"D"
                         
 pointsToDice(points)=
  dice
@@ -47,9 +47,24 @@ starDice (dice) = ([dice],((baseline,throws)->
               
 characterTable = ruleset
 {
-    
+    Profile = table
+    {
+      tableLayout = layout { columns = 4  size = wide }
+      Type = string {}
+      Species = string {}
+      Gender = string {}
+      Age = string {}
+      Height = string {}
+      Weight = string {}
+      Move = integer
+      {
+        default = 10
+        minvalue = 0
+      }
+    }
   'Attributes' = keyvalues
       {
+          tableLayout = layout { columns = 3  size = wide }
           singular = "Attribute"
           keys = ["Dexterity","Knowledge","Mechanical","Perception","Strength","Technical" ]
           valueType = custom
@@ -141,7 +156,7 @@ characterTable = ruleset
         }
     'Strength Skills' = keyvalues
         {
-            singular = "Perception Skill"
+            singular = "Strength Skill"
             editablekeys = character
             keys = ["Brawling", "Climbing jumping", "Lifting", "Swimming"]
             valueType = custom
@@ -177,32 +192,8 @@ characterTable = ruleset
 
           }
         }
-    'Jedi skills' = keyvalues
-        {
-          visible=boolToVisible (General.'Force sensitive')
-          singular = "Jedi skill"
-          keys = ["Control","Sense","Alter"]
-          valueType = custom
-          {
-              Points=integer
-              {
-                valuedice=starDice(pointsToDice(Points), 0)
-                render=pointsToSkill(Points)
-                default=0
-                minvalue=0
-                maxvalue=25
-              }
-
-          }
-        }
-    'Force powers' = list
-        {
-          visible=boolToVisible (General.'Force sensitive')
-          singular = "Force Power"
-          source=secondary.'Force powers'
-          editable = character
-        }
      General = table{
+              tableLayout = layout { columns = 4  size = wide }
               'Force Points'=integer
               {
                 default=0
@@ -272,6 +263,32 @@ characterTable = ruleset
       Heroic = "31+"
     }
 
+    'Jedi skills' = keyvalues
+        {
+          visible=boolToVisible (General.'Force sensitive')
+          singular = "Jedi skill"
+          keys = ["Control","Sense","Alter"]
+          valueType = custom
+          {
+              Points=integer
+              {
+                valuedice=starDice(pointsToDice(Points), 0)
+                render=pointsToSkill(Points)
+                default=0
+                minvalue=0
+                maxvalue=25
+              }
+
+          }
+        }
+    'Force powers' = list
+        {
+          visible=boolToVisible (General.'Force sensitive')
+          singular = "Force Power"
+          source=secondary.'Force powers'
+          editable = character
+        }
+
     'Melee weapons' = list
     {
         tableLayout = layout
@@ -307,6 +324,16 @@ characterTable = ruleset
         source=secondary.'Other items'
         singular = "Item"
         editable = character
+    }
+    Story = table
+    {
+      tableLayout = layout { size = wide }
+      'Physical description' = string { multiline = true }
+      Background = string { multiline = true }
+      Personality = string { multiline = true }
+      Objectives = string { multiline = true }
+      'A quote' = string {}
+      Connections = string { multiline = true }
     }
     'Spaceships' = list
     {
