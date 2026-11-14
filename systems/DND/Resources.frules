@@ -52,7 +52,7 @@ classResourcesTable = table
     'Resource 1' = custom
     {
         visible = resourceVisible (characterTable, 0)
-        Name = resourceName (characterTable, 0)
+        Name = string { value = resourceName (characterTable, 0) editable = none }
         Uses = slots
         {
             number = resourceUses (characterTable, 0)
@@ -63,7 +63,7 @@ classResourcesTable = table
     'Resource 2' = custom
     {
         visible = resourceVisible (characterTable, 1)
-        Name = resourceName (characterTable, 1)
+        Name = string { value = resourceName (characterTable, 1) editable = none }
         Uses = slots
         {
             number = resourceUses (characterTable, 1)
@@ -74,7 +74,7 @@ classResourcesTable = table
     'Resource 3' = custom
     {
         visible = resourceVisible (characterTable, 2)
-        Name = resourceName (characterTable, 2)
+        Name = string { value = resourceName (characterTable, 2) editable = none }
         Uses = slots
         {
             number = resourceUses (characterTable, 2)
@@ -85,7 +85,7 @@ classResourcesTable = table
     'Resource 4' = custom
     {
         visible = resourceVisible (characterTable, 3)
-        Name = resourceName (characterTable, 3)
+        Name = string { value = resourceName (characterTable, 3) editable = none }
         Uses = slots
         {
             number = resourceUses (characterTable, 3)
