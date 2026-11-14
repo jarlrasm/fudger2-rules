@@ -241,13 +241,31 @@ parryFor(level, text, bonus) =
     else
         toString (3 + level / 2 + bonus + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
 
-attack(name, level, mode, parry, reach) = custom
+reachYards(text) =
+    max (map ((x)->toInt (x), split (",", replace ("-", ",", replace ("/", ",", replace ("C", "0", replace (" ", "", text)))))))
+
+strengthRange(st, multiple) =
+    if contains (multiple, ".") then
+        st * toInt (replace (".", "", multiple)) / 10
+    else
+        st * toInt (multiple)
+
+maxRangeYards(text) =
+    if contains (first (reverse (split ("/", replace (" ", "", text)))), "STx") then
+        strengthRange (fromAttribute ("ST"), replace ("STx", "", first (reverse (split ("/", replace (" ", "", text))))))
+    else
+        toInt (replace (",", "", first (reverse (split ("/", replace (" ", "", text))))))
+
+attack(name, level, mode, parry, reach, kind, distance) = custom
 {
     Name = name
     'To hit' = integer {
         value = level
         render = "To hit: " + toString (level)
         valuedice = 3d6
+        action = kind
+        reach = distance
+        range = distance
     }
     Damage = integer {
         value = modeAdds (mode)
@@ -267,7 +285,9 @@ meleeAttacks(weapon) =
             weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
             mode,
             "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry, defenseBonus (characterTable)),
-            "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach),
+            "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach,
+            "melee",
+            reachYards (weapon.data.meleeWeaponStats.Stats.Reach)),
         split (" / ", weapon.data.meleeWeaponStats.Stats.Damage))
 
 rangedAttacks(weapon) =
@@ -277,7 +297,9 @@ rangedAttacks(weapon) =
             weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
             mode,
             "",
-            "Range: " + weapon.data.rangedWeaponStats.Stats.Range),
+            "Range: " + weapon.data.rangedWeaponStats.Stats.Range,
+            "ranged",
+            maxRangeYards (weapon.data.rangedWeaponStats.Stats.Range)),
         split (" / ", weapon.data.rangedWeaponStats.Stats.Damage))
 
 attacksFor(char) =

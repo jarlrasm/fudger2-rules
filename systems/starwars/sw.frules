@@ -45,6 +45,50 @@ starDice (dice) = ([dice],((baseline,throws)->
               
               
               
+noSkill = { Points = 0 }
+
+dexterityPoints (char, skill) =
+    valueOr (valueOr (char.'Dexterity Skills', skill, noSkill), "Points", 0) + valueOr (valueOr (char.Attributes, "Dexterity", noSkill), "Points", 9)
+
+meleeSkill (weapon) =
+    if contains (toLower (weapon.Name), "lightsaber") then
+        "Lightsaber"
+    else
+        "Melee"
+
+rangedSkill (weapon) =
+    if contains (toLower (weapon.Name), "grenade") then
+        "Grenade"
+    else
+        if contains (toLower (weapon.Name), "detonator") then
+            "Grenade"
+        else
+            "Blaster"
+
+longRange (text) = toInt (first (reverse (split ("/", text))))
+
+weaponAttack (name, points, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer
+    {
+        value = points
+        valuedice = starDice (pointsToDice (points), 0)
+        render = pointsToSkill (points)
+        action = kind
+        range = distance
+    }
+    Damage = string
+    {
+        value = damage
+    }
+}
+
+attacksFor (char) =
+    concat (
+        map ((weapon)->weaponAttack (weapon.Name, dexterityPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0), char.'Melee weapons'),
+        map ((weapon)->weaponAttack (weapon.Name, dexterityPoints (char, rangedSkill (weapon)), valueOr (weapon.data.rangedWeaponStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedWeaponStats.Stats, "Range", ""))), char.'Ranged weapons'))
+
 characterTable = ruleset
 {
     Profile = table
@@ -306,6 +350,13 @@ characterTable = ruleset
         source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
         editable = character
+    }
+    Attacks = list
+    {
+        source = attacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
     }
     'Armour' = list
     {

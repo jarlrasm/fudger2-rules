@@ -131,7 +131,15 @@ A field with `action` is an action. In a running battle, whoever has the current
 Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action = kind  reach = distance  range = distance }
 ```
 
-`DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties.
+Weapon lists that come from `secondary` have no rolled fields, so each system builds a computed `Attacks` list from them, one row per weapon, with a rolled field that carries `action`:
+
+- `DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties.
+- Fudge rolls the skill named in the weapon's `Skill`, or Dex, as a modifier relative to Fair. Fudge has no distances, so there is no reach or range.
+- GURPS uses the largest number in Reach, and the max range from Range (`ST x20` is worked out from ST), in yards.
+- Mothership rolls Combat plus Hand to hand Combat or Firearms (15) or Military Training (10). Adjacent weapons are melee, and Close, Long and Extreme are 20 m, 100 m and no limit.
+- Star Wars rolls Melee or Lightsaber for melee weapons, and Blaster or Grenade for ranged ones, plus Dexterity. The range is the long band of Range.
+- Torg rolls Melee Weapons, or Fire Combat, Energy Weapons or Missile Weapons by the weapon's name and notes, with the long band of Range. An Unarmed row is always there.
+- Creatures without weapon lists: Over the Edge's `Fight` and Mothership's creature `Combat` are actions themselves, and Torg creatures get a hidden `'Attack rolls'` list with a row for each combat skill they have.
 
 A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
