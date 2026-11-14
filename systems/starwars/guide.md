@@ -7,7 +7,7 @@ Attributes and skills are dice codes like 3D+2: roll that many d6 and add the pi
 Roll against a difficulty number: Very Easy 1-5, Easy 6-10, Moderate 11-15, Difficult 16-20, Very Difficult 21-30, Heroic 31+. These are listed on the sheet.
 
 ## Combat
-1. Call initiative, usually rolled with Perception.
+1. Call initiative. It rolls Initiative (under General), which is the character's Perception code. Highest goes first. The Actions penalty doesn't apply to it.
 2. Attacks roll the weapon skill (Blaster, Melee and so on) against the range difficulty, or against the target's Dodge or parry roll if they use one.
 3. Damage rolls the weapon's damage against the target's Strength (plus armour). The amount by which damage beats Strength gives the injury level on the sheet: 0-3 Stunned, 4-8 Wounded, 9-12 Incapacitated, 13-15 Mortally wounded, 16+ Killed.
 4. Mark the injury in Injuries. Wounds lower every roll by one die.

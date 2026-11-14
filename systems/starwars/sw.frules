@@ -216,6 +216,13 @@ characterTable = ruleset
               {
 
               }
+              Initiative=integer
+              {
+                value=Attributes.'Perception'.Points
+                valuedice=starDice(pointsToDice(Attributes.'Perception'.Points), 0)
+                render=pointsToSkill(Attributes.'Perception'.Points)
+                editable=none
+              }
               Actions = selector
               {
                 options = ["1", "2", "3", "4", "5"]
@@ -530,6 +537,7 @@ Starwars = system
       entityTypeDescription("Spaceships","spaceship",true, "/systems/starwars/spaceship-entity.svg", ["ShipWeapons"])
       ]
     cssFiles = ["/systems/starwars/starwars.css"]
+    initiativeCompare(item1,item2) = compare (item1,item2)
     quickdice =[1d6]
 }
 
