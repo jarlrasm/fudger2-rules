@@ -116,6 +116,23 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 
 `valuedice` can be any expression, e.g. a function that picks a roll from the character's state (see `D20Roll` in `DND/Basics.frules`).
 
+### Battlemap actions
+
+A field with `action` is an action. In a running battle, whoever has the current initiative can click another token and use it on that token. Chat then shows "Bob used Sword on Orc and rolled 14".
+
+- `action = melee` or `action = ranged`. A plain name and a string (`"melee"`) both work, so a function can pass the kind in as a parameter.
+- `reach = <number>`: how far a melee action reaches, in the battlemap's unit (ft or m). Without it the target must be next to the user.
+- `range = <number>`: how far a ranged action reaches. Without it there is no limit.
+- An out-of-reach action is greyed out for players. The gamemaster can still use it.
+- In a list row, the action is named after the row's `Name` and rolls the first rolled field in the row.
+- In the sheet's meta view you can tick "Action" on any row or field to make it an action, or untick one the rules made. Those have no range limit, and a field without dice just says "Bob used Rope on Orc".
+
+```
+Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action = kind  reach = distance  range = distance }
+```
+
+`DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties.
+
 A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
 ## The system

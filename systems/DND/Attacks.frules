@@ -19,12 +19,63 @@ abiltyBonusForRangedWeapon (weapon, char) =
     else
      char.'Ability scores'.'Dex'.Modifier
 
-attack (name, tohit, damage, damagebonus) = custom
+meleeReach (weapon) =
+    if contains(toLower(weapon.data.weaponStats.Stats.Properties), "reach") then
+        10
+    else
+        5
+
+weaponRange (weapon) =
+    bonusWithValue ([[weapon.data.weaponStats.Stats.Properties]], "Range\s*([0-9]+)")
+
+attackRollBonus (text) =
+    bonusWithValue ([[text]], "Attack Roll:\s*\+([0-9]+)") - bonusWithValue ([[text]], "Attack Roll:\s*-([0-9]+)")
+
+attackKind (text) =
+    if contains (toLower (text), "range") then
+        "ranged"
+    else
+        "melee"
+
+attackReach (text) =
+    bonusWithValue ([[text]], "[Rr]each\s*([0-9]+)")
+
+attackRange (text) =
+    bonusWithValue ([[text]], "[Rr]ange\s*([0-9]+)")
+
+creatureAttack (name, text) = custom
+{
+    Name = name
+    'To hit' = modifier {
+        value = attackRollBonus (text)
+        valuedice = D20Roll (creatureTable)
+        action = attackKind (text)
+        reach = attackReach (text)
+        range = attackRange (text)
+    }
+}
+
+hasAttackNamed (creature, name) =
+    count (filter ((a)->a.Name == name, creature.Attacks)) > 0
+
+creatureAttacksFromActions (creature) =
+    map ((a)->creatureAttack (a.Name, a.Description),
+        filter ((a)->
+            if hasAttackNamed (creature, a.Name) then
+                false
+            else
+                contains (a.Description, "Attack Roll"),
+            concat (creature.Actions, creature.'Bonus Actions')))
+
+attack (name, tohit, damage, damagebonus, kind, distance) = custom
 {
     Name= name
     Tohit = modifier {
         value=tohit
         valuedice= D20Roll (characterTable)
+        action=kind
+        reach=distance
+        range=distance
     }
     Damage= string {
         value=damage
@@ -41,7 +92,7 @@ attacksFor (char) =
         toHitBonus(weapon.Description) +
            abiltyBonusForMeleeWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus',
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description)), char.'Equipment'.'Melee weapons'),
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description), "melee", meleeReach (weapon)), char.'Equipment'.'Melee weapons'),
     map
      ((weapon)->
       attack(weapon.Name,
@@ -50,7 +101,7 @@ attacksFor (char) =
            abiltyBonusForRangedWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus'
          + rangedAttackBonus (char),
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char) + damageBonus (weapon.Description)), char.'Equipment'.'Ranged weapons')
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char) + damageBonus (weapon.Description), "ranged", weaponRange (weapon)), char.'Equipment'.'Ranged weapons')
     )
 
 attackTable = list
