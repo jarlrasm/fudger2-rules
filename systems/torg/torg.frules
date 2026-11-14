@@ -1,3 +1,5 @@
+#include "/systems/common.frules"
+
 D20Roll  = D20RollImpl (0)
 
 D20RollImpl (extra) = ([1d20],((baseline,throws)->
@@ -51,6 +53,73 @@ calculate(n)=
  
  
 
+
+flatten (lists) = fold ([], (acc, x)->concat (acc, x), lists)
+
+weaponAttack (name, skill, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer
+    {
+        value = skill
+        valuedice = D20Roll
+        action = kind
+        range = distance
+    }
+    Damage = string
+    {
+        value = damage
+    }
+}
+
+noSkill = { Modifier = 0 }
+
+creatureSkill (creature, skill) =
+    valueOr (valueOr (creature.'Combat skills', skill, noSkill), "Modifier", 0)
+
+creatureAttack (creature, skill, kind) =
+    if creatureSkill (creature, skill) > 0 then
+        [weaponAttack (skill, creatureSkill (creature, skill), "", kind, 0)]
+    else
+        []
+
+creatureAttacksFor (creature) =
+    flatten ([
+        creatureAttack (creature, "Melee Weapons", "melee"),
+        creatureAttack (creature, "Unarmed Combat", "melee"),
+        creatureAttack (creature, "Fire Combat", "ranged"),
+        creatureAttack (creature, "Energy Weapons", "ranged"),
+        creatureAttack (creature, "Heavy Weapons", "ranged"),
+        creatureAttack (creature, "Missile Weapons", "ranged")])
+
+rangedSkill (weapon) =
+    if contains (toLower (weapon.Name), "laser") then
+        "Energy Weapons"
+    else
+        if contains (toLower (weapon.Name), "bow") then
+            "Missile Weapons"
+        else
+            if contains (toLower (valueOr (weapon.data.rangedStats.Stats, "Notes", "")), "thrown") then
+                "Missile Weapons"
+            else
+                "Fire Combat"
+
+rangedSkillValue (char, skill) =
+    if skill == "Energy Weapons" then
+        char.'Combat Skills'.'Energy Weapons'.'Skill value'
+    else
+        if skill == "Missile Weapons" then
+            char.'Combat Skills'.'Missile Weapons'.'Skill value'
+        else
+            char.'Combat Skills'.'Fire Combat'.'Skill value'
+
+longRange (text) = toInt (first (reverse (split ("/", text))))
+
+attacksFor (char) =
+    flatten ([
+        [weaponAttack ("Unarmed", char.'Combat Skills'.'Unarmed Combat'.'Skill value', "STR", "melee", 0)],
+        map ((weapon)->weaponAttack (weapon.Name, char.'Combat Skills'.'Melee Weapons'.'Skill value', valueOr (weapon.data.meleeStats.Stats, "Damage", ""), "melee", 0), char.'Melee Weapons'),
+        map ((weapon)->weaponAttack (weapon.Name, rangedSkillValue (char, rangedSkill (weapon)), valueOr (weapon.data.rangedStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedStats.Stats, "Range", ""))), char.'Ranged Weapons')])
 
 creatureTable = ruleset
 {
@@ -401,6 +470,14 @@ creatureTable = ruleset
       }
       singular = "Special"
       valueType = nameAndDescription
+  }
+  'Attack rolls' = list
+  {
+      visible = none
+      source = creatureAttacksFor (creatureTable)
+      singular = "Attack"
+      editable = none
+      valueType = weaponAttack
   }
 }
 
@@ -863,6 +940,17 @@ characterTable = ruleset
         source=secondary.'Ranged weapons'
         singular = "Ranged weapon"
         editable = character
+    }
+    Attacks = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = attacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
     }
     'Perks' = list
     {

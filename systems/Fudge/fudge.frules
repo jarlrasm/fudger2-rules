@@ -3,6 +3,31 @@
 
 fudgevalues= ["Terrible","Poor","Mediocre","Fair","Good","Great","Superb" ]
 
+fudgeLevel (value) = intValueFromEnumString (fudgevalues, value) + toInt (toString (value)) - 3
+
+weaponSkillLevel (char, weapon) =
+    fudgeLevel (valueOr (char.Skills, valueOr (weapon.data.weaponStats.Stats, "Skill", ""), valueOr (char.Attributes, "Dex", "Fair")))
+
+fudgeAttack (name, level, damage, kind) = custom
+{
+    Name = name
+    Attack = modifier
+    {
+        value = level
+        valuedice = 4df
+        action = kind
+    }
+    Damage = modifier
+    {
+        value = damage
+    }
+}
+
+fudgeAttacksFor (char) =
+    concat (
+        map ((weapon)->fudgeAttack (weapon.Name, weaponSkillLevel (char, weapon), valueOr (weapon.data.weaponStats.Stats, "Damage", 0), "melee"), char.'Melee weapons'),
+        map ((weapon)->fudgeAttack (weapon.Name, weaponSkillLevel (char, weapon), valueOr (weapon.data.weaponStats.Stats, "Damage", 0), "ranged"), char.'Ranged weapons'))
+
 characterTable = ruleset
 {
     Attributes = keyvalues
@@ -130,6 +155,13 @@ characterTable = ruleset
         singular = "Ranged weapon"
         editable = character
     }
+    Attacks = list
+    {
+        source = fudgeAttacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = fudgeAttack
+    }
     'Armour' = list
     {
         tableLayout = layout
@@ -160,6 +192,8 @@ weaponStats =ruleset
                 Damage=modifier
                 {minvalue = -6
                 maxvalue = +6}
+                Skill=string
+                {}
             }
         }
 armourStats= ruleset

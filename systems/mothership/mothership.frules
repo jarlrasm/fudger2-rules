@@ -12,6 +12,53 @@ hundred = ([1d100], ((baseline,throws)->
 
 
 
+notProficient = { Proficient = false }
+
+hasSkill (char, level, skill) =
+    valueOr (valueOr (valueOr (char, level, notProficient), skill, notProficient), "Proficient", false)
+
+skillBonus (char, expertSkill) =
+    if hasSkill (char, "Expert 15", expertSkill) then
+        15
+    else
+        if hasSkill (char, "Trained 10", "Military Training") then
+            10
+        else
+            0
+
+isMelee (weapon) = valueOr (weapon.data.weaponStats.Stats, "Range", "") == "Adjacent"
+
+rangeMetres (text) =
+    if text == "Close" then
+        20
+    else
+        if text == "Long" then
+            100
+        else
+            0
+
+weaponAttack (name, target, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer
+    {
+        value = target
+        valuedice = hundred
+        action = kind
+        range = distance
+    }
+    Damage = string
+    {
+        value = damage
+    }
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Stats.Combat + skillBonus (char, "Hand to hand Combat"), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "melee", 0)
+    else
+        weaponAttack (weapon.Name, char.Stats.Combat + skillBonus (char, "Firearms"), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", rangeMetres (valueOr (weapon.data.weaponStats.Stats, "Range", "")))
+
 characterTable = ruleset
 {
   Basics = table
@@ -399,6 +446,18 @@ characterTable = ruleset
         editable = character
     }
 
+  Attacks = list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
   'Armor' = list
     {
         tableLayout = layout
@@ -431,7 +490,11 @@ creatureTable = ruleset
   }
   Stats = table
   {
-    Combat = integer {}
+    Combat = integer
+    {
+      valuedice = hundred
+      action = melee
+    }
     Attack = string {}
     Instinct = integer {}
     AP = integer {}
