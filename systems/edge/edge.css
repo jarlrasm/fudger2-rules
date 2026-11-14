@@ -1,0 +1,86 @@
+/* Over the Edge: photocopied dossier look. Off-white paper, black ink,
+   typewriter headings on solid black bars, heavy ruled rows. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9d5c9;
+    --surface: #f2efe6;
+    --surface-alt: #e8e4d8;
+    --surface-sunken: #dcd7c9;
+    --surface-muted: #c9c3b2;
+    --text: #141414;
+    --text-muted: #3b3b38;
+    --text-faint: #6e6c64;
+    --on-accent: #f2efe6;
+    --border: #8c887c;
+    --border-strong: #141414;
+    --accent: #8f1d1d;
+    --accent-hover: #ad2a2a;
+    --accent-soft: #e3c9c2;
+    --link: #8f1d1d;
+    --danger: #8f1d1d;
+    --danger-hover: #6d1414;
+    --danger-soft: #ecd0cb;
+    --success: #355e3b;
+    --success-hover: #46774d;
+    --current: #d9e0cf;
+    --highlight: #ece08f;
+    --card-bg: #ebe7db;
+    --gm-bg: #dfe3d6;
+    --dice-bg: #141414;
+    --dice-text: #f2efe6;
+    --paper: #f2efe6;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --backdrop: rgba(0, 0, 0, 0.55);
+    --focus-ring: #8f1d1d;
+    --toast-success: #355e3b;
+    --toast-error: #8f1d1d;
+    --toast-info: #3b3b38;
+    --skeleton: #dcd7c9;
+    --skeleton-shine: #e8e4d8;
+    --edge-type: "Courier New", Courier, "Nimbus Mono PS", monospace;
+}
+
+.entityView .entityTable {
+    border-radius: 0;
+    background-color: var(--surface);
+    border: 2px solid var(--border-strong);
+    filter: none;
+}
+.entityView .entityTable:hover {
+    filter: none;
+    outline: 1px solid var(--accent);
+}
+.entityView .entityTable > table {
+    border-collapse: collapse;
+}
+.entityView thead th {
+    font-family: var(--edge-type);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--on-accent);
+    background: var(--border-strong);
+    text-align: left;
+    padding: 3px 8px;
+}
+.entityView tbody td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Trait descriptions read like typed notes on the dossier. */
+.entityView .table-traits tbody td {
+    font-family: var(--edge-type);
+}
+.entityView .table-trouble thead th {
+    background: var(--accent);
+}
+.entityView .table-basics tbody td:first-child {
+    font-family: var(--edge-type);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}

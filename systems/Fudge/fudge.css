@@ -1,0 +1,112 @@
+/* Fudge: plain typeset rulebook look. Cream paper, black ink, serif small caps
+   headings, ruled rows, and the trait ladder drawn as a rail of rungs. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ece6d6;
+    --surface: #fbf8ef;
+    --surface-alt: #f3eedf;
+    --surface-sunken: #e7e0cc;
+    --surface-muted: #d9d1bb;
+    --text: #1d1a14;
+    --text-muted: #4a4436;
+    --text-faint: #7d7563;
+    --on-accent: #fbf8ef;
+    --border: #b9ae92;
+    --border-strong: #1d1a14;
+    --accent: #6b2d1f;
+    --accent-hover: #8a3a28;
+    --accent-soft: #e6d6c4;
+    --link: #6b2d1f;
+    --danger: #a3261b;
+    --danger-hover: #7f1d14;
+    --danger-soft: #f2d4cf;
+    --success: #3d6b32;
+    --success-hover: #4f8741;
+    --current: #dfe7cf;
+    --highlight: #f1e3a8;
+    --card-bg: #f6f1e3;
+    --gm-bg: #e9efdf;
+    --dice-bg: #1d1a14;
+    --dice-text: #fbf8ef;
+    --paper: #fbf8ef;
+    --shadow: rgba(60, 45, 20, 0.25);
+    --backdrop: rgba(30, 25, 15, 0.5);
+    --focus-ring: #6b2d1f;
+    --toast-success: #3d6b32;
+    --toast-error: #a3261b;
+    --toast-info: #4a4436;
+    --skeleton: #e7e0cc;
+    --skeleton-shine: #f3eedf;
+    --fudge-serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, serif;
+}
+
+.entityView {
+    font-family: var(--fudge-serif);
+}
+.entityView .entityTable {
+    border-radius: 0;
+    background-color: var(--surface);
+    border: 1px solid var(--border-strong);
+    filter: none;
+    box-shadow: 2px 2px 0 var(--shadow);
+}
+.entityView .entityTable:hover {
+    filter: none;
+    box-shadow: 2px 2px 0 var(--accent-soft);
+}
+.entityView .entityTable > table {
+    border-collapse: collapse;
+}
+.entityView thead th {
+    font-family: var(--fudge-serif);
+    font-variant: small-caps;
+    font-size: 1.15em;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    text-align: left;
+    padding: 4px 8px 2px;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView tbody td {
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+}
+.entityView tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Trait ladder: a vertical rail with a rung per trait, the level in a
+   small boxed label on the right. */
+.entityView :is(.table-attributes, .table-skills, .table-injury-levels) tbody {
+    background:
+        linear-gradient(var(--border-strong), var(--border-strong)) 10px 0 / 2px 100% no-repeat;
+}
+.entityView :is(.table-attributes, .table-skills, .table-injury-levels) tbody tr > :first-child {
+    padding-left: 24px;
+    position: relative;
+}
+.entityView :is(.table-attributes, .table-skills, .table-injury-levels) tbody tr > :first-child::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    width: 10px;
+    height: 2px;
+    background: var(--border-strong);
+}
+.entityView :is(.table-attributes, .table-skills) .valueselect,
+.entityView :is(.table-attributes, .table-skills) select {
+    font-family: var(--fudge-serif);
+    font-variant: small-caps;
+    border: 1px solid var(--border-strong);
+    border-radius: 0;
+    background: var(--surface-alt);
+    color: var(--text);
+    padding: 1px 6px;
+}
+.entityView .table-injury-levels tbody td:last-child {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--text-muted);
+}
