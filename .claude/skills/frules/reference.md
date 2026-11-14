@@ -149,10 +149,26 @@ Fudge = system
 | `initiativeRolls` | Optional. Makes initiative rolls a per-campaign setting with these names as the default, e.g. `["Dex", "Alertness"]`. Leave it out to use the `Initiative` field only. |
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
 | `quickdice` | Dice buttons shown in sessions |
-| `cssFiles` | Extra stylesheets |
+| `cssFiles` | Extra stylesheets, loaded for every campaign of the system. See [Styling a sheet](#styling-a-sheet). |
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
 | `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
+
+### Styling a sheet
+
+A stylesheet in `cssFiles` can restyle the whole app by overriding the colour tokens on `:root` (see `starwars/starwars.css`), and the sheet through these classes:
+
+| Class | On |
+|---|---|
+| `entityView` | The whole sheet |
+| `entityTable` | Each block's wrapper `div`, holding `table > thead th` (the title) and `tbody` |
+| `table-<name>` | The same `div`, named after the table: lowercased, spaces to `-`, other characters dropped. `'Ability scores'` is `table-ability-scores`, `'1st Level Spells'` is `table-1st-level-spells`. Nested tables get one too. |
+| `wide`, `split2` to `split5` | Blocks with `size = wide` or `columns = N` |
+| `namedescription` | Name cells that open a description |
+| `slots`, `used`, `unused` | Slot trackers |
+| `dicethrow` | Dice roll buttons |
+
+Ship fonts and images next to the stylesheet and refer to them by their `/systems/...` path.
 
 ### PDFs
 
