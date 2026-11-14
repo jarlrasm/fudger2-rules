@@ -1,7 +1,8 @@
 /* Over the Edge: photocopied dossier look. Off-white paper, black ink,
    typewriter headings on solid black bars, heavy ruled rows. */
 
-:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+/* Tokens are scoped to the sheet, so the rest of the app keeps its own theme. */
+.entityView {
     color-scheme: light;
     --bg: #d9d5c9;
     --surface: #f2efe6;
@@ -39,6 +40,8 @@
     --skeleton: #dcd7c9;
     --skeleton-shine: #e8e4d8;
     --edge-type: "Courier New", Courier, "Nimbus Mono PS", monospace;
+    color: var(--text);
+    background-color: var(--bg);
 }
 
 .entityView .entityTable {

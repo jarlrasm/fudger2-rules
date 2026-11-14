@@ -1,7 +1,8 @@
 /* Fudge: plain typeset rulebook look. Cream paper, black ink, serif small caps
    headings, ruled rows, and the trait ladder drawn as a rail of rungs. */
 
-:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+/* Tokens are scoped to the sheet, so the rest of the app keeps its own theme. */
+.entityView {
     color-scheme: light;
     --bg: #ece6d6;
     --surface: #fbf8ef;
@@ -39,9 +40,8 @@
     --skeleton: #e7e0cc;
     --skeleton-shine: #f3eedf;
     --fudge-serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, serif;
-}
-
-.entityView {
+    color: var(--text);
+    background-color: var(--bg);
     font-family: var(--fudge-serif);
 }
 .entityView .entityTable {

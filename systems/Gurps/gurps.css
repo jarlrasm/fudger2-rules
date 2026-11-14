@@ -1,7 +1,8 @@
 /* GURPS: dense boxed record-sheet form. White paper, black hairline boxes,
    condensed sans headings on black bars, attributes as a strip of boxes on top. */
 
-:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+/* Tokens are scoped to the sheet, so the rest of the app keeps its own theme. */
+.entityView {
     color-scheme: light;
     --bg: #e4e4e0;
     --surface: #ffffff;
@@ -39,9 +40,8 @@
     --skeleton: #e8e8e3;
     --skeleton-shine: #f2f2ee;
     --gurps-head: "Arial Narrow", "Liberation Sans Narrow", "Nimbus Sans Narrow", "Roboto Condensed", Arial, sans-serif;
-}
-
-.entityView {
+    color: var(--text);
+    background-color: var(--bg);
     font-size: 0.92em;
 }
 .entityView .entityTable {
