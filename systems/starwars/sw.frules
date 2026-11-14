@@ -15,6 +15,9 @@ pointsToDice(points)=
     bonus=points-points/3*3
   }
 
+withActions(points, actions)=
+  max(min(points, 3), points - 3 * max(0, toInt(actions) - 1))
+
 rethrow (extra) = ([1d6],((baseline,throws)->
   if first(
             first (throws)
@@ -74,8 +77,8 @@ characterTable = ruleset
                 default=9
                 minvalue=1
                 maxvalue=25
-                valuedice=starDice(pointsToDice(Points), 0)
-                render=pointsToSkill(Points)
+                valuedice=starDice(pointsToDice(withActions(Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points, General.Actions))
               }
 
           }
@@ -89,8 +92,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Dexterity'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Dexterity'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Dexterity'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
                 default=0
                 minvalue=0
                 maxvalue=25
@@ -107,8 +110,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Knowledge'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Knowledge'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Knowledge'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
                 
                 default=0
                 minvalue=0
@@ -126,8 +129,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Mechanical'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Mechanical'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Mechanical'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
                 
                 default=0
                 minvalue=0
@@ -145,8 +148,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Perception'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Perception'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Perception'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Perception'.Points, General.Actions))
                 
                 default=0
                 minvalue=0
@@ -163,8 +166,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Strength'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Strength'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Strength'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Strength'.Points, General.Actions))
                 
                 default=0
                 minvalue=0
@@ -182,8 +185,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points + Attributes.'Technical'.Points), 0)
-                render=pointsToSkill(Points + Attributes.'Technical'.Points)
+                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Technical'.Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points + Attributes.'Technical'.Points, General.Actions))
                 
                 default=0
                 minvalue=0
@@ -212,6 +215,14 @@ characterTable = ruleset
               'Force sensitive' = bool
               {
 
+              }
+              Actions = selector
+              {
+                options = ["1", "2", "3", "4", "5"]
+                colors = ["white", "red", "red", "red", "red"]
+                default = "1"
+                editable=live
+                save = nosave
               }
      }
     Injuries= table{
@@ -272,8 +283,8 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(Points), 0)
-                render=pointsToSkill(Points)
+                valuedice=starDice(pointsToDice(withActions(Points, General.Actions)), 0)
+                render=pointsToSkill(withActions(Points, General.Actions))
                 default=0
                 minvalue=0
                 maxvalue=25
