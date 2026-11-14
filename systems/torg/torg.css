@@ -1,0 +1,277 @@
+/* TORG Eternity: dark navy panels, gold/orange condensed headings,
+   angular clipped frames, attributes as big number boxes. No webfont is
+   shipped yet, so headings use whatever condensed sans the system has. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --torg-heading-font: "Oswald", "Bebas Neue", "Roboto Condensed", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+    --torg-orange: #f28c1e;
+    --torg-gold: #f5c542;
+    --torg-cut: 12px;
+    --bg: #070c1a;
+    --surface: #0f1830;
+    --surface-alt: #16223f;
+    --surface-sunken: #0a1124;
+    --surface-muted: #24314f;
+    --text: #e8ecf5;
+    --text-muted: #a9b4cc;
+    --text-faint: #6c7896;
+    --on-accent: #070c1a;
+    --border: #2a3a60;
+    --border-strong: #f28c1e;
+    --accent: #f5c542;
+    --accent-hover: #ffd96e;
+    --accent-soft: #4a3a12;
+    --link: #ffb54a;
+    --danger: #e0452b;
+    --danger-hover: #b5321c;
+    --danger-soft: #5a1d16;
+    --success: #3fa66a;
+    --success-hover: #56c283;
+    --current: #1d3a5a;
+    --highlight: #6a4a10;
+    --card-bg: #121c36;
+    --gm-bg: #13243a;
+    --dice-bg: #070c1a;
+    --dice-text: #f5c542;
+    --paper: #f4f4f4;
+    --shadow: rgba(0, 0, 0, 0.8);
+    --backdrop: rgba(0, 0, 0, 0.7);
+    --focus-ring: #f5c542;
+    --toast-success: #2d7a50;
+    --toast-error: #b5321c;
+    --toast-info: #1a2440;
+    --skeleton: #16223f;
+    --skeleton-shine: #22305a;
+}
+
+.tab-button {
+    font-family: var(--torg-heading-font);
+    font-stretch: condensed;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    background-color: transparent;
+}
+.tab-button:hover {
+    background-color: var(--accent-soft);
+}
+.tab-button.active,
+.tab-button.active:hover {
+    color: var(--on-accent);
+    background-color: var(--accent);
+}
+
+.entityView {
+    max-width: 95%;
+    flex-wrap: wrap;
+    display: flex;
+}
+.entityView pre {
+    white-space: pre-wrap;
+}
+.entityView a {
+    color: var(--link);
+    text-decoration: none;
+}
+.entityView button.dicethrow {
+    padding: 0 4px;
+    margin: 0;
+    background-color: var(--dice-bg);
+    color: var(--dice-text);
+    border-radius: 0;
+}
+.entityView button:hover {
+    background-color: var(--accent-soft);
+}
+
+/* Angular framed panel: an orange frame with clipped top-left and
+   bottom-right corners, drawn as a gradient border behind the navy body. */
+.entityView .entityTable {
+    position: relative;
+    margin: 6px;
+    padding: 2px;
+    display: inline-table;
+    background: linear-gradient(135deg, var(--torg-orange), var(--torg-gold) 40%, var(--border) 70%, var(--torg-orange));
+    clip-path: polygon(var(--torg-cut) 0, 100% 0, 100% calc(100% - var(--torg-cut)), calc(100% - var(--torg-cut)) 100%, 0 100%, 0 var(--torg-cut));
+    border: none;
+    border-radius: 0;
+}
+.entityView .entityTable > table {
+    background: linear-gradient(180deg, var(--surface-alt), var(--surface) 60%);
+    clip-path: polygon(calc(var(--torg-cut) - 1px) 0, 100% 0, 100% calc(100% - var(--torg-cut) + 1px), calc(100% - var(--torg-cut) + 1px) 100%, 0 100%, 0 calc(var(--torg-cut) - 1px));
+    border-collapse: collapse;
+    width: 100%;
+}
+.entityView .entityTable:hover {
+    background: linear-gradient(135deg, var(--torg-gold), var(--torg-orange));
+}
+.entityView .wide {
+    width: calc(100% - 12px);
+}
+.entityView .wide > table {
+    table-layout: fixed;
+}
+
+.entityView .entityTable thead th {
+    padding: 6px 10px 5px calc(var(--torg-cut) + 6px);
+    font-family: var(--torg-heading-font);
+    font-stretch: condensed;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: left;
+    color: var(--torg-gold);
+    background: linear-gradient(90deg, rgba(242, 140, 30, 0.25), transparent 80%);
+    border-bottom: 2px solid var(--torg-orange);
+}
+.entityView .entityTable tbody td,
+.entityView .entityTable tbody th {
+    padding: 2px 8px;
+    border-bottom: 1px solid var(--border);
+}
+.entityView .entityTable tbody tr:last-child > * {
+    border-bottom: none;
+}
+.entityView .entityTable tbody th {
+    font-family: var(--torg-heading-font);
+    font-stretch: condensed;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: left;
+}
+
+.entityView .split2,
+.entityView .split3,
+.entityView .split4,
+.entityView .split5 {
+    display: inline-block;
+    column-rule: 1px solid var(--border);
+}
+.entityView .split2 { column-count: 2; }
+.entityView .split3 { column-count: 3; }
+.entityView .split4 { column-count: 4; }
+.entityView .split5 { column-count: 5; }
+
+/* Attributes: a row of big number boxes, label underneath. */
+.entityView .table-attributes tbody {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+}
+.entityView .table-attributes tbody tr {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    min-width: 5.5em;
+    flex: 1 1 0;
+    padding: 6px 4px;
+    background: var(--surface-sunken);
+    border: 2px solid var(--torg-orange);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.entityView .table-attributes tbody tr > * {
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-attributes tbody th,
+.entityView .table-attributes tbody tr > :first-child {
+    font-family: var(--torg-heading-font);
+    font-stretch: condensed;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8em;
+    color: var(--torg-gold);
+}
+.entityView .table-attributes tbody tr > :last-child {
+    font-family: var(--torg-heading-font);
+    font-size: 2em;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text);
+}
+.entityView .table-attributes button.dicethrow {
+    font-size: 1em;
+    background: transparent;
+}
+
+/* Axioms and possibilities read as a strip of small stat boxes too. */
+.entityView .table-axioms tbody td:last-child,
+.entityView .table-possibilities tbody td:last-child {
+    font-family: var(--torg-heading-font);
+    font-weight: 700;
+    font-size: 1.2em;
+    color: var(--torg-gold);
+    text-align: center;
+}
+
+/* Skills: a compact two-column grid. */
+.entityView .table-skills,
+.entityView .table-combat-skills,
+.entityView .table-interaction-skills {
+    font-size: 0.92em;
+}
+.entityView .table-skills.split4 {
+    column-count: 2;
+}
+@media (min-width: 1400px) {
+    .entityView .table-skills.split4 {
+        column-count: 4;
+    }
+}
+.entityView .table-skills tbody td,
+.entityView .table-skills tbody th,
+.entityView .table-combat-skills tbody td,
+.entityView .table-combat-skills tbody th,
+.entityView .table-interaction-skills tbody td,
+.entityView .table-interaction-skills tbody th {
+    padding: 1px 6px;
+}
+.entityView .table-skills tbody tr:nth-child(even),
+.entityView .table-combat-skills tbody tr:nth-child(even),
+.entityView .table-interaction-skills tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Damage track: wound and condition slots as orange boxes. */
+.entityView .table-damage .slots .used {
+    color: var(--torg-orange);
+}
+
+.entityView .slots {
+    display: inline;
+}
+.entityView .slots .used,
+.entityView .slots .unused,
+.entityView .slot-buttons,
+.entityView .slot-button {
+    display: inline;
+}
+.entityView .slot-button {
+    padding: 0;
+}
+.entityView .slots.clickable:hover {
+    position: relative;
+    background-color: var(--danger);
+    z-index: 1;
+}
+.entityView .namedescription {
+    background: var(--surface-sunken);
+    display: flex;
+    flex-flow: column;
+    border-left: 3px solid var(--torg-orange);
+    padding: 8px 10px;
+}
+.entityView .namedescription autocompleting-input {
+    width: 100%;
+}
+.entityView .editbutton {
+    flex-basis: 100%;
+}
+.entityView .customtype div {
+    margin-right: 5px;
+    display: inline;
+}
