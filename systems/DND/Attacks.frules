@@ -83,8 +83,24 @@ attack (name, tohit, damage, damagebonus, kind, distance) = custom
     }
 }
 
+isThrown (weapon) =
+    contains (toLower (weapon.data.weaponStats.Stats.Properties), "thrown")
+
+thrownWeapons (char) =
+    filter ((x)->isThrown (x), equipped (char.'Equipment'.'Melee weapons', "weaponStats"))
+
+thrownAttacksFor (char) =
+    map (
+     (weapon)->
+      attack(weapon.Name + " (thrown)",
+        toHitBonus(weapon.Description) +
+           abiltyBonusForMeleeWeapon (weapon, char)
+         + characterTable.Basics.'Proficiency bonus',
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description), "ranged", weaponRange (weapon)), thrownWeapons (char))
+
 attacksFor (char) =
   concat (
+   concat (
     map
      ((weapon)->
       attack(weapon.Name,
@@ -93,6 +109,7 @@ attacksFor (char) =
            abiltyBonusForMeleeWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus',
         weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description), "melee", meleeReach (weapon)), equipped (char.'Equipment'.'Melee weapons', "weaponStats")),
+    thrownAttacksFor (char)),
     map
      ((weapon)->
       attack(weapon.Name,

@@ -133,7 +133,7 @@ Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action =
 
 Weapon lists that come from `secondary` have no rolled fields, so each system builds a computed `Attacks` list from them, one row per weapon, with a rolled field that carries `action`:
 
-- `DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties.
+- `DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties. A melee weapon with Thrown also gets a ranged "Name (thrown)" row with that range.
 - Fudge rolls the skill named in the weapon's `Skill`, or Dex, as a modifier relative to Fair. Fudge has no distances, so there is no reach or range.
 - GURPS uses the largest number in Reach, and the max range from Range (`ST x20` is worked out from ST), in yards.
 - Mothership rolls Combat plus Hand to hand Combat or Firearms (15) or Military Training (10). Adjacent weapons are melee, and Close, Long and Extreme are 20 m, 100 m and no limit.
