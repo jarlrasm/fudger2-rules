@@ -18,6 +18,8 @@ weaponStats =ruleset
                 {}
                 Properties=string
                 {}
+                Equipped=bool
+                {default=true}
             }
         }
 armourStats= ruleset
@@ -38,6 +40,16 @@ armourStats= ruleset
                 {}
                 Weight=string
                 {}
+                Equipped=bool
+                {default=true}
+            }
+        }
+itemStats= ruleset
+        {
+            Stats= table
+            {
+                Equipped=bool
+                {default=true}
             }
         }
 spellStats =ruleset
@@ -187,6 +199,7 @@ DND5e = system
     Races = raceStats
     Backgrounds = backgroundStats
     Armour= armourStats
+    'Other items' = itemStats
     Spells = spellStats
     Feats = featStats
 

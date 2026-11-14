@@ -92,7 +92,7 @@ attacksFor (char) =
         toHitBonus(weapon.Description) +
            abiltyBonusForMeleeWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus',
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description), "melee", meleeReach (weapon)), char.'Equipment'.'Melee weapons'),
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForMeleeWeapon (weapon, char) + damageBonus (weapon.Description), "melee", meleeReach (weapon)), equipped (char.'Equipment'.'Melee weapons', "weaponStats")),
     map
      ((weapon)->
       attack(weapon.Name,
@@ -101,7 +101,7 @@ attacksFor (char) =
            abiltyBonusForRangedWeapon (weapon, char)
          + characterTable.Basics.'Proficiency bonus'
          + rangedAttackBonus (char),
-        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char) + damageBonus (weapon.Description), "ranged", weaponRange (weapon)), char.'Equipment'.'Ranged weapons')
+        weapon.data.weaponStats.Stats.Damage,abiltyBonusForRangedWeapon (weapon, char) + damageBonus (weapon.Description), "ranged", weaponRange (weapon)), equipped (char.'Equipment'.'Ranged weapons', "weaponStats"))
     )
 
 attackTable = list

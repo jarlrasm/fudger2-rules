@@ -26,6 +26,9 @@ Speed on the sheet is in feet per turn, usually 30 ft for characters. With 5 ft 
 - Leaving a square next to an enemy lets it make an opportunity attack, unless the mover takes Disengage.
 - Diagonals count as one square (5 ft).
 
+## Equipment
+Weapons, armour and other items have an Equipped box, ticked when they are added. Only equipped items count: Armour Class uses the best equipped armour, Attacks lists equipped weapons, and bonuses written in a description (such as a Shield's +2 AC or a +1 weapon) apply only while the item is equipped. Untick armour the character takes off to sleep, or a weapon left behind, instead of removing it.
+
 ## Rests
 A short rest lets a character spend hit dice to heal. A long rest restores all hit points and most resources.
 

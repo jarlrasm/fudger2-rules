@@ -49,6 +49,13 @@ equipmentTable= table
         autocomplete = autoCompletes
     }
 }
+equippedFallback = { Stats = { Equipped = true } }
+
+isEquipped(item, statsName) =
+    valueOr (valueOr (valueOr (item.data, statsName, equippedFallback), "Stats", equippedFallback.Stats), "Equipped", true)
+
+equipped(items, statsName) = filter ((x)->isEquipped (x, statsName), items)
+
 weaponAutoCompletes=[
    "+1 to hit"
     , "+2 to hit"
