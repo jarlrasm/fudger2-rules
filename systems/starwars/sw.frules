@@ -90,6 +90,35 @@ weaponAttack (name, points, damage, kind, distance) = custom
 attackPoints (char, skill) =
     withActions (dexterityPoints (char, skill), valueOr (char.General, "Actions", "1"))
 
+notUsed = { Used = false  Difficulty = "" }
+
+noPoints = { Points = 0 }
+
+forcePowerSkill (power, skill) = valueOr (power.data.forcePowerStats.Power, skill, notUsed)
+
+jediPoints (char, skill) =
+    withActions (valueOr (valueOr (char.'Jedi skills', skill, noPoints), "Points", 0), valueOr (char.General, "Actions", "1"))
+
+forcePowerUse (name, points, difficulty) = custom
+{
+    Name = name
+    Roll = integer
+    {
+        value = points
+        valuedice = starDice (pointsToDice (points), 0)
+        render = pointsToSkill (points)
+        action = "ranged"
+    }
+    Difficulty = difficulty
+}
+
+forceUsesWith (char, skill) =
+    map ((power)->forcePowerUse (power.Name + " (" + skill + ")", jediPoints (char, skill), valueOr (forcePowerSkill (power, skill), "Difficulty", "")),
+        filter ((power)->valueOr (forcePowerSkill (power, skill), "Used", false), char.'Force powers'))
+
+forceUsesFor (char) =
+    concat (forceUsesWith (char, "Control"), concat (forceUsesWith (char, "Sense"), forceUsesWith (char, "Alter")))
+
 attacksFor (char) =
     concat (
         map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0), char.'Melee weapons'),
@@ -352,6 +381,14 @@ characterTable = ruleset
           singular = "Force Power"
           source=secondary.'Force powers'
           editable = character
+        }
+    'Force power uses' = list
+        {
+          visible=boolToVisible (General.'Force sensitive')
+          singular = "Force power use"
+          source=forceUsesFor (characterTable)
+          editable = none
+          valueType = forcePowerUse
         }
 
     'Melee weapons' = list

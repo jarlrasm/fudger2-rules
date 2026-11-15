@@ -19,5 +19,8 @@ There is no initiative roll. Each round, flip a Drama card: it says which side a
 ## Movement
 `Move` on the sheet is how many metres a character moves in a round and can still act. Running covers about three times that but gives a penalty to other actions that round. Difficult ground halves movement. Divide by the map's square size, usually 1 or 2 metres, to get squares.
 
+## Spells, miracles and psionics
+Spell uses lists each one under Magic Miracles Psionics, rolling the skill in its Skill field against its DN, and can be used on a token within its Range.
+
 ## Possibilities
 Possibilities let a hero reroll and add, or soak damage. Heroes are meant to be bold, so give them chances to spend them.

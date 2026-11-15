@@ -40,6 +40,85 @@ spellAttackModifier (class, char) =
   +bonusWithValue (allSources(char),"[Ss]pell attacks?(?: rolls?| bonus)? (?:increases? by \+?|\+)([0-9]+)")
   +bonusWithValue (allSources(char),"\+([0-9]+) bonus to (?:your )?spell attack rolls")
 
+flatten (lists) = fold ([], (acc, x)->concat (acc, x), lists)
+
+spellRangeText (spell) = valueOr (spell.data.spellStats.Stats, "Range", "")
+
+isTouchSpell (spell) = toLower (spellRangeText (spell)) == "touch"
+
+spellFeet (spell) =
+  if contains (toLower (spellRangeText (spell)), "mile") then
+    toInt (first (split (" ", spellRangeText (spell)))) * 5280
+  else
+    toInt (first (split (" ", spellRangeText (spell))))
+
+spellKind (spell) = if isTouchSpell (spell) then "melee" else "ranged"
+
+spellDistance (spell) = if isTouchSpell (spell) then 5 else spellFeet (spell)
+
+characterSpells (char) =
+  flatten ([
+    char.Spells.Cantrips.Spells,
+    char.Spells.'1st Level Spells'.Spells,
+    char.Spells.'2nd Level Spells'.Spells,
+    char.Spells.'3rd Level Spells'.Spells,
+    char.Spells.'4th Level Spells'.Spells,
+    char.Spells.'5th Level Spells'.Spells,
+    char.Spells.'6th Level Spells'.Spells,
+    char.Spells.'7th Level Spells'.Spells,
+    char.Spells.'8th Level Spells'.Spells,
+    char.Spells.'9th Level Spells'.Spells])
+
+isAttackSpell (spell) = contains (toLower (spell.Description), "spell attack")
+
+saveAbilities (spell) =
+  filter ((a)->contains (spell.Description, a + " saving throw"),
+    ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"])
+
+saveAbility (spell) =
+  if count (saveAbilities (spell)) > 1 then
+    "Several"
+  else
+    first (saveAbilities (spell))
+
+spellAttack (name, tohit, kind, distance, rangeText) = custom
+{
+    Name = name
+    'To hit' = modifier
+    {
+        value = tohit
+        valuedice = D20Roll (characterTable)
+        action = kind
+        reach = distance
+        range = distance
+    }
+    Range = rangeText
+}
+
+spellSave (name, dc, ability, kind, distance, rangeText) = custom
+{
+    Name = name
+    Save = ability
+    DC = integer
+    {
+        value = dc
+        action = kind
+        reach = distance
+        range = distance
+    }
+    Range = rangeText
+}
+
+spellAttacksFor (char) =
+  map ((spell)->spellAttack (spell.Name, spellAttackModifier (currentClass (char), char), spellKind (spell), spellDistance (spell), spellRangeText (spell)),
+    filter ((spell)->isAttackSpell (spell), characterSpells (char)))
+
+spellSavesFor (char) =
+  map ((spell)->spellSave (spell.Name, spellCastingDC (currentClass (char), char), saveAbility (spell), spellKind (spell), spellDistance (spell), spellRangeText (spell)),
+    filter ((spell)->count (saveAbilities (spell)) > 0, characterSpells (char)))
+
+listVisible (items) = if count (items) > 0 then visible else none
+
 spellTable= table
 {
       visible=getSpellVisibility(Class.Main.Name, Class.Main.Levels, 1)
@@ -70,6 +149,30 @@ spellTable= table
                   valuedice= D20Roll (characterTable)
                   editable=none
                 }
+        }
+        'Spell attacks' = list
+        {
+          visible = listVisible (spellAttacksFor (characterTable))
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source = spellAttacksFor (characterTable)
+          singular = "Spell attack"
+          editable = none
+          valueType = spellAttack
+        }
+        'Spell saves' = list
+        {
+          visible = listVisible (spellSavesFor (characterTable))
+          tableLayout = layout
+          {
+            size = wide
+          }
+          source = spellSavesFor (characterTable)
+          singular = "Spell save"
+          editable = none
+          valueType = spellSave
         }
         'Cantrips' = table
       {

@@ -116,6 +116,45 @@ rangedSkillValue (char, skill) =
 
 longRange (text) = toInt (first (reverse (split ("/", text))))
 
+spellSkillName (spell) = valueOr (spell.data.spellStats.Stats, "Skill", "")
+
+spellSkillValue (char, spell) =
+    if contains (toLower (spellSkillName (spell)), "alteration") then char.Skills.'Alteration'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "apportation") then char.Skills.'Apportation'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "conjuration") then char.Skills.'Conjuration'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "divination") then char.Skills.'Divination'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "faith") then char.Skills.'Faith'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "kinesis") then char.Skills.'Kinesis'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "precognition") then char.Skills.'Precognition'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "telepathy") then char.Skills.'Telepathy'.'Skill value' else
+    if contains (toLower (spellSkillName (spell)), "willpower") then char.Skills.'Willpower'.'Skill value' else
+    char.Attributes.'Spirit'.'Score'
+
+spellRangeText (spell) = valueOr (spell.data.spellStats.Stats, "Range", "")
+
+spellKind (spell) = if toLower (spellRangeText (spell)) == "touch" then "melee" else "ranged"
+
+spellMetres (spell) = toInt (first (split (" ", replace ("m", " ", spellRangeText (spell)))))
+
+spellUse (name, skill, dn, kind, distance, rangeText) = custom
+{
+    Name = name
+    Roll = integer
+    {
+        value = skill
+        valuedice = D20Roll
+        action = kind
+        range = distance
+    }
+    DN = dn
+    Range = rangeText
+}
+
+listVisible (items) = if count (items) > 0 then visible else none
+
+spellUsesFor (char) =
+    map ((spell)->spellUse (spell.Name, spellSkillValue (char, spell), valueOr (spell.data.spellStats.Stats, "DN", ""), spellKind (spell), spellMetres (spell), spellRangeText (spell)), char.'Magic Miracles Psionics')
+
 attacksFor (char) =
     flatten ([
         [weaponAttack ("Unarmed", char.'Combat Skills'.'Unarmed Combat'.'Skill value', "STR", "melee", 0)],
@@ -975,6 +1014,18 @@ characterTable = ruleset
         source=secondary.Spells
         singular = "Spell"
         editable = character
+    }
+    'Spell uses' = list
+    {
+        visible = listVisible (spellUsesFor (characterTable))
+        tableLayout = layout
+        {
+          size = wide
+        }
+        source = spellUsesFor (characterTable)
+        singular = "Spell use"
+        editable = none
+        valueType = spellUse
     }
     'Features and Traits' = list
     {

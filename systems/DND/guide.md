@@ -34,6 +34,9 @@ Most classes pick a subclass at level 3, under Subclass in the Class block. The 
 
 The Leveling block appears when the character is owed something: XP enough for a new level, a subclass to choose, or feats to pick. Feats come from the origin feat of the background, Human's Versatile trait, and class and subclass levels (Ability Score Improvement, Fighting Style and Epic Boon count as feats). In the editor it also reminds the player which ability score increases they have, and which features the current level gave.
 
+## Spells
+Spell attacks under Spells lists every spell the character knows that makes a spell attack, rolling the spell attack bonus. Spell saves lists the spells that call for a saving throw, with the ability and the save DC: the target rolls that save. Both can be used on a token within the spell's range (Touch is 5 ft, Self has no limit). Damage and effects are in the spell's description.
+
 ## Rests
 A short rest lets a character spend hit dice to heal. A long rest restores all hit points and most resources.
 
