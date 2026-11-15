@@ -1,0 +1,124 @@
+featLevelCount (levels, level) =
+  count (filter ((l)->if toInt (l) > 0 then toInt (l) < level + 1 else false, split (",", replace (" ", "", levels))))
+
+characterSubclasses (char) = subclassesNamed (char.Class.Main.Name, subclassName (char))
+
+subclassFeatLevels (char) =
+  if count (characterSubclasses (char)) > 0 then first (characterSubclasses (char)).FeatLevels else ""
+
+backgroundFeat (name) =
+  if count (backgroundsNamed (name)) > 0 then
+    if first (backgroundsNamed (name)).Feat == "" then 0 else 1
+  else
+    0
+
+expectedFeats (char) =
+  backgroundFeat (char.Class.Background) +
+  raceFeats (char.Class.Race) +
+  featLevelCount (classNamed (char.Class.Main.Name).FeatLevels, char.Class.Main.Levels) +
+  featLevelCount (subclassFeatLevels (char), char.Class.Main.Levels)
+
+takenFeats (char) = count (char.'Features and Traits'.'Feats')
+
+missingFeats (char) = expectedFeats (char) - takenFeats (char)
+
+xpLevel (xp) = (first (filter ((x)->x.XP < xp + 1, levelTable))).Level
+
+levelsBehind (char) = xpLevel (char.Basics.XP) - char.Class.Main.Levels
+
+needsSubclass (char) =
+  if subclassName (char) == "None" then
+    count (filter ((f)->contains (f.Name, "Subclass"), classFeatures (char.Class.Main.Name, char.Class.Main.Levels))) > 0
+  else
+    false
+
+asiCount (char) =
+  count (filter ((x)->contains (x.Name, "Ability Score Improvement"),
+    concat (char.'Features and Traits'.'Feats', char.'Features and Traits'.'Other features')))
+
+pendingCount (char) =
+  (if levelsBehind (char) > 0 then 1 else 0) +
+  (if needsSubclass (char) then 1 else 0) +
+  (if missingFeats (char) > 0 then 1 else 0)
+
+levelingVisible (char) = if pendingCount (char) > 0 then visible else editor
+
+pendingVisible (flag) = if flag then visible else none
+
+editorVisible (text) = if text == "" then none else editor
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "s")
+
+levelMessage (char) =
+  "Your XP is enough for level " + toString (xpLevel (char.Basics.XP)) + ". Raise Levels under Class."
+
+subclassMessage (char) =
+  "Choose a " + baseClassName (char.Class.Main.Name) + " subclass under Class, or Custom to make your own."
+
+featMessage (char) =
+  "Choose " + plural (missingFeats (char), "more feat") + " under Feats (" +
+  toString (takenFeats (char)) + " of " + toString (expectedFeats (char)) + " taken). Ability Score Improvement counts as a feat."
+
+backgroundAbilityText (name) =
+  if count (backgroundsNamed (name)) > 0 then
+    "Background: +2 to one and +1 to another, or +1 to all three of " + first (backgroundsNamed (name)).Abilities + ". "
+  else
+    ""
+
+asiText (n) =
+  if n > 0 then
+    "Ability Score Improvement taken " + plural (n, "time") + ": +2 to one score or +1 to two, each time. "
+  else
+    ""
+
+abilityMessage (char) =
+  if backgroundAbilityText (char.Class.Background) + asiText (asiCount (char)) == "" then
+    ""
+  else
+    backgroundAbilityText (char.Class.Background) + asiText (asiCount (char)) + "Scores can't go above 20."
+
+rawFeaturesAt (char, level) =
+  concat (
+    filter ((f)->f.Level == level, classNamed (char.Class.Main.Name).Features),
+    if count (characterSubclasses (char)) > 0 then
+      filter ((f)->f.Level == level, first (characterSubclasses (char)).Features)
+    else
+      [])
+
+newFeaturesMessage (char) =
+  fold ("", (text, f)->if text == "" then f.Name else text + ", " + f.Name, rawFeaturesAt (char, char.Class.Main.Levels))
+
+levelingTable = table
+{
+    visible = levelingVisible (characterTable)
+    'Next level' = string
+    {
+        value = levelMessage (characterTable)
+        editable = none
+        visible = pendingVisible (levelsBehind (characterTable) > 0)
+    }
+    Subclass = string
+    {
+        value = subclassMessage (characterTable)
+        editable = none
+        visible = pendingVisible (needsSubclass (characterTable))
+    }
+    Feats = string
+    {
+        value = featMessage (characterTable)
+        editable = none
+        visible = pendingVisible (missingFeats (characterTable) > 0)
+    }
+    'Ability scores' = string
+    {
+        value = abilityMessage (characterTable)
+        editable = none
+        visible = editorVisible (abilityMessage (characterTable))
+    }
+    'New features' = string
+    {
+        value = newFeaturesMessage (characterTable)
+        editable = none
+        visible = editorVisible (newFeaturesMessage (characterTable))
+    }
+}

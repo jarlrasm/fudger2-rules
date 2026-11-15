@@ -28,7 +28,7 @@ levelTable =
         , experienceLevelAndProficiencyBonus(0, 1, 2)
     ]
 allSources(char) = [
-                      map ((x)->x.Description ,classFeatures (char.Class.Main.Name, char.Class.Main.Levels)),
+                      map ((x)->x.Description ,allClassFeatures (char)),
                       map ((x)->x.Description ,char.'Features and Traits'.'Feats'),
                       map ((x)->x.Description ,char.'Features and Traits'.'Other features'),
                       
@@ -40,7 +40,7 @@ allSources(char) = [
                     ]
 
 hasClassFeature(char, name) =
-  count (filter ((f)->f.Name == name, classFeatures (char.Class.Main.Name, char.Class.Main.Levels))) > 0
+  count (filter ((f)->f.Name == name, allClassFeatures (char))) > 0
 
 acBonus(char) =
   bonusWithValue (allSources(char), "\+([0-9]+)\s*(?:bonus to (?:your )?)?(?:AC|Armou?r Class)\b") +

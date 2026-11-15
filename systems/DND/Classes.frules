@@ -1,5 +1,6 @@
-class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels, resources)=ruleset
+class(name,hitdie,savingThrows,spellcastingAbilityModifier,features, spellevels, resources, featLevels)=ruleset
 {
+    FeatLevels=featLevels
     Resources=resources
     Name=name
     HitDie=hitdie
@@ -52,10 +53,53 @@ libraryClasses =
             mapSpellevels (x.data.classStats.Stats.Spellevels),
             map (
                 (res)->classResource (valueOr (res, "Name", ""), valueOr (res, "Uses", ""), valueOr (res, "Short rest", "None"), valueOr (res, "Short rest level", 1)),
-                valueOr (x.data.classStats.Stats, "Resources", []))),
+                valueOr (x.data.classStats.Stats, "Resources", [])),
+            valueOr (x.data.classStats.Stats, "Feat levels", "")),
         library.'Classes')
 
-classNamed (classname) = first (filter ((class)->class.Name == classname, libraryClasses))
+baseClassName (name) = if contains (name, " (") then first (split (" (", name)) else name
+
+legacySubclass (name) = if contains (name, " (") then replace (")", "", item (1, split (" (", name))) else "None"
+
+classesNamed (classname) = filter ((class)->class.Name == classname, libraryClasses)
+
+classNamed (classname) =
+    first (concat (
+        classesNamed (classname),
+        filter ((class)->class.Name == baseClassName (classname), libraryClasses)))
+
+subclass(name, className, features, featLevels)=
+{
+    Name=name
+    Class=className
+    Features=features
+    FeatLevels=featLevels
+}
+
+librarySubclasses =
+    map (
+        (x)->subclass (
+            x.name,
+            valueOr (x.data.subclassStats.Stats, "Class", ""),
+            map (
+                (feat)->classFeature (valueOr (feat, "Level", 1), valueOr (feat, "Name", ""), valueOr (feat, "Description", "")),
+                valueOr (x.data.subclassStats.Stats, "Features", [])),
+            valueOr (x.data.subclassStats.Stats, "Feat levels", "")),
+        library.'Subclasses')
+
+subclassesOf (classname) = filter ((s)->s.Class == baseClassName (classname), librarySubclasses)
+
+subclassNames (classname) = map ((s)->s.Name, subclassesOf (classname))
+
+subclassesNamed (classname, name) = filter ((s)->s.Name == name, subclassesOf (classname))
+
+subclassName (char) =
+    if char.Class.Subclass == "None" then
+        if count (classesNamed (char.Class.Main.Name)) > 0 then "None" else legacySubclass (char.Class.Main.Name)
+    else
+        char.Class.Subclass
+
+customVisible (subclass) = if subclass == "Custom" then visible else none
 
 currentClass (char) = classNamed (char.Class.Main.Name)
 
@@ -73,6 +117,15 @@ classTable=table
                 minvalue=1
                 default=1
           }
+      }
+      Subclass = string
+      {
+        keys = concat (["None", "Custom"], subclassNames (Main.Name))
+        default="None"
+      }
+      'Custom subclass' = string
+      {
+        visible = customVisible (Subclass)
       }
       Race = string
       {

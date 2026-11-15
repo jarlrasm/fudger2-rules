@@ -212,6 +212,7 @@ def species():
             "Size": " or ".join(sizes) or "Medium",
             "Speed": int(speed.group(1)) if speed else 30,
             "Darkvision": int(darkvision.group(1)) if darkvision else 0,
+            "Feats": 1 if "Versatile" in traits else 0,
         }
         result.append(entity("Races", s["name"], clean(s.get("desc", "")), {"raceStats": {"Stats": stats}}))
     return result
@@ -230,6 +231,12 @@ SPELLCASTING = {
 SKIP_FEATURES = {"PROFICIENCY_BONUS", "SPELL_SLOTS", "CLASS_TABLE_DATA"}
 
 
+FEATURE_FIXES = {
+    ("Bard", "Bard Subclass"): {"Level": 3},
+    ("Cleric", "Cleric Subclasses", 1): {"Name": "Core Cleric Traits"},
+}
+
+
 def class_features(c, level_offset_name=None):
     out = []
     for f in c["features"]:
@@ -237,7 +244,10 @@ def class_features(c, level_offset_name=None):
             continue
         levels = [g["level"] for g in f["gained_at"]]
         level = min(levels) if levels else 1
-        out.append({"Level": level, "Name": f["name"], "Description": clean(f["desc"])})
+        feature = {"Level": level, "Name": f["name"], "Description": clean(f["desc"])}
+        feature.update(FEATURE_FIXES.get((c["name"], f["name"]), {}))
+        feature.update(FEATURE_FIXES.get((c["name"], f["name"], level), {}))
+        out.append(feature)
     columns = []
     for f in c["features"]:
         if f["feature_type"] != "CLASS_TABLE_DATA" or not f["data_for_class_table"]:
@@ -309,6 +319,16 @@ EXTRA_RESOURCES = {
 }
 
 
+FEAT_LEVELS = {
+    "Fighter": "1,4,6,8,12,14,16,19",
+    "Rogue": "4,8,10,12,16,19",
+    "Paladin": "2,4,8,12,16,19",
+    "Ranger": "2,4,8,12,16,19",
+}
+
+SUBCLASS_FEAT_LEVELS = {"Champion": "7"}
+
+
 def class_resources(c):
     out = []
     for f in c["features"]:
@@ -337,6 +357,7 @@ def classes():
             "Features": features,
             "Spellevels": spell_levels(c),
             "Resources": class_resources(c),
+            "Feat levels": FEAT_LEVELS.get(c["name"], "4,8,12,16,19"),
         }
         return entity("Classes", name, clean(c.get("desc", "")), {"classStats": {"Stats": stats}})
 
@@ -345,9 +366,13 @@ def classes():
         result.append(make(name, c, class_features(c)))
     for s in sorted(subs, key=lambda x: x["name"]):
         parent = base[s["subclass_of"]["name"]]
-        features = class_features(parent) + class_features(s)
-        features.sort(key=lambda x: (x["Level"], 0 if x["Name"].startswith("Core ") else 1))
-        result.append(make(f"{parent['name']} ({s['name']})", parent, features))
+        stats = {
+            "Class": parent["name"],
+            "Features": class_features(s),
+            "Feat levels": SUBCLASS_FEAT_LEVELS.get(s["name"], ""),
+        }
+        description = clean(s.get("desc", "")) or f"{parent['name']} subclass."
+        result.append(entity("Subclasses", s["name"], description, {"subclassStats": {"Stats": stats}}))
     return result
 
 

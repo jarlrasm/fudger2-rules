@@ -116,6 +116,32 @@ classStats = ruleset {
                         'Short rest level'=integer{default=1}
                     }
             }
+        'Feat levels'=string{}
+    }
+}
+
+subclassStats = ruleset {
+    rulesetConfiguration =
+    {
+        filters= [
+            filter {
+                name="Class"
+                prefix=""
+                filter=Stats.Class}]
+    }
+    Stats=table
+    {
+        Class=string{}
+        Features=list{
+                singular = "Feature"
+                valueType = custom
+                    {
+                        Level=integer{}
+                        Name=string{}
+                        Description=string{multiline = true}
+                    }
+                }
+        'Feat levels'=string{}
     }
 }
 
@@ -152,6 +178,7 @@ raceStats = ruleset
         Size=string{}
         Speed=integer{default=30}
         Darkvision=integer{default=0}
+        Feats=integer{default=0}
     }
 }
 
@@ -184,6 +211,7 @@ DND5e = system
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats
     Classes = classStats
+    Subclasses = subclassStats
     Races = raceStats
     Backgrounds = backgroundStats
     Armour= armourStats
@@ -193,7 +221,7 @@ DND5e = system
     description="DND 5e rules"
     
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Spells", "Other items", "Other features", "Feats"]
-    otherLibararyTypes = ["Classes", "Races", "Backgrounds"]
+    otherLibararyTypes = ["Classes", "Subclasses", "Races", "Backgrounds"]
     libraries = ["/systems/DND/dndsrd2024.json", "/systems/DND/manythings.json", "/systems/names/fantasy.json", "/systems/names/norwegian.json", "/systems/names/viking.json", "/systems/names/chinese.json", "/systems/names/gothic.json", "/systems/names/oldworld.json", "/systems/names/desert.json", "/systems/names/barbarian.json", "/systems/names/pirates.json", "/systems/names/samurai.json", "/systems/names/mythicgreece.json", "/systems/names/arthurian.json", "/systems/names/faerie.json"]
     nameSettings = [dndNameSetting, norseNameSetting, easternNameSetting, gothicHorrorNameSetting, oldWorldNameSetting, desertRealmsNameSetting, swordAndSorceryNameSetting, highSeasNameSetting, feudalJapanNameSetting, mythicGreeceNameSetting, arthurianNameSetting, faerieCourtsNameSetting]
     initiativeCompare(item1,item2) = compare (item1 ,item2)

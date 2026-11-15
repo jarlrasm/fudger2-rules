@@ -26,6 +26,11 @@ Speed on the sheet is in feet per turn, usually 30 ft for characters. With 5 ft 
 - Leaving a square next to an enemy lets it make an opportunity attack, unless the mover takes Disengage.
 - Diagonals count as one square (5 ft).
 
+## Levels and subclasses
+Most classes pick a subclass at level 3, under Subclass in the Class block. The list has the subclasses for the class in the campaign's libraries. Custom lets the player name their own subclass and write its features under Custom subclass features. GMs can add more subclasses as Subclasses library items, each naming its class.
+
+The Leveling block appears when the character is owed something: XP enough for a new level, a subclass to choose, or feats to pick. Feats come from the origin feat of the background, Human's Versatile trait, and class and subclass levels (Ability Score Improvement, Fighting Style and Epic Boon count as feats). In the editor it also reminds the player which ability score increases they have, and which features the current level gave.
+
 ## Rests
 A short rest lets a character spend hit dice to heal. A long rest restores all hit points and most resources.
 
