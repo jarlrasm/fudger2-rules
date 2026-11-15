@@ -182,6 +182,8 @@ characterTable = ruleset
       {
         default = 0
         editable = live
+        indicator = "#d64545"
+        indicatorLabel = "Wounds"
       }
       Maximum = integer
       {
@@ -499,7 +501,7 @@ creatureTable = ruleset
     Instinct = integer {}
     AP = integer {}
     Wounds = integer {}
-    'Current Wounds' = integer { editable=live }
+    'Current Wounds' = integer { editable=live  indicator = "#d64545"  indicatorLabel = "Wounds" }
     Health = integer {}
     'Current Health' = integer { editable=live }
     Special = string {}

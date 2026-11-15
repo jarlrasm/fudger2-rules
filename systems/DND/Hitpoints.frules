@@ -25,6 +25,12 @@ hitpoints = table
                 minvalue=0
               }
     HitDie=hitDie(Class.Main.Name, Class.Main.Levels)
+    State = string
+              {
+                value = downState (Current, Max)
+                visible = none
+                indicator = "#d64545"
+              }
     'Hit dice' = slots
               {
                 number = Class.Main.Levels

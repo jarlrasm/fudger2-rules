@@ -181,25 +181,29 @@ creatureTable = ruleset
     Move = integer {}
     Tough = string {}
     Shock = integer {}
-    'Shocks taken' = integer { editable = live}
+    'Shocks taken' = integer { editable = live  indicator = "#d4b106"  indicatorLabel = "Shock" }
     Wounds = integer {}
     'Wounds taken' = slots
     {
       number = 8
       allowedchange = increaseAndClear
       editable = live
+      indicator = "#d64545"
+      indicatorLabel = "Wounds"
     }
     Stymied = slots
     {
       number = 2
       allowedchange = increaseAndClear
       editable = live
+      indicator = "#e8913a"
     }
     Weakened = slots
     {
       number = 2
       allowedchange = increaseAndClear
       editable = live
+      indicator = "#8e5cc4"
     }
   }
   Other = table
@@ -564,12 +568,13 @@ characterTable = ruleset
   'Damage' = table
       {
           Shock = integer
-          { editable=live }
+          { editable=live  indicator = "#d4b106" }
           Wounds = slots
           {
             number = 6
             allowedchange = increaseAndClear
             editable = live
+            indicator = "#d64545"
            }
           Toughness = string
           {}
@@ -578,12 +583,14 @@ characterTable = ruleset
             number = 2
             allowedchange = increaseAndClear
             editable = live
+            indicator = "#e8913a"
            }
           Weakened = slots
           {
             number = 2
             allowedchange = increaseAndClear
             editable = live
+            indicator = "#8e5cc4"
           }
           'Smack that' = integer
           {

@@ -387,6 +387,12 @@ characterTable = ruleset
                         editable=none
                     }
         }
+            'HP state'=string
+                    {
+                        value=hpState (HP.Current, HP.Max)
+                        visible=none
+                        indicator="#d64545"
+                    }
             'Basic speed'=quarterText (speedQuarters (characterTable))
             'Basic move'=basicMove (characterTable)
             'Basic lift'=poundsText (basicLift (fromAttribute ("ST")))
@@ -540,6 +546,21 @@ characterTable = ruleset
         editable = character
     }
 }
+hpState(current, max) =
+    if max < 1 then
+        ""
+    else
+        if current < 1 - max then
+            "Death checks"
+        else
+            if current < 1 then
+                "HT to stay up"
+            else
+                if current * 3 < max then
+                    "Reeling"
+                else
+                    ""
+
 hundredthsText(n) =
     toString (n / 100) + "." + (if n - n / 100 * 100 < 10 then "0" else "") + toString (n - n / 100 * 100)
 
@@ -576,6 +597,7 @@ creatureTable = ruleset
         tableLayout = layout { columns = 4 }
         HP = integer { default = 10 }
         'Current HP' = integer { default = HP  editable = live }
+        'HP state' = string { value = hpState ('Current HP', HP)  visible = none  indicator = "#d64545" }
         FP = integer { default = 10 }
         'Current FP' = integer { default = FP  editable = live }
         Will = integer { default = 10  valuedice = 3d6 }

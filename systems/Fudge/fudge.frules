@@ -94,6 +94,12 @@ characterTable = ruleset
             value ='Near death'.realvalue + Incapacitated.overflowValue
             allowedchange = increase
             editable = live}
+        'Wound level' = string
+            {
+            value = if 'Near death'.value > 0 then "Near death" else if Incapacitated.value > 0 then "Incapacitated" else if 'Very hurt'.value > 0 then "Very hurt" else if Hurt.value > 0 then "Hurt" else ""
+            visible = none
+            indicator = "#d64545"
+            }
         Heal = button
             {editable = live
             onClick = updates

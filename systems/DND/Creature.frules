@@ -56,6 +56,12 @@ creatureTable = ruleset
     Max=integer
               {
               }
+    State = string
+              {
+                value = downState (Current, Max)
+                visible = none
+                indicator = "#d64545"
+              }
   }
   'Ability scores' = keyvalues
       {

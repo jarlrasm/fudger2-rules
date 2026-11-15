@@ -15,6 +15,12 @@ exhaustionLevel (char) = char.Conditions.Exhaustion
 
 textVisible (text) = if text == "" then none else visible
 
+downState (current, max) =
+    if max > 0 then
+        if current < 1 then "Down" else ""
+    else
+        ""
+
 conditionEffects (blinded, charmed, deafened, frightened, grappled, incapacitated, invisible, paralyzed, petrified, poisoned, prone, restrained, stunned, unconscious, exhaustion) =
     joinEffects (flatten ([
         effectLine (blinded, "Blinded: can't see, attacks against it have advantage and its attacks have disadvantage"),
@@ -39,22 +45,22 @@ conditionsTable = table
     {
         columns = 3
     }
-    Blinded = bool { default = false  editable = live }
-    Charmed = bool { default = false  editable = live }
-    Deafened = bool { default = false  editable = live }
-    Frightened = bool { default = false  editable = live }
-    Grappled = bool { default = false  editable = live }
-    Incapacitated = bool { default = false  editable = live }
-    Invisible = bool { default = false  editable = live }
-    Paralyzed = bool { default = false  editable = live }
-    Petrified = bool { default = false  editable = live }
-    Poisoned = bool { default = false  editable = live }
-    Prone = bool { default = false  editable = live }
-    Restrained = bool { default = false  editable = live }
-    Stunned = bool { default = false  editable = live }
-    Unconscious = bool { default = false  editable = live }
-    Exhaustion = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live }
-    Concentration = string { editable = live }
+    Blinded = bool { default = false  editable = live  indicator = "#555555" }
+    Charmed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+    Deafened = bool { default = false  editable = live  indicator = "#555555" }
+    Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+    Grappled = bool { default = false  editable = live  indicator = "#e8913a" }
+    Incapacitated = bool { default = false  editable = live  indicator = "#d4b106" }
+    Invisible = bool { default = false  editable = live  indicator = "#3a7bd5" }
+    Paralyzed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+    Petrified = bool { default = false  editable = live  indicator = "#555555" }
+    Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
+    Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+    Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+    Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+    Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+    Exhaustion = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live  indicator = "#d64545" }
+    Concentration = string { editable = live  indicator = "#3a7bd5"  indicatorLabel = "Concentrating" }
     Effects = string
     {
         value = conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)

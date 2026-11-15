@@ -143,6 +143,25 @@ Weapon lists that come from `secondary` have no rolled fields, so each system bu
 - Dark Conspiracy rolls the weapon's Skill (or, if the character has no skill by that exact name, the part before the brackets) plus DEX, or STR for bludgeon and unarmed, with the number in Range as metres and reach 2 for Melee (a weapon with no Range is melee when its Skill is). An Unarmed row is always there. Creatures roll their `'Attack DM'` for each weapon, and `'Attack DM'` itself is a melee action. `'Talent Uses'` makes each empathic talent a ranged action, rolling Empathy Use plus EMP (creatures roll their Check), with the metres in the talent's Reach.
 - Creatures without weapon lists: Over the Edge's `Fight` and Mothership's creature `Combat` are actions themselves, and Torg creatures get a hidden `'Attack rolls'` list with a row for each combat skill they have.
 
+### Battlemap indicators
+
+A bool, integer, modifier, string or slots field with `indicator = "<colour>"` shows as a badge on the entity's battlemap token while it is set: a ticked bool, a number or slots above 0, or text that isn't empty. Use the colours of the built-in presets so badges look alike: `"#e8913a"` (Prone, Grappled), `"#8e5cc4"` (Frightened, Charmed), `"#3a7bd5"` (Invisible, Concentrating), `"#d4b106"` (Stunned), `"#3fa34d"` (Poisoned), `"#555555"` (Blinded, Unconscious) and `"#d64545"` (wounds, damage).
+
+- The badge is named after the field, with the number for a number or slots (`Exhaustion 2`). A text shows the text itself, so a computed string can name a state (`"Very hurt"`). `indicatorLabel = "Concentrating"` names it instead.
+- In the token's indicator editor the gamemaster sees the badges from the sheet and can clear them, which unticks the bool, sets the number or slots to 0, or empties the text. Fields that can be set appear as presets above the built-in ones (which are hidden when a rule indicator has the same name): a bool is ticked and a number or slots goes up by one.
+- Computed fields (with `value =`, other than slots) and `editable = none` fields can't be changed from the map. A text can only be cleared, and a bool with a `radiogroup` only unticked, since ticking it would leave another in its group ticked.
+- A field the gamemaster hides from players gives a badge only the gamemaster sees. Players see badges only on tokens whose entity they can open.
+- For a state worked out from other fields, add a hidden computed string that is empty when nothing is wrong: `State = string { value = downState (Current, Max)  visible = none  indicator = "#d64545" }`.
+
+```
+Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+Exhaustion = integer { default = 0  maxvalue = 6  editable = live  indicator = "#d64545" }
+Concentration = string { editable = live  indicator = "#3a7bd5"  indicatorLabel = "Concentrating" }
+Strikes = slots { number = 3  editable = live  indicator = "#d64545" }
+```
+
+Systems that use it: D&D conditions, Exhaustion, Concentration and Down at 0 HP; Fudge's worst wound level; Star Wars injuries; Torg Shock, Wounds, Stymied and Weakened; Mothership Wounds; GURPS Reeling, HT to stay up and Death checks from HP; Dark Conspiracy Wounded, Unconscious, Dead and Down; Over the Edge Strikes.
+
 A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
 ## The system

@@ -154,6 +154,10 @@ condition (str, dex, end) =
     else if end < 1 then "Wounded"
     else "Fit"
 
+mapCondition (text) = if text == "Fit" then "" else text
+
+hitsCondition (current, hits) = if hits > 0 then if current < 1 then "Down" else "" else ""
+
 darkInfluenceEffect (di) =
     if di < 4 then "None"
     else if di < 6 then "STR or END +1"
@@ -185,6 +189,12 @@ characterTable = ruleset
         Assignment = string {}
         Rank = string {}
         Condition = condition (Characteristics.'STR'.Current, Characteristics.'DEX'.Current, Characteristics.'END'.Current)
+        'Map condition' = string
+        {
+            value = mapCondition (condition (Characteristics.'STR'.Current, Characteristics.'DEX'.Current, Characteristics.'END'.Current))
+            visible = none
+            indicator = "#d64545"
+        }
     }
 
     Checks = table
@@ -355,6 +365,7 @@ minionTable = ruleset
         tableLayout = layout { columns = 2 }
         Hits = integer { default = 10 }
         'Current Hits' = integer { default = Hits  minvalue = 0  editable = live }
+        'Map condition' = string { value = hitsCondition ('Current Hits', Hits)  visible = none  indicator = "#d64545" }
         EMP = integer { default = 0 }
         'Current EMP' = integer { default = EMP  minvalue = 0  editable = live }
         Instability = string {}
