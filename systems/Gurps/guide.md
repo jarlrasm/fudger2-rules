@@ -23,3 +23,6 @@ A turn is one second, and a hex is one yard. `Move` under Encumbrance (Basic Mov
 
 ## Encumbrance
 The sheet works out Encumbrance from carried weight. Higher levels lower Move and Dodge.
+
+## Creatures
+Creatures have their own sheet with attributes, HP, FP, Basic speed and Dodge written out, and an Attacks list. Each attack rolls its own skill level and damage, and can be used on a token within its reach (C is close combat) or range in yards. Traits, Skills and Notes say what is special about them. The built-in library has animals, people and monsters to start from.

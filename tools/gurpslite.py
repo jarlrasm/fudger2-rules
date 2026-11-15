@@ -312,6 +312,90 @@ SKILLS = [
 ]
 
 
+# name, description, ST, DX, IQ, HT, HP, FP, Will, Per, Basic speed (hundredths), Basic move,
+# DR, SM, weight, parry, attacks [(name, to hit, damage dice, reach)], traits, skills, notes
+CREATURES = [
+    ("Wolf", "A lean pack hunter that circles and tests its prey before it closes in.",
+     9, 14, 4, 12, 9, 12, 11, 14, 650, 9, 1, 0, "80 lb", "No",
+     [("Bite", 14, "1d-1 cut", "C")],
+     "Acute Smell 2, Night Vision 2, Quadruped, Wild Animal.", "Brawling 14, Stealth 13, Tracking 14.",
+     "Hunts in packs of four to ten and tries to surround a lone target."),
+    ("Brown bear", "A huge, short-tempered omnivore that defends its ground and its cubs.",
+     20, 10, 4, 13, 20, 13, 12, 13, 575, 7, 2, 1, "1,000 lb", "No",
+     [("Bite", 12, "2d cut", "C"), ("Claw", 12, "2d cr", "C")],
+     "Acute Smell 2, Quadruped, Wild Animal. Can rear up to attack.", "Brawling 12, Swimming 13.",
+     "Usually bluffs first. A wounded bear fights to the end."),
+    ("Guard dog", "A trained watchdog that barks first and bites second.",
+     8, 12, 4, 12, 8, 12, 10, 14, 600, 8, 0, -1, "60 lb", "No",
+     [("Bite", 13, "1d-2 cut", "C")],
+     "Acute Smell 3, Quadruped, Domestic Animal.", "Brawling 13, Tracking 13.",
+     "Obeys its handler. Grapples a fleeing target by the leg."),
+    ("Warhorse", "A heavy horse trained to stand its ground in battle.",
+     24, 9, 4, 12, 24, 12, 10, 11, 525, 8, 1, 1, "1,500 lb", "No",
+     [("Kick", 10, "2d+1 cr", "C,1"), ("Bite", 10, "1d cr", "C")],
+     "Enhanced Move (Ground), Quadruped, Domestic Animal.", "Brawling 10.",
+     "Kicks enemies behind it and tramples those in front."),
+    ("Wild boar", "A tusked, bad-tempered pig that charges anything it does not like.",
+     13, 10, 4, 13, 13, 13, 11, 12, 575, 8, 2, 0, "250 lb", "No",
+     [("Tusks", 12, "1d+1 cut", "C")],
+     "Hard to Kill 2, High Pain Threshold, Quadruped, Wild Animal.", "Brawling 12.",
+     "Charges in a straight line. Keeps fighting long after it should be down."),
+    ("Great cat", "A big hunting cat that stalks, pounces and goes for the throat.",
+     17, 13, 4, 13, 17, 13, 11, 13, 650, 10, 1, 1, "400 lb", "No",
+     [("Bite", 14, "1d+2 cut", "C"), ("Claws", 14, "1d+1 cut", "C")],
+     "Combat Reflexes, Night Vision 5, Quadruped, Wild Animal.", "Brawling 14, Jumping 14, Stealth 14.",
+     "Pounces from hiding. Often drags a downed victim away."),
+    ("Rat swarm", "Dozens of rats moving as one, filling a corridor or a cellar.",
+     4, 12, 3, 12, 8, 12, 10, 12, 600, 4, 0, 0, "Many small rats", "No",
+     [("Bites", 12, "1d-3 cut", "C")],
+     "Swarm: fills its hex and attacks everyone in it. Only area attacks and fire hurt it fully.", "Brawling 12.",
+     "Scatters when it has lost all its HP."),
+    ("Giant spider", "A spider the size of a dog that waits in its web.",
+     12, 13, 3, 12, 12, 12, 10, 12, 625, 7, 3, 0, "100 lb", "No",
+     [("Bite", 14, "1d cut", "C")],
+     "Clinging, Extra Legs (8), Night Vision 5, Wild Animal.", "Brawling 14, Climbing 15, Stealth 14.",
+     "The bite carries poison: HT-2 or 1d toxic and lose 2 DX for an hour. It can also spit web up to 10 yards (DX 13 to hit, Dodge to avoid). The web entangles: ST-3 to break free."),
+    ("Bandit", "A desperate highway robber with a blade and a crossbow.",
+     11, 11, 10, 11, 11, 11, 10, 10, 550, 5, 1, 0, "150 lb", "9",
+     [("Shortsword", 12, "1d cut", "C,1"), ("Light crossbow", 11, "1d+2 imp", "Range 220"), ("Punch", 11, "1d-2 cr", "C")],
+     "Bad Temper, Greed.", "Brawling 11, Crossbow 11, Shortsword 12, Stealth 11, Survival 10.",
+     "Wears leather. Runs when the fight turns against the gang."),
+    ("Town guard", "A watchman with a spear, a shield and orders to keep the peace.",
+     12, 11, 10, 11, 12, 11, 10, 10, 550, 5, 3, 0, "170 lb", "10",
+     [("Spear", 13, "1d+2 imp", "1,2"), ("Punch", 11, "1d-1 cr", "C")],
+     "Duty (town watch), Sense of Duty (townsfolk).", "Brawling 11, Shield 12, Spear 13, Streetwise 10.",
+     "Wears mail and carries a medium shield (Block 9, DB 2). Blows a whistle for help."),
+    ("Skeleton", "Old bones held together by necromancy, still carrying a rusty blade.",
+     10, 12, 8, 12, 10, 12, 10, 10, 600, 6, 2, 0, "40 lb", "9",
+     [("Rusty sword", 12, "1d cut", "C,1"), ("Claw", 12, "1d-2 cr", "C")],
+     "Unliving, Doesn't Breathe, High Pain Threshold, Indomitable, Immune to poison and disease.",
+     "Brawling 12, Shortsword 12.",
+     "Impaling and piercing attacks do 1 point at most. Crushing does full damage."),
+    ("Zombie", "A rotting corpse that walks towards the living and grabs at them.",
+     13, 9, 6, 12, 18, 12, 8, 9, 525, 4, 1, 0, "150 lb", "No",
+     [("Grab", 11, "1d-1 cr", "C"), ("Bite", 11, "1d-2 cut", "C")],
+     "Unliving, Doesn't Breathe, High Pain Threshold, No Fine Manipulators, Immune to poison and disease.",
+     "Brawling 11.",
+     "Takes no extra damage from cutting or impaling. Keeps going until reduced to -HP."),
+    ("Orc warrior", "A strong, scarred raider with an axe and a grudge.",
+     13, 11, 9, 12, 14, 12, 10, 10, 575, 5, 2, 0, "200 lb", "9",
+     [("Axe", 13, "2d+1 cut", "1"), ("Punch", 12, "1d-1 cr", "C")],
+     "Night Vision 3, Bad Temper, Bully.", "Axe/Mace 13, Brawling 12, Intimidation 10.",
+     "Fights in loud mobs and follows the strongest."),
+    ("Goblin", "A small, sly raider that prefers ambushes and sharp sticks.",
+     8, 12, 9, 10, 8, 10, 9, 11, 550, 6, 1, -1, "70 lb", "9",
+     [("Short spear", 12, "1d-1 imp", "1"), ("Sling", 12, "1d-1 cr", "Range 80")],
+     "Night Vision 4, Cowardice.", "Sling 12, Spear 12, Stealth 13, Traps 10.",
+     "Flees once a third of the band is down."),
+    ("Troll", "A tall, rubbery brute with long claws that heals as it fights.",
+     22, 11, 7, 14, 26, 14, 10, 11, 625, 7, 3, 1, "600 lb", "No",
+     [("Claw", 13, "2d+1 cut", "C,1"), ("Bite", 13, "2d-1 cut", "C")],
+     "Regeneration (1 HP per second, not from fire or acid), Night Vision 5, Bad Temper.",
+     "Brawling 13, Intimidation 12.",
+     "Only fire and acid damage stay. Anything else heals during the fight."),
+]
+
+
 def build():
     entities = []
     for name, points, per_level, kind, text in ADVANTAGES:
@@ -352,9 +436,26 @@ def build():
         entities.append(entity("Skills", name, f"{attribute}/{short}. Defaults: {defaults}.", {
             "skillStats": {"Training": {"Points": 1}, "Stats": {"Attribute": attribute, "Difficulty": difficulty, "Defaults": defaults}}
         }))
+    for (name, text, st, dx, iq, ht, hp, fp, will, per, speed, move, dr, sm, weight, parry,
+         attacks, traits, skills, notes) in CREATURES:
+        entities.append(entity("Creature", name, text, {
+            "creatureTable": {
+                "Attributes": {"ST": st, "DX": dx, "IQ": iq, "HT": ht},
+                "Secondary characteristics": {
+                    "HP": hp, "Current HP": hp, "FP": fp, "Current FP": fp, "Will": will, "Per": per,
+                    "Basic speed": speed, "Basic move": move, "Dodge": speed // 100 + 3,
+                    "Parry": parry, "DR": dr, "SM": sm, "Weight": weight,
+                },
+                "Attacks": [
+                    {"Name": a, "To hit": hit, "Damage dice": dice, "Reach": reach}
+                    for a, hit, dice, reach in attacks
+                ],
+                "Abilities": {"Traits": traits, "Skills": skills, "Notes": notes},
+            }
+        }))
     return {
         "name": "GURPS Lite",
-        "description": "Advantages, disadvantages, skills and equipment from GURPS Lite (Fourth Edition). " + NOTICE,
+        "description": "Advantages, disadvantages, skills and equipment from GURPS Lite (Fourth Edition), and creatures written for Fudger. " + NOTICE,
         "url": "/systems/Gurps/gurpslite.json",
         "gamemaster": "",
         "entities": entities,

@@ -540,6 +540,97 @@ characterTable = ruleset
         editable = character
     }
 }
+hundredthsText(n) =
+    toString (n / 100) + "." + (if n - n / 100 * 100 < 10 then "0" else "") + toString (n - n / 100 * 100)
+
+creatureDamageDice(text) = toInt (first (split ("d", modeToken (text))))
+
+creatureDamageAdds(text) = modifierOf (item (1, split ("d", modeToken (text))))
+
+isRangedReach(text) = contains (toLower (text), "range")
+
+creatureAttackKind(text) = if isRangedReach (text) then "ranged" else "melee"
+
+creatureAttackDistance(text) =
+    if isRangedReach (text) then
+        toInt (replace ("range", "", replace (" ", "", toLower (text))))
+    else
+        reachYards (text)
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4 }
+        ST = integer { default = 10  valuedice = 3d6 }
+        DX = integer { default = 10  valuedice = 3d6 }
+        IQ = integer { default = 10  valuedice = 3d6 }
+        HT = integer { default = 10  valuedice = 3d6 }
+    }
+    'Secondary characteristics' = table
+    {
+        tableLayout = layout { columns = 4 }
+        HP = integer { default = 10 }
+        'Current HP' = integer { default = HP  editable = live }
+        FP = integer { default = 10 }
+        'Current FP' = integer { default = FP  editable = live }
+        Will = integer { default = 10  valuedice = 3d6 }
+        Per = integer { default = 10  valuedice = 3d6 }
+        'Basic speed' = integer { default = 500  step = 25  render = hundredthsText ('Basic speed') }
+        'Basic move' = integer { default = 5 }
+        Initiative = integer
+        {
+            value = 'Basic speed'
+            valuedice = basicSpeedOrder
+            editable = none
+            visible = none
+        }
+        Dodge = integer { default = 8  valuedice = 3d6 }
+        Parry = string {}
+        DR = integer { default = 0 }
+        SM = integer { default = 0  render = signedText (SM) }
+        Weight = string {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            'To hit' = integer
+            {
+                default = 10
+                valuedice = 3d6
+                action = creatureAttackKind (Reach)
+                reach = creatureAttackDistance (Reach)
+                range = creatureAttackDistance (Reach)
+            }
+            'Damage dice' = string { default = "1d"  visible = editor }
+            Damage = integer
+            {
+                value = creatureDamageAdds ('Damage dice')
+                render = 'Damage dice'
+                valuedice = damageDice (creatureDamageDice ('Damage dice'))
+                editable = none
+            }
+            Reach = string { default = "C" }
+        }
+    }
+    Abilities = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+        Skills = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
 meleeWeaponStats = ruleset
         {
             rulesetConfiguration =
@@ -677,7 +768,7 @@ GURPSLite = system
     distanceUnit = "yd"
     squareSize = 1
     characters = characterTable
-    creatures = characterTable
+    creatures = creatureTable
     'Ranged weapons' = rangedWeaponStats
     'Melee weapons' = meleeWeaponStats
     Advantage = advantageStats
