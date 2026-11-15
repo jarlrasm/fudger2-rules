@@ -18,7 +18,7 @@ Read [reference.md](reference.md) for the full language before writing anything 
 ## Workflow
 
 1. Read `rules.json` and a similar existing system.
-2. Write the file(s). Start with `#include "/systems/common.frules"` if you need `compare`, `nameAndDescription` or `entityTypeDescription`.
+2. Write the file(s). Start with `#include "/systems/common.frules"` if you need `compare`, `nameAndDescription` or `entityTypeDescription`. Make each sheet look similar to the game's official character sheet: the same sections in the same order and places, the same field names and groupings, and a similar feel (colours, fonts, borders) through custom CSS where the system has it. A player who knows the paper sheet should find things where they expect them. Copy the layout and look, not the official artwork or logos.
 3. Define one `system` at the top level, and point `characters`, `creatures` and every name in `secondaryTypes` at a `ruleset`.
 4. Register a new system (or extension) in `rules.json`. If it has `nameSettings`, list the same setting names there as `"nameSettings"`.
 5. For names, add the files from `names/` that fit the setting to `libraries`, and pick or write `nameSettings` (see [Name generators](reference.md#name-generators)).
