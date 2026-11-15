@@ -559,8 +559,88 @@ def mothership():
         "/systems/mothership/mothership.json", entities)
 
 
+DC_WEAPONS = [
+    ("Fighting knife", "Melee (blade)", "Melee", "2D", "0.5", "", "", "Easy to hide under a jacket."),
+    ("Machete", "Melee (blade)", "Melee", "2D+2", "1", "", "", "Clears brush, and worse."),
+    ("Baseball bat", "Melee (bludgeon)", "Melee", "2D", "1", "", "", "Found in every closet and car boot."),
+    ("Crowbar", "Melee (bludgeon)", "Melee", "2D", "1.5", "", "", "Also opens doors that should stay shut."),
+    ("Stun baton", "Melee (bludgeon)", "Melee", "2D", "1", "", "Stun", "A charged club. Damage is stun, not wounds."),
+    ("Compact pistol", "Gun Combat (pistol)", "10m", "2D+2", "0.6", "7", "", "A small concealed-carry handgun."),
+    ("Service pistol", "Gun Combat (pistol)", "20m", "3D", "1", "15", "", "The everyday police and military sidearm."),
+    ("Heavy revolver", "Gun Combat (pistol)", "25m", "3D+2", "1.3", "6", "", "Loud, slow to reload, hits hard."),
+    ("Pump shotgun", "Gun Combat (rifle)", "40m", "4D", "3.5", "6", "Bulky", "Brutal up close."),
+    ("Hunting rifle", "Gun Combat (rifle)", "400m", "3D+3", "4", "5", "", "Bolt action, with a scope."),
+    ("Assault rifle", "Gun Combat (rifle)", "300m", "3D", "3.5", "30", "Auto 2", "Selective fire military rifle."),
+    ("Crossbow", "Gun Combat (archaic)", "100m", "3D", "3", "1", "Silent", "Quiet, and a bolt can be fletched with anything."),
+    ("Hand grenade", "Athletics (dexterity)", "20m", "5D", "0.4", "", "Blast 6", "Thrown. Hurts everyone near where it lands."),
+    ("Flare gun", "Gun Combat (pistol)", "50m", "2D", "0.8", "1", "Fire", "Lights up the dark. Sets things alight."),
+]
+
+DC_ARMOUR = [
+    ("Leather jacket", 1, "1.5", "Turns a glancing blow."),
+    ("Concealed vest", 3, "1.5", "Soft body armour worn under a shirt."),
+    ("Tactical vest", 5, "4", "Plates front and back. Obvious to anyone who looks."),
+    ("Riot gear", 6, "8", "Helmet, shield and padding. Slow and hot."),
+    ("Hazmat suit", 1, "3", "Sealed against gas, spores and fluids."),
+]
+
+DC_EQUIPMENT = [
+    ("Burner phone", "Comms", "0.2", "Cheap, prepaid, thrown away after one job."),
+    ("Police scanner", "Comms", "0.5", "Listen in on the emergency bands."),
+    ("Night-vision goggles", "Optics", "1", "See by starlight. Blinded by sudden bright light."),
+    ("Thermal imager", "Optics", "1", "Shows heat through smoke and darkness. Some things show no heat at all."),
+    ("Lock picks", "Tools", "0.1", "For pin locks and padlocks."),
+    ("Laptop", "Computers", "2", "With the cell's own encrypted tools."),
+    ("First aid kit", "Medical", "1", "Bandages, splints, painkillers and a suture kit."),
+    ("Trauma kit", "Medical", "3", "For gunshots and worse. Needs a trained Medic."),
+    ("Heavy torch", "Tools", "0.8", "Bright, and doubles as a club."),
+    ("Climbing gear", "Tools", "5", "Rope, harness and hooks."),
+    ("Camera with long lens", "Optics", "1.5", "Proof, if anyone would believe it."),
+    ("Bug detector", "Electronics", "0.3", "Finds radio transmitters and hidden cameras."),
+    ("Rosary and holy water", "Personal", "0.2", "Comfort, at least. Maybe more."),
+]
+
+DC_MINIONS = [
+    ("Corrupted cop", "A police officer who looks the other way, and reports to something that does not.",
+     12, 0, 7, 1, 1, 3, "Gun Combat 1, Streetwise 1, Drive 1", "", "Calls for backup at the first sign of trouble."),
+    ("Cult enforcer", "Muscle for a cult that meets in a basement under the city.",
+     14, 0, 7, 0, 1, 1, "Melee 1, Intimidation 1", "", "Fanatical. Never surrenders."),
+    ("Pale stalker", "A thin grey hunter that moves through ducts and drains and hates light.",
+     18, 0, 10, 2, 2, 2, "Stealth 3, Recon 2", "Claws 2D+2", "Bright light gives it a Bane on every check."),
+    ("Hollow man", "A body that is still walking after its owner left it.",
+     20, 0, 5, 0, 0, 1, "", "Grab 2D", "Feels no pain. Ignores wound effects until its Hits run out."),
+    ("Whisperer", "Something that rides the minds of others and speaks through them.",
+     10, 8, 6, 0, 2, 0, "Deception 2, Persuade 2", "Project Mind", "Retreats into a host when threatened."),
+    ("Hound from beyond", "A pack hunter with too many teeth, brought through to track a scent.",
+     22, 0, 14, 2, 1, 2, "Recon 2, Survival 2", "Bite 3D", "Never loses a scent once it has one."),
+]
+
+
+def darkconspiracy():
+    s = "DarkConspiracy"
+    entities = []
+    for name, skill, range_, damage, kg, magazine, traits, text in DC_WEAPONS:
+        entities.append(entity(s, "Weapons", name, text, {"weaponStats": {"Stats": {
+            "Skill": skill, "Range": range_, "Damage dice": damage, "Kg": kg, "Magazine": magazine, "Traits": traits}}}))
+    for name, protection, kg, text in DC_ARMOUR:
+        entities.append(entity(s, "Armour", name, text, {"armourStats": {"Stats": {"Protection": protection, "Kg": kg}}}))
+    for name, category, kg, text in DC_EQUIPMENT:
+        entities.append(entity(s, "Equipment", name, text, {"equipmentStats": {"Stats": {"Category": category, "Kg": kg}}}))
+    for name, text, hits, emp, speed, protection, initiative, attack, skills, attacks, traits in DC_MINIONS:
+        entities.append(entity(s, "Creature", name, text, {"minionTable": {
+            "Stats": {"Hits": hits, "Current Hits": hits, "EMP": emp, "Current EMP": emp, "Speed": f"{speed}m",
+                      "Protection": protection, "Initiative": initiative, "Check": 0, "Attack DM": attack},
+            "Abilities": {"Skills": skills, "Attacks": attacks, "Traits": traits},
+        }}))
+    return library(
+        "Dark Conspiracy basics",
+        "Weapons, armour, gear and enemies for Dark Conspiracy, written for Fudger as a fan aid. Damage is in d6, and Range is the longest range in metres. Dark Conspiracy is a trademark of its owners.",
+        "/systems/darkconspiracy/basics.json", entities)
+
+
 write("Fudge/fudge.json", fudge())
 write("edge/edge.json", edge())
 write("starwars/sw.json", starwars())
 write("torg/torg.json", torg())
 write("mothership/mothership.json", mothership())
+write("darkconspiracy/basics.json", darkconspiracy())

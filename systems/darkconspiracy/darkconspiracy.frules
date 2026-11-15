@@ -60,6 +60,62 @@ damageDice (n) =
     case 10 then 10d6
     else noDamage
 
+noSkill = { Level = 0 }
+
+skillLevelDM (char, skill) =
+    levelDM (char, valueOr (valueOr (char.Skills, skill, noSkill), "Trained", true), valueOr (valueOr (char.Skills, skill, noSkill), "Level", 0))
+
+weaponSkill (weapon) = first (split (" (", valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee (blade)")))
+
+weaponRange (weapon) = valueOr (weapon.data.weaponStats.Stats, "Range", "Melee")
+
+weaponDamage (weapon) = valueOr (weapon.data.weaponStats.Stats, "Damage dice", "1D")
+
+isMelee (weapon) = contains (toLower (weaponRange (weapon)), "melee")
+
+attackCharacteristic (weapon) =
+    if contains (toLower (valueOr (weapon.data.weaponStats.Stats, "Skill", "")), "bludgeon") then "STR"
+    else if contains (toLower (valueOr (weapon.data.weaponStats.Stats, "Skill", "")), "unarmed") then "STR"
+    else "DEX"
+
+metres (text) =
+    if contains (text, "m") then toInt (replace ("m", "", text))
+    else 10000
+
+attackKind (weapon) = if isMelee (weapon) then "melee" else "ranged"
+
+attackDistance (weapon) = if isMelee (weapon) then 2 else metres (weaponRange (weapon))
+
+weaponAttack (name, dm, dice, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier
+    {
+        value = dm
+        valuedice = dice
+        action = kind
+        reach = distance
+        range = distance
+    }
+    Damage = integer
+    {
+        value = damageBonus (damage)
+        render = damage
+        valuedice = damageDice (damageDiceCount (damage))
+    }
+}
+
+characterAttack (char, weapon) =
+    weaponAttack (weapon.Name, skillLevelDM (char, weaponSkill (weapon)) + dmFor (char, attackCharacteristic (weapon)), checkRoll (char), weaponDamage (weapon), attackKind (weapon), attackDistance (weapon))
+
+attacksFor (char) =
+    concat (
+        [weaponAttack ("Unarmed", skillLevelDM (char, "Melee") + dmFor (char, "STR"), checkRoll (char), "1D", "melee", 2)],
+        map ((weapon)->characterAttack (char, weapon), char.Weapons))
+
+minionAttacksFor (minion) =
+    map ((weapon)->weaponAttack (weapon.Name, minion.Stats.'Attack DM', 2d6, weaponDamage (weapon), attackKind (weapon), attackDistance (weapon)), minion.Weapons)
+
 condition (str, dex, end) =
     if str + dex + end < 1 then "Dead"
     else if str < 1 then "Unconscious"
@@ -199,6 +255,15 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
     }
 
+    Attacks = list
+    {
+        source = attacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+        tableLayout = layout { size = wide }
+    }
+
     Armour = list
     {
         source = secondary.Armour
@@ -257,6 +322,7 @@ minionTable = ruleset
         Protection = integer { default = 0 }
         Initiative = modifier { default = 0  valuedice = 2d6 }
         Check = modifier { default = 0  valuedice = 2d6 }
+        'Attack DM' = modifier { default = 0  valuedice = 2d6  action = melee  reach = 2 }
     }
     Abilities = table
     {
@@ -271,6 +337,14 @@ minionTable = ruleset
         source = secondary.Weapons
         singular = "Weapon"
         editable = character
+        tableLayout = layout { size = wide }
+    }
+    Attacks = list
+    {
+        source = minionAttacksFor (minionTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
         tableLayout = layout { size = wide }
     }
 }
@@ -357,7 +431,7 @@ darkConspiracyNameSetting = nameSetting
 
 DarkConspiracy = system
 {
-    libraries = ["/systems/names/spies.json", "/systems/names/cosmic.json"]
+    libraries = ["/systems/darkconspiracy/basics.json", "/systems/names/spies.json", "/systems/names/cosmic.json"]
     nameSettings = [darkConspiracyNameSetting]
     characters = characterTable
     creatures = minionTable
