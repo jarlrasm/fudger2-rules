@@ -103,6 +103,16 @@
 }
 .entityView .table-leveling td {
     font-style: italic;
+    vertical-align: top;
+}
+.entityView .table-leveling td:first-child {
+    width: 1%;
+    white-space: nowrap;
+}
+.entityView .table-leveling pre {
+    margin: 0;
+    font-family: inherit;
+    overflow-wrap: anywhere;
 }
 
 .entityView thead {
@@ -326,4 +336,48 @@
     border-radius: 6px 6px 0 0;
     border-bottom: none;
     padding: 3px 6px;
+}
+
+.entityView .table-conditions {
+    column-count: auto;
+}
+.entityView .table-conditions tbody {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    padding-top: 4px;
+}
+.entityView .table-conditions tbody tr {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 1 1 120px;
+    min-width: 0;
+}
+.entityView .table-conditions tbody tr:not(:has(input[type="checkbox"])) {
+    flex: 1 1 100%;
+    flex-direction: row;
+    gap: 6px;
+}
+.entityView .table-conditions tbody tr td {
+    border: none;
+    padding: 1px 2px;
+}
+.entityView .table-conditions tbody tr:not(:has(input[type="checkbox"])) td:first-child {
+    flex: none;
+    font-weight: 700;
+}
+.entityView .table-conditions tbody tr:not(:has(input[type="checkbox"])) td:last-child {
+    flex: 1 1 0;
+    min-width: 0;
+}
+.entityView .table-conditions pre {
+    margin: 0;
+    font-family: inherit;
+    overflow-wrap: anywhere;
+}
+.entityView .table-conditions input:not([type="checkbox"]) {
+    max-width: 100%;
+    box-sizing: border-box;
 }
