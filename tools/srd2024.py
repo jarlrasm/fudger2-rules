@@ -61,6 +61,23 @@ CASTING_TIMES = {
 }
 
 
+ABILITY_NAMES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
+
+
+def spell_attack(description):
+    """Whether the spell makes a spell attack, as the D&D sheet's Spell attacks list reads it: Melee, Ranged, both, or empty."""
+    kinds = [k for k in ("Melee", "Ranged") if re.search(k + r" spell attack", description, re.I)]
+    if kinds:
+        return " or ".join(kinds)
+    return "Ranged" if re.search(r"spell attack", description, re.I) else ""
+
+
+def saving_throw(description):
+    """The ability whose saving throw the spell calls for, Several, or empty."""
+    found = [a for a in ABILITY_NAMES if a + " saving throw" in description]
+    return found[0] if len(found) == 1 else ("Several" if found else "")
+
+
 def spells():
     result = []
     for s in sorted(load("spells"), key=lambda x: x["name"]):
@@ -89,14 +106,17 @@ def spells():
         if s.get("higher_level"):
             label = "Cantrip Upgrade." if s["level"] == 0 else "Using a Higher-Level Spell Slot."
             parts.append(f"{label} {clean(s['higher_level'])}")
+        description = "\n\n".join(parts)
         stats = {
             "level": s["level"],
             "Casting time": casting,
             "Range": s["range_text"] or "",
             "Components": ", ".join(components),
             "Duration": duration,
+            "Spell attack": spell_attack(description),
+            "Saving throw": saving_throw(description),
         }
-        result.append(entity("Spells", s["name"], "\n\n".join(parts), {"spellStats": {"Stats": stats}, "secondary": {}}))
+        result.append(entity("Spells", s["name"], description, {"spellStats": {"Stats": stats}, "secondary": {}}))
     return result
 
 
