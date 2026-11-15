@@ -107,64 +107,193 @@ button.entitypicker.current {
     color: var(--text);
     border-radius: 5px;
 }
-.entityView button.dicethrow {
-    padding: 0;
-    margin: 0;
-    background-color: var(--dice-bg);
-    color: var(--dice-text);
-}
 .entityView button:hover {
     background-color: var(--accent-soft);
 }
-.entityView .entityTable:hover {
-    filter: drop-shadow(0 0 5px var(--accent-soft));
-}
-.entityView .entityTable {
-    border-radius: 10px;
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    margin: 5px;
-    display: inline-table;
-    filter: drop-shadow(1px 1px 3px var(--shadow));
-}
-.entityView .wide {
-    width: 100%;
-}
-.entityView .wide>table {
-    width: 100%;
-    table-layout: fixed;
-}
-.entityView .split2 {
-    display: inline-block;
-    column-count: 2;
-    column-rule: 4px solid var(--surface);
-}
-.entityView .split3 {
-    display: inline-block;
-    column-count: 3;
-    column-rule: 4px solid var(--surface);
-}
-.entityView .split4 {
-    display: inline-block;
-    column-count: 4;
-    column-rule: 4px solid var(--surface);
-}
-.entityView .split5 {
-    display: inline-block;
-    column-count: 5;
-    column-rule: 4px solid var(--surface);
-}
-.entityView thead {
-    padding-top: 15px;
-    font-family: starjedi;
-    color: var(--accent);
-    margin: 0;
-    text-align: left;
-}
 .entityView {
-    max-width: 95%;
+    max-width: 100%;
     flex-wrap: wrap;
     display: flex;
+    gap: 10px;
+    padding: 10px;
+    background:
+        radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(1px 1px at 34% 76%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 88% 88%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 52% 8%, rgba(255, 255, 255, 0.3), transparent);
+    background-size: 240px 240px;
+}
+.entityView .entityTable {
+    position: relative;
+    flex: 1 1 280px;
+    min-width: 0;
+    margin: 0;
+    display: block;
+    background: linear-gradient(180deg, var(--surface-alt), var(--surface) 60px);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+.entityView .entityTable::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(225deg, var(--accent) 0 9px, transparent 9px);
+    pointer-events: none;
+}
+.entityView .entityTable:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 10px var(--accent-soft);
+}
+.entityView .entityTable>table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.entityView .wide {
+    flex-basis: 100%;
+}
+.entityView .wide>table {
+    table-layout: fixed;
+}
+.entityView thead {
+    font-family: starjedi;
+    color: var(--accent);
+    text-align: left;
+}
+.entityView thead th {
+    padding: 6px 28px 6px 10px;
+    font-weight: normal;
+    font-size: 1.05em;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 6px rgba(255, 232, 31, 0.35);
+}
+.entityView tbody td {
+    padding: 3px 8px;
+    border-bottom: 1px solid rgba(201, 162, 39, 0.12);
+}
+.entityView tbody tr:last-child td {
+    border-bottom: none;
+}
+.entityView tbody tr:hover td {
+    background-color: rgba(255, 232, 31, 0.05);
+}
+.entityView tbody td:first-child {
+    color: var(--text-muted);
+}
+.entityView tbody td {
+    font-variant-numeric: tabular-nums;
+}
+
+.entityView .split2,
+.entityView .split3,
+.entityView .split4,
+.entityView .split5 {
+    column-count: auto;
+}
+.entityView .split2>table,
+.entityView .split3>table,
+.entityView .split4>table,
+.entityView .split5>table {
+    display: block;
+}
+.entityView .split2>table>thead,
+.entityView .split3>table>thead,
+.entityView .split4>table>thead,
+.entityView .split5>table>thead {
+    display: block;
+}
+.entityView .split2>table>thead tr,
+.entityView .split3>table>thead tr,
+.entityView .split4>table>thead tr,
+.entityView .split5>table>thead tr,
+.entityView .split2>table>thead th,
+.entityView .split3>table>thead th,
+.entityView .split4>table>thead th,
+.entityView .split5>table>thead th {
+    display: block;
+}
+.entityView .split2>table>tbody,
+.entityView .split3>table>tbody,
+.entityView .split4>table>tbody,
+.entityView .split5>table>tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    padding: 10px;
+}
+.entityView .split3>table>tbody {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+.entityView .split2>table>tbody>tr,
+.entityView .split3>table>tbody>tr,
+.entityView .split4>table>tbody>tr,
+.entityView .split5>table>tbody>tr {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-strong);
+}
+.entityView .split2>table>tbody>tr>td,
+.entityView .split3>table>tbody>tr>td,
+.entityView .split4>table>tbody>tr>td,
+.entityView .split5>table>tbody>tr>td {
+    display: block;
+    border: none;
+    text-align: left;
+    padding: 4px 8px;
+}
+.entityView .split2>table>tbody>tr>td:first-child,
+.entityView .split3>table>tbody>tr>td:first-child,
+.entityView .split4>table>tbody>tr>td:first-child,
+.entityView .split5>table>tbody>tr>td:first-child {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-faint);
+}
+.entityView .split3>table>tbody>tr {
+    border-left-width: 1px;
+    border-top: 3px solid var(--accent);
+    text-align: center;
+}
+.entityView .split3>table>tbody>tr>td {
+    text-align: center;
+}
+.entityView .split3>table>tbody>tr>td:first-child {
+    font-family: starjedi;
+    font-size: 0.95em;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+}
+.entityView .split3 button.dicethrow {
+    font-size: 1.6em;
+    padding: 2px 10px;
+}
+
+.entityView button.dicethrow {
+    padding: 0 6px;
+    margin: 0;
+    min-width: 3.4em;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    background-color: var(--dice-bg);
+    color: var(--dice-text);
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+}
+.entityView button.dicethrow:hover {
+    background-color: var(--accent);
+    color: var(--on-accent);
+    box-shadow: 0 0 8px var(--accent);
 }
 .entityView .slots {
     display: inline;

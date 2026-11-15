@@ -116,6 +116,31 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 
 `valuedice` can be any expression, e.g. a function that picks a roll from the character's state (see `D20Roll` in `DND/Basics.frules`).
 
+### Battlemap actions
+
+A field with `action` is an action. In a running battle, whoever has the current initiative can click another token and use it on that token. Chat then shows "Bob used Sword on Orc and rolled 14".
+
+- `action = melee` or `action = ranged`. A plain name and a string (`"melee"`) both work, so a function can pass the kind in as a parameter.
+- `reach = <number>`: how far a melee action reaches, in the battlemap's unit (ft or m). Without it the target must be next to the user.
+- `range = <number>`: how far a ranged action reaches. Without it there is no limit.
+- An out-of-reach action is greyed out for players. The gamemaster can still use it.
+- In a list row, the action is named after the row's `Name` and rolls the first rolled field in the row.
+- In the sheet's meta view you can tick "Action" on any row or field to make it an action, or untick one the rules made. Those have no range limit, and a field without dice just says "Bob used Rope on Orc".
+
+```
+Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action = kind  reach = distance  range = distance }
+```
+
+Weapon lists that come from `secondary` have no rolled fields, so each system builds a computed `Attacks` list from them, one row per weapon, with a rolled field that carries `action`:
+
+- `DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties. A melee weapon with Thrown also gets a ranged "Name (thrown)" row with that range.
+- Fudge has no default actions.
+- GURPS uses the largest number in Reach, and the max range from Range (`ST x20` is worked out from ST), in yards.
+- Mothership rolls Combat plus Hand to hand Combat or Firearms (15) or Military Training (10). Adjacent weapons are melee, and Close, Long and Extreme are 20 m, 100 m and no limit.
+- Star Wars rolls Melee or Lightsaber for melee weapons, and Blaster or Grenade for ranged ones, plus Dexterity. The range is the long band of Range.
+- Torg rolls Melee Weapons, or Fire Combat, Energy Weapons or Missile Weapons by the weapon's name and notes, with the long band of Range. An Unarmed row is always there.
+- Creatures without weapon lists: Over the Edge's `Fight` and Mothership's creature `Combat` are actions themselves, and Torg creatures get a hidden `'Attack rolls'` list with a row for each combat skill they have.
+
 A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
 ## The system
@@ -149,10 +174,26 @@ Fudge = system
 | `initiativeRolls` | Optional. Makes initiative rolls a per-campaign setting with these names as the default, e.g. `["Dex", "Alertness"]`. Leave it out to use the `Initiative` field only. |
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
 | `quickdice` | Dice buttons shown in sessions |
-| `cssFiles` | Extra stylesheets |
+| `cssFiles` | Extra stylesheets, loaded for every campaign of the system. See [Styling a sheet](#styling-a-sheet). |
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
 | `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
+
+### Styling a sheet
+
+A stylesheet in `cssFiles` can restyle the whole app by overriding the colour tokens on `:root` (see `starwars/starwars.css`), and the sheet through these classes:
+
+| Class | On |
+|---|---|
+| `entityView` | The whole sheet |
+| `entityTable` | Each block's wrapper `div`, holding `table > thead th` (the title) and `tbody` |
+| `table-<name>` | The same `div`, named after the table: lowercased, spaces to `-`, other characters dropped. `'Ability scores'` is `table-ability-scores`, `'1st Level Spells'` is `table-1st-level-spells`. Nested tables get one too. |
+| `wide`, `split2` to `split5` | Blocks with `size = wide` or `columns = N` |
+| `namedescription` | Name cells that open a description |
+| `slots`, `used`, `unused` | Slot trackers |
+| `dicethrow` | Dice roll buttons |
+
+Ship fonts and images next to the stylesheet and refer to them by their `/systems/...` path.
 
 ### PDFs
 

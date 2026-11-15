@@ -241,13 +241,31 @@ parryFor(level, text, bonus) =
     else
         toString (3 + level / 2 + bonus + modifierOf (replace ("U", "", replace ("F", "", text)))) + (if contains (text, "U") then "U" else if contains (text, "F") then "F" else "")
 
-attack(name, level, mode, parry, reach) = custom
+reachYards(text) =
+    max (map ((x)->toInt (x), split (",", replace ("-", ",", replace ("/", ",", replace ("C", "0", replace (" ", "", text)))))))
+
+strengthRange(st, multiple) =
+    if contains (multiple, ".") then
+        st * toInt (replace (".", "", multiple)) / 10
+    else
+        st * toInt (multiple)
+
+maxRangeYards(text) =
+    if contains (first (reverse (split ("/", replace (" ", "", text)))), "STx") then
+        strengthRange (fromAttribute ("ST"), replace ("STx", "", first (reverse (split ("/", replace (" ", "", text))))))
+    else
+        toInt (replace (",", "", first (reverse (split ("/", replace (" ", "", text))))))
+
+attack(name, level, mode, parry, reach, kind, distance) = custom
 {
     Name = name
     'To hit' = integer {
         value = level
         render = "To hit: " + toString (level)
         valuedice = 3d6
+        action = kind
+        reach = distance
+        range = distance
     }
     Damage = integer {
         value = modeAdds (mode)
@@ -267,7 +285,9 @@ meleeAttacks(weapon) =
             weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill),
             mode,
             "Parry: " + parryFor (weaponLevel (weapon.data.meleeWeaponStats.Stats.Skill), weapon.data.meleeWeaponStats.Stats.Parry, defenseBonus (characterTable)),
-            "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach),
+            "Reach: " + weapon.data.meleeWeaponStats.Stats.Reach,
+            "melee",
+            reachYards (weapon.data.meleeWeaponStats.Stats.Reach)),
         split (" / ", weapon.data.meleeWeaponStats.Stats.Damage))
 
 rangedAttacks(weapon) =
@@ -277,7 +297,9 @@ rangedAttacks(weapon) =
             weaponLevel (weapon.data.rangedWeaponStats.Stats.Skill),
             mode,
             "",
-            "Range: " + weapon.data.rangedWeaponStats.Stats.Range),
+            "Range: " + weapon.data.rangedWeaponStats.Stats.Range,
+            "ranged",
+            maxRangeYards (weapon.data.rangedWeaponStats.Stats.Range)),
         split (" / ", weapon.data.rangedWeaponStats.Stats.Damage))
 
 attacksFor(char) =
@@ -652,6 +674,7 @@ GURPSLite = system
     Armour = armourStats
     'Other items' = itemStats
     Skills = skillStats
+    cssFiles = ["/systems/Gurps/gurps.css"]
     description = "Gurps lite"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items","Advantage","Disadvantage","Skills"]
     libraries = ["/systems/Gurps/gurpslite.json", "/systems/names/norwegian.json", "/systems/names/viking.json", "/systems/names/chinese.json", "/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/cyberpunk.json", "/systems/names/gothic.json", "/systems/names/cosmic.json", "/systems/names/grimdark.json", "/systems/names/oldworld.json", "/systems/names/nightworld.json", "/systems/names/desert.json", "/systems/names/barbarian.json", "/systems/names/wasteland.json", "/systems/names/weirdwest.json", "/systems/names/pirates.json", "/systems/names/samurai.json", "/systems/names/victorian.json", "/systems/names/bluecollar.json", "/systems/names/mythicgreece.json", "/systems/names/arthurian.json", "/systems/names/egypt.json", "/systems/names/heroes.json", "/systems/names/spies.json", "/systems/names/faerie.json"]

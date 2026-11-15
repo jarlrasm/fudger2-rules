@@ -1,0 +1,288 @@
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ece3cf;
+    --surface: #fbf7ec;
+    --surface-alt: #f3ecda;
+    --surface-sunken: #e4d9bf;
+    --surface-muted: #d9cdb0;
+    --text: #1f1a14;
+    --text-muted: #4d4336;
+    --text-faint: #7d715e;
+    --on-accent: #fbf7ec;
+    --border: #b9a986;
+    --border-strong: #2a231a;
+    --accent: #7a1f1a;
+    --accent-hover: #942a23;
+    --accent-soft: #ead5c6;
+    --link: #7a1f1a;
+    --danger: #a3221b;
+    --danger-hover: #7f1913;
+    --danger-soft: #f1d3cc;
+    --success: #3f6b2a;
+    --success-hover: #4f8435;
+    --current: #e6dcb8;
+    --highlight: #efe1a8;
+    --card-bg: #fbf7ec;
+    --gm-bg: #e8e4cf;
+    --dice-bg: transparent;
+    --dice-text: #1f1a14;
+    --paper: #fbf7ec;
+    --shadow: rgba(60, 40, 10, 0.25);
+    --backdrop: rgba(30, 20, 10, 0.55);
+    --focus-ring: #7a1f1a;
+    --toast-success: #3f6b2a;
+    --toast-error: #a3221b;
+    --toast-info: #4d4336;
+    --skeleton: #e4d9bf;
+    --skeleton-shine: #efe6d2;
+    --dnd-serif: "Book Antiqua", "Palatino Linotype", Palatino, "URW Palladio L", Georgia, serif;
+    --dnd-display: "Cinzel", "Trajan Pro", "Optima", "Book Antiqua", Palatino, Georgia, serif;
+}
+
+.entityView {
+    font-family: var(--dnd-serif);
+    color: var(--text);
+    gap: 8px;
+    padding: 4px;
+}
+
+.entityView .entityTable {
+    background-color: var(--surface);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 6px 8px 8px;
+    filter: none;
+    box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--border);
+}
+.entityView .entityTable:hover {
+    filter: none;
+    box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--accent);
+}
+.entityView .entityTable .entityTable {
+    border-width: 1px;
+    border-radius: 8px;
+    box-shadow: none;
+    margin: 4px 0;
+}
+
+.entityView thead {
+    font-family: var(--dnd-display);
+    font-style: normal;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-align: center;
+}
+.entityView thead th {
+    padding: 2px 0 6px;
+    border-bottom: 1px solid var(--accent);
+}
+.entityView .entityTable .entityTable thead th {
+    border-bottom: none;
+    font-size: 0.72rem;
+}
+
+.entityView td {
+    padding: 2px 6px;
+    vertical-align: middle;
+}
+.entityView tbody tr + tr td {
+    border-top: 1px dotted var(--border);
+}
+
+.entityView button {
+    font-family: var(--dnd-serif);
+}
+.entityView button.dicethrow {
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0 4px;
+}
+.entityView button.dicethrow:hover {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+}
+
+.entityView .namedescription {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+.entityView .namedescription summary {
+    font-weight: 700;
+}
+
+.entityView .table-saving-throws input[type="checkbox"],
+.entityView .table-skills input[type="checkbox"] {
+    appearance: none;
+    width: 11px;
+    height: 11px;
+    margin: 0 2px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    vertical-align: middle;
+}
+.entityView .table-saving-throws input[type="checkbox"]:checked,
+.entityView .table-skills input[type="checkbox"]:checked {
+    background: var(--border-strong);
+}
+.entityView .table-saving-throws .customtype,
+.entityView .table-skills .customtype {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+}
+.entityView .table-saving-throws .customtype div,
+.entityView .table-skills .customtype div {
+    margin: 0;
+}
+.entityView .table-saving-throws .customtype > :first-child button.dicethrow,
+.entityView .table-skills .customtype > :first-child button.dicethrow {
+    min-width: 2.4em;
+    border-bottom: 1px solid var(--border-strong);
+    border-radius: 0;
+}
+.entityView .table-saving-throws td:first-child,
+.entityView .table-skills td:first-child {
+    font-size: 0.92em;
+}
+.entityView .table-skills tbody tr {
+    break-inside: avoid;
+}
+
+.entityView .table-ability-scores {
+    flex: 1 1 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+.entityView .table-ability-scores:hover {
+    box-shadow: none;
+}
+.entityView .table-ability-scores > table {
+    width: 100%;
+}
+.entityView .table-ability-scores thead {
+    display: none;
+}
+.entityView .table-ability-scores tbody {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+}
+.entityView .table-ability-scores tbody tr {
+    display: grid;
+    grid-template-areas: "name" "mod" "score";
+    justify-items: center;
+    flex: 1 1 88px;
+    max-width: 130px;
+    padding: 8px 6px 0;
+    background: var(--surface);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 14px 14px 30px 30px;
+    box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--border);
+}
+.entityView .table-ability-scores tbody tr td {
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-ability-scores tbody tr td:nth-child(1) {
+    grid-area: name;
+    font-family: var(--dnd-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.entityView .table-ability-scores tbody tr td:nth-child(2) {
+    grid-area: score;
+    min-width: 3em;
+    margin-bottom: -10px;
+    padding: 1px 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 0.95rem;
+}
+.entityView .table-ability-scores tbody tr td:nth-child(3) {
+    grid-area: mod;
+    font-size: 1.9rem;
+    line-height: 1.15;
+    padding: 2px 0 6px;
+}
+.entityView .table-ability-scores tbody tr td:nth-child(3) button.dicethrow {
+    font-size: inherit;
+}
+.entityView .table-ability-scores tbody {
+    padding-bottom: 12px;
+}
+.entityView .table-ability-scores input {
+    width: 3em;
+    text-align: center;
+}
+
+.entityView .table-basics tbody {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 4px;
+}
+.entityView .table-basics tbody tr {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 76px;
+    flex: 1 1 76px;
+    padding: 4px 4px 3px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+}
+.entityView .table-basics tbody tr td {
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-basics tbody tr td:first-child {
+    font-family: var(--dnd-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.entityView .table-basics tbody tr td:last-child {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+.entityView .table-basics tbody tr:nth-child(2) {
+    border-radius: 8px 8px 50% 50% / 8px 8px 30% 30%;
+}
+
+.entityView .table-hitpoints tbody tr:first-child td:last-child {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+.entityView .table-hitpoints .slots {
+    letter-spacing: 0.1em;
+}
+
+.entityView [class*="table-"][class*="-level-spells"] > table > thead th,
+.entityView .table-cantrips > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    padding: 3px 6px;
+}

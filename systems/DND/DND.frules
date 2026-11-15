@@ -18,6 +18,8 @@ weaponStats =ruleset
                 {}
                 Properties=string
                 {}
+                Equipped=bool
+                {default=true}
             }
         }
 armourStats= ruleset
@@ -38,6 +40,16 @@ armourStats= ruleset
                 {}
                 Weight=string
                 {}
+                Equipped=bool
+                {default=true}
+            }
+        }
+itemStats= ruleset
+        {
+            Stats= table
+            {
+                Equipped=bool
+                {default=true}
             }
         }
 spellStats =ruleset
@@ -187,6 +199,7 @@ DND5e = system
     Races = raceStats
     Backgrounds = backgroundStats
     Armour= armourStats
+    'Other items' = itemStats
     Spells = spellStats
     Feats = featStats
 
@@ -198,6 +211,7 @@ DND5e = system
     nameSettings = [dndNameSetting, norseNameSetting, easternNameSetting, gothicHorrorNameSetting, oldWorldNameSetting, desertRealmsNameSetting, swordAndSorceryNameSetting, highSeasNameSetting, feudalJapanNameSetting, mythicGreeceNameSetting, arthurianNameSetting, faerieCourtsNameSetting]
     initiativeCompare(item1,item2) = compare (item1 ,item2)
     quickdice =[1d20,1d12,1d10,1d8,1d6,1d4]
+    cssFiles = ["/systems/DND/dnd.css"]
 
 }
 

@@ -269,10 +269,22 @@ creatureTable = ruleset
             'To hit' = modifier
             {
                 valuedice = D20Roll (creatureTable)
+                action = attackKind (Reach)
+                reach = attackReach (Reach)
+                range = attackRange (Reach)
             }
             Reach = string {}
             Damage = string {}
         }
+    }
+  'Attack rolls' =
+  list
+    {
+        visible = none
+        source = creatureAttacksFromActions (creatureTable)
+        singular = "Attack"
+        editable = none
+        valueType = creatureAttack
     }
   'Traits' =
   list

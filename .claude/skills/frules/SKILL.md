@@ -22,7 +22,8 @@ Read [reference.md](reference.md) for the full language before writing anything 
 3. Define one `system` at the top level, and point `characters`, `creatures` and every name in `secondaryTypes` at a `ruleset`.
 4. Register a new system (or extension) in `rules.json`. If it has `nameSettings`, list the same setting names there as `"nameSettings"`.
 5. For names, add the files from `names/` that fit the setting to `libraries`, and pick or write `nameSettings` (see [Name generators](reference.md#name-generators)).
-6. Validate by parsing (see below). Fix and repeat until it passes.
+6. Write a play guide, `guide.md` next to the system's files, and point to it with `"guide"` in the system's (or extension's) `rules.json` entry. It tells an AI gamemaster how to play: how rolls are judged, combat, damage and healing, and which sheet fields matter. Use your own words, and keep it short. The MCP's `get_rules` tool serves it.
+7. Validate by parsing (see below). Fix and repeat until it passes.
 
 ## Validate
 

@@ -32,10 +32,10 @@ allSources(char) = [
                       map ((x)->x.Description ,char.'Features and Traits'.'Feats'),
                       map ((x)->x.Description ,char.'Features and Traits'.'Other features'),
                       
-                      map ((x)->x.Description ,char.'Equipment'.'Melee weapons'),
-                      map ((x)->x.Description ,char.'Equipment'.'Ranged weapons'),
-                      map ((x)->x.Description ,char.'Equipment'.'Armour'),
-                      map ((x)->x.Description ,char.'Equipment'.'Other items'),
+                      map ((x)->x.Description ,equipped (char.'Equipment'.'Melee weapons', "weaponStats")),
+                      map ((x)->x.Description ,equipped (char.'Equipment'.'Ranged weapons', "weaponStats")),
+                      map ((x)->x.Description ,equipped (char.'Equipment'.'Armour', "armourStats")),
+                      map ((x)->x.Description ,equipped (char.'Equipment'.'Other items', "itemStats")),
                       map ((x)->x.Description ,safeRaceFeatures (char))
                     ]
 
@@ -77,8 +77,8 @@ unarmouredAC(char) =
           0)
 
 ac(char) =
-  if count (char.'Equipment'.'Armour') > 0 then
-    first (reverse (sort (map ((x)->acForArmour (char, x), char.'Equipment'.'Armour'))))
+  if count (equipped (char.'Equipment'.'Armour', "armourStats")) > 0 then
+    first (reverse (sort (map ((x)->acForArmour (char, x), equipped (char.'Equipment'.'Armour', "armourStats")))))
   else
     unarmouredAC (char)
 
