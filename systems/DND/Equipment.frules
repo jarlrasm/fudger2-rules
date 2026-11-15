@@ -48,6 +48,18 @@ equipmentTable= table
         editable = character
         autocomplete = autoCompletes
     }
+    Coins = table
+    {
+        tableLayout = layout
+        {
+            columns = 5
+        }
+        CP = integer { default = 0  minvalue = 0  editable = live }
+        SP = integer { default = 0  minvalue = 0  editable = live }
+        EP = integer { default = 0  minvalue = 0  editable = live }
+        GP = integer { default = 0  minvalue = 0  editable = live }
+        PP = integer { default = 0  minvalue = 0  editable = live }
+    }
 }
 equippedFallback = { Stats = { Equipped = true } }
 

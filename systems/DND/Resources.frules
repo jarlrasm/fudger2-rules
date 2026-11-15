@@ -131,6 +131,7 @@ restTable = table
                 (root.Hitpoints.'Death save successes'.realvalue) = 0
                 (root.Hitpoints.'Death save failures'.realvalue) = 0
                 (root.Hitpoints.'Hit dice'.realvalue) = 0
+                (root.Conditions.Exhaustion) = max (0, Conditions.Exhaustion - 1)
                 (root.'Class resources'.'Resource 1'.Uses.realvalue) = 0
                 (root.'Class resources'.'Resource 2'.Uses.realvalue) = 0
                 (root.'Class resources'.'Resource 3'.Uses.realvalue) = 0

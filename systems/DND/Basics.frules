@@ -110,8 +110,8 @@ basicsTable =table
         }
     Speed = integer
         {
-          value = raceSpeed (Class.Race) + speedBonus (characterTable)
-          render = distance (raceSpeed (Class.Race) + speedBonus (characterTable))
+          value = max (0, raceSpeed (Class.Race) + speedBonus (characterTable) - 5 * Conditions.Exhaustion)
+          render = distance (max (0, raceSpeed (Class.Race) + speedBonus (characterTable) - 5 * Conditions.Exhaustion))
           editable=none
         }
     Size = raceSize (Class.Race)
@@ -127,6 +127,11 @@ basicsTable =table
           )).ProficiencyBonus
           editable=none
         }
+    'Heroic Inspiration' = bool
+        {
+          default = false
+          editable = live
+        }
     Roll = selector
         {
                 options = ["Disadvantage", "Normal", "Advantage"]
@@ -140,7 +145,7 @@ basicsTable =table
   }
 
 
-D20Roll (char) = if char.Basics.Roll == "Advantage" then ([1d20,1d20],((baseline,throws)->
+plainD20Roll (char) = if char.Basics.Roll == "Advantage" then ([1d20,1d20],((baseline,throws)->
       baseline +
       max(
         first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls),
@@ -155,3 +160,25 @@ D20Roll (char) = if char.Basics.Roll == "Advantage" then ([1d20,1d20],((baseline
           )
           )) else
         1d20
+
+exhaustedD20Roll (mode, penalty) =
+    if mode == "Advantage" then ([1d20,1d20],((baseline,throws)->
+        baseline - penalty +
+        max(
+          first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls),
+          item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls)
+        ))) else
+    if mode == "Disadvantage" then ([1d20,1d20],((baseline,throws)->
+        baseline - penalty +
+        min(
+          first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls),
+          item (1,throws).bonus + fold (0, (x1,x2)->x1+x2, item (1,throws).rolls)
+        ))) else
+    ([1d20],((baseline,throws)->
+        baseline - penalty + first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls)))
+
+D20Roll (char) =
+    if exhaustionLevel (char) > 0 then
+        exhaustedD20Roll (char.Basics.Roll, 2 * exhaustionLevel (char))
+    else
+        plainD20Roll (char)

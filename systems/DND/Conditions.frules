@@ -1,0 +1,65 @@
+effectLine (flag, text) = if flag then [text] else []
+
+joinEffects (lines) = fold ("", (acc, x)->if acc == "" then x else acc + ". " + x, lines)
+
+exhaustionEffect (level) =
+    if level > 5 then
+        ["Exhaustion 6: dead"]
+    else
+        if level > 0 then
+            ["Exhaustion " + toString (level) + ": " + toString (0 - 2 * level) + " to d20 Tests, Speed -" + toString (5 * level) + " ft"]
+        else
+            []
+
+exhaustionLevel (char) = char.Conditions.Exhaustion
+
+textVisible (text) = if text == "" then none else visible
+
+conditionEffects (blinded, charmed, deafened, frightened, grappled, incapacitated, invisible, paralyzed, petrified, poisoned, prone, restrained, stunned, unconscious, exhaustion) =
+    joinEffects (flatten ([
+        effectLine (blinded, "Blinded: can't see, attacks against it have advantage and its attacks have disadvantage"),
+        effectLine (charmed, "Charmed: can't attack the charmer, who has advantage on social checks against it"),
+        effectLine (deafened, "Deafened: can't hear"),
+        effectLine (frightened, "Frightened: disadvantage on checks and attacks while it can see the source, and can't move closer to it"),
+        effectLine (grappled, "Grappled: Speed 0, disadvantage on attacks against anyone but the grappler"),
+        effectLine (incapacitated, "Incapacitated: no actions, bonus actions or reactions, and concentration ends"),
+        effectLine (invisible, "Invisible: attacks against it have disadvantage and its attacks have advantage"),
+        effectLine (paralyzed, "Paralyzed: incapacitated, Speed 0, fails Str and Dex saves, attacks against it have advantage and hits from within 5 ft are critical"),
+        effectLine (petrified, "Petrified: turned to stone, incapacitated, Speed 0, resistant to all damage"),
+        effectLine (poisoned, "Poisoned: disadvantage on attacks and ability checks"),
+        effectLine (prone, "Prone: disadvantage on attacks, melee attacks against it have advantage and ranged ones disadvantage"),
+        effectLine (restrained, "Restrained: Speed 0, disadvantage on attacks and Dex saves, attacks against it have advantage"),
+        effectLine (stunned, "Stunned: incapacitated, fails Str and Dex saves, attacks against it have advantage"),
+        effectLine (unconscious, "Unconscious: incapacitated and prone, fails Str and Dex saves, hits from within 5 ft are critical"),
+        exhaustionEffect (exhaustion)]))
+
+conditionsTable = table
+{
+    tableLayout = layout
+    {
+        columns = 3
+    }
+    Blinded = bool { default = false  editable = live }
+    Charmed = bool { default = false  editable = live }
+    Deafened = bool { default = false  editable = live }
+    Frightened = bool { default = false  editable = live }
+    Grappled = bool { default = false  editable = live }
+    Incapacitated = bool { default = false  editable = live }
+    Invisible = bool { default = false  editable = live }
+    Paralyzed = bool { default = false  editable = live }
+    Petrified = bool { default = false  editable = live }
+    Poisoned = bool { default = false  editable = live }
+    Prone = bool { default = false  editable = live }
+    Restrained = bool { default = false  editable = live }
+    Stunned = bool { default = false  editable = live }
+    Unconscious = bool { default = false  editable = live }
+    Exhaustion = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live }
+    Concentration = string { editable = live }
+    Effects = string
+    {
+        value = conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)
+        multiline = true
+        editable = none
+        visible = textVisible (conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion))
+    }
+}

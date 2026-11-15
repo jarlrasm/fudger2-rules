@@ -37,8 +37,14 @@ The Leveling block appears when the character is owed something: XP enough for a
 ## Spells
 Spell attacks under Spells lists every spell the character knows that makes a spell attack, rolling the spell attack bonus. Spell saves lists the spells that call for a saving throw, with the ability and the save DC: the target rolls that save. Both can be used on a token within the spell's range (Touch is 5 ft, Self has no limit). Damage and effects are in the spell's description.
 
+## Conditions
+Tick conditions under Conditions on characters and creatures, and Effects sums up what they do. Exhaustion counts from 0 to 6: each level gives -2 to every d20 roll on the sheet and -5 ft Speed, and 6 is death. Write the spell being concentrated on under Concentration, and clear it when the caster takes damage and fails a Constitution save (DC 10 or half the damage, whichever is higher), is incapacitated, or casts another concentration spell. Heroic Inspiration under Basics lets the player reroll one die and use the new result.
+
 ## Rests
-A short rest lets a character spend hit dice to heal. A long rest restores all hit points and most resources.
+A short rest lets a character spend hit dice to heal. A long rest restores all hit points and most resources, and removes one level of Exhaustion.
+
+## Money
+Coins under Equipment counts copper, silver, electrum, gold and platinum pieces. 10 cp = 1 sp, 10 sp = 1 gp, 2 ep = 1 gp and 10 gp = 1 pp.
 
 ## Creatures
 Creatures have a Challenge rating. A fair fight for four characters is about one creature of their level, or several weaker ones. The built-in library has the SRD monsters, spells and equipment. Use them with library_items in create_encounter.
