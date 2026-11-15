@@ -111,6 +111,7 @@ basicsTable =table
     Speed = integer
         {
           value = raceSpeed (Class.Race) + speedBonus (characterTable)
+          render = distance (raceSpeed (Class.Race) + speedBonus (characterTable))
           editable=none
         }
     Size = raceSize (Class.Race)

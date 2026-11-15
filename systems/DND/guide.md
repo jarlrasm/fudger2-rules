@@ -15,10 +15,10 @@ Roll 1d20, add a modifier, and compare with a Difficulty Class (DC): 5 very easy
 3. An attack rolls d20 plus the attack bonus against the target's Armor Class. A natural 20 is a critical hit and doubles the damage dice. A natural 1 always misses.
 4. Damage comes off Hitpoints (Current). At 0 hit points a character falls unconscious and makes death saving throws. A creature usually dies.
 
-Battlemap squares are 5 feet, so a Speed of 30 ft is 6 squares.
+Battlemap squares are 5 feet (1.5 m), so a Speed of 30 ft (9 m) is 6 squares. New maps start at 5 ft a square, or 1.5 m in a campaign whose Distances setting is m. Reach and range follow the map's unit either way.
 
 ## Movement
-Speed on the sheet is in feet per turn, usually 30 ft for characters. With 5 ft squares that is Speed ÷ 5 squares (6 for 30 ft).
+Speed on the sheet is per turn, usually 30 ft (9 m) for characters. The campaign's Distances setting picks feet or metres for the sheet's Speed and creature reach. With 5 ft squares that is Speed ÷ 5 squares (6 for 30 ft).
 - Movement can be split around the action, such as moving 10 ft, attacking, then moving 20 ft.
 - The Dash action gives the Speed again, so 12 squares for 30 ft.
 - Difficult terrain costs 2 squares of movement per square.

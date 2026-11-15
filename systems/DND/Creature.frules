@@ -273,7 +273,7 @@ creatureTable = ruleset
                 reach = attackReach (Reach)
                 range = attackRange (Reach)
             }
-            Reach = string {}
+            Reach = string { render = distances (Reach) }
             Damage = string {}
         }
     }
