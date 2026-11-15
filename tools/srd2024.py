@@ -395,7 +395,7 @@ def feats():
             parts.append(clean(f["desc"]))
         for b in f["benefits"]:
             parts.append(clean(b["desc"]))
-        result.append(entity("Feats", f["name"], "\n\n".join(parts), {"featStats": {"Type": f["type"]}}))
+        result.append(entity("Feats", f["name"], "\n\n".join(parts), {"featStats": {"Stats": {"Type": f["type"]}}}))
     return result
 
 
