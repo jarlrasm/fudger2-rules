@@ -58,17 +58,26 @@ spellDistance (spell) = if isTouchSpell (spell) then 5 else spellFeet (spell)
 
 characterSpells (char) = char.Spells.'All spells'
 
-isAttackSpell (spell) = contains (toLower (spell.Description), "spell attack")
+storedSpellStat (spell, key) = valueOr (spell.data.spellStats.Stats, key, "?")
+
+isAttackSpell (spell) =
+  if storedSpellStat (spell, "Spell attack") == "?" then
+    contains (toLower (spell.Description), "spell attack")
+  else
+    if storedSpellStat (spell, "Spell attack") == "" then false else true
 
 saveAbilities (spell) =
   filter ((a)->contains (spell.Description, a + " saving throw"),
     ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"])
 
 saveAbility (spell) =
-  if count (saveAbilities (spell)) > 1 then
-    "Several"
+  if storedSpellStat (spell, "Saving throw") == "?" then
+    if count (saveAbilities (spell)) > 1 then
+      "Several"
+    else
+      if count (saveAbilities (spell)) > 0 then first (saveAbilities (spell)) else ""
   else
-    first (saveAbilities (spell))
+    storedSpellStat (spell, "Saving throw")
 
 spellAttack (name, tohit, kind, distance, rangeText) = custom
 {
@@ -100,7 +109,7 @@ spellSave (name, dc, ability, kind, distance, rangeText) = custom
 
 attackSpells (char) = filter ((spell)->isAttackSpell (spell), characterSpells (char))
 
-saveSpells (char) = filter ((spell)->count (saveAbilities (spell)) > 0, characterSpells (char))
+saveSpells (char) = filter ((spell)->if saveAbility (spell) == "" then false else true, characterSpells (char))
 
 spellAttacksWith (spells, tohit) =
   map ((spell)->spellAttack (spell.Name, tohit, spellKind (spell), spellDistance (spell), spellRangeText (spell)), spells)

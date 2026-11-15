@@ -13,7 +13,7 @@ exhaustionEffect (level) =
 
 exhaustionLevel (char) = char.Conditions.Exhaustion
 
-textVisible (text) = if text == "" then none else visible
+anyCondition (flags) = if count (filter ((flag)->flag, flags)) > 0 then visible else none
 
 downState (current, max) =
     if max > 0 then
@@ -66,6 +66,6 @@ conditionsTable = table
         value = conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)
         multiline = true
         editable = none
-        visible = textVisible (conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion))
+        visible = if Exhaustion > 0 then visible else anyCondition ([Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious])
     }
 }
