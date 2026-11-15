@@ -9,7 +9,7 @@ Attributes: ST (strength), DX (dexterity), IQ (intelligence), HT (health), with 
 Both sides roll their skill. The one with the better margin of success wins.
 
 ## Combat
-1. Turns go in order of Basic Speed.
+1. Call initiative. Turns go in order of Basic Speed (Initiative under Secondary characteristics, which the chat shows as Basic Speed x 100, so 5.25 is 525). Highest goes first. On a tie, the higher DX goes first: drag the tokens if the list has them the wrong way round.
 2. An attack rolls the weapon skill. The defender may then roll an active defence: Dodge, Block or Parry. Success avoids the hit.
 3. Damage is rolled from the weapon (based on ST for muscle weapons). Subtract the Damage Resistance of the hit location. What is left comes off HP. Cutting and impaling wounds hurt more.
 4. Below 1/3 HP a character moves and dodges at half. At 0 HP they roll HT each turn to stay conscious, and at -1 x HP they roll HT to avoid death.

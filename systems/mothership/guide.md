@@ -11,6 +11,8 @@ Roll 1d100 and try to roll **under** the stat or save. A trained skill adds its 
 Stress rises when things go wrong. When a character's nerve breaks, they make a Panic check: roll 1d20. Rolling over their Stress is fine. Rolling at or under it means a panic effect, worse the higher the roll.
 
 ## Combat
+There is no initiative roll. Players usually act first. When an enemy could plausibly act sooner, a Speed check decides who goes first. Drag tokens into order in the initiative list.
+
 1. Attacks roll Combat (plus a weapon skill). A hit deals the weapon's damage to Health.
 2. When Health reaches 0, the character takes a Wound, Health resets, and a wound effect follows. At maximum Wounds the character dies.
 3. Armour reduces damage.

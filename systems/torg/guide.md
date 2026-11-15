@@ -6,6 +6,8 @@ Roll a d20 and look up the bonus on the bonus chart, then add it to the attribut
 Compare the total with a Difficulty Number (DN). 10 is standard, 12 challenging, 14 hard, 16 very hard, 18 heroic. Meeting the DN succeeds. Beating it by 5 or more is a good success, and by 10 or more an outstanding success.
 
 ## Combat
+There is no initiative roll. Each round, flip a Drama card: it says which side acts first, and its conditions and approved actions apply to the round. Within a side, the players choose their order. Drag tokens into that order in the initiative list.
+
 1. Roll the attack skill against the target's defence (usually Dodge or a melee skill, and at least 8).
 2. A hit deals the weapon's damage plus bonus. Compare it with the target's Toughness:
    - below Toughness: no effect, or one Shock with a strong hit
