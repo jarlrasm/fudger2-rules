@@ -88,6 +88,7 @@ A reference is looked up in the current table first, then each enclosing table, 
 | `split (separator, text)` | Split into a list of strings |
 | `replace (old, new, text)` | Replace all |
 | `toString (n)`, `toInt (text)` | Convert (bad numbers become `0`) |
+| `distance (n)`, `distances (text)` | A distance in `distanceUnit` as text in the campaign's chosen unit (`"30 ft"` or `"9 m"`), and a text with every "30 ft", "30 feet" and "30-foot" rewritten that way. Use them in `render`. |
 | `toList (record)` | Record to list of `{Key, Value}` |
 | `intValueFromEnumString (values, text)` | Index of `text` in the list `values` |
 | `bonusFrom (listOfTextLists, regex, n)` | `n` if any text matches `regex`, else `0` |
@@ -121,7 +122,7 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 A field with `action` is an action. In a running battle, whoever has the current initiative can click another token and use it on that token. Chat then shows "Bob used Sword on Orc and rolled 14".
 
 - `action = melee` or `action = ranged`. A plain name and a string (`"melee"`) both work, so a function can pass the kind in as a parameter.
-- `reach = <number>`: how far a melee action reaches, in the battlemap's unit (ft or m). Without it the target must be next to the user.
+- `reach = <number>`: how far a melee action reaches, in the system's `distanceUnit`. A map in another unit converts it. Without it the target must be next to the user.
 - `range = <number>`: how far a ranged action reaches. Without it there is no limit.
 - An out-of-reach action is greyed out for players. The gamemaster can still use it.
 - In a list row, the action is named after the row's `Name` and rolls the first rolled field in the row.
@@ -133,7 +134,7 @@ Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action =
 
 Weapon lists that come from `secondary` have no rolled fields, so each system builds a computed `Attacks` list from them, one row per weapon, with a rolled field that carries `action`:
 
-- `DND/Attacks.frules` passes `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties. A melee weapon with Thrown also gets a ranged "Name (thrown)" row with that range.
+- `DND/Attacks.frules` passes, in feet, `"melee"` with reach 5 (10 for weapons with Reach) or `"ranged"` with the first number after "Range" in the weapon's Properties. A melee weapon with Thrown also gets a ranged "Name (thrown)" row with that range.
 - Fudge has no default actions.
 - GURPS uses the largest number in Reach, and the max range from Range (`ST x20` is worked out from ST), in yards.
 - Mothership rolls Combat plus Hand to hand Combat or Firearms (15) or Military Training (10). Adjacent weapons are melee, and Close, Long and Extreme are 20 m, 100 m and no limit.
@@ -178,6 +179,9 @@ Fudge = system
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
 | `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
+| `distanceUnit` | Optional. The unit `reach`, `range` and other rule distances are written in, e.g. `"ft"`, `"m"` or `"yd"`. A battlemap in another unit converts them (5 ft = 1.5 m, 1 yd = 0.9 m). |
+| `squareSize` | Optional. How far a square is, in `distanceUnit`, on a map that never had its scale set. Without it such maps are 1 m. |
+| `distanceUnits` | Optional. Makes the unit sheets show distances in a campaign setting, e.g. `["ft", "m"]`. The first is the default. The campaign stores its choice as `distance` in its configuration. |
 
 ### Styling a sheet
 
