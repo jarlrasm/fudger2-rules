@@ -62,8 +62,15 @@ damageDice (n) =
 
 noSkill = { Level = 0 }
 
+skillEntry (char, skill) = valueOr (char.Skills, skill, noSkill)
+
+trainedFlag (entry) = valueOr (entry, "Trained", "missing")
+
 skillLevelDM (char, skill) =
-    levelDM (char, valueOr (valueOr (char.Skills, skill, noSkill), "Trained", true), valueOr (valueOr (char.Skills, skill, noSkill), "Level", 0))
+    if trainedFlag (skillEntry (char, skill)) == "missing" then valueOr (skillEntry (char, skill), "Level", 0)
+    else if trainedFlag (skillEntry (char, skill)) == "true" then valueOr (skillEntry (char, skill), "Level", 0)
+    else if trainedFlag (skillEntry (char, skill)) == true then valueOr (skillEntry (char, skill), "Level", 0)
+    else untrainedDM (char)
 
 weaponSkill (weapon) = first (split (" (", valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee (blade)")))
 
