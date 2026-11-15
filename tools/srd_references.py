@@ -29,7 +29,7 @@ SECTIONS = {
     "Melee weapons": ("Weapons", "Armor"),
     "Ranged weapons": ("Weapons", "Armor"),
     "Armour": ("Armor", "Tools"),
-    "Other items": ("Armor", "Tools"),
+    "Other items": ("Armor", "Magic Items"),
 }
 
 # Types listed in tables, where a row starts with the item's name.
@@ -89,12 +89,23 @@ def subclass_entity_page(entity, toc, book):
     return subclass_page(f"{parent} ({entity['name']})", toc, book)
 
 
+def is_magic_item(entity):
+    implementation = entity["rulesets"][0]["implementation"]
+    return bool(implementation.get("itemStats", {}).get("Stats", {}).get("Rarity"))
+
+
 def page_of(entity, toc, book):
     name = normal(entity["name"])
     heading = lambda line: line == name
     found = None
-    if entity["type"] in TABLES:
+    if is_magic_item(entity):
+        start = toc.get(normal("Magic Items A–Z"))
+        found = first_page(book, lambda line: line == name or (len(line) > 15 and name.startswith(line + " ")), start) if start else None
+    elif entity["type"] in TABLES:
         found = section_page(entity["type"], lambda line: line == name or line.startswith(name + " "), toc, book)
+        base = re.split(r", | \(", name)[0]
+        if not found and base != name:
+            found = section_page(entity["type"], lambda line: line == base or any(line.startswith(base + end) for end in (" ", ",", "s")), toc, book)
     elif entity["type"] in SECTIONS:
         found = section_page(entity["type"], heading, toc, book)
     return found or subclass_entity_page(entity, toc, book) or toc.get(name) or subclass_page(entity["name"], toc, book) or first_page(book, heading)

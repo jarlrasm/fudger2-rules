@@ -47,4 +47,4 @@ A short rest lets a character spend hit dice to heal. A long rest restores all h
 Coins under Equipment counts copper, silver, electrum, gold and platinum pieces. 10 cp = 1 sp, 10 sp = 1 gp, 2 ep = 1 gp and 10 gp = 1 pp.
 
 ## Creatures
-Creatures have a Challenge rating. A fair fight for four characters is about one creature of their level, or several weaker ones. The built-in library has the SRD monsters, spells and equipment. Use them with library_items in create_encounter.
+Creatures have a Challenge rating. A fair fight for four characters is about one creature of their level, or several weaker ones. The built-in library has the SRD monsters, spells and equipment, including adventuring gear, tools, mounts and vehicles, and the SRD magic items with their rarity and attunement (filter Other items by Category or Rarity). Use them with library_items in create_encounter.
