@@ -1,0 +1,249 @@
+/* Early-90s GDW record-sheet look: black ink on white paper, dense thin-ruled
+   boxes, black title bands with reversed caps, typewriter text for entries.
+   Uses system font stacks only, no shipped fonts. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --dc-ink: #111;
+    --dc-paper: #fff;
+    --dc-rule: #111;
+    --dc-type: "Courier Prime", "Courier New", Courier, ui-monospace, "DejaVu Sans Mono", monospace;
+    --dc-head: "Times New Roman", Times, "Liberation Serif", "DejaVu Serif", serif;
+    --bg: #e6e5e0;
+    --surface: #fff;
+    --surface-alt: #f3f3f0;
+    --surface-sunken: #fff;
+    --surface-muted: #d6d5d0;
+    --text: #111;
+    --text-muted: #333;
+    --text-faint: #666;
+    --on-accent: #fff;
+    --border: #111;
+    --border-strong: #111;
+    --accent: #111;
+    --accent-hover: #3a3a3a;
+    --accent-soft: #e2e2de;
+    --link: #111;
+    --danger: #a3141c;
+    --danger-hover: #7a0f15;
+    --danger-soft: #f3d6d8;
+    --success: #2b5a2f;
+    --success-hover: #36713b;
+    --current: #ededea;
+    --highlight: #f2e27a;
+    --card-bg: #fff;
+    --gm-bg: #f3f3f0;
+    --dice-bg: #111;
+    --dice-text: #fff;
+    --paper: #fff;
+    --shadow: rgba(0, 0, 0, 0.25);
+    --backdrop: rgba(0, 0, 0, 0.6);
+    --focus-ring: #a3141c;
+    --toast-success: #2b5a2f;
+    --toast-error: #a3141c;
+    --toast-info: #111;
+    --skeleton: #e2e2de;
+    --skeleton-shine: #efefeb;
+}
+
+.tab-button {
+    font-family: var(--dc-head);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dc-ink);
+    background-color: transparent;
+    border-radius: 0;
+}
+.tab-button:hover {
+    background-color: var(--accent-soft);
+}
+.tab-button.active,
+.tab-button.active:hover {
+    color: var(--dc-paper);
+    background-color: var(--dc-ink);
+}
+
+/* ---- Sheet blocks: thin-ruled boxes packed tight ---- */
+
+.entityView {
+    max-width: 95%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    font-family: var(--dc-type);
+    color: var(--dc-ink);
+}
+.entityView a {
+    color: var(--dc-ink);
+}
+.entityView .entityTable {
+    display: inline-table;
+    margin: 3px;
+    background: var(--dc-paper);
+    border: 1px solid var(--dc-rule);
+    outline: 1px solid var(--dc-rule);
+    outline-offset: 2px;
+    border-radius: 0;
+    box-shadow: none;
+}
+.entityView .wide {
+    width: calc(100% - 6px);
+}
+.entityView .wide > table {
+    width: 100%;
+    table-layout: fixed;
+}
+.entityView .split2 { display: inline-block; column-count: 2; column-rule: 1px solid var(--dc-rule); }
+.entityView .split3 { display: inline-block; column-count: 3; column-rule: 1px solid var(--dc-rule); }
+.entityView .split4 { display: inline-block; column-count: 4; column-rule: 1px solid var(--dc-rule); }
+.entityView .split5 { display: inline-block; column-count: 5; column-rule: 1px solid var(--dc-rule); }
+
+/* Block title: black band, reversed serif caps, like the sheet's section heads. */
+.entityView .entityTable > table > thead th {
+    background: var(--dc-ink);
+    color: var(--dc-paper);
+    font-family: var(--dc-head);
+    font-weight: 700;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    text-align: left;
+    padding: 2px 6px;
+}
+.entityView td {
+    padding: 1px 5px;
+    font-size: 0.85em;
+    border-bottom: 1px solid var(--dc-rule);
+}
+.entityView tr:last-child > td {
+    border-bottom: none;
+}
+.entityView td:first-child {
+    font-family: var(--dc-head);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.entityView input,
+.entityView select,
+.entityView textarea {
+    font-family: var(--dc-type);
+    color: var(--dc-ink);
+    background: var(--dc-paper);
+    border: none;
+    border-bottom: 1px solid var(--dc-rule);
+    border-radius: 0;
+}
+.entityView button {
+    font-family: var(--dc-head);
+    text-transform: uppercase;
+    color: var(--dc-ink);
+    background: var(--dc-paper);
+    border: 1px solid var(--dc-rule);
+    border-radius: 0;
+}
+.entityView button:hover {
+    background: var(--dc-ink);
+    color: var(--dc-paper);
+}
+.entityView button.dicethrow {
+    font-family: var(--dc-type);
+    padding: 0 4px;
+    margin: 0;
+    background: var(--dice-bg);
+    color: var(--dice-text);
+}
+
+/* Nested blocks drop the double rule and use an underlined title. */
+.entityView .entityTable .entityTable {
+    outline: none;
+    margin: 2px;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    background: var(--dc-paper);
+    color: var(--dc-ink);
+    border-bottom: 1px solid var(--dc-rule);
+}
+
+/* ---- Characteristics: big boxed scores ---- */
+
+.entityView .table-characteristics input {
+    width: 2.2em;
+    height: 1.8em;
+    border: 1px solid var(--dc-rule);
+    text-align: center;
+    font-size: 1.25em;
+    font-weight: 700;
+    padding: 0;
+}
+.entityView .table-characteristics td:first-child {
+    font-weight: 700;
+    font-size: 1em;
+    vertical-align: middle;
+}
+
+/* ---- Skills: tight ruled list ---- */
+
+.entityView .table-skills td {
+    padding: 0 4px;
+}
+.entityView .table-skills input[type="number"] {
+    width: 2.5em;
+    text-align: center;
+}
+
+/* ---- Condition and Dark Influence stand out ---- */
+
+.entityView .table-operative tr:last-child td,
+.entityView .table-company tr:nth-child(4) td {
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.entityView .table-company > table > thead th {
+    background: var(--danger);
+}
+
+/* ---- Checkboxes as inked squares ---- */
+
+.entityView input[type="checkbox"],
+.entityView input[type="radio"] {
+    appearance: none;
+    width: 0.9em;
+    height: 0.9em;
+    border: 1px solid var(--dc-rule);
+    border-radius: 0;
+    vertical-align: middle;
+}
+.entityView input[type="checkbox"]:checked,
+.entityView input[type="radio"]:checked {
+    background: var(--dc-ink);
+}
+
+/* ---- Misc sheet chrome ---- */
+
+.entityView pre {
+    white-space: pre-wrap;
+}
+.entityView .namedescription {
+    display: flex;
+    flex-flow: column;
+    background: var(--dc-paper);
+    border: 1px solid var(--dc-rule);
+    outline: 1px solid var(--dc-rule);
+    outline-offset: 2px;
+    border-radius: 0;
+    padding: 8px;
+    margin: 3px;
+    font-family: var(--dc-head);
+    text-transform: uppercase;
+}
+.entityView .namedescription autocompleting-input {
+    width: 100%;
+}
+.entityView .editbutton {
+    flex-basis: 100%;
+}
+.entityView .customtype div {
+    margin-right: 5px;
+    display: inline;
+}

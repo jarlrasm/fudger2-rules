@@ -13,10 +13,10 @@ Set Roll under Checks to Boon (roll 3D6, keep the best two) or Bane (keep the wo
 3. Damage is the weapon's dice plus the attack's Effect. Subtract the target's armour Protection.
 4. Damage comes off END first (Current under Characteristics). When END is gone, the rest comes off STR or DEX. Condition shows the result: Wounded at 0 END, Unconscious when STR or DEX is also gone, Dead when all three are.
 
-Creatures have Hits instead of characteristics. They attack with Attack DM, or with the rows in their own Attacks list for weapons they carry, and go down at 0 Current Hits.
+Creatures have Hits instead of characteristics. They attack with Attack DM and roll the Damage next to it for claws, bites and fists, or use the rows in their own Attacks list for weapons they carry. They go down at 0 Current Hits.
 
 ## Healing
 Lost END comes back with a night's rest. STR and DEX need days of rest and a Medic check to help. First aid right after a fight restores a few points, once per injury.
 
 ## The Darkness
-Facing the Dark Minions raises Dark Influence under Company, and its effect is shown next to it. Trust measures how far the cell's employer believes them. Empathic talents spend EMP. Keep the horror slow, strange and personal, and let most of what lies behind the conspiracy stay unseen.
+Facing the Dark Minions raises Dark Influence under Company, and its effect is shown next to it. Trust measures how far the cell's employer believes them. Empathic talents spend EMP. Talent Uses lists each talent the character has, rolling Empathy Use plus the EMP DM, and can be used on a token within the talent's Reach. Keep the horror slow, strange and personal, and let most of what lies behind the conspiracy stay unseen.

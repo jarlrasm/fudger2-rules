@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "systems"
@@ -616,6 +617,11 @@ DC_MINIONS = [
 ]
 
 
+def dc_natural_damage(attacks):
+    found = re.search(r"\d+D(\+\d+)?", attacks)
+    return found.group(0) if found else "1D"
+
+
 def darkconspiracy():
     s = "DarkConspiracy"
     entities = []
@@ -629,7 +635,8 @@ def darkconspiracy():
     for name, text, hits, emp, speed, protection, initiative, attack, skills, attacks, traits in DC_MINIONS:
         entities.append(entity(s, "Creature", name, text, {"minionTable": {
             "Stats": {"Hits": hits, "Current Hits": hits, "EMP": emp, "Current EMP": emp, "Speed": f"{speed}m",
-                      "Protection": protection, "Initiative": initiative, "Check": 0, "Attack DM": attack},
+                      "Protection": protection, "Initiative": initiative, "Check": 0, "Attack DM": attack,
+                      "Attack damage": dc_natural_damage(attacks)},
             "Abilities": {"Skills": skills, "Attacks": attacks, "Traits": traits},
         }}))
     return library(

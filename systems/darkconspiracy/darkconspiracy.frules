@@ -38,10 +38,12 @@ levelDM (char, trained, level) = if trained then level else untrainedDM (char)
 skillDM (char, trained, level, characteristic) =
     levelDM (char, trained, level) + dmFor (char, characteristic)
 
-damageDiceCount (damage) = toInt (first (split ("D", damage)))
+damageText (damage) = replace ("d6", "d", replace (" ", "", toLower (damage)))
+
+damageDiceCount (damage) = toInt (first (split ("d", damageText (damage))))
 
 damageBonus (damage) =
-    if count (split ("D", damage)) > 1 then toInt (replace ("+", "", item (1, split ("D", damage))))
+    if count (split ("d", damageText (damage))) > 1 then toInt (replace ("+", "", item (1, split ("d", damageText (damage)))))
     else 0
 
 noDamage = ([1d6], ((baseline, throws)-> baseline))
@@ -60,7 +62,7 @@ damageDice (n) =
     case 10 then 10d6
     else noDamage
 
-noSkill = { Level = 0 }
+noSkill = { Level = 0  Trained = false }
 
 skillEntry (char, fullSkill) =
     valueOr (char.Skills, fullSkill, valueOr (char.Skills, first (split (" (", fullSkill)), noSkill))
@@ -74,16 +76,19 @@ weaponRange (weapon) = valueOr (weapon.data.weaponStats.Stats, "Range", "Melee")
 
 weaponDamage (weapon) = valueOr (weapon.data.weaponStats.Stats, "Damage dice", "1D")
 
-isMelee (weapon) = contains (toLower (weaponRange (weapon)), "melee")
+isMelee (weapon) =
+    if contains (toLower (weaponRange (weapon)), "melee") then true
+    else if weaponRange (weapon) == "" then contains (toLower (weaponSkill (weapon)), "melee")
+    else false
 
 attackCharacteristic (weapon) =
     if contains (toLower (valueOr (weapon.data.weaponStats.Stats, "Skill", "")), "bludgeon") then "STR"
     else if contains (toLower (valueOr (weapon.data.weaponStats.Stats, "Skill", "")), "unarmed") then "STR"
     else "DEX"
 
-metres (text) =
-    if contains (text, "m") then toInt (replace ("m", "", text))
-    else 10000
+metresIn (text) = toInt (replace ("m", "", replace (" ", "", toLower (text))))
+
+metres (text) = if metresIn (text) > 0 then metresIn (text) else 10000
 
 attackKind (weapon) = if isMelee (weapon) then "melee" else "ranged"
 
@@ -118,6 +123,29 @@ attacksFor (char) =
 
 minionAttacksFor (minion) =
     map ((weapon)->weaponAttack (weapon.Name, minion.Stats.'Attack DM', 2d6, weaponDamage (weapon), attackKind (weapon), attackDistance (weapon)), minion.Weapons)
+
+talentUse (name, dm, dice, cost, distance) = custom
+{
+    Name = name
+    Check = modifier
+    {
+        value = dm
+        valuedice = dice
+        action = "ranged"
+        range = distance
+    }
+    'EMP Cost' = cost
+}
+
+talentCost (talent) = valueOr (talent.data.talentStats.Stats, "EMP Cost", "")
+
+talentRange (talent) = metres (valueOr (talent.data.talentStats.Stats, "Reach", ""))
+
+talentUsesFor (char) =
+    map ((talent)->talentUse (talent.Name, skillLevelDM (char, "Empathy Use") + dmFor (char, "EMP"), checkRoll (char), talentCost (talent), talentRange (talent)), char.'Empathic Talents')
+
+minionTalentUsesFor (minion) =
+    map ((talent)->talentUse (talent.Name, minion.Stats.Check, 2d6, talentCost (talent), talentRange (talent)), minion.'Empathic Talents')
 
 condition (str, dex, end) =
     if str + dex + end < 1 then "Dead"
@@ -291,6 +319,15 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
     }
 
+    'Talent Uses' = list
+    {
+        source = talentUsesFor (characterTable)
+        singular = "Talent use"
+        editable = none
+        valueType = talentUse
+        tableLayout = layout { size = wide }
+    }
+
     'Career History' = list
     {
         singular = "Term"
@@ -326,6 +363,13 @@ minionTable = ruleset
         Initiative = modifier { default = 0  valuedice = 2d6 }
         Check = modifier { default = 0  valuedice = 2d6 }
         'Attack DM' = modifier { default = 0  valuedice = 2d6  action = melee  reach = 2 }
+        'Attack damage' = string { default = "1D"  visible = editor }
+        Damage = integer
+        {
+            value = damageBonus ('Attack damage')
+            render = 'Attack damage'
+            valuedice = damageDice (damageDiceCount ('Attack damage'))
+        }
     }
     Abilities = table
     {
@@ -350,6 +394,21 @@ minionTable = ruleset
         valueType = weaponAttack
         tableLayout = layout { size = wide }
     }
+    'Empathic Talents' = list
+    {
+        source = secondary.'Empathic Talents'
+        singular = "Empathic talent"
+        editable = character
+        tableLayout = layout { size = wide }
+    }
+    'Talent Uses' = list
+    {
+        source = minionTalentUsesFor (minionTable)
+        singular = "Talent use"
+        editable = none
+        valueType = talentUse
+        tableLayout = layout { size = wide }
+    }
 }
 
 weaponStats = ruleset
@@ -362,7 +421,7 @@ weaponStats = ruleset
     {
         Skill = string { keys = ["Melee (blade)", "Melee (bludgeon)", "Melee (unarmed)", "Gun Combat (pistol)", "Gun Combat (rifle)", "Gun Combat (archaic)", "Heavy Weapons (portable)", "Athletics (dexterity)", "Explosives"] }
         Range = string {}
-        'Damage dice' = string { default = "3D"  visible = none }
+        'Damage dice' = string { default = "3D"  visible = editor }
         Damage = integer
         {
             value = damageBonus ('Damage dice')
@@ -446,4 +505,7 @@ DarkConspiracy = system
     secondaryTypes = ["Weapons", "Armour", "Equipment", "Empathic Talents"]
     initiativeCompare (item1, item2) = compare (item1, item2)
     quickdice = [2d6, 1d6, 3d6]
+    distanceUnit = "m"
+    squareSize = 2
+    cssFiles = ["/systems/darkconspiracy/darkconspiracy.css"]
 }
