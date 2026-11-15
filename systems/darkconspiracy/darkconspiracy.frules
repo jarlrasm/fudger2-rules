@@ -62,17 +62,13 @@ damageDice (n) =
 
 noSkill = { Level = 0 }
 
-skillEntry (char, skill) = valueOr (char.Skills, skill, noSkill)
+skillEntry (char, fullSkill) =
+    valueOr (char.Skills, fullSkill, valueOr (char.Skills, first (split (" (", fullSkill)), noSkill))
 
-trainedFlag (entry) = valueOr (entry, "Trained", "missing")
+skillLevelDM (char, fullSkill) =
+    levelDM (char, valueOr (skillEntry (char, fullSkill), "Trained", true), valueOr (skillEntry (char, fullSkill), "Level", 0))
 
-skillLevelDM (char, skill) =
-    if trainedFlag (skillEntry (char, skill)) == "missing" then valueOr (skillEntry (char, skill), "Level", 0)
-    else if trainedFlag (skillEntry (char, skill)) == "true" then valueOr (skillEntry (char, skill), "Level", 0)
-    else if trainedFlag (skillEntry (char, skill)) == true then valueOr (skillEntry (char, skill), "Level", 0)
-    else untrainedDM (char)
-
-weaponSkill (weapon) = first (split (" (", valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee (blade)")))
+weaponSkill (weapon) = valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee (blade)")
 
 weaponRange (weapon) = valueOr (weapon.data.weaponStats.Stats, "Range", "Melee")
 
@@ -117,7 +113,7 @@ characterAttack (char, weapon) =
 
 attacksFor (char) =
     concat (
-        [weaponAttack ("Unarmed", skillLevelDM (char, "Melee") + dmFor (char, "STR"), checkRoll (char), "1D", "melee", 2)],
+        [weaponAttack ("Unarmed", skillLevelDM (char, "Melee (unarmed)") + dmFor (char, "STR"), checkRoll (char), "1D", "melee", 2)],
         map ((weapon)->characterAttack (char, weapon), char.Weapons))
 
 minionAttacksFor (minion) =
