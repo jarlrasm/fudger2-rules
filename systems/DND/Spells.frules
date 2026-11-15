@@ -56,18 +56,7 @@ spellKind (spell) = if isTouchSpell (spell) then "melee" else "ranged"
 
 spellDistance (spell) = if isTouchSpell (spell) then 5 else spellFeet (spell)
 
-characterSpells (char) =
-  flatten ([
-    char.Spells.Cantrips.Spells,
-    char.Spells.'1st Level Spells'.Spells,
-    char.Spells.'2nd Level Spells'.Spells,
-    char.Spells.'3rd Level Spells'.Spells,
-    char.Spells.'4th Level Spells'.Spells,
-    char.Spells.'5th Level Spells'.Spells,
-    char.Spells.'6th Level Spells'.Spells,
-    char.Spells.'7th Level Spells'.Spells,
-    char.Spells.'8th Level Spells'.Spells,
-    char.Spells.'9th Level Spells'.Spells])
+characterSpells (char) = char.Spells.'All spells'
 
 isAttackSpell (spell) = contains (toLower (spell.Description), "spell attack")
 
@@ -109,13 +98,19 @@ spellSave (name, dc, ability, kind, distance, rangeText) = custom
     Range = rangeText
 }
 
-spellAttacksFor (char) =
-  map ((spell)->spellAttack (spell.Name, spellAttackModifier (currentClass (char), char), spellKind (spell), spellDistance (spell), spellRangeText (spell)),
-    filter ((spell)->isAttackSpell (spell), characterSpells (char)))
+attackSpells (char) = filter ((spell)->isAttackSpell (spell), characterSpells (char))
 
-spellSavesFor (char) =
-  map ((spell)->spellSave (spell.Name, spellCastingDC (currentClass (char), char), saveAbility (spell), spellKind (spell), spellDistance (spell), spellRangeText (spell)),
-    filter ((spell)->count (saveAbilities (spell)) > 0, characterSpells (char)))
+saveSpells (char) = filter ((spell)->count (saveAbilities (spell)) > 0, characterSpells (char))
+
+spellAttacksWith (spells, tohit) =
+  map ((spell)->spellAttack (spell.Name, tohit, spellKind (spell), spellDistance (spell), spellRangeText (spell)), spells)
+
+spellSavesWith (spells, dc) =
+  map ((spell)->spellSave (spell.Name, dc, saveAbility (spell), spellKind (spell), spellDistance (spell), spellRangeText (spell)), spells)
+
+spellAttacksFor (char) = spellAttacksWith (attackSpells (char), spellAttackModifier (currentClass (char), char))
+
+spellSavesFor (char) = spellSavesWith (saveSpells (char), spellCastingDC (currentClass (char), char))
 
 listVisible (items) = if count (items) > 0 then visible else none
 
@@ -150,9 +145,15 @@ spellTable= table
                   editable=none
                 }
         }
+        'All spells' = list
+        {
+          visible = none
+          source = secondary.Spells
+          editable = none
+        }
         'Spell attacks' = list
         {
-          visible = listVisible (spellAttacksFor (characterTable))
+          visible = listVisible (attackSpells (characterTable))
           tableLayout = layout
           {
             size = wide
@@ -164,7 +165,7 @@ spellTable= table
         }
         'Spell saves' = list
         {
-          visible = listVisible (spellSavesFor (characterTable))
+          visible = listVisible (saveSpells (characterTable))
           tableLayout = layout
           {
             size = wide
