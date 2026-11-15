@@ -47,8 +47,35 @@ armourStats= ruleset
         }
 itemStats= ruleset
         {
+            rulesetConfiguration =
+            {
+                sortedBy = sort
+                {
+                    prefix=""
+                    sort=Stats.Category
+                    }
+                filters= [
+                    filter {
+                        name="Category"
+                        prefix=""
+                        filter=Stats.Category},
+                    filter {
+                        name="Rarity"
+                        prefix=""
+                        filter=Stats.Rarity}]
+            }
             Stats= table
             {
+                Category=string
+                {}
+                Rarity=string
+                {}
+                Attunement=string
+                {}
+                Cost=string
+                {}
+                Weight=string
+                {}
                 Equipped=bool
                 {default=true}
             }
