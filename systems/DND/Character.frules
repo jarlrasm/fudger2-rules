@@ -12,6 +12,7 @@
 #include "/systems/DND/Skills.frules"
 #include "/systems/DND/Spells.frules"
 #include "/systems/DND/Attacks.frules"
+#include "/systems/DND/Leveling.frules"
 
 characterTable = ruleset
 {
@@ -21,6 +22,7 @@ characterTable = ruleset
   }
   Basics = basicsTable{}
   Class = classTable{}
+  Leveling = levelingTable{}
   
   'Ability scores' = keyvalues
       {

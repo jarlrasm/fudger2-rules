@@ -7,6 +7,27 @@ classFeatures(classname,level) =
                 )
         )
 
+subclassFeatures(classname, subclass, level) =
+    if count (subclassesNamed (classname, subclass)) > 0 then
+        map (
+            (feature)->nameAndDescription (feature.Name, feature.Description),
+            filter ((f)->f.Level < level + 1, first (subclassesNamed (classname, subclass)).Features))
+    else
+        []
+
+customSubclassFeatures(char) =
+    if char.Class.Subclass == "Custom" then char.'Features and Traits'.'Custom subclass features' else []
+
+allClassFeatures(char) =
+    concat (
+        concat (
+            classFeatures (char.Class.Main.Name, char.Class.Main.Levels),
+            subclassFeatures (char.Class.Main.Name, subclassName (char), char.Class.Main.Levels)),
+        customSubclassFeatures (char))
+
+subclassFeaturesVisible(char) =
+    if count (subclassFeatures (char.Class.Main.Name, subclassName (char), char.Class.Main.Levels)) > 0 then visible else none
+
 raceFeatures(main, subrace)=
    map (
      (feature)->nameAndDescription (feature.Name, feature.Description),
@@ -17,7 +38,7 @@ raceFeatures(main, subrace)=
 
 jackBonus(char) = bonusFrom (
                     [
-                      map ((x)->x.Name ,classFeatures (char.Class.Main.Name, char.Class.Main.Levels)),
+                      map ((x)->x.Name ,allClassFeatures (char)),
                       map ((x)->x.Name ,char.'Features and Traits'.'Feats'),
                       map ((x)->x.Name ,char.'Features and Traits'.'Other features')
                     ],"Jack of All Trades", char.Basics.'Proficiency bonus' / 2)
@@ -73,6 +94,29 @@ features= table
           source=classFeatures (Class.Main.Name, Class.Main.Levels)
           singular = "Feature"
           editable = none
+    }
+    'Subclass features'=list
+    {
+        tableLayout = layout
+        {
+            size = wide
+            rowTitle = hidden
+        }
+          visible=subclassFeaturesVisible (characterTable)
+          source=subclassFeatures (Class.Main.Name, subclassName (characterTable), Class.Main.Levels)
+          singular = "Feature"
+          editable = none
+    }
+    'Custom subclass features'=list
+    {
+        tableLayout = layout
+        {
+          size = wide
+        }
+        visible = customVisible (Class.Subclass)
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
     }
     'Race features'=list
     {

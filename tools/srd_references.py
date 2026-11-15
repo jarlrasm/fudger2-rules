@@ -82,6 +82,13 @@ def subclass_page(name, toc, book):
     return min(pages) if pages else first_page(book, lambda line: line.startswith(heading))
 
 
+def subclass_entity_page(entity, toc, book):
+    if entity["type"] != "Subclasses":
+        return None
+    parent = entity["rulesets"][0]["implementation"]["subclassStats"]["Stats"]["Class"]
+    return subclass_page(f"{parent} ({entity['name']})", toc, book)
+
+
 def page_of(entity, toc, book):
     name = normal(entity["name"])
     heading = lambda line: line == name
@@ -90,7 +97,7 @@ def page_of(entity, toc, book):
         found = section_page(entity["type"], lambda line: line == name or line.startswith(name + " "), toc, book)
     elif entity["type"] in SECTIONS:
         found = section_page(entity["type"], heading, toc, book)
-    return found or toc.get(name) or subclass_page(entity["name"], toc, book) or first_page(book, heading)
+    return found or subclass_entity_page(entity, toc, book) or toc.get(name) or subclass_page(entity["name"], toc, book) or first_page(book, heading)
 
 
 def write(path, original, library):

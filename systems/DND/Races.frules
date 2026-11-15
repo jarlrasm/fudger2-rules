@@ -7,7 +7,8 @@ raceFeature(name, description)=ruleset
     Name=name
     Description=description
 }
-race(name,features,subraces,size,speed,darkvision) = {
+race(name,features,subraces,size,speed,darkvision,feats) = {
+    Feats=feats
     Name=name
     Features=features
     Subraces=subraces
@@ -27,7 +28,8 @@ libraryRaces =
                 valueOr (x.data.raceStats.Stats, "Subraces", [])),
             valueOr (x.data.raceStats.Stats, "Size", "Medium"),
             valueOr (x.data.raceStats.Stats, "Speed", 30),
-            valueOr (x.data.raceStats.Stats, "Darkvision", 0)),
+            valueOr (x.data.raceStats.Stats, "Darkvision", 0),
+            valueOr (x.data.raceStats.Stats, "Feats", 0)),
         library.'Races')
 
 getRace(racename)=first (filter ((race)->race.Name == racename, libraryRaces))
@@ -41,4 +43,5 @@ safeRaceFeatures (char) =
 
 raceSpeed (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Speed else 30
 raceSize (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Size else "Medium"
+raceFeats (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Feats else 0
 raceDarkvision (racename) = if count (racesNamed (racename)) > 0 then first (racesNamed (racename)).Darkvision else 0
