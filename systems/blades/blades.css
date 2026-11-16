@@ -1,0 +1,40 @@
+/* Blades in the Dark: soot-black page, ash-grey ink and a single cold blue. */
+.entityView {
+    color-scheme: dark;
+    --bg: #101113;
+    --surface: #1a1c1f;
+    --surface-alt: #222529;
+    --surface-sunken: #15171a;
+    --surface-muted: #2c3035;
+    --text: #e4e1da;
+    --text-muted: #bab6ad;
+    --text-faint: #827e76;
+    --on-accent: #101113;
+    --border: #3a3e44;
+    --border-strong: #8fb3c9;
+    --accent: #8fb3c9;
+    --accent-hover: #aecbdc;
+    --accent-soft: #233039;
+    --link: #8fb3c9;
+    --danger: #d15b4c;
+    --paper: #1a1c1f;
+    --card-bg: #1d1f23;
+    --dice-bg: #e4e1da;
+    --dice-text: #101113;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-variant: small-caps;
+    letter-spacing: 0.12em;
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .clock .clock-background { fill: var(--surface-sunken); }
+.entityView .clock .clock-segment { stroke: var(--text); }
+.entityView .clock .clock-segment.filled { fill: var(--accent); }

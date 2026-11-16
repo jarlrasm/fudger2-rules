@@ -1,0 +1,343 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+bladesBest (pool, rolls) = if pool < 1 then min (rolls) else max (rolls)
+
+bladesSixes (pool, rolls) = if pool < 1 then 0 else count (filter ((x)->x == 6, rolls))
+
+bladesOutcome (pool, rolls) =
+    if bladesSixes (pool, rolls) > 1 then "Critical"
+    else if bladesBest (pool, rolls) == 6 then "Full success"
+    else if bladesBest (pool, rolls) > 3 then "Partial success"
+    else "Bad outcome"
+
+actionMeaning (outcome, position) =
+    switch outcome
+        case "Critical" then "critical, you do it with increased effect"
+        case "Full success" then "you do it"
+        case "Partial success" then (if position == "Controlled" then "you hesitate, or do it with a minor complication" else if position == "Desperate" then "you do it, but suffer severe harm or a serious complication" else "you do it, but there is a consequence")
+        else (if position == "Controlled" then "you falter; press on from a risky position or withdraw" else if position == "Desperate" then "it's the worst outcome" else "things go badly")
+
+bladesResult (pool, rolls, position, effect) =
+{
+    Text = toString (bladesBest (pool, rolls)) + ": " + actionMeaning (bladesOutcome (pool, rolls), position) + " (" + position + ", " + effect + " effect)"
+    Value = bladesBest (pool, rolls)
+    Outcome = bladesOutcome (pool, rolls)
+}
+
+bladesRoll (pool, position, effect) = ([dice { number = if pool < 1 then 2 else pool  sides = 6  color = if position == "Desperate" then "red" else if position == "Controlled" then "green" else "" }],
+    ((baseline, throws)->bladesResult (pool, first (throws).rolls, position, effect)))
+
+bladesDice (char, rating) = bladesRoll (rating + char.Scoundrel.'Bonus Dice', char.Scoundrel.Position, char.Scoundrel.Effect)
+
+resistanceResult (pool, rolls) =
+{
+    Text = if bladesSixes (pool, rolls) > 1 then "Critical: clear 1 stress" else "Take " + toString (6 - bladesBest (pool, rolls)) + " stress"
+    Value = bladesBest (pool, rolls)
+    Outcome = if bladesSixes (pool, rolls) > 1 then "Critical" else ""
+}
+
+resistanceRoll (pool) = ([dice { number = if pool < 1 then 2 else pool  sides = 6  label = "Resist" }],
+    ((baseline, throws)->resistanceResult (pool, first (throws).rolls)))
+
+fortuneResult (pool, rolls) =
+{
+    Text = toString (bladesBest (pool, rolls)) + ": " + (if bladesSixes (pool, rolls) > 1 then "exceptional result" else if bladesBest (pool, rolls) == 6 then "good result" else if bladesBest (pool, rolls) > 3 then "mixed result" else "bad result")
+    Value = bladesBest (pool, rolls)
+    Outcome = bladesOutcome (pool, rolls)
+}
+
+fortuneRoll (pool) = ([dice { number = if pool < 1 then 2 else pool  sides = 6 }], ((baseline, throws)->fortuneResult (pool, first (throws).rolls)))
+
+dotted (n) = if n > 0 then 1 else 0
+
+characterTable = ruleset
+{
+    Scoundrel = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Alias = string {}
+        Playbook = string { keys = ["Cutter", "Hound", "Leech", "Lurk", "Slide", "Spider", "Whisper", "Ghost", "Hull", "Vampire"] }
+        Crew = string {}
+        Look = string { multiline = true }
+        Heritage = string { keys = ["Akoros", "The Dagger Isles", "Iruvia", "Severos", "Skovlan", "Tycheros"] }
+        Background = string { keys = ["Academic", "Labor", "Law", "Trade", "Military", "Noble", "Underworld"] }
+        Vice = string { keys = ["Faith", "Gambling", "Luxury", "Obligation", "Pleasure", "Stupor", "Weird"] }
+        'Vice Purveyor' = string {}
+        Position = selector
+        {
+            options = ["Controlled", "Risky", "Desperate"]
+            labels = ["Controlled", "Risky", "Desperate"]
+            colors = ["green", "white", "red"]
+            default = "Risky"
+            editable = live
+            save = nosave
+        }
+        Effect = selector
+        {
+            options = ["Limited", "Standard", "Great"]
+            labels = ["Limited", "Standard", "Great"]
+            colors = ["red", "white", "green"]
+            default = "Standard"
+            editable = live
+            save = nosave
+        }
+        'Bonus Dice' = integer { default = 0  minvalue = -3  maxvalue = 3  editable = live }
+    }
+
+    Stress = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Stress = slots { number = 9  editable = live  indicator = "#8e5cc4" }
+        Trauma = slots { number = 4  editable = live  allowedchange = increase  indicator = "#d64545" }
+        Traumas = string { keys = ["", "Cold", "Haunted", "Obsessed", "Paranoid", "Reckless", "Soft", "Unstable", "Vicious"] }
+        'Other Traumas' = string {}
+    }
+
+    Harm = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Level 3' = string { editable = live  indicator = "#d64545"  indicatorLabel = "Harm 3: need help" }
+        'Level 2 A' = string { editable = live  indicator = "#e8913a"  indicatorLabel = "Harm 2: -1d" }
+        'Level 2 B' = string { editable = live }
+        'Level 1 A' = string { editable = live  indicator = "#d4b106"  indicatorLabel = "Harm 1: less effect" }
+        'Level 1 B' = string { editable = live }
+        Healing = clock { segments = 4  editable = live }
+        Armor = bool { default = false  editable = live }
+        'Heavy Armor' = bool { default = false  editable = live }
+        'Special Armor' = bool { default = false  editable = live }
+    }
+
+    Insight = table
+    {
+        tableLayout = layout { columns = 1 }
+        Resistance = integer { value = dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker)  valuedice = resistanceRoll (dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker))  editable = none }
+        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
+        Hunt = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Hunt) }
+        Study = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Study) }
+        Survey = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Survey) }
+        Tinker = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Tinker) }
+    }
+
+    Prowess = table
+    {
+        tableLayout = layout { columns = 1 }
+        Resistance = integer { value = dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck)  valuedice = resistanceRoll (dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck))  editable = none }
+        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
+        Finesse = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Finesse) }
+        Prowl = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Prowl) }
+        Skirmish = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Skirmish)  action = melee  reach = 2 }
+        Wreck = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Wreck) }
+    }
+
+    Resolve = table
+    {
+        tableLayout = layout { columns = 1 }
+        Resistance = integer { value = dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway)  valuedice = resistanceRoll (dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway))  editable = none }
+        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
+        Attune = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Attune) }
+        Command = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Command) }
+        Consort = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Consort) }
+        Sway = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Sway) }
+    }
+
+    'Playbook XP' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        XP = slots { number = 8  editable = live  allowedchange = increaseAndClear }
+        'XP Triggers' = string { multiline = true }
+    }
+
+    'Special Abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Friends = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Friend or Rival"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Friend = bool { default = true }
+        }
+    }
+
+    Load = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Load = string { default = "Normal"  keys = ["Light", "Normal", "Heavy"]  editable = live }
+        Coin = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        Stash = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
+        Fortune = integer { default = 1  minvalue = 0  valuedice = fortuneRoll (Fortune) }
+    }
+
+    Items = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Clocks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Clock"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Size = integer { default = 4  minvalue = 1  maxvalue = 12 }
+            Progress = clock { segments = Size  editable = live }
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+crewTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Crew = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Assassins", "Bravos", "Cult", "Hawkers", "Shadows", "Smugglers"] }
+        Reputation = string {}
+        Lair = string {}
+        Tier = integer { default = 0  minvalue = 0  maxvalue = 5 }
+        Hold = string { default = "Strong"  keys = ["Weak", "Strong"] }
+        Rep = slots { number = 12  editable = live  allowedchange = increaseAndClear }
+        Heat = slots { number = 9  editable = live  allowedchange = increaseAndClear }
+        'Wanted Level' = slots { number = 4  editable = live }
+        Coin = integer { default = 2  minvalue = 0  editable = live }
+        Vault = integer { default = 4 }
+        'Crew XP' = slots { number = 8  editable = live  allowedchange = increaseAndClear }
+        'Engagement Roll' = integer { default = 1  minvalue = 0  valuedice = fortuneRoll ('Engagement Roll') }
+    }
+    'Crew Abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Upgrades = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Upgrade"
+        editable = character
+        valueType = string
+    }
+    Claims = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Claim"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Cohorts = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Cohort"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Kind = string { keys = ["Gang", "Expert"] }
+            Quality = integer { default = 1  valuedice = fortuneRoll (Quality) }
+            Harm = string { editable = live }
+        }
+    }
+    Clocks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Clock"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Size = integer { default = 6  minvalue = 1  maxvalue = 12 }
+            Progress = clock { segments = Size  editable = live }
+        }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Threat = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Tier = integer { default = 1 }
+        Kind = string { keys = ["Person", "Gang", "Faction", "Spirit", "Horror"] }
+        Quality = integer { default = 1  valuedice = fortuneRoll (Quality) }
+        Harm = string { editable = live  indicator = "#d64545" }
+        Defeat = clock { segments = 4  editable = live }
+        Notes = string { multiline = true }
+    }
+}
+
+abilityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Playbook" prefix = "" filter = Stats.Playbook }]
+    }
+    Stats = table
+    {
+        Playbook = string {}
+    }
+}
+
+itemStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Load = integer { default = 1  minvalue = 0  maxvalue = 3 }
+        Playbook = string {}
+    }
+}
+
+factionStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Tier = integer { default = 1 }
+        Hold = string { keys = ["Weak", "Strong"] }
+        Status = integer { default = 0  minvalue = -3  maxvalue = 3 }
+        Turf = string {}
+        Assets = string { multiline = true }
+    }
+}
+
+BladesInTheDark = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Crews = crewTable
+    Abilities = abilityStats
+    Items = itemStats
+    Factions = factionStats
+    secondaryTypes = ["Abilities", "Items"]
+    otherLibararyTypes = ["Factions"]
+    extraEntityTypes = [entityTypeDescription ("Crews", "crew", false, "/images/armour.svg", [])]
+    description = "Blades in the Dark: daring scoundrels, heists and clocks in a haunted industrial city"
+    quickdice = [1d6, 2d6, 3d6, 4d6]
+    cssFiles = ["/systems/blades/blades.css"]
+    libraries = ["/systems/names/victorian.json", "/systems/names/gothic.json", "/systems/names/oldworld.json"]
+    nameSettings = [gaslightNameSetting, gothicHorrorNameSetting, oldWorldNameSetting]
+}
