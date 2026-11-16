@@ -1,0 +1,395 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+hits (rolls) = count (filter ((x)->x > 4, rolls))
+
+isGlitch (rolls) = count (rolls) > 0 and count (filter ((x)->x == 1, rolls)) * 2 > count (rolls)
+
+srOutcome (rolls, threshold) =
+    if isGlitch (rolls) and hits (rolls) == 0 then "Critical glitch"
+    else if isGlitch (rolls) then "Glitch"
+    else if threshold > 0 and hits (rolls) >= threshold then "Success"
+    else if threshold > 0 then "Failure"
+    else if hits (rolls) > 0 then "Hit"
+    else "Miss"
+
+srText (rolls, threshold) =
+    toString (hits (rolls)) + (if hits (rolls) == 1 then " hit" else " hits")
+    + (if threshold > 0 then " vs " + toString (threshold) + (if hits (rolls) >= threshold then ", net " + toString (hits (rolls) - threshold) else "") else "")
+    + (if isGlitch (rolls) and hits (rolls) == 0 then ", critical glitch" else if isGlitch (rolls) then ", glitch" else "")
+
+srResult (rolls, threshold, canReroll) =
+{
+    Text = srText (rolls, threshold)
+    Value = hits (rolls)
+    Outcome = srOutcome (rolls, threshold)
+    Push = if canReroll and count (filter ((x)->x < 5, rolls)) > 0 then srReroll (filter ((x)->x > 4, rolls), count (filter ((x)->x < 5, rolls)), threshold) else 0
+    PushLabel = "Reroll misses (Edge)"
+}
+
+srReroll (kept, misses, threshold) = ([dice { number = misses  sides = 6  label = "Edge reroll" }],
+    ((baseline, throws)->srResult (concat (kept, first (throws).rolls), threshold, false)))
+
+srRoll (pool, threshold, ruleOfSix) = ([dice { number = max (0, pool)  sides = 6  explode = if ruleOfSix then 6 else 7 }],
+    ((baseline, throws)->srResult (first (throws).rolls, threshold, true)))
+
+srDice (char, pool) =
+    srRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier' + (if char.Runner.Edge == "Push the Limit" then char.Attributes.Edge else 0), char.Runner.Threshold, char.Runner.Edge == "Push the Limit")
+
+attributeValue (char, name) =
+    switch name
+        case "Body" then char.Attributes.Body
+        case "Agility" then char.Attributes.Agility
+        case "Reaction" then char.Attributes.Reaction
+        case "Strength" then char.Attributes.Strength
+        case "Willpower" then char.Attributes.Willpower
+        case "Logic" then char.Attributes.Logic
+        case "Intuition" then char.Attributes.Intuition
+        case "Charisma" then char.Attributes.Charisma
+        case "Magic" then char.Attributes.Magic
+        case "Resonance" then char.Attributes.Resonance
+        else 0
+
+attributeNames = ["Body", "Agility", "Reaction", "Strength", "Willpower", "Logic", "Intuition", "Charisma", "Magic", "Resonance"]
+
+skill (usual) = custom
+{
+    Rank = integer { default = 0  minvalue = 0  maxvalue = 12 }
+    Attribute = string { default = usual  keys = attributeNames  editable = live }
+    Specialization = string {}
+    Pool = integer { value = (if Rank == 0 then attributeValue (characterTable, Attribute) - 1 else Rank + attributeValue (characterTable, Attribute))  valuedice = srDice (characterTable, if Rank == 0 then attributeValue (characterTable, Attribute) - 1 else Rank + attributeValue (characterTable, Attribute))  editable = none }
+}
+
+noSkill = { Rank = 0 }
+
+rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rank", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = srDice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Damage = damage
+    'Attack Rating' = string {}
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Skill") == "Close Combat" then
+        weaponAttack (weapon.Name, rankOf (char, "Close Combat") + char.Attributes.Agility, weaponStat (weapon, "Damage"), "melee", 2)
+    else
+        weaponAttack (weapon.Name, rankOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")) + char.Attributes.Agility, weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
+
+characterTable = ruleset
+{
+    Runner = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Metatype = string { keys = ["Human", "Elf", "Dwarf", "Ork", "Troll"] }
+        Role = string {}
+        Ethnicity = string {}
+        Age = integer { default = 25 }
+        Reputation = integer { default = 0 }
+        Heat = integer { default = 0  editable = live }
+        Karma = integer { default = 0  editable = live }
+        Nuyen = integer { default = 0  editable = live }
+        Lifestyle = string {}
+        Threshold = integer { default = 0  minvalue = 0  editable = live }
+        Modifier = modifier { default = 0  editable = live }
+        Edge = selector
+        {
+            options = ["Normal", "Push the Limit"]
+            labels = ["Normal", "Push the Limit"]
+            colors = ["white", "purple"]
+            hold = ["", "Shift"]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Body = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Agility = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Reaction = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Strength = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Willpower = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Logic = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Intuition = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Charisma = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        Edge = integer { default = 2  minvalue = 1  maxvalue = 7 }
+        'Current Edge' = integer { default = Edge  minvalue = 0  maxvalue = 7  editable = live  indicator = "#8e5cc4"  indicatorLabel = "Edge" }
+        Magic = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Resonance = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Essence = string { default = "6.0" }
+    }
+
+    'Derived Ratings' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Initiative Dice' = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Initiative = integer { value = Attributes.Reaction + Attributes.Intuition - 'Condition Monitors'.'Wound Modifier'  valuedice = ([dice { number = 'Initiative Dice'  sides = 6 }], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
+        'Defense Rating' = integer { default = Attributes.Body }
+        Composure = integer { value = Attributes.Willpower + Attributes.Charisma  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Charisma)  editable = none }
+        'Judge Intentions' = integer { value = Attributes.Willpower + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Intuition)  editable = none }
+        Memory = integer { value = Attributes.Logic + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Logic + Attributes.Intuition)  editable = none }
+        'Lift and Carry' = integer { value = Attributes.Body + Attributes.Willpower  valuedice = srDice (characterTable, Attributes.Body + Attributes.Willpower)  editable = none }
+        Defense = integer { value = Attributes.Reaction + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Reaction + Attributes.Intuition)  editable = none }
+        'Damage Resistance' = integer { value = Attributes.Body  valuedice = srDice (characterTable, Attributes.Body)  editable = none }
+        Movement = string { default = "10/15" }
+    }
+
+    'Condition Monitors' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Physical = slots { number = 8 + (Attributes.Body + 1) / 2  editable = live  overflow = allow  indicator = "#d64545" }
+        Stun = slots { number = 8 + (Attributes.Willpower + 1) / 2  editable = live  indicator = "#d4b106" }
+        'Wound Modifier' = integer { value = Physical.realvalue / 3 + Stun.realvalue / 3  editable = none }
+        Overflow = integer { value = max (0, Physical.realvalue - (8 + (Attributes.Body + 1) / 2))  editable = none }
+        Down = string { value = if Physical.realvalue >= 8 + (Attributes.Body + 1) / 2 then "Dying" else if Stun.realvalue >= 8 + (Attributes.Willpower + 1) / 2 then "Unconscious" else ""  visible = none  indicator = "#555555" }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Astral = skill ("Intuition")
+        Athletics = skill ("Agility")
+        Biotech = skill ("Logic")
+        'Close Combat' = skill ("Agility")
+        Con = skill ("Charisma")
+        Conjuring = skill ("Magic")
+        Cracking = skill ("Logic")
+        Electronics = skill ("Logic")
+        Enchanting = skill ("Magic")
+        Engineering = skill ("Logic")
+        'Exotic Weapons' = skill ("Agility")
+        Firearms = skill ("Agility")
+        Influence = skill ("Charisma")
+        Outdoors = skill ("Intuition")
+        Perception = skill ("Intuition")
+        Piloting = skill ("Reaction")
+        Sorcery = skill ("Magic")
+        Stealth = skill ("Agility")
+        Tasking = skill ("Resonance")
+    }
+
+    Qualities = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Qualities
+        singular = "Quality"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", rankOf (characterTable, "Close Combat") + Attributes.Agility, toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Augmentations = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Augmentations
+        singular = "Augmentation"
+        editable = character
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Contacts = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Contact"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string {}
+            Connection = integer { default = 1 }
+            Loyalty = integer { default = 1 }
+        }
+    }
+
+    IDs = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "SIN or License"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Rating = integer { default = 1 }
+            Notes = string {}
+        }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        'Professional Rating' = integer { default = 2 }
+        B = integer { default = 3 }
+        A = integer { default = 3 }
+        R = integer { default = 3 }
+        S = integer { default = 3 }
+        W = integer { default = 3 }
+        L = integer { default = 3 }
+        I = integer { default = 3 }
+        C = integer { default = 3 }
+        Initiative = integer { value = R + I  valuedice = ([1d6], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
+        'Defense Rating' = integer { default = 3 }
+        'Condition Monitor' = slots { number = 10  editable = live  indicator = "#d64545" }
+        Defense = integer { value = R + I  valuedice = srRoll (R + I, 0, false)  editable = none }
+    }
+    'Dice Pools' = keyvalues
+    {
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Firearms", "Close Combat"]
+        valueType = custom
+        {
+            Dice = integer { default = 8  valuedice = srRoll (8, 0, false)  action = ranged  range = 50 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Gear = string { multiline = true }
+        Powers = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Firearms", "Close Combat", "Exotic Weapons", "Athletics"] }
+        Damage = string {}
+        Mode = string {}
+        'Attack Ratings' = string {}
+        Range = string {}
+        Ammo = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        'Defense Bonus' = string {}
+        Capacity = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+augmentationStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Cyberware", "Bioware", "Geneware", "Nanoware"] }
+        Rating = string {}
+        Essence = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Category = string { keys = ["Combat", "Detection", "Health", "Illusion", "Manipulation"] }
+        Range = string {}
+        Type = string { keys = ["Physical", "Mana"] }
+        Duration = string {}
+        Drain = string {}
+    }
+}
+
+qualityStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Positive", "Negative"] }
+        Karma = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Rating = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+Shadowrun = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Augmentations = augmentationStats
+    Spells = spellStats
+    Qualities = qualityStats
+    Gear = gearStats
+    secondaryTypes = ["Weapons", "Armor", "Augmentations", "Spells", "Qualities", "Gear"]
+    description = "Shadowrun 6th World: magic and cyberware in the shadows of the megacorps"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d6, 2d6]
+    cssFiles = ["/systems/shadowrun/shadowrun.css"]
+    libraries = ["/systems/names/cyberpunk.json", "/systems/names/spies.json", "/systems/names/fantasy.json"]
+    nameSettings = [neonStreetsNameSetting, spyThrillerNameSetting, fantasyNameSetting]
+}
