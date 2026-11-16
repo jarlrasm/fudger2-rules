@@ -416,8 +416,15 @@ SavageWorlds = system
         {
             title = "Action cards"
             topic = "Initiative"
-            text = ["Add the Action Deck to the session and use Deal initiative each round; Ace acts first. Shuffle after a Joker."]
-            deck = "Action Deck"
+            text = ["Add the 54-card deck to the session and use Deal initiative each round; Ace acts first, and a Joker acts whenever they like with +2 to trait and damage rolls. Shuffle after a Joker."]
+            deck = "54-card deck"
+        },
+        hint
+        {
+            title = "Interludes"
+            topic = "Play"
+            text = ["For an Interlude, a player draws from the 52-card deck and tells a tale by its suit: clubs misfortune, spades victory, hearts love, diamonds desire. Give a Benny for it."]
+            deck = "52-card deck"
         },
         hint
         {
@@ -438,9 +445,9 @@ SavageWorlds = system
     secondaryTypes = ["Weapons", "Gear", "Edges", "Hindrances", "Powers"]
     description = "Savage Worlds: fast, furious and fun, with exploding dice and action cards"
     initiativeCompare (item1, item2) = compare (cardOrder (item1), cardOrder (item2))
-    initiativeDeck = "Action Deck"
+    initiativeDeck = "54-card deck"
     quickdice = [1d4, 1d6, 1d8, 1d10, 1d12, 1d20]
     cssFiles = ["/systems/savage/savage.css"]
-    libraries = ["/systems/savage/actiondeck.json", "/systems/names/fantasy.json", "/systems/names/weirdwest.json", "/systems/names/pirates.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/wasteland.json", "/systems/names/spies.json", "/systems/names/victorian.json"]
+    libraries = ["/systems/cards/standard.json", "/systems/names/fantasy.json", "/systems/names/weirdwest.json", "/systems/names/pirates.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/wasteland.json", "/systems/names/spies.json", "/systems/names/victorian.json"]
     nameSettings = [fantasyNameSetting, weirdWestNameSetting, highSeasNameSetting, spaceNameSetting, superheroesNameSetting, wastelandNameSetting, spyThrillerNameSetting, gaslightNameSetting]
 }
