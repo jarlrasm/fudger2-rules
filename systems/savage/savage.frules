@@ -1,0 +1,404 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieTypes = ["d4", "d6", "d8", "d10", "d12", "d12+1", "d12+2", "d12+3"]
+
+skillDieTypes = ["Unskilled", "d4", "d6", "d8", "d10", "d12", "d12+1", "d12+2"]
+
+dieSides (die) =
+    switch die
+        case "d6" then 6
+        case "d8" then 8
+        case "d10" then 10
+        case "Unskilled" then 4
+        case "d4" then 4
+        else 12
+
+dieBonus (die) =
+    switch die
+        case "Unskilled" then -2
+        case "d12+1" then 1
+        case "d12+2" then 2
+        case "d12+3" then 3
+        else 0
+
+raisesText (total, target) =
+    if total < target then "Failure"
+    else if total < target + 4 then "Success"
+    else if total < target + 8 then "Success with a raise"
+    else "Success with " + toString ((total - target) / 4) + " raises"
+
+swOutcome (trait, wild, wildCard, total, target) =
+    if first (trait) == 1 and (not (wildCard) or first (wild) == 1) then "Critical failure"
+    else if total < target then "Failure"
+    else if total < target + 4 then "Success"
+    else "Raise"
+
+swTotal (trait, wild, wildCard, modifier) =
+    max (sum (trait), if wildCard then sum (wild) else 0) + modifier
+
+swResult (dieSize, trait, wild, wildCard, modifier, target) =
+{
+    Text = toString (swTotal (trait, wild, wildCard, modifier)) + " vs " + toString (target) + ": " + (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then "Critical failure" else raisesText (swTotal (trait, wild, wildCard, modifier), target))
+    Value = swTotal (trait, wild, wildCard, modifier)
+    Outcome = swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target)
+    Push = if swTotal (trait, wild, wildCard, modifier) < target then swRoll (dieSize, wildCard, modifier, target) else 0
+    PushLabel = "Spend a Benny"
+}
+
+swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
+    ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target)))
+
+penaltyOf (char) = min (3, char.Status.Wounds) + char.Status.Fatigue
+
+traitRoll (char, die) = swRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), char.Character.'Target Number')
+
+trait (startDie) = custom
+{
+    Die = string { default = startDie  keys = dieTypes }
+    Roll = integer { value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
+}
+
+skill (startDie) = custom
+{
+    Die = string { default = startDie  keys = skillDieTypes }
+    Roll = integer { value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
+}
+
+noSkill = { Die = "Unskilled" }
+
+skillDie (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Die", "Unskilled")
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, die, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+longRange (text) = toInt (first (reverse (split ("/", text))))
+
+attackFor (char, weapon) =
+    if longRange (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, skillDie (char, "Shooting"), weaponStat (weapon, "Damage"), "ranged", longRange (weaponStat (weapon, "Range")) * 2)
+    else
+        weaponAttack (weapon.Name, skillDie (char, "Fighting"), weaponStat (weapon, "Damage"), "melee", if contains (toLower (weaponStat (weapon, "Notes")), "reach") then 4 else 2)
+
+cardRank (n) =
+    switch n
+        case 9 then "Jack"
+        case 10 then "Queen"
+        case 11 then "King"
+        case 12 then "Ace"
+        else toString (n + 2)
+
+cardSuit (n) =
+    switch n
+        case 0 then "Clubs"
+        case 1 then "Diamonds"
+        case 2 then "Hearts"
+        else "Spades"
+
+cardName (n) = if n > 52 then "Joker" else cardRank ((n - 1) / 4) + " of " + cardSuit (mod (n - 1, 4))
+
+actionCard = ([1d54], ((baseline, throws)->{ Text = cardName (first (first (throws).rolls))  Value = first (first (throws).rolls)  Outcome = if first (first (throws).rolls) > 52 then "Joker" else "" }))
+
+rankValue (text) =
+    if contains (text, "Joker") then 100
+    else if contains (text, "Ace") then 14
+    else if contains (text, "King") then 13
+    else if contains (text, "Queen") then 12
+    else if contains (text, "Jack") then 11
+    else toInt (first (split (" ", text)))
+
+suitValue (text) =
+    if contains (text, "Spades") then 3
+    else if contains (text, "Hearts") then 2
+    else if contains (text, "Diamonds") then 1
+    else 0
+
+cardOrder (text) = rankValue (text) * 4 + suitValue (text)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        Ancestry = string { default = "Human" }
+        Rank = string { default = "Novice"  keys = ["Novice", "Seasoned", "Veteran", "Heroic", "Legendary"] }
+        Advances = integer { default = 0  editable = live }
+        'Wild Card' = bool { default = true }
+        'Target Number' = integer { default = 4  minvalue = 0  editable = live }
+        Modifier = modifier { default = 0  editable = live }
+        Bennies = integer { default = 3  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Conviction = bool { default = false  editable = live  indicator = "#3a7bd5" }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Agility = trait ("d6")
+        Smarts = trait ("d6")
+        Spirit = trait ("d6")
+        Strength = trait ("d6")
+        Vigor = trait ("d6")
+    }
+
+    Derived = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Pace = integer { default = 6 }
+        Parry = integer { value = 2 + (if skillDie (characterTable, "Fighting") == "Unskilled" then 0 else dieSides (skillDie (characterTable, "Fighting")) / 2 + dieBonus (skillDie (characterTable, "Fighting")) / 2) + 'Parry Bonus'  editable = none }
+        'Parry Bonus' = integer { default = 0 }
+        Armor = integer { default = 0 }
+        Toughness = integer { value = 2 + dieSides (Attributes.Vigor.Die) / 2 + dieBonus (Attributes.Vigor.Die) / 2 + Armor + 'Toughness Bonus'  editable = none }
+        'Toughness Bonus' = integer { default = 0 }
+        Running = integer { default = 6  valuedice = 1d6 }
+        Initiative = integer { default = 0  valuedice = actionCard }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Shaken = bool { default = false  editable = live  indicator = "#d4b106" }
+        Wounds = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
+        Fatigue = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live  indicator = "#e8913a" }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+        Distracted = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { default = false  editable = live  indicator = "#e8913a" }
+        Penalty = integer { value = penaltyOf (characterTable)  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = skill ("d4")
+        'Common Knowledge' = skill ("d4")
+        Notice = skill ("d4")
+        Persuasion = skill ("d4")
+        Stealth = skill ("d4")
+        Academics = skill ("Unskilled")
+        Battle = skill ("Unskilled")
+        Boating = skill ("Unskilled")
+        Driving = skill ("Unskilled")
+        Electronics = skill ("Unskilled")
+        Faith = skill ("Unskilled")
+        Fighting = skill ("Unskilled")
+        Focus = skill ("Unskilled")
+        Gambling = skill ("Unskilled")
+        Hacking = skill ("Unskilled")
+        Healing = skill ("Unskilled")
+        Intimidation = skill ("Unskilled")
+        Language = skill ("Unskilled")
+        Occult = skill ("Unskilled")
+        Performance = skill ("Unskilled")
+        Piloting = skill ("Unskilled")
+        Psionics = skill ("Unskilled")
+        Repair = skill ("Unskilled")
+        Research = skill ("Unskilled")
+        Riding = skill ("Unskilled")
+        Science = skill ("Unskilled")
+        Shooting = skill ("Unskilled")
+        Spellcasting = skill ("Unskilled")
+        Survival = skill ("Unskilled")
+        Taunt = skill ("Unskilled")
+        Thievery = skill ("Unskilled")
+        'Weird Science' = skill ("Unskilled")
+    }
+
+    Hindrances = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Hindrances
+        singular = "Hindrance"
+        editable = character
+    }
+
+    Edges = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Edges
+        singular = "Edge"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillDie (characterTable, "Fighting"), "Str", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Powers = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Arcane Background' = string {}
+        'Power Points' = integer { default = 0 }
+        'Current Power Points' = integer { default = 'Power Points'  minvalue = 0  editable = live }
+    }
+
+    'Known Powers' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 2 }
+        Money = integer { default = 500  editable = live }
+        'Load Limit' = integer { value = dieSides (Attributes.Strength.Die) * 5 + dieBonus (Attributes.Strength.Die) * 20  editable = none }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Traits = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Agility = trait ("d6")
+        Smarts = trait ("d6")
+        Spirit = trait ("d6")
+        Strength = trait ("d6")
+        Vigor = trait ("d6")
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Wild Card' = bool { default = false }
+        Pace = integer { default = 6 }
+        Parry = integer { default = 5 }
+        Toughness = integer { default = 5 }
+        Shaken = bool { default = false  editable = live  indicator = "#d4b106" }
+        Wounds = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
+        Initiative = integer { default = 0  valuedice = actionCard }
+    }
+    'Skill Dice' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Fighting", "Notice", "Shooting"]
+        valueType = custom
+        {
+            Die = string { default = "d6"  keys = skillDieTypes }
+            Roll = integer { value = dieSides (Die)  valuedice = swRoll (dieSides (Die), false, dieBonus (Die), 4)  editable = none  render = Die  action = melee  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Special Abilities' = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Damage = string { default = "Str+d6" }
+        Range = string {}
+        AP = string {}
+        ROF = string {}
+        Shots = string {}
+        'Min Str' = string {}
+        Weight = string {}
+        Cost = string {}
+        Notes = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Armor = string {}
+        Weight = string {}
+        Cost = string {}
+        Notes = string {}
+    }
+}
+
+edgeStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        Category = string { keys = ["Background", "Combat", "Leadership", "Power", "Professional", "Social", "Weird", "Legendary"] }
+        Requirements = string {}
+    }
+}
+
+hindranceStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Severity = string { keys = ["Minor", "Major", "Minor or Major"] }
+    }
+}
+
+powerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Rank = string { keys = ["Novice", "Seasoned", "Veteran", "Heroic", "Legendary"] }
+        'Power Points' = string {}
+        Range = string {}
+        Duration = string {}
+        Trappings = string {}
+    }
+}
+
+SavageWorlds = system
+{
+    distanceUnit = "yd"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Edges = edgeStats
+    Hindrances = hindranceStats
+    Powers = powerStats
+    secondaryTypes = ["Weapons", "Gear", "Edges", "Hindrances", "Powers"]
+    description = "Savage Worlds: fast, furious and fun, with exploding dice and action cards"
+    initiativeCompare (item1, item2) = compare (cardOrder (item1), cardOrder (item2))
+    quickdice = [1d4, 1d6, 1d8, 1d10, 1d12, 1d20]
+    cssFiles = ["/systems/savage/savage.css"]
+    libraries = ["/systems/savage/actiondeck.json", "/systems/names/fantasy.json", "/systems/names/weirdwest.json", "/systems/names/pirates.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/wasteland.json", "/systems/names/spies.json", "/systems/names/victorian.json"]
+    nameSettings = [fantasyNameSetting, weirdWestNameSetting, highSeasNameSetting, spaceNameSetting, superheroesNameSetting, wastelandNameSetting, spyThrillerNameSetting, gaslightNameSetting]
+}

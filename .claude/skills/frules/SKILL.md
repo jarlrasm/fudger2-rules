@@ -49,7 +49,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Every function is called as `f (a, b)`**, including the built-in `max` and `min`.
 - **A call at the top level must have its `(` on the same line as the function name.** Inside parentheses, newlines are fine.
 - **Same-named definitions merge.** Two `characterTable = ruleset {...}` blocks combine their fields, and two lists concatenate. This is how extensions and multi-file systems add to a base system, but it also means an accidental duplicate name silently merges.
-- **Don't name a parameter after a field option it sets.** In `strike (reach) = custom { Hit = modifier { reach = reach } }` the `reach` on the right means the option itself, and drawing the sheet loops forever. Call the parameter `reachFeet`.
+- **Don't name a parameter after a field option it sets.** In `strike (reach) = custom { Hit = modifier { reach = reach } }` or `roll (sides) = ([dice { sides = sides }], ...)` the name on the right means the option itself, and the sheet or the roll loops forever. Use another name, such as `reachFeet` or `dieSize`.
 - **`otherLibararyTypes` is spelled with the typo.** The code reads that exact name.
 - **Don't add to a shared name setting.** Merging into `fantasyNameSetting` from one system would change it for all of them, and its lists would add up. Write your own `nameSetting` instead.
 - **Name generators are JSON, not frules.** `#` and quotes are fine there, and names must be original, not taken from published settings.

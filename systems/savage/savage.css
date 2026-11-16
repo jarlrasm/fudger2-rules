@@ -1,0 +1,35 @@
+/* Savage Worlds: bold black frames, warm orange headings and a heavy sans. */
+.entityView {
+    color-scheme: light;
+    --bg: #e9e4d8;
+    --surface: #fffdf7;
+    --surface-alt: #f5efe2;
+    --surface-sunken: #f7f2e7;
+    --surface-muted: #e2d8c4;
+    --text: #1c1a16;
+    --text-muted: #3d3a33;
+    --text-faint: #75705f;
+    --on-accent: #ffffff;
+    --border: #a39b87;
+    --border-strong: #1c1a16;
+    --accent: #c4501b;
+    --accent-hover: #dd6326;
+    --accent-soft: #f6dccc;
+    --link: #c4501b;
+    --paper: #fffdf7;
+    --card-bg: #fbf7ee;
+    --dice-bg: #c4501b;
+    --dice-text: #ffffff;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 3px solid var(--border-strong);
+    border-radius: 6px;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    text-transform: uppercase;
+    color: var(--accent);
+}
