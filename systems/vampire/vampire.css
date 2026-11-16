@@ -1,0 +1,37 @@
+/* Vampire: the Masquerade: black and blood red, with a sharp serif heading. */
+.entityView {
+    color-scheme: dark;
+    --bg: #0b0708;
+    --surface: #160e10;
+    --surface-alt: #201416;
+    --surface-sunken: #110a0b;
+    --surface-muted: #2c1b1e;
+    --text: #efe6e6;
+    --text-muted: #c9b8b9;
+    --text-faint: #8c7a7c;
+    --on-accent: #ffffff;
+    --border: #3b2427;
+    --border-strong: #a3121f;
+    --accent: #a3121f;
+    --accent-hover: #c41a28;
+    --accent-soft: #3a1015;
+    --link: #e04a55;
+    --danger: #e0303e;
+    --paper: #160e10;
+    --card-bg: #1a1113;
+    --dice-bg: #a3121f;
+    --dice-text: #ffffff;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--border-strong);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Copperplate", "Trajan Pro", Georgia, serif;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}

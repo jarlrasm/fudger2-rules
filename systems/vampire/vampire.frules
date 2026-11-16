@@ -1,0 +1,320 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+tensIn (rolls) = count (filter ((x)->x == 10, rolls))
+
+successesIn (normal, hunger) =
+    count (filter ((x)->x > 5, concat (normal, hunger))) + 2 * ((tensIn (normal) + tensIn (hunger)) / 2)
+
+isCritical (normal, hunger) = tensIn (normal) + tensIn (hunger) > 1
+
+v5Outcome (normal, hunger, difficulty) =
+    if successesIn (normal, hunger) < max (1, difficulty) then
+        (if count (filter ((x)->x == 1, hunger)) > 0 then "Bestial failure" else if successesIn (normal, hunger) == 0 then "Total failure" else "Failure")
+    else if isCritical (normal, hunger) and tensIn (hunger) > 0 then "Messy critical"
+    else if isCritical (normal, hunger) then "Critical win"
+    else "Win"
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "es")
+
+v5Text (normal, hunger, difficulty) =
+    plural (successesIn (normal, hunger), "success")
+    + (if difficulty > 0 then " vs " + toString (difficulty) else "")
+    + ": " + v5Outcome (normal, hunger, difficulty)
+    + (if successesIn (normal, hunger) >= max (1, difficulty) and difficulty > 0 then ", margin " + toString (successesIn (normal, hunger) - difficulty) else "")
+
+failedNormal (normal) = count (filter ((x)->x < 6, normal))
+
+v5Result (normal, hunger, difficulty, canReroll) =
+{
+    Text = v5Text (normal, hunger, difficulty)
+    Value = successesIn (normal, hunger)
+    Outcome = v5Outcome (normal, hunger, difficulty)
+    Color = if v5Outcome (normal, hunger, difficulty) == "Messy critical" then "orange" else ""
+    Push = if canReroll and failedNormal (normal) > 0 then v5Reroll (filter ((x)->x > 5, normal), hunger, min (3, failedNormal (normal)), difficulty) else 0
+    PushLabel = "Reroll with Willpower"
+}
+
+v5Reroll (kept, hunger, rerolls, difficulty) = ([dice { number = rerolls  sides = 10  label = "Reroll" }],
+    ((baseline, throws)->v5Result (concat (kept, first (throws).rolls), hunger, difficulty, false)))
+
+v5Pool (pool, hunger, difficulty) = ([dice { number = max (0, pool - hunger)  sides = 10 }, dice { number = min (pool, hunger)  sides = 10  color = "red"  label = "Hunger" }],
+    ((baseline, throws)->v5Result (first (throws).rolls, item (1, throws).rolls, difficulty, true)))
+
+v5Dice (char, pool) = v5Pool (pool + char.Character.Modifier, char.Character.Hunger, char.Character.Difficulty)
+
+rouseCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": no Hunger"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": Hunger rises"  Outcome = "Failure" }))
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Charisma" then char.Attributes.Charisma
+        case "Manipulation" then char.Attributes.Manipulation
+        case "Composure" then char.Attributes.Composure
+        case "Intelligence" then char.Attributes.Intelligence
+        case "Wits" then char.Attributes.Wits
+        else char.Attributes.Resolve
+
+attributeNames = ["Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Composure", "Intelligence", "Wits", "Resolve"]
+
+skill (usual) = custom
+{
+    Dots = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    With = string { default = usual  keys = attributeNames  editable = live }
+    Pool = integer { value = Dots + attributeValue (characterTable, With)  valuedice = v5Dice (characterTable, Dots + attributeValue (characterTable, With))  editable = none }
+    Specialty = string {}
+}
+
+noSkill = { Pool = 0 }
+
+poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = v5Dice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Composure + valueOr (valueOr (char.Skills, "Firearms", noSkill), "Dots", 0), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Strength + valueOr (valueOr (char.Skills, "Melee", noSkill), "Dots", 0), weaponStat (weapon, "Damage"), "melee", 2)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        Chronicle = string {}
+        Ambition = string {}
+        Desire = string {}
+        Predator = string { keys = ["Alleycat", "Bagger", "Blood Leech", "Cleaver", "Consensualist", "Farmer", "Osiris", "Sandman", "Scene Queen", "Siren"] }
+        Clan = string { keys = ["Banu Haqim", "Brujah", "Caitiff", "Gangrel", "Hecata", "Lasombra", "Malkavian", "Ministry", "Nosferatu", "Ravnos", "Salubri", "Thin-blood", "Toreador", "Tremere", "Tzimisce", "Ventrue"] }
+        Generation = integer { default = 13 }
+        Sire = string {}
+        Hunger = integer { default = 1  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
+        Difficulty = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live }
+        Modifier = modifier { default = 0  editable = live }
+        'Rouse Check' = integer { default = 0  valuedice = rouseCheck  editable = none }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Strength) }
+        Charisma = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Charisma) }
+        Intelligence = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Intelligence) }
+        Dexterity = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Dexterity) }
+        Manipulation = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Manipulation) }
+        Wits = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Wits) }
+        Stamina = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Stamina) }
+        Composure = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Composure) }
+        Resolve = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Resolve) }
+    }
+
+    Trackers = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Health Superficial' = slots { number = Attributes.Stamina + 3  editable = live  indicator = "#e8913a"  indicatorLabel = "Superficial" }
+        'Health Aggravated' = slots { number = Attributes.Stamina + 3  editable = live  indicator = "#d64545"  indicatorLabel = "Aggravated" }
+        'Willpower Superficial' = slots { number = Attributes.Composure + Attributes.Resolve  editable = live }
+        'Willpower Aggravated' = slots { number = Attributes.Composure + Attributes.Resolve  editable = live }
+        Impaired = string { value = if 'Health Superficial'.realvalue + 'Health Aggravated'.realvalue > Attributes.Stamina + 2 then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        Humanity = integer { default = 7  minvalue = 0  maxvalue = 10  editable = live }
+        Stains = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#8e5cc4" }
+        'Blood Potency' = integer { default = 1  minvalue = 0  maxvalue = 10 }
+        'Remorse' = integer { value = 10 - Humanity - Stains  valuedice = ([dice { number = max (1, 10 - Humanity - Stains)  sides = 10 }], ((baseline, throws)->if count (filter ((x)->x > 5, first (throws).rolls)) > 0 then { Text = "Humanity holds"  Outcome = "Success" } else { Text = "Lose 1 Humanity"  Outcome = "Failure" }))  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = skill ("Dexterity")
+        'Animal Ken' = skill ("Charisma")
+        Academics = skill ("Intelligence")
+        Brawl = skill ("Strength")
+        Etiquette = skill ("Charisma")
+        Awareness = skill ("Wits")
+        Craft = skill ("Dexterity")
+        Insight = skill ("Wits")
+        Finance = skill ("Intelligence")
+        Drive = skill ("Dexterity")
+        Intimidation = skill ("Charisma")
+        Investigation = skill ("Intelligence")
+        Firearms = skill ("Composure")
+        Leadership = skill ("Charisma")
+        Medicine = skill ("Intelligence")
+        Larceny = skill ("Dexterity")
+        Performance = skill ("Charisma")
+        Occult = skill ("Resolve")
+        Melee = skill ("Strength")
+        Persuasion = skill ("Charisma")
+        Politics = skill ("Intelligence")
+        Stealth = skill ("Dexterity")
+        Streetwise = skill ("Charisma")
+        Science = skill ("Intelligence")
+        Survival = skill ("Wits")
+        Subterfuge = skill ("Manipulation")
+        Technology = skill ("Intelligence")
+    }
+
+    Disciplines = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Discipline"
+        editable = character
+        valueType = custom
+        {
+            Discipline = string { keys = ["Animalism", "Auspex", "Blood Sorcery", "Celerity", "Dominate", "Fortitude", "Obfuscate", "Oblivion", "Potence", "Presence", "Protean", "Thin-blood Alchemy"] }
+            Dots = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        }
+    }
+
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Bite or Brawl", Attributes.Strength + valueOr (valueOr (Skills, "Brawl", noSkill), "Dots", 0), "Superficial", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Advantages and Flaws' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Advantage"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Dots = integer { default = 1 }
+            Flaw = bool { default = false }
+        }
+    }
+
+    Convictions = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Conviction"
+        editable = character
+        valueType = custom
+        {
+            Conviction = string {}
+            Touchstone = string {}
+        }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Chronicle Tenets' = string { multiline = true }
+        'Clan Bane' = string { multiline = true }
+        'Clan Compulsion' = string { multiline = true }
+        History = string { multiline = true }
+        'True Age' = string {}
+        'Apparent Age' = string {}
+        'Total Experience' = integer { default = 0 }
+        'Spent Experience' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Mortal", "Ghoul", "Vampire", "Werewolf", "Hunter", "Other"] }
+        Physical = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
+        Social = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
+        Mental = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
+        Health = slots { number = 5  editable = live  indicator = "#d64545" }
+        Willpower = slots { number = 3  editable = live }
+        Humanity = integer { default = 7 }
+        'Blood Potency' = integer { default = 0 }
+    }
+    'Exceptional Pools' = keyvalues
+    {
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Brawl", "Firearms"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = v5Pool (5, 0, 0)  action = melee  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Disciplines = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Damage = string {}
+        Range = string {}
+        Clips = string {}
+        Concealability = string {}
+    }
+}
+
+powerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+    }
+    Stats = table
+    {
+        Discipline = string {}
+        Level = integer { default = 1 }
+        Cost = string {}
+        'Dice Pool' = string {}
+        Duration = string {}
+        Amalgam = string {}
+    }
+}
+
+Vampire = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Powers = powerStats
+    secondaryTypes = ["Weapons", "Powers"]
+    description = "Vampire: the Masquerade 5th edition: the Beast within and the Masquerade without"
+    quickdice = [1d10]
+    cssFiles = ["/systems/vampire/vampire.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/gothic.json", "/systems/names/cyberpunk.json", "/systems/names/norwegian.json"]
+    nameSettings = [nightWorldNameSetting, gothicHorrorNameSetting, neonStreetsNameSetting, modernNorwayNameSetting]
+}
