@@ -1,0 +1,433 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+d100Value (units, tens) =
+    if mod (tens, 10) == 0 and mod (units, 10) == 0 then 100
+    else mod (tens, 10) * 10 + mod (units, 10)
+
+isDouble (roll) = roll < 100 and mod (roll, 10) == roll / 10
+
+passes (target, roll) = roll < 6 or (roll < 96 and roll <= target)
+
+successLevel (target, roll) =
+    if passes (target, roll) then max (0, target / 10 - roll / 10)
+    else min (0, target / 10 - roll / 10)
+
+slText (sl) = if sl < 0 then toString (sl) else "+" + toString (sl)
+
+wfrpLevel (target, roll) =
+    if passes (target, roll) and isDouble (roll) then "Critical"
+    else if passes (target, roll) then "Success"
+    else if isDouble (roll) or roll == 100 then "Fumble"
+    else "Failure"
+
+wfrpResult (target, roll) =
+{
+    Text = toString (roll) + " vs " + toString (target) + ": " + wfrpLevel (target, roll) + ", SL " + slText (successLevel (target, roll))
+    Value = successLevel (target, roll)
+    Outcome = wfrpLevel (target, roll)
+}
+
+difficultyOf (char) =
+    switch char.Character.Difficulty
+        case "Very Easy" then 60
+        case "Easy" then 40
+        case "Average" then 20
+        case "Difficult" then -10
+        case "Hard" then -20
+        case "Very Hard" then -30
+        else 0
+
+wfrpRoll (modifier) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
+    ((baseline, throws)->wfrpResult (max (0, baseline + modifier), d100Value (first (first (throws).rolls), first (item (1, throws).rolls)))))
+
+wfrpDice (char) = wfrpRoll (difficultyOf (char))
+
+plainD100 = wfrpRoll (0)
+
+characteristic = custom
+{
+    Initial = integer { default = 30 }
+    Advances = integer { default = 0 }
+    Current = integer { value = Initial + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+    Bonus = Current / 10
+}
+
+skill (base) = custom
+{
+    Characteristic = base
+    Advances = integer { default = 0 }
+    Skill = integer { value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+}
+
+noSkill = { Skill = 0 }
+
+skillValue (char, name, fallback) = valueOr (valueOr (char.'Basic Skills', name, valueOr (char.'Advanced Skills', name, noSkill)), "Skill", fallback)
+
+weaponAttack (name, target, damage, kind, distance) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = wfrpDice (characterTable)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+strengthBonus (char) = char.Characteristics.S.Bonus
+
+meleeDamage (char, weapon) =
+    if contains (weaponStat (weapon, "Damage"), "SB") then
+        "+" + toString (strengthBonus (char) + toInt (replace ("SB", "", replace ("+", "", weaponStat (weapon, "Damage")))))
+    else weaponStat (weapon, "Damage")
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, skillValue (char, "Ranged " + weaponStat (weapon, "Group"), char.Characteristics.BS.Current), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, skillValue (char, "Melee " + weaponStat (weapon, "Group"), char.Characteristics.WS.Current), meleeDamage (char, weapon), "melee", 2)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Species = string { keys = ["Human", "Dwarf", "Halfling", "High Elf", "Wood Elf"] }
+        Class = string {}
+        Career = string {}
+        'Career Level' = string {}
+        'Career Path' = string {}
+        Status = string {}
+        Age = string {}
+        Height = string {}
+        Hair = string {}
+        Eyes = string {}
+        Difficulty = selector
+        {
+            options = ["Very Hard", "Hard", "Difficult", "Challenging", "Average", "Easy", "Very Easy"]
+            labels = ["-30", "-20", "-10", "+0", "+20", "+40", "+60"]
+            colors = ["red", "red", "red", "white", "green", "green", "green"]
+            hold = ["", "", "Ctrl", "", "Shift", "", ""]
+            default = "Challenging"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        WS = characteristic {}
+        BS = characteristic {}
+        S = characteristic {}
+        T = characteristic {}
+        I = characteristic {}
+        Ag = characteristic {}
+        Dex = characteristic {}
+        Int = characteristic {}
+        WP = characteristic {}
+        Fel = characteristic {}
+    }
+
+    'Fate and Fortune' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Fate = integer { default = 2 }
+        Fortune = integer { default = 2  editable = live }
+        Resilience = integer { default = 1 }
+        Resolve = integer { default = 1  editable = live }
+        Motivation = string {}
+        Advantage = integer { default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Initiative = integer { value = Characteristics.I.Current  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Movement = integer { default = 4 }
+        Walk = Movement * 2
+        Run = Movement * 4
+    }
+
+    Experience = table
+    {
+        tableLayout = layout { columns = 3 }
+        Current = integer { default = 0  editable = live }
+        Spent = integer { default = 0 }
+        Total = Current + Spent
+    }
+
+    Wounds = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Hardy Talent' = integer { default = 0 }
+        Maximum = integer { value = Characteristics.S.Bonus + 2 * Characteristics.T.Bonus + Characteristics.WP.Bonus + 'Hardy Talent' * Characteristics.T.Bonus  editable = none }
+        Current = integer { default = Maximum  editable = live }
+        Down = string { value = if Current < 1 then "Wounds 0" else ""  visible = none  indicator = "#d64545" }
+        'Critical Wounds' = string { multiline = true  editable = live }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Bleeding = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Blinded = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Broken = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Deafened = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Entangled = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Fatigued = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Poisoned = integer { default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Ablaze = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Surprised = bool { default = false  editable = live  indicator = "#d4b106" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+    }
+
+    'Basic Skills' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Art = skill (Characteristics.Dex.Current)
+        Athletics = skill (Characteristics.Ag.Current)
+        Bribery = skill (Characteristics.Fel.Current)
+        Charm = skill (Characteristics.Fel.Current)
+        'Charm Animal' = skill (Characteristics.WP.Current)
+        Climb = skill (Characteristics.S.Current)
+        Cool = skill (Characteristics.WP.Current)
+        'Consume Alcohol' = skill (Characteristics.T.Current)
+        Dodge = skill (Characteristics.Ag.Current)
+        Drive = skill (Characteristics.Ag.Current)
+        Endurance = skill (Characteristics.T.Current)
+        Entertain = skill (Characteristics.Fel.Current)
+        Gamble = skill (Characteristics.Int.Current)
+        Gossip = skill (Characteristics.Fel.Current)
+        Haggle = skill (Characteristics.Fel.Current)
+        Intimidate = skill (Characteristics.S.Current)
+        Intuition = skill (Characteristics.I.Current)
+        Leadership = skill (Characteristics.Fel.Current)
+        'Melee Basic' = skill (Characteristics.WS.Current)
+        Navigation = skill (Characteristics.I.Current)
+        'Outdoor Survival' = skill (Characteristics.Int.Current)
+        Perception = skill (Characteristics.I.Current)
+        Ride = skill (Characteristics.Ag.Current)
+        Row = skill (Characteristics.S.Current)
+        Stealth = skill (Characteristics.Ag.Current)
+    }
+
+    'Advanced Skills' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Characteristic = string { keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
+            Value = integer { default = 30 }
+            Advances = integer { default = 0 }
+            Skill = integer { value = Value + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+        }
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, "Melee Brawling", Characteristics.WS.Current), "+" + toString (Characteristics.S.Bonus), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Trappings = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Trappings
+        singular = "Trapping"
+        editable = character
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Gold Crowns' = integer { default = 0  editable = live }
+        Shillings = integer { default = 0  editable = live }
+        Brass = integer { default = 0  editable = live }
+        'Corruption Points' = integer { default = 0  editable = live  indicator = "#8e5cc4" }
+        Mutations = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        M = integer { default = 4 }
+        WS = integer { default = 30  valuedice = plainD100 }
+        BS = integer { default = 30  valuedice = plainD100 }
+        S = integer { default = 30  valuedice = plainD100 }
+        T = integer { default = 30  valuedice = plainD100 }
+        I = integer { default = 30  valuedice = plainD100 }
+        Ag = integer { default = 30  valuedice = plainD100 }
+        Dex = integer { default = 30  valuedice = plainD100 }
+        Int = integer { default = 30  valuedice = plainD100 }
+        WP = integer { default = 30  valuedice = plainD100 }
+        Fel = integer { default = 30  valuedice = plainD100 }
+        W = integer { default = 10 }
+    }
+    State = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Current Wounds' = integer { default = 10  editable = live }
+        Advantage = integer { default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Initiative = integer { value = Characteristics.I  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Bleeding = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = plainD100  action = melee  reach = 2 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+        Skills = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Group = string { keys = ["Basic", "Brawling", "Cavalry", "Fencing", "Flail", "Parry", "Polearm", "Two-Handed", "Blackpowder", "Bow", "Crossbow", "Engineering", "Entangling", "Explosives", "Sling", "Throwing"] }
+        'Reach or Range' = string {}
+        Range = string {}
+        Damage = string {}
+        Qualities = string {}
+        Encumbrance = string {}
+        Price = string {}
+        Availability = string {}
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Locations = string {}
+        'Armour Points' = string {}
+        Qualities = string {}
+        Penalty = string {}
+        Encumbrance = string {}
+        Price = string {}
+    }
+}
+
+trappingStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Encumbrance = string {}
+        Price = string {}
+        Availability = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Max = string {}
+        Tests = string {}
+        Taken = integer { default = 1 }
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Lore = string {}
+        CN = string {}
+        Range = string {}
+        Target = string {}
+        Duration = string {}
+    }
+}
+
+careerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Class = string {}
+        Levels = string { multiline = true }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Trappings = string { multiline = true }
+    }
+}
+
+WarhammerFantasy = system
+{
+    distanceUnit = "yd"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armour = armourStats
+    Trappings = trappingStats
+    Talents = talentStats
+    Spells = spellStats
+    Careers = careerStats
+    secondaryTypes = ["Weapons", "Armour", "Trappings", "Talents", "Spells"]
+    otherLibararyTypes = ["Careers"]
+    description = "Warhammer Fantasy Roleplay 4th edition: grim and perilous adventure in the Old World"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d100, 1d10]
+    cssFiles = ["/systems/wfrp/wfrp.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/gothic.json", "/systems/names/fantasy.json"]
+    nameSettings = [oldWorldNameSetting, gothicHorrorNameSetting, fantasyNameSetting]
+}
