@@ -1,0 +1,425 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+cocValue (units, tens) =
+    if mod (tens, 10) == 0 and mod (units, 10) == 0 then 100
+    else mod (tens, 10) * 10 + mod (units, 10)
+
+cocPick (extra, units, tens) =
+    if extra > 0 then min (map ((t)->cocValue (first (units), t), tens))
+    else if extra < 0 then max (map ((t)->cocValue (first (units), t), tens))
+    else cocValue (first (units), first (tens))
+
+cocLevel (skill, roll) =
+    if roll == 1 then "Critical"
+    else if roll == 100 or (skill < 50 and roll > 95) then "Fumble"
+    else if roll > skill then "Failure"
+    else if roll <= skill / 5 then "Extreme success"
+    else if roll <= skill / 2 then "Hard success"
+    else "Regular success"
+
+cocResult (skill, roll, extra) =
+{
+    Text = toString (roll) + " vs " + toString (skill) + ": " + cocLevel (skill, roll)
+    Value = roll
+    Outcome = cocLevel (skill, roll)
+    Push = if cocLevel (skill, roll) == "Failure" then cocRoll (extra) else 0
+    PushLabel = "Push the roll"
+}
+
+tensColor (extra) = if extra > 0 then "green" else if extra < 0 then "red" else ""
+
+cocRoll (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }],
+    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra)))
+
+cocDice (char) =
+    switch char.Investigator.Dice
+        case "Two penalty" then cocRoll (-2)
+        case "Penalty" then cocRoll (-1)
+        case "Bonus" then cocRoll (1)
+        case "Two bonus" then cocRoll (2)
+        else cocRoll (0)
+
+plainD100 = cocRoll (0)
+
+characteristic (base) = custom
+{
+    Value = integer { default = base  valuedice = cocDice (characterTable) }
+    Half = Value / 2
+    Fifth = Value / 5
+}
+
+skill (base) = custom
+{
+    Value = integer { default = base  valuedice = cocDice (characterTable) }
+    Half = Value / 2
+    Fifth = Value / 5
+    Improve = bool { default = false  editable = live }
+}
+
+strAndSiz (char) = char.Characteristics.STR.Value + char.Characteristics.SIZ.Value
+
+damageBonus (total) =
+    if total < 65 then "-2"
+    else if total < 85 then "-1"
+    else if total < 125 then "None"
+    else if total < 165 then "+1d4"
+    else if total < 205 then "+1d6"
+    else if total < 285 then "+2d6"
+    else "+3d6"
+
+build (total) =
+    if total < 65 then -2
+    else if total < 85 then -1
+    else if total < 125 then 0
+    else if total < 165 then 1
+    else if total < 205 then 2
+    else if total < 285 then 3
+    else 4
+
+moveRate (str, dex, siz) =
+    if dex < siz and str < siz then 7
+    else if dex > siz and str > siz then 9
+    else 8
+
+noSkill = { Value = 0 }
+
+skillValue (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Value", 0)
+
+weaponSkill (weapon) = valueOr (weapon.data.weaponStats.Stats, "Skill", "Fighting Brawl")
+
+weaponRange (weapon) = toInt (valueOr (weapon.data.weaponStats.Stats, "Range", ""))
+
+weaponAttack (name, target, damage, kind, distance) = custom
+{
+    Name = name
+    Skill = integer
+    {
+        value = target
+        valuedice = cocDice (characterTable)
+        action = kind
+        reach = 2
+        range = distance
+    }
+    Damage = string { value = damage }
+}
+
+attackFor (char, weapon) =
+    if weaponRange (weapon) > 0 then
+        weaponAttack (weapon.Name, skillValue (char, weaponSkill (weapon)), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", weaponRange (weapon))
+    else
+        weaponAttack (weapon.Name, skillValue (char, weaponSkill (weapon)), valueOr (weapon.data.weaponStats.Stats, "Damage", "") + " " + damageBonus (strAndSiz (char)), "melee", 0)
+
+characterTable = ruleset
+{
+    Investigator = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Player = string {}
+        Occupation = string {}
+        Age = integer { default = 25 }
+        Pronoun = string {}
+        Residence = string {}
+        Birthplace = string {}
+        Dice = selector
+        {
+            options = ["Two penalty", "Penalty", "Normal", "Bonus", "Two bonus"]
+            labels = ["2 pen", "Pen", "Normal", "Bonus", "2 bon"]
+            colors = ["red", "red", "white", "green", "green"]
+            hold = ["", "Ctrl", "", "Shift", ""]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        STR = characteristic (50)
+        DEX = characteristic (50)
+        INT = characteristic (50)
+        CON = characteristic (50)
+        APP = characteristic (50)
+        POW = characteristic (50)
+        SIZ = characteristic (50)
+        EDU = characteristic (50)
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hit Points' = table
+        {
+            Max = integer { value = (Characteristics.CON.Value + Characteristics.SIZ.Value) / 10  editable = none }
+            Current = integer { default = Max  editable = live }
+            'Major Wound' = bool { default = false  editable = live  indicator = "#d64545" }
+            Dying = bool { default = false  editable = live  indicator = "#d64545" }
+            Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        }
+        Sanity = table
+        {
+            Start = integer { value = Characteristics.POW.Value  editable = none }
+            Max = integer { value = 99 - skillValue (characterTable, "Cthulhu Mythos")  editable = none }
+            Current = integer { default = Start  editable = live  valuedice = cocDice (characterTable) }
+            'Temporary Insanity' = bool { default = false  editable = live  indicator = "#8e5cc4" }
+            'Indefinite Insanity' = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        }
+        Luck = table
+        {
+            Current = integer { default = 50  editable = live  valuedice = cocDice (characterTable) }
+        }
+        'Magic Points' = table
+        {
+            Max = integer { value = Characteristics.POW.Value / 5  editable = none }
+            Current = integer { default = Max  editable = live }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Damage Bonus' = damageBonus (strAndSiz (characterTable))
+        Build = build (strAndSiz (characterTable))
+        Move = moveRate (Characteristics.STR.Value, Characteristics.DEX.Value, Characteristics.SIZ.Value)
+        Initiative = integer { value = Characteristics.DEX.Value  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Accounting = skill (5)
+        Anthropology = skill (1)
+        Appraise = skill (5)
+        Archaeology = skill (1)
+        'Art and Craft' = skill (5)
+        Charm = skill (15)
+        Climb = skill (20)
+        'Credit Rating' = skill (0)
+        'Cthulhu Mythos' = skill (0)
+        Disguise = skill (5)
+        Dodge = skill (Characteristics.DEX.Value / 2)
+        'Drive Auto' = skill (20)
+        'Elec Repair' = skill (10)
+        'Fast Talk' = skill (5)
+        'Fighting Brawl' = skill (25)
+        'Firearms Handgun' = skill (20)
+        'Firearms Rifle Shotgun' = skill (25)
+        'First Aid' = skill (30)
+        History = skill (5)
+        Intimidate = skill (15)
+        Jump = skill (20)
+        'Language Other' = skill (1)
+        'Language Own' = skill (Characteristics.EDU.Value)
+        Law = skill (5)
+        'Library Use' = skill (20)
+        Listen = skill (20)
+        Locksmith = skill (1)
+        'Mech Repair' = skill (10)
+        Medicine = skill (1)
+        'Natural World' = skill (10)
+        Navigate = skill (10)
+        Occult = skill (5)
+        Persuade = skill (10)
+        Pilot = skill (1)
+        Psychoanalysis = skill (1)
+        Psychology = skill (10)
+        Ride = skill (5)
+        Science = skill (1)
+        'Sleight of Hand' = skill (10)
+        'Spot Hidden' = skill (25)
+        Stealth = skill (20)
+        Survival = skill (10)
+        Swim = skill (20)
+        Throw = skill (20)
+        Track = skill (10)
+    }
+
+    'Other Skills' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Value = integer { default = 1  valuedice = cocDice (characterTable) }
+            Improve = bool { default = false  editable = live }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, "Fighting Brawl"), "1d3 " + damageBonus (strAndSiz (characterTable)), "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Gear and Possessions' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Backstory = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Personal Description' = string { multiline = true }
+        'Ideology and Beliefs' = string { multiline = true }
+        'Significant People' = string { multiline = true }
+        'Meaningful Locations' = string { multiline = true }
+        'Treasured Possessions' = string { multiline = true }
+        Traits = string { multiline = true }
+        'Injuries and Scars' = string { multiline = true }
+        'Phobias and Manias' = string { multiline = true }
+        'Arcane Tomes and Spells' = string { multiline = true }
+        'Encounters with Strange Entities' = string { multiline = true }
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Spending Level' = string {}
+        Cash = string {}
+        Assets = string { multiline = true }
+    }
+}
+
+creatureAttack (name, target, damage, kind, distance) = custom
+{
+    Name = name
+    Skill = integer { value = target  valuedice = plainD100  action = kind  reach = 2  range = distance }
+    Damage = string { value = damage }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = integer { default = 50  valuedice = plainD100 }
+        CON = integer { default = 50  valuedice = plainD100 }
+        SIZ = integer { default = 50  valuedice = plainD100 }
+        DEX = integer { default = 50  valuedice = plainD100 }
+        INT = integer { default = 50  valuedice = plainD100 }
+        POW = integer { default = 50  valuedice = plainD100 }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Hit Points' = integer { default = 10 }
+        'Current HP' = integer { default = 10  editable = live }
+        'Damage Bonus' = string {}
+        Build = integer { default = 0 }
+        Move = integer { default = 8 }
+        'Magic Points' = integer { default = 10 }
+        'Attacks per Round' = integer { default = 1 }
+        Armour = string {}
+        'Sanity Loss' = string {}
+        Fighting = integer { default = 40  valuedice = plainD100 }
+        Dodge = integer { default = 25  valuedice = plainD100 }
+        Initiative = integer { value = Characteristics.DEX  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Dying = bool { default = false  editable = live  indicator = "#d64545" }
+    }
+    'Natural Attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Skill = integer { default = 40  valuedice = plainD100  action = melee  reach = 2 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Spells and Powers' = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Fighting Brawl", "Firearms Handgun", "Firearms Rifle Shotgun", "Throw"] }
+        Damage = string {}
+        Range = string {}
+        Uses = string {}
+        'Bullets in Gun' = string {}
+        Malfunction = string {}
+        Era = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        Era = string {}
+    }
+}
+
+tomeStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Language = string {}
+        'Sanity Loss' = string {}
+        'Mythos Rating' = string {}
+        'Cthulhu Mythos' = string {}
+        'Study Weeks' = string {}
+        Spells = string { multiline = true }
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        'Casting Time' = string {}
+        'Deeper Version' = string { multiline = true }
+    }
+}
+
+CallOfCthulhu = system
+{
+    distanceUnit = "yd"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Tomes = tomeStats
+    Spells = spellStats
+    secondaryTypes = ["Weapons", "Gear", "Spells"]
+    otherLibararyTypes = ["Tomes"]
+    description = "Call of Cthulhu 7th edition: investigators against the Mythos"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d100, 1d10, 1d6, 1d4]
+    cssFiles = ["/systems/coc/coc.css"]
+    libraries = ["/systems/names/cosmic.json", "/systems/names/victorian.json", "/systems/names/gothic.json", "/systems/names/spies.json"]
+    nameSettings = [cosmicHorrorNameSetting, gaslightNameSetting, gothicHorrorNameSetting, spyThrillerNameSetting]
+}
