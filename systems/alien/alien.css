@@ -1,0 +1,36 @@
+/* Alien: green phosphor on black, monospace like a ship terminal. */
+.entityView {
+    color-scheme: dark;
+    --bg: #030805;
+    --surface: #07120a;
+    --surface-alt: #0b1a0f;
+    --surface-sunken: #050d07;
+    --surface-muted: #11261a;
+    --text: #b7f5c4;
+    --text-muted: #8ad49b;
+    --text-faint: #57915f;
+    --on-accent: #030805;
+    --border: #1d4a2a;
+    --border-strong: #3be26a;
+    --accent: #3be26a;
+    --accent-hover: #6cf091;
+    --accent-soft: #0f2c17;
+    --link: #6cf091;
+    --danger: #ff5a4e;
+    --paper: #07120a;
+    --card-bg: #091610;
+    --dice-bg: #3be26a;
+    --dice-text: #030805;
+    color: var(--text);
+    background-color: var(--bg);
+    font-family: "Courier New", Courier, ui-monospace, monospace;
+}
+.entityView .entityTable {
+    border: 1px solid var(--border-strong);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}

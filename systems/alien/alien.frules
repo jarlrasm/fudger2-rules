@@ -1,0 +1,274 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+ones (rolls) = count (filter ((x)->x == 1, rolls))
+
+panics (stress) = ones (stress) > 0
+
+yzeOutcome (base, stress) =
+    if panics (stress) and sixes (base) + sixes (stress) == 0 then "Failure and panic"
+    else if panics (stress) then "Success and panic"
+    else if sixes (base) + sixes (stress) > 0 then "Success"
+    else "Failure"
+
+yzeText (base, stress) =
+    toString (sixes (base) + sixes (stress)) + (if sixes (base) + sixes (stress) == 1 then " success" else " successes")
+    + (if panics (stress) then ", a stress die shows 1: make a Panic Roll" else "")
+
+yzeResult (base, stress, canPush) =
+{
+    Text = yzeText (base, stress)
+    Value = sixes (base) + sixes (stress)
+    Outcome = yzeOutcome (base, stress)
+    Push = if canPush and not (panics (stress)) then yzePush (filter ((x)->x == 6, base), filter ((x)->x == 6, stress), count (filter ((x)->x < 6, base)), count (filter ((x)->x < 6, stress))) else 0
+    PushLabel = "Push (+1 Stress)"
+}
+
+yzePush (keptBase, keptStress, baseCount, stressCount) = ([dice { number = baseCount  sides = 6 }, dice { number = stressCount + 1  sides = 6  color = "yellow"  label = "Stress" }],
+    ((baseline, throws)->yzeResult (concat (keptBase, first (throws).rolls), concat (keptStress, item (1, throws).rolls), false)))
+
+yzeRoll (pool, stress) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = max (0, stress)  sides = 6  color = "yellow"  label = "Stress" }],
+    ((baseline, throws)->yzeResult (first (throws).rolls, item (1, throws).rolls, true)))
+
+yzeDice (char, pool) = yzeRoll (pool + char.Character.Modifier, char.Status.Stress)
+
+panicRoll = ([1d6], ((baseline, throws)->panicResult (baseline + first (first (throws).rolls))))
+
+panicResult (total) =
+{
+    Text = toString (total) + ": " + (if total < 7 then "keeping it together"
+        else if total == 7 then "nervous twitch, +1 Stress to everyone nearby"
+        else if total == 8 then "tremble, -2 to Agility"
+        else if total == 9 then "drop item"
+        else if total == 10 then "freeze for a round"
+        else if total == 11 then "seek cover"
+        else if total == 12 then "scream, everyone nearby gains Stress"
+        else if total == 13 then "flee"
+        else if total == 14 then "frenzy, attack the nearest person"
+        else "catatonic")
+    Value = total
+    Outcome = if total < 7 then "Success" else "Failure"
+}
+
+skill (attribute) = custom
+{
+    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Pool = integer { value = attribute + Level  valuedice = yzeDice (characterTable, attribute + Level)  editable = none }
+}
+
+noSkill = { Pool = 0 }
+
+poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeMetres (text) =
+    if text == "Engaged" then 2
+    else if text == "Short" then 10
+    else if text == "Medium" then 25
+    else if text == "Long" then 100
+    else if text == "Extreme" then 1000
+    else 2
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = yzeDice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Range") == "Engaged" or weaponStat (weapon, "Range") == "" then
+        weaponAttack (weapon.Name, poolOf (char, "Close Combat") + toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "melee", 2)
+    else
+        weaponAttack (weapon.Name, poolOf (char, "Ranged Combat") + toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Career = string { keys = ["Colonial Marine", "Colonial Marshal", "Company Agent", "Kid", "Medic", "Mercenary", "Officer", "Pilot", "Roughneck", "Scientist", "Synthetic"] }
+        Appearance = string {}
+        'Personal Agenda' = string { multiline = true }
+        Buddy = string {}
+        Rival = string {}
+        'Signature Item' = string {}
+        Modifier = modifier { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Strength) }
+        Agility = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Agility) }
+        Wits = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Wits) }
+        Empathy = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Empathy) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Health' = integer { value = Attributes.Strength  editable = none }
+        Health = integer { default = 'Max Health'  minvalue = 0  editable = live }
+        Broken = string { value = if Health < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Stress = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#d4b106"  indicatorLabel = "Stress" }
+        'Panic Roll' = integer { value = Stress  valuedice = panicRoll  editable = none }
+        Radiation = integer { default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        Starving = bool { default = false  editable = live  indicator = "#d4b106" }
+        Dehydrated = bool { default = false  editable = live  indicator = "#d4b106" }
+        Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
+        Freezing = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        'Critical Injuries' = string { multiline = true  editable = live }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Heavy Machinery' = skill (Attributes.Strength)
+        Stamina = skill (Attributes.Strength)
+        'Close Combat' = skill (Attributes.Strength)
+        Mobility = skill (Attributes.Agility)
+        Piloting = skill (Attributes.Agility)
+        'Ranged Combat' = skill (Attributes.Agility)
+        Observation = skill (Attributes.Wits)
+        Survival = skill (Attributes.Wits)
+        Comtech = skill (Attributes.Wits)
+        Command = skill (Attributes.Empathy)
+        Manipulation = skill (Attributes.Empathy)
+        'Medical Aid' = skill (Attributes.Empathy)
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Consumables = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Air = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Air  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
+        Food = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Food  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
+        Water = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Water  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
+        Power = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Power  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
+        Cash = integer { default = 0  editable = live }
+        Encumbrance = integer { value = Attributes.Strength * 2  editable = none }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Speed = integer { default = 1 }
+        Health = integer { default = 4 }
+        'Current Health' = integer { default = Health  editable = live }
+        Armor = integer { default = 0 }
+        'Acid Splash' = integer { default = 0 }
+        Mobility = integer { default = 5  valuedice = yzeRoll (5, 0) }
+        Observation = integer { default = 5  valuedice = yzeRoll (5, 0) }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        Down = string { value = if 'Current Health' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+    }
+    'Signature Attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Roll = integer { default = 1  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
+            Name = string {}
+            Effect = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Bonus = string {}
+        Damage = string {}
+        Range = string { keys = ["Engaged", "Short", "Medium", "Long", "Extreme"] }
+        Weight = string {}
+        Cost = string {}
+        Comments = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string {}
+        Effect = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Career = string {}
+    }
+}
+
+Alien = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Talents = talentStats
+    secondaryTypes = ["Weapons", "Gear", "Talents"]
+    description = "Alien RPG: Year Zero Engine survival horror in space"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    quickdice = [1d6, 1d10, 2d6]
+    cssFiles = ["/systems/alien/alien.css"]
+    libraries = ["/systems/names/bluecollar.json", "/systems/names/scifi.json", "/systems/names/cosmic.json"]
+    nameSettings = [blueCollarSpaceNameSetting, spaceNameSetting, cosmicHorrorNameSetting]
+}
