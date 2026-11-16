@@ -225,7 +225,7 @@ pf2Spellcasting = table
     'Spell Attribute' = string { default = "INT"  keys = ["INT", "WIS", "CHA"] }
     'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
-    'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level)  editable = none }
+    'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  editable = none }
     'Focus Points' = slots { number = 3  editable = live }
     'Slots Rank 1' = slots { number = 0  editable = live }
     'Slots Rank 2' = slots { number = 0  editable = live }

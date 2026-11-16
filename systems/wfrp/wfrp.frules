@@ -56,7 +56,8 @@ characteristicValue (char, name) =
         case "Dex" then char.Characteristics.Dex.Current
         case "WP" then char.Characteristics.WP.Current
         case "Fel" then char.Characteristics.Fel.Current
-        else char.Characteristics.Int.Current
+        case "Int" then char.Characteristics.Int.Current
+        else 0
 
 characteristic = custom
 {
@@ -73,9 +74,14 @@ skill (base) = custom
     Skill = integer { value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
 }
 
-skillOrNothing (char, name) = valueOr (char.'Basic Skills', name, valueOr (char.'Advanced Skills', name, 0))
+advancedValue (entry, fallback) =
+    if entry == 0 then fallback
+    else if valueOr (entry, "Characteristic", "") == "" then fallback + valueOr (entry, "Advances", 0)
+    else valueOr (entry, "Skill", fallback)
 
-skillValue (char, name, fallback) = if skillOrNothing (char, name) == 0 then fallback else valueOr (skillOrNothing (char, name), "Skill", fallback)
+skillValue (char, name, fallback) =
+    if valueOr (char.'Basic Skills', name, 0) == 0 then advancedValue (valueOr (char.'Advanced Skills', name, 0), fallback)
+    else valueOr (valueOr (char.'Basic Skills', name, 0), "Skill", fallback)
 
 weaponAttack (name, target, damage, kind, distance) = custom
 {
@@ -229,7 +235,7 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Characteristic = string { default = "Int"  keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
+            Characteristic = string { default = ""  keys = ["", "WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
             Advances = integer { default = 0 }
             Skill = integer { value = characteristicValue (characterTable, Characteristic) + Advances  valuedice = wfrpDice (characterTable)  editable = none }
         }

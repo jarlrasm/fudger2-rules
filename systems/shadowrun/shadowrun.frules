@@ -63,14 +63,14 @@ skill (usual) = custom
     Rank = integer { default = 0  minvalue = 0  maxvalue = 12 }
     Attribute = string { default = usual  keys = attributeNames  editable = live }
     Specialization = string {}
-    Pool = integer { value = (if Rank == 0 then attributeValue (characterTable, Attribute) - 1 else Rank + attributeValue (characterTable, Attribute))  valuedice = srDice (characterTable, if Rank == 0 then attributeValue (characterTable, Attribute) - 1 else Rank + attributeValue (characterTable, Attribute))  editable = none }
+    Pool = integer { value = skillPool (Rank, attributeValue (characterTable, Attribute))  valuedice = srDice (characterTable, skillPool (Rank, attributeValue (characterTable, Attribute)))  editable = none }
 }
 
 noSkill = { Rank = 0 }
 
 skillPool (rank, attribute) = if rank == 0 then attribute - 1 else rank + attribute
 
-rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rank", 0)
+poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", skillPool (0, char.Attributes.Agility))
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
@@ -84,9 +84,9 @@ weaponAttack (name, pool, damage, kind, distance) = custom
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Skill") == "Close Combat" then
-        weaponAttack (weapon.Name, skillPool (rankOf (char, "Close Combat"), char.Attributes.Agility), weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, poolOf (char, "Close Combat"), weaponStat (weapon, "Damage"), "melee", 2)
     else
-        weaponAttack (weapon.Name, skillPool (rankOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")), char.Attributes.Agility), weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
+        weaponAttack (weapon.Name, poolOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
 
 characterTable = ruleset
 {
@@ -201,7 +201,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", skillPool (rankOf (characterTable, "Close Combat"), Attributes.Agility), toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
