@@ -22,7 +22,11 @@ redResult (base, die, extra, dv) =
 {
     Text = redText (base, die, extra, dv)
     Value = redTotal (base, die, extra)
-    Outcome = if die == 10 then "Critical" else if die == 1 then "Fumble" else redLevel (die, redTotal (base, die, extra), dv)
+    Outcome =
+        if dv > 0 then (if redTotal (base, die, extra) > dv then (if die == 10 then "Critical" else "Success") else (if die == 1 then "Fumble" else "Failure"))
+        else if die == 10 then "Critical"
+        else if die == 1 then "Fumble"
+        else ""
 }
 
 redRoll (dv) = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10  label = "Crit"  color = "black" }],
@@ -397,6 +401,32 @@ programStats = ruleset
 
 CyberpunkRed = system
 {
+    hints = [
+        hint
+        {
+            title = "Roles"
+            topic = "Getting started"
+            text = ["Each edgerunner has a Role and its ability: Solo, Netrunner, Tech, Medtech, Fixer and so on. Build the crew so the roles cover each other."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["STAT + skill + 1d10 against a DV. Each roll asks for the DV; a 10 adds the Crit die and a 1 subtracts it."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (REF + 1d10); highest goes first."]
+        },
+        hint
+        {
+            title = "Armor and wounds"
+            topic = "Combat"
+            text = ["Armor SP is subtracted from damage and drops by 1 each time it is penetrated. Below half HP a character is Seriously Wounded."]
+        }
+    ]
     distanceUnit = "m"
     squareSize = 2
     characters = characterTable

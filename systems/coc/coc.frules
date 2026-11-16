@@ -410,6 +410,38 @@ spellStats = ruleset
 
 CallOfCthulhu = system
 {
+    hints = [
+        hint
+        {
+            title = "Investigators"
+            topic = "Getting started"
+            text = ["Agree on the era and the kind of investigators: 1920s scholars, modern journalists, or something else. Each investigator needs a reason to keep digging."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Rolls are d100 at or under the skill. Half is a Hard success, a fifth Extreme. Use the Dice slider for bonus and penalty dice.", "A failed roll can be pushed once, if the player says how they try harder; failing a push should hurt."]
+        },
+        hint
+        {
+            title = "Sanity"
+            topic = "Play"
+            text = ["Sanity losses are written like 1/1d6. Reaching Temporary or Indefinite Insanity is ticked on the sheet."]
+        },
+        hint
+        {
+            title = "DEX order"
+            topic = "Initiative"
+            text = ["Combat goes in DEX order. Players roll the Initiative field to put their DEX in the list."]
+        },
+        hint
+        {
+            title = "Major wounds"
+            topic = "Combat"
+            text = ["Damage of half max HP or more in one hit is a Major Wound. At 0 HP with a major wound the investigator is dying."]
+        }
+    ]
     distanceUnit = "yd"
     characters = characterTable
     creatures = creatureTable

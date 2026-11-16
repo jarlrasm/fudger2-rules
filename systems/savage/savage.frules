@@ -29,7 +29,7 @@ raisesText (total, target) =
     else "Success with " + toString ((total - target) / 4) + " raises"
 
 swOutcome (trait, wild, wildCard, total, target) =
-    if first (trait) == 1 and (not (wildCard) or first (wild) == 1) then "Critical failure"
+    if first (trait) == 1 and first (wild) == 1 then "Critical failure"
     else if total < target then "Failure"
     else if total < target + 4 then "Success"
     else "Raise"
@@ -47,13 +47,13 @@ swResult (dieSize, trait, wild, wildCard, modifier, target, bennies) =
     PushSets = [{ Field = "characterTable.Character.Bennies"  Value = bennies - 1 }]
 }
 
-swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
+swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, 0)))
 
-swBennyRoll (dieSize, wildCard, modifier, target, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
+swBennyRoll (dieSize, wildCard, modifier, target, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, bennies)))
 
-swAskedRoll (dieSize, wildCard, modifier, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
+swAskedRoll (dieSize, wildCard, modifier, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, asked, bennies)))
 
 creatureRoll (die, wildCard, wounds) = ask ("Target number", 4, swAskedRoll (dieSides (die), wildCard, dieBonus (die) - min (3, wounds), 0))
@@ -286,7 +286,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Money = integer { default = 500  editable = live }
-        'Load Limit' = integer { value = dieSides (Attributes.Strength.Die) * 5 + dieBonus (Attributes.Strength.Die) * 20  editable = none }
+        'Load Limit' = integer { value = (dieSides (Attributes.Strength.Die) - 2) * 10 + dieBonus (Attributes.Strength.Die) * 20  editable = none }
     }
 }
 
@@ -399,6 +399,33 @@ powerStats = ruleset
 
 SavageWorlds = system
 {
+    hints = [
+        hint
+        {
+            title = "Setting"
+            topic = "Getting started"
+            text = ["Savage Worlds fits any setting; pick one and decide which Edges and powers fit it."]
+        },
+        hint
+        {
+            title = "Trait rolls"
+            topic = "Play"
+            text = ["Roll the trait die and the Wild Die, keep the best, and aim for the target number each roll asks for. Dice ace and roll again. Each 4 over is a raise."]
+        },
+        hint
+        {
+            title = "Action cards"
+            topic = "Initiative"
+            text = ["Add the Action Deck to the session and use Deal initiative each round; Ace acts first. Shuffle after a Joker."]
+            deck = "Action Deck"
+        },
+        hint
+        {
+            title = "Bennies"
+            topic = "Play"
+            text = ["Spend a Benny to reroll a failed trait roll; the sheet takes it off. Hand them out for good play."]
+        }
+    ]
     distanceUnit = "yd"
     squareSize = 2
     characters = characterTable

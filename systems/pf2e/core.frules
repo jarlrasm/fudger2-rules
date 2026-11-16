@@ -34,6 +34,18 @@ pf2Result (bonus, natural, dc) =
 pf2Roll (dc, fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
     ((baseline, throws)->pf2Result (baseline, if fortune == "Fortune" then max (first (throws).rolls) else if fortune == "Misfortune" then min (first (throws).rolls) else first (first (throws).rolls), dc)))
 
+keyAttribute (char) =
+    switch char.Character.'Key Attribute'
+        case "STR" then char.Attributes.STR
+        case "DEX" then char.Attributes.DEX
+        case "CON" then char.Attributes.CON
+        case "INT" then char.Attributes.INT
+        case "WIS" then char.Attributes.WIS
+        case "CHA" then char.Attributes.CHA
+        else max (char.Attributes.STR, char.Attributes.DEX, char.Attributes.CON, char.Attributes.INT, char.Attributes.WIS, char.Attributes.CHA)
+
+signedText (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n) else ""
+
 statusPenalty (char) = max (char.Conditions.Frightened, char.Conditions.Sickened)
 
 pf2AskedRoll (fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
@@ -83,7 +95,7 @@ strikeBonus (char, weapon) =
     attackAttribute (char, weapon) + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - statusPenalty (char)
 
 strikeDamage (char, weapon) =
-    weaponStat (weapon, "Damage") + (if isRanged (weapon) then "" else if char.Attributes.STR == 0 then "" else " " + (if char.Attributes.STR > 0 then "+" else "") + toString (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
+    weaponStat (weapon, "Damage") + (if isRanged (weapon) then "" else signedText (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
 
 strike (name, bonus, damage, kind, reachFeet, distance) = custom
 {
@@ -139,7 +151,7 @@ pf2Character = table
     Class = string {}
     Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
     XP = integer { default = 0  editable = live }
-    'Hero Points' = slots { number = 3  editable = live  allowedchange = increaseAndClear }
+    'Hero Points' = slots { number = 3  editable = live }
     'Key Attribute' = string { keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
     Size = string { default = "Medium"  keys = ["Tiny", "Small", "Medium", "Large"] }
     Speed = integer { default = 25 }
@@ -188,9 +200,10 @@ pf2Defenses = table
     'Armor Rank' = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Armor Item Bonus' = integer { default = 0 }
     'Dex Cap' = integer { default = 5 }
-    AC = integer { value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' - (if Conditions.'Off Guard' then 2 else 0)  editable = none }
+    'Shield Bonus' = integer { default = 2  minvalue = 0 }
+    AC = integer { value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' + (if 'Shield Raised' then 'Shield Bonus' else 0) - (if Conditions.'Off Guard' then 2 else 0) - statusPenalty (characterTable)  editable = none }
     'Shield Raised' = bool { default = false  editable = live  indicator = "#3a7bd5" }
-    'Class DC' = integer { value = 10 + max (Attributes.STR, Attributes.DEX, Attributes.CON, Attributes.INT, Attributes.WIS, Attributes.CHA) + proficiencyBonus (Proficiencies.'Class DC', Character.Level)  editable = none }
+    'Class DC' = integer { value = 10 + keyAttribute (characterTable) + proficiencyBonus (Proficiencies.'Class DC', Character.Level) - statusPenalty (characterTable)  editable = none }
     Resistances = string {}
     Weaknesses = string {}
 }
@@ -213,7 +226,7 @@ pf2Spellcasting = table
     'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
     'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level)  editable = none }
-    'Focus Points' = slots { number = 3  editable = live  allowedchange = increaseAndClear }
+    'Focus Points' = slots { number = 3  editable = live }
     'Slots Rank 1' = slots { number = 0  editable = live }
     'Slots Rank 2' = slots { number = 0  editable = live }
     'Slots Rank 3' = slots { number = 0  editable = live }

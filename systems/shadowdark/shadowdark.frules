@@ -259,6 +259,32 @@ spellStats = ruleset
 
 Shadowdark = system
 {
+    hints = [
+        hint
+        {
+            title = "Real-time torches"
+            topic = "Getting started"
+            text = ["A torch lasts an hour of real time. Use the Torch clock on the sheet to count it down."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["d20 + modifier against a DC. Each roll asks for the DC; use the slider for advantage and disadvantage."]
+        },
+        hint
+        {
+            title = "Clockwise"
+            topic = "Initiative"
+            text = ["Everyone rolls Initiative (d20 + DEX); the highest goes first, then play goes clockwise round the table. Drag tokens into that order."]
+        },
+        hint
+        {
+            title = "Spellcasting"
+            topic = "Play"
+            text = ["Casters roll against 10 + the spell's tier. A failed spell is lost until rest."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

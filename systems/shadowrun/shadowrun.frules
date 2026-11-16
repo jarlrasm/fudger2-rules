@@ -68,6 +68,8 @@ skill (usual) = custom
 
 noSkill = { Rank = 0 }
 
+skillPool (rank, attribute) = if rank == 0 then attribute - 1 else rank + attribute
+
 rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rank", 0)
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
@@ -82,9 +84,9 @@ weaponAttack (name, pool, damage, kind, distance) = custom
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Skill") == "Close Combat" then
-        weaponAttack (weapon.Name, rankOf (char, "Close Combat") + char.Attributes.Agility, weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, skillPool (rankOf (char, "Close Combat"), char.Attributes.Agility), weaponStat (weapon, "Damage"), "melee", 2)
     else
-        weaponAttack (weapon.Name, rankOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")) + char.Attributes.Agility, weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
+        weaponAttack (weapon.Name, skillPool (rankOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")), char.Attributes.Agility), weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
 
 characterTable = ruleset
 {
@@ -199,7 +201,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", rankOf (characterTable, "Close Combat") + Attributes.Agility, toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", skillPool (rankOf (characterTable, "Close Combat"), Attributes.Agility), toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -381,6 +383,32 @@ gearStats = ruleset
 
 Shadowrun = system
 {
+    hints = [
+        hint
+        {
+            title = "The run"
+            topic = "Getting started"
+            text = ["A job from a Johnson, legwork, the run, and the payout. Plan for betrayal."]
+        },
+        hint
+        {
+            title = "Hits and glitches"
+            topic = "Play"
+            text = ["5s and 6s are hits. Each test asks for its threshold. More than half 1s is a glitch."]
+        },
+        hint
+        {
+            title = "Edge"
+            topic = "Play"
+            text = ["Reroll misses for one Edge (the sheet spends it), or Push the Limit with the slider to add Edge and make 6s explode."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (Reaction + Intuition + initiative dice) to join the list."]
+        }
+    ]
     distanceUnit = "m"
     characters = characterTable
     creatures = creatureTable

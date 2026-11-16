@@ -372,6 +372,33 @@ spellStats = ruleset
 
 Dragonbane = system
 {
+    hints = [
+        hint
+        {
+            title = "Kin and profession"
+            topic = "Getting started"
+            text = ["Pick a kin and a profession; ducks and wolfkin are as welcome as humans."]
+        },
+        hint
+        {
+            title = "Roll under"
+            topic = "Play"
+            text = ["Roll d20 at or under the skill. 1 is a Dragon, 20 a Demon. Conditions give banes on their attribute automatically."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Add the Initiative Cards deck to the session and use Deal initiative every round. Lowest acts first."]
+            deck = "Initiative Cards"
+        },
+        hint
+        {
+            title = "Dying"
+            topic = "Combat"
+            text = ["At 0 HP make death rolls on CON each turn: three successes stabilise, three failures kill."]
+        }
+    ]
     distanceUnit = "m"
     squareSize = 2
     characters = characterTable

@@ -73,6 +73,8 @@ charDM (char, name) =
 
 noSkill = { Level = -3 }
 
+zeroedPhysical (char) = (if char.Characteristics.STR.Current < 1 then 1 else 0) + (if char.Characteristics.DEX.Current < 1 then 1 else 0) + (if char.Characteristics.END.Current < 1 then 1 else 0)
+
 skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -3)
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
@@ -144,8 +146,8 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Initiative = modifier { value = Characteristics.DEX.DM  valuedice = 2d6  editable = none }
-        Unconscious = string { value = if Characteristics.END.Current < 1 and (Characteristics.STR.Current < 1 or Characteristics.DEX.Current < 1) then "Unconscious" else ""  visible = none  indicator = "#555555" }
-        Dead = string { value = if Characteristics.END.Current < 1 and Characteristics.STR.Current < 1 and Characteristics.DEX.Current < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Unconscious = string { value = if zeroedPhysical (characterTable) == 2 then "Unconscious" else ""  visible = none  indicator = "#555555" }
+        Dead = string { value = if zeroedPhysical (characterTable) == 3 then "Dead" else ""  visible = none  indicator = "#d64545" }
         Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
         Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
         Armour = integer { default = 0  editable = live }
@@ -377,6 +379,32 @@ shipStats = ruleset
 
 Traveller = system
 {
+    hints = [
+        hint
+        {
+            title = "Ship and debt"
+            topic = "Getting started"
+            text = ["Decide whose ship it is and how the mortgage gets paid. Trade, passengers and odd jobs drive the campaign."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["2d6 + characteristic DM + skill against 8. The Difficulty slider changes the target, Boon and Bane add a third die.", "Effect, the margin over the target, decides how well it went."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (2d6 + DEX DM) to join the list."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Damage comes off END first, then STR or DEX. Two characteristics at 0 means unconscious."]
+        }
+    ]
     distanceUnit = "m"
     squareSize = 1
     characters = characterTable

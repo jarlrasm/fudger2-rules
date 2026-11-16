@@ -331,6 +331,32 @@ ritualStats = ruleset
 
 DeltaGreen = system
 {
+    hints = [
+        hint
+        {
+            title = "The operation"
+            topic = "Getting started"
+            text = ["Start with a briefing: who sends the agents, what they are told, and what they must keep hidden."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll d100 at or under a skill or a statistic times five. Doubles under the target are criticals, doubles over are fumbles.", "Use the Modifier slider for easy or hard situations."]
+        },
+        hint
+        {
+            title = "Bonds and sanity"
+            topic = "Characters"
+            text = ["Bonds are the people the agent cares about. Spending Bond points softens Sanity loss but harms the relationship."]
+        },
+        hint
+        {
+            title = "DEX order"
+            topic = "Initiative"
+            text = ["Act in DEX order. Players roll the Initiative field to put their DEX in the list."]
+        }
+    ]
     distanceUnit = "m"
     characters = characterTable
     creatures = creatureTable

@@ -262,6 +262,33 @@ talentStats = ruleset
 
 Alien = system
 {
+    hints = [
+        hint
+        {
+            title = "Agendas"
+            topic = "Getting started"
+            text = ["Give each player a secret personal agenda. Trust between the crew should never be certain."]
+        },
+        hint
+        {
+            title = "Stress and panic"
+            topic = "Play"
+            text = ["Stress adds yellow dice. A 1 on a stress die means a Panic Roll. Pushing a roll adds a Stress automatically."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Add the Initiative Cards deck to the session and use Deal initiative in the encounter. Lowest acts first."]
+            deck = "Initiative Cards"
+        },
+        hint
+        {
+            title = "Supplies"
+            topic = "Play"
+            text = ["Roll air, food, water and power as supply dice when they are used."]
+        }
+    ]
     distanceUnit = "m"
     characters = characterTable
     creatures = creatureTable

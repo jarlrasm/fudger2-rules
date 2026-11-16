@@ -72,7 +72,7 @@ attackFor (char, weapon) =
     if toInt (weaponStat (weapon, "Long Range")) > 0 then
         weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Long Range")))
     else
-        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.STR.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage") + (if char.Abilities.STR.Modifier == 0 then "" else " " + toString (char.Abilities.STR.Modifier)), "melee", 5)
+        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.STR.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage") + (if char.Abilities.STR.Modifier > 0 then "+" + toString (char.Abilities.STR.Modifier) else if char.Abilities.STR.Modifier < 0 then toString (char.Abilities.STR.Modifier) else ""), "melee", 5)
 
 spellSlots (level) = custom
 {
@@ -361,6 +361,32 @@ classStats = ruleset
 
 OldSchoolEssentials = system
 {
+    hints = [
+        hint
+        {
+            title = "Rulings"
+            topic = "Getting started"
+            text = ["Rules are short; the referee makes rulings. Describe, ask what the players do, and roll only when it matters."]
+        },
+        hint
+        {
+            title = "Exploration"
+            topic = "Play"
+            text = ["Time passes in 10-minute turns. Track light, rest and wandering monsters."]
+        },
+        hint
+        {
+            title = "Initiative by side"
+            topic = "Initiative"
+            text = ["Each side rolls a d6 each round, and the higher side acts first. The optional rule lets each character roll the Initiative field instead."]
+        },
+        hint
+        {
+            title = "Saves and morale"
+            topic = "Combat"
+            text = ["Saving throws are d20 at or above the save value. Monsters check morale on 2d6 and flee when they fail."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 10
     characters = characterTable

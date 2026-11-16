@@ -70,7 +70,7 @@ characterTable = ruleset
     Strikes = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([strike ("Fist", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4 " + toString (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([strike ("Fist", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4" + signedText (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
         singular = "Strike"
         editable = none
         valueType = strike
@@ -139,6 +139,32 @@ characterTable = ruleset
 
 Pathfinder2e = system
 {
+    hints = [
+        hint
+        {
+            title = "Ancestry, background, class"
+            topic = "Getting started"
+            text = ["Characters are built from an ancestry, a background and a class. The built-in library has the core options."]
+        },
+        hint
+        {
+            title = "Four degrees"
+            topic = "Play"
+            text = ["Each check asks for the DC. Beating it by 10 is a critical success; missing by 10 a critical failure."]
+        },
+        hint
+        {
+            title = "Three actions"
+            topic = "Combat"
+            text = ["Each turn has three actions. Set the Attack slider for the second and third Strike to apply the multiple attack penalty."]
+        },
+        hint
+        {
+            title = "Perception"
+            topic = "Initiative"
+            text = ["Initiative is usually Perception. Roll the Initiative field to join the list."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

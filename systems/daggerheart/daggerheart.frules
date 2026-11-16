@@ -111,7 +111,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Evasion = integer { default = 10 }
         'Armor Score' = integer { default = 0 }
-        'Armor Slots' = slots { number = 'Armor Score'  editable = live  allowedchange = increaseAndClear }
+        'Armor Slots' = slots { number = 'Armor Score'  editable = live }
         'Major Threshold' = integer { default = 6 }
         'Severe Threshold' = integer { default = 12 }
     }
@@ -120,10 +120,10 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 1  size = wide }
         'HP Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
-        'Hit Points' = slots { number = 'HP Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        'Hit Points' = slots { number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
         'Stress Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
-        Stress = slots { number = 'Stress Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
-        Hope = slots { number = 6  editable = live  allowedchange = increaseAndClear  indicator = "#d4b106" }
+        Stress = slots { number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
+        Hope = slots { number = 6  editable = live  indicator = "#d4b106" }
         Down = string { value = if 'Hit Points'.realvalue >= 'HP Slots' then "Death move" else ""  visible = none  indicator = "#555555" }
         Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
         Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
@@ -237,9 +237,9 @@ creatureTable = ruleset
         'Major Threshold' = integer { default = 7 }
         'Severe Threshold' = integer { default = 12 }
         'HP Slots' = integer { default = 5  minvalue = 1 }
-        HP = slots { number = 'HP Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        HP = slots { number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
         'Stress Slots' = integer { default = 3  minvalue = 0 }
-        Stress = slots { number = 'Stress Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
+        Stress = slots { number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
         ATK = modifier { default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
         Attack = string {}
         Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
@@ -339,6 +339,32 @@ environmentStats = ruleset
 
 Daggerheart = system
 {
+    hints = [
+        hint
+        {
+            title = "Session zero"
+            topic = "Getting started"
+            text = ["Ask each player questions about their character's background and connections, and build the world from the answers."]
+        },
+        hint
+        {
+            title = "Hope and Fear"
+            topic = "Play"
+            text = ["Roll the Hope and Fear d12s plus a trait against the Difficulty each roll asks for. Higher Hope gives the player Hope, higher Fear gives the GM Fear."]
+        },
+        hint
+        {
+            title = "Spotlight"
+            topic = "Initiative"
+            text = ["There is no initiative. The spotlight moves to the GM on rolls with Fear or failures."]
+        },
+        hint
+        {
+            title = "Thresholds"
+            topic = "Combat"
+            text = ["Damage below Major marks 1 HP, Major 2, Severe 3. Armor slots reduce it."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

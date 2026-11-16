@@ -254,6 +254,32 @@ typeStats = ruleset
 
 CypherSystem = system
 {
+    hints = [
+        hint
+        {
+            title = "I am a..."
+            topic = "Getting started"
+            text = ["Each character is a sentence: an adjective descriptor, a type, and a focus that does something."]
+        },
+        hint
+        {
+            title = "Task levels"
+            topic = "Play"
+            text = ["Every roll asks for the task's level. Skills, assets and Effort ease it, and the target is level times 3.", "The GM never rolls: players roll to attack and to defend."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll the Initiative field (a Speed task) to join the list."]
+        },
+        hint
+        {
+            title = "Intrusions"
+            topic = "Play"
+            text = ["Offer GM intrusions with 2 XP to complicate things; a natural 1 is a free intrusion."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

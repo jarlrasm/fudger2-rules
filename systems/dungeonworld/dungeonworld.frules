@@ -236,6 +236,32 @@ classStats = ruleset
 
 DungeonWorld = system
 {
+    hints = [
+        hint
+        {
+            title = "Fiction first"
+            topic = "Getting started"
+            text = ["Ask lots of questions and use the answers. Draw maps, leave blanks, and play to find out what happens."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["When the fiction triggers a move, roll 2d6 + stat: 10+ strong hit, 7-9 weak hit, 6- miss and mark XP."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["There is no initiative. The spotlight moves between players as the fiction asks."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Damage rolls the class's damage die minus armor. At 0 HP make the Last Breath move."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

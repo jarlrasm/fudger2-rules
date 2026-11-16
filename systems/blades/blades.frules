@@ -325,6 +325,32 @@ factionStats = ruleset
 
 BladesInTheDark = system
 {
+    hints = [
+        hint
+        {
+            title = "The crew"
+            topic = "Getting started"
+            text = ["Make the crew first: its type, lair and hunting grounds. Then the scoundrels."]
+        },
+        hint
+        {
+            title = "Action rolls"
+            topic = "Play"
+            text = ["Set position and effect, roll a d6 per dot and read the highest: 6 full success, 4-5 partial, 1-3 bad."]
+        },
+        hint
+        {
+            title = "Clocks"
+            topic = "Play"
+            text = ["Track threats and projects as clocks in the Clocks lists."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["There is no initiative; the spotlight moves with the fiction. Flashbacks replace planning."]
+        }
+    ]
     distanceUnit = "m"
     characters = characterTable
     creatures = creatureTable

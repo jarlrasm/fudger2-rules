@@ -72,7 +72,7 @@ characterTable = ruleset
     Strikes = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([strike ("Unarmed", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4 " + toString (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([strike ("Unarmed", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4" + signedText (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
         singular = "Strike"
         editable = none
         valueType = strike
@@ -230,6 +230,32 @@ shipStats = ruleset
 
 Starfinder2e = system
 {
+    hints = [
+        hint
+        {
+            title = "Same core as Pathfinder"
+            topic = "Getting started"
+            text = ["Starfinder 2e uses the Pathfinder 2e rules; checks, degrees of success and conditions work the same."]
+        },
+        hint
+        {
+            title = "Guns and magazines"
+            topic = "Combat"
+            text = ["Track rounds in the Ammunition list and reload with an action. Strikes ask for the target's AC."]
+        },
+        hint
+        {
+            title = "Starships"
+            topic = "Getting started"
+            text = ["Ships are their own entity type. In ship combat each crew member takes a role."]
+        },
+        hint
+        {
+            title = "Perception"
+            topic = "Initiative"
+            text = ["Roll the Initiative field (Perception) to join the list."]
+        }
+    ]
     distanceUnit = "ft"
     squareSize = 5
     characters = characterTable

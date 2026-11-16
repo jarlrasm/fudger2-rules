@@ -45,6 +45,19 @@ wfrpDice (char) = wfrpRoll (difficultyOf (char))
 
 plainD100 = wfrpRoll (0)
 
+characteristicValue (char, name) =
+    switch name
+        case "WS" then char.Characteristics.WS.Current
+        case "BS" then char.Characteristics.BS.Current
+        case "S" then char.Characteristics.S.Current
+        case "T" then char.Characteristics.T.Current
+        case "I" then char.Characteristics.I.Current
+        case "Ag" then char.Characteristics.Ag.Current
+        case "Dex" then char.Characteristics.Dex.Current
+        case "WP" then char.Characteristics.WP.Current
+        case "Fel" then char.Characteristics.Fel.Current
+        else char.Characteristics.Int.Current
+
 characteristic = custom
 {
     Initial = integer { default = 30 }
@@ -216,10 +229,9 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Characteristic = string { keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
-            Value = integer { default = 30 }
+            Characteristic = string { default = "Int"  keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
             Advances = integer { default = 0 }
-            Skill = integer { value = Value + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+            Skill = integer { value = characteristicValue (characterTable, Characteristic) + Advances  valuedice = wfrpDice (characterTable)  editable = none }
         }
     }
 
@@ -413,6 +425,32 @@ careerStats = ruleset
 
 WarhammerFantasy = system
 {
+    hints = [
+        hint
+        {
+            title = "Careers"
+            topic = "Getting started"
+            text = ["Characters start in humble careers. Let them be ordinary people swept up in events."]
+        },
+        hint
+        {
+            title = "Success Levels"
+            topic = "Play"
+            text = ["Roll d100 at or under the skill. Success Levels (tens of the target minus tens of the roll) decide how well it went.", "Pick the difficulty on the sheet before rolling."]
+        },
+        hint
+        {
+            title = "Advantage"
+            topic = "Combat"
+            text = ["Winning opposed tests in combat gives Advantage, +10 per point. Losing or being wounded clears it."]
+        },
+        hint
+        {
+            title = "Initiative order"
+            topic = "Initiative"
+            text = ["Act in order of the I characteristic. Roll the Initiative field to join the list."]
+        }
+    ]
     distanceUnit = "yd"
     characters = characterTable
     creatures = creatureTable
