@@ -534,6 +534,22 @@ A group of fields shown together in one cell, e.g. a skill with a modifier and a
 Acrobatics = custom { Modifier = modifier { valuedice = 1d20 } }
 ```
 
+### Field templates
+
+A function whose body is a field (or a `custom` group of fields) can make the same kind of field many times. Writing the field as a call to it puts the field in its place, with the arguments filled in, so it is stored and edited like a field written out in full:
+
+```
+skill (base) = custom
+{
+    Value = integer { default = base  valuedice = d100Roll (characterTable) }
+    Half = Value / 2
+}
+
+Skills = table { Climb = skill (20)  Dodge = skill (Characteristics.DEX.Value / 2) }
+```
+
+Arguments are worked out where the field ends up, so they can refer to the sheet. Only a call that is a field's whole value is expanded; calls inside expressions stay ordinary function calls. This needs the app from branch `claude/rpg-engine-features` or later.
+
 ### Your own section types
 
 Any parameterless assignment that is a table can be used as a type:
