@@ -45,10 +45,10 @@ rangeOf (tags) =
     else if contains (tags, "near") then 30
     else 0
 
-weaponMove (name, modifier, damage, kind, distance) = custom
+weaponMove (name, statMod, damage, kind, distance) = custom
 {
     Name = name
-    Roll = modifier { value = modifier  valuedice = dwDice (characterTable)  action = kind  reach = 5  range = distance }
+    Roll = modifier { value = statMod  valuedice = dwDice (characterTable)  action = kind  reach = 5  range = distance }
     Damage = damage
 }
 

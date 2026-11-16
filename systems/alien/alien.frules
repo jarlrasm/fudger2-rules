@@ -202,8 +202,8 @@ creatureTable = ruleset
         'Current Health' = integer { default = Health  editable = live }
         Armor = integer { default = 0 }
         'Acid Splash' = integer { default = 0 }
-        Mobility = integer { default = 5  valuedice = yzeRoll (5, 0) }
-        Observation = integer { default = 5  valuedice = yzeRoll (5, 0) }
+        Mobility = integer { default = 5  valuedice = yzeRoll (Mobility, 0) }
+        Observation = integer { default = 5  valuedice = yzeRoll (Observation, 0) }
         Initiative = integer { default = 0  valuedice = 1d10 }
         Down = string { value = if 'Current Health' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
     }

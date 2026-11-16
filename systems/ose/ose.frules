@@ -40,6 +40,15 @@ checkResult (score, natural) =
     Outcome = if natural <= score and natural < 20 then "Success" else "Failure"
 }
 
+percentResult (score, natural) =
+{
+    Text = toString (natural) + " vs " + toString (score) + ": " + (if natural <= score then "Success" else "Failure")
+    Value = natural
+    Outcome = if natural <= score then "Success" else "Failure"
+}
+
+percentCheck = ([1d100], ((baseline, throws)->percentResult (baseline, first (first (throws).rolls))))
+
 abilityCheck = ([1d20], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls))))
 
 xInSix = ([1d6], ((baseline, throws)->if first (first (throws).rolls) <= baseline then { Text = toString (first (first (throws).rolls)) + " in " + toString (baseline) + ": Success"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + " in " + toString (baseline) + ": Failure"  Outcome = "Failure" }))
@@ -137,13 +146,13 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         visible = if Character.Class == "Thief" then visible else none
-        'Climb Sheer Surfaces' = integer { default = 87  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
-        'Find or Remove Traps' = integer { default = 10  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Climb Sheer Surfaces' = integer { default = 87  valuedice = percentCheck }
+        'Find or Remove Traps' = integer { default = 10  valuedice = percentCheck }
         'Hear Noise' = integer { default = 2  valuedice = xInSix }
-        'Hide in Shadows' = integer { default = 10  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
-        'Move Silently' = integer { default = 20  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
-        'Open Locks' = integer { default = 15  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
-        'Pick Pockets' = integer { default = 20  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Hide in Shadows' = integer { default = 10  valuedice = percentCheck }
+        'Move Silently' = integer { default = 20  valuedice = percentCheck }
+        'Open Locks' = integer { default = 15  valuedice = percentCheck }
+        'Pick Pockets' = integer { default = 20  valuedice = percentCheck }
     }
 
     Weapons = list
@@ -260,7 +269,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Attack = modifier { default = 0  valuedice = oseAttack (19)  action = melee  reach = 5 }
+            Attack = modifier { default = 0  valuedice = oseAttack (Stats.THAC0)  action = melee  reach = 5 }
             Damage = string {}
         }
     }

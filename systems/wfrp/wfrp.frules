@@ -60,9 +60,9 @@ skill (base) = custom
     Skill = integer { value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
 }
 
-noSkill = { Skill = 0 }
+skillOrNothing (char, name) = valueOr (char.'Basic Skills', name, valueOr (char.'Advanced Skills', name, 0))
 
-skillValue (char, name, fallback) = valueOr (valueOr (char.'Basic Skills', name, valueOr (char.'Advanced Skills', name, noSkill)), "Skill", fallback)
+skillValue (char, name, fallback) = if skillOrNothing (char, name) == 0 then fallback else valueOr (skillOrNothing (char, name), "Skill", fallback)
 
 weaponAttack (name, target, damage, kind, distance) = custom
 {

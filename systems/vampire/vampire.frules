@@ -253,9 +253,9 @@ creatureTable = ruleset
     {
         tableLayout = layout { columns = 3  size = wide }
         Kind = string { keys = ["Mortal", "Ghoul", "Vampire", "Werewolf", "Hunter", "Other"] }
-        Physical = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
-        Social = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
-        Mental = integer { default = 3  valuedice = v5Pool (3, 0, 0) }
+        Physical = integer { default = 3  valuedice = v5Pool (Physical, 0, 0) }
+        Social = integer { default = 3  valuedice = v5Pool (Social, 0, 0) }
+        Mental = integer { default = 3  valuedice = v5Pool (Mental, 0, 0) }
         Health = slots { number = 5  editable = live  indicator = "#d64545" }
         Willpower = slots { number = 3  editable = live }
         Humanity = integer { default = 7 }
@@ -268,7 +268,7 @@ creatureTable = ruleset
         keys = ["Brawl", "Firearms"]
         valueType = custom
         {
-            Dice = integer { default = 5  valuedice = v5Pool (5, 0, 0)  action = melee  reach = 2 }
+            Dice = integer { default = 5  valuedice = v5Pool (Dice, 0, 0)  action = melee  reach = 2 }
         }
     }
     Notes = table

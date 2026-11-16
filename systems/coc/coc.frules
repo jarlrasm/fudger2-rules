@@ -18,19 +18,22 @@ cocLevel (skill, roll) =
     else if roll <= skill / 2 then "Hard success"
     else "Regular success"
 
-cocResult (skill, roll, extra) =
+cocResult (skill, roll, extra, canPush) =
 {
     Text = toString (roll) + " vs " + toString (skill) + ": " + cocLevel (skill, roll)
     Value = roll
     Outcome = cocLevel (skill, roll)
-    Push = if cocLevel (skill, roll) == "Failure" then cocRoll (extra) else 0
+    Push = if canPush and cocLevel (skill, roll) == "Failure" then cocPushed (extra) else 0
     PushLabel = "Push the roll"
 }
 
 tensColor (extra) = if extra > 0 then "green" else if extra < 0 then "red" else ""
 
 cocRoll (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }],
-    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra)))
+    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra, true)))
+
+cocPushed (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }],
+    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra, false)))
 
 cocDice (char) =
     switch char.Investigator.Dice

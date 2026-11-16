@@ -24,17 +24,21 @@ dbOutcome (target, roll) =
     else if roll <= target then "Success"
     else "Failure"
 
-dbResult (target, roll) =
+dbResult (target, roll, net, canPush) =
 {
     Text = toString (roll) + " vs " + toString (target) + ": " + (switch dbOutcome (target, roll) case "Dragon" then "Dragon! critical success" case "Demon" then "Demon! critical failure" else dbOutcome (target, roll))
     Value = roll
     Outcome = switch dbOutcome (target, roll) case "Dragon" then "Critical" case "Demon" then "Fumble" else dbOutcome (target, roll)
-    Push = if dbOutcome (target, roll) == "Failure" then dbRoll (0) else 0
+    Push = if canPush and dbOutcome (target, roll) == "Failure" then dbRollOnce (net, false) else 0
     PushLabel = "Push (take a condition)"
 }
 
-dbRoll (net) = ([dice { number = if net == 0 then 1 else 2  sides = 20  color = if net > 0 then "green" else if net < 0 then "red" else "" }],
-    ((baseline, throws)->dbResult (baseline, keptDie (net, first (throws).rolls))))
+dbRollOnce (net, canPush) = ([dice { number = if net == 0 then 1 else 2  sides = 20  color = if net > 0 then "green" else if net < 0 then "red" else "" }],
+    ((baseline, throws)->dbResult (baseline, keptDie (net, first (throws).rolls), net, canPush)))
+
+dbRoll (net) = dbRollOnce (net, true)
+
+deathRoll = dbRollOnce (0, false)
 
 selectorNet (char) = if char.Character.Roll == "Boon" then 1 else if char.Character.Roll == "Bane" then -1 else 0
 
@@ -88,8 +92,10 @@ weaponAttribute (skillName) =
         case "Staves" then "AGL"
         else "STR"
 
+isRangedSkill (skillName) = skillName == "Bows" or skillName == "Crossbows" or skillName == "Slings"
+
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Range")) > 2 then
+    if isRangedSkill (weaponStat (weapon, "Skill")) then
         weaponAttack (weapon.Name, skillValue (char, char.'Weapon Skills', weaponStat (weapon, "Skill")), weaponAttribute (weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage") + " " + damageBonus (char.Attributes.AGL), "ranged", toInt (weaponStat (weapon, "Range")))
     else
         weaponAttack (weapon.Name, skillValue (char, char.'Weapon Skills', weaponStat (weapon, "Skill")), weaponAttribute (weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage") + " " + damageBonus (if weaponAttribute (weaponStat (weapon, "Skill")) == "AGL" then char.Attributes.AGL else char.Attributes.STR), "melee", max (2, toInt (weaponStat (weapon, "Range"))))
@@ -149,7 +155,7 @@ characterTable = ruleset
         'Damage Bonus AGL' = damageBonus (Attributes.AGL)
         Movement = integer { default = 10 }
         Initiative = integer { default = 0  valuedice = 1d10 }
-        'Death Rolls' = integer { value = Attributes.CON  valuedice = dbRoll (0)  editable = none }
+        'Death Rolls' = integer { value = Attributes.CON  valuedice = deathRoll  editable = none }
         'Death Successes' = slots { number = 3  editable = live }
         'Death Failures' = slots { number = 3  editable = live  indicator = "#d64545" }
         Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }

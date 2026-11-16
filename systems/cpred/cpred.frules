@@ -62,6 +62,12 @@ attackFor (char, weapon) =
     else
         weaponAttack (weapon.Name, skillBase (char, "Melee Weapon"), weaponStat (weapon, "Damage"), "melee", 2)
 
+brawlingDamage (body) =
+    if body > 10 then "4d6"
+    else if body > 6 then "3d6"
+    else if body > 4 then "2d6"
+    else "1d6"
+
 maxHitPoints (body, will) = 10 + 5 * ((body + will + 1) / 2)
 
 characterTable = ruleset
@@ -213,7 +219,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Brawling", skillBase (characterTable, "Brawling"), if Stats.BODY > 6 then "2d6" else "1d6", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Brawling", skillBase (characterTable, "Brawling"), brawlingDamage (Stats.BODY), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
