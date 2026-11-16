@@ -1,0 +1,378 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilitySuccess (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 7 then 1 else 0
+abilityAdvantage (n) = switch n case 5 then 1 case 6 then 1 case 7 then 1 case 8 then 2 else 0
+
+proficiencySuccess (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 5 then 2 case 7 then 1 case 8 then 1 case 9 then 1 else 0
+proficiencyAdvantage (n) = switch n case 6 then 1 case 7 then 1 case 8 then 1 case 9 then 1 case 10 then 2 case 11 then 2 else 0
+
+boostSuccess (n) = switch n case 3 then 1 case 4 then 1 else 0
+boostAdvantage (n) = switch n case 4 then 1 case 5 then 2 case 6 then 1 else 0
+
+difficultyFailure (n) = switch n case 2 then 1 case 3 then 2 case 8 then 1 else 0
+difficultyThreat (n) = switch n case 4 then 1 case 5 then 1 case 6 then 1 case 7 then 2 case 8 then 1 else 0
+
+challengeFailure (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 5 then 2 case 8 then 1 case 9 then 1 else 0
+challengeThreat (n) = switch n case 6 then 1 case 7 then 1 case 8 then 1 case 9 then 1 case 10 then 2 case 11 then 2 else 0
+
+setbackFailure (n) = switch n case 3 then 1 case 4 then 1 else 0
+setbackThreat (n) = switch n case 5 then 1 case 6 then 1 else 0
+
+triumphs (proficiency) = count (filter ((x)->x == 12, proficiency))
+
+despairs (challenge) = count (filter ((x)->x == 12, challenge))
+
+netSuccesses (ability, proficiency, boost, difficulty, challenge, setback) =
+    sum (map ((n)->abilitySuccess (n), ability)) + sum (map ((n)->proficiencySuccess (n), proficiency)) + sum (map ((n)->boostSuccess (n), boost)) + triumphs (proficiency)
+    - sum (map ((n)->difficultyFailure (n), difficulty)) - sum (map ((n)->challengeFailure (n), challenge)) - sum (map ((n)->setbackFailure (n), setback)) - despairs (challenge)
+
+netAdvantages (ability, proficiency, boost, difficulty, challenge, setback) =
+    sum (map ((n)->abilityAdvantage (n), ability)) + sum (map ((n)->proficiencyAdvantage (n), proficiency)) + sum (map ((n)->boostAdvantage (n), boost))
+    - sum (map ((n)->difficultyThreat (n), difficulty)) - sum (map ((n)->challengeThreat (n), challenge)) - sum (map ((n)->setbackThreat (n), setback))
+
+countText (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
+
+advantageText (a) =
+    if a > 0 then ", " + countText (a, "advantage", "advantages")
+    else if a < 0 then ", " + countText (0 - a, "threat", "threats")
+    else ""
+
+symbolsText (t, d) =
+    (if t > 0 then ", " + countText (t, "Triumph", "Triumphs") else "")
+    + (if d > 0 then ", " + countText (d, "Despair", "Despairs") else "")
+
+genesysText (s, a, t, d) =
+    (if s > 0 then "Success, " + countText (s, "net success", "net successes") else "Failure")
+    + advantageText (a)
+    + symbolsText (t, d)
+
+genesysResult (s, a, t, d) =
+{
+    Text = genesysText (s, a, t, d)
+    Value = s
+    Outcome = if t > 0 and s > 0 then "Triumph" else if d > 0 and s < 1 then "Failure" else if s > 0 then "Success" else "Failure"
+}
+
+genesysPool (proficiency, ability, boost, challenge, difficulty, setback) = ([
+        dice { number = ability  sides = 8  color = "green"  label = "Ability" },
+        dice { number = proficiency  sides = 12  color = "yellow"  label = "Proficiency" },
+        dice { number = boost  sides = 6  color = "blue"  label = "Boost" },
+        dice { number = difficulty  sides = 8  color = "purple"  label = "Difficulty" },
+        dice { number = challenge  sides = 12  color = "red"  label = "Challenge" },
+        dice { number = setback  sides = 6  color = "black"  label = "Setback" }
+    ],
+    ((baseline, throws)->genesysResult (
+        netSuccesses (item (0, throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, item (4, throws).rolls, item (5, throws).rolls),
+        netAdvantages (item (0, throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, item (4, throws).rolls, item (5, throws).rolls),
+        triumphs (item (1, throws).rolls),
+        despairs (item (4, throws).rolls))))
+
+upgradedPool (yellow, green, upgrades) =
+    { Yellow = yellow + min (upgrades, green)  Green = green - min (upgrades, green) + max (0, upgrades - green) }
+
+checkPool (char, characteristic, ranks) =
+    genesysPool (
+        upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), char.Check.Upgrades).Yellow,
+        upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), char.Check.Upgrades).Green,
+        char.Check.Boost,
+        char.Check.Challenge,
+        char.Check.Difficulty,
+        char.Check.Setback)
+
+characteristicValue (char, name) =
+    switch name
+        case "Brawn" then char.Characteristics.Brawn
+        case "Agility" then char.Characteristics.Agility
+        case "Intellect" then char.Characteristics.Intellect
+        case "Cunning" then char.Characteristics.Cunning
+        case "Willpower" then char.Characteristics.Willpower
+        else char.Characteristics.Presence
+
+characteristicNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", "Presence"]
+
+skill (usual) = custom
+{
+    Career = bool { default = false }
+    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Characteristic = string { default = usual  keys = characteristicNames  editable = live }
+    Pool = integer { value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = checkPool (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = toString (min (Rank, characteristicValue (characterTable, Characteristic))) + "Y " + toString (max (Rank, characteristicValue (characterTable, Characteristic)) - min (Rank, characteristicValue (characterTable, Characteristic))) + "G" }
+}
+
+noSkill = { Rank = 0 }
+
+rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rank", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeMetres (band) =
+    switch band
+        case "Engaged" then 2
+        case "Short" then 10
+        case "Medium" then 40
+        case "Long" then 100
+        case "Extreme" then 1000
+        else 2
+
+weaponAttack (name, characteristic, ranks, damage, kind, distance) = custom
+{
+    Name = name
+    Check = integer { value = max (characteristic, ranks)  valuedice = checkPool (characterTable, characteristic, ranks)  action = kind  reach = 2  range = distance }
+    Damage = damage
+    Critical = string {}
+}
+
+weaponSkillCharacteristic (skillName) =
+    if skillName == "Ranged" or skillName == "Gunnery" then "Agility"
+    else "Brawn"
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        characteristicValue (char, weaponSkillCharacteristic (weaponStat (weapon, "Skill"))),
+        rankOf (char, weaponStat (weapon, "Skill")),
+        weaponStat (weapon, "Damage") + " (Crit " + weaponStat (weapon, "Critical") + ")",
+        if weaponStat (weapon, "Range") == "Engaged" or weaponStat (weapon, "Range") == "" then "melee" else "ranged",
+        rangeMetres (weaponStat (weapon, "Range")))
+
+initiativeText (s, a) = toString (s) + " successes " + toString (a) + " advantages"
+
+initiativeOrder (text) = toInt (first (split (" ", text))) * 100 + toInt (item (2, split (" ", text)))
+
+initiativePool (characteristic, ranks) = ([
+        dice { number = max (characteristic, ranks) - min (characteristic, ranks)  sides = 8  color = "green"  label = "Ability" },
+        dice { number = min (characteristic, ranks)  sides = 12  color = "yellow"  label = "Proficiency" }
+    ],
+    ((baseline, throws)->{ Text = initiativeText (netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []), netAdvantages (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []))  Value = netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []) }))
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Archetype = string {}
+        Career = string {}
+        Setting = string { keys = ["Fantasy", "Steampunk", "Weird War", "Modern", "Science Fiction", "Space Opera"] }
+        Motivation = string { multiline = true }
+        'Total XP' = integer { default = 0 }
+        'Available XP' = integer { default = 0  editable = live }
+        Money = integer { default = 0  editable = live }
+        'Story Points' = integer { default = 0  editable = live  indicator = "#3a7bd5" }
+    }
+
+    Check = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Difficulty = integer { default = 2  minvalue = 0  maxvalue = 5  editable = live }
+        Challenge = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Setback = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Boost = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Upgrades = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Brawn = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Brawn, 0) }
+        Agility = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Agility, 0) }
+        Intellect = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Intellect, 0) }
+        Cunning = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Cunning, 0) }
+        Willpower = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Willpower, 0) }
+        Presence = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Presence, 0) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Soak = integer { value = Characteristics.Brawn + Armor  editable = none }
+        Armor = integer { default = 0 }
+        'Wound Threshold' = integer { default = 10 + Characteristics.Brawn }
+        Wounds = integer { default = 0  minvalue = 0  editable = live }
+        'Strain Threshold' = integer { default = 10 + Characteristics.Willpower }
+        Strain = integer { default = 0  minvalue = 0  editable = live }
+        'Melee Defense' = integer { default = 0 }
+        'Ranged Defense' = integer { default = 0 }
+        Incapacitated = string { value = if Wounds > 'Wound Threshold' then "Incapacitated" else if Strain > 'Strain Threshold' then "Incapacitated by strain" else ""  visible = none  indicator = "#d64545" }
+        'Critical Injuries' = string { multiline = true  editable = live }
+        'Initiative Cool' = integer { value = rankOf (characterTable, "Cool")  valuedice = initiativePool (Characteristics.Presence, rankOf (characterTable, "Cool"))  editable = none }
+        Initiative = integer { value = rankOf (characterTable, "Vigilance")  valuedice = initiativePool (Characteristics.Willpower, rankOf (characterTable, "Vigilance"))  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Alchemy = skill ("Intellect")
+        Astrocartography = skill ("Intellect")
+        Athletics = skill ("Brawn")
+        Computers = skill ("Intellect")
+        Cool = skill ("Presence")
+        Coordination = skill ("Agility")
+        Discipline = skill ("Willpower")
+        Driving = skill ("Agility")
+        Mechanics = skill ("Intellect")
+        Medicine = skill ("Intellect")
+        Operating = skill ("Intellect")
+        Perception = skill ("Cunning")
+        Piloting = skill ("Agility")
+        Resilience = skill ("Brawn")
+        Riding = skill ("Agility")
+        Skulduggery = skill ("Cunning")
+        Stealth = skill ("Agility")
+        Streetwise = skill ("Cunning")
+        Survival = skill ("Cunning")
+        Vigilance = skill ("Willpower")
+        Brawl = skill ("Brawn")
+        Gunnery = skill ("Agility")
+        Melee = skill ("Brawn")
+        Ranged = skill ("Agility")
+        Charm = skill ("Presence")
+        Coercion = skill ("Willpower")
+        Deception = skill ("Cunning")
+        Leadership = skill ("Presence")
+        Negotiation = skill ("Presence")
+        Knowledge = skill ("Intellect")
+        Arcana = skill ("Intellect")
+        Divine = skill ("Willpower")
+        Primal = skill ("Cunning")
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.Brawn, rankOf (characterTable, "Brawl"), toString (Characteristics.Brawn) + " (Crit 5)", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Description = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { default = "Rival"  keys = ["Minion", "Rival", "Nemesis"] }
+        Brawn = integer { default = 2 }
+        Agility = integer { default = 2 }
+        Intellect = integer { default = 2 }
+        Cunning = integer { default = 2 }
+        Willpower = integer { default = 2 }
+        Presence = integer { default = 2 }
+        Soak = integer { default = 3 }
+        'Wound Threshold' = integer { default = 12 }
+        Wounds = integer { default = 0  editable = live  indicator = "#d64545" }
+        'Melee Defense' = integer { default = 0 }
+        'Ranged Defense' = integer { default = 0 }
+        Initiative = integer { default = 0  valuedice = initiativePool (2, 1) }
+    }
+    'Skill Pools' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Melee", "Ranged", "Vigilance"]
+        valueType = custom
+        {
+            Yellow = integer { default = 1  minvalue = 0 }
+            Green = integer { default = 1  minvalue = 0 }
+            Roll = integer { value = Yellow + Green  valuedice = genesysPool (Yellow, Green, 0, 0, 2, 0)  editable = none  action = melee  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Equipment = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Brawl", "Melee", "Ranged", "Gunnery"] }
+        Damage = string {}
+        Critical = string {}
+        Range = string { keys = ["Engaged", "Short", "Medium", "Long", "Extreme"] }
+        Encumbrance = string {}
+        Price = string {}
+        Rarity = string {}
+        Special = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Defense = string {}
+        Soak = string {}
+        Encumbrance = string {}
+        Price = string {}
+        Rarity = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
+    }
+    Stats = table
+    {
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Activation = string { keys = ["Passive", "Active (Incidental)", "Active (Maneuver)", "Active (Action)", "Active (Incidental, Out of Turn)"] }
+        Ranked = bool { default = false }
+    }
+}
+
+Genesys = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Talents = talentStats
+    secondaryTypes = ["Weapons", "Gear", "Talents"]
+    description = "Genesys: narrative dice for any setting, with successes, advantages and triumphs"
+    initiativeCompare (item1, item2) = compare (initiativeOrder (item1), initiativeOrder (item2))
+    quickdice = [1d8, 1d12, 1d6, 1d100]
+    cssFiles = ["/systems/genesys/genesys.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/victorian.json", "/systems/names/cyberpunk.json", "/systems/names/spies.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, gaslightNameSetting, neonStreetsNameSetting, spyThrillerNameSetting]
+}
