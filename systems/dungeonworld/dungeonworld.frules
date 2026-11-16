@@ -1,0 +1,253 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+statModifier (score) =
+    if score < 4 then -3
+    else if score < 6 then -2
+    else if score < 9 then -1
+    else if score < 13 then 0
+    else if score < 16 then 1
+    else if score < 18 then 2
+    else 3
+
+moveOutcome (total) =
+    if total > 9 then "Strong hit"
+    else if total > 6 then "Weak hit"
+    else "Miss"
+
+moveText (total) =
+    if total > 9 then "10+: you do it"
+    else if total > 6 then "7-9: you do it, with a cost or a hard choice"
+    else "6-: miss, mark XP, and the GM makes a move"
+
+moveResult (total) =
+{
+    Text = toString (total) + ", " + moveText (total)
+    Value = total
+    Outcome = moveOutcome (total)
+}
+
+dwRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + sum (first (throws).rolls))))
+
+dwDice (char) = dwRoll (char.Status.Forward + char.Status.Ongoing)
+
+stat (debility) = custom
+{
+    Score = integer { default = 10  minvalue = 1  maxvalue = 18 }
+    Debility = bool { default = false  editable = live  indicator = "#d4b106"  indicatorLabel = debility }
+    Modifier = modifier { value = statModifier (Score) - (if Debility then 1 else 0)  valuedice = dwDice (characterTable)  editable = none }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeOf (tags) =
+    if contains (tags, "far") then 60
+    else if contains (tags, "near") then 30
+    else 0
+
+weaponMove (name, modifier, damage, kind, distance) = custom
+{
+    Name = name
+    Roll = modifier { value = modifier  valuedice = dwDice (characterTable)  action = kind  reach = 5  range = distance }
+    Damage = damage
+}
+
+moveFor (char, weapon) =
+    if rangeOf (toLower (weaponStat (weapon, "Tags"))) > 0 then
+        weaponMove (weapon.Name + " (Volley)", char.Stats.DEX.Modifier, char.Status.Damage, "ranged", rangeOf (toLower (weaponStat (weapon, "Tags"))))
+    else
+        weaponMove (weapon.Name + " (Hack and Slash)", char.Stats.STR.Modifier, char.Status.Damage, "melee", if contains (toLower (weaponStat (weapon, "Tags")), "reach") then 10 else 5)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Bard", "Cleric", "Druid", "Fighter", "Paladin", "Ranger", "Thief", "Wizard"] }
+        Race = string {}
+        Alignment = string { keys = ["Good", "Lawful", "Neutral", "Chaotic", "Evil"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        XP = slots { number = Level + 7  editable = live  allowedchange = increaseAndClear }
+        Look = string { multiline = true }
+        'Alignment Goal' = string {}
+    }
+
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = stat ("Weak")
+        DEX = stat ("Shaky")
+        CON = stat ("Sick")
+        INT = stat ("Stunned")
+        WIS = stat ("Confused")
+        CHA = stat ("Scarred")
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Base HP' = integer { default = 8 }
+        'Max HP' = integer { value = 'Base HP' + Stats.CON.Score  editable = none }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Last Breath" else ""  visible = none  indicator = "#d64545" }
+        Damage = string { default = "d8" }
+        'Damage Roll' = integer { default = 0  valuedice = 1d8 }
+        Armor = integer { default = 0 }
+        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        Ongoing = modifier { default = 0  editable = live }
+        'Last Breath' = integer { default = 0  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > 9 then { Text = toString (sum (first (throws).rolls)) + ": you cheat death"  Outcome = "Strong hit" } else if sum (first (throws).rolls) > 6 then { Text = toString (sum (first (throws).rolls)) + ": Death offers a bargain"  Outcome = "Weak hit" } else { Text = toString (sum (first (throws).rolls)) + ": your time has come"  Outcome = "Miss" }))  editable = none }
+    }
+
+    'Basic Moves' = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Hack and Slash' = modifier { value = Stats.STR.Modifier  valuedice = dwDice (characterTable)  editable = none  action = melee  reach = 5 }
+        Volley = modifier { value = Stats.DEX.Modifier  valuedice = dwDice (characterTable)  editable = none  action = ranged  range = 60 }
+        'Defy Danger STR' = modifier { value = Stats.STR.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Defy Danger DEX' = modifier { value = Stats.DEX.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Defy Danger CON' = modifier { value = Stats.CON.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Defy Danger INT' = modifier { value = Stats.INT.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Defy Danger WIS' = modifier { value = Stats.WIS.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Defy Danger CHA' = modifier { value = Stats.CHA.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        Defend = modifier { value = Stats.CON.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Spout Lore' = modifier { value = Stats.INT.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Discern Realities' = modifier { value = Stats.WIS.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        Parley = modifier { value = Stats.CHA.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Aid or Interfere' = modifier { default = 0  valuedice = dwDice (characterTable) }
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Moves
+        singular = "Move"
+        editable = character
+    }
+
+    Bonds = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Bond"
+        editable = character
+        valueType = string
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        filter = equipmentStats.Stats.Kind == "Weapon"
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->moveFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponMove
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        filter = equipmentStats.Stats.Kind != "Weapon"
+        singular = "Item"
+        editable = character
+    }
+
+    Load = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Max Load' = integer { value = 9 + Stats.STR.Modifier  editable = none }
+        Coin = integer { default = 0  editable = live }
+        Spells = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Monster = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Tags = string { default = "Solitary, Large" }
+        'Max HP' = integer { default = 10 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Armor = integer { default = 1 }
+        Damage = string { default = "d8" }
+        'Damage Roll' = integer { default = 0  valuedice = 1d8  action = melee  reach = 5 }
+        Instinct = string {}
+        Dead = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Moves = string { multiline = true }
+        Qualities = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+moveStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }]
+    }
+    Stats = table
+    {
+        Class = string {}
+        Level = string { keys = ["Starting", "2-5", "6-10", "Basic", "Special"] }
+        Stat = string { keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA", ""] }
+        Requires = string {}
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Weapon", "Armor", "Gear", "Potion", "Poison", "Service"] }
+        Tags = string {}
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+classStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        'Base HP' = string {}
+        Damage = string {}
+        'Base Load' = string {}
+        Races = string { multiline = true }
+        Alignments = string { multiline = true }
+        Bonds = string { multiline = true }
+    }
+}
+
+DungeonWorld = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Moves = moveStats
+    Equipment = equipmentStats
+    Classes = classStats
+    secondaryTypes = ["Moves", "Equipment"]
+    otherLibararyTypes = ["Classes"]
+    description = "Dungeon World: Powered by the Apocalypse fantasy, 2d6 moves and the fiction first"
+    quickdice = [2d6, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/dungeonworld/dungeonworld.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/barbarian.json", "/systems/names/faerie.json"]
+    nameSettings = [fantasyNameSetting, swordAndSorceryNameSetting, faerieCourtsNameSetting]
+}

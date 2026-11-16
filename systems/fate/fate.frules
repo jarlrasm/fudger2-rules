@@ -1,0 +1,221 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+ladder (n) =
+    if n > 8 then "Beyond Legendary +" + toString (n)
+    else if n < -2 then "Terrible " + toString (n)
+    else switch n
+        case 8 then "Legendary +8"
+        case 7 then "Epic +7"
+        case 6 then "Fantastic +6"
+        case 5 then "Superb +5"
+        case 4 then "Great +4"
+        case 3 then "Good +3"
+        case 2 then "Fair +2"
+        case 1 then "Average +1"
+        case 0 then "Mediocre +0"
+        case -1 then "Poor -1"
+        else "Terrible -2"
+
+shiftsOutcome (shifts) =
+    if shifts > 2 then "Success with style"
+    else if shifts > 0 then "Success"
+    else if shifts == 0 then "Tie"
+    else "Failure"
+
+fateResult (skill, dice, opposition, opposed) =
+{
+    Text = ladder (skill + dice) + (if opposed then " vs " + ladder (opposition) + ": " + shiftsOutcome (skill + dice - opposition) + ", " + toString (skill + dice - opposition) + " shifts" else "")
+    Value = skill + dice
+    Outcome = if opposed then shiftsOutcome (skill + dice - opposition) else ""
+}
+
+fateRoll (opposition, opposed) = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), opposition, opposed)))
+
+fateDice (char) = fateRoll (char.Character.Opposition, char.Character.'Use Opposition')
+
+plainFate = fateRoll (0, false)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Refresh = integer { default = 3 }
+        'Fate Points' = integer { default = 3  minvalue = 0  editable = live }
+        Opposition = integer { default = 2  editable = live }
+        'Use Opposition' = bool { default = false  editable = live }
+        Description = string { multiline = true }
+    }
+
+    Aspects = table
+    {
+        tableLayout = layout { columns = 1  size = wide }
+        'High Concept' = string {}
+        Trouble = string {}
+        'Relationship' = string {}
+        'Other Aspect' = string {}
+        'Another Aspect' = string {}
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Burglary = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Contacts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Crafts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Deceive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Drive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Empathy = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Fight = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = melee  reach = 2 }
+        Investigate = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Lore = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Notice = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Physique = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Provoke = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Rapport = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Resources = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Shoot = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged }
+        Stealth = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Will = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        Initiative = modifier { value = Notice  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+    }
+
+    'Other Skills' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = campaign
+        keys = []
+        valueType = custom
+        {
+            Rating = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+        }
+    }
+
+    Stunts = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Stunts
+        singular = "Stunt"
+        editable = character
+    }
+
+    'Own Stunts' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Stunt"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Stress = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Physical = slots { number = if Skills.Physique > 2 then 4 else if Skills.Physique > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#d64545" }
+        Mental = slots { number = if Skills.Will > 2 then 4 else if Skills.Will > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#8e5cc4" }
+    }
+
+    Consequences = table
+    {
+        tableLayout = layout { columns = 1  size = wide }
+        'Mild 2' = string { editable = live  indicator = "#d64545"  indicatorLabel = "Mild consequence" }
+        'Moderate 4' = string { editable = live  indicator = "#d64545"  indicatorLabel = "Moderate consequence" }
+        'Severe 6' = string { editable = live  indicator = "#d64545"  indicatorLabel = "Severe consequence" }
+        'Extra Mild 2' = string { editable = live  visible = if Skills.Physique > 4 or Skills.Will > 4 then visible else none }
+        Taken = bool { default = false  editable = live  indicator = "#555555"  indicatorLabel = "Taken out" }
+    }
+
+    'Situation Aspects' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Aspect"
+        editable = live
+        valueType = custom
+        {
+            Aspect = string {}
+            'Free Invokes' = integer { default = 1  minvalue = 0  editable = live }
+        }
+    }
+
+    Extras = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Extras
+        singular = "Extra"
+        editable = character
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Aspects = table
+    {
+        tableLayout = layout { size = wide }
+        'High Concept' = string {}
+        Trouble = string {}
+        Other = string {}
+    }
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Fight", "Notice", "Physique"]
+        valueType = custom
+        {
+            Rating = modifier { default = 1  minvalue = -2  maxvalue = 8  valuedice = plainFate  action = melee  reach = 2 }
+        }
+    }
+    Stress = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Boxes = slots { number = 2  editable = live  indicator = "#d64545" }
+        Consequence = string { editable = live  indicator = "#d64545" }
+        'Taken Out' = bool { default = false  editable = live  indicator = "#555555" }
+        Initiative = modifier { default = 0  valuedice = ([1d1], ((baseline, throws)->baseline)) }
+    }
+    Stunts = table
+    {
+        tableLayout = layout { size = wide }
+        Stunts = string { multiline = true }
+    }
+}
+
+stuntStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Skill = string {}
+        Cost = string { default = "1 refresh" }
+    }
+}
+
+extraStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Aspects = string {}
+        Skills = string {}
+        Stunts = string {}
+        Cost = string {}
+    }
+}
+
+FateCore = system
+{
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Stunts = stuntStats
+    Extras = extraStats
+    secondaryTypes = ["Stunts", "Extras"]
+    description = "Fate Core: proactive, competent characters driven by their aspects"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [4df, 1d6]
+    cssFiles = ["/systems/fate/fate.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/cyberpunk.json", "/systems/names/heroes.json", "/systems/names/spies.json", "/systems/names/weirdwest.json", "/systems/names/victorian.json", "/systems/names/pirates.json", "/systems/names/samurai.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, neonStreetsNameSetting, superheroesNameSetting, spyThrillerNameSetting, weirdWestNameSetting, gaslightNameSetting, highSeasNameSetting, feudalJapanNameSetting]
+}

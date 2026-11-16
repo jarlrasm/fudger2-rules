@@ -1,0 +1,272 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+effectiveLevel (level, eases) = max (0, level - eases)
+
+specialRoll (natural) =
+    if natural == 20 then ", major effect, no pool cost"
+    else if natural == 19 then ", minor or major effect"
+    else if natural > 16 then ", +" + toString (natural - 16) + " damage or minor effect"
+    else if natural == 1 then ", GM intrusion"
+    else ""
+
+cypherOutcome (natural, target) =
+    if natural == 1 then "Fumble"
+    else if natural > 18 then "Critical"
+    else if natural >= target then "Success"
+    else "Failure"
+
+cypherResult (level, eases, natural) =
+{
+    Text = toString (natural) + " vs " + toString (effectiveLevel (level, eases) * 3) + " (level " + toString (effectiveLevel (level, eases)) + "): " + (if natural >= effectiveLevel (level, eases) * 3 then "Success" else "Failure") + specialRoll (natural)
+    Value = natural
+    Outcome = cypherOutcome (natural, effectiveLevel (level, eases) * 3)
+}
+
+cypherRoll (level, effort) = ([1d20], ((baseline, throws)->cypherResult (level, baseline + effort, first (first (throws).rolls))))
+
+cypherDice (char) = cypherRoll (char.Character.'Task Level', char.Character.Effort)
+
+plainTask = cypherRoll (0, 0)
+
+trainingEases (training) =
+    switch training
+        case "Inability" then -1
+        case "Trained" then 1
+        case "Specialized" then 2
+        else 0
+
+pool (start) = custom
+{
+    Pool = integer { default = start  minvalue = 0 }
+    Current = integer { default = Pool  minvalue = 0  editable = live }
+    Edge = integer { default = 0  minvalue = 0 }
+}
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Descriptor = string {}
+        Type = string { keys = ["Warrior", "Adept", "Explorer", "Speaker"] }
+        Focus = string {}
+        Flavor = string {}
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        XP = integer { default = 0  editable = live }
+        Effort = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live }
+        'Max Effort' = integer { value = Tier  editable = none }
+        'Task Level' = integer { default = 3  minvalue = 0  maxvalue = 10  editable = live }
+        Armor = integer { default = 0 }
+        Cypher = integer { default = 2 }
+        Shins = integer { default = 0  editable = live }
+    }
+
+    Pools = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Might = pool (10)
+        Speed = pool (10)
+        Intellect = pool (10)
+    }
+
+    'Damage Track' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
+        Debilitated = bool { default = false  editable = live  indicator = "#d64545" }
+        Dead = bool { default = false  editable = live  indicator = "#555555" }
+        State = string { value = if Dead then "Dead" else if Debilitated then "Debilitated" else if Impaired then "Impaired" else "Hale" }
+    }
+
+    'Recovery Rolls' = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Recovery Bonus' = integer { value = Character.Tier  valuedice = 1d6  editable = none }
+        Used = slots { number = 4  editable = live  labels = ["1 action", "10 min", "1 hour", "10 hours"] }
+    }
+
+    Tasks = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Might = integer { default = 0  valuedice = cypherDice (characterTable) }
+        Speed = integer { default = 0  valuedice = cypherDice (characterTable) }
+        Intellect = integer { default = 0  valuedice = cypherDice (characterTable) }
+        Initiative = integer { default = 0  valuedice = 1d20 }
+        'Speed Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
+        'Might Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
+        'Intellect Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
+    }
+
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Training = string { default = "Trained"  keys = ["Inability", "Practiced", "Trained", "Specialized"] }
+            Assets = integer { default = 0  minvalue = 0  maxvalue = 2 }
+            Roll = integer { value = trainingEases (Training) + Assets  valuedice = cypherDice (characterTable)  editable = none }
+        }
+    }
+
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Eases = integer { default = 0  valuedice = cypherDice (characterTable)  action = melee  reach = 2 }
+            Damage = integer { default = 4 }
+        }
+    }
+
+    Cyphers = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Cyphers
+        singular = "Cypher"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Advancement = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        'Increase Capabilities' = bool { default = false }
+        'Move Toward Perfection' = bool { default = false }
+        'Extra Effort' = bool { default = false }
+        'Skill Training' = bool { default = false }
+        Other = bool { default = false }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Connection' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Level = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        'Target Number' = integer { value = Level * 3  editable = none }
+        Health = integer { default = 9 }
+        'Current Health' = integer { default = Health  editable = live }
+        Damage = integer { default = 3 }
+        Armor = integer { default = 0 }
+        Movement = string { default = "Short" }
+        Down = string { value = if 'Current Health' < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Modifications = string { multiline = true }
+        Combat = string { multiline = true }
+        Interaction = string { multiline = true }
+        Use = string { multiline = true }
+        Loot = string { multiline = true }
+        'GM Intrusion' = string { multiline = true }
+    }
+}
+
+abilityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Tier" prefix = "Tier" filter = Stats.Tier }]
+    }
+    Stats = table
+    {
+        Cost = string {}
+        Pool = string { keys = ["Might", "Speed", "Intellect", ""] }
+        Tier = string {}
+        Action = bool { default = true }
+        Enabler = bool { default = false }
+    }
+}
+
+cypherStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Level = string {}
+        Form = string {}
+        Kind = string { keys = ["Subtle", "Manifest", "Fantastic"] }
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Light weapon", "Medium weapon", "Heavy weapon", "Light armor", "Medium armor", "Heavy armor", "Gear", "Artifact"] }
+        Damage = string {}
+        Armor = string {}
+        Range = string {}
+        Price = string {}
+    }
+}
+
+typeStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Type", "Descriptor", "Focus", "Flavor"] }
+        Pools = string {}
+        Edges = string {}
+        Benefits = string { multiline = true }
+    }
+}
+
+CypherSystem = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Abilities = abilityStats
+    Cyphers = cypherStats
+    Equipment = equipmentStats
+    'Character Options' = typeStats
+    secondaryTypes = ["Abilities", "Cyphers", "Equipment"]
+    otherLibararyTypes = ["Character Options"]
+    description = "Cypher System: d20 against task level, with stat pools and Effort"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d6, 1d100]
+    cssFiles = ["/systems/cypher/cypher.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/cyberpunk.json", "/systems/names/heroes.json", "/systems/names/cosmic.json", "/systems/names/wasteland.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, neonStreetsNameSetting, superheroesNameSetting, cosmicHorrorNameSetting, wastelandNameSetting]
+}
