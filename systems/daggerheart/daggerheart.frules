@@ -234,8 +234,10 @@ creatureTable = ruleset
         Difficulty = integer { default = 12 }
         'Major Threshold' = integer { default = 7 }
         'Severe Threshold' = integer { default = 12 }
-        HP = slots { number = 5  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
-        Stress = slots { number = 3  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
+        'HP Slots' = integer { default = 5  minvalue = 1 }
+        HP = slots { number = 'HP Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        'Stress Slots' = integer { default = 3  minvalue = 0 }
+        Stress = slots { number = 'Stress Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
         ATK = modifier { default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
         Attack = string {}
         Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
@@ -350,6 +352,6 @@ Daggerheart = system
     description = "Daggerheart: heroic fantasy with Hope and Fear duality dice"
     quickdice = [2d12, 1d6, 1d8, 1d10, 1d12, 1d20]
     cssFiles = ["/systems/daggerheart/daggerheart.css"]
-    libraries = ["/systems/names/fantasy.json", "/systems/names/faerie.json", "/systems/names/barbarian.json"]
+    libraries = ["/systems/daggerheart/daggerheart.json", "/systems/names/fantasy.json", "/systems/names/faerie.json", "/systems/names/barbarian.json"]
     nameSettings = [fantasyNameSetting, faerieCourtsNameSetting, swordAndSorceryNameSetting]
 }
