@@ -45,7 +45,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **No `#` in strings**, and put every `#include` at the top of the file. The include resolver stops at the first `#` that isn't an `#include`.
 - **Bare names are letters and digits only.** No `_` or `-`. Anything else needs single quotes: `'Very hurt'`. Quoted names allow only letters, digits and spaces.
 - **Strings use double quotes and have no escapes.** A string can't contain `"`. Backslashes are kept as-is, which is handy for regexes.
-- **Operators:** `+ - * /`, `==`, `>`, `<`. There is no `>=`, `<=`, `!=`, `and`, `or` or `not`; nest `if`s instead. `if` and `switch` always need `else`.
+- **Operators:** `+ - * /`, `==`, `!=`, `>`, `<`, `>=`, `<=`, `and`, `or`, and the functions `not`, `mod` and `abs`. These need the app from branch `claude/rpg-engine-features` or later. `if` and `switch` always need `else`.
 - **Every function is called as `f (a, b)`**, including the built-in `max` and `min`.
 - **A call at the top level must have its `(` on the same line as the function name.** Inside parentheses, newlines are fine.
 - **Same-named definitions merge.** Two `characterTable = ruleset {...}` blocks combine their fields, and two lists concatenate. This is how extensions and multi-file systems add to a base system, but it also means an accidental duplicate name silently merges.

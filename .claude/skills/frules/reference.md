@@ -39,7 +39,8 @@ TypeName = constructor { field = value  other = value }
 ## Expressions
 
 - Arithmetic: `+ - * /` (integer division), parentheses for grouping.
-- Comparison: `==`, `>`, `<`. Returns a bool.
+- Comparison: `==`, `!=`, `>`, `<`, `>=`, `<=`. Returns a bool.
+- Logic: `a and b`, `a or b` (lower precedence than comparisons; `and` binds tighter than `or`), and the function `not (x)`.
 - Conditional: `if cond then a else b`. Chain with nested `if`s. `else` is required.
 - Switch: `switch value case x then a case y then b else c`. Compares `value` to each case with `==` in order and returns the first match, or the `else` value. At least one `case` and the `else` are required. Cases can go on their own lines:
 
@@ -77,6 +78,7 @@ A reference is looked up in the current table first, then each enclosing table, 
 | `fold (start, (acc, x)->..., list)` | Left fold |
 | `sum (list)` | Sum of numbers |
 | `max (a, b, ...)`, `min (a, b, ...)` | Largest or smallest number. Arguments can be numbers or lists of numbers: `max (0, hp - damage)`, `max (rolls)`. Missing values are skipped; with no numbers at all the result is 0 |
+| `mod (a, b)`, `abs (n)` | Remainder (never negative, so `mod (-1, 10)` is 9) and absolute value |
 | `count (list)` | Length |
 | `first (list)` | First item |
 | `item (n, list)` | Item at index `n` (0-based) |
@@ -116,6 +118,50 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 ```
 
 `valuedice` can be any expression, e.g. a function that picks a roll from the character's state (see `D20Roll` in `DND/Basics.frules`).
+
+### Dice groups with a size, colour, label and explosions
+
+`dice { number = n  sides = s }` makes a group of dice whose count and size come from the sheet, e.g. a pool of `Attribute + Skill` d10s. Optional fields:
+
+| Field | Meaning |
+|---|---|
+| `sides` | A number, or `"F"` for Fudge dice |
+| `bonus` | Added to the group (default 0) |
+| `color` | `"red"`, `"green"`, `"blue"`, `"white"`, `"yellow"`, `"purple"`, `"orange"` or `"black"`. The group's dice are drawn in that colour in the roll window and in chat |
+| `label` | Shown next to the group, e.g. `"Hunger"`, `"Stress"`, `"Wild"` |
+| `explode` | A die that shows this face or more rolls again, and the new number is added to the group's `rolls` (up to 20 times per die). `explode = 6` on d6s is the Savage Worlds ace and the Shadowrun rule of six |
+
+Put several groups in one roll with the custom form. Each throw the lambda gets has `rolls`, `bonus`, `sides`, `label` and `color`:
+
+```
+v5Pool (pool, hunger) = ([dice { number = max (0, pool - hunger)  sides = 10 }, dice { number = min (pool, hunger)  sides = 10  color = "red"  label = "Hunger" }],
+    ((baseline, throws)-> v5Result (first (throws).rolls, item (1, throws).rolls)))
+```
+
+A whole roll goes to chat as one line, each group in its colour.
+
+### Results with an outcome, and pushing
+
+A roll lambda can return a number, a text, a list of texts (shown joined), or a record:
+
+| Field | Meaning |
+|---|---|
+| `Text` | What the result says, e.g. `"3 successes"` |
+| `Value` | A number, shown when there is no `Text` |
+| `Outcome` | A word for how it went, e.g. `"Critical"`, `"Failure"`. Words with fail, fumble, botch, miss, glitch, bestial or mishap colour the result red; crit, success, extreme, triumph or hit colour it green |
+| `Color` | A colour for the result, which wins over the outcome's |
+| `Push` | A dice value (`[dice], lambda` or `dice {}`). The roll window shows a button that rolls it, for pushing or rerolling. Make its lambda close over what the first roll kept, e.g. the successes so far |
+| `PushLabel` | The button's text, default `"Push"` |
+
+```
+yzeResult (successes, banes, pushable, toReroll) = {
+    Text = toString (successes) + " successes"
+    Outcome = if successes > 0 then "Success" else "Failure"
+    Push = if pushable then yzePush (successes, toReroll) else 0
+}
+```
+
+A record is written with braces after `=` like a table: `name = { Text = "x"  Outcome = "y" }` at the top level, or returned from a function.
 
 ### Battlemap actions
 
@@ -511,7 +557,8 @@ characterTable = ruleset { Hitpoints = hitpoints {} }
 | `string` | `default`, `multiline = true`, `keys = [...]` (dropdown), `bonus` |
 | `bool` | `default`, `radiogroup = "name"` (bools sharing a group act as radio buttons) |
 | `selector` | A slider with one position per option. `options = [...]` (the stored text, read with `==`), `default` (an option; unset reads as this), `labels = [...]` (shown text; the first and last sit at the slider ends), `colors = [...]` (`"red"`, `"white"`, `"green"`, `"blue"` or `""`), `hold = [...]` (`"Shift"`, `"Ctrl"`, `"Alt"` or `""`: holding that key picks the option while held). When the selected option is not the default, every dice roll whose dice change because of it is shown in that option's color. Usually `editable = live` and `save = nosave`. Example: `Roll = selector { options = ["Disadvantage", "Normal", "Advantage"] labels = ["Dis", "Normal", "Adv"] colors = ["red", "white", "green"] hold = ["Ctrl", "", "Shift"] default = "Normal" editable = live save = nosave }`, then `if char.Basics.Roll == "Advantage" then ...` |
-| `slots` | Checkboxes. `number` (how many), `value` (computed fill), `allowedchange = increase` or `increaseAndClear`, `overflow = allow`, `overflowValue` (what spills into the next track). The stored count is `Name.realvalue`. |
+| `slots` | Checkboxes. `number` (how many), `value` (computed fill), `labels = [...]` (a label under each box, e.g. harm levels), `allowedchange = increase` or `increaseAndClear`, `overflow = allow`, `overflowValue` (what spills into the next track). The stored count is `Name.realvalue`. |
+| `clock` | A progress clock: a circle of `segments` (or `number`) parts. Each click fills one, and Clear empties it. Stored and read like slots (`Name.realvalue`), and it takes the same options, including `indicator`. |
 | `button` | `onClick = updates { (Field.realvalue) = expr ... }`. Each line sets the field on the left. Targets are relative to the button's table; start a target with `root.` to reach any table of the entity, e.g. `(root.Hitpoints.Current) = Hitpoints.Max`. |
 
 ### Options on any section or field
