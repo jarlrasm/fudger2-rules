@@ -616,6 +616,44 @@ forcePowerStats= ruleset
 
 Starwars = system
 {
+    hints = [
+        hint
+        {
+            title = "Templates"
+            topic = "Getting started"
+            text = ["Let players start from a template idea such as smuggler, young Jedi or bounty hunter, then spend their attribute and skill dice to fit it."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Call initiative and everyone rolls Perception. Highest goes first, and the Actions penalty does not apply."]
+        },
+        hint
+        {
+            title = "Multiple actions"
+            topic = "Combat"
+            text = ["Each extra action in a round costs 1D on every roll. Set Actions under General to how many actions a character takes this round."]
+        },
+        hint
+        {
+            title = "Damage against Strength"
+            topic = "Combat"
+            text = ["Damage rolls against Strength plus armour. The difference gives Stunned, Wounded, Incapacitated, Mortally wounded or Killed."]
+        },
+        hint
+        {
+            title = "Spaceships"
+            topic = "Vehicles"
+            text = ["Spaceships are their own entity type with ship weapons. Create the party's ship early so it can be placed on maps."]
+        },
+        hint
+        {
+            title = "Force points"
+            topic = "Play"
+            text = ["Force points double every die code for a round. Save them for heroic moments, and use the dark side when a character uses them in anger."]
+        }
+    ]
     distanceUnit = "m"
     squareSize = 2
     libraries = ["/systems/starwars/sw.json", "/systems/names/scifi.json"]

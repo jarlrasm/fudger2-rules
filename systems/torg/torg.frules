@@ -1243,6 +1243,52 @@ perkStats =ruleset
 }
 TORG = system
 {
+    hints = [
+        hint
+        {
+            title = "The cosms"
+            topic = "Getting started"
+            text = ["Agree on which cosm or realm the campaign starts in. It decides which axioms and world laws apply, and which skills and gear work without contradiction."]
+        },
+        hint
+        {
+            title = "Initiative with the Drama deck"
+            topic = "Initiative"
+            text = ["There is no initiative roll. Each round, flip a Drama card: it says which side acts first, and its conditions and approved actions apply to the round.", "Within a side the players choose their order. Drag tokens into that order in the initiative list.", "Add the Drama deck to the campaign so you can flip it in sessions."]
+            deck = "Drama deck"
+        },
+        hint
+        {
+            title = "Deal Destiny cards"
+            topic = "Cards"
+            text = ["Every hero holds Destiny cards. Deal each player a hand at the start of an act and let them play cards for bonuses and effects.", "Add the Destiny deck to the campaign so you can deal it in sessions."]
+            deck = "Destiny deck"
+        },
+        hint
+        {
+            title = "Archetypes"
+            topic = "Characters"
+            text = ["Let new players start from one of the archetypes in the core book and adjust it, rather than building from scratch."]
+        },
+        hint
+        {
+            title = "Shock and wounds"
+            topic = "Combat"
+            text = ["Damage is compared with Toughness: equal or more gives Shock, 5 or more over gives a wound. Track Shock and Wounds on the sheet."]
+        },
+        hint
+        {
+            title = "Metres and squares"
+            topic = "Maps"
+            text = ["Move on the sheet is in metres per round. Set the battlemap square size to 1 or 2 metres."]
+        },
+        hint
+        {
+            title = "Possibilities"
+            topic = "Play"
+            text = ["Heroes spend Possibilities to reroll and add, or to soak damage. Give them chances to be bold."]
+        }
+    ]
     distanceUnit = "m"
     squareSize = 1
     characters = characterTable

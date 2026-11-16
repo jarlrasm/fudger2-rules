@@ -504,6 +504,44 @@ darkConspiracyNameSetting = nameSetting
 
 DarkConspiracy = system
 {
+    hints = [
+        hint
+        {
+            title = "The cell"
+            topic = "Getting started"
+            text = ["The characters are a cell working against the Dark Minions. Decide who employs them, and set their Trust under Company."]
+        },
+        hint
+        {
+            title = "Careers"
+            topic = "Characters"
+            text = ["Build characters through their careers. Untick Trained on any skill they lack so it rolls unskilled."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Call initiative and everyone rolls 2D6 plus the better of the DEX and INT DMs. Highest acts first."]
+        },
+        hint
+        {
+            title = "Boons and Banes"
+            topic = "Play"
+            text = ["Set Roll under Checks to Boon or Bane when the situation helps or hinders. Several do not stack, and one of each cancels."]
+        },
+        hint
+        {
+            title = "Endurance first"
+            topic = "Combat"
+            text = ["Damage comes off END first, then STR or DEX. Condition shows Wounded, Unconscious or Dead."]
+        },
+        hint
+        {
+            title = "Keep the darkness unseen"
+            topic = "Style"
+            text = ["Raise Dark Influence when the cell faces the Dark Minions, and let most of the conspiracy stay hidden."]
+        }
+    ]
     libraries = ["/systems/darkconspiracy/basics.json", "/systems/names/spies.json", "/systems/names/cosmic.json"]
     nameSettings = [darkConspiracyNameSetting]
     characters = characterTable
