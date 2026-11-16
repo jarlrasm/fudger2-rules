@@ -1,0 +1,355 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dualityKind (hope, fear) =
+    if hope == fear then "Critical success"
+    else if hope > fear then "with Hope"
+    else "with Fear"
+
+advantageDie (mode, rolls) =
+    if mode == "Advantage" then first (rolls)
+    else if mode == "Disadvantage" then 0 - first (rolls)
+    else 0
+
+dualityTotal (modifier, hope, fear, extra) = hope + fear + modifier + extra
+
+dualityText (total, hope, fear, difficulty) =
+    toString (total)
+    + (if hope == fear then ", critical success"
+        else if difficulty > 0 then (if total >= difficulty then " vs " + toString (difficulty) + ": success " else " vs " + toString (difficulty) + ": failure ") + dualityKind (hope, fear)
+        else " " + dualityKind (hope, fear))
+
+dualityResult (modifier, hope, fear, extra, difficulty) =
+{
+    Text = dualityText (dualityTotal (modifier, hope, fear, extra), hope, fear, difficulty)
+    Value = dualityTotal (modifier, hope, fear, extra)
+    Outcome = if hope == fear then "Critical" else if difficulty > 0 and dualityTotal (modifier, hope, fear, extra) < difficulty then "Failure" else ""
+    Color = if hope == fear then "green" else if hope > fear then "yellow" else "purple"
+}
+
+dualityRoll (mode, difficulty) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+    ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), difficulty)))
+
+dualityDice (char) = dualityRoll (char.Character.Roll, char.Character.Difficulty)
+
+plainDuality = dualityRoll ("Normal", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeFeet (text) =
+    switch text
+        case "Melee" then 5
+        case "Very Close" then 10
+        case "Close" then 30
+        case "Far" then 100
+        case "Very Far" then 300
+        else 5
+
+traitValue (char, name) =
+    switch name
+        case "Agility" then char.Traits.Agility
+        case "Strength" then char.Traits.Strength
+        case "Finesse" then char.Traits.Finesse
+        case "Instinct" then char.Traits.Instinct
+        case "Presence" then char.Traits.Presence
+        else char.Traits.Knowledge
+
+weaponAttack (name, bonus, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = dualityDice (characterTable)  action = kind  reach = 5  range = distance }
+    Damage = damage
+}
+
+damageText (char, weapon) = toString (char.Character.Proficiency) + weaponStat (weapon, "Damage") + " " + weaponStat (weapon, "Damage Type")
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Range") == "Melee" or weaponStat (weapon, "Range") == "" then
+        weaponAttack (weapon.Name, traitValue (char, weaponStat (weapon, "Trait")), damageText (char, weapon), "melee", 5)
+    else
+        weaponAttack (weapon.Name, traitValue (char, weaponStat (weapon, "Trait")), damageText (char, weapon), if weaponStat (weapon, "Range") == "Very Close" then "melee" else "ranged", rangeFeet (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Bard", "Druid", "Guardian", "Ranger", "Rogue", "Seraph", "Sorcerer", "Warrior", "Wizard"] }
+        Subclass = string {}
+        Ancestry = string {}
+        Community = string {}
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        Proficiency = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Difficulty = integer { default = 0  minvalue = 0  editable = live }
+        Roll = selector
+        {
+            options = ["Disadvantage", "Normal", "Advantage"]
+            labels = ["Dis", "Normal", "Adv"]
+            colors = ["red", "white", "green"]
+            hold = ["Ctrl", "", "Shift"]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Traits = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Agility = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Strength = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Finesse = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Instinct = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Presence = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Knowledge = modifier { default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+    }
+
+    Defense = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Evasion = integer { default = 10 }
+        'Armor Score' = integer { default = 0 }
+        'Armor Slots' = slots { number = 'Armor Score'  editable = live  allowedchange = increaseAndClear }
+        'Major Threshold' = integer { default = 6 }
+        'Severe Threshold' = integer { default = 12 }
+    }
+
+    'Hope and Health' = table
+    {
+        tableLayout = layout { columns = 1  size = wide }
+        'HP Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
+        'Hit Points' = slots { number = 'HP Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        'Stress Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
+        Stress = slots { number = 'Stress Slots'  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
+        Hope = slots { number = 6  editable = live  allowedchange = increaseAndClear  indicator = "#d4b106" }
+        Down = string { value = if 'Hit Points'.realvalue >= 'HP Slots' then "Death move" else ""  visible = none  indicator = "#555555" }
+        Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+        Hidden = bool { default = false  editable = live  indicator = "#3a7bd5" }
+    }
+
+    Experiences = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Experience"
+        editable = character
+        valueType = custom
+        {
+            Experience = string {}
+            Bonus = modifier { default = 2  valuedice = dualityDice (characterTable) }
+        }
+    }
+
+    'Hope Feature' = table
+    {
+        tableLayout = layout { size = wide }
+        'Hope Feature' = string { multiline = true }
+        'Class Feature' = string { multiline = true }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    'Domain Cards' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Domain Cards'
+        singular = "Domain card"
+        editable = character
+    }
+
+    Inventory = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Gold = table
+    {
+        tableLayout = layout { columns = 3 }
+        Handfuls = integer { default = 1  minvalue = 0  maxvalue = 9  editable = live }
+        Bags = integer { default = 0  minvalue = 0  maxvalue = 9  editable = live }
+        Chests = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Countdowns = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Countdown"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Size = integer { default = 4  minvalue = 1  maxvalue = 12 }
+            Progress = clock { segments = Size  editable = live }
+        }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        'Background Questions' = string { multiline = true }
+        Connections = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 4 }
+        Type = string { keys = ["Bruiser", "Horde", "Leader", "Minion", "Ranged", "Skulk", "Social", "Solo", "Standard", "Support"] }
+        Difficulty = integer { default = 12 }
+        'Major Threshold' = integer { default = 7 }
+        'Severe Threshold' = integer { default = 12 }
+        HP = slots { number = 5  editable = live  allowedchange = increaseAndClear  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        Stress = slots { number = 3  editable = live  allowedchange = increaseAndClear  indicator = "#8e5cc4" }
+        ATK = modifier { default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
+        Attack = string {}
+        Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
+        Damage = string {}
+        Motives = string {}
+    }
+    Features = table
+    {
+        tableLayout = layout { size = wide }
+        Features = string { multiline = true }
+        Experiences = string {}
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Tier = integer { default = 1 }
+        Slot = string { keys = ["Primary", "Secondary"] }
+        Trait = string { keys = ["Agility", "Strength", "Finesse", "Instinct", "Presence", "Knowledge"] }
+        Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
+        Damage = string { default = "d8" }
+        'Damage Type' = string { keys = ["phy", "mag"] }
+        Burden = string { keys = ["One-Handed", "Two-Handed"] }
+        Feature = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Tier = integer { default = 1 }
+        'Base Thresholds' = string {}
+        'Base Score' = string {}
+        Feature = string {}
+    }
+}
+
+domainCardStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Domain" prefix = "" filter = Stats.Domain }]
+    }
+    Stats = table
+    {
+        Domain = string { keys = ["Arcana", "Blade", "Bone", "Codex", "Grace", "Midnight", "Sage", "Splendor", "Valor"] }
+        Level = integer { default = 1 }
+        Type = string { keys = ["Ability", "Spell", "Grimoire"] }
+        'Recall Cost' = integer { default = 0 }
+        'In Loadout' = bool { default = true  editable = live }
+    }
+}
+
+itemStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Item", "Consumable", "Loot"] }
+        Uses = string {}
+    }
+}
+
+optionStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Class", "Subclass", "Ancestry", "Community"] }
+        Domains = string {}
+        'Starting Evasion' = string {}
+        'Starting HP' = string {}
+        Features = string { multiline = true }
+    }
+}
+
+environmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Tier = integer { default = 1 }
+        Type = string { keys = ["Exploration", "Social", "Traversal", "Event"] }
+        Difficulty = integer { default = 12 }
+        Impulses = string {}
+        'Potential Adversaries' = string {}
+        Features = string { multiline = true }
+    }
+}
+
+Daggerheart = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    'Domain Cards' = domainCardStats
+    Items = itemStats
+    'Character Options' = optionStats
+    Environments = environmentStats
+    secondaryTypes = ["Weapons", "Armor", "Domain Cards", "Items"]
+    otherLibararyTypes = ["Character Options", "Environments"]
+    description = "Daggerheart: heroic fantasy with Hope and Fear duality dice"
+    quickdice = [2d12, 1d6, 1d8, 1d10, 1d12, 1d20]
+    cssFiles = ["/systems/daggerheart/daggerheart.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/faerie.json", "/systems/names/barbarian.json"]
+    nameSettings = [fantasyNameSetting, faerieCourtsNameSetting, swordAndSorceryNameSetting]
+}

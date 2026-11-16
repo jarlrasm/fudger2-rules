@@ -1,0 +1,37 @@
+/* Daggerheart: deep violet page, gold rules and an elegant serif heading. */
+.entityView {
+    color-scheme: dark;
+    --bg: #15101f;
+    --surface: #1f182d;
+    --surface-alt: #271f38;
+    --surface-sunken: #1a1426;
+    --surface-muted: #322846;
+    --text: #f1ebe0;
+    --text-muted: #cfc5b4;
+    --text-faint: #91897b;
+    --on-accent: #15101f;
+    --border: #43385a;
+    --border-strong: #d7b25b;
+    --accent: #d7b25b;
+    --accent-hover: #e9c878;
+    --accent-soft: #3a3020;
+    --link: #e9c878;
+    --danger: #e0605a;
+    --paper: #1f182d;
+    --card-bg: #221a31;
+    --dice-bg: #d7b25b;
+    --dice-text: #15101f;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Cinzel", "Trajan Pro", Georgia, serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
