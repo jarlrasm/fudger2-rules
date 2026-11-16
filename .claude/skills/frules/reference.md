@@ -337,7 +337,7 @@ A deck item in a library JSON file:
 | `settings.drawTo` | Where a player's draw goes: `hand` (the default, kept secret) or `table` (face up for everyone) |
 | `settings.gmSeesHands` | `true` (the default) lets the GM see every hand. Use `false` for games like poker, where the GM plays too. |
 
-See `systems/DND/manythings.json`.
+See `systems/DND/manythings.json`. Standard playing cards, a 52-card deck and a 54-card deck with two Jokers, are shared in `systems/cards/standard.json`; add that file to `libraries` instead of writing your own.
 
 Each deck has a draw pile, a face-up discard pile, the table, a face-down pile (for folded and burnt cards) and a hand for each person. The GM can deal a number of cards to every player at once.
 

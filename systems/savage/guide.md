@@ -9,7 +9,10 @@ Traits (attributes and skills) are dice from d4 to d12. Roll the trait die and, 
 - **Bennies:** spend one to reroll a trait roll (the roll window offers *Spend a Benny* on a failure, and takes the Benny off the sheet), to soak damage, or to recover from Shaken. Each player starts a session with three.
 
 ## Initiative
-Deal one **action card** to each Wild Card and to each group of Extras at the start of every round, and act from Ace down to Two (ties: spades, hearts, diamonds, clubs). A **Joker** acts whenever they like and adds +2 to trait and damage rolls; shuffle after that round. Add the Action Deck that comes with the system to the session, and the encounter's initiative list gets a **Deal initiative** button that deals a card to every combatant and orders them; use it again each round. Without the deck, rolling the Initiative field draws a random card.
+Deal one **action card** to each Wild Card and to each group of Extras at the start of every round, and act from Ace down to Two (ties: spades, hearts, diamonds, clubs). A **Joker** acts whenever they like and adds +2 to trait and damage rolls; shuffle after that round. Add the **54-card deck** (from the Playing cards library that comes with the system) to the session, and the encounter's initiative list gets a **Deal initiative** button that deals a card to every combatant and orders them; use it again each round. Without the deck, rolling the Initiative field draws a random card.
+
+## Interludes
+During a rest, a player can draw from the **52-card deck** and tell a short tale about their character by the suit: clubs misfortune, spades victory, hearts love, diamonds desire. Reward it with a Benny.
 
 ## Combat
 1. Fighting against Parry, Shooting and Throwing against 4 (modified by range, cover and light).
