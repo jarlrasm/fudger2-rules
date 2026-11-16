@@ -592,7 +592,7 @@ characterTable = ruleset { Hitpoints = hitpoints {} }
 | Type | Options |
 |---|---|
 | `integer` | `default`, `minvalue`, `maxvalue`, `value` (computed, read-only), `valuedice`, `render` (text shown instead of the number; the editor then shows −/+ buttons around it), `step` (how much each −/+ click changes the stored number, default 1) |
-| `modifier` | Like `integer`, shown with a sign (`+2`) |
+| `modifier` | Like `integer`, shown with a sign (`+2`), or as its `render` text (Fate shows `render = ladder (Fight)` as "Good +3") |
 | `string` | `default`, `multiline = true`, `keys = [...]` (dropdown), `bonus` |
 | `bool` | `default`, `radiogroup = "name"` (bools sharing a group act as radio buttons) |
 | `selector` | A slider with one position per option. `options = [...]` (the stored text, read with `==`), `default` (an option; unset reads as this), `labels = [...]` (shown text; the first and last sit at the slider ends), `colors = [...]` (`"red"`, `"white"`, `"green"`, `"blue"` or `""`), `hold = [...]` (`"Shift"`, `"Ctrl"`, `"Alt"` or `""`: holding that key picks the option while held). When the selected option is not the default, every dice roll whose dice change because of it is shown in that option's color. Usually `editable = live` and `save = nosave`. Example: `Roll = selector { options = ["Disadvantage", "Normal", "Advantage"] labels = ["Dis", "Normal", "Adv"] colors = ["red", "white", "green"] hold = ["Ctrl", "", "Shift"] default = "Normal" editable = live save = nosave }`, then `if char.Basics.Roll == "Advantage" then ...` |

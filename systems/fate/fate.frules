@@ -61,25 +61,25 @@ characterTable = ruleset
     Skills = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Athletics = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Burglary = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Contacts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Crafts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Deceive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Drive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Empathy = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Fight = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = melee  reach = 2 }
-        Investigate = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Lore = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Notice = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Physique = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Provoke = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Rapport = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Resources = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Shoot = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged }
-        Stealth = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Will = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
-        Initiative = modifier { value = Notice  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Athletics = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Athletics) }
+        Burglary = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Burglary) }
+        Contacts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Contacts) }
+        Crafts = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Crafts) }
+        Deceive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Deceive) }
+        Drive = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Drive) }
+        Empathy = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Empathy) }
+        Fight = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = melee  reach = 2  render = ladder (Fight) }
+        Investigate = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Investigate) }
+        Lore = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Lore) }
+        Notice = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Notice) }
+        Physique = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Physique) }
+        Provoke = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Provoke) }
+        Rapport = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Rapport) }
+        Resources = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Resources) }
+        Shoot = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged  render = ladder (Shoot) }
+        Stealth = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Stealth) }
+        Will = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Will) }
+        Initiative = modifier { value = Notice  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none  render = ladder (Initiative) }
     }
 
     'Other Skills' = keyvalues
@@ -89,7 +89,7 @@ characterTable = ruleset
         keys = []
         valueType = custom
         {
-            Rating = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable) }
+            Rating = modifier { default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Rating) }
         }
     }
 
@@ -164,7 +164,7 @@ creatureTable = ruleset
         keys = ["Fight", "Notice", "Physique"]
         valueType = custom
         {
-            Rating = modifier { default = 1  minvalue = -2  maxvalue = 8  valuedice = plainFate  action = melee  reach = 2 }
+            Rating = modifier { default = 1  minvalue = -2  maxvalue = 8  valuedice = plainFate  action = melee  reach = 2  render = ladder (Rating) }
         }
     }
     Stress = table
