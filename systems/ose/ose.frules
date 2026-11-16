@@ -238,6 +238,7 @@ creatureTable = ruleset
         tableLayout = layout { columns = 3  size = wide }
         'Armour Class' = integer { default = 7 }
         'Hit Dice' = string { default = "1" }
+        Attacks = string {}
         'Max HP' = integer { default = 4 }
         HP = integer { default = 'Max HP'  editable = live }
         THAC0 = integer { default = 19 }
