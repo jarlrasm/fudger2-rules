@@ -1,0 +1,37 @@
+/* Dragonbane: warm parchment, dark green and gold, with a storybook serif. */
+.entityView {
+    color-scheme: light;
+    --bg: #e4d9bf;
+    --surface: #fbf4e2;
+    --surface-alt: #f2e8cf;
+    --surface-sunken: #f5ecd6;
+    --surface-muted: #ddd0b0;
+    --text: #23281c;
+    --text-muted: #434a37;
+    --text-faint: #767b63;
+    --on-accent: #fbf4e2;
+    --border: #a69a77;
+    --border-strong: #2f4a2b;
+    --accent: #2f4a2b;
+    --accent-hover: #3d5f38;
+    --accent-soft: #d8e0c8;
+    --link: #2f4a2b;
+    --danger: #8f2219;
+    --paper: #fbf4e2;
+    --card-bg: #f7efda;
+    --dice-bg: #b08a2e;
+    --dice-text: #fbf4e2;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 2px solid var(--border-strong);
+    border-radius: 10px;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Palatino Linotype", Palatino, "Book Antiqua", serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+}

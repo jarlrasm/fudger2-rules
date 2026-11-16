@@ -1,0 +1,384 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+baseChance (attribute) =
+    if attribute < 6 then 3
+    else if attribute < 9 then 4
+    else if attribute < 13 then 5
+    else if attribute < 16 then 6
+    else 7
+
+damageBonus (attribute) =
+    if attribute > 16 then "+D6"
+    else if attribute > 12 then "+D4"
+    else ""
+
+keptDie (net, rolls) =
+    if net > 0 then min (rolls)
+    else if net < 0 then max (rolls)
+    else first (rolls)
+
+dbOutcome (target, roll) =
+    if roll == 1 then "Dragon"
+    else if roll == 20 then "Demon"
+    else if roll <= target then "Success"
+    else "Failure"
+
+dbResult (target, roll) =
+{
+    Text = toString (roll) + " vs " + toString (target) + ": " + (switch dbOutcome (target, roll) case "Dragon" then "Dragon! critical success" case "Demon" then "Demon! critical failure" else dbOutcome (target, roll))
+    Value = roll
+    Outcome = switch dbOutcome (target, roll) case "Dragon" then "Critical" case "Demon" then "Fumble" else dbOutcome (target, roll)
+    Push = if dbOutcome (target, roll) == "Failure" then dbRoll (0) else 0
+    PushLabel = "Push (take a condition)"
+}
+
+dbRoll (net) = ([dice { number = if net == 0 then 1 else 2  sides = 20  color = if net > 0 then "green" else if net < 0 then "red" else "" }],
+    ((baseline, throws)->dbResult (baseline, keptDie (net, first (throws).rolls))))
+
+selectorNet (char) = if char.Character.Roll == "Boon" then 1 else if char.Character.Roll == "Bane" then -1 else 0
+
+conditionFor (char, attribute) =
+    switch attribute
+        case "STR" then char.Conditions.Exhausted
+        case "CON" then char.Conditions.Sickly
+        case "AGL" then char.Conditions.Dazed
+        case "INT" then char.Conditions.Angry
+        case "WIL" then char.Conditions.Scared
+        else char.Conditions.Disheartened
+
+dbDice (char, attribute) = dbRoll (selectorNet (char) - (if conditionFor (char, attribute) then 1 else 0))
+
+attributeValue (char, name) =
+    switch name
+        case "STR" then char.Attributes.STR
+        case "CON" then char.Attributes.CON
+        case "AGL" then char.Attributes.AGL
+        case "INT" then char.Attributes.INT
+        case "WIL" then char.Attributes.WIL
+        else char.Attributes.CHA
+
+skill (attribute) = custom
+{
+    Trained = bool { default = false }
+    Improvement = integer { default = 0  minvalue = 0  maxvalue = 14 }
+    Value = integer { value = min (18, baseChance (attributeValue (characterTable, attribute)) * (if Trained then 2 else 1) + Improvement)  valuedice = dbDice (characterTable, attribute)  editable = none }
+    Advancement = bool { default = false  editable = live }
+}
+
+noSkill = { Value = 0 }
+
+skillValue (char, group, name) = valueOr (valueOr (group, name, noSkill), "Value", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, target, attribute, damage, kind, distance) = custom
+{
+    Name = name
+    Skill = integer { value = target  valuedice = dbDice (characterTable, attribute)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+weaponAttribute (skillName) =
+    switch skillName
+        case "Bows" then "AGL"
+        case "Crossbows" then "AGL"
+        case "Knives" then "AGL"
+        case "Slings" then "AGL"
+        case "Staves" then "AGL"
+        else "STR"
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Range")) > 2 then
+        weaponAttack (weapon.Name, skillValue (char, char.'Weapon Skills', weaponStat (weapon, "Skill")), weaponAttribute (weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage") + " " + damageBonus (char.Attributes.AGL), "ranged", toInt (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, skillValue (char, char.'Weapon Skills', weaponStat (weapon, "Skill")), weaponAttribute (weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage") + " " + damageBonus (if weaponAttribute (weaponStat (weapon, "Skill")) == "AGL" then char.Attributes.AGL else char.Attributes.STR), "melee", max (2, toInt (weaponStat (weapon, "Range"))))
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kin = string { keys = ["Human", "Halfling", "Dwarf", "Elf", "Mallard", "Wolfkin"] }
+        Age = string { keys = ["Young", "Adult", "Old"] }
+        Profession = string { keys = ["Artisan", "Bard", "Fighter", "Hunter", "Knight", "Mage", "Mariner", "Merchant", "Scholar", "Thief"] }
+        Weakness = string {}
+        Appearance = string { multiline = true }
+        Roll = selector
+        {
+            options = ["Bane", "Normal", "Boon"]
+            labels = ["Bane", "Normal", "Boon"]
+            colors = ["red", "white", "green"]
+            hold = ["Ctrl", "", "Shift"]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        STR = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "STR") }
+        CON = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CON") }
+        AGL = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "AGL") }
+        INT = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "INT") }
+        WIL = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "WIL") }
+        CHA = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CHA") }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
+        Sickly = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Angry = bool { default = false  editable = live  indicator = "#d64545" }
+        Scared = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Disheartened = bool { default = false  editable = live  indicator = "#555555" }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { value = Attributes.CON  editable = none }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live }
+        'Max WP' = integer { value = Attributes.WIL  editable = none }
+        WP = integer { default = 'Max WP'  minvalue = 0  editable = live }
+        'Damage Bonus STR' = damageBonus (Attributes.STR)
+        'Damage Bonus AGL' = damageBonus (Attributes.AGL)
+        Movement = integer { default = 10 }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        'Death Rolls' = integer { value = Attributes.CON  valuedice = dbRoll (0)  editable = none }
+        'Death Successes' = slots { number = 3  editable = live }
+        'Death Failures' = slots { number = 3  editable = live  indicator = "#d64545" }
+        Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
+        'Round Rest' = bool { default = false  editable = live }
+        'Stretch Rest' = bool { default = false  editable = live }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = skill ("AGL")
+        Awareness = skill ("INT")
+        Bartering = skill ("CHA")
+        'Beast Lore' = skill ("INT")
+        Bluffing = skill ("CHA")
+        Bushcraft = skill ("INT")
+        Crafting = skill ("STR")
+        Evade = skill ("AGL")
+        Healing = skill ("INT")
+        'Hunting and Fishing' = skill ("AGL")
+        Languages = skill ("INT")
+        'Myths and Legends' = skill ("INT")
+        Performance = skill ("CHA")
+        Persuasion = skill ("CHA")
+        Riding = skill ("AGL")
+        Seamanship = skill ("INT")
+        'Sleight of Hand' = skill ("AGL")
+        Sneaking = skill ("AGL")
+        'Spot Hidden' = skill ("INT")
+        Swimming = skill ("AGL")
+    }
+
+    'Weapon Skills' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Axes = skill ("STR")
+        Bows = skill ("AGL")
+        Brawling = skill ("STR")
+        Crossbows = skill ("AGL")
+        Hammers = skill ("STR")
+        Knives = skill ("AGL")
+        Slings = skill ("AGL")
+        Spears = skill ("STR")
+        Staves = skill ("AGL")
+        Swords = skill ("STR")
+    }
+
+    'Secondary Skills' = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Animism = skill ("INT")
+        Elementalism = skill ("INT")
+        Mentalism = skill ("INT")
+    }
+
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, 'Weapon Skills', "Brawling"), "STR", "D6 " + damageBonus (Attributes.STR), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armor Rating' = integer { default = 0 }
+        Helmet = integer { default = 0 }
+        'Bane on' = string {}
+    }
+
+    Inventory = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Purse = table
+    {
+        tableLayout = layout { columns = 4 }
+        Gold = integer { default = 0  editable = live }
+        Silver = integer { default = 0  editable = live }
+        Copper = integer { default = 0  editable = live }
+        Encumbrance = integer { value = (Attributes.STR + 1) / 2  editable = none }
+        Memento = string {}
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Ferocity = integer { default = 1 }
+        Size = string { keys = ["Small", "Normal", "Large", "Huge", "Swarm"] }
+        Movement = integer { default = 10 }
+        Armor = integer { default = 0 }
+        'Max HP' = integer { default = 12 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        Down = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+    }
+    'Monster Attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Roll = integer { default = 1  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
+            Name = string {}
+            Effect = string {}
+        }
+    }
+    'NPC Skills' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Awareness", "Evade", "Swords"]
+        valueType = custom
+        {
+            Value = integer { default = 12  valuedice = dbRoll (0)  action = melee  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Axes", "Bows", "Brawling", "Crossbows", "Hammers", "Knives", "Slings", "Spears", "Staves", "Swords"] }
+        Grip = string { keys = ["1H", "2H"] }
+        Range = string {}
+        Damage = string {}
+        Durability = string {}
+        Features = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+abilityStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirement = string {}
+        WP = string {}
+        Kind = string { keys = ["Heroic", "Kin", "Profession"] }
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "School" prefix = "" filter = Stats.School }]
+    }
+    Stats = table
+    {
+        School = string { keys = ["General", "Animism", "Elementalism", "Mentalism"] }
+        Rank = integer { default = 1 }
+        Requirement = string {}
+        'Casting Time' = string {}
+        Range = string {}
+        Duration = string {}
+    }
+}
+
+Dragonbane = system
+{
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Abilities = abilityStats
+    Spells = spellStats
+    secondaryTypes = ["Weapons", "Gear", "Abilities", "Spells"]
+    description = "Dragonbane: fast and fun fantasy adventure, roll under on a d20"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/dragonbane/dragonbane.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/faerie.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, faerieCourtsNameSetting]
+}
