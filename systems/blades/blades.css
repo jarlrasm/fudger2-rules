@@ -1,40 +1,108 @@
-/* Blades in the Dark: soot-black page, ash-grey ink and a single cold blue. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Blades in the Dark: the scoundrel playbook. Soot-black page, bone-white
+   type, heavy small-caps titles with an amber rule; stress and trauma as a long
+   box track, harm as the three-level table with the healing clock, and the
+   Insight, Prowess and Resolve action columns side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: dark;
-    --bg: #101113;
-    --surface: #1a1c1f;
-    --surface-alt: #222529;
-    --surface-sunken: #15171a;
-    --surface-muted: #2c3035;
-    --text: #e4e1da;
-    --text-muted: #bab6ad;
-    --text-faint: #827e76;
-    --on-accent: #101113;
-    --border: #3a3e44;
-    --border-strong: #8fb3c9;
-    --accent: #8fb3c9;
-    --accent-hover: #aecbdc;
-    --accent-soft: #233039;
-    --link: #8fb3c9;
-    --danger: #d15b4c;
-    --paper: #1a1c1f;
-    --card-bg: #1d1f23;
-    --dice-bg: #e4e1da;
-    --dice-text: #101113;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #111214;
+    --surface: #1b1c1f;
+    --surface-alt: #24252a;
+    --surface-sunken: #151619;
+    --surface-muted: #33343a;
+    --text: #ece6da;
+    --text-muted: #c3bcae;
+    --text-faint: #8a8476;
+    --on-accent: #111214;
+    --border: #45464d;
+    --border-strong: #d9a441;
+    --accent: #d9a441;
+    --accent-hover: #ecbd5f;
+    --accent-soft: #3a2f17;
+    --link: #ecbd5f;
+    --danger: #d4553d;
+    --danger-hover: #b5432d;
+    --danger-soft: #3d1c15;
+    --success: #7fb069;
+    --current: #3a2f17;
+    --highlight: #4a3c1c;
+    --paper: #1b1c1f;
+    --card-bg: #202126;
+    --gm-bg: #18191c;
+    --dice-bg: #ece6da;
+    --dice-text: #111214;
+    --shadow: rgba(0, 0, 0, 0.8);
+    --focus-ring: #ecbd5f;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --title-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Georgia", "Times New Roman", serif;
+.entityView .entityTable > table > thead th {
     font-variant: small-caps;
-    letter-spacing: 0.12em;
-    border-bottom: 1px solid var(--border-strong);
+    font-size: 1.3em;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid var(--accent);
 }
-.entityView .clock .clock-background { fill: var(--surface-sunken); }
-.entityView .clock .clock-segment { stroke: var(--text); }
-.entityView .clock .clock-segment.filled { fill: var(--accent); }
+
+/* ---- Stress and trauma beside harm ---- */
+
+.entityView .table-stress,
+.entityView .table-harm { --block: 50%; }
+.entityView .table-stress > table > tbody,
+.entityView .table-harm > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+.entityView .table-stress .slots input[type="checkbox"] {
+    width: 1.5em;
+    height: 1.5em;
+    accent-color: var(--accent);
+}
+.entityView .table-harm > table > tbody > tr > td:first-child {
+    font-variant: small-caps;
+    white-space: nowrap;
+}
+.entityView .table-harm .clock {
+    width: 4em;
+    height: 4em;
+}
+
+/* ---- Actions: three columns of dots ---- */
+
+.entityView .table-insight,
+.entityView .table-prowess,
+.entityView .table-resolve { --block: 33.333%; }
+.entityView .table-insight > table > tbody > tr:first-child > td,
+.entityView .table-prowess > table > tbody > tr:first-child > td,
+.entityView .table-resolve > table > tbody > tr:first-child > td {
+    color: var(--accent);
+    font-variant: small-caps;
+}
+.entityView .table-insight button.dicethrow,
+.entityView .table-prowess button.dicethrow,
+.entityView .table-resolve button.dicethrow {
+    border-radius: 50%;
+    min-width: 1.9em;
+    min-height: 1.9em;
+}
+
+/* ---- Abilities, friends, load and items ---- */
+
+.entityView .table-playbook-xp,
+.entityView .table-special-abilities,
+.entityView .table-friends,
+.entityView .table-load,
+.entityView .table-items,
+.entityView .table-clocks,
+.entityView .table-notes { --block: 50%; }
+.entityView .table-clocks .clock {
+    width: 3.6em;
+    height: 3.6em;
+}

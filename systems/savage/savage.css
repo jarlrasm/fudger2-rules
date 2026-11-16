@@ -1,35 +1,112 @@
-/* Savage Worlds: bold black frames, warm orange headings and a heavy sans. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Savage Worlds: the adventure edition sheet. Warm paper, rust-red title
+   bands with bold condensed capitals, the five attributes as die badges across
+   the top, Pace, Parry and Toughness in shields, wounds and fatigue beside
+   them, and skills in three columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #e9e4d8;
-    --surface: #fffdf7;
-    --surface-alt: #f5efe2;
-    --surface-sunken: #f7f2e7;
-    --surface-muted: #e2d8c4;
-    --text: #1c1a16;
-    --text-muted: #3d3a33;
-    --text-faint: #75705f;
-    --on-accent: #ffffff;
-    --border: #a39b87;
-    --border-strong: #1c1a16;
-    --accent: #c4501b;
-    --accent-hover: #dd6326;
-    --accent-soft: #f6dccc;
-    --link: #c4501b;
-    --paper: #fffdf7;
-    --card-bg: #fbf7ee;
-    --dice-bg: #c4501b;
-    --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #d9c9a8;
+    --surface: #fbf4e3;
+    --surface-alt: #f1e6cb;
+    --surface-sunken: #e8dabb;
+    --surface-muted: #d6c49f;
+    --text: #22170e;
+    --text-muted: #4a3a29;
+    --text-faint: #7d6a52;
+    --on-accent: #fbf4e3;
+    --border: #a98d63;
+    --border-strong: #3a2617;
+    --accent: #a63d17;
+    --accent-hover: #852f10;
+    --accent-soft: #f2d9c8;
+    --link: #852f10;
+    --danger: #a63d17;
+    --danger-hover: #852f10;
+    --danger-soft: #f2d9c8;
+    --success: #3f6a2a;
+    --paper: #fbf4e3;
+    --card-bg: #f6eeda;
+    --dice-bg: #3a2617;
+    --dice-text: #fbf4e3;
 }
-.entityView .entityTable {
-    border: 3px solid var(--border-strong);
-    border-radius: 6px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
+    --title-font: Impact, "Haettenschweiler", "Arial Narrow Bold", sans-serif;
+    --block-radius: 6px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
     text-transform: uppercase;
-    color: var(--accent);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    font-size: 1.15em;
+    border-bottom: none;
 }
+
+/* ---- Attributes as die badges ---- */
+
+.entityView .table-attributes > table > tbody {
+    column-gap: 10px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    border: 2px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface-alt);
+    padding: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    font-size: 1.1em;
+    letter-spacing: 0.06em;
+}
+.entityView .table-attributes > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+}
+.entityView .table-attributes button.dicethrow {
+    font-size: 1.3em;
+    min-width: 2.6em;
+}
+
+/* ---- Derived values as shields, status beside them ---- */
+
+.entityView .table-derived,
+.entityView .table-status { --block: 50%; }
+.entityView .table-derived > table > tbody,
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-derived > table > tbody > tr > td + td {
+    font-family: var(--title-font);
+    font-size: 1.3em;
+}
+
+/* ---- Skills ---- */
+
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px dotted var(--border);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-hindrances,
+.entityView .table-edges,
+.entityView .table-weapons,
+.entityView .table-powers,
+.entityView .table-known-powers,
+.entityView .table-gear,
+.entityView .table-wealth { --block: 50%; }

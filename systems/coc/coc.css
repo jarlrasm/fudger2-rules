@@ -1,42 +1,202 @@
-/* Call of Cthulhu: aged paper, sepia ink and a typewriter face, like a 1920s dossier. */
-.entityView {
+/* Call of Cthulhu: the investigator sheet. Aged paper and sepia ink, dark title
+   bars, characteristics as boxes with the full value large and half and fifth
+   beside it, and four columns of skills. */
+@import url("/systems/sheet.css");
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
     --bg: #d8cdb4;
-    --surface: #f1e8d2;
-    --surface-alt: #e8dcc0;
+    --surface: #f3ead5;
+    --surface-alt: #ebe0c4;
     --surface-sunken: #e2d5b6;
     --surface-muted: #cdbf9e;
     --text: #2b2116;
     --text-muted: #4d3e2b;
     --text-faint: #7a6a52;
-    --on-accent: #f1e8d2;
-    --border: #9c8a69;
+    --on-accent: #f3ead5;
+    --border: #a8936d;
     --border-strong: #3b2e1f;
-    --accent: #2f4a3a;
-    --accent-hover: #3d5f4b;
-    --accent-soft: #d3d9c3;
+    --accent: #3b2e1f;
+    --accent-hover: #5a4630;
+    --accent-soft: #e0d2b0;
     --link: #2f4a3a;
     --danger: #7d1f1a;
+    --danger-hover: #5e1713;
     --danger-soft: #ead0c6;
-    --paper: #f1e8d2;
+    --success: #2f4a3a;
+    --paper: #f3ead5;
     --card-bg: #ede3ca;
-    --dice-bg: #2b2116;
-    --dice-text: #f1e8d2;
-    color: var(--text);
-    background-color: var(--bg);
+    --dice-bg: #3b2e1f;
+    --dice-text: #f3ead5;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: Georgia, "Book Antiqua", "Palatino Linotype", serif;
+    --title-font: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Courier New", Courier, "Nimbus Mono PS", monospace;
+
+/* Title bars: dark ink with paper-coloured small caps, as on the printed sheet. */
+.entityView > .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: var(--surface);
+    font-variant: small-caps;
+    letter-spacing: 0.12em;
+    font-size: 1.1em;
+    text-align: center;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    text-align: center;
+    font-variant: small-caps;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--border-strong);
+    background: transparent;
+    border-bottom: 1px solid var(--border-strong);
 }
-.entityView .table-characteristics .customtype,
-.entityView .table-skills .customtype {
+
+/* ---- Top row: investigator details beside the characteristics ---- */
+
+.entityView .table-investigator { --block: 42%; }
+.entityView .table-characteristics { --block: 58%; }
+
+.entityView .table-characteristics > table > tbody {
+    row-gap: 6px;
+    padding: 6px;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    border: 1px solid var(--border-strong);
+    background: var(--surface-alt);
+    padding: 2px 6px;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child {
+    font-weight: 700;
+    font-size: 1.15em;
+    color: var(--text);
+}
+.entityView .table-characteristics > table > tbody > tr > td + td,
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+
+/* Full value large, half over fifth in two small boxes on its right. */
+/* Only while playing, when half and fifth show; the editor has just the input. */
+.entityView .table-characteristics .customtype:has(> div:nth-child(3)),
+.entityView .table-skills .customtype:has(> div:nth-child(3)) {
+    display: inline-grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 3px;
+    row-gap: 0;
     font-variant-numeric: tabular-nums;
+}
+.entityView .table-characteristics .customtype > div,
+.entityView .table-skills .customtype > div {
+    display: block;
+    margin: 0;
+}
+.entityView .table-characteristics .customtype:has(> div:nth-child(3)) > div:nth-child(1),
+.entityView .table-skills .customtype:has(> div:nth-child(3)) > div:nth-child(1) {
+    grid-row: 1 / 3;
+    grid-column: 2;
+}
+.entityView .table-characteristics .customtype:has(> div:nth-child(3)) > div:nth-child(2),
+.entityView .table-characteristics .customtype:has(> div:nth-child(3)) > div:nth-child(3),
+.entityView .table-skills .customtype:has(> div:nth-child(3)) > div:nth-child(2),
+.entityView .table-skills .customtype:has(> div:nth-child(3)) > div:nth-child(3) {
+    grid-column: 3;
+    min-width: 1.6em;
+    padding: 0 2px;
+    font-size: 0.72em;
+    line-height: 1.25;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+.entityView .table-characteristics .customtype:has(> div:nth-child(3)) > div:nth-child(3),
+.entityView .table-skills .customtype:has(> div:nth-child(3)) > div:nth-child(3) {
+    border-top: none;
+}
+.entityView .table-characteristics .customtype button.dicethrow {
+    min-width: 2.2em;
+    font-size: 1.3em;
+    padding: 2px 6px;
+}
+.entityView .table-characteristics input[type="number"] {
+    width: 3em;
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+/* ---- Hit points, sanity, luck and magic points side by side ---- */
+
+.entityView .table-status > table > thead {
+    display: none;
+}
+.entityView .table-status > table > tbody {
+    column-gap: 8px;
+    padding: 6px;
+}
+.entityView .table-status .entityTable {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+}
+.entityView .table-status .entityTable > table > thead th {
+    font-size: 1.05em;
+}
+
+/* ---- Skills: four columns, the improvement tick after the value ---- */
+
+.entityView .table-skills > table > tbody {
+    column-gap: 18px;
+    padding: 4px 8px;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px dotted var(--border);
+}
+.entityView .table-skills > table > tbody > tr > td:first-child {
+    color: var(--text);
+}
+.entityView .table-skills .customtype {
+    grid-template-columns: auto auto auto;
+}
+.entityView .table-skills .customtype:has(> div:nth-child(3)) > div:nth-child(4) {
+    grid-row: 1 / 3;
+    grid-column: 1;
+}
+.entityView .table-skills .customtype button.dicethrow {
+    min-width: 2em;
+}
+
+/* ---- Weapons and combat ---- */
+
+.entityView .table-attacks { --block: 66%; }
+.entityView .table-combat { --block: 34%; }
+.entityView .table-weapons,
+.entityView .table-gear-and-possessions { --block: 50%; }
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    color: var(--text);
+    font-weight: 700;
+}
+
+/* ---- Backstory ---- */
+
+.entityView .table-backstory > table > tbody {
+    row-gap: 4px;
+}
+.entityView .table-backstory > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+}
+.entityView .table-backstory > table > tbody > tr > td:first-child {
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    font-weight: 700;
+}
+.entityView .table-backstory > table > tbody > tr > td + td {
+    text-align: left;
+    min-height: 2.4em;
 }

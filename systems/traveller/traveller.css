@@ -1,37 +1,127 @@
-/* Traveller: black page, white type and coloured rules, like a starship datasheet. */
-.entityView {
-    color-scheme: dark;
-    --bg: #050505;
-    --surface: #111111;
-    --surface-alt: #1a1a1a;
-    --surface-sunken: #0b0b0b;
-    --surface-muted: #252525;
-    --text: #f5f5f5;
-    --text-muted: #cccccc;
-    --text-faint: #8f8f8f;
-    --on-accent: #050505;
-    --border: #3d3d3d;
-    --border-strong: #c8202e;
-    --accent: #c8202e;
-    --accent-hover: #e6303e;
-    --accent-soft: #321014;
-    --link: #f5f5f5;
-    --danger: #e6303e;
-    --paper: #111111;
-    --card-bg: #151515;
-    --dice-bg: #c8202e;
+@import url("/systems/sheet.css");
+
+/* Traveller: a starship crew record. Plain white form with black title bars
+   and a thin red rule, clean sans-serif capitals, the characteristics as a row
+   of boxes with value, current and DM, and the UPP written out under them. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9dbdd;
+    --surface: #ffffff;
+    --surface-alt: #f0f1f2;
+    --surface-sunken: #e6e8ea;
+    --surface-muted: #cfd2d5;
+    --text: #111316;
+    --text-muted: #3b4047;
+    --text-faint: #6d737b;
+    --on-accent: #ffffff;
+    --border: #9aa0a6;
+    --border-strong: #111316;
+    --accent: #c8102e;
+    --accent-hover: #a00d25;
+    --accent-soft: #f6d5da;
+    --link: #a00d25;
+    --danger: #c8102e;
+    --danger-hover: #a00d25;
+    --danger-soft: #f6d5da;
+    --success: #1f6b35;
+    --paper: #ffffff;
+    --card-bg: #f6f7f8;
+    --dice-bg: #111316;
     --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
 }
-.entityView .entityTable {
-    border: 0;
-    border-top: 3px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --title-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Optima", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0.2em;
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: #ffffff;
     text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.8em;
+    border-bottom: 3px solid var(--accent);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.05em;
+}
+
+/* ---- Characteristics: one row of boxes ---- */
+
+.entityView .table-characteristics > table > tbody {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 6px;
+    padding: 6px;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    border: 1px solid var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child {
+    background: var(--surface-alt);
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95em;
+    color: var(--text);
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 700;
+    padding: 2px 4px;
+}
+.entityView .table-characteristics .customtype {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    font-size: 0.85em;
+}
+.entityView .table-characteristics .customtype > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+}
+.entityView .table-characteristics .customtype > div::before {
+    font-size: 0.7em;
+    font-weight: 400;
+    color: var(--text-faint);
+}
+.entityView .table-characteristics .customtype > div:nth-child(1)::before { content: "VALUE"; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "CURRENT"; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "DM"; }
+.entityView .table-characteristics input[type="number"] {
+    width: 2.6em;
+}
+
+/* ---- Skills beside specialities, then the gear ---- */
+
+.entityView .table-skills,
+.entityView .table-specialities,
+.entityView .table-weapons,
+.entityView .table-armour,
+.entityView .table-equipment,
+.entityView .table-career,
+.entityView .table-finances { --block: 50%; }
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    font-weight: 700;
 }

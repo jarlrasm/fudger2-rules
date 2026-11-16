@@ -1,0 +1,137 @@
+@import url("/systems/sheet.css");
+
+/* The Pathfinder and Starfinder Second Edition sheet layout, shared by both
+   systems; each sets its own colours and fonts on top. Attribute modifiers in a
+   row of six boxes, defences beside saves and perception, skills as attribute +
+   proficiency + item = modifier with the rank as T E M L, then strikes, feats,
+   spells and gear. */
+
+.entityView {
+    --block-radius: 4px;
+    --label-color: var(--text);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.85em;
+    border-bottom: none;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+    width: fit-content;
+    min-width: 30%;
+    padding-right: 26px;
+}
+
+/* ---- Attribute modifiers: six boxes ---- */
+
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 8px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 2px;
+    border: 2px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 4px;
+    background: var(--surface-alt);
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+}
+.entityView .table-attributes > table > tbody > tr > td {
+    display: block;
+    border-top: none;
+}
+.entityView .table-attributes > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+/* ---- Defences beside saves ---- */
+
+.entityView .table-defenses,
+.entityView .table-saves { --block: 50%; }
+.entityView .table-defenses > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-saves > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---- Skills and saves: attribute + rank + item = modifier ---- */
+
+.entityView .table-skills,
+.entityView .table-lore { --block: 50%; }
+.entityView .table-skills > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+.entityView .table-skills > table > tbody > tr,
+.entityView .table-saves > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-skills > table > tbody > tr > td + td,
+.entityView .table-saves > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills .customtype,
+.entityView .table-saves .customtype {
+    display: inline-grid;
+    grid-template-columns: 2.2em 6.5em 2.2em 3em;
+    align-items: center;
+    column-gap: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.entityView .table-skills .customtype > div,
+.entityView .table-saves .customtype > div {
+    margin: 0;
+    text-align: center;
+}
+.entityView .table-skills .customtype > div:nth-child(1),
+.entityView .table-saves .customtype > div:nth-child(1),
+.entityView .table-skills .customtype > div:nth-child(3),
+.entityView .table-saves .customtype > div:nth-child(3) {
+    color: var(--text-faint);
+    font-size: 0.85em;
+}
+.entityView .table-skills .customtype > div:nth-child(2),
+.entityView .table-saves .customtype > div:nth-child(2) {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 4px;
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-ammunition,
+.entityView .table-augmentations,
+.entityView .table-feats,
+.entityView .table-class-features,
+.entityView .table-spellcasting,
+.entityView .table-spells,
+.entityView .table-inventory,
+.entityView .table-wealth,
+.entityView .table-proficiencies { --block: 50%; }
+.entityView .table-proficiencies > table > tbody,
+.entityView .table-spellcasting > table > tbody,
+.entityView .table-wealth > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-strikes > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}

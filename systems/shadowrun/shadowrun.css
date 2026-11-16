@@ -1,38 +1,112 @@
-/* Shadowrun: dark steel panels, neon magenta and cyan rules, condensed headings. */
+@import url("/systems/sheet.css");
+
+/* Shadowrun Sixth World: the runner sheet. Light grey page, charcoal title
+   bars with a red edge and condensed capitals, attributes in a box grid, the
+   two condition monitors as rows of three boxes, skills as rank + attribute. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9ccd0;
+    --surface: #f7f8f9;
+    --surface-alt: #eceef0;
+    --surface-sunken: #e2e5e8;
+    --surface-muted: #c6cbd0;
+    --text: #15181c;
+    --text-muted: #3a4048;
+    --text-faint: #6c747d;
+    --on-accent: #ffffff;
+    --border: #8d959e;
+    --border-strong: #23282e;
+    --accent: #b5121b;
+    --accent-hover: #8e0e15;
+    --accent-soft: #f2d3d5;
+    --link: #8e0e15;
+    --danger: #b5121b;
+    --danger-hover: #8e0e15;
+    --danger-soft: #f2d3d5;
+    --success: #1f6b4a;
+    --paper: #f7f8f9;
+    --card-bg: #f1f2f4;
+    --dice-bg: #23282e;
+    --dice-text: #ffffff;
+}
+
 .entityView {
-    color-scheme: dark;
-    --bg: #0a0b10;
-    --surface: #12141c;
-    --surface-alt: #1a1d28;
-    --surface-sunken: #0e1016;
-    --surface-muted: #252a38;
-    --text: #e8ecf5;
-    --text-muted: #b8bfd0;
-    --text-faint: #7d859a;
-    --on-accent: #0a0b10;
-    --border: #2b3144;
-    --border-strong: #ff2f92;
-    --accent: #ff2f92;
-    --accent-hover: #ff5aa9;
-    --accent-soft: #3a1028;
-    --link: #2fe0ff;
-    --danger: #ff4f4f;
-    --paper: #12141c;
-    --card-bg: #151823;
-    --dice-bg: #2fe0ff;
-    --dice-text: #0a0b10;
-    color: var(--text);
-    background-color: var(--bg);
+    --sheet-font: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
 }
-.entityView .entityTable {
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--link);
-    border-radius: 0;
-    background-color: var(--surface);
-}
-.entityView thead th {
-    font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-    letter-spacing: 0.14em;
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: #ffffff;
     text-transform: uppercase;
-    color: var(--accent);
+    letter-spacing: 0.14em;
+    font-style: italic;
+    border-bottom: none;
+    border-left: 6px solid var(--accent);
 }
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.82em;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Attributes beside derived ratings ---- */
+
+.entityView .table-attributes,
+.entityView .table-derived-ratings { --block: 50%; }
+.entityView .table-attributes > table > tbody,
+.entityView .table-derived-ratings > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-attributes > table > tbody > tr > td + td {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* ---- Condition monitors: rows of three boxes ---- */
+
+.entityView .table-condition-monitors > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 24px;
+}
+.entityView .table-condition-monitors > table > tbody > tr {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.entityView .table-condition-monitors > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: left;
+}
+.entityView .table-condition-monitors .slots .used,
+.entityView .table-condition-monitors .slots .unused {
+    display: inline;
+}
+.entityView .table-condition-monitors .slots input[type="checkbox"] {
+    width: 1.4em;
+    height: 1.4em;
+    accent-color: var(--accent);
+}
+
+/* ---- Skills: rank and attribute make the pool ---- */
+
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-qualities,
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-augmentations,
+.entityView .table-spells,
+.entityView .table-gear,
+.entityView .table-contacts,
+.entityView .table-ids { --block: 50%; }

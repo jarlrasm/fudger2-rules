@@ -266,7 +266,15 @@ Fudge = system
 
 ### Styling a sheet
 
-A stylesheet in `cssFiles` can restyle the whole app by overriding the colour tokens on `:root` (see `starwars/starwars.css`), and the sheet through these classes:
+The app loads only the first file in `cssFiles`, and it replaces the app's own sheet stylesheet, so that file has to style the whole sheet. Start it with
+
+```css
+@import url("/systems/sheet.css");
+```
+
+`systems/sheet.css` is a shared base: blocks flow in the order the rules list them, `columns = N` becomes a grid under the block's title, nested tables become boxed groups, and slots and clocks get their sizes. On top of it, set the colour tokens on `:root` (see `coc/coc.css`), the fonts with `--sheet-font` and `--title-font` on `.entityView`, and each block's width with `--block`, for example `.entityView .table-skills { --block: 50%; }` (wide blocks are 100%, others a third). A table can get more columns than `columns` allows with its own `grid-template-columns` on `.table-<name> > table > tbody`. Rows of `customtype` values have no field names in the markup, so label them with `::before` on `> div:nth-child(n)`. Model the look and the placement of blocks on the official sheet. On a phone, every grid wraps to the columns that fit.
+
+The sheet uses these classes:
 
 | Class | On |
 |---|---|

@@ -1,42 +1,38 @@
-/* Pathfinder: cream paper, deep red headings and a serif face, like a Pathfinder character folio. */
-.entityView {
+@import url("/systems/pf2e/layout.css");
+
+/* Pathfinder Second Edition: white paper with crimson arrow-tab titles and
+   dark ink, as on the Remaster character sheet. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #d8cdb4;
-    --surface: #f1e8d2;
-    --surface-alt: #e8dcc0;
-    --surface-sunken: #e2d5b6;
-    --surface-muted: #cdbf9e;
-    --text: #2b2116;
-    --text-muted: #4d3e2b;
-    --text-faint: #7a6a52;
-    --on-accent: #f1e8d2;
-    --border: #9c8a69;
-    --border-strong: #3b2e1f;
-    --accent: #8b1c1c;
-    --accent-hover: #a52626;
-    --accent-soft: #efd6cf;
-    --link: #8b1c1c;
-    --danger: #7d1f1a;
-    --danger-soft: #ead0c6;
-    --paper: #f1e8d2;
-    --card-bg: #ede3ca;
-    --dice-bg: #2b2116;
-    --dice-text: #f1e8d2;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #ddd6c8;
+    --surface: #fffdf8;
+    --surface-alt: #f4eee2;
+    --surface-sunken: #ebe3d3;
+    --surface-muted: #d8cfbd;
+    --text: #1d1a17;
+    --text-muted: #45403a;
+    --text-faint: #7a7166;
+    --on-accent: #ffffff;
+    --border: #a69b88;
+    --border-strong: #5c1416;
+    --accent: #7a1a1d;
+    --accent-hover: #962226;
+    --accent-soft: #efd6d4;
+    --link: #7a1a1d;
+    --danger: #9e2226;
+    --danger-hover: #7a1a1d;
+    --danger-soft: #efd6d4;
+    --success: #2f5f34;
+    --paper: #fffdf8;
+    --card-bg: #f7f2e8;
+    --dice-bg: #5c1416;
+    --dice-text: #ffffff;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    background-color: var(--surface);
-}
-.entityView thead th {
-    font-family: Georgia, "Times New Roman", serif;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--border-strong);
-}
-.entityView .table-characteristics .customtype,
-.entityView .table-skills .customtype {
-    font-variant-numeric: tabular-nums;
+
+.entityView {
+    --sheet-font: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+    --title-font: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
 }

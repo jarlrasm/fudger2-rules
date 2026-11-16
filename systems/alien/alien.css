@@ -1,36 +1,107 @@
-/* Alien: green phosphor on black, monospace like a ship terminal. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Alien RPG: a ship's terminal readout. Near-black panels, phosphor green
+   monospace, thin framed blocks, the four attributes across the top with each
+   attribute's three skills in the column under it. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: dark;
-    --bg: #030805;
-    --surface: #07120a;
-    --surface-alt: #0b1a0f;
-    --surface-sunken: #050d07;
-    --surface-muted: #11261a;
-    --text: #b7f5c4;
-    --text-muted: #8ad49b;
-    --text-faint: #57915f;
-    --on-accent: #030805;
-    --border: #1d4a2a;
-    --border-strong: #3be26a;
-    --accent: #3be26a;
-    --accent-hover: #6cf091;
-    --accent-soft: #0f2c17;
-    --link: #6cf091;
-    --danger: #ff5a4e;
-    --paper: #07120a;
-    --card-bg: #091610;
-    --dice-bg: #3be26a;
-    --dice-text: #030805;
-    color: var(--text);
-    background-color: var(--bg);
-    font-family: "Courier New", Courier, ui-monospace, monospace;
+    --bg: #050806;
+    --surface: #0b120d;
+    --surface-alt: #111b14;
+    --surface-sunken: #070c08;
+    --surface-muted: #1b2b1f;
+    --text: #b8f5c4;
+    --text-muted: #85c995;
+    --text-faint: #55865f;
+    --on-accent: #050806;
+    --border: #2a4a31;
+    --border-strong: #6fe08a;
+    --accent: #6fe08a;
+    --accent-hover: #9bf0ad;
+    --accent-soft: #143220;
+    --link: #9bf0ad;
+    --danger: #ff6b4a;
+    --danger-hover: #e05634;
+    --danger-soft: #3a160f;
+    --success: #6fe08a;
+    --current: #143220;
+    --highlight: #1d4a2c;
+    --paper: #0b120d;
+    --card-bg: #0e1710;
+    --gm-bg: #0a100b;
+    --dice-bg: #6fe08a;
+    --dice-text: #050806;
+    --shadow: rgba(0, 0, 0, 0.8);
+    --focus-ring: #9bf0ad;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "IBM Plex Mono", "DejaVu Sans Mono", Consolas, monospace;
+    --title-font: "IBM Plex Mono", "DejaVu Sans Mono", Consolas, monospace;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    --label-color: var(--text-muted);
+    background: var(--bg);
+    text-shadow: 0 0 4px rgba(111, 224, 138, 0.25);
 }
-.entityView thead th {
-    letter-spacing: 0.2em;
+.entityView .entityTable > table > thead th {
     text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.85em;
+    color: var(--accent);
+    border-bottom: 1px dashed var(--border-strong);
 }
+.entityView .entityTable > table > thead th::before {
+    content: "> ";
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+/* ---- Attributes over their skills ---- */
+
+.entityView .table-attributes > table > tbody,
+.entityView .table-skills > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 16px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    border: 1px solid var(--border-strong);
+    padding: 4px 8px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1em;
+}
+.entityView .table-attributes > table > tbody > tr > td + td {
+    border-bottom: none;
+    font-size: 1.4em;
+}
+.entityView .table-skills > table > tbody {
+    grid-auto-flow: column;
+    grid-template-rows: repeat(3, auto);
+}
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px dashed var(--border);
+}
+.entityView .table-skills .customtype > div:nth-child(1)::after {
+    content: " →";
+    color: var(--text-faint);
+}
+
+/* ---- Status, talents and gear ---- */
+
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-gear,
+.entityView .table-consumables { --block: 50%; }

@@ -1,35 +1,124 @@
-/* Old-School Essentials: clean white page, black rules and a serif face, like a tidy reference booklet. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Old-School Essentials: a clean B/X character sheet. White paper, thick black
+   rounded boxes and bold serif titles; abilities, combat and saving throws in
+   three columns under the name line, as on the classic sheet. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #ecebe6;
+    --bg: #e9e7e1;
     --surface: #ffffff;
-    --surface-alt: #f4f3ef;
-    --surface-sunken: #f7f6f2;
-    --surface-muted: #dedcd5;
-    --text: #111111;
-    --text-muted: #333333;
-    --text-faint: #6b6b6b;
+    --surface-alt: #f3f2ee;
+    --surface-sunken: #ebe9e4;
+    --surface-muted: #d6d3cb;
+    --text: #141414;
+    --text-muted: #383838;
+    --text-faint: #6e6e6e;
     --on-accent: #ffffff;
-    --border: #b8b6ad;
-    --border-strong: #111111;
-    --accent: #2b5797;
-    --accent-hover: #3a6cb5;
-    --accent-soft: #dbe5f3;
-    --link: #2b5797;
+    --border: #8e8b84;
+    --border-strong: #141414;
+    --accent: #141414;
+    --accent-hover: #3a3a3a;
+    --accent-soft: #e4e2dc;
+    --link: #8a1c1c;
+    --danger: #8a1c1c;
+    --danger-hover: #6b1515;
+    --danger-soft: #f0d6d6;
+    --success: #2c5a2c;
     --paper: #ffffff;
-    --card-bg: #fbfbf8;
-    --dice-bg: #111111;
+    --card-bg: #f7f6f2;
+    --dice-bg: #141414;
     --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 0;
+
+.entityView {
+    --sheet-font: Georgia, "Times New Roman", serif;
+    --title-font: Georgia, "Times New Roman", serif;
+    --block-radius: 10px;
+    --block-border: 3px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: Georgia, "Times New Roman", serif;
-    font-variant: small-caps;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border-strong);
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.95em;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+/* ---- Abilities, combat and saves in three columns ---- */
+
+.entityView .table-abilities,
+.entityView .table-combat,
+.entityView .table-saving-throws { --block: 33.333%; }
+.entityView .table-abilities > table > tbody,
+.entityView .table-saving-throws > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 4px;
+    padding: 6px;
+}
+.entityView .table-combat > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 4px;
+    padding: 6px;
+}
+
+/* Ability scores: the name in a black tab, the score in a box, the modifier after. */
+.entityView .table-abilities > table > tbody > tr > td:first-child {
+    background: var(--border-strong);
+    color: var(--surface);
+    font-weight: 700;
+    min-width: 3em;
+    text-align: center;
+    border-radius: 6px;
+}
+.entityView .table-abilities > table > tbody > tr > td + td {
+    border-bottom: none;
+}
+.entityView .table-abilities .customtype {
+    font-size: 1.15em;
+    font-weight: 700;
+}
+.entityView .table-abilities .customtype > div:nth-child(1) {
+    border: 2px solid var(--border-strong);
+    border-radius: 6px;
+    min-width: 2em;
+    text-align: center;
+    padding: 0 4px;
+}
+
+/* Saving throws: the target number in a round box. */
+.entityView .table-saving-throws > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-saving-throws button.dicethrow,
+.entityView .table-combat button.dicethrow {
+    border-radius: 50%;
+    min-width: 2.2em;
+    min-height: 2.2em;
+}
+
+/* ---- Class abilities beside thief skills, then gear and spells ---- */
+
+.entityView .table-class-abilities,
+.entityView .table-thief-skills,
+.entityView .table-weapons,
+.entityView .table-armour,
+.entityView .table-spells,
+.entityView .table-equipment,
+.entityView .table-treasure,
+.entityView .table-retainers { --block: 50%; }
+.entityView .table-class-abilities > table > tbody,
+.entityView .table-thief-skills > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-spell-slots > table > tbody {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}
+.entityView .table-treasure > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }

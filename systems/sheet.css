@@ -1,0 +1,297 @@
+/* Shared sheet layout for systems that style their sheets on top of it.
+
+   The app loads only a system's first cssFiles entry, in place of its own
+   characters.css, so a system stylesheet starts with
+       @import url("/systems/sheet.css");
+   and then sets its colours, fonts and block widths.
+
+   Blocks flow left to right in the order the rules list them, so a user who
+   rearranges a sheet still gets what they chose. A block is a third of the
+   sheet, or all of it when wide, unless a system gives it another width with
+       .entityView .table-<name> { --block: 50%; }
+   after the import.
+   Inside a block, `columns = N` lays its fields out in N columns under the
+   title. A table nested in another sits in one of those columns as a boxed
+   group without repeating its name. */
+
+.entityView {
+    --gap: 8px;
+    --block: 33.333%;
+    --sheet-font: inherit;
+    --title-font: inherit;
+    --label-color: var(--text-muted);
+    --block-border: 1px solid var(--border);
+    --block-radius: 6px;
+    --title-border: 1px solid var(--border-strong);
+    --cell-pad: 2px 6px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    align-content: flex-start;
+    gap: var(--gap);
+    padding: var(--gap);
+    font-family: var(--sheet-font);
+    color: var(--text);
+}
+.entityView pre {
+    white-space: pre-wrap;
+    margin: 0;
+}
+.entityView a {
+    color: var(--link);
+    text-decoration: none;
+}
+
+/* ---- Blocks ---- */
+
+.entityView > .entityTable {
+    box-sizing: border-box;
+    flex: 1 1 calc(var(--block) - var(--gap));
+    max-width: 100%;
+    min-width: min(260px, 100%);
+}
+.entityView .entityTable {
+    display: block;
+    margin: 0;
+    background-color: var(--surface);
+    border: var(--block-border);
+    border-radius: var(--block-radius);
+    overflow: hidden;
+}
+.entityView .wide {
+    --block: 100%;
+}
+/* The title is a bar across the whole block, whatever the rows hold. */
+.entityView .entityTable > table {
+    display: block;
+    width: 100%;
+}
+.entityView .entityTable > table > thead,
+.entityView .entityTable > table > thead > tr,
+.entityView .entityTable > table > thead th {
+    display: block;
+}
+.entityView .entityTable > table > tbody {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1em;
+    font-weight: 700;
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: var(--title-border);
+    color: var(--text);
+}
+.entityView .entityTable > table > tbody > tr > td {
+    padding: var(--cell-pad);
+    vertical-align: middle;
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    color: var(--label-color);
+}
+.entityView .entityTable > table > tbody > tr > td:last-child {
+    text-align: right;
+}
+.entityView .entityTable > table > tbody > tr > td:only-child {
+    text-align: left;
+}
+
+/* Lists (weapons, attacks, gear) read as rows with a rule between them. */
+.entityView .entityTable:not(.split2, .split3, .split4, .split5) > table > tbody > tr + tr > td {
+    border-top: 1px dotted var(--border);
+}
+
+/* ---- Columns: the title on top, the fields in a grid under it ---- */
+
+.entityView .split2 > table > tbody,
+.entityView .split3 > table > tbody,
+.entityView .split4 > table > tbody,
+.entityView .split5 > table > tbody {
+    display: grid;
+    column-gap: 14px;
+    padding: 2px 4px;
+}
+.entityView .split2 > table > tbody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.entityView .split3 > table > tbody { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.entityView .split4 > table > tbody { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.entityView .split5 > table > tbody { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.entityView .split2 > table > tbody > tr,
+.entityView .split3 > table > tbody > tr,
+.entityView .split4 > table > tbody > tr,
+.entityView .split5 > table > tbody > tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+}
+.entityView .split2 > table > tbody > tr > td,
+.entityView .split3 > table > tbody > tr > td,
+.entityView .split4 > table > tbody > tr > td,
+.entityView .split5 > table > tbody > tr > td {
+    display: block;
+    border-top: none;
+    padding: 2px 0;
+    min-width: 0;
+}
+.entityView .split2 > table > tbody > tr > td + td,
+.entityView .split3 > table > tbody > tr > td + td,
+.entityView .split4 > table > tbody > tr > td + td,
+.entityView .split5 > table > tbody > tr > td + td {
+    border-bottom: 1px solid var(--border);
+    flex: 1 1 auto;
+    min-height: 1.2em;
+}
+
+/* ---- Nested tables: a boxed group, named once ---- */
+
+.entityView .entityTable > table > tbody > tr:has(> td > .entityTable) > td:first-child {
+    display: none;
+}
+.entityView .entityTable > table > tbody > tr:has(> td > .entityTable) {
+    align-items: stretch;
+}
+.entityView .entityTable > table > tbody > tr:has(> td > .entityTable) > td {
+    display: flex;
+    border: none;
+    padding: 3px 0;
+    flex: 1 1 auto;
+}
+.entityView .entityTable .entityTable {
+    flex: 1 1 auto;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--block-radius) / 2);
+    background-color: var(--surface-alt);
+    height: 100%;
+    box-sizing: border-box;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    font-size: 0.9em;
+    padding: 2px 6px;
+    border-bottom: 1px solid var(--border);
+}
+.entityView .entityTable .entityTable > table > tbody > tr > td + td {
+    border-bottom: none;
+}
+
+/* ---- Values ---- */
+
+.entityView .customtype {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.entityView .customtype div {
+    display: inline;
+}
+.entityView input[type="number"] {
+    width: 4em;
+    text-align: center;
+}
+.entityView input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+}
+.entityView button {
+    color: var(--text);
+    border-radius: 4px;
+}
+.entityView button:hover {
+    background-color: var(--surface-alt);
+}
+.entityView button.dicethrow {
+    min-width: 2em;
+    padding: 0 6px;
+    margin: 0;
+    font-weight: 700;
+    background-color: var(--dice-bg);
+    color: var(--dice-text);
+    border: none;
+}
+.entityView .namedescription {
+    background: var(--surface-alt);
+    display: flex;
+    flex-flow: column;
+    border-radius: 4px;
+    padding: 6px;
+}
+.entityView .namedescription autocompleting-input {
+    width: 100%;
+}
+.entityView .editbutton {
+    flex-basis: 100%;
+}
+
+/* ---- Slots and clocks ---- */
+
+.entityView .slots,
+.entityView .slots .used,
+.entityView .slots .unused,
+.entityView .slot-buttons,
+.entityView .slot-button {
+    display: inline;
+}
+.entityView .slot-button {
+    padding: 0 4px;
+    margin-left: 2px;
+    font-size: 0.8em;
+}
+.entityView .slots.clickable {
+    cursor: pointer;
+}
+.entityView .slots.clickable:hover {
+    position: relative;
+    background-color: var(--danger-soft);
+    z-index: 1;
+}
+.entityView .slots .slot-labelled {
+    margin: 0 3px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75em;
+}
+.entityView .clock {
+    display: inline-block;
+    width: 3.2em;
+    height: 3.2em;
+}
+.entityView .clock.clickable {
+    cursor: pointer;
+}
+.entityView .clock .clock-face {
+    width: 100%;
+    height: 100%;
+}
+.entityView .clock .clock-background {
+    fill: var(--surface, #ffffff);
+}
+.entityView .clock .clock-segment {
+    fill: transparent;
+    stroke: var(--text, #222222);
+    stroke-width: 0.06;
+}
+.entityView .clock .clock-segment.filled {
+    fill: var(--text, #222222);
+}
+
+/* ---- Phones: one block per row ---- */
+
+/* Systems lay out rows of boxes with their own grids; on a phone every grid
+   wraps to as many columns as fit, whatever the system asked for. */
+@media (max-width: 700px) {
+    .entityView > .entityTable {
+        flex-basis: 100%;
+    }
+    .entityView .entityTable > table > tbody {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+        grid-template-rows: none !important;
+        grid-auto-flow: row !important;
+    }
+}

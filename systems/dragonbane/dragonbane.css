@@ -1,37 +1,124 @@
-/* Dragonbane: warm parchment, dark green and gold, with a storybook serif. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Dragonbane: the adventurer sheet. Warm parchment, dark red ribbon titles in
+   a storybook serif, the six attributes as round medallions in a row, the
+   conditions under them, and the skill lists side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #e4d9bf;
-    --surface: #fbf4e2;
-    --surface-alt: #f2e8cf;
-    --surface-sunken: #f5ecd6;
-    --surface-muted: #ddd0b0;
-    --text: #23281c;
-    --text-muted: #434a37;
-    --text-faint: #767b63;
-    --on-accent: #fbf4e2;
-    --border: #a69a77;
-    --border-strong: #2f4a2b;
-    --accent: #2f4a2b;
-    --accent-hover: #3d5f38;
-    --accent-soft: #d8e0c8;
-    --link: #2f4a2b;
-    --danger: #8f2219;
-    --paper: #fbf4e2;
-    --card-bg: #f7efda;
-    --dice-bg: #b08a2e;
-    --dice-text: #fbf4e2;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #d6c3a0;
+    --surface: #f8efdc;
+    --surface-alt: #efe2c6;
+    --surface-sunken: #e6d6b5;
+    --surface-muted: #d3bf98;
+    --text: #2a1c10;
+    --text-muted: #513d28;
+    --text-faint: #806a4f;
+    --on-accent: #f8efdc;
+    --border: #a88b60;
+    --border-strong: #6e1d17;
+    --accent: #8c241c;
+    --accent-hover: #6e1d17;
+    --accent-soft: #f0d6cc;
+    --link: #8c241c;
+    --danger: #8c241c;
+    --danger-hover: #6e1d17;
+    --danger-soft: #f0d6cc;
+    --success: #3f6a2a;
+    --paper: #f8efdc;
+    --card-bg: #f4e9d2;
+    --dice-bg: #6e1d17;
+    --dice-text: #f8efdc;
 }
-.entityView .entityTable {
-    border: 2px solid var(--border-strong);
-    border-radius: 10px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Book Antiqua", "Palatino Linotype", Georgia, serif;
+    --title-font: "Book Antiqua", "Palatino Linotype", Georgia, serif;
+    --block-radius: 8px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Palatino Linotype", Palatino, "Book Antiqua", serif;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-variant: small-caps;
+    font-size: 1.15em;
+    letter-spacing: 0.1em;
+    text-align: center;
+    border-bottom: none;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
+}
+
+/* ---- Attributes as medallions, conditions as a row ---- */
+
+.entityView .table-attributes > table > tbody,
+.entityView .table-conditions > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 10px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-conditions > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td,
+.entityView .table-conditions > table > tbody > tr > td {
+    display: block;
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    font-weight: 700;
+    letter-spacing: 0.1em;
     color: var(--accent);
 }
+.entityView .table-attributes button.dicethrow {
+    width: 2.8em;
+    height: 2.8em;
+    border-radius: 50%;
+    font-size: 1.3em;
+    border: 3px double var(--surface);
+}
+.entityView .table-conditions > table > tbody > tr > td:first-child {
+    font-variant: small-caps;
+}
+
+/* ---- Status, then the skill lists side by side ---- */
+
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.entityView .table-skills,
+.entityView .table-weapon-skills,
+.entityView .table-secondary-skills { --block: 33.333%; }
+.entityView .table-skills > table > tbody,
+.entityView .table-weapon-skills > table > tbody,
+.entityView .table-secondary-skills > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+.entityView .table-skills > table > tbody > tr > td + td,
+.entityView .table-weapon-skills > table > tbody > tr > td + td,
+.entityView .table-secondary-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr,
+.entityView .table-weapon-skills > table > tbody > tr,
+.entityView .table-secondary-skills > table > tbody > tr {
+    border-bottom: 1px dotted var(--border);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-abilities,
+.entityView .table-spells,
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-inventory,
+.entityView .table-purse { --block: 50%; }

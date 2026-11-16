@@ -1,42 +1,154 @@
-/* WFRP: parchment, black-letter feel and red rubrics, like a broadsheet from Altdorf. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Warhammer Fantasy Roleplay: the character record. Parchment, black ruled
+   boxes with red rubric titles, the ten characteristics as one table with
+   Initial, Advances and Current stacked, and skills as Characteristic +
+   Advances = Skill. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #d8cdb4;
-    --surface: #f1e8d2;
-    --surface-alt: #e8dcc0;
-    --surface-sunken: #e2d5b6;
-    --surface-muted: #cdbf9e;
-    --text: #2b2116;
-    --text-muted: #4d3e2b;
+    --bg: #d3c6a6;
+    --surface: #f2e9d0;
+    --surface-alt: #e9ddbd;
+    --surface-sunken: #e2d5b1;
+    --surface-muted: #cbbc96;
+    --text: #1f1710;
+    --text-muted: #45382a;
     --text-faint: #7a6a52;
-    --on-accent: #f1e8d2;
-    --border: #9c8a69;
-    --border-strong: #3b2e1f;
+    --on-accent: #f2e9d0;
+    --border: #8f7a58;
+    --border-strong: #1f1710;
     --accent: #7a1712;
     --accent-hover: #962119;
     --accent-soft: #ecd2c8;
     --link: #7a1712;
-    --danger: #7d1f1a;
-    --danger-soft: #ead0c6;
-    --paper: #f1e8d2;
+    --danger: #7a1712;
+    --danger-hover: #5d110d;
+    --danger-soft: #ecd2c8;
+    --success: #3d5a2a;
+    --paper: #f2e9d0;
     --card-bg: #ede3ca;
-    --dice-bg: #2b2116;
-    --dice-text: #f1e8d2;
-    color: var(--text);
-    background-color: var(--bg);
+    --dice-bg: #1f1710;
+    --dice-text: #f2e9d0;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --block-radius: 8px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Palatino Linotype", Palatino, "Book Antiqua", serif;
-    letter-spacing: 0.08em;
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
     text-transform: uppercase;
+    letter-spacing: 0.12em;
     border-bottom: 2px solid var(--border-strong);
 }
-.entityView .table-characteristics .customtype,
-.entityView .table-skills .customtype {
+
+/* ---- Characteristics: one row of ten columns ---- */
+
+.entityView .table-characteristics > table > tbody {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    column-gap: 0;
+    padding: 0;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border-left: 1px solid var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody > tr:first-child {
+    border-left: none;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child {
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+}
+.entityView .table-characteristics .customtype {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+.entityView .table-characteristics .customtype > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1px 6px;
+    margin: 0;
+    border-bottom: 1px dotted var(--border);
+}
+.entityView .table-characteristics .customtype > div::before {
+    font-size: 0.7em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+}
+.entityView .table-characteristics .customtype > div:nth-child(1)::before { content: "Init"; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "Adv"; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "Cur"; }
+.entityView .table-characteristics .customtype > div:nth-child(4)::before { content: "Bonus"; }
+.entityView .table-characteristics .customtype > div:nth-child(4) {
+    border-bottom: none;
+}
+.entityView .table-characteristics input[type="number"] {
+    width: 3em;
+}
+
+/* ---- Fate, experience and wounds side by side ---- */
+
+.entityView .table-fate-and-fortune { --block: 50%; }
+.entityView .table-experience,
+.entityView .table-wounds { --block: 25%; }
+.entityView .table-fate-and-fortune > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-experience > table > tbody,
+.entityView .table-wounds > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---- Skills: basic on the left, grouped and advanced on the right ---- */
+
+.entityView .table-basic-skills,
+.entityView .table-advanced-skills { --block: 50%; }
+.entityView .table-basic-skills > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+.entityView .table-basic-skills > table > tbody > tr > td + td,
+.entityView .table-advanced-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-basic-skills > table > tbody > tr {
+    border-bottom: 1px dotted var(--border);
+}
+.entityView .table-basic-skills .customtype {
     font-variant-numeric: tabular-nums;
+}
+.entityView .table-basic-skills .customtype > div:nth-child(1)::after { content: " +"; color: var(--text-faint); }
+.entityView .table-basic-skills .customtype > div:nth-child(2)::after { content: " ="; color: var(--text-faint); }
+
+/* ---- Talents, gear and spells two to a row ---- */
+
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-armour,
+.entityView .table-trappings,
+.entityView .table-spells,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}
+.entityView .table-wealth > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }

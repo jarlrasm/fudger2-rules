@@ -1,37 +1,109 @@
-/* Daggerheart: deep violet page, gold rules and an elegant serif heading. */
+@import url("/systems/sheet.css");
+
+/* Daggerheart: the class sheet. Ivory page, deep violet title bands with gold
+   capitals, the six traits as a row of crests, Evasion, Armor and the damage
+   thresholds beside the HP, Stress and Hope tracks. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ded6e6;
+    --surface: #fdfbf6;
+    --surface-alt: #f3eef6;
+    --surface-sunken: #ebe4f0;
+    --surface-muted: #d5cadf;
+    --text: #1f1729;
+    --text-muted: #463a55;
+    --text-faint: #7a6e89;
+    --on-accent: #f7e7b4;
+    --border: #a796b8;
+    --border-strong: #3b2457;
+    --accent: #3b2457;
+    --accent-hover: #523375;
+    --accent-soft: #e6dcef;
+    --link: #6a3fa0;
+    --danger: #a3243a;
+    --danger-hover: #821c2e;
+    --danger-soft: #f3d5db;
+    --success: #3d6b4a;
+    --paper: #fdfbf6;
+    --card-bg: #f8f4fa;
+    --dice-bg: #3b2457;
+    --dice-text: #f7e7b4;
+}
+
 .entityView {
-    color-scheme: dark;
-    --bg: #15101f;
-    --surface: #1f182d;
-    --surface-alt: #271f38;
-    --surface-sunken: #1a1426;
-    --surface-muted: #322846;
-    --text: #f1ebe0;
-    --text-muted: #cfc5b4;
-    --text-faint: #91897b;
-    --on-accent: #15101f;
-    --border: #43385a;
-    --border-strong: #d7b25b;
-    --accent: #d7b25b;
-    --accent-hover: #e9c878;
-    --accent-soft: #3a3020;
-    --link: #e9c878;
-    --danger: #e0605a;
-    --paper: #1f182d;
-    --card-bg: #221a31;
-    --dice-bg: #d7b25b;
-    --dice-text: #15101f;
-    color: var(--text);
-    background-color: var(--bg);
+    --sheet-font: "Book Antiqua", "Palatino Linotype", Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", "Book Antiqua", Georgia, serif;
+    --block-radius: 10px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 8px;
-    background-color: var(--surface);
-}
-.entityView thead th {
-    font-family: "Cinzel", "Trajan Pro", Georgia, serif;
-    letter-spacing: 0.1em;
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-align: center;
     text-transform: uppercase;
-    color: var(--accent);
+    letter-spacing: 0.2em;
+    font-size: 0.9em;
+    border-bottom: 2px solid #c9a646;
 }
+
+/* ---- Traits: six crests in a row ---- */
+
+.entityView .table-traits > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 10px;
+    padding: 10px;
+}
+.entityView .table-traits > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px 12px;
+    background: var(--surface-alt);
+    border: 2px solid var(--border-strong);
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+}
+.entityView .table-traits > table > tbody > tr > td {
+    display: block;
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-traits > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8em;
+    font-weight: 700;
+}
+.entityView .table-traits button.dicethrow {
+    font-size: 1.4em;
+    min-width: 2em;
+}
+
+/* ---- Defence beside the tracks ---- */
+
+.entityView .table-defense,
+.entityView .table-hope-and-health { --block: 50%; }
+.entityView .table-defense > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-hope-and-health .slots input[type="checkbox"] {
+    width: 1.3em;
+    height: 1.3em;
+    accent-color: var(--accent);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-experiences,
+.entityView .table-domain-cards,
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-inventory,
+.entityView .table-gold,
+.entityView .table-countdowns,
+.entityView .table-background { --block: 50%; }

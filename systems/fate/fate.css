@@ -1,42 +1,122 @@
-/* Fate: warm paper and a friendly sans heading, like a codex of the Ninth World. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Fate Core: the character sheet. White page, dark grey title tabs with
+   rounded corners and white capitals, aspects beside skills, and stress boxes
+   above the consequences. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #d8cdb4;
-    --surface: #f1e8d2;
-    --surface-alt: #e8dcc0;
-    --surface-sunken: #e2d5b6;
-    --surface-muted: #cdbf9e;
-    --text: #2b2116;
-    --text-muted: #4d3e2b;
-    --text-faint: #7a6a52;
-    --on-accent: #f1e8d2;
-    --border: #9c8a69;
-    --border-strong: #3b2e1f;
-    --accent: #1f5f8b;
-    --accent-hover: #2a76ab;
-    --accent-soft: #d3d9c3;
-    --link: #1f5f8b;
-    --danger: #7d1f1a;
-    --danger-soft: #ead0c6;
-    --paper: #f1e8d2;
-    --card-bg: #ede3ca;
-    --dice-bg: #2b2116;
-    --dice-text: #f1e8d2;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #e4e4e2;
+    --surface: #ffffff;
+    --surface-alt: #f1f1ef;
+    --surface-sunken: #e8e8e6;
+    --surface-muted: #d2d2cf;
+    --text: #1f1f1f;
+    --text-muted: #474747;
+    --text-faint: #7a7a7a;
+    --on-accent: #ffffff;
+    --border: #a3a3a0;
+    --border-strong: #4a4a4c;
+    --accent: #4a4a4c;
+    --accent-hover: #2f2f31;
+    --accent-soft: #e6e6e4;
+    --link: #8a3b12;
+    --danger: #a3361a;
+    --danger-hover: #7e2913;
+    --danger-soft: #f3d8cf;
+    --success: #3d6b2f;
+    --paper: #ffffff;
+    --card-bg: #f7f7f5;
+    --dice-bg: #4a4a4c;
+    --dice-text: #ffffff;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Roboto Slab", "Rockwell", Georgia, serif;
+    --title-font: "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 12px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0.08em;
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: #ffffff;
     text-transform: uppercase;
-    border-bottom: 2px solid var(--border-strong);
+    letter-spacing: 0.14em;
+    font-size: 0.85em;
+    border-bottom: none;
+    border-radius: 0 0 12px 0;
+    width: fit-content;
+    padding: 4px 18px 4px 12px;
 }
-.entityView .table-characteristics .customtype,
-.entityView .table-skills .customtype {
-    font-variant-numeric: tabular-nums;
+
+/* ---- Name, aspects beside skills ---- */
+
+.entityView .table-character > table > tbody {
+    grid-template-columns: 8em 8em minmax(0, 1fr);
+}
+.entityView .table-aspects,
+.entityView .table-skills { --block: 50%; }
+.entityView .table-aspects > table > tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+    padding: 6px 10px;
+}
+.entityView .table-aspects > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+.entityView .table-aspects > table > tbody > tr > td:first-child {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    order: 2;
+}
+.entityView .table-aspects > table > tbody > tr > td {
+    display: block;
+    border-top: none;
+    padding: 0;
+}
+.entityView .table-aspects > table > tbody > tr > td + td {
+    text-align: left;
+    font-size: 1.05em;
+    min-height: 1.4em;
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .table-skills > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+}
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+
+/* ---- Stunts beside stress and consequences ---- */
+
+.entityView .table-other-skills,
+.entityView .table-stunts,
+.entityView .table-own-stunts,
+.entityView .table-stress,
+.entityView .table-consequences,
+.entityView .table-situation-aspects,
+.entityView .table-extras { --block: 50%; }
+.entityView .table-stress .slots input[type="checkbox"] {
+    width: 1.6em;
+    height: 1.6em;
+}
+.entityView .table-consequences > table > tbody > tr > td:first-child {
+    font-weight: 700;
+    white-space: nowrap;
+}
+.entityView .table-consequences > table > tbody > tr > td + td {
+    text-align: left;
 }

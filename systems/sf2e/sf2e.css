@@ -1,37 +1,43 @@
-/* Starfinder: dark navy panels with cyan rules, like a starship console. */
-.entityView {
+@import url("/systems/pf2e/layout.css");
+
+/* Starfinder Second Edition: the Pathfinder layout on a dark console, cyan
+   arrow-tab titles and a clean technical sans. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: dark;
-    --bg: #0b1424;
-    --surface: #122036;
-    --surface-alt: #18294a;
-    --surface-sunken: #0b0b0b;
-    --surface-muted: #252525;
-    --text: #f5f5f5;
-    --text-muted: #cccccc;
-    --text-faint: #8f8f8f;
-    --on-accent: #0b1424;
-    --border: #3d3d3d;
+    --bg: #08111f;
+    --surface: #101d33;
+    --surface-alt: #162847;
+    --surface-sunken: #0b1527;
+    --surface-muted: #23375a;
+    --text: #eef4fb;
+    --text-muted: #b9c8da;
+    --text-faint: #7d8ea4;
+    --on-accent: #06121f;
+    --border: #2d4569;
     --border-strong: #24b6d6;
     --accent: #24b6d6;
     --accent-hover: #4fd0ec;
     --accent-soft: #0f3644;
-    --link: #f5f5f5;
-    --danger: #4fd0ec;
-    --paper: #122036;
-    --card-bg: #151515;
+    --link: #4fd0ec;
+    --danger: #ff5a5f;
+    --danger-hover: #e0434a;
+    --danger-soft: #3d1a22;
+    --success: #3ddc97;
+    --current: #133a4a;
+    --highlight: #1d4f63;
+    --paper: #101d33;
+    --card-bg: #13223c;
+    --gm-bg: #0e1a2e;
     --dice-bg: #24b6d6;
-    --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
+    --dice-text: #06121f;
+    --shadow: rgba(0, 0, 0, 0.7);
+    --focus-ring: #4fd0ec;
 }
-.entityView .entityTable {
-    border: 0;
-    border-top: 3px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
-}
-.entityView thead th {
-    font-family: "Optima", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+
+.entityView {
+    --sheet-font: "Eurostile", "Bank Gothic", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Eurostile", "Bank Gothic", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
 }

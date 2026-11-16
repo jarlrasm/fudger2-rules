@@ -1,37 +1,104 @@
-/* Vampire: the Masquerade: black and blood red, with a sharp serif heading. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Vampire: the Masquerade fifth edition. Black page, blood-red rules and
+   capitals in a sharp serif; the nine attributes in Physical, Social and Mental
+   columns, health and willpower as box tracks, skills in three columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: dark;
-    --bg: #0b0708;
-    --surface: #160e10;
-    --surface-alt: #201416;
-    --surface-sunken: #110a0b;
-    --surface-muted: #2c1b1e;
+    --bg: #0a0708;
+    --surface: #140e10;
+    --surface-alt: #1e1417;
+    --surface-sunken: #0f0a0c;
+    --surface-muted: #2c1d21;
     --text: #efe6e6;
-    --text-muted: #c9b8b9;
-    --text-faint: #8c7a7c;
+    --text-muted: #c4b3b5;
+    --text-faint: #8a7679;
     --on-accent: #ffffff;
-    --border: #3b2427;
-    --border-strong: #a3121f;
-    --accent: #a3121f;
-    --accent-hover: #c41a28;
-    --accent-soft: #3a1015;
-    --link: #e04a55;
-    --danger: #e0303e;
-    --paper: #160e10;
-    --card-bg: #1a1113;
-    --dice-bg: #a3121f;
+    --border: #3e2a2e;
+    --border-strong: #a3121b;
+    --accent: #a3121b;
+    --accent-hover: #c41a24;
+    --accent-soft: #3a0b10;
+    --link: #e04a52;
+    --danger: #d4202a;
+    --danger-hover: #a3121b;
+    --danger-soft: #3a0b10;
+    --success: #6fa36b;
+    --current: #3a0b10;
+    --highlight: #4f1218;
+    --paper: #140e10;
+    --card-bg: #1a1114;
+    --gm-bg: #120c0e;
+    --dice-bg: #a3121b;
     --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
+    --shadow: rgba(0, 0, 0, 0.8);
+    --focus-ring: #e04a52;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --title-font: "Trajan Pro", "Cinzel", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Copperplate", "Trajan Pro", Georgia, serif;
-    letter-spacing: 0.15em;
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    color: var(--accent);
     text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 1.05em;
+    border-bottom: none;
+    background: linear-gradient(90deg, transparent, var(--accent-soft) 30%, var(--accent-soft) 70%, transparent);
 }
+
+/* ---- Attributes: Physical, Social and Mental columns ---- */
+
+.entityView .table-attributes > table > tbody {
+    column-gap: 32px;
+    padding: 6px 16px;
+}
+.entityView .table-attributes > table > tbody > tr > td + td,
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-attributes > table > tbody > tr {
+    border-bottom: 1px solid var(--border);
+}
+.entityView .table-attributes button.dicethrow,
+.entityView .table-skills button.dicethrow {
+    border-radius: 50%;
+    min-width: 1.9em;
+    min-height: 1.9em;
+}
+
+/* ---- Trackers ---- */
+
+.entityView .table-trackers > table > tbody {
+    column-gap: 32px;
+}
+.entityView .table-trackers .slots input[type="checkbox"] {
+    width: 1.3em;
+    height: 1.3em;
+    accent-color: var(--accent);
+}
+
+/* ---- Skills ---- */
+
+.entityView .table-skills > table > tbody {
+    column-gap: 28px;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--border);
+}
+
+/* ---- Disciplines, gear and background two to a row ---- */
+
+.entityView .table-disciplines,
+.entityView .table-powers,
+.entityView .table-weapons,
+.entityView .table-advantages-and-flaws,
+.entityView .table-convictions { --block: 50%; }

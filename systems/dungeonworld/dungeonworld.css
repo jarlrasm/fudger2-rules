@@ -1,42 +1,127 @@
-/* Dungeon World: parchment, brown ink and a book face, like a ranger journal. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Dungeon World: the playbook. Rough parchment, heavy serif small caps, the
+   six stats as boxes with their modifier large and the debility named beneath,
+   HP, armour and damage beside them, then moves, bonds and gear. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: light;
-    --bg: #d8cdb4;
-    --surface: #f1e8d2;
-    --surface-alt: #e8dcc0;
-    --surface-sunken: #e2d5b6;
-    --surface-muted: #cdbf9e;
-    --text: #2b2116;
-    --text-muted: #4d3e2b;
-    --text-faint: #7a6a52;
-    --on-accent: #f1e8d2;
-    --border: #9c8a69;
-    --border-strong: #3b2e1f;
-    --accent: #6b3a1e;
-    --accent-hover: #844a27;
-    --accent-soft: #d3d9c3;
-    --link: #6b3a1e;
-    --danger: #7d1f1a;
-    --danger-soft: #ead0c6;
-    --paper: #f1e8d2;
-    --card-bg: #ede3ca;
-    --dice-bg: #2b2116;
-    --dice-text: #f1e8d2;
-    color: var(--text);
-    background-color: var(--bg);
+    --bg: #cbbd9a;
+    --surface: #f4ecd6;
+    --surface-alt: #ebe0c2;
+    --surface-sunken: #e2d5b3;
+    --surface-muted: #cdbf99;
+    --text: #231a10;
+    --text-muted: #4a3b28;
+    --text-faint: #7b6a50;
+    --on-accent: #f4ecd6;
+    --border: #8f7b56;
+    --border-strong: #231a10;
+    --accent: #231a10;
+    --accent-hover: #4a3b28;
+    --accent-soft: #e0d3b0;
+    --link: #6b2414;
+    --danger: #8a2414;
+    --danger-hover: #6b1b0f;
+    --danger-soft: #efd2c7;
+    --success: #3f5a26;
+    --paper: #f4ecd6;
+    --card-bg: #efe5cb;
+    --dice-bg: #231a10;
+    --dice-text: #f4ecd6;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: Georgia, "Book Antiqua", serif;
+    --title-font: "Trajan Pro", "Cinzel", "Book Antiqua", Georgia, serif;
+    --block-radius: 3px;
+    --block-border: 3px double var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Palatino Linotype", Palatino, "Book Antiqua", serif;
+.entityView .entityTable > table > thead th {
+    font-variant: small-caps;
+    font-size: 1.25em;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     border-bottom: 2px solid var(--border-strong);
 }
-.entityView .table-characteristics .customtype,
-.entityView .table-skills .customtype {
-    font-variant-numeric: tabular-nums;
+
+/* ---- Stats as boxes, status beside them ---- */
+
+.entityView .table-stats { --block: 60%; }
+.entityView .table-status { --block: 40%; }
+.entityView .table-stats > table > tbody {
+    row-gap: 8px;
+    column-gap: 8px;
+    padding: 8px;
+}
+.entityView .table-stats > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    border: 2px solid var(--border-strong);
+    background: var(--surface-alt);
+    padding: 4px;
+}
+.entityView .table-stats > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    font-weight: 700;
+    font-size: 1.15em;
+    text-align: center;
+}
+.entityView .table-stats > table > tbody > tr > td + td {
+    border-bottom: none;
+}
+.entityView .table-stats .customtype {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    width: 100%;
+}
+.entityView .table-stats .customtype > div {
+    margin: 0;
+}
+.entityView .table-stats .customtype > div:nth-child(1) {
+    text-align: left;
+    color: var(--text-faint);
+}
+.entityView .table-stats .customtype > div:nth-child(1)::before {
+    content: "Score ";
+    font-size: 0.75em;
+}
+.entityView .table-stats .customtype > div:nth-child(3) {
+    grid-row: 1 / 3;
+    grid-column: 2;
+}
+.entityView .table-stats .customtype > div:nth-child(3) button.dicethrow {
+    font-size: 1.5em;
+    min-width: 1.8em;
+    border-radius: 50%;
+}
+.entityView .table-stats .customtype > div:nth-child(2) {
+    font-size: 0.8em;
+    text-align: left;
+    font-variant: small-caps;
+}
+.entityView .table-stats .customtype > div:nth-child(2)::after { margin-left: 4px; }
+.entityView .table-stats tr:nth-child(1) .customtype > div:nth-child(2)::after { content: "weak"; }
+.entityView .table-stats tr:nth-child(2) .customtype > div:nth-child(2)::after { content: "shaky"; }
+.entityView .table-stats tr:nth-child(3) .customtype > div:nth-child(2)::after { content: "sick"; }
+.entityView .table-stats tr:nth-child(4) .customtype > div:nth-child(2)::after { content: "stunned"; }
+.entityView .table-stats tr:nth-child(5) .customtype > div:nth-child(2)::after { content: "confused"; }
+.entityView .table-stats tr:nth-child(6) .customtype > div:nth-child(2)::after { content: "scarred"; }
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ---- Moves beside bonds, gear beside load ---- */
+
+.entityView .table-moves,
+.entityView .table-bonds,
+.entityView .table-weapons,
+.entityView .table-gear,
+.entityView .table-load { --block: 50%; }
+.entityView .table-load > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }

@@ -1,37 +1,114 @@
-/* Genesys: charcoal page, gold headings and coloured dice accents. */
-.entityView {
-    color-scheme: dark;
-    --bg: #050505;
-    --surface: #111111;
-    --surface-alt: #1a1a1a;
-    --surface-sunken: #0b0b0b;
-    --surface-muted: #252525;
-    --text: #f5f5f5;
-    --text-muted: #cccccc;
-    --text-faint: #8f8f8f;
-    --on-accent: #050505;
-    --border: #3d3d3d;
-    --border-strong: #d9a62e;
-    --accent: #d9a62e;
-    --accent-hover: #e8bd52;
-    --accent-soft: #3a2e10;
-    --link: #f5f5f5;
-    --danger: #e8bd52;
-    --paper: #111111;
-    --card-bg: #151515;
-    --dice-bg: #d9a62e;
+@import url("/systems/sheet.css");
+
+/* Genesys: the character sheet. Pale sand page, navy title bars with white
+   capitals, the six characteristics as a row of large rings, soak, wounds,
+   strain and defence beside each other, and skills with their dice pool
+   written as ability and proficiency dice. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d8d2c4;
+    --surface: #fbf8f1;
+    --surface-alt: #f0ebdf;
+    --surface-sunken: #e7e0d0;
+    --surface-muted: #d1c8b4;
+    --text: #18202b;
+    --text-muted: #3b4553;
+    --text-faint: #707985;
+    --on-accent: #ffffff;
+    --border: #a59c87;
+    --border-strong: #1f3352;
+    --accent: #1f3352;
+    --accent-hover: #2c4770;
+    --accent-soft: #dfe5ee;
+    --link: #2c4770;
+    --danger: #a3301f;
+    --danger-hover: #822617;
+    --danger-soft: #f2d6d1;
+    --success: #2f6a3a;
+    --paper: #fbf8f1;
+    --card-bg: #f6f2e8;
+    --dice-bg: #1f3352;
     --dice-text: #ffffff;
-    color: var(--text);
-    background-color: var(--bg);
 }
-.entityView .entityTable {
-    border: 0;
-    border-top: 3px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 4px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Optima", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0.2em;
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #ffffff;
     text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.85em;
+    border-bottom: none;
 }
+
+/* ---- Characteristics: six rings ---- */
+
+.entityView .table-characteristics > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 10px;
+    padding: 10px;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 4px;
+}
+.entityView .table-characteristics > table > tbody > tr > td {
+    display: block;
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child {
+    background: var(--accent);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75em;
+    padding: 1px 10px;
+    border-radius: 3px;
+}
+.entityView .table-characteristics button.dicethrow {
+    width: 2.6em;
+    height: 2.6em;
+    border-radius: 50%;
+    font-size: 1.4em;
+    background: var(--surface);
+    color: var(--accent);
+    border: 4px solid var(--accent);
+}
+
+/* ---- Check, status ---- */
+
+.entityView .table-check > table > tbody {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ---- Skills ---- */
+
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-gear,
+.entityView .table-description { --block: 50%; }

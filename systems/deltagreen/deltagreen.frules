@@ -93,7 +93,7 @@ characterTable = ruleset
 
     Statistics = table
     {
-        tableLayout = layout { columns = 3  size = wide }
+        tableLayout = layout { }
         Strength = statistic (10)
         Constitution = statistic (10)
         Dexterity = statistic (10)
@@ -104,7 +104,7 @@ characterTable = ruleset
 
     'Derived Attributes' = table
     {
-        tableLayout = layout { columns = 4  size = wide }
+        tableLayout = layout { columns = 2 }
         'Hit Points' = table
         {
             Maximum = integer { value = (Statistics.Strength.Score + Statistics.Constitution.Score + 1) / 2  editable = none }
@@ -132,14 +132,13 @@ characterTable = ruleset
 
     Psychology = table
     {
-        tableLayout = layout { columns = 2  size = wide }
+        tableLayout = layout { }
         Motivations = string { multiline = true }
         Disorders = string { multiline = true }
     }
 
     Bonds = list
     {
-        tableLayout = layout { size = wide }
         singular = "Bond"
         editable = character
         valueType = custom

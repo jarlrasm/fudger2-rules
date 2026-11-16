@@ -36,7 +36,7 @@ cocPushed (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { n
     ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra, false)))
 
 cocDice (char) =
-    switch char.Investigator.Dice
+    switch char.Combat.Dice
         case "Two penalty" then cocRoll (-2)
         case "Penalty" then cocRoll (-1)
         case "Bonus" then cocRoll (1)
@@ -117,36 +117,26 @@ characterTable = ruleset
 {
     Investigator = table
     {
-        tableLayout = layout { columns = 3  size = wide }
+        tableLayout = layout { columns = 2 }
         Player = string {}
         Occupation = string {}
         Age = integer { default = 25 }
         Pronoun = string {}
         Residence = string {}
         Birthplace = string {}
-        Dice = selector
-        {
-            options = ["Two penalty", "Penalty", "Normal", "Bonus", "Two bonus"]
-            labels = ["2 pen", "Pen", "Normal", "Bonus", "2 bon"]
-            colors = ["red", "red", "white", "green", "green"]
-            hold = ["", "Ctrl", "", "Shift", ""]
-            default = "Normal"
-            editable = live
-            save = nosave
-        }
     }
 
     Characteristics = table
     {
-        tableLayout = layout { columns = 4  size = wide }
+        tableLayout = layout { columns = 3 }
         STR = characteristic (50)
         DEX = characteristic (50)
-        INT = characteristic (50)
+        POW = characteristic (50)
         CON = characteristic (50)
         APP = characteristic (50)
-        POW = characteristic (50)
-        SIZ = characteristic (50)
         EDU = characteristic (50)
+        SIZ = characteristic (50)
+        INT = characteristic (50)
     }
 
     Status = table
@@ -179,18 +169,9 @@ characterTable = ruleset
         }
     }
 
-    Combat = table
-    {
-        tableLayout = layout { columns = 4  size = wide }
-        'Damage Bonus' = damageBonus (strAndSiz (characterTable))
-        Build = build (strAndSiz (characterTable))
-        Move = moveRate (Characteristics.STR.Value, Characteristics.DEX.Value, Characteristics.SIZ.Value)
-        Initiative = integer { value = Characteristics.DEX.Value  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
-    }
-
     Skills = table
     {
-        tableLayout = layout { columns = 3  size = wide }
+        tableLayout = layout { columns = 4  size = wide }
         Accounting = skill (5)
         Anthropology = skill (1)
         Appraise = skill (5)
@@ -251,26 +232,41 @@ characterTable = ruleset
         }
     }
 
-    Weapons = list
-    {
-        tableLayout = layout { size = wide }
-        source = secondary.Weapons
-        singular = "Weapon"
-        editable = character
-    }
-
     Attacks = list
     {
-        tableLayout = layout { size = wide }
         source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, "Fighting Brawl"), "1d3 " + damageBonus (strAndSiz (characterTable)), "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
     }
 
+    Combat = table
+    {
+        'Damage Bonus' = damageBonus (strAndSiz (characterTable))
+        Build = build (strAndSiz (characterTable))
+        Move = moveRate (Characteristics.STR.Value, Characteristics.DEX.Value, Characteristics.SIZ.Value)
+        Initiative = integer { value = Characteristics.DEX.Value  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Dice = selector
+        {
+            options = ["Two penalty", "Penalty", "Normal", "Bonus", "Two bonus"]
+            labels = ["2 pen", "Pen", "Normal", "Bonus", "2 bon"]
+            colors = ["red", "red", "white", "green", "green"]
+            hold = ["", "Ctrl", "", "Shift", ""]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
     'Gear and Possessions' = list
     {
-        tableLayout = layout { size = wide }
         source = secondary.Gear
         singular = "Item"
         editable = character

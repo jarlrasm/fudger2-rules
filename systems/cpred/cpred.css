@@ -1,40 +1,142 @@
-/* Cyberpunk RED: black panels, hot red rules and condensed caps headings. */
-.entityView {
+@import url("/systems/sheet.css");
+
+/* Cyberpunk RED: the edgerunner sheet. Black panels with hot red bars and
+   condensed white capitals, the ten STATs as a row of big boxes, and skills as
+   STAT + LVL = BASE in three columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
     color-scheme: dark;
-    --bg: #0d0d0f;
-    --surface: #17171b;
-    --surface-alt: #1f1f25;
-    --surface-sunken: #121215;
-    --surface-muted: #2a2a31;
-    --text: #f2f2f2;
-    --text-muted: #c4c4c8;
+    --bg: #0b0b0d;
+    --surface: #16161a;
+    --surface-alt: #202026;
+    --surface-sunken: #111114;
+    --surface-muted: #2b2b33;
+    --text: #f4f4f4;
+    --text-muted: #c9c9ce;
     --text-faint: #8a8a92;
-    --on-accent: #0d0d0f;
-    --border: #3a3a42;
-    --border-strong: #e3242b;
-    --accent: #e3242b;
-    --accent-hover: #ff3b42;
-    --accent-soft: #3a1416;
-    --link: #3fd8e8;
-    --danger: #ff3b42;
-    --danger-soft: #3a1416;
-    --paper: #17171b;
+    --on-accent: #ffffff;
+    --border: #3d3d46;
+    --border-strong: #e1112b;
+    --accent: #e1112b;
+    --accent-hover: #ff2c45;
+    --accent-soft: #3a0d14;
+    --link: #ff4b5f;
+    --danger: #ff2c45;
+    --danger-hover: #e1112b;
+    --danger-soft: #3a0d14;
+    --success: #2fd38a;
+    --success-hover: #4be3a0;
+    --current: #3a0d14;
+    --highlight: #5a1420;
+    --paper: #16161a;
     --card-bg: #1b1b20;
-    --dice-bg: #e3242b;
-    --dice-text: #0d0d0f;
-    color: var(--text);
-    background-color: var(--bg);
+    --gm-bg: #141418;
+    --dice-bg: #e1112b;
+    --dice-text: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.8);
+    --focus-ring: #ff2c45;
 }
-.entityView .entityTable {
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--border-strong);
-    border-radius: 0;
-    background-color: var(--surface);
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Arial Black", "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border);
+    --label-color: var(--text-muted);
+    background: var(--bg);
 }
-.entityView thead th {
-    font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-    font-stretch: condensed;
-    letter-spacing: 0.12em;
+.entityView > .entityTable {
+    border-left: 4px solid var(--accent);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #ffffff;
     text-transform: uppercase;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    border-bottom: none;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    width: fit-content;
+    min-width: 40%;
+    padding-right: 28px;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    background: var(--surface-muted);
+    clip-path: none;
+    width: auto;
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Handle, and the ten STATs in a row ---- */
+
+.entityView .table-stats > table > tbody {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    column-gap: 6px;
+    padding: 6px;
+}
+.entityView .table-stats > table > tbody > tr {
+    flex-direction: column;
+    gap: 2px;
+    border: 1px solid var(--border);
+    background: var(--surface-alt);
+    padding: 4px 2px;
+}
+.entityView .table-stats > table > tbody > tr > td:first-child {
     color: var(--accent);
+    font-weight: 700;
+    font-size: 0.95em;
+}
+.entityView .table-stats > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+.entityView .table-stats button.dicethrow {
+    font-size: 1em;
+    min-width: 1.8em;
+}
+
+/* ---- Hit points, luck, humanity and armour ---- */
+
+.entityView .table-status > table > tbody {
+    column-gap: 8px;
+    padding: 6px;
+}
+
+/* ---- Skills ---- */
+
+.entityView .table-skills > table > tbody {
+    column-gap: 22px;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-skills .customtype {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-faint);
+}
+.entityView .table-skills .customtype > div:nth-child(1)::after { content: " +"; }
+.entityView .table-skills .customtype > div:nth-child(2)::after { content: " ="; }
+
+/* ---- Gear, two to a row ---- */
+
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-cyberware,
+.entityView .table-gear,
+.entityView .table-programs,
+.entityView .table-money { --block: 50%; }
+.entityView .table-lifepath { --block: 100%; }
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    color: var(--text);
+    font-weight: 700;
 }
