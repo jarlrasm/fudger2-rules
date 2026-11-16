@@ -130,6 +130,7 @@ advantage = ([1d20, 1d20], ((baseline, throws)->
 | `color` | `"red"`, `"green"`, `"blue"`, `"white"`, `"yellow"`, `"purple"`, `"orange"` or `"black"`. The group's dice are drawn in that colour in the roll window and in chat |
 | `label` | Shown next to the group, e.g. `"Hunger"`, `"Stress"`, `"Wild"` |
 | `explode` | A die that shows this face or more rolls again, and the new number is added to the group's `rolls` (up to 20 times per die). `explode = 6` on d6s is the Savage Worlds ace and the Shadowrun rule of six |
+| `faces` | A text for each face, from 1 up, shown instead of the number in the roll window and chat, e.g. `faces = ["", "S", "S", "SS", "A", "A", "SA", "AA"]` for a Genesys ability die. `""` is a blank face. The lambda still gets the numbers |
 
 Put several groups in one roll with the custom form. Each throw the lambda gets has `rolls`, `bonus`, `sides`, `label` and `color`:
 
@@ -152,6 +153,7 @@ A roll lambda can return a number, a text, a list of texts (shown joined), or a 
 | `Color` | A colour for the result, which wins over the outcome's |
 | `Push` | A dice value (`[dice], lambda` or `dice {}`). The roll window shows a button that rolls it, for pushing or rerolling. Make its lambda close over what the first roll kept, e.g. the successes so far |
 | `PushLabel` | The button's text, default `"Push"` |
+| `PushSets` | Sheet changes made when the push button is used: a list of `{ Field = "characterTable.Status.Stress"  Value = stress + 1 }`. `Field` is the path from the ruleset's name, with `.realvalue` at the end for slots; `Value` is the new value, worked out when the first roll was made |
 
 ```
 yzeResult (successes, banes, pushable, toReroll) = {
@@ -160,6 +162,18 @@ yzeResult (successes, banes, pushable, toReroll) = {
     Push = if pushable then yzePush (successes, toReroll) else 0
 }
 ```
+
+### Asking before rolling
+
+`ask (label, default, dice)` makes a roll that first asks the roller for a number, such as a DC, a difficulty or a target number. The prompt starts at `default`; rolls made from the battlemap use the default without asking. The roll's lambda reads the answer as `asked`, and a push or follow-up throw gets the same answer:
+
+```
+pf2Asked (fortune) = ([1d20], ((baseline, throws)->pf2Result (baseline, first (first (throws).rolls), asked)))
+
+Athletics = modifier { value = ...  valuedice = ask ("DC", 15, pf2Asked ("Normal")) }
+```
+
+Keep a version of the roll that takes the number as a parameter for creatures and tests; `asked` is 0 when nothing asked.
 
 A record is written with braces after `=` like a table: `name = { Text = "x"  Outcome = "y" }` at the top level, or returned from a function.
 
@@ -238,6 +252,7 @@ Fudge = system
 | `secondaryTypes` | Library item types that can be attached to an entity. Names without a ruleset get just name and description. |
 | `otherLibararyTypes` | Library-only types, not attached to entities (typo is required) |
 | `extraEntityTypes` | Extra top-level entity types, built with `entityTypeDescription` |
+| `initiativeDeck` | Optional. The name of a card deck (ship it in `libraries`). When the gamemaster has added that deck to the session, the encounter's initiative list gets a **Deal initiative** button: the server deals one card to the table for each combatant and posts its name as that combatant's Initiative, replacing any earlier entry so every round can be dealt again. `initiativeCompare` orders the card names. Used by Savage Worlds, Alien and Dragonbane. |
 | `initiativeRolls` | Optional. Makes initiative rolls a per-campaign setting with these names as the default, e.g. `["Dex", "Alertness"]`. Leave it out to use the `Initiative` field only. |
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
 | `quickdice` | Dice buttons shown in sessions |

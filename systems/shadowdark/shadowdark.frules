@@ -27,7 +27,12 @@ checkResult (bonus, natural, dc) =
 sdRoll (mode, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
     ((baseline, throws)->checkResult (baseline, d20Total (mode, first (throws).rolls), dc)))
 
-sdDice (char) = sdRoll (char.Character.Roll, char.Character.DC)
+sdAskedRoll (mode) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
+    ((baseline, throws)->checkResult (baseline, d20Total (mode, first (throws).rolls), asked)))
+
+sdDice (char) = ask ("DC", 12, sdAskedRoll (char.Character.Roll))
+
+sdAttackDice (char) = ask ("Target AC", 12, sdAskedRoll (char.Character.Roll))
 
 plainD20 = sdRoll ("Normal", 0)
 
@@ -51,7 +56,7 @@ usesDex (char, weapon) =
 weaponAttack (name, bonus, damage, kind, distance) = custom
 {
     Name = name
-    Attack = modifier { value = bonus  valuedice = sdDice (characterTable)  action = kind  reach = 5  range = distance }
+    Attack = modifier { value = bonus  valuedice = sdAttackDice (characterTable)  action = kind  reach = 5  range = distance }
     Damage = damage
 }
 
@@ -75,7 +80,6 @@ characterTable = ruleset
         Background = string {}
         Deity = string {}
         'Attack Bonus' = integer { default = 0 }
-        DC = integer { default = 0  minvalue = 0  editable = live }
         Roll = selector
         {
             options = ["Disadvantage", "Normal", "Advantage"]

@@ -1,11 +1,11 @@
 # Playing Vampire: the Masquerade (5th edition)
 
 ## Rolling
-Build a pool of **d10s**, usually an Attribute plus a Skill (each skill row has a picker for the attribute that fits the task). Each die showing **6 or more** is a success. Set **Difficulty** to the number of successes needed (and Modifier for bonus or penalty dice) before rolling.
+Build a pool of **d10s**, usually an Attribute plus a Skill (each skill row has a picker for the attribute that fits the task). Each die showing **6 or more** is a success. Each roll asks for the **Difficulty**, the number of successes needed; set Modifier on the sheet for bonus or penalty dice.
 
 - **Critical:** every pair of 10s counts as four successes instead of two.
 - **Hunger dice:** as many dice as the vampire's Hunger are red. A critical with a 10 on a hunger die is a **messy critical**: they succeed, but the Beast shows. A failed roll with a 1 on a hunger die is a **bestial failure**: the Beast takes over.
-- **Willpower:** after a roll, spend 1 superficial Willpower to reroll up to three of the non-hunger dice. The roll window offers *Reroll with Willpower*; mark the Willpower damage yourself.
+- **Willpower:** after a roll, spend 1 superficial Willpower to reroll up to three of the non-hunger dice. The roll window offers *Reroll with Willpower*, which also marks the superficial Willpower on the sheet.
 - **Rouse checks:** using Blood (Disciplines, waking, healing) rolls a d10; on 1–5 Hunger rises by one.
 
 ## Conflict

@@ -9,7 +9,7 @@ Roll a **d20 at or under** the skill value (or the attribute, for attribute roll
 - **Pushing:** after a failed roll, a character can take a condition of their choice and roll again. The roll window offers *Push (take a condition)*.
 
 ## Combat
-At the start of each round everyone draws an initiative card from 1 to 10 and acts lowest first (roll the Initiative field, or use real cards). Each turn: one action and movement.
+At the start of each round everyone draws an initiative card from 1 to 10 and acts lowest first (add the Initiative Cards deck to the session and use **Deal initiative** in the encounter, or roll the Initiative field). Each turn: one action and movement.
 
 1. Attack with a weapon skill; the defender may **parry** (with a weapon, damaging its durability) or **dodge** (Evade) as their action.
 2. Damage is the weapon die plus the STR or AGL damage bonus, minus armor. A Dragon on an attack lets the attacker pick an extra effect.

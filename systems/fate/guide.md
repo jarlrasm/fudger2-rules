@@ -3,7 +3,7 @@
 ## Rolling
 Roll **4dF** (four Fudge dice, −4 to +4) and add a skill rating. Read the total on the ladder: Legendary +8, Epic +7, Fantastic +6, Superb +5, Great +4, Good +3, Fair +2, Average +1, Mediocre +0, Poor −1, Terrible −2.
 
-- Compare to the opposition (a difficulty or the other side's roll). Set **Opposition** and tick **Use Opposition** to have the roll name the outcome: **fail** (below), **tie**, **succeed** (1–2 shifts above), or **succeed with style** (3+).
+- Compare to the opposition (a difficulty or the other side's roll). Each roll asks for the **Opposition** and names the outcome: **fail** (below), **tie**, **succeed** (1–2 shifts above), or **succeed with style** (3+).
 - The four actions: **overcome** an obstacle, **create an advantage** (make or discover an aspect with free invokes), **attack**, and **defend**.
 
 ## Aspects and fate points

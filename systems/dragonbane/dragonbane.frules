@@ -379,6 +379,7 @@ Dragonbane = system
     initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
     quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
     cssFiles = ["/systems/dragonbane/dragonbane.css"]
-    libraries = ["/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/faerie.json"]
+    initiativeDeck = "Initiative Cards"
+    libraries = ["/systems/dragonbane/initiativedeck.json", "/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/faerie.json"]
     nameSettings = [fantasyNameSetting, norseNameSetting, faerieCourtsNameSetting]
 }

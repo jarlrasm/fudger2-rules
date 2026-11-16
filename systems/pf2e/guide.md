@@ -1,7 +1,7 @@
 # Playing Pathfinder 2nd edition (Remaster)
 
 ## Rolling
-A check is **d20 + modifier** against a DC. The modifier is an attribute modifier plus a proficiency bonus (Trained 2, Expert 4, Master 6, Legendary 8, each plus the character's level; Untrained adds nothing) plus item and circumstance bonuses, minus penalties. Set the DC field on the sheet to have each roll name its degree of success.
+A check is **d20 + modifier** against a DC. The modifier is an attribute modifier plus a proficiency bonus (Trained 2, Expert 4, Master 6, Legendary 8, each plus the character's level; Untrained adds nothing) plus item and circumstance bonuses, minus penalties. Each check asks for the DC (Strikes ask for the target's AC) and names its degree of success.
 
 - **Four degrees:** beat the DC by 10 or more for a **critical success**; meet it for a **success**; miss it for a **failure**; miss it by 10 or more for a **critical failure**. A natural 20 moves the result one degree up, a natural 1 one degree down.
 - **Fortune** rolls twice and keeps the higher, **misfortune** the lower (Shift and Ctrl).

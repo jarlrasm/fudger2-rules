@@ -36,7 +36,12 @@ pf2Roll (dc, fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  
 
 statusPenalty (char) = max (char.Conditions.Frightened, char.Conditions.Sickened)
 
-pf2Dice (char) = pf2Roll (char.Character.DC, char.Character.Roll)
+pf2AskedRoll (fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
+    ((baseline, throws)->pf2Result (baseline, if fortune == "Fortune" then max (first (throws).rolls) else if fortune == "Misfortune" then min (first (throws).rolls) else first (first (throws).rolls), asked)))
+
+pf2Dice (char) = ask ("DC", 15, pf2AskedRoll (char.Character.Roll))
+
+pf2StrikeDice (char) = ask ("Target AC", 15, pf2AskedRoll (char.Character.Roll))
 
 plainPf2 = pf2Roll (0, "Normal")
 
@@ -83,7 +88,7 @@ strikeDamage (char, weapon) =
 strike (name, bonus, damage, kind, reachFeet, distance) = custom
 {
     Name = name
-    Strike = modifier { value = bonus  valuedice = pf2Dice (characterTable)  action = kind  reach = reachFeet  range = distance }
+    Strike = modifier { value = bonus  valuedice = pf2StrikeDice (characterTable)  action = kind  reach = reachFeet  range = distance }
     Damage = damage
 }
 
@@ -139,7 +144,6 @@ pf2Character = table
     Size = string { default = "Medium"  keys = ["Tiny", "Small", "Medium", "Large"] }
     Speed = integer { default = 25 }
     Languages = string {}
-    DC = integer { default = 0  minvalue = 0  editable = live }
     Roll = selector
     {
         options = ["Misfortune", "Normal", "Fortune"]
@@ -207,7 +211,7 @@ pf2Spellcasting = table
     Tradition = string { keys = ["", "Arcane", "Divine", "Occult", "Primal"] }
     'Spell Attribute' = string { default = "INT"  keys = ["INT", "WIS", "CHA"] }
     'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
-    'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none  action = ranged  range = 120 }
+    'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
     'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level)  editable = none }
     'Focus Points' = slots { number = 3  editable = live  allowedchange = increaseAndClear }
     'Slots Rank 1' = slots { number = 0  editable = live }

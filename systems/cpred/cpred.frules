@@ -28,7 +28,10 @@ redResult (base, die, extra, dv) =
 redRoll (dv) = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10  label = "Crit"  color = "black" }],
     ((baseline, throws)->redResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), dv)))
 
-redDice (char) = redRoll (char.Handle.DV)
+redAskedRoll = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10  label = "Crit"  color = "black" }],
+    ((baseline, throws)->redResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), asked)))
+
+redDice (char) = ask ("DV", 13, redAskedRoll)
 
 plainRed = redRoll (0)
 
@@ -69,7 +72,6 @@ characterTable = ruleset
         Role = string { keys = ["Rockerboy", "Solo", "Netrunner", "Tech", "Medtech", "Media", "Exec", "Lawman", "Fixer", "Nomad"] }
         'Role Ability' = string {}
         Rank = integer { default = 4  minvalue = 1  maxvalue = 10 }
-        DV = integer { default = 0  minvalue = 0  editable = live }
     }
 
     Stats = table

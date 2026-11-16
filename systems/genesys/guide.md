@@ -1,7 +1,7 @@
 # Playing Genesys
 
 ## Narrative dice
-A check builds a pool of special dice and reads their **symbols**, not a total. Fudger rolls ordinary dice for each type and works out the symbols for you.
+A check builds a pool of special dice and reads their **symbols**, not a total. Fudger rolls ordinary dice for each type, shows each die's symbols (S success, A advantage, F failure, T threat) and works out the net result.
 
 - **Positive dice:** Ability (green d8) and Proficiency (yellow d12) from the character; Boost (blue d6) from advantages in the situation. The higher of characteristic and skill ranks is the number of dice, and the lower is how many of them are upgraded to Proficiency.
 - **Negative dice:** Difficulty (purple d8, 2 for an average task, up to 5 for formidable), Challenge (red d12, upgraded difficulty), Setback (black d6). Set these in the **Check** row of the sheet before rolling; Upgrades turns Ability dice into Proficiency.

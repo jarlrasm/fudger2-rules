@@ -30,7 +30,10 @@ dualityResult (modifier, hope, fear, extra, difficulty) =
 dualityRoll (mode, difficulty) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
     ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), difficulty)))
 
-dualityDice (char) = dualityRoll (char.Character.Roll, char.Character.Difficulty)
+dualityAskedRoll (mode) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+    ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), asked)))
+
+dualityDice (char) = ask ("Difficulty", 12, dualityAskedRoll (char.Character.Roll))
 
 plainDuality = dualityRoll ("Normal", 0)
 
@@ -80,7 +83,6 @@ characterTable = ruleset
         Community = string {}
         Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
         Proficiency = integer { default = 1  minvalue = 1  maxvalue = 6 }
-        Difficulty = integer { default = 0  minvalue = 0  editable = live }
         Roll = selector
         {
             options = ["Disadvantage", "Normal", "Advantage"]

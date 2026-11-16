@@ -1,7 +1,7 @@
 # Playing Daggerheart
 
 ## Duality dice
-An action roll is **two d12s, Hope (yellow) and Fear (purple), plus a trait** (and an Experience's +2 if one applies). Set Difficulty on the sheet before rolling; meet or beat it to succeed.
+An action roll is **two d12s, Hope (yellow) and Fear (purple), plus a trait** (and an Experience's +2 if one applies). Each roll asks for the Difficulty; meet or beat it to succeed.
 
 - If the Hope die is higher, the roll is **with Hope**: the player gains a Hope.
 - If the Fear die is higher, it is **with Fear**: the GM gains a Fear and the spotlight can swing to them.

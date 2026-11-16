@@ -17,22 +17,26 @@ yzeText (base, stress) =
     toString (sixes (base) + sixes (stress)) + (if sixes (base) + sixes (stress) == 1 then " success" else " successes")
     + (if panics (stress) then ", a stress die shows 1: make a Panic Roll" else "")
 
-yzeResult (base, stress, canPush) =
+yzeResult (base, stress, canPush, spend) =
 {
     Text = yzeText (base, stress)
     Value = sixes (base) + sixes (stress)
     Outcome = yzeOutcome (base, stress)
     Push = if canPush and not (panics (stress)) then yzePush (filter ((x)->x == 6, base), filter ((x)->x == 6, stress), count (filter ((x)->x < 6, base)), count (filter ((x)->x < 6, stress))) else 0
     PushLabel = "Push (+1 Stress)"
+    PushSets = spend
 }
 
 yzePush (keptBase, keptStress, baseCount, stressCount) = ([dice { number = baseCount  sides = 6 }, dice { number = stressCount + 1  sides = 6  color = "yellow"  label = "Stress" }],
-    ((baseline, throws)->yzeResult (concat (keptBase, first (throws).rolls), concat (keptStress, item (1, throws).rolls), false)))
+    ((baseline, throws)->yzeResult (concat (keptBase, first (throws).rolls), concat (keptStress, item (1, throws).rolls), false, [])))
 
 yzeRoll (pool, stress) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = max (0, stress)  sides = 6  color = "yellow"  label = "Stress" }],
-    ((baseline, throws)->yzeResult (first (throws).rolls, item (1, throws).rolls, true)))
+    ((baseline, throws)->yzeResult (first (throws).rolls, item (1, throws).rolls, true, [])))
 
-yzeDice (char, pool) = yzeRoll (pool + char.Character.Modifier, char.Status.Stress)
+yzeCharacterRoll (pool, stress) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = max (0, stress)  sides = 6  color = "yellow"  label = "Stress" }],
+    ((baseline, throws)->yzeResult (first (throws).rolls, item (1, throws).rolls, true, [{ Field = "characterTable.Status.Stress"  Value = min (10, stress + 1) }])))
+
+yzeDice (char, pool) = yzeCharacterRoll (pool + char.Character.Modifier, char.Status.Stress)
 
 panicRoll = ([1d6], ((baseline, throws)->panicResult (baseline + first (first (throws).rolls))))
 
@@ -269,6 +273,7 @@ Alien = system
     initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
     quickdice = [1d6, 1d10, 2d6]
     cssFiles = ["/systems/alien/alien.css"]
-    libraries = ["/systems/names/bluecollar.json", "/systems/names/scifi.json", "/systems/names/cosmic.json"]
+    initiativeDeck = "Initiative Cards"
+    libraries = ["/systems/alien/initiativedeck.json", "/systems/names/bluecollar.json", "/systems/names/scifi.json", "/systems/names/cosmic.json"]
     nameSettings = [blueCollarSpaceNameSetting, spaceNameSetting, cosmicHorrorNameSetting]
 }

@@ -1,7 +1,7 @@
 # Playing Shadowrun (6th World)
 
 ## Rolling
-Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Set Threshold on the sheet for tests with a target number of hits, and Modifier for situational dice.
+Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Each test asks for its threshold (0 for none); set Modifier on the sheet for situational dice.
 
 - **Glitch:** more than half the dice show 1. A glitch with no hits is a **critical glitch**.
 - **Opposed tests:** both roll; the attacker needs more hits than the defender, and net hits add to damage.
@@ -10,7 +10,7 @@ Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skil
 ## Edge
 Edge points (up to 7) are gained during play, for example from a better Attack Rating than the target's Defense Rating.
 
-- **Reroll misses:** the roll window offers *Reroll misses (Edge)* after a roll; spend the Edge on the sheet.
+- **Reroll misses:** the roll window offers *Reroll misses (Edge)* after a roll, and takes the Edge point off the sheet.
 - **Push the Limit:** set the Edge slider (Shift) before rolling to add Edge to the pool and make 6s explode.
 - Other Edge actions (+1 to a die, buying a hit) are adjusted by hand.
 

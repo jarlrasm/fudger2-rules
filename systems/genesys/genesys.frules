@@ -55,12 +55,12 @@ genesysResult (s, a, t, d) =
 }
 
 genesysPool (proficiency, ability, boost, challenge, difficulty, setback) = ([
-        dice { number = ability  sides = 8  color = "green"  label = "Ability" },
-        dice { number = proficiency  sides = 12  color = "yellow"  label = "Proficiency" },
-        dice { number = boost  sides = 6  color = "blue"  label = "Boost" },
-        dice { number = difficulty  sides = 8  color = "purple"  label = "Difficulty" },
-        dice { number = challenge  sides = 12  color = "red"  label = "Challenge" },
-        dice { number = setback  sides = 6  color = "black"  label = "Setback" }
+        dice { number = ability  sides = 8  color = "green"  label = "Ability"  faces = ["", "S", "S", "SS", "A", "A", "SA", "AA"] },
+        dice { number = proficiency  sides = 12  color = "yellow"  label = "Proficiency"  faces = ["", "S", "S", "SS", "SS", "A", "SA", "SA", "SA", "AA", "AA", "Triumph"] },
+        dice { number = boost  sides = 6  color = "blue"  label = "Boost"  faces = ["", "", "S", "SA", "AA", "A"] },
+        dice { number = difficulty  sides = 8  color = "purple"  label = "Difficulty"  faces = ["", "F", "FF", "T", "T", "T", "TT", "FT"] },
+        dice { number = challenge  sides = 12  color = "red"  label = "Challenge"  faces = ["", "F", "F", "FF", "FF", "T", "T", "FT", "FT", "TT", "TT", "Despair"] },
+        dice { number = setback  sides = 6  color = "black"  label = "Setback"  faces = ["", "", "F", "F", "T", "T"] }
     ],
     ((baseline, throws)->genesysResult (
         netSuccesses (item (0, throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, item (4, throws).rolls, item (5, throws).rolls),
@@ -139,8 +139,8 @@ initiativeText (s, a) = toString (s) + " successes " + toString (a) + " advantag
 initiativeOrder (text) = toInt (first (split (" ", text))) * 100 + toInt (item (2, split (" ", text)))
 
 initiativePool (characteristic, ranks) = ([
-        dice { number = max (characteristic, ranks) - min (characteristic, ranks)  sides = 8  color = "green"  label = "Ability" },
-        dice { number = min (characteristic, ranks)  sides = 12  color = "yellow"  label = "Proficiency" }
+        dice { number = max (characteristic, ranks) - min (characteristic, ranks)  sides = 8  color = "green"  label = "Ability"  faces = ["", "S", "S", "SS", "A", "A", "SA", "AA"] },
+        dice { number = min (characteristic, ranks)  sides = 12  color = "yellow"  label = "Proficiency"  faces = ["", "S", "S", "SS", "SS", "A", "SA", "SA", "SA", "AA", "AA", "Triumph"] }
     ],
     ((baseline, throws)->{ Text = initiativeText (netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []), netAdvantages (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []))  Value = netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []) }))
 

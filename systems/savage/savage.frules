@@ -37,21 +37,27 @@ swOutcome (trait, wild, wildCard, total, target) =
 swTotal (trait, wild, wildCard, modifier) =
     max (sum (trait), if wildCard then sum (wild) else 0) + modifier
 
-swResult (dieSize, trait, wild, wildCard, modifier, target) =
+swResult (dieSize, trait, wild, wildCard, modifier, target, spend) =
 {
     Text = toString (swTotal (trait, wild, wildCard, modifier)) + " vs " + toString (target) + ": " + (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then "Critical failure" else raisesText (swTotal (trait, wild, wildCard, modifier), target))
     Value = swTotal (trait, wild, wildCard, modifier)
     Outcome = swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target)
     Push = if swTotal (trait, wild, wildCard, modifier) < target then swRoll (dieSize, wildCard, modifier, target) else 0
     PushLabel = "Spend a Benny"
+    PushSets = spend
 }
 
 swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
-    ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target)))
+    ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, [])))
+
+swAskedRoll (dieSize, wildCard, modifier, spend) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = if wildCard then 1 else 0  sides = 6  explode = 6  label = "Wild"  color = "green" }],
+    ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, asked, spend)))
+
+bennySpend (char) = if char.Character.Bennies > 0 then [{ Field = "characterTable.Character.Bennies"  Value = char.Character.Bennies - 1 }] else []
 
 penaltyOf (char) = min (3, char.Status.Wounds) + char.Status.Fatigue
 
-traitRoll (char, die) = swRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), char.Character.'Target Number')
+traitRoll (char, die) = ask ("Target number", 4, swAskedRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), bennySpend (char)))
 
 trait (startDie) = custom
 {
@@ -131,7 +137,6 @@ characterTable = ruleset
         Rank = string { default = "Novice"  keys = ["Novice", "Seasoned", "Veteran", "Heroic", "Legendary"] }
         Advances = integer { default = 0  editable = live }
         'Wild Card' = bool { default = true }
-        'Target Number' = integer { default = 4  minvalue = 0  editable = live }
         Modifier = modifier { default = 0  editable = live }
         Bennies = integer { default = 3  minvalue = 0  editable = live  indicator = "#d4b106" }
         Conviction = bool { default = false  editable = live  indicator = "#3a7bd5" }
@@ -397,6 +402,7 @@ SavageWorlds = system
     secondaryTypes = ["Weapons", "Gear", "Edges", "Hindrances", "Powers"]
     description = "Savage Worlds: fast, furious and fun, with exploding dice and action cards"
     initiativeCompare (item1, item2) = compare (cardOrder (item1), cardOrder (item2))
+    initiativeDeck = "Action Deck"
     quickdice = [1d4, 1d6, 1d8, 1d10, 1d12, 1d20]
     cssFiles = ["/systems/savage/savage.css"]
     libraries = ["/systems/savage/actiondeck.json", "/systems/names/fantasy.json", "/systems/names/weirdwest.json", "/systems/names/pirates.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/wasteland.json", "/systems/names/spies.json", "/systems/names/victorian.json"]

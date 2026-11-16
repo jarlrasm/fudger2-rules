@@ -25,7 +25,9 @@ cypherResult (level, eases, natural) =
 
 cypherRoll (level, effort) = ([1d20], ((baseline, throws)->cypherResult (level, baseline + effort, first (first (throws).rolls))))
 
-cypherDice (char) = cypherRoll (char.Character.'Task Level', char.Character.Effort)
+cypherAskedRoll (effort) = ([1d20], ((baseline, throws)->cypherResult (asked, baseline + effort, first (first (throws).rolls))))
+
+cypherDice (char) = ask ("Task level", 3, cypherAskedRoll (char.Character.Effort))
 
 plainTask = cypherRoll (0, 0)
 
@@ -56,7 +58,6 @@ characterTable = ruleset
         XP = integer { default = 0  editable = live }
         Effort = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live }
         'Max Effort' = integer { value = Tier  editable = none }
-        'Task Level' = integer { default = 3  minvalue = 0  maxvalue = 10  editable = live }
         Armor = integer { default = 0 }
         Cypher = integer { default = 2 }
         Shins = integer { default = 0  editable = live }

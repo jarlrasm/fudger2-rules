@@ -32,7 +32,9 @@ fateResult (skill, dice, opposition, opposed) =
 
 fateRoll (opposition, opposed) = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), opposition, opposed)))
 
-fateDice (char) = fateRoll (char.Character.Opposition, char.Character.'Use Opposition')
+fateAskedRoll = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), asked, true)))
+
+fateDice (char) = ask ("Opposition", 2, fateAskedRoll)
 
 plainFate = fateRoll (0, false)
 
@@ -43,8 +45,6 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Refresh = integer { default = 3 }
         'Fate Points' = integer { default = 3  minvalue = 0  editable = live }
-        Opposition = integer { default = 2  editable = live }
-        'Use Opposition' = bool { default = false  editable = live }
         Description = string { multiline = true }
     }
 

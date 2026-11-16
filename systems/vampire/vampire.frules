@@ -25,7 +25,7 @@ v5Text (normal, hunger, difficulty) =
 
 failedNormal (normal) = count (filter ((x)->x < 6, normal))
 
-v5Result (normal, hunger, difficulty, canReroll) =
+v5Result (normal, hunger, difficulty, canReroll, spend) =
 {
     Text = v5Text (normal, hunger, difficulty)
     Value = successesIn (normal, hunger)
@@ -33,15 +33,21 @@ v5Result (normal, hunger, difficulty, canReroll) =
     Color = if v5Outcome (normal, hunger, difficulty) == "Messy critical" then "orange" else ""
     Push = if canReroll and failedNormal (normal) > 0 then v5Reroll (filter ((x)->x > 5, normal), hunger, min (3, failedNormal (normal)), difficulty) else 0
     PushLabel = "Reroll with Willpower"
+    PushSets = spend
 }
 
 v5Reroll (kept, hunger, rerolls, difficulty) = ([dice { number = rerolls  sides = 10  label = "Reroll" }],
-    ((baseline, throws)->v5Result (concat (kept, first (throws).rolls), hunger, difficulty, false)))
+    ((baseline, throws)->v5Result (concat (kept, first (throws).rolls), hunger, difficulty, false, [])))
 
 v5Pool (pool, hunger, difficulty) = ([dice { number = max (0, pool - hunger)  sides = 10 }, dice { number = min (pool, hunger)  sides = 10  color = "red"  label = "Hunger" }],
-    ((baseline, throws)->v5Result (first (throws).rolls, item (1, throws).rolls, difficulty, true)))
+    ((baseline, throws)->v5Result (first (throws).rolls, item (1, throws).rolls, difficulty, true, [])))
 
-v5Dice (char, pool) = v5Pool (pool + char.Character.Modifier, char.Character.Hunger, char.Character.Difficulty)
+v5AskedPool (pool, hunger, spend) = ([dice { number = max (0, pool - hunger)  sides = 10 }, dice { number = min (pool, hunger)  sides = 10  color = "red"  label = "Hunger" }],
+    ((baseline, throws)->v5Result (first (throws).rolls, item (1, throws).rolls, asked, true, spend)))
+
+willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
+
+v5Dice (char, pool) = ask ("Difficulty", 2, v5AskedPool (pool + char.Character.Modifier, char.Character.Hunger, willpowerSpend (char)))
 
 rouseCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": no Hunger"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": Hunger rises"  Outcome = "Failure" }))
 
@@ -100,7 +106,6 @@ characterTable = ruleset
         Generation = integer { default = 13 }
         Sire = string {}
         Hunger = integer { default = 1  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
-        Difficulty = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live }
         Modifier = modifier { default = 0  editable = live }
         'Rouse Check' = integer { default = 0  valuedice = rouseCheck  editable = none }
     }

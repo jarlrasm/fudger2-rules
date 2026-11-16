@@ -18,23 +18,29 @@ srText (rolls, threshold) =
     + (if threshold > 0 then " vs " + toString (threshold) + (if hits (rolls) >= threshold then ", net " + toString (hits (rolls) - threshold) else "") else "")
     + (if isGlitch (rolls) and hits (rolls) == 0 then ", critical glitch" else if isGlitch (rolls) then ", glitch" else "")
 
-srResult (rolls, threshold, canReroll) =
+srResult (rolls, threshold, canReroll, spend) =
 {
     Text = srText (rolls, threshold)
     Value = hits (rolls)
     Outcome = srOutcome (rolls, threshold)
     Push = if canReroll and count (filter ((x)->x < 5, rolls)) > 0 then srReroll (filter ((x)->x > 4, rolls), count (filter ((x)->x < 5, rolls)), threshold) else 0
     PushLabel = "Reroll misses (Edge)"
+    PushSets = spend
 }
 
 srReroll (kept, misses, threshold) = ([dice { number = misses  sides = 6  label = "Edge reroll" }],
-    ((baseline, throws)->srResult (concat (kept, first (throws).rolls), threshold, false)))
+    ((baseline, throws)->srResult (concat (kept, first (throws).rolls), threshold, false, [])))
 
 srRoll (pool, threshold, ruleOfSix) = ([dice { number = max (0, pool)  sides = 6  explode = if ruleOfSix then 6 else 7 }],
-    ((baseline, throws)->srResult (first (throws).rolls, threshold, true)))
+    ((baseline, throws)->srResult (first (throws).rolls, threshold, true, [])))
+
+srAskedRoll (pool, ruleOfSix, spend) = ([dice { number = max (0, pool)  sides = 6  explode = if ruleOfSix then 6 else 7 }],
+    ((baseline, throws)->srResult (first (throws).rolls, asked, true, spend)))
+
+edgeSpend (char) = if char.Attributes.'Current Edge' > 0 then [{ Field = "characterTable.Attributes.Current Edge"  Value = char.Attributes.'Current Edge' - 1 }] else []
 
 srDice (char, pool) =
-    srRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier' + (if char.Runner.Edge == "Push the Limit" then char.Attributes.Edge else 0), char.Runner.Threshold, char.Runner.Edge == "Push the Limit")
+    ask ("Threshold", 0, srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier' + (if char.Runner.Edge == "Push the Limit" then char.Attributes.Edge else 0), char.Runner.Edge == "Push the Limit", edgeSpend (char)))
 
 attributeValue (char, name) =
     switch name
@@ -94,7 +100,6 @@ characterTable = ruleset
         Karma = integer { default = 0  editable = live }
         Nuyen = integer { default = 0  editable = live }
         Lifestyle = string {}
-        Threshold = integer { default = 0  minvalue = 0  editable = live }
         Modifier = modifier { default = 0  editable = live }
         Edge = selector
         {
