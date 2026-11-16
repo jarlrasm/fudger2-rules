@@ -1,0 +1,35 @@
+/* Old-School Essentials: clean white page, black rules and a serif face, like a tidy reference booklet. */
+.entityView {
+    color-scheme: light;
+    --bg: #ecebe6;
+    --surface: #ffffff;
+    --surface-alt: #f4f3ef;
+    --surface-sunken: #f7f6f2;
+    --surface-muted: #dedcd5;
+    --text: #111111;
+    --text-muted: #333333;
+    --text-faint: #6b6b6b;
+    --on-accent: #ffffff;
+    --border: #b8b6ad;
+    --border-strong: #111111;
+    --accent: #2b5797;
+    --accent-hover: #3a6cb5;
+    --accent-soft: #dbe5f3;
+    --link: #2b5797;
+    --paper: #ffffff;
+    --card-bg: #fbfbf8;
+    --dice-bg: #111111;
+    --dice-text: #ffffff;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border-strong);
+    border-radius: 0;
+}
+.entityView thead th {
+    font-family: Georgia, "Times New Roman", serif;
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-strong);
+}

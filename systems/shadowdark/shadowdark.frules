@@ -1,0 +1,272 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+statModifier (score) =
+    if score < 4 then -4
+    else if score < 6 then -3
+    else if score < 8 then -2
+    else if score < 10 then -1
+    else if score < 12 then 0
+    else if score < 14 then 1
+    else if score < 16 then 2
+    else if score < 18 then 3
+    else 4
+
+d20Total (mode, rolls) =
+    if mode == "Advantage" then max (rolls)
+    else if mode == "Disadvantage" then min (rolls)
+    else first (rolls)
+
+checkResult (bonus, natural, dc) =
+{
+    Text = toString (natural + bonus) + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if natural == 20 then "Critical success" else if natural == 1 then "Critical failure" else if natural + bonus >= dc then "Success" else "Failure") else if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = natural + bonus
+    Outcome = if natural == 20 then "Critical" else if natural == 1 then "Fumble" else if dc > 0 then (if natural + bonus >= dc then "Success" else "Failure") else ""
+}
+
+sdRoll (mode, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
+    ((baseline, throws)->checkResult (baseline, d20Total (mode, first (throws).rolls), dc)))
+
+sdDice (char) = sdRoll (char.Character.Roll, char.Character.DC)
+
+plainD20 = sdRoll ("Normal", 0)
+
+stat = custom
+{
+    Score = integer { default = 10  minvalue = 3  maxvalue = 18 }
+    Modifier = modifier { value = statModifier (Score)  valuedice = sdDice (characterTable)  editable = none }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeFeet (text) =
+    if text == "Close" then 5
+    else if text == "Near" then 30
+    else if text == "Far" then 120
+    else 5
+
+usesDex (char, weapon) =
+    contains (weaponStat (weapon, "Properties"), "Finesse") and char.Stats.DEX.Modifier > char.Stats.STR.Modifier
+
+weaponAttack (name, bonus, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = sdDice (characterTable)  action = kind  reach = 5  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Type") == "Ranged" then
+        weaponAttack (weapon.Name, char.Stats.DEX.Modifier + char.Character.'Attack Bonus', weaponStat (weapon, "Damage"), "ranged", rangeFeet (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, (if usesDex (char, weapon) then char.Stats.DEX.Modifier else char.Stats.STR.Modifier) + char.Character.'Attack Bonus', weaponStat (weapon, "Damage"), "melee", 5)
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Ancestry = string { keys = ["Dwarf", "Elf", "Goblin", "Halfling", "Half-Orc", "Human"] }
+        Class = string { keys = ["Fighter", "Priest", "Thief", "Wizard"] }
+        Level = integer { default = 1  minvalue = 0  maxvalue = 10 }
+        XP = integer { default = 0  editable = live }
+        Title = string {}
+        Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
+        Background = string {}
+        Deity = string {}
+        'Attack Bonus' = integer { default = 0 }
+        DC = integer { default = 0  minvalue = 0  editable = live }
+        Roll = selector
+        {
+            options = ["Disadvantage", "Normal", "Advantage"]
+            labels = ["Dis", "Normal", "Adv"]
+            colors = ["red", "white", "green"]
+            hold = ["Ctrl", "", "Shift"]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = stat {}
+        DEX = stat {}
+        CON = stat {}
+        INT = stat {}
+        WIS = stat {}
+        CHA = stat {}
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        AC = integer { default = 10 + Stats.DEX.Modifier }
+        'Max HP' = integer { default = 4 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
+        Initiative = modifier { value = Stats.DEX.Modifier  valuedice = 1d20  editable = none }
+        Luck = bool { default = false  editable = live  indicator = "#d4b106"  indicatorLabel = "Luck token" }
+        Torch = clock { segments = 6  editable = live }
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Talent"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    'Spellcasting Check' = table
+    {
+        visible = if Character.Class == "Priest" or Character.Class == "Wizard" then visible else none
+        'Priest uses WIS' = modifier { value = Stats.WIS.Modifier  valuedice = sdDice (characterTable)  editable = none }
+        'Wizard uses INT' = modifier { value = Stats.INT.Modifier  valuedice = sdDice (characterTable)  editable = none }
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Gear Slots' = integer { value = max (10, Stats.STR.Score)  editable = none }
+        GP = integer { default = 0  editable = live }
+        SP = integer { default = 0  editable = live }
+        CP = integer { default = 0  editable = live }
+    }
+
+    Items = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "LV" sort = Stats.Level }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 1 }
+        AC = integer { default = 12 }
+        'Max HP' = integer { default = 5 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Movement = string { default = "Near" }
+        Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
+        STR = modifier { default = 0  valuedice = plainD20 }
+        DEX = modifier { default = 0  valuedice = plainD20 }
+        CON = modifier { default = 0  valuedice = plainD20 }
+        INT = modifier { default = 0  valuedice = plainD20 }
+        WIS = modifier { default = 0  valuedice = plainD20 }
+        CHA = modifier { default = 0  valuedice = plainD20 }
+        Initiative = modifier { value = DEX  valuedice = 1d20  editable = none }
+        Dead = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 1  valuedice = plainD20  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Type = string { keys = ["Melee", "Ranged", "Melee and Ranged"] }
+        Range = string { keys = ["Close", "Near", "Far"] }
+        Damage = string {}
+        Properties = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Slots = integer { default = 1 }
+        Cost = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
+    }
+    Stats = table
+    {
+        Class = string { keys = ["Priest", "Wizard"] }
+        Tier = integer { default = 1 }
+        Duration = string {}
+        Range = string { keys = ["Self", "Close", "Near", "Far"] }
+        Lost = bool { default = false  editable = live }
+    }
+}
+
+Shadowdark = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Spells = spellStats
+    secondaryTypes = ["Weapons", "Gear", "Spells"]
+    description = "Shadowdark: dungeon crawling by torchlight, in real time"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/shadowdark/shadowdark.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/barbarian.json", "/systems/names/gothic.json"]
+    nameSettings = [fantasyNameSetting, swordAndSorceryNameSetting, gothicHorrorNameSetting]
+}

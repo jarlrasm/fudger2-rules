@@ -1,0 +1,36 @@
+/* Shadowdark: near-black page, bone-white type and stark heavy headings. */
+.entityView {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --surface: #151515;
+    --surface-alt: #1e1e1e;
+    --surface-sunken: #101010;
+    --surface-muted: #2a2a2a;
+    --text: #ece8de;
+    --text-muted: #c3beb2;
+    --text-faint: #8c877c;
+    --on-accent: #0a0a0a;
+    --border: #3b3b3b;
+    --border-strong: #ece8de;
+    --accent: #ece8de;
+    --accent-hover: #ffffff;
+    --accent-soft: #2a2a2a;
+    --link: #ece8de;
+    --danger: #c0392b;
+    --paper: #151515;
+    --card-bg: #181818;
+    --dice-bg: #ece8de;
+    --dice-text: #0a0a0a;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 2px solid var(--border-strong);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Impact", "Haettenschweiler", "Arial Narrow Bold", sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}

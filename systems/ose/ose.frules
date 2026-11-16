@@ -1,0 +1,371 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) =
+    if score < 4 then -3
+    else if score < 6 then -2
+    else if score < 9 then -1
+    else if score < 13 then 0
+    else if score < 16 then 1
+    else if score < 18 then 2
+    else 3
+
+hitsAC (thac0, natural, total) =
+    if natural == 20 then "Hits any AC"
+    else if natural == 1 then "Misses"
+    else "Hits AC " + toString (thac0 - total) + " or worse"
+
+attackResult (thac0, natural, total) =
+{
+    Text = toString (total) + ": " + hitsAC (thac0, natural, total)
+    Value = total
+    Outcome = if natural == 20 then "Critical" else if natural == 1 then "Miss" else ""
+}
+
+oseAttack (thac0) = ([1d20], ((baseline, throws)->attackResult (thac0, first (first (throws).rolls), baseline + first (first (throws).rolls))))
+
+saveResult (target, natural) =
+{
+    Text = toString (natural) + " vs " + toString (target) + ": " + (if natural >= target then "Saved" else "Failed")
+    Value = natural
+    Outcome = if natural >= target then "Success" else "Failure"
+}
+
+oseSave = ([1d20], ((baseline, throws)->saveResult (baseline, first (first (throws).rolls))))
+
+checkResult (score, natural) =
+{
+    Text = toString (natural) + " vs " + toString (score) + ": " + (if natural <= score and natural < 20 then "Success" else "Failure")
+    Value = natural
+    Outcome = if natural <= score and natural < 20 then "Success" else "Failure"
+}
+
+abilityCheck = ([1d20], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls))))
+
+xInSix = ([1d6], ((baseline, throws)->if first (first (throws).rolls) <= baseline then { Text = toString (first (first (throws).rolls)) + " in " + toString (baseline) + ": Success"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + " in " + toString (baseline) + ": Failure"  Outcome = "Failure" }))
+
+ability = custom
+{
+    Score = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = abilityCheck }
+    Modifier = modifier { value = abilityModifier (Score)  editable = none }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, thac0, bonus, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = oseAttack (thac0)  action = kind  reach = 5  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Long Range")) > 0 then
+        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Long Range")))
+    else
+        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.STR.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage") + (if char.Abilities.STR.Modifier == 0 then "" else " " + toString (char.Abilities.STR.Modifier)), "melee", 5)
+
+spellSlots (level) = custom
+{
+    Slots = integer { default = 0 }
+    Used = integer { default = 0  editable = live }
+}
+
+characterTable = ruleset
+{
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Cleric", "Dwarf", "Elf", "Fighter", "Halfling", "Magic-User", "Thief"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 14 }
+        Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
+        Title = string {}
+        XP = integer { default = 0  editable = live }
+        'XP for Next Level' = integer { default = 2000 }
+        'Prime Requisite Bonus' = string { keys = ["-20%", "-10%", "None", "+5%", "+10%"] }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = ability {}
+        INT = ability {}
+        WIS = ability {}
+        DEX = ability {}
+        CON = ability {}
+        CHA = ability {}
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armour Class' = integer { default = 9 }
+        'Ascending AC' = integer { value = 19 - 'Armour Class'  editable = none }
+        THAC0 = integer { default = 19 }
+        'Attack Bonus' = integer { value = 19 - THAC0  editable = none }
+        'Max HP' = integer { default = 4 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Initiative = modifier { value = Abilities.DEX.Modifier  valuedice = 1d6  editable = none }
+        Movement = string { default = "120' (40')" }
+        'Encounter Movement' = string { default = "40'" }
+    }
+
+    'Saving Throws' = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        'Death or Poison' = integer { default = 12  valuedice = oseSave }
+        Wands = integer { default = 13  valuedice = oseSave }
+        'Paralysis or Petrify' = integer { default = 14  valuedice = oseSave }
+        Breath = integer { default = 15  valuedice = oseSave }
+        'Spells or Rods or Staves' = integer { default = 16  valuedice = oseSave }
+        'Magic Save Modifier' = modifier { value = Abilities.WIS.Modifier  editable = none }
+    }
+
+    'Class Abilities' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Open Doors' = integer { default = 2  valuedice = xInSix }
+        'Find Secret Doors' = integer { default = 1  valuedice = xInSix }
+        'Find Room Traps' = integer { default = 1  valuedice = xInSix }
+        Listen = integer { default = 1  valuedice = xInSix }
+        Languages = string { default = "Alignment, Common" }
+        'Other Abilities' = string { multiline = true }
+    }
+
+    'Thief Skills' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        visible = if Character.Class == "Thief" then visible else none
+        'Climb Sheer Surfaces' = integer { default = 87  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Find or Remove Traps' = integer { default = 10  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Hear Noise' = integer { default = 2  valuedice = xInSix }
+        'Hide in Shadows' = integer { default = 10  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Move Silently' = integer { default = 20  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Open Locks' = integer { default = 15  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+        'Pick Pockets' = integer { default = 20  valuedice = ([1d100], ((baseline, throws)->checkResult (baseline, first (first (throws).rolls)))) }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    'Spell Slots' = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        visible = if Character.Class == "Cleric" or Character.Class == "Elf" or Character.Class == "Magic-User" then visible else none
+        'Level 1' = spellSlots (1)
+        'Level 2' = spellSlots (2)
+        'Level 3' = spellSlots (3)
+        'Level 4' = spellSlots (4)
+        'Level 5' = spellSlots (5)
+        'Level 6' = spellSlots (6)
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Treasure = table
+    {
+        tableLayout = layout { columns = 5 }
+        PP = integer { default = 0  editable = live }
+        GP = integer { default = 0  editable = live }
+        EP = integer { default = 0  editable = live }
+        SP = integer { default = 0  editable = live }
+        CP = integer { default = 0  editable = live }
+        'Encumbrance in coins' = integer { default = 0 }
+        'Gems and Jewellery' = string { multiline = true }
+    }
+
+    Retainers = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Retainer"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Class = string {}
+            Level = integer { default = 1 }
+            Loyalty = integer { default = 7 }
+        }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "HD" sort = Stats.'Hit Dice' }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Armour Class' = integer { default = 7 }
+        'Hit Dice' = string { default = "1" }
+        'Max HP' = integer { default = 4 }
+        HP = integer { default = 'Max HP'  editable = live }
+        THAC0 = integer { default = 19 }
+        Movement = string { default = "120' (40')" }
+        'Saves As' = string { default = "F1" }
+        Morale = integer { default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + ": fights on"  Outcome = "Success" })) }
+        Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
+        XP = integer { default = 10 }
+        'Number Appearing' = string {}
+        'Treasure Type' = string {}
+        Initiative = modifier { default = 0  valuedice = 1d6 }
+        Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = oseAttack (19)  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    'Saving Throws' = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        D = integer { default = 12  valuedice = oseSave }
+        W = integer { default = 13  valuedice = oseSave }
+        P = integer { default = 14  valuedice = oseSave }
+        B = integer { default = 15  valuedice = oseSave }
+        S = integer { default = 16  valuedice = oseSave }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Special Abilities' = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Damage = string {}
+        'Attack Bonus' = string {}
+        Qualities = string {}
+        'Short Range' = string {}
+        'Medium Range' = string {}
+        'Long Range' = string {}
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        AC = string {}
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Level" prefix = "Level" filter = Stats.Level }]
+    }
+    Stats = table
+    {
+        Class = string { keys = ["Cleric", "Magic-User"] }
+        Level = integer { default = 1 }
+        Duration = string {}
+        Range = string {}
+        Reversible = bool { default = false }
+    }
+}
+
+classStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirements = string {}
+        'Prime Requisite' = string {}
+        'Hit Dice' = string {}
+        'Maximum Level' = string {}
+        Armour = string {}
+        Weapons = string {}
+        Languages = string {}
+    }
+}
+
+OldSchoolEssentials = system
+{
+    distanceUnit = "ft"
+    squareSize = 10
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armour = armourStats
+    Equipment = equipmentStats
+    Spells = spellStats
+    Classes = classStats
+    secondaryTypes = ["Weapons", "Armour", "Equipment", "Spells"]
+    otherLibararyTypes = ["Classes"]
+    description = "Old-School Essentials: classic Basic/Expert fantasy adventure"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d6, 1d8, 1d4, 1d10, 1d12, 1d100]
+    cssFiles = ["/systems/ose/ose.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/barbarian.json", "/systems/names/arthurian.json"]
+    nameSettings = [fantasyNameSetting, swordAndSorceryNameSetting, arthurianNameSetting]
+}
