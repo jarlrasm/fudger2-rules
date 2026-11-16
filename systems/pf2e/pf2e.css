@@ -1,0 +1,42 @@
+/* Pathfinder: cream paper, deep red headings and a serif face, like a Pathfinder character folio. */
+.entityView {
+    color-scheme: light;
+    --bg: #d8cdb4;
+    --surface: #f1e8d2;
+    --surface-alt: #e8dcc0;
+    --surface-sunken: #e2d5b6;
+    --surface-muted: #cdbf9e;
+    --text: #2b2116;
+    --text-muted: #4d3e2b;
+    --text-faint: #7a6a52;
+    --on-accent: #f1e8d2;
+    --border: #9c8a69;
+    --border-strong: #3b2e1f;
+    --accent: #8b1c1c;
+    --accent-hover: #a52626;
+    --accent-soft: #efd6cf;
+    --link: #8b1c1c;
+    --danger: #7d1f1a;
+    --danger-soft: #ead0c6;
+    --paper: #f1e8d2;
+    --card-bg: #ede3ca;
+    --dice-bg: #2b2116;
+    --dice-text: #f1e8d2;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .table-characteristics .customtype,
+.entityView .table-skills .customtype {
+    font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,37 @@
+/* Starfinder: dark navy panels with cyan rules, like a starship console. */
+.entityView {
+    color-scheme: dark;
+    --bg: #0b1424;
+    --surface: #122036;
+    --surface-alt: #18294a;
+    --surface-sunken: #0b0b0b;
+    --surface-muted: #252525;
+    --text: #f5f5f5;
+    --text-muted: #cccccc;
+    --text-faint: #8f8f8f;
+    --on-accent: #0b1424;
+    --border: #3d3d3d;
+    --border-strong: #24b6d6;
+    --accent: #24b6d6;
+    --accent-hover: #4fd0ec;
+    --accent-soft: #0f3644;
+    --link: #f5f5f5;
+    --danger: #4fd0ec;
+    --paper: #122036;
+    --card-bg: #151515;
+    --dice-bg: #24b6d6;
+    --dice-text: #ffffff;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 0;
+    border-top: 3px solid var(--border-strong);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Optima", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}

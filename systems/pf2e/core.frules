@@ -1,0 +1,390 @@
+proficiencyBonus (rank, level) =
+    switch rank
+        case "Trained" then 2 + level
+        case "Expert" then 4 + level
+        case "Master" then 6 + level
+        case "Legendary" then 8 + level
+        else 0
+
+degreeIndex (total, dc) =
+    if total >= dc + 10 then 3
+    else if total >= dc then 2
+    else if total > dc - 10 then 1
+    else 0
+
+adjustedDegree (natural, total, dc) =
+    if natural == 20 then min (3, degreeIndex (total, dc) + 1)
+    else if natural == 1 then max (0, degreeIndex (total, dc) - 1)
+    else degreeIndex (total, dc)
+
+degreeName (degree) =
+    switch degree
+        case 3 then "Critical success"
+        case 2 then "Success"
+        case 1 then "Failure"
+        else "Critical failure"
+
+pf2Result (bonus, natural, dc) =
+{
+    Text = toString (natural + bonus) + (if dc > 0 then " vs DC " + toString (dc) + ": " + degreeName (adjustedDegree (natural, natural + bonus, dc)) else if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = natural + bonus
+    Outcome = if dc > 0 then degreeName (adjustedDegree (natural, natural + bonus, dc)) else ""
+}
+
+pf2Roll (dc, fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
+    ((baseline, throws)->pf2Result (baseline, if fortune == "Fortune" then max (first (throws).rolls) else if fortune == "Misfortune" then min (first (throws).rolls) else first (first (throws).rolls), dc)))
+
+statusPenalty (char) = max (char.Conditions.Frightened, char.Conditions.Sickened)
+
+pf2Dice (char) = pf2Roll (char.Character.DC, char.Character.Roll)
+
+plainPf2 = pf2Roll (0, "Normal")
+
+mapPenalty (char, agile) =
+    switch char.Character.Attack
+        case "Second" then if agile then -4 else -5
+        case "Third" then if agile then -8 else -10
+        else 0
+
+proficiency (attribute) = custom
+{
+    Attribute = attribute
+    Rank = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    Item = integer { default = 0  minvalue = 0  maxvalue = 4 }
+    Modifier = modifier { value = attribute + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "sf2Weapon", valueOr (weapon.data, "pf2Weapon", noStats)), "Stats", noStats.Stats), field, "")
+
+weaponRank (char, weapon) =
+    switch weaponStat (weapon, "Category")
+        case "Unarmed" then char.Proficiencies.Unarmed
+        case "Martial" then char.Proficiencies.Martial
+        case "Advanced" then char.Proficiencies.Advanced
+        else char.Proficiencies.Simple
+
+isRanged (weapon) = toInt (weaponStat (weapon, "Range")) > 0
+
+isAgile (weapon) = contains (toLower (weaponStat (weapon, "Traits")), "agile")
+
+attackAttribute (char, weapon) =
+    if isRanged (weapon) then char.Attributes.DEX
+    else if contains (toLower (weaponStat (weapon, "Traits")), "finesse") then max (char.Attributes.STR, char.Attributes.DEX)
+    else char.Attributes.STR
+
+strikeBonus (char, weapon) =
+    attackAttribute (char, weapon) + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - statusPenalty (char)
+
+strikeDamage (char, weapon) =
+    weaponStat (weapon, "Damage") + (if isRanged (weapon) then "" else if char.Attributes.STR == 0 then "" else " " + (if char.Attributes.STR > 0 then "+" else "") + toString (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
+
+strike (name, bonus, damage, kind, reachFeet, distance) = custom
+{
+    Name = name
+    Strike = modifier { value = bonus  valuedice = pf2Dice (characterTable)  action = kind  reach = reachFeet  range = distance }
+    Damage = damage
+}
+
+strikeFor (char, weapon) =
+    if isRanged (weapon) then
+        strike (weapon.Name, strikeBonus (char, weapon), strikeDamage (char, weapon), "ranged", 5, toInt (weaponStat (weapon, "Range")) * 6)
+    else
+        strike (weapon.Name, strikeBonus (char, weapon), strikeDamage (char, weapon), "melee", if contains (toLower (weaponStat (weapon, "Traits")), "reach") then 10 else 5, 0)
+
+conditionValue (colour) = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = colour }
+
+conditionFlag (colour) = bool { default = false  editable = live  indicator = colour }
+
+pf2Conditions = table
+{
+    tableLayout = layout { columns = 5  size = wide }
+    Clumsy = conditionValue ("#e8913a")
+    Drained = conditionValue ("#d64545")
+    Enfeebled = conditionValue ("#e8913a")
+    Frightened = conditionValue ("#8e5cc4")
+    Sickened = conditionValue ("#3fa34d")
+    Slowed = conditionValue ("#d4b106")
+    Stunned = conditionValue ("#d4b106")
+    Stupefied = conditionValue ("#8e5cc4")
+    Wounded = conditionValue ("#d64545")
+    Dying = conditionValue ("#d64545")
+    Doomed = conditionValue ("#555555")
+    'Off Guard' = conditionFlag ("#e8913a")
+    Prone = conditionFlag ("#e8913a")
+    Grabbed = conditionFlag ("#e8913a")
+    Restrained = conditionFlag ("#e8913a")
+    Blinded = conditionFlag ("#555555")
+    Concealed = conditionFlag ("#3a7bd5")
+    Hidden = conditionFlag ("#3a7bd5")
+    Invisible = conditionFlag ("#3a7bd5")
+    Fatigued = conditionFlag ("#d4b106")
+    Quickened = conditionFlag ("#3a7bd5")
+    Unconscious = conditionFlag ("#555555")
+    Persistent = string { editable = live  indicator = "#d64545"  indicatorLabel = "Persistent damage" }
+}
+
+pf2Character = table
+{
+    tableLayout = layout { columns = 4  size = wide }
+    Ancestry = string {}
+    Heritage = string {}
+    Background = string {}
+    Class = string {}
+    Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+    XP = integer { default = 0  editable = live }
+    'Hero Points' = slots { number = 3  editable = live  allowedchange = increaseAndClear }
+    'Key Attribute' = string { keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+    Size = string { default = "Medium"  keys = ["Tiny", "Small", "Medium", "Large"] }
+    Speed = integer { default = 25 }
+    Languages = string {}
+    DC = integer { default = 0  minvalue = 0  editable = live }
+    Roll = selector
+    {
+        options = ["Misfortune", "Normal", "Fortune"]
+        labels = ["Misfortune", "Normal", "Fortune"]
+        colors = ["red", "white", "green"]
+        hold = ["Ctrl", "", "Shift"]
+        default = "Normal"
+        editable = live
+        save = nosave
+    }
+    Attack = selector
+    {
+        options = ["First", "Second", "Third"]
+        labels = ["1st", "2nd MAP", "3rd MAP"]
+        colors = ["white", "yellow", "red"]
+        default = "First"
+        editable = live
+        save = nosave
+    }
+}
+
+pf2Attributes = table
+{
+    tableLayout = layout { columns = 6  size = wide }
+    STR = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    DEX = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    CON = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    INT = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    WIS = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    CHA = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+}
+
+pf2Defenses = table
+{
+    tableLayout = layout { columns = 4  size = wide }
+    'Ancestry HP' = integer { default = 8 }
+    'Class HP' = integer { default = 8 }
+    'Max HP' = integer { value = 'Ancestry HP' + ('Class HP' + Attributes.CON) * Character.Level  editable = none }
+    HP = integer { default = 'Max HP'  editable = live }
+    'Temp HP' = integer { default = 0  editable = live }
+    Down = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
+    'Armor Rank' = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    'Armor Item Bonus' = integer { default = 0 }
+    'Dex Cap' = integer { default = 5 }
+    AC = integer { value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' - (if Conditions.'Off Guard' then 2 else 0)  editable = none }
+    'Shield Raised' = bool { default = false  editable = live  indicator = "#3a7bd5" }
+    'Class DC' = integer { value = 10 + max (Attributes.STR, Attributes.DEX, Attributes.CON, Attributes.INT, Attributes.WIS, Attributes.CHA) + proficiencyBonus (Proficiencies.'Class DC', Character.Level)  editable = none }
+    Resistances = string {}
+    Weaknesses = string {}
+}
+
+pf2Proficiencies = table
+{
+    tableLayout = layout { columns = 5  size = wide }
+    Unarmed = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    Simple = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    Martial = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    Advanced = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    'Class DC' = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+}
+
+pf2Spellcasting = table
+{
+    tableLayout = layout { columns = 4  size = wide }
+    Tradition = string { keys = ["", "Arcane", "Divine", "Occult", "Primal"] }
+    'Spell Attribute' = string { default = "INT"  keys = ["INT", "WIS", "CHA"] }
+    'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none  action = ranged  range = 120 }
+    'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level)  editable = none }
+    'Focus Points' = slots { number = 3  editable = live  allowedchange = increaseAndClear }
+    'Slots Rank 1' = slots { number = 0  editable = live }
+    'Slots Rank 2' = slots { number = 0  editable = live }
+    'Slots Rank 3' = slots { number = 0  editable = live }
+    'Slots Rank 4' = slots { number = 0  editable = live }
+    'Slots Rank 5' = slots { number = 0  editable = live }
+}
+
+pf2Creature = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 1  minvalue = -1  maxvalue = 25 }
+        Traits = string {}
+        Perception = modifier { default = 5  valuedice = plainPf2 }
+        Initiative = modifier { value = Perception  valuedice = 1d20  editable = none }
+        AC = integer { default = 15 }
+        Fortitude = modifier { default = 5  valuedice = plainPf2 }
+        Reflex = modifier { default = 5  valuedice = plainPf2 }
+        Will = modifier { default = 5  valuedice = plainPf2 }
+        'Max HP' = integer { default = 20 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Speed = integer { default = 25 }
+        Immunities = string {}
+        Resistances = string {}
+        Weaknesses = string {}
+        Down = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+    }
+    Conditions = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Frightened = conditionValue ("#8e5cc4")
+        Sickened = conditionValue ("#3fa34d")
+        Slowed = conditionValue ("#d4b106")
+        Stunned = conditionValue ("#d4b106")
+        'Off Guard' = conditionFlag ("#e8913a")
+        Prone = conditionFlag ("#e8913a")
+        Grabbed = conditionFlag ("#e8913a")
+        Persistent = string { editable = live  indicator = "#d64545"  indicatorLabel = "Persistent damage" }
+    }
+    Strikes = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Strike"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Strike = modifier { default = 7  valuedice = plainPf2  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Abilities = string { multiline = true }
+        Spells = string { multiline = true }
+    }
+}
+
+pf2Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        Category = string { keys = ["Unarmed", "Simple", "Martial", "Advanced"] }
+        Damage = string {}
+        'Damage Type' = string { keys = ["B", "P", "S", "fire", "electricity", "cold", "sonic", "acid"] }
+        Range = string {}
+        Reload = string {}
+        Hands = string {}
+        Bulk = string {}
+        Traits = string {}
+        'Item Bonus' = string {}
+        Group = string {}
+        Level = string {}
+        Price = string {}
+    }
+}
+
+pf2Armor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Category = string { keys = ["Unarmored", "Light", "Medium", "Heavy", "Shield"] }
+        'AC Bonus' = string {}
+        'Dex Cap' = string {}
+        Strength = string {}
+        'Check Penalty' = string {}
+        'Speed Penalty' = string {}
+        Bulk = string {}
+        Traits = string {}
+        Level = string {}
+        Price = string {}
+    }
+}
+
+pf2Item = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+    }
+    Stats = table
+    {
+        Level = integer { default = 0 }
+        Bulk = string {}
+        Traits = string {}
+        Usage = string {}
+        Price = string {}
+    }
+}
+
+pf2Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Rank" sort = Stats.Rank }
+        filters = [filter { name = "Rank" prefix = "Rank" filter = Stats.Rank }, filter { name = "Tradition" prefix = "" filter = split (", ", Stats.Traditions) }]
+    }
+    Stats = table
+    {
+        Rank = integer { default = 1 }
+        Traditions = string {}
+        Traits = string {}
+        Cast = string {}
+        Range = string {}
+        Area = string {}
+        Targets = string {}
+        Defense = string {}
+        Duration = string {}
+        Heightened = string { multiline = true }
+    }
+}
+
+pf2Feat = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { keys = ["Ancestry", "Class", "General", "Skill", "Archetype"] }
+        Level = integer { default = 1 }
+        Traits = string {}
+        Prerequisites = string {}
+        Actions = string {}
+    }
+}
+
+pf2Option = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Ancestry", "Heritage", "Background", "Class"] }
+        HP = string {}
+        'Key Attribute' = string {}
+        Boosts = string {}
+        Traits = string {}
+    }
+}

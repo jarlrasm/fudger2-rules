@@ -1,0 +1,254 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+#include "/systems/pf2e/core.frules"
+
+characterTable = ruleset
+{
+    Character = pf2Character {}
+
+    Attributes = pf2Attributes {}
+
+    Defenses = pf2Defenses {}
+
+    Saves = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Fortitude = proficiency (Attributes.CON)
+        Reflex = proficiency (Attributes.DEX)
+        Will = proficiency (Attributes.WIS)
+        Perception = proficiency (Attributes.WIS)
+        Initiative = modifier { value = Perception.Modifier  valuedice = 1d20  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = proficiency (Attributes.DEX)
+        Arcana = proficiency (Attributes.INT)
+        Athletics = proficiency (Attributes.STR)
+        Computers = proficiency (Attributes.INT)
+        Crafting = proficiency (Attributes.INT)
+        Deception = proficiency (Attributes.CHA)
+        Diplomacy = proficiency (Attributes.CHA)
+        Intimidation = proficiency (Attributes.CHA)
+        Medicine = proficiency (Attributes.WIS)
+        Nature = proficiency (Attributes.WIS)
+        Occultism = proficiency (Attributes.INT)
+        Performance = proficiency (Attributes.CHA)
+        Piloting = proficiency (Attributes.DEX)
+        Religion = proficiency (Attributes.WIS)
+        Society = proficiency (Attributes.INT)
+        Stealth = proficiency (Attributes.DEX)
+        Survival = proficiency (Attributes.WIS)
+        Thievery = proficiency (Attributes.DEX)
+    }
+
+    Lore = keyvalues
+    {
+        singular = "Lore"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Rank = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+            Item = integer { default = 0 }
+            Modifier = modifier { value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+        }
+    }
+
+    Proficiencies = pf2Proficiencies {}
+
+    Conditions = pf2Conditions {}
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Strikes = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([strike ("Unarmed", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4 " + toString (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Strike"
+        editable = none
+        valueType = strike
+    }
+
+    Ammunition = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Weapon = string {}
+            Rounds = integer { default = 10  minvalue = 0  editable = live }
+            Capacity = integer { default = 10 }
+        }
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Augmentations = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Augmentations
+        singular = "Augmentation"
+        editable = character
+    }
+
+    Feats = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    'Class Features' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Spellcasting = pf2Spellcasting {}
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Inventory = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 2 }
+        Credits = integer { default = 150  editable = live }
+        UPB = integer { default = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Homeworld = string {}
+        Faction = string {}
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+sf2Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        Category = string { keys = ["Unarmed", "Simple", "Martial", "Advanced"] }
+        Damage = string {}
+        'Damage Type' = string { keys = ["B", "P", "S", "fire", "electricity", "cold", "sonic", "acid", "force"] }
+        Range = string {}
+        Magazine = string {}
+        Usage = string {}
+        Hands = string {}
+        Bulk = string {}
+        Traits = string {}
+        'Item Bonus' = string {}
+        Group = string {}
+        Level = string {}
+        Price = string {}
+    }
+}
+
+augmentationStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Level = integer { default = 1 }
+        System = string { keys = ["Arm", "Brain", "Ears", "Eyes", "Foot", "Hand", "Heart", "Legs", "Lungs", "Skin", "Spinal Column", "Throat"] }
+        Traits = string {}
+        Price = string {}
+    }
+}
+
+shipStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/starwars/spaceship-entity.svg" }
+    Ship = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Tier = integer { default = 1 }
+        Frame = string {}
+        Size = string {}
+        Speed = string {}
+        Maneuverability = string {}
+        AC = integer { default = 15 }
+        'Hull Points' = integer { default = 50 }
+        'Current Hull' = integer { default = 50  editable = live  indicator = "#d64545" }
+        Shields = integer { default = 0  editable = live }
+        Sensors = string {}
+        Crew = string { multiline = true }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = plainPf2  action = ranged }
+            Damage = string {}
+            Range = string {}
+        }
+    }
+}
+
+Starfinder2e = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = pf2Creature
+    Weapons = sf2Weapon
+    Armor = pf2Armor
+    Equipment = pf2Item
+    Augmentations = augmentationStats
+    Spells = pf2Spell
+    Feats = pf2Feat
+    'Character Options' = pf2Option
+    Starships = shipStats
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Augmentations", "Spells", "Feats"]
+    otherLibararyTypes = ["Character Options"]
+    extraEntityTypes = [entityTypeDescription ("Starships", "starship", true, "/systems/starwars/spaceship-entity.svg", [])]
+    description = "Starfinder 2nd edition: Pathfinder's rules among the stars"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/sf2e/sf2e.css"]
+    libraries = ["/systems/names/scifi.json", "/systems/names/bluecollar.json", "/systems/names/cyberpunk.json"]
+    nameSettings = [spaceNameSetting, blueCollarSpaceNameSetting, neonStreetsNameSetting]
+}

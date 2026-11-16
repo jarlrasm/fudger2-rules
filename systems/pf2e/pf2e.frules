@@ -1,0 +1,160 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+#include "/systems/pf2e/core.frules"
+
+characterTable = ruleset
+{
+    Character = pf2Character {}
+
+    Attributes = pf2Attributes {}
+
+    Defenses = pf2Defenses {}
+
+    Saves = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Fortitude = proficiency (Attributes.CON)
+        Reflex = proficiency (Attributes.DEX)
+        Will = proficiency (Attributes.WIS)
+        Perception = proficiency (Attributes.WIS)
+        Initiative = modifier { value = Perception.Modifier  valuedice = 1d20  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = proficiency (Attributes.DEX)
+        Arcana = proficiency (Attributes.INT)
+        Athletics = proficiency (Attributes.STR)
+        Crafting = proficiency (Attributes.INT)
+        Deception = proficiency (Attributes.CHA)
+        Diplomacy = proficiency (Attributes.CHA)
+        Intimidation = proficiency (Attributes.CHA)
+        Medicine = proficiency (Attributes.WIS)
+        Nature = proficiency (Attributes.WIS)
+        Occultism = proficiency (Attributes.INT)
+        Performance = proficiency (Attributes.CHA)
+        Religion = proficiency (Attributes.WIS)
+        Society = proficiency (Attributes.INT)
+        Stealth = proficiency (Attributes.DEX)
+        Survival = proficiency (Attributes.WIS)
+        Thievery = proficiency (Attributes.DEX)
+    }
+
+    Lore = keyvalues
+    {
+        singular = "Lore"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Rank = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+            Item = integer { default = 0 }
+            Modifier = modifier { value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+        }
+    }
+
+    Proficiencies = pf2Proficiencies {}
+
+    Conditions = pf2Conditions {}
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Strikes = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([strike ("Fist", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4 " + toString (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Strike"
+        editable = none
+        valueType = strike
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Feats = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    'Class Features' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Spellcasting = pf2Spellcasting {}
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Inventory = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 4 }
+        PP = integer { default = 0  editable = live }
+        GP = integer { default = 15  editable = live }
+        SP = integer { default = 0  editable = live }
+        CP = integer { default = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Deity = string {}
+        Appearance = string { multiline = true }
+        Personality = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+Pathfinder2e = system
+{
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = pf2Creature
+    Weapons = pf2Weapon
+    Armor = pf2Armor
+    Equipment = pf2Item
+    Spells = pf2Spell
+    Feats = pf2Feat
+    'Character Options' = pf2Option
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Spells", "Feats"]
+    otherLibararyTypes = ["Character Options"]
+    description = "Pathfinder 2nd edition (Remaster): three actions, four degrees of success"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/pf2e/pf2e.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/desert.json", "/systems/names/chinese.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
+    nameSettings = [fantasyNameSetting, desertRealmsNameSetting, easternNameSetting, norseNameSetting]
+}

@@ -38,7 +38,7 @@ stat (debility) = custom
     Modifier = modifier { value = statModifier (Score) - (if Debility then 1 else 0)  valuedice = dwDice (characterTable)  editable = none }
 }
 
-weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+weaponStat (weapon, field) = valueOr (weapon.data.equipmentStats.Stats, field, "")
 
 rangeOf (tags) =
     if contains (tags, "far") then 60
