@@ -1,0 +1,408 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+redTotal (base, die, extra) =
+    if die == 10 then base + 10 + extra
+    else if die == 1 then base + 1 - extra
+    else base + die
+
+redLevel (die, total, dv) =
+    if die == 10 and dv == 0 then "Critical success"
+    else if die == 1 and dv == 0 then "Critical failure"
+    else if dv == 0 then ""
+    else if total > dv then "Success"
+    else "Failure"
+
+redText (base, die, extra, dv) =
+    toString (redTotal (base, die, extra))
+    + (if die == 10 then " (critical, +" + toString (extra) + ")" else if die == 1 then " (fumble, -" + toString (extra) + ")" else "")
+    + (if dv > 0 then " vs DV " + toString (dv) + ": " + redLevel (die, redTotal (base, die, extra), dv) else "")
+
+redResult (base, die, extra, dv) =
+{
+    Text = redText (base, die, extra, dv)
+    Value = redTotal (base, die, extra)
+    Outcome = if die == 10 then "Critical" else if die == 1 then "Fumble" else redLevel (die, redTotal (base, die, extra), dv)
+}
+
+redRoll (dv) = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10  label = "Crit"  color = "black" }],
+    ((baseline, throws)->redResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), dv)))
+
+redDice (char) = redRoll (char.Handle.DV)
+
+plainRed = redRoll (0)
+
+skill (stat) = custom
+{
+    STAT = stat
+    Level = integer { default = 0  minvalue = 0  maxvalue = 10 }
+    Base = integer { value = stat + Level  valuedice = redDice (characterTable)  editable = none }
+}
+
+noSkill = { Base = 0 }
+
+skillBase (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Base", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, target, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = target  valuedice = redDice (characterTable)  action = kind  reach = 2  range = distance }
+    Damage = damage
+    ROF = string {}
+}
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, skillBase (char, weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, skillBase (char, "Melee Weapon"), weaponStat (weapon, "Damage"), "melee", 2)
+
+maxHitPoints (body, will) = 10 + 5 * ((body + will + 1) / 2)
+
+characterTable = ruleset
+{
+    Handle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Role = string { keys = ["Rockerboy", "Solo", "Netrunner", "Tech", "Medtech", "Media", "Exec", "Lawman", "Fixer", "Nomad"] }
+        'Role Ability' = string {}
+        Rank = integer { default = 4  minvalue = 1  maxvalue = 10 }
+        DV = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        INT = integer { default = 5  valuedice = plainRed }
+        REF = integer { default = 5  valuedice = plainRed }
+        DEX = integer { default = 5  valuedice = plainRed }
+        TECH = integer { default = 5  valuedice = plainRed }
+        COOL = integer { default = 5  valuedice = plainRed }
+        WILL = integer { default = 5  valuedice = plainRed }
+        LUCK = integer { default = 5 }
+        MOVE = integer { default = 5 }
+        BODY = integer { default = 5  valuedice = plainRed }
+        EMP = integer { default = 5  valuedice = plainRed }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hit Points' = table
+        {
+            Max = integer { value = maxHitPoints (Stats.BODY, Stats.WILL)  editable = none }
+            Current = integer { default = Max  editable = live }
+            'Seriously Wounded' = (Max + 1) / 2
+            Wounded = string { value = if Current < 1 then "Mortally Wounded" else if Current < 'Seriously Wounded' then "Seriously Wounded" else ""  visible = none  indicator = "#d64545" }
+            'Death Save' = integer { value = Stats.BODY  valuedice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) == 10 or first (first (throws).rolls) > baseline then { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": dies"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": survives"  Outcome = "Success" }))  editable = none }
+        }
+        Luck = table
+        {
+            Current = integer { default = Stats.LUCK  editable = live }
+        }
+        Humanity = table
+        {
+            Max = integer { value = Stats.EMP * 10  editable = none }
+            Current = integer { default = Max  editable = live }
+        }
+        Armor = table
+        {
+            Head = integer { default = 0  editable = live }
+            Body = integer { default = 0  editable = live }
+        }
+        Initiative = integer { value = Stats.REF  valuedice = 1d10  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Concentration = skill (Stats.WILL)
+        'Conceal Reveal Object' = skill (Stats.INT)
+        'Lip Reading' = skill (Stats.INT)
+        Perception = skill (Stats.INT)
+        Tracking = skill (Stats.INT)
+        Athletics = skill (Stats.DEX)
+        Contortionist = skill (Stats.DEX)
+        Dance = skill (Stats.DEX)
+        Endurance = skill (Stats.WILL)
+        'Resist Torture Drugs' = skill (Stats.WILL)
+        Stealth = skill (Stats.DEX)
+        'Drive Land Vehicle' = skill (Stats.REF)
+        'Pilot Air Vehicle' = skill (Stats.REF)
+        'Pilot Sea Vehicle' = skill (Stats.REF)
+        Riding = skill (Stats.REF)
+        Accounting = skill (Stats.INT)
+        'Animal Handling' = skill (Stats.INT)
+        Bureaucracy = skill (Stats.INT)
+        Business = skill (Stats.INT)
+        Composition = skill (Stats.INT)
+        Criminology = skill (Stats.INT)
+        Cryptography = skill (Stats.INT)
+        Deduction = skill (Stats.INT)
+        Education = skill (Stats.INT)
+        Gamble = skill (Stats.INT)
+        'Language Streetslang' = skill (Stats.INT)
+        'Library Search' = skill (Stats.INT)
+        'Local Expert' = skill (Stats.INT)
+        Science = skill (Stats.INT)
+        Tactics = skill (Stats.INT)
+        'Wilderness Survival' = skill (Stats.INT)
+        Brawling = skill (Stats.DEX)
+        Evasion = skill (Stats.DEX)
+        'Martial Arts' = skill (Stats.DEX)
+        'Melee Weapon' = skill (Stats.DEX)
+        Acting = skill (Stats.COOL)
+        'Play Instrument' = skill (Stats.TECH)
+        Archery = skill (Stats.REF)
+        Autofire = skill (Stats.REF)
+        Handgun = skill (Stats.REF)
+        'Heavy Weapons' = skill (Stats.REF)
+        'Shoulder Arms' = skill (Stats.REF)
+        Bribery = skill (Stats.COOL)
+        Conversation = skill (Stats.EMP)
+        'Human Perception' = skill (Stats.EMP)
+        Interrogation = skill (Stats.COOL)
+        Persuasion = skill (Stats.COOL)
+        'Personal Grooming' = skill (Stats.COOL)
+        Streetwise = skill (Stats.COOL)
+        Trading = skill (Stats.COOL)
+        'Wardrobe and Style' = skill (Stats.COOL)
+        'Air Vehicle Tech' = skill (Stats.TECH)
+        'Basic Tech' = skill (Stats.TECH)
+        Cybertech = skill (Stats.TECH)
+        Demolitions = skill (Stats.TECH)
+        'Electronics Security Tech' = skill (Stats.TECH)
+        'First Aid' = skill (Stats.TECH)
+        Forgery = skill (Stats.TECH)
+        'Land Vehicle Tech' = skill (Stats.TECH)
+        'Paint Draw Sculpt' = skill (Stats.TECH)
+        Paramedic = skill (Stats.TECH)
+        'Photography Film' = skill (Stats.TECH)
+        'Pick Lock' = skill (Stats.TECH)
+        'Pick Pocket' = skill (Stats.TECH)
+        'Sea Vehicle Tech' = skill (Stats.TECH)
+        Weaponstech = skill (Stats.TECH)
+    }
+
+    'Other Skills' = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            STAT = integer { default = 5 }
+            Level = integer { default = 0 }
+            Base = integer { value = STAT + Level  valuedice = redDice (characterTable)  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Brawling", skillBase (characterTable, "Brawling"), if Stats.BODY > 6 then "2d6" else "1d6", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Cyberware = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Cyberware
+        singular = "Cyberware"
+        editable = character
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Programs = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Programs
+        singular = "Program"
+        editable = character
+    }
+
+    Lifepath = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Cultural Origins' = string {}
+        Personality = string {}
+        'Clothing Style' = string {}
+        Hairstyle = string {}
+        Affectation = string {}
+        'Valued Most' = string {}
+        'Feelings About People' = string {}
+        'Most Valued Person' = string {}
+        'Most Valued Possession' = string {}
+        'Family Background' = string { multiline = true }
+        Friends = string { multiline = true }
+        Enemies = string { multiline = true }
+        'Tragic Love Affairs' = string { multiline = true }
+        'Life Goals' = string { multiline = true }
+    }
+
+    Money = table
+    {
+        tableLayout = layout { columns = 3 }
+        Eurobucks = integer { default = 0  editable = live }
+        Reputation = integer { default = 0 }
+        'Improvement Points' = integer { default = 0  editable = live }
+        Housing = string {}
+        Rent = string {}
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        INT = integer { default = 5 }
+        REF = integer { default = 5 }
+        DEX = integer { default = 5 }
+        TECH = integer { default = 5 }
+        COOL = integer { default = 5 }
+        WILL = integer { default = 5 }
+        MOVE = integer { default = 5 }
+        BODY = integer { default = 5 }
+        EMP = integer { default = 5 }
+        'Hit Points' = integer { default = 35 }
+        'Current HP' = integer { default = 35  editable = live }
+        'Head SP' = integer { default = 7 }
+        'Body SP' = integer { default = 7 }
+        Initiative = integer { value = REF  valuedice = 1d10  editable = none }
+        'Death Save' = integer { value = BODY }
+        Evasion = integer { default = 10  valuedice = plainRed }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = integer { default = 12  valuedice = plainRed  action = ranged  range = 50 }
+            Damage = string {}
+            ROF = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Cyberware = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Handgun", "Shoulder Arms", "Heavy Weapons", "Archery", "Autofire", "Melee Weapon", "Brawling", "Martial Arts", "Athletics"] }
+        Damage = string {}
+        Range = string {}
+        ROF = string {}
+        Magazine = string {}
+        Hands = string {}
+        Concealable = string {}
+        Quality = string { keys = ["Poor", "Standard", "Excellent"] }
+        Cost = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        SP = string {}
+        'Armor Penalty' = string {}
+        Location = string { keys = ["Head", "Body", "Shield"] }
+        Cost = string {}
+    }
+}
+
+cyberwareStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Type = string { keys = ["Fashionware", "Neuralware", "Cyberoptics", "Cyberaudio", "Internal Body", "External Body", "Cyberlimb", "Borgware"] }
+        'Install' = string { keys = ["Mall", "Clinic", "Hospital"] }
+        'Humanity Loss' = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string {}
+    }
+}
+
+programStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Class = string { keys = ["Booster", "Defender", "Attacker", "Black ICE"] }
+        ATK = string {}
+        DEF = string {}
+        REZ = string {}
+        Effect = string { multiline = true }
+    }
+}
+
+CyberpunkRed = system
+{
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Cyberware = cyberwareStats
+    Gear = gearStats
+    Programs = programStats
+    secondaryTypes = ["Weapons", "Armor", "Cyberware", "Gear", "Programs"]
+    description = "Cyberpunk RED: edgerunners in the Time of the Red"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d10, 1d6]
+    cssFiles = ["/systems/cpred/cpred.css"]
+    libraries = ["/systems/names/cyberpunk.json", "/systems/names/spies.json", "/systems/names/wasteland.json"]
+    nameSettings = [neonStreetsNameSetting, spyThrillerNameSetting, wastelandNameSetting]
+}

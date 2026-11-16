@@ -1,0 +1,396 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dmOf (value) =
+    if value < 1 then -3
+    else if value < 3 then -2
+    else if value < 6 then -1
+    else if value < 9 then 0
+    else if value < 12 then 1
+    else if value < 15 then 2
+    else 3
+
+bestTwo (rolls) = sum (rolls) - min (rolls)
+
+worstTwo (rolls) = sum (rolls) - max (rolls)
+
+keptDice (mode, rolls) =
+    if mode == "Boon" then bestTwo (rolls)
+    else if mode == "Bane" then worstTwo (rolls)
+    else sum (rolls)
+
+effectText (effect) = if effect < 0 then toString (effect) else "+" + toString (effect)
+
+travellerLevel (natural, effect) =
+    if natural == 2 then "Failure"
+    else if natural == 12 then "Success"
+    else if effect > 5 then "Exceptional success"
+    else if effect < -5 then "Exceptional failure"
+    else if effect < 0 then "Failure"
+    else "Success"
+
+travellerResult (dm, target, natural) =
+{
+    Text = toString (natural + dm) + " vs " + toString (target) + ": " + travellerLevel (natural, natural + dm - target) + ", Effect " + effectText (natural + dm - target)
+    Value = natural + dm
+    Outcome = travellerLevel (natural, natural + dm - target)
+}
+
+travellerRoll (mode, target) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Boon" then "green" else if mode == "Bane" then "red" else "" }],
+    ((baseline, throws)->travellerResult (baseline, target, keptDice (mode, first (throws).rolls))))
+
+difficultyOf (char) =
+    switch char.Traveller.Difficulty
+        case "Simple" then 2
+        case "Easy" then 4
+        case "Routine" then 6
+        case "Difficult" then 10
+        case "Very Difficult" then 12
+        case "Formidable" then 14
+        else 8
+
+travellerDice (char) = travellerRoll (char.Traveller.Dice, difficultyOf (char))
+
+plainCheck = travellerRoll ("Normal", 8)
+
+characteristic = custom
+{
+    Value = integer { default = 7  minvalue = 0  maxvalue = 15 }
+    Current = integer { default = Value  editable = live }
+    DM = integer { value = dmOf (Current)  valuedice = travellerDice (characterTable)  editable = none }
+}
+
+charDM (char, name) =
+    switch name
+        case "STR" then char.Characteristics.STR.DM
+        case "DEX" then char.Characteristics.DEX.DM
+        case "END" then char.Characteristics.END.DM
+        case "INT" then char.Characteristics.INT.DM
+        case "EDU" then char.Characteristics.EDU.DM
+        case "SOC" then char.Characteristics.SOC.DM
+        case "PSI" then dmOf (char.Characteristics.PSI)
+        else 0
+
+noSkill = { Level = -3 }
+
+skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -3)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, dm, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = dm  valuedice = travellerDice (characterTable)  action = kind  reach = 1  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if toInt (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, skillLevel (char, if weaponStat (weapon, "Skill") == "" then "Gun Combat" else weaponStat (weapon, "Skill")) + char.Characteristics.DEX.DM, weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, skillLevel (char, if weaponStat (weapon, "Skill") == "" then "Melee" else weaponStat (weapon, "Skill")) + char.Characteristics.STR.DM, weaponStat (weapon, "Damage"), "melee", 1)
+
+skill (level) = custom
+{
+    Level = integer { default = level  minvalue = -3 }
+    Characteristic = string { default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
+    Check = modifier { value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
+}
+
+characterTable = ruleset
+{
+    Traveller = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Species = string { default = "Human" }
+        Age = integer { default = 18 }
+        Homeworld = string {}
+        Rads = integer { default = 0  editable = live }
+        Difficulty = selector
+        {
+            options = ["Formidable", "Very Difficult", "Difficult", "Average", "Routine", "Easy", "Simple"]
+            labels = ["14", "12", "10", "8", "6", "4", "2"]
+            colors = ["red", "red", "red", "white", "green", "green", "green"]
+            default = "Average"
+            editable = live
+            save = nosave
+        }
+        Dice = selector
+        {
+            options = ["Bane", "Normal", "Boon"]
+            labels = ["Bane", "Normal", "Boon"]
+            colors = ["red", "white", "green"]
+            hold = ["Ctrl", "", "Shift"]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = characteristic {}
+        DEX = characteristic {}
+        END = characteristic {}
+        INT = characteristic {}
+        EDU = characteristic {}
+        SOC = characteristic {}
+        PSI = integer { default = 0 }
+        UPP = string { value = toString (STR.Value) + "-" + toString (DEX.Value) + "-" + toString (END.Value) + "-" + toString (INT.Value) + "-" + toString (EDU.Value) + "-" + toString (SOC.Value) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Initiative = modifier { value = Characteristics.DEX.DM  valuedice = 2d6  editable = none }
+        Unconscious = string { value = if Characteristics.END.Current < 1 and (Characteristics.STR.Current < 1 or Characteristics.DEX.Current < 1) then "Unconscious" else ""  visible = none  indicator = "#555555" }
+        Dead = string { value = if Characteristics.END.Current < 1 and Characteristics.STR.Current < 1 and Characteristics.DEX.Current < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Armour = integer { default = 0  editable = live }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Admin = skill (-3)
+        Advocate = skill (-3)
+        Animals = skill (-3)
+        Athletics = skill (-3)
+        Art = skill (-3)
+        Astrogation = skill (-3)
+        Broker = skill (-3)
+        Carouse = skill (-3)
+        Deception = skill (-3)
+        Diplomat = skill (-3)
+        Drive = skill (-3)
+        Electronics = skill (-3)
+        Engineer = skill (-3)
+        Explosives = skill (-3)
+        Flyer = skill (-3)
+        Gambler = skill (-3)
+        Gunner = skill (-3)
+        'Gun Combat' = skill (-3)
+        'Heavy Weapons' = skill (-3)
+        Investigate = skill (-3)
+        'Jack of all Trades' = skill (0)
+        Language = skill (-3)
+        Leadership = skill (-3)
+        Mechanic = skill (-3)
+        Medic = skill (-3)
+        Melee = skill (-3)
+        Navigation = skill (-3)
+        Persuade = skill (-3)
+        Pilot = skill (-3)
+        Profession = skill (-3)
+        Recon = skill (-3)
+        Science = skill (-3)
+        Seafarer = skill (-3)
+        Stealth = skill (-3)
+        Steward = skill (-3)
+        Streetwise = skill (-3)
+        Survival = skill (-3)
+        Tactics = skill (-3)
+        'Vacc Suit' = skill (-3)
+    }
+
+    Specialities = keyvalues
+    {
+        singular = "Speciality"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Level = integer { default = 0 }
+            Characteristic = string { default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
+            Check = modifier { value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillLevel (characterTable, "Melee") + Characteristics.STR.DM, "1d6", "melee", 1)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Career = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Career History' = string { multiline = true }
+        'Ranks and Awards' = string { multiline = true }
+        Allies = string { multiline = true }
+        Contacts = string { multiline = true }
+        Rivals = string { multiline = true }
+        Enemies = string { multiline = true }
+    }
+
+    Finances = table
+    {
+        tableLayout = layout { columns = 3 }
+        Credits = integer { default = 0  editable = live }
+        Pension = integer { default = 0 }
+        Debt = integer { default = 0  editable = live }
+        'Ship Shares' = integer { default = 0 }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Hits' = integer { default = 10 }
+        'Current Hits' = integer { default = 10  editable = live }
+        Speed = string { default = "6m" }
+        Armour = integer { default = 0 }
+        Skills = string {}
+        Behaviour = string {}
+        Initiative = modifier { default = 0  valuedice = 2d6 }
+        Down = string { value = if 'Current Hits' < 1 then "Down" else ""  visible = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = plainCheck  action = melee  reach = 1 }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Gun Combat", "Melee", "Heavy Weapons", "Athletics"] }
+        TL = string {}
+        Range = string {}
+        Damage = string {}
+        Magazine = string {}
+        Traits = string {}
+        Mass = string {}
+        Cost = string {}
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Protection = string {}
+        TL = string {}
+        Rad = string {}
+        Mass = string {}
+        Cost = string {}
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        TL = string {}
+        Mass = string {}
+        Cost = string {}
+    }
+}
+
+shipStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/starwars/spaceship-entity.svg" }
+    Ship = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Class = string {}
+        Tonnage = integer { default = 200 }
+        Hull = integer { default = 80 }
+        'Current Hull' = integer { default = 80  editable = live  indicator = "#d64545" }
+        Structure = integer { default = 80 }
+        Armour = integer { default = 0 }
+        Thrust = integer { default = 1 }
+        Jump = integer { default = 1 }
+        'Power Plant' = integer { default = 0 }
+        Fuel = integer { default = 0  editable = live }
+        Computer = string {}
+        Sensors = string {}
+        Cargo = integer { default = 0 }
+        Staterooms = integer { default = 0 }
+        Crew = string { multiline = true }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = plainCheck  action = ranged }
+            Damage = string {}
+            Range = string {}
+        }
+    }
+}
+
+Traveller = system
+{
+    distanceUnit = "m"
+    squareSize = 1
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armour = armourStats
+    Equipment = equipmentStats
+    Starships = shipStats
+    secondaryTypes = ["Weapons", "Armour", "Equipment"]
+    extraEntityTypes = [entityTypeDescription ("Starships", "starship", true, "/systems/starwars/spaceship-entity.svg", [])]
+    description = "Traveller: adventures across the far future, 2d6 and Effect"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [2d6, 1d6, 3d6]
+    cssFiles = ["/systems/traveller/traveller.css"]
+    libraries = ["/systems/names/scifi.json", "/systems/names/bluecollar.json", "/systems/names/grimdark.json"]
+    nameSettings = [spaceNameSetting, blueCollarSpaceNameSetting, grimdarkNameSetting]
+}

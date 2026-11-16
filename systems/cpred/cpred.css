@@ -1,0 +1,40 @@
+/* Cyberpunk RED: black panels, hot red rules and condensed caps headings. */
+.entityView {
+    color-scheme: dark;
+    --bg: #0d0d0f;
+    --surface: #17171b;
+    --surface-alt: #1f1f25;
+    --surface-sunken: #121215;
+    --surface-muted: #2a2a31;
+    --text: #f2f2f2;
+    --text-muted: #c4c4c8;
+    --text-faint: #8a8a92;
+    --on-accent: #0d0d0f;
+    --border: #3a3a42;
+    --border-strong: #e3242b;
+    --accent: #e3242b;
+    --accent-hover: #ff3b42;
+    --accent-soft: #3a1416;
+    --link: #3fd8e8;
+    --danger: #ff3b42;
+    --danger-soft: #3a1416;
+    --paper: #17171b;
+    --card-bg: #1b1b20;
+    --dice-bg: #e3242b;
+    --dice-text: #0d0d0f;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.entityView .entityTable {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border-strong);
+    border-radius: 0;
+    background-color: var(--surface);
+}
+.entityView thead th {
+    font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-stretch: condensed;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
