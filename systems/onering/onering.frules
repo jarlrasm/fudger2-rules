@@ -1,0 +1,321 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+featFaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Eye", "Rune"]
+
+featNumber (x) = if x > 10 then 0 else x
+
+pickFeat (feats, favour) =
+    if count (feats) < 2 then first (feats)
+    else if favour == "Favoured" then (if first (feats) == 12 or item (1, feats) == 12 then 12 else if first (feats) == 11 then item (1, feats) else if item (1, feats) == 11 then first (feats) else max (first (feats), item (1, feats)))
+    else (if first (feats) == 11 or item (1, feats) == 11 then 11 else if first (feats) == 12 then item (1, feats) else if item (1, feats) == 12 then first (feats) else min (first (feats), item (1, feats)))
+
+successValue (x, weary) = if weary and x < 4 then 0 else x
+
+tengwar (rolls) = count (filter ((x)->x == 6, rolls))
+
+degree (n) =
+    if n > 1 then ", extraordinary success"
+    else if n == 1 then ", great success"
+    else ""
+
+torSucceeds (feat, total, tn, miserable) =
+    if feat == 11 and miserable then false
+    else if feat == 12 then true
+    else total >= tn
+
+torText (feat, total, tn, successDice, miserable) =
+    (if feat == 12 then "Rune" else if feat == 11 then "Eye" else toString (total))
+    + (if tn > 0 then " vs TN " + toString (tn) else "")
+    + (if feat == 11 and miserable then ": the Eye, automatic failure while Miserable"
+        else if tn < 1 then (if feat == 12 then ": automatic success" else "")
+        else if torSucceeds (feat, total, tn, miserable) then ": success" + degree (tengwar (successDice))
+        else ": failure")
+
+torResult (feats, successDice, tn, weary, miserable, favour) =
+{
+    Text = torText (pickFeat (feats, favour), featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice)), tn, successDice, miserable)
+    Value = featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice))
+    Outcome = if tn < 1 and pickFeat (feats, favour) != 12 then "" else if torSucceeds (pickFeat (feats, favour), featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice)), tn, miserable) then "Success" else "Failure"
+}
+
+torRoll (rating, tn, weary, miserable, favour) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
+    ((baseline, throws)->torResult (first (throws).rolls, item (1, throws).rolls, if tn > 0 then tn else asked, weary, miserable, favour)))
+
+torAttack (rating, tn, weary, miserable, favour) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
+    ((baseline, throws)->torAttackResult (first (throws).rolls, item (1, throws).rolls, tn + asked, weary, miserable, favour)))
+
+piercing (feats, successDice, tn, weary, miserable, favour) =
+    torResult (feats, successDice, tn, weary, miserable, favour).Outcome == "Success" and (pickFeat (feats, favour) == 10 or pickFeat (feats, favour) == 12)
+
+torAttackResult (feats, successDice, tn, weary, miserable, favour) =
+{
+    Text = torResult (feats, successDice, tn, weary, miserable, favour).Text + (if piercing (feats, successDice, tn, weary, miserable, favour) then ", Piercing Blow" else "")
+    Value = torResult (feats, successDice, tn, weary, miserable, favour).Value
+    Outcome = torResult (feats, successDice, tn, weary, miserable, favour).Outcome
+}
+
+heroRoll (char, rating, tn, favoured) = torRoll (rating, tn, char.Condition.Weary, char.Condition.Miserable, rollFavour (char, favoured))
+
+rollFavour (char, favoured) =
+    if char.Condition.Roll != "Normal" then char.Condition.Roll
+    else if favoured then "Favoured"
+    else "Normal"
+
+skill (tn) = custom
+{
+    Favoured = bool { default = false }
+    Rating = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = heroRoll (characterTable, Rating, tn, Favoured) }
+}
+
+proficiencyOf (char, name) = valueOr (char.Proficiencies, name, 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.warGearStats.Stats, field, "")
+
+weaponAttack (name, rating, damage, injury, kind) = custom
+{
+    Name = name
+    Attack = integer { value = rating  valuedice = ask ("Enemy Parry", torAttack (rating, characterTable.Attributes.'Strength TN', characterTable.Condition.Weary, characterTable.Condition.Miserable, characterTable.Condition.Roll))  action = kind  reach = 2  range = if kind == "ranged" then 100 else 0 }
+    Damage = damage
+    Injury = injury
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, proficiencyOf (char, weaponStat (weapon, "Proficiency")), weaponStat (weapon, "Damage"), weaponStat (weapon, "Injury"),
+        if weaponStat (weapon, "Proficiency") == "Bows" then "ranged" else "melee")
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Condition, Attacks] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Culture = string { keys = ["Bardings", "Dwarves of Durin's Folk", "Elves of Lindon", "Hobbits of the Shire", "Men of Bree", "Rangers of the North"] }
+        Calling = string { keys = ["Captain", "Champion", "Messenger", "Scholar", "Treasure Hunter", "Warden"] }
+        'Shadow Path' = string {}
+        Age = integer { default = 30 }
+        'Cultural Blessing' = string {}
+        Patron = string {}
+        'Distinctive Features' = string {}
+        Flaws = string {}
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { default = 4  minvalue = 1  maxvalue = 8 }
+        Heart = integer { default = 4  minvalue = 1  maxvalue = 8 }
+        Wits = integer { default = 4  minvalue = 1  maxvalue = 8 }
+        'Strength TN' = integer { value = 20 - Strength  editable = none }
+        'Heart TN' = integer { value = 20 - Heart  editable = none }
+        'Wits TN' = integer { value = 20 - Wits  editable = none }
+        'Endurance Base' = integer { default = 22 }
+        'Hope Base' = integer { default = 8 }
+        'Parry Base' = integer { default = 12 }
+    }
+
+    Condition = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Endurance' = integer { value = Attributes.Strength + Attributes.'Endurance Base'  editable = none }
+        Endurance = integer { default = 'Max Endurance'  editable = live }
+        Load = integer { default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live }
+        'Max Hope' = integer { value = Attributes.Heart + Attributes.'Hope Base'  editable = none }
+        Hope = integer { default = 'Max Hope'  minvalue = 0  editable = live }
+        Shadow = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        'Shadow Scars' = integer { default = 0  minvalue = 0 }
+        Parry = integer { value = Attributes.Wits + Attributes.'Parry Base' + Armour.Shield  editable = none }
+        Weary = bool { default = false  editable = live  indicator = "#d4b106" }
+        Miserable = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
+        Down = string { value = if Endurance < 1 then "Unconscious" else if Load > Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
+        Roll = selector { options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Injury = string { editable = live }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Awe = skill (Attributes.'Strength TN')
+        Enhearten = skill (Attributes.'Heart TN')
+        Persuade = skill (Attributes.'Wits TN')
+        Athletics = skill (Attributes.'Strength TN')
+        Travel = skill (Attributes.'Heart TN')
+        Stealth = skill (Attributes.'Wits TN')
+        Awareness = skill (Attributes.'Strength TN')
+        Insight = skill (Attributes.'Heart TN')
+        Scan = skill (Attributes.'Wits TN')
+        Hunting = skill (Attributes.'Strength TN')
+        Healing = skill (Attributes.'Heart TN')
+        Explore = skill (Attributes.'Wits TN')
+        Song = skill (Attributes.'Strength TN')
+        Courtesy = skill (Attributes.'Heart TN')
+        Riddle = skill (Attributes.'Wits TN')
+        Craft = skill (Attributes.'Strength TN')
+        Battle = skill (Attributes.'Heart TN')
+        Lore = skill (Attributes.'Wits TN')
+    }
+
+    Proficiencies = table
+    {
+        tableLayout = layout { columns = 2 }
+        Axes = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Bows = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Spears = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Swords = integer { default = 0  minvalue = 0  maxvalue = 6 }
+    }
+
+    Standing = table
+    {
+        tableLayout = layout { columns = 2 }
+        Valour = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Wisdom = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Treasure = integer { default = 0  minvalue = 0  editable = live }
+        'Adventure Points' = integer { default = 0  editable = live }
+        'Skill Points' = integer { default = 0  editable = live }
+        Fellowship = integer { default = 0  editable = live }
+    }
+
+    Armour = table
+    {
+        tableLayout = layout { columns = 3 }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = torRoll (Armour, 0, false, false, "Normal") }
+        Helm = integer { default = 0  minvalue = 0  maxvalue = 1 }
+        Shield = integer { default = 0  minvalue = 0  maxvalue = 3 }
+    }
+
+    'War Gear' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'War Gear'
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.'War Gear')
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Virtues = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Virtues
+        singular = "Virtue"
+        editable = character
+    }
+
+    'Useful Items' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Item"
+        editable = character
+        valueType = custom { Name = string {}  Skill = string {} }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Adversary, 'Combat Proficiencies'] }
+    Adversary = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Attribute Level' = integer { default = 4  valuedice = ask ("TN", torRoll ('Attribute Level', 0, false, false, "Normal")) }
+        'Max Endurance' = integer { default = 12 }
+        Endurance = integer { default = 'Max Endurance'  editable = live }
+        Down = string { value = if Endurance < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+        Might = integer { default = 1 }
+        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Hate or Resolve' = integer { default = 3  editable = live }
+        Parry = modifier { default = 0 }
+        Armour = integer { default = 2  valuedice = torRoll (Armour, 0, false, false, "Normal") }
+        'Fell Abilities' = string { multiline = true }
+    }
+    'Combat Proficiencies' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Proficiency"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Rating = integer { default = 2  valuedice = ask ("Hero's Parry", torAttack (Rating, 0, false, false, "Normal"))  action = melee  reach = 2 }
+            Damage = integer { default = 3 }
+            Injury = integer { default = 12 }
+            'Special Damage' = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+warGearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Proficiency = string { keys = ["Axes", "Bows", "Spears", "Swords", "Brawling"] }
+        Damage = string {}
+        Injury = string {}
+        Load = string {}
+        Notes = string {}
+    }
+}
+
+virtueStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Virtue", "Reward", "Cultural Virtue"] }
+    }
+}
+
+TheOneRing = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll the Feat die and one Success die per skill rank, and beat the TN: 20 minus the attribute. The Rune always succeeds, the Eye counts 0. Each 6 on a Success die improves the result."]
+        },
+        hint
+        {
+            title = "Weary and Miserable"
+            topic = "Play"
+            text = ["Weary heroes count Success dice of 1 to 3 as 0. Miserable heroes fail whenever the Eye comes up."]
+        },
+        hint
+        {
+            title = "Stances"
+            topic = "Initiative"
+            text = ["Each round heroes choose a stance: forward, open, defensive or rearward. Forward acts first, rearward last; adversaries act after the heroes."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["A hero's attack TN is their Strength TN plus the enemy's Parry. An adversary's TN is the hero's Parry. A hit takes Endurance; a 10 or Rune on the Feat die is a Piercing Blow that tests armour against Injury."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    'War Gear' = warGearStats
+    Virtues = virtueStats
+    secondaryTypes = ["War Gear", "Virtues"]
+    description = "The One Ring 2nd edition: journeys, fellowship and the Shadow in the Third Age"
+    quickdice = [1d12, 1d6]
+    cssFiles = ["/systems/onering/onering.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/arthurian.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, arthurianNameSetting]
+}

@@ -1,0 +1,65 @@
+@import url("/systems/sheet.css");
+
+/* The One Ring: a hero sheet in green and gold on cream. An uncial face
+   for the headings, the three attributes with their TNs, the skills in three
+   columns under Strength, Heart and Wits. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9c3a4;
+    --surface: #f6f1dc;
+    --surface-alt: #ece5c7;
+    --surface-sunken: #e2dab8;
+    --surface-muted: #cfc59e;
+    --text: #1f2a1c;
+    --text-muted: #3e4b36;
+    --text-faint: #6b7660;
+    --on-accent: #f6f1dc;
+    --border: #8d8a62;
+    --border-strong: #2d4a2a;
+    --accent: #2d4a2a;
+    --accent-hover: #3d6339;
+    --accent-soft: #dfe3c4;
+    --link: #7a5a12;
+    --danger: #8b2a1a;
+    --danger-hover: #8b2a1a;
+    --danger-soft: #dfe3c4;
+    --success: #3f7a3a;
+    --paper: #f6f1dc;
+    --card-bg: #ece5c7;
+    --dice-bg: #2d4a2a;
+    --dice-text: #f6f1dc;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", Garamond, Georgia, serif;
+    --title-font: "Uncial Antiqua", "Aniron", "Book Antiqua", serif;
+    --block-radius: 10px;
+    --block-border: 2px solid var(--accent);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-size: 1.25em;
+    color: var(--accent);
+    border-bottom: 1px solid #b08d2b;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.entityView .table-attributes > table > tbody > tr {
+    border: 1px solid #b08d2b;
+    border-radius: 12px;
+    padding: 2px 8px;
+}
+.entityView .table-skills > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.entityView .table-skills .customtype > div:nth-child(1) { flex: 0 0 auto; }
+.entityView .table-proficiencies,
+.entityView .table-standing,
+.entityView .table-armour { --block: 33.333%; }
+.entityView .table-war-gear,
+.entityView .table-attacks,
+.entityView .table-virtues,
+.entityView .table-useful-items { --block: 50%; }
