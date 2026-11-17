@@ -114,11 +114,14 @@
     border-bottom: 1px dotted var(--border);
 }
 
-/* ---- The rest two to a row ---- */
+/* ---- Abilities, spells and weapons beside the long skill list ---- */
 
 .entityView .table-abilities,
 .entityView .table-spells,
-.entityView .table-weapons,
+.entityView .table-weapons { --block: 66.667%; }
+
+/* ---- The rest two to a row ---- */
+
 .entityView .table-armor,
 .entityView .table-inventory,
 .entityView .table-purse { --block: 50%; }

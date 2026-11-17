@@ -6,10 +6,14 @@
    and then sets its colours, fonts and block widths.
 
    Blocks flow left to right in the order the rules list them, so a user who
-   rearranges a sheet still gets what they chose. A block is a third of the
+   rearranges a sheet still gets what they chose. Each block is as tall as
+   what it holds, and a block rises into the space under a shorter one before
+   it rather than leaving a gap. A block is a third of the
    sheet, or all of it when wide, unless a system gives it another width with
        .entityView .table-<name> { --block: 50%; }
-   after the import.
+   after the import. Where a row of one width follows a row of another, such
+   as halves under thirds, give the row's first block `clear: left` so it
+   starts on the left edge instead of under the shortest block above.
    Inside a block, `columns = N` lays its fields out in N columns under the
    title. A table nested in another sits in one of those columns as a boxed
    group without repeating its name. */
@@ -26,12 +30,8 @@
     --cell-pad: 2px 6px;
     width: 100%;
     box-sizing: border-box;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-    align-content: flex-start;
-    gap: var(--gap);
-    padding: var(--gap);
+    display: flow-root;
+    padding: var(--gap) var(--gap) 0 0;
     font-family: var(--sheet-font);
     color: var(--text);
 }
@@ -46,12 +46,6 @@
 
 /* ---- Blocks ---- */
 
-.entityView > .entityTable {
-    box-sizing: border-box;
-    flex: 1 1 calc(var(--block) - var(--gap));
-    max-width: 100%;
-    min-width: min(260px, 100%);
-}
 .entityView .entityTable {
     display: block;
     margin: 0;
@@ -59,6 +53,19 @@
     border: var(--block-border);
     border-radius: var(--block-radius);
     overflow: hidden;
+}
+/* Floated, so a block sits as high as it fits: under a short block beside a
+   tall one, instead of the row stretching every block to the tallest. The
+   tenth of a pixel keeps rounding from pushing the last block of a row down. */
+.entityView > .entityTable {
+    box-sizing: border-box;
+    float: left;
+    width: calc(var(--block) - var(--gap) - 0.1px);
+    min-width: min(260px, calc(100% - var(--gap)));
+    margin: 0 0 var(--gap) var(--gap);
+}
+.entityView > :not(.entityTable) {
+    clear: both;
 }
 .entityView .wide {
     --block: 100%;
@@ -225,7 +232,7 @@
     width: 100%;
 }
 .entityView .editbutton {
-    flex-basis: 100%;
+    margin-left: var(--gap);
 }
 
 /* ---- Slots and clocks ---- */
@@ -287,7 +294,7 @@
    wraps to as many columns as fit, whatever the system asked for. */
 @media (max-width: 700px) {
     .entityView > .entityTable {
-        flex-basis: 100%;
+        width: calc(100% - var(--gap));
     }
     .entityView .entityTable > table > tbody {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
