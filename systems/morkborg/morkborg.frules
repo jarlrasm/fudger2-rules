@@ -1,0 +1,213 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+mbOutcome (natural, total, dr) =
+    if natural == 20 then "Crit"
+    else if natural == 1 then "Fumble"
+    else if dr < 1 then ""
+    else if total >= dr then "Success"
+    else "Failure"
+
+mbText (natural, total, dr) =
+    toString (total)
+    + (if dr > 0 then " vs DR" + toString (dr) else "")
+    + (if natural == 20 then ": crit" else if natural == 1 then ": fumble" else if dr < 1 then "" else if total >= dr then ": success" else ": failure")
+
+mbResult (natural, total, dr) =
+{
+    Text = mbText (natural, total, dr)
+    Value = total
+    Outcome = mbOutcome (natural, total, dr)
+}
+
+mbTest (dr) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), dr)))
+
+mbAsked = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
+
+mbDice = ask ("DR", 12, mbAsked)
+
+ability (dummy) = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, bonus, damage, kind) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = mbDice  action = kind  reach = 2 }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Ranged" then
+        weaponAttack (weapon.Name, char.Abilities.Presence, weaponStat (weapon, "Damage"), "ranged")
+    else
+        weaponAttack (weapon.Name, char.Abilities.Strength, weaponStat (weapon, "Damage"), "melee")
+
+armourText (tier) =
+    if tier == 1 then "-d2 damage, no penalty"
+    else if tier == 2 then "-d4 damage, Agility tests DR+2"
+    else if tier == 3 then "-d6 damage, Agility tests DR+4, Defence DR+2"
+    else "none"
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Abilities, Status, Attacks] }
+    Scum = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Class = string { keys = ["Classless", "Fanged Deserter", "Gutterborn Scum", "Esoteric Hermit", "Wretched Royalty", "Heretical Priest", "Occult Herbmaster"] }
+        Traits = string { multiline = true }
+        'Broken Body' = string {}
+        'Bad Habit' = string {}
+        'Troubling Tales' = string { multiline = true }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = ability (0)
+        Agility = ability (0)
+        Presence = ability (0)
+        Toughness = ability (0)
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Max HP' = integer { default = 6  minvalue = 1 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 0 then "Dead" else if HP < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Omens = integer { default = 1  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Omen Die' = integer { default = 0  valuedice = 1d2 }
+        Powers = integer { default = 0  minvalue = 0  editable = live }
+        'Power Uses' = integer { default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Presence + first (first (throws).rolls))) + " uses of powers today"  Value = max (0, Abilities.Presence + first (first (throws).rolls)) }))  editable = none }
+        Defence = modifier { value = Abilities.Agility  valuedice = mbDice  editable = none }
+        Initiative = integer { default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = toString (Abilities.Agility + first (first (throws).rolls))  Value = Abilities.Agility + first (first (throws).rolls) })) }
+        Infected = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Silver = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Armour = table
+    {
+        tableLayout = layout { columns = 3 }
+        Tier = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Effect = armourText (Tier)
+        Shield = bool { default = false  editable = live }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Abilities.Strength, "d2", "melee")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Scrolls = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Scrolls
+        singular = "Scroll"
+        editable = character
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Equipment = string { multiline = true }
+        'Carrying Capacity' = integer { value = Abilities.Strength + 8  editable = none }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Creature] }
+    Creature = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Max HP' = integer { default = 6 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Morale = integer { default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": fights on"  Outcome = "Success" })) }
+        Armour = string { default = "-d2" }
+        Attack = string { default = "d6" }
+        'Damage Roll' = integer { default = 0  valuedice = 1d6  action = melee  reach = 2 }
+        Special = string { multiline = true }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged"] }
+        Damage = string {}
+        Notes = string {}
+    }
+}
+
+scrollStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Sacred", "Unclean"] }
+        'Power Test' = modifier { default = 0  valuedice = mbDice }
+    }
+}
+
+MorkBorg = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d20 + ability against a DR, usually 12. A natural 20 is a crit and a natural 1 a fumble."]
+        },
+        hint
+        {
+            title = "Defence"
+            topic = "Combat"
+            text = ["Monsters do not roll to hit. Players test Agility against DR12 to defend, and take the monster's damage minus armour when they fail."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll a d6 each round: on 1-3 the enemies act first, on 4-6 the players do. Or let everyone roll d6 + Agility."]
+        },
+        hint
+        {
+            title = "The end is near"
+            topic = "Getting started"
+            text = ["Roll on the Calendar of Nechrubel each day. When the last misery comes, the world ends."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Scrolls = scrollStats
+    secondaryTypes = ["Weapons", "Scrolls"]
+    description = "MÖRK BORG: a doom metal art-punk game of dying in a dying world"
+    quickdice = [1d20, 1d2, 1d4, 1d6, 1d8, 1d10]
+    cssFiles = ["/systems/morkborg/morkborg.css"]
+    libraries = ["/systems/names/gothic.json", "/systems/names/barbarian.json"]
+    nameSettings = [gothicHorrorNameSetting, swordAndSorceryNameSetting]
+}
