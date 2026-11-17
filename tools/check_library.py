@@ -28,7 +28,7 @@ def source(path, seen=None):
 def blocks(text):
     """Top-level `name = constructor { ... }` blocks, by name."""
     result = {}
-    for match in re.finditer(r"^([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*(?:\([^)]*\))?\s*=\s*([A-Za-z0-9]*)\s*\n?\s*\{", text, re.M):
+    for match in re.finditer(r"^\s*([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*(?:\([^)]*\))?\s*=\s*([A-Za-z0-9]*)\s*\n?\s*\{", text, re.M):
         depth, i = 1, match.end()
         while depth and i < len(text):
             depth += {"{": 1, "}": -1}.get(text[i], 0)
@@ -38,7 +38,16 @@ def blocks(text):
 
 
 def field_names(body):
-    return set(n.strip("'") for n in re.findall(r"(?:^|\s)([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*=", body))
+    """Field names, and the keys a keyvalues table starts with."""
+    names = set(n.strip("'") for n in re.findall(r"(?:^|\s)([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*=", body))
+    for keys in re.findall(r"\bkeys\s*=\s*\[([^\]]*)\]", body):
+        names |= set(re.findall(r'"([^"]+)"', keys))
+    return names
+
+
+def open_tables(body):
+    """Keyvalues tables whose keys the user adds, so any key is fine."""
+    return set(n.strip("'") for n in re.findall(r"([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*=\s*keyvalues\s*\{[^{}]*?\beditablekeys\b", body))
 
 
 def main(rules_path, library_path):
@@ -47,6 +56,7 @@ def main(rules_path, library_path):
     systems = [name for name, defs in found.items() if any(kind == "system" for kind, _ in defs)]
     system_body = "".join(body for name in systems for kind, body in found[name] if kind == "system")
     types = set(re.findall(r'"([^"]+)"', " ".join(re.findall(r"(?:secondaryTypes|otherLibararyTypes)\s*=\s*\[([^\]]*)\]", system_body)))) | {"Creature", "Decks", "Names"}
+    types |= set(re.findall(r'"([^"]+)"', " ".join(re.findall(r"entityTypeDescription\s*\(([^)]*)\)", system_body))))
     library = json.load(open(library_path))
     problems = []
     for item in library["entities"]:
@@ -62,10 +72,11 @@ def main(rules_path, library_path):
                     problems.append(f"{item['name']}: no ruleset {name}")
                     continue
                 known = set().union(*(field_names(body) for _, body in found[name]))
+                anykey = set().union(*(open_tables(body) for _, body in found[name]))
                 for table, fields in tables.items():
                     if table not in known:
                         problems.append(f"{item['name']}: {name} has no {table}")
-                    elif isinstance(fields, dict):
+                    elif isinstance(fields, dict) and table not in anykey:
                         for field in fields:
                             if field not in known:
                                 problems.append(f"{item['name']}: {name}.{table} has no {field}")
