@@ -225,7 +225,7 @@ Strikes = slots { number = 3  editable = live  indicator = "#d64545" }
 
 Systems that use it: D&D conditions, Exhaustion, Concentration and Down at 0 HP; Fudge's worst wound level; Star Wars injuries; Torg Shock, Wounds, Stymied and Weakened; Mothership Wounds; GURPS Reeling, HT to stay up and Death checks from HP; Dark Conspiracy Wounded, Unconscious, Dead and Down; Over the Edge Strikes.
 
-A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
+A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list. Initiative never asks: a roll made with `ask`, such as Fudge's trait roll, rolls there with `asked` 0 and `answered` false.
 
 ## The system
 
