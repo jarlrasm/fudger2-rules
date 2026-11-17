@@ -1,0 +1,357 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+accuracyLabel (net) = if net > 0 then "Accuracy" else if net < 0 then "Difficulty" else ""
+
+lancerText (natural, total, target, isAttack) =
+    toString (total)
+    + (if target > 0 then " vs " + toString (target) + (if total >= target then (if isAttack and total >= 20 then ": critical hit" else if isAttack then ": hit" else ": success") else (if isAttack then ": miss" else ": failure")) else (if isAttack and total >= 20 then ", critical if it hits" else ""))
+
+lancerResult (natural, extra, net, bonus, target, isAttack) =
+{
+    Text = lancerText (natural, natural + bonus + (if net < 0 then 0 - extra else extra), target, isAttack)
+    Value = natural + bonus + (if net < 0 then 0 - extra else extra)
+    Outcome = if target < 1 then "" else if natural + bonus + (if net < 0 then 0 - extra else extra) >= target then (if isAttack and natural + bonus + (if net < 0 then 0 - extra else extra) >= 20 then "Critical hit" else if isAttack then "Hit" else "Success") else (if isAttack then "Miss" else "Failure")
+}
+
+lancerRoll (bonus, net, target, isAttack) = ([1d20, dice { number = abs (net)  sides = 6  color = if net < 0 then "red" else "green"  label = accuracyLabel (net) }],
+    ((baseline, throws)->lancerResult (first (first (throws).rolls), max (0, max (item (1, throws).rolls)), net, bonus, target, isAttack)))
+
+lancerAsked (bonus, net, isAttack) = ([1d20, dice { number = abs (net)  sides = 6  color = if net < 0 then "red" else "green"  label = accuracyLabel (net) }],
+    ((baseline, throws)->lancerResult (first (first (throws).rolls), max (0, max (item (1, throws).rolls)), net, bonus, asked, isAttack)))
+
+attackDice (bonus, net) = ask ("Evasion or E-Defense", lancerAsked (bonus, net, true))
+
+checkDice (bonus, net) = ([1d20, dice { number = abs (net)  sides = 6  color = if net < 0 then "red" else "green"  label = accuracyLabel (net) }],
+    ((baseline, throws)->lancerResult (first (first (throws).rolls), max (0, max (item (1, throws).rolls)), net, bonus, 10, false)))
+
+structureText (lowest, left) =
+    if left < 1 then "Destroyed"
+    else if lowest > 4 then "Glancing blow: impaired until the end of your next turn"
+    else if lowest > 1 then "System trauma: destroy a weapon or system, or roll Hull to keep it"
+    else if left > 1 then "Direct hit: roll a Hull check, on a failure the mech is destroyed"
+    else "Direct hit: the mech is destroyed"
+
+stressText (lowest, left) =
+    if left < 1 then "Reactor meltdown"
+    else if lowest > 4 then "Emergency shunt: impaired until the end of your next turn"
+    else if lowest > 1 then "Destabilized power plant: exposed until you clear it"
+    else if left > 1 then "Meltdown risk: roll an Engineering check, on a failure the reactor goes critical"
+    else "Irreversible meltdown: the reactor explodes in 1d6 turns"
+
+damageRoll (left, isStress) = ([dice { number = max (1, 5 - left)  sides = 6 }],
+    ((baseline, throws)->{
+        Text = toString (min (first (throws).rolls)) + ": " + (if isStress then stressText (min (first (throws).rolls), left) else structureText (min (first (throws).rolls), left))
+        Value = min (first (throws).rolls)
+        Outcome = "Failure"
+    }))
+
+weaponStat (weapon, field) = valueOr (weapon.data.mechWeaponStats.Stats, field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+mechAttack (name, bonus, net, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = bonus  valuedice = attackDice (bonus, net)  action = kind  reach = distance  range = distance }
+    Damage = damage
+}
+
+attackFor (mech, weapon) =
+    mechAttack (weapon.Name, mech.Mech.Grit, mech.Combat.Accuracy,
+        weaponStat (weapon, "Damage"),
+        (if contains (weaponStat (weapon, "Range"), "Threat") then "melee" else "ranged"),
+        max (1, firstNumber (weaponStat (weapon, "Range"))))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Pilot, Status] }
+    Pilot = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Callsign = string {}
+        Background = string {}
+        'License Level' = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Grit = integer { value = ('License Level' + 1) / 2  editable = none }
+        Licenses = string {}
+        'Core Bonuses' = string {}
+        History = string { multiline = true }
+        Appearance = string { multiline = true }
+    }
+
+    Mech = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Hull = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Agility = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Systems = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Engineering = integer { default = 0  minvalue = 0  maxvalue = 6 }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { value = 6 + Pilot.Grit  editable = none }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live }
+        Down = string { value = if HP < 1 then "Down and out" else ""  visible = none  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        Evasion = integer { default = 10 }
+        'E Defense' = integer { default = 10 }
+        Speed = integer { default = 4 }
+        Accuracy = integer { default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
+        Attack = integer { value = Pilot.Grit  valuedice = attackDice (Pilot.Grit, Accuracy)  editable = none  action = ranged  range = 5 }
+        Damage = string { default = "1d3" }
+    }
+
+    'Skill Triggers' = keyvalues
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        singular = "Trigger"
+        editablekeys = character
+        keys = ["Act Unseen or Unheard", "Apply Fists to Faces", "Assault", "Blow Something Up", "Charm", "Get a Hold of Something", "Get Somewhere Quickly", "Hack or Fix", "Investigate", "Lead or Inspire", "Patch", "Read a Situation", "Spot", "Survive", "Take Control"]
+        valueType = custom
+        {
+            Bonus = integer { default = 0  minvalue = 0  maxvalue = 6  step = 2  valuedice = checkDice (Bonus, 0) }
+        }
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Talent"
+        editable = character
+        valueType = custom { Name = string {}  Rank = integer { default = 1  minvalue = 1  maxvalue = 3 }  Description = string {} }
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Pilot Gear' = string { multiline = true }
+        Reserves = string { multiline = true }
+    }
+}
+
+mechTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Attacks] }
+    Mech = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Frame = string {}
+        Size = string { keys = ["1/2", "1", "2", "3"] }
+        Grit = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Hull = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Agility = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Systems = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Engineering = integer { default = 0  minvalue = 0  maxvalue = 6 }
+    }
+    Frame = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Frame HP' = integer { default = 10 }
+        'Frame Evasion' = integer { default = 8 }
+        'Frame E Defense' = integer { default = 8 }
+        'Frame Heat' = integer { default = 6 }
+        'Frame Speed' = integer { default = 4 }
+        'Frame Repair' = integer { default = 5 }
+        'Frame Sensors' = integer { default = 10 }
+        'Frame Tech Attack' = integer { default = 0 }
+        'Frame Save' = integer { default = 10 }
+        'System Points' = integer { default = 6 }
+        Armor = integer { default = 1 }
+        Traits = string { multiline = true }
+    }
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { value = Frame.'Frame HP' + Mech.Hull * 2 + Mech.Grit  editable = none }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Structure = integer { default = 4  minvalue = 0  maxvalue = 4  editable = live }
+        'Structure Roll' = integer { value = Structure  valuedice = damageRoll (Structure, false)  editable = none }
+        'Heat Cap' = integer { value = Frame.'Frame Heat' + Mech.Engineering  editable = none }
+        Heat = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Stress = integer { default = 4  minvalue = 0  maxvalue = 4  editable = live }
+        'Overheat Roll' = integer { value = Stress  valuedice = damageRoll (Stress, true)  editable = none }
+        Down = string { value = if Structure < 1 then "Destroyed" else if Stress < 1 then "Meltdown" else ""  visible = none  indicator = "#d64545" }
+        Evasion = integer { value = Frame.'Frame Evasion' + Mech.Agility  editable = none }
+        'E Defense' = integer { value = Frame.'Frame E Defense' + Mech.Systems  editable = none }
+        Speed = integer { value = Frame.'Frame Speed' + Mech.Agility / 2  editable = none }
+        'Repair Cap' = integer { value = Frame.'Frame Repair' + Mech.Hull / 2  editable = none }
+        Repairs = integer { default = 'Repair Cap'  minvalue = 0  editable = live }
+        'Save Target' = integer { value = Frame.'Frame Save' + Mech.Grit  editable = none }
+        'Tech Attack' = integer { value = Frame.'Frame Tech Attack' + Mech.Systems  valuedice = attackDice (Frame.'Frame Tech Attack' + Mech.Systems, Accuracy)  editable = none  action = ranged  range = Frame.'Frame Sensors' }
+        'Limited Systems Bonus' = integer { value = Mech.Engineering / 2  editable = none }
+        Accuracy = integer { default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
+        Overshield = integer { default = 0  minvalue = 0  editable = live }
+        Burn = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Exposed = bool { default = false  editable = live  indicator = "#d64545" }
+        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
+        Slowed = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Immobilized = bool { default = false  editable = live  indicator = "#555555" }
+        Jammed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Lock = bool { default = false  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Lock On" }
+        Shredded = bool { default = false  editable = live  indicator = "#d64545" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+    }
+    Checks = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hull Check' = integer { value = Mech.Hull  valuedice = checkDice (Mech.Hull, Combat.Accuracy)  editable = none }
+        'Agility Check' = integer { value = Mech.Agility  valuedice = checkDice (Mech.Agility, Combat.Accuracy)  editable = none }
+        'Systems Check' = integer { value = Mech.Systems  valuedice = checkDice (Mech.Systems, Combat.Accuracy)  editable = none }
+        'Engineering Check' = integer { value = Mech.Engineering  valuedice = checkDice (Mech.Engineering, Combat.Accuracy)  editable = none }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Mech Weapons'
+        singular = "Weapon"
+        editable = character
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([mechAttack ("Ram or Grapple", Mech.Grit, Combat.Accuracy, "", "melee", 1)], map ((weapon)->attackFor (mechTable, weapon), mechTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = mechAttack
+    }
+    Systems = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Mech Systems'
+        singular = "System"
+        editable = character
+    }
+    Core = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Core Power' = string { multiline = true }
+        'Core Used' = bool { default = false  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [NPC, Attacks] }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Ace", "Archer", "Assault", "Bastion", "Berserker", "Breacher", "Demolisher", "Engineer", "Goliath", "Hive", "Hornet", "Mirage", "Operator", "Pyro", "Rainmaker", "Ronin", "Scout", "Seeder", "Sentinel", "Specter", "Support", "Witch"] }
+        Template = string { keys = ["", "Grunt", "Elite", "Ultra", "Veteran", "Commander"] }
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 3 }
+        'Max HP' = integer { default = 10 }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Structure = integer { default = 1  minvalue = 0  editable = live }
+        Stress = integer { default = 1  minvalue = 0  editable = live }
+        Down = string { value = if Structure < 1 then "Destroyed" else ""  visible = none  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        Evasion = integer { default = 8 }
+        'E Defense' = integer { default = 8 }
+        'Heat Cap' = integer { default = 6 }
+        Heat = integer { default = 0  minvalue = 0  editable = live }
+        Speed = integer { default = 4 }
+        Sensors = integer { default = 10 }
+        Save = integer { default = 10 }
+        Size = string { default = "1" }
+        Activations = integer { default = 1 }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Hull = modifier { default = 0  valuedice = checkDice (Hull, 0) }
+        Agility = modifier { default = 0  valuedice = checkDice (Agility, 0) }
+        Systems = modifier { default = 0  valuedice = checkDice (Systems, 0) }
+        Engineering = modifier { default = 0  valuedice = checkDice (Engineering, 0) }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Bonus = modifier { default = 1 }
+            Accuracy = integer { default = 0 }
+            Attack = integer { value = Bonus  valuedice = attackDice (Bonus, Accuracy)  action = ranged  range = 10 }
+            Damage = string {}
+            Range = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Features = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+mechWeaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Mount = string { keys = ["Aux", "Main", "Heavy", "Superheavy"] }
+        Type = string { keys = ["Melee", "CQB", "Rifle", "Launcher", "Cannon", "Nexus"] }
+        Range = string {}
+        Damage = string {}
+        Tags = string {}
+        License = string {}
+    }
+}
+
+mechSystemStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        SP = string {}
+        Tags = string {}
+        License = string {}
+    }
+}
+
+Lancer = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll d20 + bonus. Accuracy and Difficulty cancel out; roll the rest as d6s and add (or subtract) only the highest. Checks succeed on 10, attacks against Evasion or E-Defense, and 20 or more is a critical hit."]
+        },
+        hint
+        {
+            title = "Mechs"
+            topic = "Getting started"
+            text = ["Make a Mechs entity for each pilot's mech and put it on the battlemap. Fill in the frame's numbers once; the sheet adds the pilot's mech skills."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Players and NPCs alternate turns. Any player who has not acted may go next, then the GM activates an NPC."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Damage minus Armor takes HP. At 0 HP mark off Structure and roll on the structure table; past the Heat Cap mark off Stress and roll on the overheating table."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 1
+    characters = characterTable
+    creatures = creatureTable
+    Mechs = mechTable
+    'Mech Weapons' = mechWeaponStats
+    'Mech Systems' = mechSystemStats
+    secondaryTypes = ["Mech Weapons", "Mech Systems"]
+    extraEntityTypes = [entityTypeDescription ("Mechs", "mech", true, "/systems/starwars/spaceship-entity.svg", ["Mech Weapons", "Mech Systems"])]
+    description = "Lancer: mech pilots, tactical grid combat and narrative downtime"
+    quickdice = [1d20, 1d6, 1d3, 2d6]
+    cssFiles = ["/systems/lancer/lancer.css"]
+    libraries = ["/systems/names/scifi.json", "/systems/names/bluecollar.json"]
+    nameSettings = [spaceNameSetting, blueCollarSpaceNameSetting]
+}
