@@ -173,7 +173,7 @@ pf2Asked (fortune) = ([1d20], ((baseline, throws)->pf2Result (baseline, first (f
 Athletics = modifier { value = ...  valuedice = ask ("DC", pf2Asked ("Normal")) }
 ```
 
-Where 0 can't be a real number (a DC, a DV, a threshold), test `asked > 0`. Where it can (Fate's Mediocre +0, Cypher's level 0), pass `answered` to the result instead, as in `fateResult (..., asked, answered)`. `ask (label, default, dice)` pre-fills the prompt with `default`, and an empty answer then uses it; keep that for numbers the roller always knows.
+Where 0 can't be a real number (a DC, a DV, a threshold), test `asked > 0`. Where it can (Fate's Mediocre +0, Cypher's level 0), pass `answered` to the result instead, as in `fateResult (..., asked, answered)`. `ask (label, levels, first, dice)` offers named levels in a dropdown instead, such as a ladder: `levels` is a list of names, the first is worth `first` and each one after it one more, and the roll gets the picked level's number as `asked`, as in `ask ("Opposition", ["Poor -1", "Mediocre +0", "Fair +1"], -1, fateAskedRoll)`. `ask (label, default, dice)` pre-fills the prompt with `default`, and an empty answer then uses it; keep that for numbers the roller always knows.
 
 When the number gives the roll its meaning but some uses must not ask, such as initiative, keep a version without `ask` for those: `asked` is 0 there and `answered` is false. Keep a version of the roll that takes the number as a parameter for creatures and tests.
 
