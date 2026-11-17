@@ -89,7 +89,7 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 weaponAttack (name, die, damage, kind, distance) = custom
 {
     Name = name
-    Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = 2  range = distance }
+    Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = distance  range = distance }
     Damage = damage
 }
 
