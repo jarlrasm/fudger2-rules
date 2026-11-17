@@ -1,7 +1,7 @@
 # Playing Mothership
 
 ## Rolling
-Roll 1d100 and try to roll **under** the stat or save. A trained skill adds its bonus (+10, +15 or +20) to the target. Doubles are criticals: a critical success under the target, a critical failure over it. A failure usually gives 1 Stress.
+Roll 1d100 and try to roll **under** the stat or save. A trained skill adds its bonus (+10, +15 or +20) to the target. Doubles are criticals: a critical success under the target, a critical failure over it. A failure usually gives 1 Stress. A roll of 100 counts as 00.
 
 - **Stats:** Strength, Speed, Intellect, Combat.
 - **Saves:** Sanity, Fear, Body.

@@ -85,7 +85,7 @@ spellAttack (name, tohit, kind, distance, rangeText) = custom
     'To hit' = modifier
     {
         value = tohit
-        valuedice = D20Roll (characterTable)
+        valuedice = AttackRoll (characterTable)
         action = kind
         reach = distance
         range = distance
@@ -150,7 +150,7 @@ spellTable= table
                 {
                   value=spellAttackModifier (currentClass (characterTable), characterTable)
 
-                  valuedice= D20Roll (characterTable)
+                  valuedice= AttackRoll (characterTable)
                   editable=none
                 }
         }

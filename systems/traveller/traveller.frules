@@ -39,17 +39,21 @@ travellerResult (dm, target, natural) =
 travellerRoll (mode, target) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Boon" then "green" else if mode == "Bane" then "red" else "" }],
     ((baseline, throws)->travellerResult (baseline, target, keptDice (mode, first (throws).rolls))))
 
-difficultyOf (char) =
-    switch char.Traveller.Difficulty
-        case "Simple" then 2
-        case "Easy" then 4
-        case "Routine" then 6
-        case "Difficult" then 10
-        case "Very Difficult" then 12
-        case "Formidable" then 14
-        else 8
+naturalText (natural) = if natural == 2 then ", natural 2: Failure" else if natural == 12 then ", natural 12: Success" else ""
 
-travellerDice (char) = travellerRoll (char.Traveller.Dice, difficultyOf (char))
+travellerUnset (dm, natural) =
+{
+    Text = toString (natural + dm) + naturalText (natural)
+    Value = natural + dm
+    Outcome = if natural == 2 then "Failure" else if natural == 12 then "Success" else ""
+}
+
+travellerAskedRoll (mode) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Boon" then "green" else if mode == "Bane" then "red" else "" }],
+    ((baseline, throws)->if asked > 0 then travellerResult (baseline, asked, keptDice (mode, first (throws).rolls)) else travellerUnset (baseline, keptDice (mode, first (throws).rolls))))
+
+travellerDice (char) = ask ("Target (Average 8)", travellerAskedRoll (char.Traveller.Dice))
+
+travellerAttackDice (char) = travellerRoll (char.Traveller.Dice, 8)
 
 plainCheck = travellerRoll ("Normal", 8)
 
@@ -82,7 +86,7 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 weaponAttack (name, dm, damage, kind, distance) = custom
 {
     Name = name
-    Attack = modifier { value = dm  valuedice = travellerDice (characterTable)  action = kind  reach = 1  range = distance }
+    Attack = modifier { value = dm  valuedice = travellerAttackDice (characterTable)  action = kind  reach = 1  range = distance }
     Damage = damage
 }
 
@@ -108,15 +112,6 @@ characterTable = ruleset
         Age = integer { default = 18 }
         Homeworld = string {}
         Rads = integer { default = 0  editable = live }
-        Difficulty = selector
-        {
-            options = ["Formidable", "Very Difficult", "Difficult", "Average", "Routine", "Easy", "Simple"]
-            labels = ["14", "12", "10", "8", "6", "4", "2"]
-            colors = ["red", "red", "red", "white", "green", "green", "green"]
-            default = "Average"
-            editable = live
-            save = nosave
-        }
         Dice = selector
         {
             options = ["Bane", "Normal", "Boon"]
@@ -390,7 +385,7 @@ Traveller = system
         {
             title = "Checks"
             topic = "Play"
-            text = ["2d6 + characteristic DM + skill against 8. The Difficulty slider changes the target, Boon and Bane add a third die.", "Effect, the margin over the target, decides how well it went."]
+            text = ["2d6 + characteristic DM + skill against 8. Each check asks for the target; leave it blank when only the referee knows it. Boon and Bane add a third die.", "Effect, the margin over the target, decides how well it went."]
         },
         hint
         {

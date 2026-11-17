@@ -3,7 +3,7 @@
 ## Rolling
 Roll a d20 and look up the bonus on the bonus chart, then add it to the attribute or skill. The sheet does this. A 10 or 20 rolls again and adds, so results can climb high. A natural 1 is a mishap.
 
-Compare the total with a Difficulty Number (DN). 10 is standard, 12 challenging, 14 hard, 16 very hard, 18 heroic. Meeting the DN succeeds. Beating it by 5 or more is a good success, and by 10 or more an outstanding success.
+Compare the total with a Difficulty Number (DN). 10 is standard, 12 challenging, 14 hard, 16 very hard, 18 heroic. Meeting the DN succeeds. Beating it by 5 or more is a good success, and by 10 or more an outstanding success. Each roll asks for the DN. Leave it blank when only the GM knows it, and the roll shows just the total.
 
 ## Combat
 There is no initiative roll. Each round, flip a Drama card: it says which side acts first, and its conditions and approved actions apply to the round. Within a side, the players choose their order. Drag tokens into that order in the initiative list.

@@ -100,7 +100,7 @@ basicsTable =table
               {
                 value='Ability scores'.'Dex'.Modifier +
                   jackBonus(characterTable) + alertBonus(characterTable) + initiativeBonus(characterTable)
-                valuedice= D20Roll (characterTable)
+                valuedice= InitiativeRoll (characterTable)
                 editable=none
               }
     'Passive Perception' = integer
@@ -177,8 +177,47 @@ exhaustedD20Roll (mode, penalty) =
     ([1d20],((baseline,throws)->
         baseline - penalty + first (throws).bonus + fold (0, (x1,x2)->x1+x2, first (throws).rolls)))
 
-D20Roll (char) =
+InitiativeRoll (char) =
     if exhaustionLevel (char) > 0 then
         exhaustedD20Roll (char.Basics.Roll, 2 * exhaustionLevel (char))
     else
         plainD20Roll (char)
+
+keptD20 (mode, throws) =
+    if mode == "Advantage" then max (first (first (throws).rolls), first (item (1, throws).rolls))
+    else if mode == "Disadvantage" then min (first (first (throws).rolls), first (item (1, throws).rolls))
+    else first (first (throws).rolls)
+
+naturalNote (natural) = if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else ""
+
+checkResult (total, natural, dc) =
+{
+    Text = toString (total) + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if total >= dc then "Success" else "Failure") else naturalNote (natural))
+    Value = total
+    Outcome = if dc > 0 then (if total >= dc then "Success" else "Failure") else ""
+}
+
+attackOutcome (total, natural, ac) =
+    if natural == 20 then "Critical hit"
+    else if natural == 1 then "Miss"
+    else if total >= ac then "Hit"
+    else "Miss"
+
+attackResult (total, natural, ac) =
+{
+    Text = toString (total) + (if ac > 0 then " vs AC " + toString (ac) + ": " + attackOutcome (total, natural, ac) else if natural == 20 then " (natural 20, critical hit)" else if natural == 1 then " (natural 1, miss)" else "")
+    Value = total
+    Outcome = if natural == 20 then "Critical" else if natural == 1 then "Failure" else if ac > 0 then (if total >= ac then "Success" else "Failure") else ""
+}
+
+rollPenalty (char) = 2 * exhaustionLevel (char)
+
+askedCheck (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Normal" then 0 else 1  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+    ((baseline, throws)->checkResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), asked)))
+
+askedAttack (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Normal" then 0 else 1  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+    ((baseline, throws)->attackResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), asked)))
+
+D20Roll (char) = ask ("DC", askedCheck (char.Basics.Roll, rollPenalty (char)))
+
+AttackRoll (char) = ask ("Target AC", askedAttack (char.Basics.Roll, rollPenalty (char)))

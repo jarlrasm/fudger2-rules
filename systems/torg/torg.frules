@@ -1,14 +1,24 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
-D20Roll  = D20RollImpl (0)
+D20Roll  = ask ("DN", D20RollImpl (0))
+
+torgLevel (total, dn) =
+    if total < dn then "Failure"
+    else if total < dn + 5 then "Standard success"
+    else if total < dn + 10 then "Good success"
+    else "Outstanding success"
+
+torgResult (total, dn) =
+    if dn > 0 then { Text = toString (total) + " vs DN " + toString (dn) + ": " + torgLevel (total, dn)  Value = total  Outcome = if total < dn then "Failure" else "Success" }
+    else total
 
 D20RollImpl (extra) = ([1d20],((baseline,throws)->
   switch first(first (throws).rolls)
     case 10 then D20RollImpl (extra + 10)
     case 20 then D20RollImpl (extra + 20)
     else if extra + first(first (throws).rolls) == 1 then "Mishap"
-    else baseline + calculate (extra + first(first (throws).rolls))
+    else torgResult (baseline + calculate (extra + first(first (throws).rolls)), asked)
           ))
           
           

@@ -25,7 +25,7 @@ creatureTable = ruleset
     'Initiative'=modifier
               {
                 default=0
-                valuedice= D20Roll (creatureTable)
+                valuedice= InitiativeRoll (creatureTable)
               }
     Speed = string {}
     Immunities = string {}
@@ -275,7 +275,7 @@ creatureTable = ruleset
             Name = string {}
             'To hit' = modifier
             {
-                valuedice = D20Roll (creatureTable)
+                valuedice = AttackRoll (creatureTable)
                 action = attackKind (Reach)
                 reach = attackReach (Reach)
                 range = attackRange (Reach)

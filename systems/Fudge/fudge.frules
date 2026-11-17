@@ -3,6 +3,22 @@
 
 fudgevalues= ["Terrible","Poor","Mediocre","Fair","Good","Great","Superb" ]
 
+ladderWord (level) =
+    if level < 0 then "Terrible - " + toString (0 - level)
+    else if level > 6 then "Superb + " + toString (level - 6)
+    else item (level, fudgevalues)
+
+fudgeOutcome (shifts) =
+    if shifts > 0 then "Success by " + toString (shifts)
+    else if shifts == 0 then "Success"
+    else "Failure by " + toString (0 - shifts)
+
+fudgeResult (level, difficulty, known) =
+    if known then { Text = ladderWord (level) + " vs " + ladderWord (difficulty + 3) + ": " + fudgeOutcome (level - difficulty - 3)  Value = level  Outcome = if level >= difficulty + 3 then "Success" else "Failure" }
+    else level
+
+fudgeRoll = ask ("Difficulty (Fair 0, Good 1, Mediocre -1)", ([4df], ((baseline, throws)->fudgeResult (baseline + sum (first (throws).rolls), asked, answered))))
+
 characterTable = ruleset
 {
     Attributes = keyvalues
@@ -14,7 +30,7 @@ characterTable = ruleset
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
-                valuedice=4df
+                valuedice=fudgeRoll
             }
         }
     Skills = keyvalues
@@ -26,7 +42,7 @@ characterTable = ruleset
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
-                valuedice=4df
+                valuedice=fudgeRoll
             }
         }
     Gifts = list

@@ -2,12 +2,22 @@
 #include "/systems/names/settings.frules"
 
 
-hundred = ([1d100], ((baseline,throws)->
-  sum(
-       
-        first (throws).rolls
-       
-)))
+isDouble (roll) = mod (roll, 11) == 0
+
+msOutcome (target, roll) =
+    if roll < target and isDouble (roll) then "Critical success"
+    else if roll < target then "Success"
+    else if isDouble (roll) then "Critical failure"
+    else "Failure"
+
+msResult (target, roll) =
+{
+    Text = toString (roll) + " vs " + toString (target) + ": " + msOutcome (target, roll) + (if roll < target then "" else ", +1 Stress")
+    Value = roll
+    Outcome = switch msOutcome (target, roll) case "Critical success" then "Critical" case "Critical failure" then "Fumble" else msOutcome (target, roll)
+}
+
+hundred = ([1d100], ((baseline, throws)->msResult (baseline, mod (first (first (throws).rolls), 100))))
 
 
 

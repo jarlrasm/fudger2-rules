@@ -3,7 +3,7 @@
 These rules follow the System Reference Document 5.2.1, which is in the built-in library as a PDF.
 
 ## Checks
-Roll 1d20, add a modifier, and compare with a Difficulty Class (DC): 5 very easy, 10 easy, 15 medium, 20 hard, 25 very hard, 30 nearly impossible. Meeting the DC succeeds.
+Roll 1d20, add a modifier, and compare with a Difficulty Class (DC): 5 very easy, 10 easy, 15 medium, 20 hard, 25 very hard, 30 nearly impossible. Meeting the DC succeeds. Each check and save asks for the DC, and each attack for the target's AC. Leave it blank when only the GM knows it, and the roll shows just the total.
 
 - **Ability checks** use the ability's modifier from Ability scores, plus the proficiency bonus when the character is proficient in the skill.
 - **Saving throws** resist harm and use the Saving throws on the sheet.
