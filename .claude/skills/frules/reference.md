@@ -484,6 +484,8 @@ rulesetConfiguration =
 }
 ```
 
+`important = [...]` in the same block lists the fields shown in the compact "important only" view (the session sidebar) for entities that have not marked their own. Name tables (`Combat`) or single rows (`Combat.HP`). Pick what matters most in combat, e.g. `rulesetConfiguration = { important = [Combat, Attributes, Conditions] }`. Fields among them that are `editable = live` can be edited in that view.
+
 ## Section types
 
 ### table
