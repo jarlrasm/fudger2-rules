@@ -2,14 +2,20 @@
 #include "/systems/names/settings.frules"
 
 
-edgeRoll = ([2d6], ((baseline,throws)->
-  sum(
-       
-        first (throws).rolls
-       
-      )
-  
-))
+edgeDice (rolls, mode) = if mode == "Bonus" then sum (rolls) - min (rolls) else if mode == "Penalty" then sum (rolls) - max (rolls) else sum (rolls)
+
+edgeDropped (rolls, mode) = if mode == "Bonus" then " (dropped " + toString (min (rolls)) + ")" else if mode == "Penalty" then " (dropped " + toString (max (rolls)) + ")" else ""
+
+edgeResult (rolls, mode) =
+{
+    Text = toString (edgeDice (rolls, mode)) + edgeDropped (rolls, mode)
+    Value = edgeDice (rolls, mode)
+}
+
+edgeModeRoll (mode) = ([dice { number = 2  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else "Penalty die" }],
+    ((baseline, throws)-> edgeResult (concat (first (throws).rolls, item (1, throws).rolls), mode)))
+
+edgeRoll (char) = edgeModeRoll (char.Basics.Roll)
 
 characterTable = ruleset
 {
@@ -31,7 +37,7 @@ characterTable = ruleset
         Score = integer
         {
           default = 0
-          valuedice =  edgeRoll
+          valuedice = edgeRoll (characterTable)
         }
       }
     }
@@ -45,7 +51,7 @@ characterTable = ruleset
         Score = integer
         {
           default = 0
-          valuedice =  edgeRoll
+          valuedice = edgeRoll (characterTable)
         }
       }
     }
@@ -71,18 +77,28 @@ characterTable = ruleset
     Fight = integer
     {
       default=0
-      valuedice = edgeRoll
+      valuedice = edgeRoll (characterTable)
       action = ranged
     }
     Sway = integer
     {
       default=0
-      valuedice=edgeRoll
+      valuedice = edgeRoll (characterTable)
     }
     Weird = integer
     {
       default=0
-      valuedice=edgeRoll
+      valuedice = edgeRoll (characterTable)
+    }
+    Roll = selector
+    {
+      options = ["Penalty", "Normal", "Bonus"]
+      labels = ["Penalty die", "Normal", "Bonus die"]
+      colors = ["red", "white", "green"]
+      hold = ["Ctrl", "", "Shift"]
+      default = "Normal"
+      editable = live
+      save = nosave
     }
     Strikes = slots
     {
