@@ -457,6 +457,7 @@ SKIP_FEATURES = {"PROFICIENCY_BONUS", "SPELL_SLOTS", "CLASS_TABLE_DATA"}
 
 
 FEATURE_FIXES = {
+    ("Monk", "Unarmoed Movement"): {"Name": "Unarmored Movement"},
     ("Bard", "Bard Subclass"): {"Level": 3},
     ("Cleric", "Cleric Subclasses", 1): {"Name": "Core Cleric Traits"},
 }
@@ -568,6 +569,15 @@ def class_resources(c):
     return out + EXTRA_RESOURCES.get(c["name"], [])
 
 
+def class_saves(c, features):
+    """The class's saving throws, from its Core Traits table, which the API's saving_throws field gets wrong for some classes."""
+    for f in features:
+        found = re.search(r"Saving Throw Proficiencies \| (\w+) and (\w+)", f["Description"])
+        if found:
+            return [{"Attr": ABILITY[name]} for name in found.groups()]
+    return [{"Attr": ABILITY[s["name"]]} for s in c["saving_throws"]]
+
+
 def classes():
     raw = load("classes")
     base = {c["name"]: c for c in raw if not c["subclass_of"]}
@@ -577,7 +587,7 @@ def classes():
     def make(name, c, features):
         stats = {
             "HitDie": int(c["hit_dice"].lstrip("Dd")),
-            "SavingThrows": [{"Attr": ABILITY[s["name"]]} for s in c["saving_throws"]],
+            "SavingThrows": class_saves(c, features),
             "SpellcastingAbilityModifier": SPELLCASTING.get(c["name"], "None"),
             "Features": features,
             "Spellevels": spell_levels(c),

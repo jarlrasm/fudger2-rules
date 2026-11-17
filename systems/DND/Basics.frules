@@ -55,7 +55,7 @@ monkMovement(level) =
 
 speedBonus(char) =
   bonusWithValue (allSources(char), "\bYour [Ss]peed increases by ([0-9]+) feet") +
-  (if hasClassFeature (char, "Unarmoed Movement") then monkMovement (char.Class.Main.Levels) - 10 else 0)
+  (if hasClassFeature (char, "Unarmored Movement") then monkMovement (char.Class.Main.Levels) - 10 else 0)
 acForArmour(char, armour)=
   armour.data.armourStats.Stats.AC +
     min(

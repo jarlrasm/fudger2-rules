@@ -14,7 +14,9 @@ abiltyBonusForMeleeWeapon (weapon, char) =
      char.'Ability scores'.'Str'.Modifier
 
 abiltyBonusForRangedWeapon (weapon, char) =
-    if contains(toLower(weapon.data.weaponStats.Stats.Properties), "thrown") then
+    if contains(toLower(weapon.data.weaponStats.Stats.Properties), "finesse") then
+        max(char.'Ability scores'.'Dex'.Modifier, char.'Ability scores'.'Str'.Modifier)
+    else if contains(toLower(weapon.data.weaponStats.Stats.Properties), "thrown") then
          char.'Ability scores'.'Str'.Modifier
     else
      char.'Ability scores'.'Dex'.Modifier
