@@ -7,47 +7,32 @@ pointsToSkill(points)=
                          
                         else toString(points/3)+"D"
                         
-pointsToDice(points)=
- dice
-  {
-    number=points/3
-    sides=6
-    bonus=points-points/3*3
-  }
-
 withActions(points, actions)=
   max(min(points, 3), points - 3 * max(0, toInt(actions) - 1))
 
-rethrow (extra) = ([1d6],((baseline,throws)->
-  if first(
-            first (throws)
-            .rolls) == 6 then
-            rethrow (extra + sum(first (throws)
-            .rolls))
-         else
-              extra +
-              sum(
-                first (throws)
-                .rolls)
-              ))
+rethrow (extra) = ([dice { number = 1  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
+  if first (first (throws).rolls) == 6 then
+    rethrow (extra + 6)
+  else
+    extra + sum (first (throws).rolls)
+  ))
 
-
-oneOnWild(rolls) =
-  if count(rolls) == 1 then
+oneOnWild (rolls) =
+  if count (rolls) == 0 then
     0
-   else
-     sum(rolls) - 1 - max(rolls)
-                  
+  else
+    sum (rolls) - max (rolls)
 
-starDice (dice) = ([dice],((baseline,throws)->
-  switch first(first (throws).rolls)
-    case 6 then rethrow (sum(first (throws).rolls) + first (throws).bonus)
-    case 1 then oneOnWild(first (throws).rolls) + first (throws).bonus
-    else sum(first (throws).rolls) + first (throws).bonus
-              ))
-              
-              
-              
+starDice (points) = ([dice { number = max (0, points / 3 - 1)  sides = 6  bonus = points - points / 3 * 3 }, dice { number = min (1, points / 3)  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
+  if count (item (1, throws).rolls) == 0 then
+    first (throws).bonus
+  else
+    switch first (item (1, throws).rolls)
+      case 6 then rethrow (sum (first (throws).rolls) + 6 + first (throws).bonus)
+      case 1 then oneOnWild (first (throws).rolls) + first (throws).bonus
+      else sum (first (throws).rolls) + sum (item (1, throws).rolls) + first (throws).bonus
+  ))
+
 noSkill = { Points = 0 }
 
 dexterityPoints (char, skill) =
@@ -76,7 +61,7 @@ weaponAttack (name, points, damage, kind, distance) = custom
     Attack = integer
     {
         value = points
-        valuedice = starDice (pointsToDice (points), 0)
+        valuedice = starDice (points)
         render = pointsToSkill (points)
         action = kind
         range = distance
@@ -105,7 +90,7 @@ forcePowerUse (name, points, difficulty) = custom
     Roll = integer
     {
         value = points
-        valuedice = starDice (pointsToDice (points), 0)
+        valuedice = starDice (points)
         render = pointsToSkill (points)
         action = "ranged"
     }
@@ -153,7 +138,7 @@ characterTable = ruleset
                 default=9
                 minvalue=1
                 maxvalue=25
-                valuedice=starDice(pointsToDice(withActions(Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points, General.Actions))
                 render=pointsToSkill(withActions(Points, General.Actions))
               }
 
@@ -168,7 +153,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Dexterity'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
                 default=0
                 minvalue=0
@@ -186,7 +171,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Knowledge'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
                 
                 default=0
@@ -205,7 +190,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Mechanical'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
                 
                 default=0
@@ -224,7 +209,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Perception'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Perception'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Perception'.Points, General.Actions))
                 
                 default=0
@@ -242,7 +227,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Strength'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Strength'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Strength'.Points, General.Actions))
                 
                 default=0
@@ -261,7 +246,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points + Attributes.'Technical'.Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points + Attributes.'Technical'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Technical'.Points, General.Actions))
                 
                 default=0
@@ -295,7 +280,7 @@ characterTable = ruleset
               Initiative=integer
               {
                 value=Attributes.'Perception'.Points
-                valuedice=starDice(pointsToDice(Attributes.'Perception'.Points), 0)
+                valuedice=starDice (Attributes.'Perception'.Points)
                 render=pointsToSkill(Attributes.'Perception'.Points)
                 editable=none
               }
@@ -371,7 +356,7 @@ characterTable = ruleset
           {
               Points=integer
               {
-                valuedice=starDice(pointsToDice(withActions(Points, General.Actions)), 0)
+                valuedice=starDice (withActions(Points, General.Actions))
                 render=pointsToSkill(withActions(Points, General.Actions))
                 default=0
                 minvalue=0
