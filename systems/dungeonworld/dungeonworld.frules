@@ -162,7 +162,8 @@ characterTable = ruleset
     Load = table
     {
         tableLayout = layout { columns = 3 }
-        'Max Load' = integer { value = 9 + Stats.STR.Modifier  editable = none }
+        'Base Load' = integer { default = 9 }
+        'Max Load' = integer { value = 'Base Load' + Stats.STR.Modifier  editable = none }
         Coin = integer { default = 0  editable = live }
         Spells = string { multiline = true }
     }
