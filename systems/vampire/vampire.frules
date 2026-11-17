@@ -9,7 +9,9 @@ successesIn (normal, hunger) =
 isCritical (normal, hunger) = tensIn (normal) + tensIn (hunger) > 1
 
 v5Outcome (normal, hunger, difficulty) =
-    if successesIn (normal, hunger) < max (1, difficulty) then
+    if difficulty == 0 and successesIn (normal, hunger) > 0 then
+        (if isCritical (normal, hunger) and tensIn (hunger) > 0 then "Messy critical" else if isCritical (normal, hunger) then "Critical" else "")
+    else if successesIn (normal, hunger) < max (1, difficulty) then
         (if count (filter ((x)->x == 1, hunger)) > 0 then "Bestial failure" else if successesIn (normal, hunger) == 0 then "Total failure" else "Failure")
     else if isCritical (normal, hunger) and tensIn (hunger) > 0 then "Messy critical"
     else if isCritical (normal, hunger) then "Critical win"
@@ -20,7 +22,7 @@ plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "es")
 v5Text (normal, hunger, difficulty) =
     plural (successesIn (normal, hunger), "success")
     + (if difficulty > 0 then " vs " + toString (difficulty) else "")
-    + ": " + v5Outcome (normal, hunger, difficulty)
+    + (if v5Outcome (normal, hunger, difficulty) == "" then "" else ": " + v5Outcome (normal, hunger, difficulty))
     + (if successesIn (normal, hunger) >= max (1, difficulty) and difficulty > 0 then ", margin " + toString (successesIn (normal, hunger) - difficulty) else "")
 
 failedNormal (normal) = count (filter ((x)->x < 6, normal))
@@ -47,7 +49,7 @@ v5AskedPool (pool, hunger, spend) = ([dice { number = max (0, pool - hunger)  si
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-v5Dice (char, pool) = ask ("Difficulty", 2, v5AskedPool (pool + char.Character.Modifier, char.Character.Hunger, willpowerSpend (char)))
+v5Dice (char, pool) = ask ("Difficulty", v5AskedPool (pool + char.Character.Modifier, char.Character.Hunger, willpowerSpend (char)))
 
 rouseCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": no Hunger"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": Hunger rises"  Outcome = "Failure" }))
 
@@ -322,7 +324,7 @@ Vampire = system
         {
             title = "Pools and hunger"
             topic = "Play"
-            text = ["Roll Attribute + Skill d10s; 6+ succeeds. Each roll asks for the Difficulty. Hunger dice are red and bring messy criticals and bestial failures."]
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds. Each roll asks for the Difficulty; leave it blank when only the GM knows it. Hunger dice are red and bring messy criticals and bestial failures."]
         },
         hint
         {

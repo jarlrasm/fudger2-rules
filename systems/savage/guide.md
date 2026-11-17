@@ -1,7 +1,7 @@
 # Playing Savage Worlds
 
 ## Rolling
-Traits (attributes and skills) are dice from d4 to d12. Roll the trait die and, for **Wild Cards** (player characters and major villains), a **Wild Die** (d6) too, and keep the better. The target is usually **4**; every full 4 over it is a **raise**. Each roll asks for the target number (for attacks, the foe's Parry); set Modifier on the sheet for situational bonuses.
+Traits (attributes and skills) are dice from d4 to d12. Roll the trait die and, for **Wild Cards** (player characters and major villains), a **Wild Die** (d6) too, and keep the better. The target is usually **4**; every full 4 over it is a **raise**. Each roll asks for the target number (for attacks, the foe's Parry), or leave it blank when only the GM knows it; set Modifier on the sheet for situational bonuses.
 
 - **Aces:** a die that rolls its highest number is rolled again and added (both dice explode).
 - Unskilled rolls use a d4 at −2. Wounds (up to −3) and Fatigue come off every roll automatically.

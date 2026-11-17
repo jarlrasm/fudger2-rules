@@ -32,9 +32,9 @@ fateResult (skill, dice, opposition, opposed) =
 
 fateRoll (opposition, opposed) = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), opposition, opposed)))
 
-fateAskedRoll = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), asked, true)))
+fateAskedRoll = ([4df], ((baseline, throws)->fateResult (baseline + first (throws).bonus, sum (first (throws).rolls), asked, answered)))
 
-fateDice (char) = ask ("Opposition", 2, fateAskedRoll)
+fateDice (char) = ask ("Opposition", fateAskedRoll)
 
 plainFate = fateRoll (0, false)
 
@@ -217,7 +217,7 @@ FateCore = system
         {
             title = "Rolling"
             topic = "Play"
-            text = ["4dF + skill against the opposition, which each roll asks for. Read the result on the ladder: fail, tie, succeed or succeed with style."]
+            text = ["4dF + skill against the opposition, which each roll asks for. Read the result on the ladder: fail, tie, succeed or succeed with style. Leave it blank when only the GM knows it."]
         },
         hint
         {

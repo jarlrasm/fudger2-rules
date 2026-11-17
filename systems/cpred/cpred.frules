@@ -35,7 +35,7 @@ redRoll (dv) = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10 
 redAskedRoll = ([dice { number = 1  sides = 10 }, dice { number = 1  sides = 10  label = "Crit"  color = "black" }],
     ((baseline, throws)->redResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), asked)))
 
-redDice (char) = ask ("DV", 13, redAskedRoll)
+redDice (char) = ask ("DV", redAskedRoll)
 
 plainRed = redRoll (0)
 
@@ -418,7 +418,7 @@ CyberpunkRed = system
         {
             title = "Checks"
             topic = "Play"
-            text = ["STAT + skill + 1d10 against a DV. Each roll asks for the DV; a 10 adds the Crit die and a 1 subtracts it."]
+            text = ["STAT + skill + 1d10 against a DV. Each roll asks for the DV (leave it blank when only the GM knows it); a 10 adds the Crit die and a 1 subtracts it."]
         },
         hint
         {

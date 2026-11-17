@@ -1,7 +1,7 @@
 # Playing Vampire: the Masquerade (5th edition)
 
 ## Rolling
-Build a pool of **d10s**, usually an Attribute plus a Skill (each skill row has a picker for the attribute that fits the task). Each die showing **6 or more** is a success. Each roll asks for the **Difficulty**, the number of successes needed; set Modifier on the sheet for bonus or penalty dice.
+Build a pool of **d10s**, usually an Attribute plus a Skill (each skill row has a picker for the attribute that fits the task). Each die showing **6 or more** is a success. Each roll asks for the **Difficulty**, the number of successes needed (leave it blank when only the GM knows it); set Modifier on the sheet for bonus or penalty dice.
 
 - **Critical:** every pair of 10s counts as four successes instead of two.
 - **Hunger dice:** as many dice as the vampire's Hunger are red. A critical with a 10 on a hunger die is a **messy critical**: they succeed, but the Beast shows. A failed roll with a 1 on a hunger die is a **bestial failure**: the Beast takes over.

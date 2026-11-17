@@ -30,6 +30,7 @@ raisesText (total, target) =
 
 swOutcome (trait, wild, wildCard, total, target) =
     if first (trait) == 1 and first (wild) == 1 then "Critical failure"
+    else if target == 0 then ""
     else if total < target then "Failure"
     else if total < target + 4 then "Success"
     else "Raise"
@@ -39,10 +40,10 @@ swTotal (trait, wild, wildCard, modifier) =
 
 swResult (dieSize, trait, wild, wildCard, modifier, target, bennies) =
 {
-    Text = toString (swTotal (trait, wild, wildCard, modifier)) + " vs " + toString (target) + ": " + (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then "Critical failure" else raisesText (swTotal (trait, wild, wildCard, modifier), target))
+    Text = toString (swTotal (trait, wild, wildCard, modifier)) + (if target == 0 then (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then ": Critical failure" else "") else " vs " + toString (target) + ": " + (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then "Critical failure" else raisesText (swTotal (trait, wild, wildCard, modifier), target)))
     Value = swTotal (trait, wild, wildCard, modifier)
     Outcome = swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target)
-    Push = if swTotal (trait, wild, wildCard, modifier) < target and bennies > 0 and swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) != "Critical failure" then swBennyRoll (dieSize, wildCard, modifier, target, bennies - 1) else 0
+    Push = if (target == 0 or swTotal (trait, wild, wildCard, modifier) < target) and bennies > 0 and swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) != "Critical failure" then swBennyRoll (dieSize, wildCard, modifier, target, bennies - 1) else 0
     PushLabel = "Spend a Benny"
     PushSets = [{ Field = "characterTable.Character.Bennies"  Value = bennies - 1 }]
 }
@@ -56,11 +57,11 @@ swBennyRoll (dieSize, wildCard, modifier, target, bennies) = ([dice { number = 1
 swAskedRoll (dieSize, wildCard, modifier, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, asked, bennies)))
 
-creatureRoll (die, wildCard, wounds) = ask ("Target number", 4, swAskedRoll (dieSides (die), wildCard, dieBonus (die) - min (3, wounds), 0))
+creatureRoll (die, wildCard, wounds) = ask ("Target number", swAskedRoll (dieSides (die), wildCard, dieBonus (die) - min (3, wounds), 0))
 
 penaltyOf (char) = min (3, char.Status.Wounds) + char.Status.Fatigue
 
-traitRoll (char, die) = ask ("Target number", 4, swAskedRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), char.Character.Bennies))
+traitRoll (char, die) = ask ("Target number", swAskedRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), char.Character.Bennies))
 
 creatureTrait (startDie) = custom
 {
@@ -410,7 +411,7 @@ SavageWorlds = system
         {
             title = "Trait rolls"
             topic = "Play"
-            text = ["Roll the trait die and the Wild Die, keep the best, and aim for the target number each roll asks for. Dice ace and roll again. Each 4 over is a raise."]
+            text = ["Roll the trait die and the Wild Die, keep the best, and aim for the target number each roll asks for. Dice ace and roll again. Each 4 over is a raise. Leave it blank when only the GM knows it."]
         },
         hint
         {

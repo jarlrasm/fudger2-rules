@@ -165,15 +165,17 @@ yzeResult (successes, banes, pushable, toReroll) = {
 
 ### Asking before rolling
 
-`ask (label, default, dice)` makes a roll that first asks the roller for a number, such as a DC, a difficulty or a target number. The prompt starts at `default`; rolls made from the battlemap use the default without asking. The roll's lambda reads the answer as `asked`, and a push or follow-up throw gets the same answer:
+`ask (label, dice)` makes a roll that first asks the roller for a number, such as a DC, a difficulty or a target number. The prompt starts empty, and leaving it empty means the number is not set: often only the GM knows it, so the roll should then show just the total and let the GM judge. The roll's lambda reads the answer as `asked` (0 when not set) and `answered` (true when the roller gave a number). Rolls made from the battlemap don't ask, so `answered` is false. A push or follow-up throw gets the same answer:
 
 ```
 pf2Asked (fortune) = ([1d20], ((baseline, throws)->pf2Result (baseline, first (first (throws).rolls), asked)))
 
-Athletics = modifier { value = ...  valuedice = ask ("DC", 15, pf2Asked ("Normal")) }
+Athletics = modifier { value = ...  valuedice = ask ("DC", pf2Asked ("Normal")) }
 ```
 
-Keep a version of the roll that takes the number as a parameter for creatures and tests; `asked` is 0 when nothing asked.
+Where 0 can't be a real number (a DC, a DV, a threshold), test `asked > 0`. Where it can (Fate's Mediocre +0, Cypher's level 0), pass `answered` to the result instead, as in `fateResult (..., asked, answered)`. `ask (label, default, dice)` pre-fills the prompt with `default`, and an empty answer then uses it; keep that for numbers the roller always knows.
+
+Keep a version of the roll that takes the number as a parameter for creatures and tests.
 
 A record is written with braces after `=` like a table: `name = { Text = "x"  Outcome = "y" }` at the top level, or returned from a function.
 
