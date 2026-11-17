@@ -75,9 +75,9 @@ def build():
                         {
                             "weaponStats": {
                                 "Stats": {
-                                    "Skill": "Melee" if melee else ("Heavy Weapons" if "heavy" in heading.lower() else "Gun Combat"),
+                                    "Skill": "Melee" if melee else ("Heavy Weapons" if "heavy" in heading.lower() else "Athletics" if "grenade" in heading.lower() else "Gun Combat"),
                                     "TL": row.get("TL", ""),
-                                    "Range": "" if melee else range_of(row.get("Range", "")),
+                                    "Range": "" if melee else (range_of(row.get("Range", "")) or ("12" if "grenade" in heading.lower() else "")),
                                     "Damage": row.get("Damage", row.get("Dmg", "")),
                                     "Magazine": "",
                                     "Traits": ", ".join(f"{key} {row[key]}" for key in ["RoF", "Type", "Recoil", "LL"] if row.get(key) and row.get(key) != "—"),
