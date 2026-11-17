@@ -1,0 +1,62 @@
+@import url("/systems/sheet.css");
+
+/* Mutants & Masterminds: a comic-book hero sheet. White panels with thick
+   black borders and drop shadows, a bold condensed face, red headings in
+   blue bars, abilities in a grid of eight boxes. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e8eef6;
+    --surface: #ffffff;
+    --surface-alt: #f2f5fa;
+    --surface-sunken: #e3e9f2;
+    --surface-muted: #cfd8e4;
+    --text: #101418;
+    --text-muted: #33404e;
+    --text-faint: #687585;
+    --on-accent: #ffffff;
+    --border: #101418;
+    --border-strong: #101418;
+    --accent: #1d4fa8;
+    --accent-hover: #2a62c8;
+    --accent-soft: #dbe6f7;
+    --link: #1d4fa8;
+    --danger: #d0202a;
+    --danger-hover: #d0202a;
+    --danger-soft: #dbe6f7;
+    --success: #3f7a3a;
+    --paper: #ffffff;
+    --card-bg: #f2f5fa;
+    --dice-bg: #1d4fa8;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Roboto", "Segoe UI", Helvetica, sans-serif;
+    --title-font: "Bangers", "Impact", "Arial Black", sans-serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable { box-shadow: 4px 4px 0 var(--border-strong); }
+.entityView .entityTable > table > thead th {
+    font-size: 1.4em;
+    letter-spacing: 0.08em;
+    background: var(--accent);
+    color: #ffe14a;
+    text-shadow: 2px 2px 0 var(--border-strong);
+    padding: 2px 10px;
+}
+.entityView .table-abilities > table > tbody > tr,
+.entityView .table-defenses > table > tbody > tr {
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+    text-align: center;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child,
+.entityView .table-defenses > table > tbody > tr > td:first-child { font-weight: 800; text-transform: uppercase; }
+.entityView .table-skills .customtype > div:nth-child(1)::after { content: " ranks"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-offense,
+.entityView .table-powers { --block: 50%; }
+.entityView .table-advantages { --block: 66.666%; }
+.entityView .table-advantage-ranks { --block: 33.333%; }

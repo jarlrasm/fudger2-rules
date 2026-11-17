@@ -1,0 +1,2294 @@
+{
+ "name": "Mutants and Masterminds effects and advantages",
+ "description": "Power effects and advantages of the Mutants and Masterminds 3rd edition Hero's Handbook, Open Game Content under the Open Game License 1.0a (see LICENSE-mutants.md), summarised in short. Mutants and Masterminds is a trademark of Green Ronin Publishing; this library is not affiliated with Green Ronin Publishing.",
+ "url": "/systems/mutants/mutants.json",
+ "gamemaster": "",
+ "entities": [
+  {
+   "type": "Effects",
+   "name": "Affliction",
+   "description": "Imposes conditions that worsen with each degree of failure on a resistance check against 10 + rank, chosen from three tiers such as dazed, stunned and incapacitated.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Attack",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Burrowing",
+   "description": "Move through the ground at your burrowing speed, leaving a tunnel or not as you choose.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Communication",
+   "description": "Talk with others over a distance set by rank through a chosen medium, such as radio or thought.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "Free",
+        "Range": "Rank",
+        "Duration": "Sustained",
+        "Cost": "4 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Comprehend",
+   "description": "Understand and be understood: languages, animals, machines, objects or spirits.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Concealment",
+   "description": "Hide from one or more senses, up to total invisibility from every sense at high rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Create",
+   "description": "Form solid objects with Toughness equal to rank and a volume set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Ranged",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Damage",
+   "description": "Harm a target, who resists with Toughness against 15 + rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Attack",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Deflect",
+   "description": "Block ranged attacks against yourself or others with a check using your rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Defense",
+        "Action": "Standard",
+        "Range": "Ranged",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Elongation",
+   "description": "Stretch your body to reach further, by a distance set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Enhanced Trait",
+   "description": "Raise an ability, defence, skill or advantage above what you bought for it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "As the trait"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Environment",
+   "description": "Change the conditions around you: cold, heat, impeded movement, light, or visibility.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Rank",
+        "Duration": "Sustained",
+        "Cost": "1 or 2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Extra Limbs",
+   "description": "Additional arms, tentacles or tails that let you hold and act with more.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Feature",
+   "description": "A minor ability or advantage worth one point each, such as a hidden compartment or a quick change.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Flight",
+   "description": "Fly through the air at a speed set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Growth",
+   "description": "Grow larger: more Strength, Stamina and mass, but easier to hit and harder to hide.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Healing",
+   "description": "Remove damage conditions and other harm from yourself or someone you touch.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Instant",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Illusion",
+   "description": "Make false sensory images that observers must see through with Insight or Perception.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Perception",
+        "Duration": "Sustained",
+        "Cost": "1 to 5 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Immortality",
+   "description": "Come back from death after a time that shortens with rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Defense",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Immunity",
+   "description": "Ignore certain effects or conditions entirely, from a single poison up to all Fortitude effects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Defense",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Insubstantial",
+   "description": "Take a less solid form: fluid, gas, energy or fully incorporeal at the highest rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "5 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Leaping",
+   "description": "Jump great distances, set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Luck Control",
+   "description": "Spend hero points on others, force rerolls, or deny luck to your foes.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Reaction",
+        "Range": "Perception",
+        "Duration": "Instant",
+        "Cost": "3 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Mind Reading",
+   "description": "Read a target's thoughts on an opposed check against Will, learning more with each degree.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "Standard",
+        "Range": "Perception",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Morph",
+   "description": "Change your appearance, from one other look at rank 1 to any form at higher ranks.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "5 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Move Object",
+   "description": "Lift and move things at range as if with Strength equal to rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Ranged",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Movement",
+   "description": "Special ways of moving, such as wall-crawling, water-walking, slithering or dimension travel.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Nullify",
+   "description": "Cancel other powers with an opposed check of your rank against theirs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Attack",
+        "Action": "Standard",
+        "Range": "Ranged",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Protection",
+   "description": "Add rank to Toughness.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Defense",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Quickness",
+   "description": "Do routine tasks much faster than normal.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Regeneration",
+   "description": "Recover from damage conditions every few rounds instead of over hours.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Defense",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Remote Sensing",
+   "description": "Move your senses to a distant place, set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "Free",
+        "Range": "Rank",
+        "Duration": "Sustained",
+        "Cost": "1 to 5 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Senses",
+   "description": "Heightened or unusual senses: darkvision, detect, radio, tracking, danger sense and more.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Sensory",
+        "Action": "None",
+        "Range": "Personal",
+        "Duration": "Permanent",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Shrinking",
+   "description": "Grow smaller: harder to hit and see, but weaker.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Speed",
+   "description": "Run faster, at a speed set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Summon",
+   "description": "Call up a minion with power points set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Sustained",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Swimming",
+   "description": "Swim at a speed set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Free",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Teleport",
+   "description": "Vanish and reappear somewhere else within a distance set by rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Movement",
+        "Action": "Move",
+        "Range": "Rank",
+        "Duration": "Instant",
+        "Cost": "2 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Transform",
+   "description": "Change one thing into another, with mass set by rank and the breadth of what you can change set by cost.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Control",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Sustained",
+        "Cost": "2 to 5 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Variable",
+   "description": "A pool of 5 power points per rank that you can spend on different traits as the situation needs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "General",
+        "Action": "Standard",
+        "Range": "Personal",
+        "Duration": "Sustained",
+        "Cost": "7 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Effects",
+   "name": "Weaken",
+   "description": "Lower a trait of the target by your degrees of success on an opposed resistance check.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "effectStats": {
+       "Stats": {
+        "Type": "Attack",
+        "Action": "Standard",
+        "Range": "Close",
+        "Duration": "Instant",
+        "Cost": "1 per rank"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Accurate Attack",
+   "description": "Trade effect for accuracy: up to -5 on effect rank for up to +5 to attack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "All-out Attack",
+   "description": "Trade active defences for attack: up to -5 to Dodge and Parry for up to +5 to attack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Chokehold",
+   "description": "A successful grab can start suffocating the target.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Close Attack",
+   "description": "+1 to close attacks per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Defensive Attack",
+   "description": "Trade attack for defence: up to -5 to attack for up to +5 to Dodge and Parry.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Defensive Roll",
+   "description": "+1 to Toughness per rank, lost when you are vulnerable or defenceless.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Evasion",
+   "description": "+2 to Dodge against area effects per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Fast Grab",
+   "description": "Make a free grab check after a successful unarmed attack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Favored Environment",
+   "description": "+2 to attack or defence in one kind of environment, such as underwater or in the air.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Grabbing Finesse",
+   "description": "Use Dexterity instead of Strength for grabbing, and stay unhindered while grabbing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Aim",
+   "description": "Double the bonus from aiming.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Critical",
+   "description": "Score a critical hit on one more natural roll per rank with one attack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Defense",
+   "description": "+2 to active defences when you take the defend action.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Disarm",
+   "description": "Disarm without suffering a counter-disarm.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Grab",
+   "description": "Grab with one arm and stay free to act.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Hold",
+   "description": "Your grabs are harder to escape.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Initiative",
+   "description": "+4 to initiative per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Smash",
+   "description": "Smash held objects without suffering a counter-attack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improved Trip",
+   "description": "Trip without suffering a counter-trip.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improvised Weapon",
+   "description": "Use Close Combat with improvised weapons and add +1 damage per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Move-by Action",
+   "description": "Move both before and after your standard action.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Power Attack",
+   "description": "Trade accuracy for effect: up to -5 to attack for up to +5 to effect rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Precise Attack",
+   "description": "Ignore cover or concealment penalties for one kind of attack per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Prone Fighting",
+   "description": "Suffer no penalty for fighting while prone.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Quick Draw",
+   "description": "Draw a weapon as a free action.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Ranged Attack",
+   "description": "+1 to ranged attacks per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Redirect",
+   "description": "After a missed attack against you, trick the attacker into hitting someone else.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Set-up",
+   "description": "Pass the benefit of a successful interaction skill to an ally.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Takedown",
+   "description": "After taking out a minion, make a free attack on another nearby minion.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Throwing Mastery",
+   "description": "+1 damage with thrown weapons per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Uncanny Dodge",
+   "description": "You are never caught by surprise.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Weapon Bind",
+   "description": "Disarm an opponent who misses you with a melee weapon.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Weapon Break",
+   "description": "Smash an opponent's weapon when you block or are attacked.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Combat",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Beginner's Luck",
+   "description": "Spend a hero point to gain 5 temporary ranks in a skill you lack.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Inspire",
+   "description": "Spend a hero point to give allies a bonus on checks equal to your rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Leadership",
+   "description": "Spend a hero point to remove a dazed, fatigued or stunned condition from an ally.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Luck",
+   "description": "Reroll a die once per rank per session.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Seize Initiative",
+   "description": "Spend a hero point to act first in the initiative order.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Ultimate Effort",
+   "description": "Spend a hero point to treat a check of one kind as a natural 20.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Fortune",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Assessment",
+   "description": "Use Insight to learn an opponent's combat bonuses.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Benefit",
+   "description": "Wealth, status, rank or other perks, one per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Diehard",
+   "description": "Stabilise automatically when dying.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Eidetic Memory",
+   "description": "Remember everything you have seen or heard.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Equipment",
+   "description": "5 points of equipment per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Extraordinary Effort",
+   "description": "Gain two benefits from extra effort, at the cost of being exhausted afterwards.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Fearless",
+   "description": "Immune to fear effects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Great Endurance",
+   "description": "+5 on checks to resist the environment and keep going.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Instant Up",
+   "description": "Stand up from prone as a free action.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Interpose",
+   "description": "Take an attack meant for an ally once per round.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Minion",
+   "description": "A follower built on 15 power points per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Second Chance",
+   "description": "Reroll a failed check against one hazard, once per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Sidekick",
+   "description": "A sidekick built on 5 power points per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Teamwork",
+   "description": "+5 when you support team checks.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Trance",
+   "description": "Enter a deathlike trance that slows your bodily functions.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "General",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Agile Feint",
+   "description": "Feint with Acrobatics or movement speed instead of Deception.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Animal Empathy",
+   "description": "Use interaction skills on animals without penalty.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Artificer",
+   "description": "Use Expertise: Magic to make temporary magical devices.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Attractive",
+   "description": "+2 to Deception and Persuasion with those who find you attractive, per rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Connected",
+   "description": "Call in favours from people you know.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Contacts",
+   "description": "Make an initial Investigation check for gathering information in one minute.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Daze",
+   "description": "Use Deception or Intimidation to daze an opponent.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Fascinate",
+   "description": "Use an interaction skill to hold others' attention.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Favored Foe",
+   "description": "+2 to checks against one type of opponent.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Hide in Plain Sight",
+   "description": "Hide while observed, without needing cover.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Improvised Tools",
+   "description": "Ignore the penalty for working without tools.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Inventor",
+   "description": "Use Technology to make temporary inventions.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Jack-of-all-trades",
+   "description": "Use any skill untrained.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Languages",
+   "description": "Speak more languages: one at rank 1, then doubling with each rank.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Ritualist",
+   "description": "Use Expertise: Magic to perform rituals.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Skill Mastery",
+   "description": "Take routine checks with one skill per rank, even under pressure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": "Ranked"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Startle",
+   "description": "Use Intimidation to feint.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Taunt",
+   "description": "Use Deception to demoralise.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Tracking",
+   "description": "Use Perception to follow tracks.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Advantages",
+   "name": "Well-informed",
+   "description": "Make an immediate Investigation or Persuasion check to know something about a person, place or thing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "MutantsAndMasterminds",
+     "implementation": {
+      "advantageStats": {
+       "Stats": {
+        "Type": "Skill",
+        "Ranked": ""
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
