@@ -1,0 +1,65 @@
+@import url("/systems/sheet.css");
+
+/* Forbidden Lands: a weathered map. Tan parchment, dark ink, a woodcut
+   serif, the four attributes as framed boxes with their skills listed under
+   them, consumables as dice steps. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #b9a681;
+    --surface: #efe3c6;
+    --surface-alt: #e5d6b2;
+    --surface-sunken: #dccaa1;
+    --surface-muted: #c8b486;
+    --text: #2a2013;
+    --text-muted: #4f3f27;
+    --text-faint: #7d6a4b;
+    --on-accent: #efe3c6;
+    --border: #8c7651;
+    --border-strong: #2a2013;
+    --accent: #6e2a17;
+    --accent-hover: #8a3a22;
+    --accent-soft: #e2cfa5;
+    --link: #6e2a17;
+    --danger: #8a2414;
+    --danger-hover: #8a2414;
+    --danger-soft: #e2cfa5;
+    --success: #3f7a3a;
+    --paper: #efe3c6;
+    --card-bg: #e5d6b2;
+    --dice-bg: #6e2a17;
+    --dice-text: #efe3c6;
+}
+
+.entityView {
+    --sheet-font: "IM Fell English", Georgia, serif;
+    --title-font: "IM Fell English SC", "Book Antiqua", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-size: 1.2em;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+}
+.entityView .table-attributes > table > tbody > tr {
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+    text-align: center;
+}
+.entityView .table-attributes .customtype > div:nth-child(1)::before { content: "max "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills > table > tbody {
+    grid-auto-flow: column;
+    grid-template-rows: repeat(4, auto);
+}
+.entityView .table-skills .customtype > div:nth-child(2) { color: var(--text-faint); }
+.entityView .table-armour,
+.entityView .table-purse { --block: 33.333%; }
+.entityView .table-consumables { --block: 50%; clear: left; }
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-gear { --block: 50%; }
