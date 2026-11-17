@@ -1,0 +1,353 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successesOf (rolls, target, crit) = sum (map ((x)->if x <= crit then 2 else if x <= target then 1 else 0, rolls))
+
+complicationsOf (rolls, range) = count (filter ((x)->x > 20 - range, rolls))
+
+plural (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
+
+staText (successes, complications, difficulty) =
+    plural (successes, "success", "successes")
+    + (if difficulty > 0 then " vs " + toString (difficulty) + (if successes >= difficulty then ": success" + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else ": failure") else "")
+    + (if complications > 0 then ", " + plural (complications, "complication", "complications") else "")
+
+staResult (rolls, target, crit, range, difficulty) =
+{
+    Text = staText (successesOf (rolls, target, crit), complicationsOf (rolls, range), difficulty)
+    Value = successesOf (rolls, target, crit)
+    Outcome = if difficulty < 1 then (if complicationsOf (rolls, range) > 0 then "Complication" else "") else if successesOf (rolls, target, crit) >= difficulty then "Success" else "Failure"
+}
+
+staRoll (target, department, focus, diceCount, range, difficulty) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
+    ((baseline, throws)->staResult (first (throws).rolls, target, if focus then department else 1, range, difficulty)))
+
+staAsked (target, department, focus, diceCount, range) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
+    ((baseline, throws)->staResult (first (throws).rolls, target, if focus then department else 1, range, asked)))
+
+staDice (target, department, focus, diceCount, range) = ask ("Difficulty", staAsked (target, department, focus, diceCount, range))
+
+challengeFaces = ["1", "2", "", "", "E", "E"]
+
+challengeValue (x) = if x == 1 then 1 else if x == 2 then 2 else if x > 4 then 1 else 0
+
+challengeRoll (n, bonus) = ([dice { number = max (0, n)  sides = 6  faces = challengeFaces  label = "Challenge" }],
+    ((baseline, throws)->{
+        Text = toString (bonus + sum (map ((x)->challengeValue (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x > 4, first (throws).rolls)) > 0 then ", " + plural (count (filter ((x)->x > 4, first (throws).rolls)), "Effect", "Effects") else "")
+        Value = bonus + sum (map ((x)->challengeValue (x), first (throws).rolls))
+    }))
+
+valueIn (record, name) = valueOr (record, name, 0)
+
+attributeNames = ["Control", "Daring", "Fitness", "Insight", "Presence", "Reason"]
+
+departmentNames = ["Command", "Conn", "Engineering", "Security", "Medicine", "Science"]
+
+taskTable = table
+{
+    tableLayout = layout { columns = 3  size = wide }
+    Attribute = string { default = "Control"  keys = attributeNames  editable = live }
+    Department = string { default = "Command"  keys = departmentNames  editable = live }
+    Focus = bool { default = false  editable = live }
+    Dice = integer { default = 2  minvalue = 1  maxvalue = 5  editable = live }
+    'Complication Range' = integer { default = 1  minvalue = 1  maxvalue = 5  editable = live }
+    Target = integer { value = valueIn (Attributes, Attribute) + valueIn (Departments, Department)  valuedice = staDice (Target, valueIn (Departments, Department), Focus, Dice, 'Complication Range')  editable = none }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, target, department, diceCount, damage, kind) = custom
+{
+    Name = name
+    Attack = integer { value = target  valuedice = staDice (target, department, false, diceCount, 1)  action = kind  reach = 2 }
+    Damage = integer { value = damage  valuedice = challengeRoll (damage, 0)  editable = none }
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Ranged" then
+        weaponAttack (weapon.Name, char.Attributes.Control + char.Departments.Security, char.Departments.Security, char.Task.Dice, toInt (weaponStat (weapon, "Severity")) + char.Departments.Security, "ranged")
+    else
+        weaponAttack (weapon.Name, char.Attributes.Daring + char.Departments.Security, char.Departments.Security, char.Task.Dice, toInt (weaponStat (weapon, "Severity")) + char.Departments.Security, "melee")
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Departments, Status, Task] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Rank = string { keys = ["Ensign", "Lieutenant (jg)", "Lieutenant", "Lieutenant Commander", "Commander", "Captain"] }
+        Assignment = string {}
+        Species = string { keys = ["Human", "Andorian", "Bajoran", "Betazoid", "Denobulan", "Tellarite", "Trill", "Vulcan"] }
+        Environment = string {}
+        Upbringing = string {}
+        Career = string {}
+        Traits = string {}
+        Pronouns = string {}
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3 }
+        Control = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Daring = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Fitness = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Insight = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Presence = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Reason = integer { default = 8  minvalue = 7  maxvalue = 12 }
+    }
+
+    Departments = table
+    {
+        tableLayout = layout { columns = 3 }
+        Command = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Conn = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Engineering = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Security = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Medicine = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Science = integer { default = 1  minvalue = 0  maxvalue = 5 }
+    }
+
+    Task = taskTable {}
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Stress' = integer { default = Attributes.Fitness }
+        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Injured = bool { default = false  editable = live  indicator = "#d64545" }
+        Down = string { value = if Stress >= 'Max Stress' then "Out of stress" else ""  visible = none  indicator = "#d64545" }
+        Determination = integer { default = 1  minvalue = 0  maxvalue = 3  editable = live }
+        Reputation = integer { default = 10 }
+        'Personal Threat' = integer { default = 0  minvalue = 0  editable = live }
+        'Protection' = integer { default = 0 }
+    }
+
+    Values = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Value"
+        editable = character
+        valueType = custom { Value = string {}  Used = bool { default = false  editable = live }  Challenged = bool { default = false  editable = live } }
+    }
+
+    Focuses = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Focus"
+        editable = character
+        valueType = string
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed Strike", Attributes.Daring + Departments.Security, Departments.Security, Task.Dice, 1 + Departments.Security, "melee")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { size = wide }
+        Equipment = string { multiline = true }
+        Milestones = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [NPC, Task, Attacks] }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Minor", "Notable", "Major"] }
+        Species = string {}
+        'Max Stress' = integer { default = 8 }
+        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Down = string { value = if Stress >= 'Max Stress' then "Defeated" else ""  visible = none  indicator = "#d64545" }
+        Protection = integer { default = 0 }
+        Traits = string {}
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Control = integer { default = 8 }
+        Daring = integer { default = 8 }
+        Fitness = integer { default = 8 }
+        Insight = integer { default = 8 }
+        Presence = integer { default = 8 }
+        Reason = integer { default = 8 }
+    }
+    Departments = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Command = integer { default = 1 }
+        Conn = integer { default = 1 }
+        Engineering = integer { default = 1 }
+        Security = integer { default = 1 }
+        Medicine = integer { default = 1 }
+        Science = integer { default = 1 }
+    }
+    Task = taskTable {}
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Target = integer { default = 10  valuedice = staDice (Target, 1, false, 2, 1)  action = ranged }
+            Damage = integer { default = 3  valuedice = challengeRoll (Damage, 0) }
+            Qualities = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Special Rules' = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { important = [Ship, Systems, Weapons] }
+    Ship = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string {}
+        Registry = string {}
+        'Service Date' = integer { default = 2371 }
+        Scale = integer { default = 4  minvalue = 1  maxvalue = 7 }
+        'Max Shields' = integer { default = 10 }
+        Shields = integer { default = 'Max Shields'  minvalue = 0  editable = live }
+        Breaches = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Breaches > Scale then "Destroyed" else if Shields < 1 then "Shields down" else ""  visible = none  indicator = "#d64545" }
+        Power = integer { default = 8  editable = live }
+        Resistance = integer { value = Scale  editable = none }
+        Crew = string { keys = ["Untrained", "Basic", "Proficient", "Talented", "Exceptional"] }
+        Traits = string {}
+    }
+    Systems = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Comms = integer { default = 8 }
+        Computers = integer { default = 8 }
+        Engines = integer { default = 8 }
+        Sensors = integer { default = 8 }
+        Structure = integer { default = 8 }
+        Weapons = integer { default = 8 }
+    }
+    Departments = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Command = integer { default = 1 }
+        Conn = integer { default = 1 }
+        Engineering = integer { default = 1 }
+        Security = integer { default = 1 }
+        Medicine = integer { default = 1 }
+        Science = integer { default = 1 }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Damage = integer { default = 4  valuedice = challengeRoll (Damage, 0)  action = ranged }
+            Qualities = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Talents = string { multiline = true }
+        'Mission Profile' = string {}
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged"] }
+        Severity = string {}
+        Size = string { keys = ["1H", "2H"] }
+        Qualities = string {}
+        Cost = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirement = string {}
+    }
+}
+
+StarTrekAdventures = system
+{
+    hints = [
+        hint
+        {
+            title = "Tasks"
+            topic = "Play"
+            text = ["Pick an attribute and a department in the Task block. Roll 2d20 (buy up to 3 more): each die at or under the target is a success, at or under the department with a focus is two. Extra successes become Momentum."]
+        },
+        hint
+        {
+            title = "Complications"
+            topic = "Play"
+            text = ["Each die in the complication range, usually a 20, is a complication. The GM gains Threat to use against the crew."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Players and NPCs take turns. A player acts first, then the side passes; spend Momentum or Threat to keep the initiative."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Roll Challenge dice: 1 and 2 count as written, 5 and 6 count 1 and trigger Effects. Damage minus Protection is Stress; damage of 5 or more, or past the last Stress, is an Injury."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Weapons = weaponStats
+    Talents = talentStats
+    secondaryTypes = ["Weapons", "Talents"]
+    extraEntityTypes = [entityTypeDescription ("Spaceships", "starship", true, "/systems/starwars/spaceship-entity.svg", [])]
+    description = "Star Trek Adventures 2nd edition: the 2d20 system for Starfleet crews"
+    quickdice = [2d20, 1d20, 1d6]
+    cssFiles = ["/systems/startrek/startrek.css"]
+    libraries = ["/systems/names/scifi.json"]
+    nameSettings = [spaceNameSetting]
+}
