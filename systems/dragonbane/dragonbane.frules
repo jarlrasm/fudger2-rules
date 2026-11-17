@@ -305,7 +305,7 @@ creatureTable = ruleset
         keys = ["Awareness", "Evade", "Swords"]
         valueType = custom
         {
-            Value = integer { default = 12  valuedice = dbRoll (0)  action = melee  reach = 2 }
+            Value = integer { default = 12  valuedice = dbRoll (0)  action = if Key == "Bows" or Key == "Crossbows" or Key == "Slings" then "ranged" else if Key == "Awareness" or Key == "Evade" then "" else "melee"  reach = 2 }
         }
     }
     Notes = table

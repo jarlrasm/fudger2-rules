@@ -321,7 +321,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Die = string { default = "d6"  keys = skillDieTypes }
-            Roll = integer { value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die  action = melee  reach = 2 }
+            Roll = integer { value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die  action = if Key == "Shooting" then "ranged" else if Key == "Notice" then "" else "melee"  reach = 2 }
         }
     }
     Notes = table

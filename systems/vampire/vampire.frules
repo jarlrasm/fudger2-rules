@@ -268,7 +268,7 @@ creatureTable = ruleset
         keys = ["Brawl", "Firearms"]
         valueType = custom
         {
-            Dice = integer { default = 5  valuedice = v5Pool (Dice, 0, 0)  action = melee  reach = 2 }
+            Dice = integer { default = 5  valuedice = v5Pool (Dice, 0, 0)  action = if Key == "Firearms" then "ranged" else "melee"  reach = 2 }
         }
     }
     Notes = table

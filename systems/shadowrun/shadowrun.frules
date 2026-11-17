@@ -284,7 +284,7 @@ creatureTable = ruleset
         keys = ["Firearms", "Close Combat"]
         valueType = custom
         {
-            Dice = integer { default = 8  valuedice = srRoll (Dice, 0, false)  action = ranged  range = 50 }
+            Dice = integer { default = 8  valuedice = srRoll (Dice, 0, false)  action = if Key == "Close Combat" then "melee" else "ranged"  reach = 2  range = 50 }
             Damage = string {}
         }
     }

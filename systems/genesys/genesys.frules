@@ -305,7 +305,7 @@ creatureTable = ruleset
         {
             Yellow = integer { default = 1  minvalue = 0 }
             Green = integer { default = 1  minvalue = 0 }
-            Roll = integer { value = Yellow + Green  valuedice = genesysPool (Yellow, Green, 0, 0, 2, 0)  editable = none  action = melee  reach = 2 }
+            Roll = integer { value = Yellow + Green  valuedice = genesysPool (Yellow, Green, 0, 0, 2, 0)  editable = none  action = if Key == "Ranged" then "ranged" else if Key == "Vigilance" then "" else "melee"  reach = 2 }
         }
     }
     Notes = table

@@ -186,6 +186,7 @@ A field with `action` is an action. In a running battle, whoever has the current
 - `range = <number>`: how far a ranged action reaches. Without it there is no limit.
 - An out-of-reach action is greyed out for players. The gamemaster can still use it.
 - In a list row, the action is named after the row's `Name` and rolls the first rolled field in the row.
+- In a `keyvalues` row with `valueType = custom`, the action is named after the key and rolls the first rolled field. Inside the row, `Key` is the row's key, so the kind can depend on it: `action = if Key == "Firearms" then "ranged" else "melee"`. An `action` that is neither melee nor ranged, such as `""`, makes no action.
 - In the sheet's meta view you can tick "Action" on any row or field to make it an action, or untick one the rules made. Those have no range limit, and a field without dice just says "Bob used Rope on Orc".
 
 ```
@@ -520,7 +521,7 @@ Attributes = keyvalues
 - `keys`: the starting keys.
 - `editablekeys`: who can add or remove keys. `campaign` (the GM, per campaign) or `character` (the player, per character). Leave it out for fixed keys.
 - `valueType = enum { default possiblevalues valuedice }`: a value picked from a list. Stored as the index, shown as the text.
-- `valueType = custom { fields }`: each key gets those fields as columns.
+- `valueType = custom { fields }`: each key gets those fields as columns. In them, `Key` is the row's key, unless the row has a field named `Key`.
 
 ### list
 
