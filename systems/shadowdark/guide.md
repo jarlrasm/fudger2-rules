@@ -1,7 +1,7 @@
 # Playing Shadowdark
 
 ## Rolling
-Roll **d20 + stat modifier** (plus talents and bonuses) and meet or beat a DC: 9 easy, 12 normal, 15 hard, 18 extreme. Each roll asks for the DC (attacks ask for the target's AC) and says whether it worked. Only roll when the outcome is uncertain and failure is interesting.
+Roll **d20 + stat modifier** (plus talents and bonuses) and meet or beat a DC: 9 easy, 12 normal, 15 hard, 18 extreme. Each roll asks for the DC (attacks ask for the target's AC) and says whether it worked. Leave it blank when only the GM knows it, and the roll shows just the total. Only roll when the outcome is uncertain and failure is interesting.
 
 - **Advantage** rolls two d20 and keeps the best, **disadvantage** the worst (Shift and Ctrl).
 - A natural 20 is a critical success (double weapon damage dice on attacks); a natural 1 always fails.

@@ -1,7 +1,7 @@
 # Playing Cyberpunk RED
 
 ## Rolling
-A check is **STAT + Skill level + 1d10** against a Difficulty Value (DV). Each roll asks for the DV before rolling (answer 0 to just see the total). The total must **beat** the DV; ties go to the defender.
+A check is **STAT + Skill level + 1d10** against a Difficulty Value (DV). Each roll asks for the DV before rolling (leave it blank to just see the total, such as when only the GM knows it). The total must **beat** the DV; ties go to the defender.
 
 - Typical DVs: 9 everyday, 13 professional, 15 heroic, 17 incredible, 21 legendary, 24 impossible.
 - **Critical success:** a natural 10 adds the "Crit" die. **Critical failure:** a natural 1 subtracts it. The Crit die is ignored otherwise.

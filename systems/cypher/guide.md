@@ -1,7 +1,7 @@
 # Playing the Cypher System
 
 ## Rolling
-The GM gives every task a **level** from 0 to 10. The target number is **level × 3**. Each task roll asks for its **level**, then rolls d20 against the target.
+The GM gives every task a **level** from 0 to 10. The target number is **level × 3**. Each task roll asks for its **level**, then rolls d20 against the target. Leave it blank when only the GM knows it, and the roll shows just the d20.
 
 - Each step of **easing** lowers the level by one. Skills ease tasks (Trained 1, Specialized 2; an Inability hinders by 1), as do assets (at most 2) and **Effort**.
 - **Effort** costs 3 points from the relevant pool for the first level and 2 for each level after, minus the pool's **Edge**. A character can use Effort up to their tier. Set Effort before rolling; the roll adds it as eases.

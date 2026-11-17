@@ -40,7 +40,7 @@ srAskedRoll (pool, ruleOfSix, spend) = ([dice { number = max (0, pool)  sides = 
 edgeSpend (char) = if char.Attributes.'Current Edge' > 3 then [{ Field = "characterTable.Attributes.Current Edge"  Value = char.Attributes.'Current Edge' - 4 }] else []
 
 srDice (char, pool) =
-    ask ("Threshold", 0, srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier', false, edgeSpend (char)))
+    ask ("Threshold", srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier', false, edgeSpend (char)))
 
 attributeValue (char, name) =
     switch name
@@ -384,7 +384,7 @@ Shadowrun = system
         {
             title = "Hits and glitches"
             topic = "Play"
-            text = ["5s and 6s are hits. Each test asks for its threshold. More than half 1s is a glitch."]
+            text = ["5s and 6s are hits. Each test asks for its threshold; leave it blank for none. More than half 1s is a glitch."]
         },
         hint
         {

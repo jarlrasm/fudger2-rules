@@ -33,7 +33,7 @@ dualityRoll (mode, difficulty) = ([dice { number = 1  sides = 12  color = "yello
 dualityAskedRoll (mode) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
     ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), asked)))
 
-dualityDice (char) = ask ("Difficulty", 12, dualityAskedRoll (char.Character.Roll))
+dualityDice (char) = ask ("Difficulty", dualityAskedRoll (char.Character.Roll))
 
 plainDuality = dualityRoll ("Normal", 0)
 
@@ -350,7 +350,7 @@ Daggerheart = system
         {
             title = "Hope and Fear"
             topic = "Play"
-            text = ["Roll the Hope and Fear d12s plus a trait against the Difficulty each roll asks for. Higher Hope gives the player Hope, higher Fear gives the GM Fear."]
+            text = ["Roll the Hope and Fear d12s plus a trait against the Difficulty each roll asks for. Higher Hope gives the player Hope, higher Fear gives the GM Fear. Leave it blank when only the GM knows it."]
         },
         hint
         {

@@ -1,7 +1,7 @@
 # Playing Shadowrun (6th World)
 
 ## Rolling
-Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Each test asks for its threshold (0 for none); set Modifier on the sheet for situational dice.
+Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Each test asks for its threshold (leave it blank for none, or when only the GM knows it); set Modifier on the sheet for situational dice.
 
 - **Glitch:** more than half the dice show 1. A glitch with no hits is a **critical glitch**.
 - **Opposed tests:** both roll; the attacker needs more hits than the defender, and net hits add to damage.

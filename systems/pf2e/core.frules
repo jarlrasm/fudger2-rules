@@ -51,9 +51,9 @@ statusPenalty (char) = max (char.Conditions.Frightened, char.Conditions.Sickened
 pf2AskedRoll (fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
     ((baseline, throws)->pf2Result (baseline, if fortune == "Fortune" then max (first (throws).rolls) else if fortune == "Misfortune" then min (first (throws).rolls) else first (first (throws).rolls), asked)))
 
-pf2Dice (char) = ask ("DC", 15, pf2AskedRoll (char.Character.Roll))
+pf2Dice (char) = ask ("DC", pf2AskedRoll (char.Character.Roll))
 
-pf2StrikeDice (char) = ask ("Target AC", 15, pf2AskedRoll (char.Character.Roll))
+pf2StrikeDice (char) = ask ("Target AC", pf2AskedRoll (char.Character.Roll))
 
 plainPf2 = pf2Roll (0, "Normal")
 

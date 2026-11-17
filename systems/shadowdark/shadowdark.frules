@@ -30,9 +30,9 @@ sdRoll (mode, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides =
 sdAskedRoll (mode) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
     ((baseline, throws)->checkResult (baseline, d20Total (mode, first (throws).rolls), asked)))
 
-sdDice (char) = ask ("DC", 12, sdAskedRoll (char.Character.Roll))
+sdDice (char) = ask ("DC", sdAskedRoll (char.Character.Roll))
 
-sdAttackDice (char) = ask ("Target AC", 12, sdAskedRoll (char.Character.Roll))
+sdAttackDice (char) = ask ("Target AC", sdAskedRoll (char.Character.Roll))
 
 plainD20 = sdRoll ("Normal", 0)
 
@@ -270,7 +270,7 @@ Shadowdark = system
         {
             title = "Checks"
             topic = "Play"
-            text = ["d20 + modifier against a DC. Each roll asks for the DC; use the slider for advantage and disadvantage."]
+            text = ["d20 + modifier against a DC. Each roll asks for the DC; use the slider for advantage and disadvantage. Leave it blank when only the GM knows it."]
         },
         hint
         {

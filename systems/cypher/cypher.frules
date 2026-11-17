@@ -16,18 +16,18 @@ cypherOutcome (natural, target) =
     else if natural >= target then "Success"
     else "Failure"
 
-cypherResult (level, eases, natural) =
+cypherResult (level, eases, natural, known) =
 {
-    Text = toString (natural) + " vs " + toString (effectiveLevel (level, eases) * 3) + " (level " + toString (effectiveLevel (level, eases)) + "): " + (if natural >= effectiveLevel (level, eases) * 3 then "Success" else "Failure") + specialRoll (natural)
+    Text = if not (known) then toString (natural) + specialRoll (natural) else toString (natural) + " vs " + toString (effectiveLevel (level, eases) * 3) + " (level " + toString (effectiveLevel (level, eases)) + "): " + (if natural >= effectiveLevel (level, eases) * 3 then "Success" else "Failure") + specialRoll (natural)
     Value = natural
-    Outcome = cypherOutcome (natural, effectiveLevel (level, eases) * 3)
+    Outcome = if known then cypherOutcome (natural, effectiveLevel (level, eases) * 3) else if natural == 1 then "Fumble" else if natural > 18 then "Critical" else ""
 }
 
-cypherRoll (level, effort) = ([1d20], ((baseline, throws)->cypherResult (level, baseline + effort, first (first (throws).rolls))))
+cypherRoll (level, effort) = ([1d20], ((baseline, throws)->cypherResult (level, baseline + effort, first (first (throws).rolls), true)))
 
-cypherAskedRoll (effort) = ([1d20], ((baseline, throws)->cypherResult (asked, baseline + effort, first (first (throws).rolls))))
+cypherAskedRoll (effort) = ([1d20], ((baseline, throws)->cypherResult (asked, baseline + effort, first (first (throws).rolls), answered)))
 
-cypherDice (char) = ask ("Task level", 3, cypherAskedRoll (char.Character.Effort))
+cypherDice (char) = ask ("Task level", cypherAskedRoll (char.Character.Effort))
 
 plainTask = cypherRoll (0, 0)
 
@@ -265,7 +265,7 @@ CypherSystem = system
         {
             title = "Task levels"
             topic = "Play"
-            text = ["Every roll asks for the task's level. Skills, assets and Effort ease it, and the target is level times 3.", "The GM never rolls: players roll to attack and to defend."]
+            text = ["Every roll asks for the task's level. Skills, assets and Effort ease it, and the target is level times 3. Leave it blank when only the GM knows it.", "The GM never rolls: players roll to attack and to defend."]
         },
         hint
         {
