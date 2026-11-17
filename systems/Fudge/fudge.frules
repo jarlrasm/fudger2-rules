@@ -17,7 +17,7 @@ fudgeResult (level, difficulty, known) =
     if known then { Text = ladderWord (level) + " vs " + ladderWord (difficulty + 3) + ": " + fudgeOutcome (level - difficulty - 3)  Value = level  Outcome = if level >= difficulty + 3 then "Success" else "Failure" }
     else level
 
-fudgeRoll = ask ("Difficulty (Fair 0, Good 1, Mediocre -1)", ([4df], ((baseline, throws)->fudgeResult (baseline + sum (first (throws).rolls), asked, answered))))
+fudgeRoll = ask ("Difficulty", fudgevalues, -3, ([4df], ((baseline, throws)->fudgeResult (baseline + sum (first (throws).rolls), asked, answered))))
 
 characterTable = ruleset
 {

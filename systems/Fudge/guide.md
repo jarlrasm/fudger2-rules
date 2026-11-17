@@ -6,7 +6,7 @@ Traits are words on a ladder: Terrible, Poor, Mediocre, Fair, Good, Great, Super
 ## Rolling
 Roll 4dF (four Fudge dice, each -1, 0 or +1) and move that many steps along the ladder from the trait. A Good trait with a roll of -1 gives Fair. The sheet does this when a trait is clicked, and the chat shows the result.
 
-- **Unopposed:** set a difficulty on the ladder (Fair for ordinary tasks, Good or Great for hard ones). Meeting it succeeds. Each step above or below is a better or worse result. Each roll asks for the difficulty as a number from Fair: 0 is Fair, 1 Good, 2 Great, -1 Mediocre. Leave it blank when only the GM knows it, and the roll shows just the result on the ladder.
+- **Unopposed:** set a difficulty on the ladder (Fair for ordinary tasks, Good or Great for hard ones). Meeting it succeeds. Each step above or below is a better or worse result. Each roll asks for the difficulty on the ladder. Leave it at Not set when only the GM knows it, and the roll shows just the result on the ladder.
 - **Opposed:** both sides roll, and the higher result wins. The difference is the relative degree.
 
 ## Combat
