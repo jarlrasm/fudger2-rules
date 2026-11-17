@@ -1,0 +1,68 @@
+@import url("/systems/sheet.css");
+
+/* Stars Without Number: a clean technical record. Grey-blue panels, a
+   condensed sans, six attribute boxes with the modifier under the score,
+   combat numbers in a strip, skills in two columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9d1d9;
+    --surface: #f4f7fa;
+    --surface-alt: #e7edf2;
+    --surface-sunken: #dbe3ea;
+    --surface-muted: #c2ccd6;
+    --text: #16202a;
+    --text-muted: #3b4a59;
+    --text-faint: #6b7b8b;
+    --on-accent: #f4f7fa;
+    --border: #8796a5;
+    --border-strong: #16202a;
+    --accent: #1f4e79;
+    --accent-hover: #2c6aa0;
+    --accent-soft: #d6e4f0;
+    --link: #1f4e79;
+    --danger: #a42a2a;
+    --danger-hover: #a42a2a;
+    --danger-soft: #d6e4f0;
+    --success: #3f7a3a;
+    --paper: #f4f7fa;
+    --card-bg: #e7edf2;
+    --dice-bg: #1f4e79;
+    --dice-text: #f4f7fa;
+}
+
+.entityView {
+    --sheet-font: "Barlow", "Segoe UI", Helvetica, sans-serif;
+    --title-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --block-radius: 2px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 2px 8px;
+}
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 8px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    border: 1px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-weight: 700; color: var(--accent); }
+.entityView .table-attributes .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(2) { color: var(--text-faint); }
+.entityView .table-psychics,
+.entityView .table-encumbrance { --block: 50%; }
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-gear,
+.entityView .table-foci { --block: 50%; }

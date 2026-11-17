@@ -1,0 +1,75 @@
+@import url("/systems/sheet.css");
+
+/* Star Trek Adventures: a console readout. Black panels, rounded
+   coloured bars for headings, attributes and departments as two banks of
+   readouts, the task block below them. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface: #0c0c12;
+    --surface-alt: #14141c;
+    --surface-sunken: #050508;
+    --surface-muted: #22222e;
+    --text: #f0e6d2;
+    --text-muted: #c8b9a0;
+    --text-faint: #8a7f70;
+    --on-accent: #000000;
+    --border: #3a3a4a;
+    --border-strong: #ff9c00;
+    --accent: #ff9c00;
+    --accent-hover: #ffb84d;
+    --accent-soft: #3a2600;
+    --link: #99ccff;
+    --danger: #cc4444;
+    --danger-hover: #cc4444;
+    --danger-soft: #3a2600;
+    --success: #3f7a3a;
+    --paper: #0c0c12;
+    --card-bg: #14141c;
+    --dice-bg: #ff9c00;
+    --dice-text: #000000;
+}
+
+.entityView {
+    --sheet-font: "Antonio", "Arial Narrow", sans-serif;
+    --title-font: "Antonio", "Arial Narrow", sans-serif;
+    --block-radius: 18px 0 0 18px;
+    --block-border: 0;
+    --title-border: 0;
+    background: var(--bg);
+}
+.entityView .entityTable {
+    border-left: 14px solid var(--accent);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 0 12px 12px 0;
+    padding: 2px 12px;
+}
+.entityView .table-departments { border-left-color: #cc99cc; }
+.entityView .table-departments > table > thead th { background: #cc99cc; }
+.entityView .table-task { border-left-color: #99ccff; }
+.entityView .table-task > table > thead th { background: #99ccff; }
+.entityView .table-status { border-left-color: #cc6666; }
+.entityView .table-status > table > thead th { background: #cc6666; }
+.entityView .table-attributes,
+.entityView .table-departments { --block: 50%; }
+.entityView .table-attributes > table > tbody > tr > td + td,
+.entityView .table-departments > table > tbody > tr > td + td { font-size: 1.3em; color: var(--accent); }
+.entityView .table-npc ~ .table-attributes,
+.entityView .table-npc ~ .table-departments { --block: 100%; }
+.entityView .table-systems > table > tbody,
+.entityView .table-npc ~ .table-attributes > table > tbody,
+.entityView .table-npc ~ .table-departments > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.entityView .table-values,
+.entityView .table-focuses,
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-attacks { --block: 50%; }

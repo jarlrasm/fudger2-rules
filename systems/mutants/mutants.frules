@@ -1,0 +1,321 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+degreesOf (total, dc) = if total >= dc then 1 + (total - dc) / 5 else 0 - (1 + (dc - total - 1) / 5)
+
+degreeText (n) =
+    if n > 0 then "success, " + toString (n) + (if n == 1 then " degree" else " degrees")
+    else "failure, " + toString (0 - n) + (if n == -1 then " degree" else " degrees")
+
+critDegrees (natural, total, dc) = if natural == 20 then degreesOf (total, dc) + 1 else degreesOf (total, dc)
+
+mmResult (natural, total, dc) =
+{
+    Text = toString (total) + (if dc > 0 then " vs DC " + toString (dc) + ": " + degreeText (critDegrees (natural, total, dc)) else "") + (if natural == 20 then ", natural 20" else "")
+    Value = total
+    Outcome = if dc < 1 then (if natural == 20 then "Critical" else "") else if critDegrees (natural, total, dc) > 0 then "Success" else "Failure"
+}
+
+mmCheck (dc) = ([1d20], ((baseline, throws)->mmResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dc > 0 then dc else asked)))
+
+mmDice = ask ("DC", mmCheck (0))
+
+attackResult (natural, total, defence) =
+{
+    Text = toString (total) + (if defence > 0 then " vs " + toString (10 + defence) + (if natural == 20 then ": critical hit" else if natural == 1 then ": miss" else if total >= 10 + defence then ": hit" else ": miss") else (if natural == 20 then ", natural 20" else ""))
+    Value = total
+    Outcome = if natural == 20 then "Critical hit" else if natural == 1 then "Miss" else if defence < 1 then "" else if total >= 10 + defence then "Hit" else "Miss"
+}
+
+attackAsked = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
+
+attackDice = ask ("Dodge or Parry", attackAsked)
+
+damageCondition (degrees) =
+    if degrees > 0 then "no effect"
+    else if degrees == -1 then "bruised, -1 Toughness"
+    else if degrees == -2 then "bruised and dazed"
+    else if degrees == -3 then "bruised and staggered"
+    else "incapacitated"
+
+toughnessResult (natural, total, rank) =
+{
+    Text = toString (total) + " vs DC " + toString (15 + rank) + ": " + damageCondition (if natural == 20 then 1 else degreesOf (total, 15 + rank))
+    Value = total
+    Outcome = if natural == 20 or total >= 15 + rank then "Success" else "Failure"
+}
+
+toughnessCheck (rank) = ([1d20], ((baseline, throws)->toughnessResult (first (first (throws).rolls), baseline + first (first (throws).rolls), rank)))
+
+toughnessDice = ask ("Damage rank", ([1d20], ((baseline, throws)->toughnessResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked))))
+
+ability = custom
+{
+    Rank = integer { default = 0  minvalue = -5  maxvalue = 20 }
+    Check = modifier { value = Rank  valuedice = mmDice  editable = none }
+}
+
+skill (abilityRank) = custom
+{
+    Ranks = integer { default = 0  minvalue = 0  maxvalue = 20 }
+    Bonus = modifier { value = abilityRank + Ranks  valuedice = mmDice  editable = none }
+}
+
+defence (abilityRank) = custom
+{
+    Ranks = integer { default = 0  minvalue = 0  maxvalue = 20 }
+    Total = modifier { value = abilityRank + Ranks  valuedice = mmDice  editable = none }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Abilities, Defenses, Condition, Powers] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hero Name' = string {}
+        Identity = string {}
+        'Power Level' = integer { default = 10  minvalue = 1  maxvalue = 20 }
+        'Power Points' = integer { value = 'Power Level' * 15  editable = none }
+        'Points Spent' = integer { value = pointsSpent (characterTable)  editable = none }
+        Group = string {}
+        Base = string {}
+        Complications = string { multiline = true }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = ability {}
+        Stamina = ability {}
+        Agility = ability {}
+        Dexterity = ability {}
+        Fighting = ability {}
+        Intellect = ability {}
+        Awareness = ability {}
+        Presence = ability {}
+    }
+
+    Defenses = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Dodge = defence (Abilities.Agility.Rank)
+        Parry = defence (Abilities.Fighting.Rank)
+        Fortitude = defence (Abilities.Stamina.Rank)
+        Toughness = modifier { value = Abilities.Stamina.Rank + Protection - Condition.Bruised  valuedice = toughnessDice  editable = none }
+        Will = defence (Abilities.Awareness.Rank)
+        Protection = integer { default = 0  minvalue = 0 }
+        Initiative = modifier { value = Abilities.Agility.Rank + 4 * 'Improved Initiative'  valuedice = mmCheck (0)  editable = none }
+        'Improved Initiative' = integer { default = 0  minvalue = 0 }
+    }
+
+    Condition = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hero Points' = integer { default = 1  minvalue = 0  editable = live  indicator = "#d4b106"  indicatorLabel = "Hero Points" }
+        Bruised = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Staggered = bool { default = false  editable = live  indicator = "#e8913a" }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
+        Hindered = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
+        Other = string { editable = live  indicator = "#8e5cc4" }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Acrobatics = skill (Abilities.Agility.Rank)
+        Athletics = skill (Abilities.Strength.Rank)
+        'Close Combat' = skill (Abilities.Fighting.Rank)
+        Deception = skill (Abilities.Presence.Rank)
+        Expertise = skill (Abilities.Intellect.Rank)
+        Insight = skill (Abilities.Awareness.Rank)
+        Intimidation = skill (Abilities.Presence.Rank)
+        Investigation = skill (Abilities.Intellect.Rank)
+        Perception = skill (Abilities.Awareness.Rank)
+        Persuasion = skill (Abilities.Presence.Rank)
+        'Ranged Combat' = skill (Abilities.Dexterity.Rank)
+        'Sleight of Hand' = skill (Abilities.Dexterity.Rank)
+        Stealth = skill (Abilities.Agility.Rank)
+        Technology = skill (Abilities.Intellect.Rank)
+        Treatment = skill (Abilities.Intellect.Rank)
+        Vehicles = skill (Abilities.Dexterity.Rank)
+    }
+
+    Offense = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Ranged = bool { default = false }
+            Attack = modifier { default = 0  valuedice = attackDice  action = if Ranged then "ranged" else "melee"  reach = 5 }
+            Effect = string { default = "Damage" }
+            Rank = integer { default = 0 }
+        }
+    }
+
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Power"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Effect = string {}
+            Rank = integer { default = 1  minvalue = 0 }
+            Cost = integer { default = 1  minvalue = 0 }
+            Notes = string {}
+        }
+    }
+
+    Advantages = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Advantages
+        singular = "Advantage"
+        editable = character
+    }
+
+    'Advantage Ranks' = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Advantage Points' = integer { default = 0  minvalue = 0 }
+        'Equipment Points' = integer { default = 0  minvalue = 0 }
+    }
+}
+
+skillRanks (s) = s.Acrobatics.Ranks + s.Athletics.Ranks + s.'Close Combat'.Ranks + s.Deception.Ranks + s.Expertise.Ranks + s.Insight.Ranks + s.Intimidation.Ranks + s.Investigation.Ranks
+    + s.Perception.Ranks + s.Persuasion.Ranks + s.'Ranged Combat'.Ranks + s.'Sleight of Hand'.Ranks + s.Stealth.Ranks + s.Technology.Ranks + s.Treatment.Ranks + s.Vehicles.Ranks
+
+abilityRanks (a) = a.Strength.Rank + a.Stamina.Rank + a.Agility.Rank + a.Dexterity.Rank + a.Fighting.Rank + a.Intellect.Rank + a.Awareness.Rank + a.Presence.Rank
+
+pointsSpent (char) =
+    2 * abilityRanks (char.Abilities)
+    + char.Defenses.Dodge.Ranks + char.Defenses.Parry.Ranks + char.Defenses.Fortitude.Ranks + char.Defenses.Will.Ranks
+    + (skillRanks (char.Skills) + 1) / 2
+    + char.'Advantage Ranks'.'Advantage Points'
+    + sum (map ((p)->p.Cost, char.Powers))
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Power Level' = integer { default = 8 }
+        Minion = bool { default = false }
+        Dodge = integer { default = 6 }
+        Parry = integer { default = 6 }
+        Toughness = modifier { default = 6  valuedice = toughnessDice }
+        Fortitude = modifier { default = 6  valuedice = mmDice }
+        Will = modifier { default = 6  valuedice = mmDice }
+        Initiative = modifier { default = 2  valuedice = mmCheck (0) }
+        Bruised = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Staggered = bool { default = false  editable = live  indicator = "#e8913a" }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 8  valuedice = attackDice  action = melee  reach = 5 }
+            Effect = string { default = "Damage" }
+            Rank = integer { default = 8 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string {}
+        Powers = string { multiline = true }
+        Skills = string {}
+        Advantages = string {}
+        Description = string { multiline = true }
+    }
+}
+
+effectStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { keys = ["Attack", "Control", "Defense", "General", "Movement", "Sensory"] }
+        Action = string {}
+        Range = string {}
+        Duration = string {}
+        Cost = string {}
+    }
+}
+
+advantageStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { keys = ["Combat", "Fortune", "General", "Skill"] }
+        Ranked = string {}
+    }
+}
+
+MutantsAndMasterminds = system
+{
+    hints = [
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 + bonus against a DC. Every 5 over the DC is another degree of success, every 5 under another degree of failure."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["An attack hits on d20 + attack against 10 + Dodge or Parry. The target rolls Toughness against 15 + damage rank: one degree of failure bruises, two dazes, three staggers, four incapacitates."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll d20 + Initiative at the start of a conflict and act from highest to lowest."]
+        },
+        hint
+        {
+            title = "Power points"
+            topic = "Getting started"
+            text = ["Heroes get 15 power points per power level. Abilities cost 2 a rank, defences 1, skills 1 per 2 ranks, advantages 1, and powers by effect."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Effects = effectStats
+    Advantages = advantageStats
+    secondaryTypes = ["Advantages"]
+    otherLibararyTypes = ["Effects"]
+    description = "Mutants and Masterminds 3rd edition: superheroes built point by point on d20 and degrees"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20]
+    cssFiles = ["/systems/mutants/mutants.css"]
+    libraries = ["/systems/mutants/mutants.json", "/systems/names/heroes.json", "/systems/names/spies.json"]
+    nameSettings = [superheroesNameSetting, spyThrillerNameSetting]
+}

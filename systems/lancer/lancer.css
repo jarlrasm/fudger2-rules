@@ -1,0 +1,62 @@
+@import url("/systems/sheet.css");
+
+/* Lancer: a COMP/CON style terminal. Slate panels with a red accent
+   stripe, a squared sans, mech stats in a dense grid, structure and stress
+   as big counters. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #1b1f24;
+    --surface: #242a31;
+    --surface-alt: #2d343c;
+    --surface-sunken: #171b1f;
+    --surface-muted: #3a424c;
+    --text: #e6edf3;
+    --text-muted: #b4c0cc;
+    --text-faint: #7d8a97;
+    --on-accent: #1b1f24;
+    --border: #46515c;
+    --border-strong: #e63946;
+    --accent: #e63946;
+    --accent-hover: #ff5a66;
+    --accent-soft: #3a1b1e;
+    --link: #7cc4ff;
+    --danger: #ff5a66;
+    --danger-hover: #ff5a66;
+    --danger-soft: #3a1b1e;
+    --success: #3f7a3a;
+    --paper: #242a31;
+    --card-bg: #2d343c;
+    --dice-bg: #e63946;
+    --dice-text: #1b1f24;
+}
+
+.entityView {
+    --sheet-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --title-font: "Orbitron", "Eurostile", "Helvetica Neue", sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    border-top: 3px solid var(--accent);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.85em;
+    color: var(--accent);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.05em;
+}
+.entityView .table-mech > table > tbody > tr > td + td,
+.entityView .table-stats > table > tbody > tr > td + td { font-size: 1.3em; color: var(--link); }
+.entityView .table-combat > table > tbody { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.entityView .table-skill-triggers,
+.entityView .table-talents,
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-systems { --block: 50%; }

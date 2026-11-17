@@ -1,0 +1,68 @@
+@import url("/systems/sheet.css");
+
+/* Wrath & Glory: gothic dataslate. Dark steel with gold trim, a
+   condensed gothic face, seven attributes in a row of plates, traits below,
+   skills in three columns with their pools. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #14110d;
+    --surface: #1f1a14;
+    --surface-alt: #28221a;
+    --surface-sunken: #100d0a;
+    --surface-muted: #3a3124;
+    --text: #e8dcc0;
+    --text-muted: #c3b494;
+    --text-faint: #8b7f66;
+    --on-accent: #14110d;
+    --border: #5a4a2c;
+    --border-strong: #c9a14a;
+    --accent: #c9a14a;
+    --accent-hover: #e0bb64;
+    --accent-soft: #3a2f18;
+    --link: #e0bb64;
+    --danger: #c2412d;
+    --danger-hover: #c2412d;
+    --danger-soft: #3a2f18;
+    --success: #3f7a3a;
+    --paper: #1f1a14;
+    --card-bg: #28221a;
+    --dice-bg: #c9a14a;
+    --dice-text: #14110d;
+}
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", sans-serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+}
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    column-gap: 6px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    border: 1px solid var(--accent);
+    background: var(--surface-alt);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { color: var(--accent); text-transform: uppercase; font-size: 0.8em; }
+.entityView .table-attributes button.dicethrow { font-size: 1.4em; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "pool "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour { --block: 33.333%; }
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-talents,
+.entityView .table-gear,
+.entityView .table-psychic-powers { --block: 50%; }

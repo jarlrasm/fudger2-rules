@@ -1,0 +1,326 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+iconsIn (rolls) = sum (map ((x)->if x == 6 then 2 else if x > 3 then 1 else 0, rolls))
+
+sixesIn (rolls) = count (filter ((x)->x == 6, rolls))
+
+wrathNote (wrath) =
+    if count (wrath) == 0 then ""
+    else if first (wrath) == 6 then ", Wrath Critical: gain Glory"
+    else if first (wrath) == 1 then ", Complication"
+    else ""
+
+shiftsOf (icons, sixes, dn) = max (0, min (sixes, (icons - dn) / 2))
+
+wgText (icons, sixes, dn, wrath) =
+    toString (icons) + (if icons == 1 then " icon" else " icons")
+    + (if dn > 0 then " vs DN " + toString (dn) + (if icons >= dn then ": success" + (if shiftsOf (icons, sixes, dn) > 0 then ", " + toString (shiftsOf (icons, sixes, dn)) + " to shift" else "") else ": failure") else "")
+    + wrathNote (wrath)
+
+wgOutcome (icons, dn, wrath) =
+    if count (wrath) > 0 and first (wrath) == 6 and (dn < 1 or icons >= dn) then "Critical"
+    else if dn < 1 then (if count (wrath) > 0 and first (wrath) == 1 then "Complication" else "")
+    else if icons >= dn then "Success"
+    else "Failure"
+
+wgResult (normal, wrath, dn) =
+{
+    Text = wgText (iconsIn (normal) + iconsIn (wrath), sixesIn (normal) + sixesIn (wrath), dn, wrath)
+    Value = iconsIn (normal) + iconsIn (wrath)
+    Outcome = wgOutcome (iconsIn (normal) + iconsIn (wrath), dn, wrath)
+}
+
+wgPool (pool, dn) = ([dice { number = max (0, pool - 1)  sides = 6 }, dice { number = min (1, max (0, pool))  sides = 6  color = "red"  label = "Wrath" }],
+    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, dn)))
+
+wgAsked (pool) = ([dice { number = max (0, pool - 1)  sides = 6 }, dice { number = min (1, max (0, pool))  sides = 6  color = "red"  label = "Wrath" }],
+    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, asked)))
+
+wgDice (pool) = ask ("DN", wgAsked (pool))
+
+skill (attr) = custom
+{
+    Rating = integer { default = 0  minvalue = 0  maxvalue = 8 }
+    Pool = integer { value = attr + Rating  valuedice = wgDice (attr + Rating)  editable = none }
+}
+
+poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
+
+noSkill = { Pool = 0 }
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = wgDice (pool)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Ranged" then
+        weaponAttack (weapon.Name, poolOf (char, "Ballistic Skill"), weaponStat (weapon, "Damage") + " ED " + weaponStat (weapon, "ED"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, poolOf (char, "Weapon Skill"), toString (toInt (weaponStat (weapon, "Damage")) + char.Attributes.Strength) + " ED " + weaponStat (weapon, "ED"), "melee", 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Traits, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Species = string { keys = ["Human", "Adeptus Astartes", "Primaris Astartes", "Aeldari", "Ork", "Squat", "Ratling", "Ogryn"] }
+        Archetype = string {}
+        Faction = string {}
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Rank = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Keywords = string {}
+        Background = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 7  size = wide }
+        Strength = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Strength) }
+        Toughness = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Toughness) }
+        Agility = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Agility) }
+        Initiative = integer { default = 2  minvalue = 1  maxvalue = 12 }
+        Willpower = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Willpower) }
+        Intellect = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Intellect) }
+        Fellowship = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Fellowship) }
+    }
+
+    Traits = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Defence = integer { value = Attributes.Initiative - 1  editable = none }
+        Resilience = integer { value = Attributes.Toughness + 1 + Armour.Rating  editable = none }
+        'Max Wounds' = integer { value = Character.Tier * 2 + Attributes.Toughness  editable = none }
+        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Shock' = integer { value = Attributes.Willpower + Character.Tier  editable = none }
+        Shock = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Down = string { value = if Wounds > 'Max Wounds' then "Dying" else if Shock > 'Max Shock' then "Exhausted" else ""  visible = none  indicator = "#d64545" }
+        Determination = integer { value = Attributes.Toughness  valuedice = wgPool (Attributes.Toughness, 0)  editable = none }
+        Conviction = integer { value = Attributes.Willpower  editable = none }
+        Resolve = integer { value = Attributes.Willpower - 1  editable = none }
+        Influence = integer { value = Attributes.Fellowship - 1  editable = none }
+        'Passive Awareness' = integer { value = poolOf (characterTable, "Awareness") / 2  editable = none }
+        Speed = integer { default = 6 }
+        Wealth = integer { value = Character.Tier  editable = none }
+        Wrath = integer { default = 2  minvalue = 0  editable = live }
+        Faith = integer { default = 0  minvalue = 0  editable = live }
+        Corruption = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = skill (Attributes.Strength)
+        Awareness = skill (Attributes.Intellect)
+        'Ballistic Skill' = skill (Attributes.Agility)
+        Cunning = skill (Attributes.Fellowship)
+        Deception = skill (Attributes.Fellowship)
+        Insight = skill (Attributes.Fellowship)
+        Intimidation = skill (Attributes.Willpower)
+        Investigation = skill (Attributes.Intellect)
+        Leadership = skill (Attributes.Willpower)
+        Medicae = skill (Attributes.Intellect)
+        Persuasion = skill (Attributes.Fellowship)
+        Pilot = skill (Attributes.Agility)
+        'Psychic Mastery' = skill (Attributes.Willpower)
+        Scholar = skill (Attributes.Intellect)
+        Stealth = skill (Attributes.Agility)
+        Survival = skill (Attributes.Willpower)
+        Tech = skill (Attributes.Intellect)
+        'Weapon Skill' = skill (Attributes.Initiative)
+    }
+
+    Armour = table
+    {
+        tableLayout = layout { columns = 2 }
+        Name = string {}
+        Rating = integer { default = 0  minvalue = 0 }
+        Traits = string {}
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Psychic Powers' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Threat, Attacks] }
+    Threat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Troops", "Elite", "Adversary", "Monstrous Creature"] }
+        Defence = integer { default = 3 }
+        Resilience = integer { default = 4 }
+        'Max Wounds' = integer { default = 1 }
+        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds >= 'Max Wounds' then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Shock = integer { default = 0  minvalue = 0  editable = live }
+        Speed = integer { default = 6 }
+        Determination = integer { default = 3  valuedice = wgPool (Determination, 0) }
+        Conviction = integer { default = 2 }
+        Resolve = integer { default = 2 }
+        Skills = integer { default = 4  valuedice = wgDice (Skills) }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Pool = integer { default = 6  valuedice = wgDice (Pool)  action = melee  reach = 2 }
+            Damage = string {}
+            Traits = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Keywords = string {}
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged"] }
+        Damage = string {}
+        ED = string {}
+        AP = string {}
+        Range = string {}
+        Salvo = string {}
+        Traits = string {}
+        Value = string {}
+        Rarity = string {}
+        Keywords = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Value = string {}
+        Rarity = string {}
+        Keywords = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirements = string {}
+        Cost = string {}
+    }
+}
+
+powerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Discipline = string {}
+        DN = string {}
+        Activation = string {}
+        Duration = string {}
+        Range = string {}
+        'Multi Target' = string {}
+    }
+}
+
+WrathAndGlory = system
+{
+    hints = [
+        hint
+        {
+            title = "Dice pools"
+            topic = "Play"
+            text = ["Roll attribute + skill in d6s, one of them the red Wrath die. 4-5 is an icon, 6 is two. Match the DN to succeed, and shift spare 6s for extra effect."]
+        },
+        hint
+        {
+            title = "Wrath die"
+            topic = "Play"
+            text = ["A 6 on the Wrath die is a Wrath Critical and gains Glory. A 1 is a complication, even on a success."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Players and enemies take turns: a player acts, then the GM picks an enemy, and so on. Spend Ruin to seize the initiative."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Attack DN is the target's Defence. Damage is the weapon's value plus extra damage dice; above Resilience it deals wounds, and Determination can soak them as Shock."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Talents = talentStats
+    'Psychic Powers' = powerStats
+    secondaryTypes = ["Weapons", "Gear", "Talents", "Psychic Powers"]
+    description = "Warhammer 40,000 Wrath and Glory: heroes of the Gilead System against the darkness"
+    quickdice = [1d6, 2d6, 1d3]
+    cssFiles = ["/systems/wrathglory/wrathglory.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [grimdarkNameSetting]
+}

@@ -1,0 +1,68 @@
+@import url("/systems/sheet.css");
+
+/* MÖRK BORG: black and acid yellow, blackletter headings slashed at an
+   angle, abilities as four heavy slabs across the top. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-alt: #1c1c1c;
+    --surface-sunken: #050505;
+    --surface-muted: #2a2a2a;
+    --text: #f2ee2a;
+    --text-muted: #d9d41f;
+    --text-faint: #9a9616;
+    --on-accent: #0a0a0a;
+    --border: #5f5c10;
+    --border-strong: #f2ee2a;
+    --accent: #f2ee2a;
+    --accent-hover: #ffff66;
+    --accent-soft: #2b2a08;
+    --link: #ff3df2;
+    --danger: #ff3df2;
+    --danger-hover: #ff3df2;
+    --danger-soft: #2b2a08;
+    --success: #3f7a3a;
+    --paper: #141414;
+    --card-bg: #1c1c1c;
+    --dice-bg: #f2ee2a;
+    --dice-text: #0a0a0a;
+}
+
+.entityView {
+    --sheet-font: "Archivo Narrow", "Arial Narrow", Impact, sans-serif;
+    --title-font: "UnifrakturCook", "Old English Text MT", "Blackletter", serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-size: 1.6em;
+    border-bottom: 3px solid var(--accent);
+    letter-spacing: 0.05em;
+    padding-bottom: 2px;
+}
+.entityView .entityTable > table > thead th > * {
+    display: inline-block;
+    transform: rotate(-3deg);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 800;
+}
+.entityView .table-abilities > table > tbody > tr {
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 6px;
+    text-align: center;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { color: var(--on-accent); font-size: 1.1em; }
+.entityView .table-abilities button.dicethrow { font-size: 1.6em; background: var(--bg); color: var(--accent); }
+.entityView .table-status { --block: 66.666%; }
+.entityView .table-armour { --block: 33.333%; }
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-scrolls,
+.entityView .table-equipment { --block: 50%; }

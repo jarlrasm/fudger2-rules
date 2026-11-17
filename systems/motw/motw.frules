@@ -1,0 +1,211 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+moveOutcome (total) =
+    if total > 9 then "Strong hit"
+    else if total > 6 then "Weak hit"
+    else "Miss"
+
+moveText (total) =
+    if total > 11 then "12+: you do it, and with an advanced move something extra"
+    else if total > 9 then "10+: you do it"
+    else if total > 6 then "7-9: you do it, but with a cost, a complication or a hard choice"
+    else "6-: miss, mark experience, and the Keeper makes a move"
+
+moveResult (total) =
+{
+    Text = toString (total) + ", " + moveText (total)
+    Value = total
+    Outcome = moveOutcome (total)
+}
+
+motwRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + sum (first (throws).rolls))))
+
+motwDice (char) = motwRoll (char.Status.Forward)
+
+harmState (harm) =
+    if harm > 7 then "Dead"
+    else if harm > 3 then "Unstable"
+    else ""
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeOf (tags) =
+    if contains (tags, "far") then 50
+    else if contains (tags, "close") then 15
+    else 0
+
+weaponAttack (name, rating, harm, kind, distance) = custom
+{
+    Name = name
+    Roll = modifier { value = rating  valuedice = motwDice (characterTable)  action = kind  reach = 2  range = distance }
+    Harm = harm
+}
+
+attackFor (char, weapon) =
+    if rangeOf (toLower (weaponStat (weapon, "Tags"))) > 0 then
+        weaponAttack (weapon.Name, char.Ratings.Tough, weaponStat (weapon, "Harm"), "ranged", rangeOf (toLower (weaponStat (weapon, "Tags"))))
+    else
+        weaponAttack (weapon.Name, char.Ratings.Tough, weaponStat (weapon, "Harm"), "melee", 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Ratings, Status, Attacks] }
+    Hunter = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Playbook = string { keys = ["The Chosen", "The Crooked", "The Divine", "The Expert", "The Flake", "The Initiate", "The Monstrous", "The Mundane", "The Professional", "The Spell-Slinger", "The Spooky", "The Wronged"] }
+        Look = string {}
+        Experience = slots { number = 5  editable = live  allowedchange = increaseAndClear }
+        History = string { multiline = true }
+    }
+
+    Ratings = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Charm = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Cool = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Sharp = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Tough = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Weird = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        Luck = slots { number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
+        Harm = slots { number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
+        Down = string { value = harmState (Harm.realvalue)  visible = none  indicator = "#d64545" }
+        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        Armour = integer { default = 0 }
+    }
+
+    'Basic Moves' = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Act Under Pressure' = modifier { value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
+        'Help Out' = modifier { value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
+        'Investigate a Mystery' = modifier { value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
+        'Kick Some Ass' = modifier { value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none  action = melee  reach = 2 }
+        'Manipulate Someone' = modifier { value = Ratings.Charm  valuedice = motwDice (characterTable)  editable = none }
+        'Protect Someone' = modifier { value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none }
+        'Read a Bad Situation' = modifier { value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
+        'Use Magic' = modifier { value = Ratings.Weird  valuedice = motwDice (characterTable)  editable = none }
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Move"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Gear = string { multiline = true }
+        Improvements = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Monster, Attacks] }
+    Monster = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Type = string { keys = ["Monster", "Minion", "Bystander"] }
+        Motivation = string { keys = ["Beast (to run wild)", "Breeder (to give birth)", "Collector (to steal)", "Destroyer (to cause chaos)", "Devourer (to consume)", "Executioner (to punish)", "Parasite (to infest)", "Queen (to possess and control)", "Sorcerer (to usurp power)", "Tempter (to tempt)", "Torturer (to hurt)", "Trickster (to create mayhem)"] }
+        'Harm Capacity' = integer { default = 8 }
+        Harm = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armour = integer { default = 0 }
+        Down = string { value = if Harm >= 'Harm Capacity' then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Weakness = string {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Harm = integer { default = 2  action = melee  reach = 2 }
+            Tags = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Harm = string {}
+        Tags = string {}
+    }
+}
+
+MonsterOfTheWeek = system
+{
+    hints = [
+        hint
+        {
+            title = "Mysteries"
+            topic = "Getting started"
+            text = ["Plan the mystery: a monster, its minions, the bystanders and locations, and a countdown of what happens if the hunters do nothing."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["Roll 2d6 + rating: 10+ success, 7-9 success with a cost, 6- a miss, mark experience and the Keeper makes a move."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["There is no initiative. Move the spotlight between hunters as the fiction asks."]
+        },
+        hint
+        {
+            title = "Harm and Luck"
+            topic = "Combat"
+            text = ["Attacks deal their harm minus armour. At 4 harm a hunter is unstable, at 8 dying. Spending Luck turns a roll into a 12 or makes a harm 0."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    secondaryTypes = ["Weapons"]
+    description = "Monster of the Week: Powered by the Apocalypse hunters against the monster of the week"
+    quickdice = [2d6]
+    cssFiles = ["/systems/motw/motw.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/gothic.json", "/systems/names/cosmic.json"]
+    nameSettings = [nightWorldNameSetting, gothicHorrorNameSetting, cosmicHorrorNameSetting]
+}

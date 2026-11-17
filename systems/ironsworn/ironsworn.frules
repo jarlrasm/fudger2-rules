@@ -1,0 +1,315 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+#include "/systems/ironsworn/oracles.frules"
+
+hitOutcome (score, c1, c2) =
+    if score > c1 and score > c2 then "Strong hit"
+    else if score > c1 or score > c2 then "Weak hit"
+    else "Miss"
+
+matchNote (c1, c2) = if c1 == c2 then ", a match" else ""
+
+burnNote (score, momentum, c1, c2) =
+    if momentum > score and hitOutcome (momentum, c1, c2) != hitOutcome (score, c1, c2) then ", burn momentum for a " + toLower (hitOutcome (momentum, c1, c2))
+    else ""
+
+actionScore (die, stat, adds, momentum) = min (10, (if momentum < 0 and die == 0 - momentum then 0 else die) + stat + adds)
+
+actionResult (die, c1, c2, stat, adds, momentum) =
+{
+    Text = toString (actionScore (die, stat, adds, momentum)) + " vs " + toString (c1) + " and " + toString (c2) + ": " + toLower (hitOutcome (actionScore (die, stat, adds, momentum), c1, c2))
+        + matchNote (c1, c2)
+        + (if momentum < 0 and die == 0 - momentum then ", the action die is cancelled by negative momentum" else "")
+        + burnNote (actionScore (die, stat, adds, momentum), momentum, c1, c2)
+    Value = actionScore (die, stat, adds, momentum)
+    Outcome = hitOutcome (actionScore (die, stat, adds, momentum), c1, c2)
+}
+
+actionRoll (stat, adds, momentum) = ([dice { number = 1  sides = 6  label = "Action" }, dice { number = 2  sides = 10  color = "blue"  label = "Challenge" }],
+    ((baseline, throws)->actionResult (first (first (throws).rolls), first (item (1, throws).rolls), item (1, item (1, throws).rolls), stat, adds, momentum)))
+
+isDice (char, stat) = actionRoll (stat, char.Status.Adds, char.Status.Momentum)
+
+progressResult (score, c1, c2) =
+{
+    Text = toString (score) + " vs " + toString (c1) + " and " + toString (c2) + ": " + toLower (hitOutcome (score, c1, c2)) + matchNote (c1, c2)
+    Value = score
+    Outcome = hitOutcome (score, c1, c2)
+}
+
+progressRoll (ticks) = ([dice { number = 2  sides = 10  color = "blue"  label = "Challenge" }],
+    ((baseline, throws)->progressResult (min (10, ticks / 4), first (first (throws).rolls), item (1, first (throws).rolls))))
+
+rankTicks (rank) =
+    if rank == "Troublesome" then 12
+    else if rank == "Dangerous" then 8
+    else if rank == "Formidable" then 4
+    else if rank == "Extreme" then 2
+    else 1
+
+oracleRoll (table) = ([1d100], ((baseline, throws)->{
+    Text = toString (first (first (throws).rolls)) + ": " + item (first (first (throws).rolls) - 1, table)
+    Value = first (first (throws).rolls)
+}))
+
+oracleTwo (table1, table2) = ([1d100, 1d100], ((baseline, throws)->{
+    Text = item (first (first (throws).rolls) - 1, table1) + " " + item (first (item (1, throws).rolls) - 1, table2)
+    Value = first (first (throws).rolls)
+}))
+
+oddsThreshold (level) =
+    if level == 1 then 90
+    else if level == 2 then 75
+    else if level == 3 then 50
+    else if level == 4 then 25
+    else 10
+
+askResult (roll, level) =
+{
+    Text = toString (roll) + (if roll > oddsThreshold (level) then ": yes" else ": no") + (if mod (roll, 11) == 0 then ", an extreme result or a twist" else "")
+    Value = roll
+    Outcome = if roll > oddsThreshold (level) then "Success" else "Failure"
+}
+
+askOracle = ask ("Odds", ["Small chance", "Unlikely", "50/50", "Likely", "Almost certain"], 1, ([1d100], ((baseline, throws)->askResult (first (first (throws).rolls), asked))))
+
+vow = custom
+{
+    Name = string {}
+    Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
+    Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
+    Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
+    Mark = rankTicks (Rank)
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Stats, Status, Debilities] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Experience = integer { default = 0  minvalue = 0  maxvalue = 30  editable = live }
+        Spent = integer { default = 0  minvalue = 0 }
+        Background = string { multiline = true }
+    }
+
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Edge = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Edge) }
+        Heart = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Heart) }
+        Iron = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Iron) }
+        Shadow = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Shadow) }
+        Wits = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Wits) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Health = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Spirit = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Supply = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Momentum = modifier { default = 2  minvalue = -6  maxvalue = 'Max Momentum'  editable = live }
+        'Max Momentum' = integer { value = 10 - debilityCount (Debilities)  editable = none }
+        'Momentum Reset' = integer { value = max (0, 2 - debilityCount (Debilities))  editable = none }
+        Adds = modifier { default = 0  editable = live  save = nosave }
+        Down = string { value = if Health < 1 then "Face Death" else if Spirit < 1 then "Face Desolation" else ""  visible = none  indicator = "#d64545" }
+    }
+
+    Debilities = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
+        Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Unprepared = bool { default = false  editable = live  indicator = "#d4b106" }
+        Encumbered = bool { default = false  editable = live  indicator = "#e8913a" }
+        Maimed = bool { default = false  editable = live  indicator = "#555555" }
+        Corrupted = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Cursed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Tormented = bool { default = false  editable = live  indicator = "#8e5cc4" }
+    }
+
+    'Suffer and Recover' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Endure Harm' = integer { value = max (Status.Health, Stats.Iron)  valuedice = isDice (characterTable, max (Status.Health, Stats.Iron))  editable = none }
+        'Endure Stress' = integer { value = max (Status.Spirit, Stats.Heart)  valuedice = isDice (characterTable, max (Status.Spirit, Stats.Heart))  editable = none }
+        'Make Camp' = integer { value = Status.Supply  valuedice = isDice (characterTable, Status.Supply)  editable = none }
+        'Face Death' = integer { value = Stats.Heart  valuedice = isDice (characterTable, Stats.Heart)  editable = none }
+    }
+
+    Vows = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Vow"
+        editable = character
+        valueType = vow
+    }
+
+    Bonds = table
+    {
+        tableLayout = layout { columns = 2 }
+        Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
+        Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
+        Names = string { multiline = true }
+    }
+
+    Journey = table
+    {
+        tableLayout = layout { columns = 2 }
+        Destination = string {}
+        Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
+        Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
+        Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
+    }
+
+    Fight = table
+    {
+        tableLayout = layout { columns = 2 }
+        Initiative = bool { default = false  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
+        Strike = integer { value = Stats.Iron  valuedice = isDice (characterTable, Stats.Iron)  editable = none  action = melee  reach = 2 }
+        'Strike at Range' = integer { value = Stats.Edge  valuedice = isDice (characterTable, Stats.Edge)  editable = none  action = ranged }
+        Harm = integer { default = 1 }
+    }
+
+    Assets = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Assets
+        singular = "Asset"
+        editable = character
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Moves
+        singular = "Move"
+        editable = character
+    }
+
+    Oracles = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Ask the Oracle' = integer { default = 0  valuedice = askOracle  editable = none }
+        Action = integer { default = 0  valuedice = oracleRoll (oracleAction)  editable = none }
+        Theme = integer { default = 0  valuedice = oracleRoll (oracleTheme)  editable = none }
+        'Pay the Price' = integer { default = 0  valuedice = oracleRoll (oraclePayThePrice)  editable = none }
+        Region = integer { default = 0  valuedice = oracleRoll (oracleRegion)  editable = none }
+        Location = integer { default = 0  valuedice = oracleRoll (oracleLocation)  editable = none }
+        'Coastal Location' = integer { default = 0  valuedice = oracleRoll (oracleCoastalLocation)  editable = none }
+        'Location Descriptor' = integer { default = 0  valuedice = oracleRoll (oracleLocationDescriptor)  editable = none }
+        'Settlement Name' = integer { default = 0  valuedice = oracleTwo (oracleSettlementPrefix, oracleSettlementSuffix)  editable = none }
+        'Settlement Trouble' = integer { default = 0  valuedice = oracleRoll (oracleSettlementTrouble)  editable = none }
+        'Character Role' = integer { default = 0  valuedice = oracleRoll (oracleCharacterRole)  editable = none }
+        'Character Goal' = integer { default = 0  valuedice = oracleRoll (oracleCharacterGoal)  editable = none }
+        'Character Descriptor' = integer { default = 0  valuedice = oracleRoll (oracleCharacterDescriptor)  editable = none }
+        'Ironlander Name' = integer { default = 0  valuedice = oracleRoll (oracleIronlanderNameA)  editable = none }
+        'Elf Name' = integer { default = 0  valuedice = oracleRoll (oracleElfName)  editable = none }
+        'Combat Action' = integer { default = 0  valuedice = oracleRoll (oracleCombatAction)  editable = none }
+        'Mystic Backlash' = integer { default = 0  valuedice = oracleRoll (oracleMysticBacklash)  editable = none }
+        'Plot Twist' = integer { default = 0  valuedice = oracleRoll (oraclePlotTwist)  editable = none }
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { size = wide }
+        Equipment = string { multiline = true }
+    }
+}
+
+debilityCount (d) = count (filter ((x)->x, [d.Wounded, d.Shaken, d.Unprepared, d.Encumbered, d.Maimed, d.Corrupted, d.Cursed, d.Tormented]))
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Foe] }
+    Foe = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
+        Nature = string {}
+        Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live  indicator = "#d64545" }
+        Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
+        Harm = integer { value = switch Rank case "Troublesome" then 1 case "Dangerous" then 2 case "Formidable" then 3 case "Extreme" then 4 else 5  editable = none  action = melee  reach = 2 }
+        'Ticks per Harm' = rankTicks (Rank)
+        Down = string { value = if Ticks > 39 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Features = string { multiline = true }
+        Drives = string { multiline = true }
+        Tactics = string { multiline = true }
+        'Quest Starter' = string { multiline = true }
+    }
+}
+
+moveStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        Category = string {}
+        Roll = string { keys = ["Action roll", "Progress roll", "No roll"] }
+        Stats = string {}
+    }
+}
+
+assetStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        Category = string { keys = ["Companion", "Path", "Combat Talent", "Ritual"] }
+        Health = string {}
+    }
+}
+
+Ironsworn = system
+{
+    hints = [
+        hint
+        {
+            title = "Action rolls"
+            topic = "Play"
+            text = ["Roll the action die (d6) + stat + adds against two challenge dice (d10). Beat both for a strong hit, one for a weak hit, neither for a miss. Matching challenge dice mean something unexpected."]
+        },
+        hint
+        {
+            title = "Vows and progress"
+            topic = "Getting started"
+            text = ["Swear iron vows and mark progress on them by rank. Fulfil a vow with a progress roll: the progress score against the challenge dice, no action die."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Whoever has initiative acts; a strong hit keeps it, a weak hit or a miss gives it to the foe."]
+        },
+        hint
+        {
+            title = "Solo and the oracle"
+            topic = "Play"
+            text = ["With no GM, use the Oracles block: Ask the Oracle for yes or no, and roll Action and Theme for ideas."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Moves = moveStats
+    Assets = assetStats
+    secondaryTypes = ["Moves", "Assets"]
+    description = "Ironsworn: perilous quests and iron vows in the Ironlands, solo, co-op or guided"
+    quickdice = [1d6, 2d10, 1d100]
+    cssFiles = ["/systems/ironsworn/ironsworn.css"]
+    libraries = ["/systems/ironsworn/ironsworn.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/barbarian.json"]
+    nameSettings = [norseNameSetting, swordAndSorceryNameSetting]
+}

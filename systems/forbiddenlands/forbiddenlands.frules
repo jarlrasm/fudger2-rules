@@ -1,0 +1,311 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+skulls (rolls) = count (filter ((x)->x == 1, rolls))
+
+flText (base, skill, gear, pushed) =
+    toString (sixes (base) + sixes (skill) + sixes (gear)) + (if sixes (base) + sixes (skill) + sixes (gear) == 1 then " success" else " successes")
+    + (if pushed and skulls (base) > 0 then ", " + toString (skulls (base)) + (if skulls (base) == 1 then " skull" else " skulls") + " on base dice: take that much damage to the attribute and gain that much Willpower" else "")
+    + (if pushed and skulls (gear) > 0 then ", " + toString (skulls (gear)) + (if skulls (gear) == 1 then " skull" else " skulls") + " on gear dice: the gear bonus drops by that much" else "")
+
+flResult (base, skill, gear, pushed) =
+{
+    Text = flText (base, skill, gear, pushed)
+    Value = sixes (base) + sixes (skill) + sixes (gear)
+    Outcome = if sixes (base) + sixes (skill) + sixes (gear) > 0 then "Success" else "Failure"
+    Push = if pushed or count (filter ((x)->x > 1 and x < 6, concat (base, gear))) + count (filter ((x)->x < 6, skill)) == 0 then 0 else flPush (filter ((x)->x == 6 or x == 1, base), filter ((x)->x == 6, skill), filter ((x)->x == 6 or x == 1, gear), count (filter ((x)->x > 1 and x < 6, base)), count (filter ((x)->x < 6, skill)), count (filter ((x)->x > 1 and x < 6, gear)))
+}
+
+flPush (keptBase, keptSkill, keptGear, base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
+    ((baseline, throws)->flResult (concat (keptBase, first (throws).rolls), concat (keptSkill, item (1, throws).rolls), concat (keptGear, item (2, throws).rolls), true)))
+
+flRoll (base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
+    ((baseline, throws)->flResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, false)))
+
+attribute = custom
+{
+    Max = integer { default = 3  minvalue = 1  maxvalue = 6 }
+    Current = integer { default = Max  minvalue = 0  editable = live }
+    Roll = integer { value = Current  valuedice = flRoll (Current, 0, 0)  editable = none }
+}
+
+skill (attr) = custom
+{
+    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Roll = integer { value = Level  valuedice = flRoll (attr, Level, 0)  editable = none }
+}
+
+levelOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", 0)
+
+noSkill = { Level = 0 }
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+rangeMetres (text) =
+    if text == "Arm's length" then 2
+    else if text == "Near" then 25
+    else if text == "Short" then 25
+    else if text == "Long" then 100
+    else if text == "Distant" then 1000
+    else 2
+
+weaponAttack (name, base, skillDice, gear, damage, kind, distance) = custom
+{
+    Name = name
+    Roll = integer { value = skillDice  valuedice = flRoll (base, skillDice, gear)  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Ranged" then
+        weaponAttack (weapon.Name, char.Attributes.Agility.Current, levelOf (char, "Marksmanship"), toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Strength.Current, levelOf (char, "Melee"), toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "melee", 2)
+
+resourceRoll (dieSize) = ([dice { number = if dieSize > 5 then 1 else 0  sides = max (6, dieSize) }],
+    ((baseline, throws)->if dieSize < 6 then { Text = "Used up"  Outcome = "Failure" }
+        else if first (first (throws).rolls) < 3 then { Text = toString (first (first (throws).rolls)) + ": step down to " + (if dieSize == 6 then "nothing" else "d" + toString (dieSize - 2))  Outcome = "Failure" }
+        else { Text = toString (first (first (throws).rolls)) + ": enough"  Outcome = "Success" }))
+
+resource (start) = custom
+{
+    Die = integer { default = start  minvalue = 4  maxvalue = 12  step = 2  editable = live  render = if Die < 6 then "none" else "d" + toString (Die) }
+    Roll = integer { value = Die  valuedice = resourceRoll (Die)  editable = none  render = "roll" }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kin = string { keys = ["Human", "Elf", "Half-elf", "Dwarf", "Halfling", "Wolfkin", "Orc", "Goblin"] }
+        Profession = string { keys = ["Druid", "Fighter", "Hunter", "Minstrel", "Peddler", "Rider", "Rogue", "Sorcerer"] }
+        Age = string { keys = ["Young", "Adult", "Old"] }
+        Reputation = integer { default = 0 }
+        Pride = string {}
+        'Dark Secret' = string { multiline = true }
+        Appearance = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = attribute {}
+        Agility = attribute {}
+        Wits = attribute {}
+        Empathy = attribute {}
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Willpower = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live }
+        Broken = string { value = if Attributes.Strength.Current < 1 or Attributes.Agility.Current < 1 or Attributes.Wits.Current < 1 or Attributes.Empathy.Current < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Sleepy = bool { default = false  editable = live  indicator = "#555555" }
+        Thirsty = bool { default = false  editable = live  indicator = "#d4b106" }
+        Hungry = bool { default = false  editable = live  indicator = "#d4b106" }
+        Cold = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        'Critical Injuries' = string { multiline = true  editable = live }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Might = skill (Attributes.Strength.Current)
+        Endurance = skill (Attributes.Strength.Current)
+        Melee = skill (Attributes.Strength.Current)
+        Crafting = skill (Attributes.Strength.Current)
+        Stealth = skill (Attributes.Agility.Current)
+        'Sleight of Hand' = skill (Attributes.Agility.Current)
+        Move = skill (Attributes.Agility.Current)
+        Marksmanship = skill (Attributes.Agility.Current)
+        Scouting = skill (Attributes.Wits.Current)
+        Lore = skill (Attributes.Wits.Current)
+        Survival = skill (Attributes.Wits.Current)
+        Insight = skill (Attributes.Wits.Current)
+        Manipulation = skill (Attributes.Empathy.Current)
+        Performance = skill (Attributes.Empathy.Current)
+        Healing = skill (Attributes.Empathy.Current)
+        'Animal Handling' = skill (Attributes.Empathy.Current)
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Attributes.Strength.Current, levelOf (characterTable, "Melee"), 0, "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Body Armour' = integer { default = 0  minvalue = 0  valuedice = flRoll (0, 0, 'Body Armour') }
+        Helmet = integer { default = 0  minvalue = 0  valuedice = flRoll (0, 0, Helmet) }
+        Shield = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Consumables = table
+    {
+        tableLayout = layout { columns = 2 }
+        Food = resource (6)
+        Water = resource (6)
+        Arrows = resource (4)
+        Torches = resource (4)
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Purse = table
+    {
+        tableLayout = layout { columns = 3 }
+        Gold = integer { default = 0  editable = live }
+        Silver = integer { default = 0  editable = live }
+        Copper = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Monster, Attacks] }
+    Monster = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = integer { default = 6 }
+        'Current Strength' = integer { default = Strength  minvalue = 0  editable = live }
+        Down = string { value = if 'Current Strength' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Agility = integer { default = 3  valuedice = flRoll (Agility, 0, 0) }
+        Armour = integer { default = 0  valuedice = flRoll (0, 0, Armour) }
+        Movement = integer { default = 1 }
+        'Monster Attack' = integer { default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
+        Skills = string {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            D6 = integer { default = 1  minvalue = 1  maxvalue = 6 }
+            Name = string {}
+            Dice = integer { default = 6  valuedice = flRoll (Dice, 0, 0)  action = melee  reach = 2 }
+            Damage = string {}
+            Effect = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged"] }
+        Grip = string { keys = ["1H", "2H"] }
+        Bonus = string {}
+        Damage = string {}
+        Range = string { keys = ["Arm's length", "Near", "Short", "Long", "Distant"] }
+        Features = string {}
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Bonus = string {}
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Kind = string { keys = ["Kin", "Profession", "General"] }
+        Rank = integer { default = 1  minvalue = 1  maxvalue = 3 }
+    }
+}
+
+ForbiddenLands = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolling dice"
+            topic = "Play"
+            text = ["Roll base dice for the attribute, skill dice for the skill and gear dice for the item. Every 6 is a success. One push rerolls everything but 6s and skulls, and skulls on base dice then hurt."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Add the Initiative Cards deck to the session and use Deal initiative in the encounter. Lowest acts first."]
+            deck = "Initiative Cards"
+        },
+        hint
+        {
+            title = "Journeys"
+            topic = "Getting started"
+            text = ["Travel the hexes in quarter days: one player leads the way, one keeps watch, others forage, hunt or make camp. Roll Food and Water as resource dice."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Each extra success adds 1 to weapon damage. Damage lowers Strength, armour rolls its gear dice to stop it, and at 0 the victim is broken and may suffer a critical injury."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Talents = talentStats
+    secondaryTypes = ["Weapons", "Gear", "Talents"]
+    description = "Forbidden Lands: Year Zero Engine survival fantasy, hexcrawls and strongholds"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    initiativeDeck = "Initiative Cards"
+    quickdice = [1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/forbiddenlands/forbiddenlands.css"]
+    libraries = ["/systems/forbiddenlands/initiativedeck.json", "/systems/names/barbarian.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/fantasy.json"]
+    nameSettings = [swordAndSorceryNameSetting, norseNameSetting, fantasyNameSetting]
+}
