@@ -99,9 +99,17 @@ meleeDamage (char, weapon) =
         "+" + toString (strengthBonus (char) + toInt (replace ("SB", "", replace ("+", "", weaponStat (weapon, "Damage")))))
     else weaponStat (weapon, "Damage")
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+rangedGroups = ["Blackpowder", "Bow", "Crossbow", "Engineering", "Entangling", "Explosives", "Sling", "Throwing"]
+
+isRanged (weapon) = count (filter ((group)->group == weaponStat (weapon, "Group"), rangedGroups)) > 0 or firstNumber (weaponStat (weapon, "Range")) > 0
+
+rangeYards (char, text) = if contains (text, "SB") then strengthBonus (char) * max (1, firstNumber (text)) else firstNumber (text)
+
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, skillValue (char, "Ranged " + weaponStat (weapon, "Group"), char.Characteristics.BS.Current), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, skillValue (char, "Ranged " + weaponStat (weapon, "Group"), char.Characteristics.BS.Current), meleeDamage (char, weapon), "ranged", rangeYards (char, weaponStat (weapon, "Range")))
     else
         weaponAttack (weapon.Name, skillValue (char, "Melee " + weaponStat (weapon, "Group"), char.Characteristics.WS.Current), meleeDamage (char, weapon), "melee", 2)
 
@@ -235,7 +243,7 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Characteristic = string { default = ""  keys = ["", "WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
+            Characteristic = string { default = "Int"  keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
             Advances = integer { default = 0 }
             Skill = integer { value = characteristicValue (characterTable, Characteristic) + Advances  valuedice = wfrpDice (characterTable)  editable = none }
         }

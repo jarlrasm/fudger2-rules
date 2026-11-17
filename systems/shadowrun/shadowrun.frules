@@ -24,7 +24,7 @@ srResult (rolls, threshold, canReroll, spend) =
     Value = hits (rolls)
     Outcome = srOutcome (rolls, threshold)
     Push = if canReroll and count (spend) > 0 and count (filter ((x)->x < 5, rolls)) > 0 then srReroll (filter ((x)->x > 4, rolls), count (filter ((x)->x < 5, rolls)), threshold) else 0
-    PushLabel = "Reroll misses (Edge)"
+    PushLabel = "Reroll misses (4 Edge)"
     PushSets = spend
 }
 
@@ -37,10 +37,10 @@ srRoll (pool, threshold, ruleOfSix) = ([dice { number = max (0, pool)  sides = 6
 srAskedRoll (pool, ruleOfSix, spend) = ([dice { number = max (0, pool)  sides = 6  explode = if ruleOfSix then 6 else 7 }],
     ((baseline, throws)->srResult (first (throws).rolls, asked, true, spend)))
 
-edgeSpend (char) = if char.Attributes.'Current Edge' > 0 then [{ Field = "characterTable.Attributes.Current Edge"  Value = char.Attributes.'Current Edge' - 1 }] else []
+edgeSpend (char) = if char.Attributes.'Current Edge' > 3 then [{ Field = "characterTable.Attributes.Current Edge"  Value = char.Attributes.'Current Edge' - 4 }] else []
 
 srDice (char, pool) =
-    ask ("Threshold", 0, srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier' + (if char.Runner.Edge == "Push the Limit" then char.Attributes.Edge else 0), char.Runner.Edge == "Push the Limit", edgeSpend (char)))
+    ask ("Threshold", 0, srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier', false, edgeSpend (char)))
 
 attributeValue (char, name) =
     switch name
@@ -103,16 +103,6 @@ characterTable = ruleset
         Nuyen = integer { default = 0  editable = live }
         Lifestyle = string {}
         Modifier = modifier { default = 0  editable = live }
-        Edge = selector
-        {
-            options = ["Normal", "Push the Limit"]
-            labels = ["Normal", "Push the Limit"]
-            colors = ["white", "purple"]
-            hold = ["", "Shift"]
-            default = "Normal"
-            editable = live
-            save = nosave
-        }
     }
 
     Attributes = table
@@ -201,7 +191,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), toString ((Attributes.Strength + 1) / 2) + "S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), "2S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -294,7 +284,7 @@ creatureTable = ruleset
         keys = ["Firearms", "Close Combat"]
         valueType = custom
         {
-            Dice = integer { default = 8  valuedice = srRoll (Dice, 0, false)  action = ranged  range = 50 }
+            Dice = integer { default = 8  valuedice = srRoll (Dice, 0, false)  action = if Key == "Close Combat" then "melee" else "ranged"  reach = 2  range = 50 }
             Damage = string {}
         }
     }
@@ -400,7 +390,7 @@ Shadowrun = system
         {
             title = "Edge"
             topic = "Play"
-            text = ["Reroll misses for one Edge (the sheet spends it), or Push the Limit with the slider to add Edge and make 6s explode."]
+            text = ["Reroll misses for four Edge (the sheet spends it). Other Edge boosts, such as rerolling one die or buying a hit, are adjusted by hand."]
         },
         hint
         {

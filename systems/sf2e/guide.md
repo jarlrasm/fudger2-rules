@@ -9,7 +9,7 @@ Starfinder 2nd edition uses the same core rules as Pathfinder 2nd edition, so th
 - **Ranged combat** is common. Ranged weapons use **magazines**: track rounds in the Ammunition list and spend an action to reload. Many guns have area and automatic fire traits that ask targets for a basic Reflex save.
 - **Computers** and **Piloting** are skills. Hacking, sensors and flying vehicles use them.
 - **Augmentations** replace a body system (eyes, arms, brain…), one augmentation per system.
-- **Starships** are their own entity type. In ship combat each crew member takes a role (pilot, gunner, engineer, captain, science officer) and acts with their own skills.
+- **Starships** are their own entity type (Spaceships). In ship combat each crew member takes a role (pilot, gunner, engineer, captain, science officer) and acts with their own skills.
 - Money is **credits**; UPBs are the universal raw material for crafting.
 
 ## Encounters

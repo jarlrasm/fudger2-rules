@@ -204,7 +204,7 @@ characterTable = ruleset
         {
             singular = "Perception Skill"
             editablekeys = character
-            keys = ["Bargain", "Beast riding", "Con", "Gambling","Search", "Sneak"]
+            keys = ["Bargain", "Con", "Gambling","Search", "Sneak"]
             valueType = custom
           {
               Points=integer
@@ -576,8 +576,7 @@ forcePowerStats= ruleset
                   {
                     Used = bool
                     {
-                      default = 0
-                      valuedice =  edgeRoll
+                      default = false
                     }
                     Difficulty = string
                     {

@@ -42,7 +42,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 ## Gotchas that break files
 
 - **No comments.** The language has no comment syntax. Don't add any.
-- **No `#` in strings**, and put every `#include` at the top of the file. The include resolver stops at the first `#` that isn't an `#include`.
+- **No `#include` text in strings**, and put every `#include` at the top of the file. The include resolver looks for `#include` anywhere in the file. Other `#` characters, such as colours like `"#d64545"`, are fine.
 - **Bare names are letters and digits only.** No `_` or `-`. Anything else needs single quotes: `'Very hurt'`. Quoted names allow only letters, digits and spaces.
 - **Strings use double quotes and have no escapes.** A string can't contain `"`. Backslashes are kept as-is, which is handy for regexes.
 - **Operators:** `+ - * /`, `==`, `!=`, `>`, `<`, `>=`, `<=`, `and`, `or`, and the functions `not`, `mod` and `abs`. These need the app from branch `claude/rpg-engine-features` or later. `if` and `switch` always need `else`.

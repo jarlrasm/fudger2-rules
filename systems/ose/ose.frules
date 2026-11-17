@@ -68,9 +68,11 @@ weaponAttack (name, thac0, bonus, damage, kind, distance) = custom
     Damage = damage
 }
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Long Range")) > 0 then
-        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Long Range")))
+    if firstNumber (weaponStat (weapon, "Long Range")) > 0 then
+        weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Long Range")))
     else
         weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.STR.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage") + (if char.Abilities.STR.Modifier > 0 then "+" + toString (char.Abilities.STR.Modifier) else if char.Abilities.STR.Modifier < 0 then toString (char.Abilities.STR.Modifier) else ""), "melee", 5)
 
@@ -182,7 +184,7 @@ characterTable = ruleset
 
     'Spell Slots' = table
     {
-        tableLayout = layout { columns = 6  size = wide }
+        tableLayout = layout { columns = 5  size = wide }
         visible = if Character.Class == "Cleric" or Character.Class == "Elf" or Character.Class == "Magic-User" then visible else none
         'Level 1' = spellSlots (1)
         'Level 2' = spellSlots (2)

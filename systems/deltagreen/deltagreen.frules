@@ -62,9 +62,11 @@ weaponAttack (name, target, damage, kind, distance) = custom
     'Armor Piercing' = string {}
 }
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
 attackFor (char, weapon) =
-    if toInt (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) > 0 then
-        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Firearms")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", toInt (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) * 3)
+    if firstNumber (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) > 0 then
+        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Firearms")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", firstNumber (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) * 3)
     else
         weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee Weapons")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "melee", 0)
 

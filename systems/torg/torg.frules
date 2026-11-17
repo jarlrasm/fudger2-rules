@@ -33,7 +33,7 @@ calculate(n)=
  if n < 41 then 11 else
  if n < 46 then 12 else
  if n < 51 then 13 else
-  13 + (n - 50)/5
+  14 + (n - 51)/5
  
  
  
@@ -1215,7 +1215,7 @@ perkStats =ruleset
       sortedBy = sort
       {
           prefix=""
-          sort=Stats.level
+          sort=Stats.Type
       }
       filters= [
           filter {

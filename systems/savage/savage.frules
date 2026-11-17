@@ -89,7 +89,7 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 weaponAttack (name, die, damage, kind, distance) = custom
 {
     Name = name
-    Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = 2  range = distance }
+    Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = distance  range = distance }
     Damage = damage
 }
 
@@ -321,7 +321,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Die = string { default = "d6"  keys = skillDieTypes }
-            Roll = integer { value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die  action = melee  reach = 2 }
+            Roll = integer { value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die  action = if Key == "Shooting" then "ranged" else if Key == "Notice" then "" else "melee"  reach = 2 }
         }
     }
     Notes = table

@@ -10,9 +10,8 @@ Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skil
 ## Edge
 Edge points (up to 7) are gained during play, for example from a better Attack Rating than the target's Defense Rating.
 
-- **Reroll misses:** the roll window offers *Reroll misses (Edge)* after a roll, and takes the Edge point off the sheet.
-- **Push the Limit:** set the Edge slider (Shift) before rolling to add Edge to the pool and make 6s explode.
-- Other Edge actions (+1 to a die, buying a hit) are adjusted by hand.
+- **Reroll misses (4 Edge):** the roll window offers *Reroll misses (4 Edge)* after a roll when the runner has at least 4 Edge, and takes the 4 points off the sheet.
+- Other Edge boosts (reroll one die for 1, +1 to a die for 2, buy a hit for 3) are adjusted by hand. Only one boost per roll.
 
 ## Combat
 Roll **Initiative** (Reaction + Intuition + initiative dice) to join the tracker. Each turn has one major and one minor action (more minor actions with more initiative dice).

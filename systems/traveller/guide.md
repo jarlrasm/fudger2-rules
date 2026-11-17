@@ -16,7 +16,7 @@ Roll **Initiative** (2d6 + DEX DM) to join the tracker. A round is 6 seconds: on
 3. Medic checks and rest restore lost characteristics.
 
 ## Ships and trade
-Starships are their own entity type with Hull, Structure, Thrust and Jump. Jumps take a week. Travellers pay their way with freight, passengers and speculative trade, and the ship's mortgage is always due.
+Starships are their own entity type (Spaceships) with Hull, Structure, Thrust and Jump. Jumps take a week. Travellers pay their way with freight, passengers and speculative trade, and the ship's mortgage is always due.
 
 ## Style
 The universe is big and indifferent. Characters are experienced people who arrive with skills, contacts and debts; let them make plans and pay for them.

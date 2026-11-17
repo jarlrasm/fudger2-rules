@@ -91,7 +91,9 @@ skillValue (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Value"
 
 weaponSkill (weapon) = valueOr (weapon.data.weaponStats.Stats, "Skill", "Fighting Brawl")
 
-weaponRange (weapon) = toInt (valueOr (weapon.data.weaponStats.Stats, "Range", ""))
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponRange (weapon) = firstNumber (valueOr (weapon.data.weaponStats.Stats, "Range", ""))
 
 weaponAttack (name, target, damage, kind, distance) = custom
 {

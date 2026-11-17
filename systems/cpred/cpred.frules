@@ -60,11 +60,17 @@ weaponAttack (name, target, damage, kind, distance) = custom
     ROF = string {}
 }
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+isMeleeSkill (skillName) = skillName == "" or skillName == "Melee Weapon" or skillName == "Brawling" or skillName == "Martial Arts"
+
+rangedMetres (weapon) = if firstNumber (weaponStat (weapon, "Range")) > 0 then firstNumber (weaponStat (weapon, "Range")) else 50
+
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, skillBase (char, weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    if isMeleeSkill (weaponStat (weapon, "Skill")) then
+        weaponAttack (weapon.Name, skillBase (char, if weaponStat (weapon, "Skill") == "" then "Melee Weapon" else weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "melee", 2)
     else
-        weaponAttack (weapon.Name, skillBase (char, "Melee Weapon"), weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, skillBase (char, weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "ranged", rangedMetres (weapon))
 
 brawlingDamage (body) =
     if body > 10 then "4d6"
