@@ -1,0 +1,63 @@
+@import url("/systems/sheet.css");
+
+/* Monster of the Week: a photocopied hunter playbook. White paper, black
+   typewriter text, the five ratings in a row of boxes, harm and luck as tick
+   tracks beside the basic moves. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9d6cf;
+    --surface: #fbfaf6;
+    --surface-alt: #f0eee7;
+    --surface-sunken: #e6e3da;
+    --surface-muted: #cfcbc0;
+    --text: #151515;
+    --text-muted: #3c3c3c;
+    --text-faint: #6f6f6f;
+    --on-accent: #fbfaf6;
+    --border: #8a877e;
+    --border-strong: #151515;
+    --accent: #151515;
+    --accent-hover: #3c3c3c;
+    --accent-soft: #e6e3da;
+    --link: #6b1a1a;
+    --danger: #8b1a1a;
+    --danger-hover: #8b1a1a;
+    --danger-soft: #e6e3da;
+    --success: #3f7a3a;
+    --paper: #fbfaf6;
+    --card-bg: #f0eee7;
+    --dice-bg: #151515;
+    --dice-text: #fbfaf6;
+}
+
+.entityView {
+    --sheet-font: "Courier Prime", "Courier New", monospace;
+    --title-font: "Special Elite", "Courier New", monospace;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: var(--text);
+    color: var(--surface);
+    padding: 2px 8px;
+}
+.entityView .table-ratings > table > tbody > tr {
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+    text-align: center;
+}
+.entityView .table-ratings > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.entityView .table-ratings button.dicethrow { font-size: 1.4em; }
+.entityView .table-status { --block: 40%; }
+.entityView .table-basic-moves { --block: 60%; }
+.entityView .table-moves,
+.entityView .table-weapons,
+.entityView .table-attacks { --block: 50%; }
