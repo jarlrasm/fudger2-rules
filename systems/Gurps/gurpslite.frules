@@ -2,6 +2,23 @@
 #include "/systems/names/settings.frules"
 basicSpeedOrder = ([1d6], ((baseline, throws)-> baseline))
 
+gurpsOutcome (target, roll) =
+    if roll < 5 or (roll == 5 and target > 14) or (roll == 6 and target > 15) then "Critical success"
+    else if roll == 18 or (roll == 17 and target < 16) or roll - target > 9 then "Critical failure"
+    else if roll < 17 and roll <= target then "Success"
+    else "Failure"
+
+gurpsResult (target, roll) =
+{
+    Text = toString (roll) + " vs " + toString (target) + ": " + gurpsOutcome (target, roll) + ", margin " + toString (target - roll)
+    Value = target - roll
+    Outcome = switch gurpsOutcome (target, roll) case "Critical success" then "Critical" case "Critical failure" then "Fumble" else gurpsOutcome (target, roll)
+}
+
+gurpsCheck = ([3d6], ((baseline, throws)->gurpsResult (baseline, sum (first (throws).rolls))))
+
+gurpsCheckAgainst (target) = ([3d6], ((baseline, throws)->gurpsResult (target, sum (first (throws).rolls))))
+
 bonus(points,difficulty)=
      (if points < 1 then -4
       else
@@ -131,7 +148,7 @@ skillLevel(name, level, points) = custom
     Name = name
     Level = integer {
         value = level
-        valuedice = 3d6
+        valuedice = gurpsCheck
     }
     Points = points
 }
@@ -258,7 +275,7 @@ attack(name, level, mode, parry, reach, kind, distance) = custom
     'To hit' = integer {
         value = level
         render = "To hit: " + toString (level)
-        valuedice = 3d6
+        valuedice = gurpsCheck
         action = kind
         reach = distance
         range = distance
@@ -321,22 +338,22 @@ characterTable = ruleset
     Attributes = table
         {
             ST = integer {
-                valuedice=3d6
+                valuedice=gurpsCheckAgainst (ST/10+10)
                 render=toString(ST/10+10)
                 step=10
             }
             DX=integer{
-                valuedice=3d6
+                valuedice=gurpsCheckAgainst (DX/20+10)
                 render=toString(DX/20+10)
                 step=20
             }
             IQ=integer{
-                valuedice=3d6
+                valuedice=gurpsCheckAgainst (IQ/20+10)
                 render=toString(IQ/20+10)
                 step=20
             }
             HT=integer{
-                valuedice=3d6
+                valuedice=gurpsCheckAgainst (HT/10+10)
                 render=toString(HT/10+10)
                 step=10
             }
@@ -419,13 +436,13 @@ characterTable = ruleset
         Dodge = integer
         {
             value = dodge (characterTable)
-            valuedice = 3d6
+            valuedice = gurpsCheck
         }
         Block = integer
         {
             visible = hasShield (characterTable)
             value = block (characterTable)
-            valuedice = 3d6
+            valuedice = gurpsCheck
         }
     }
     'Damage resistance' = table
@@ -581,10 +598,10 @@ creatureTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4 }
-        ST = integer { default = 10  valuedice = 3d6 }
-        DX = integer { default = 10  valuedice = 3d6 }
-        IQ = integer { default = 10  valuedice = 3d6 }
-        HT = integer { default = 10  valuedice = 3d6 }
+        ST = integer { default = 10  valuedice = gurpsCheck }
+        DX = integer { default = 10  valuedice = gurpsCheck }
+        IQ = integer { default = 10  valuedice = gurpsCheck }
+        HT = integer { default = 10  valuedice = gurpsCheck }
     }
     'Secondary characteristics' = table
     {
@@ -594,8 +611,8 @@ creatureTable = ruleset
         'HP state' = string { value = hpState ('Current HP', HP)  visible = none  indicator = "#d64545" }
         FP = integer { default = 10 }
         'Current FP' = integer { default = FP  editable = live }
-        Will = integer { default = 10  valuedice = 3d6 }
-        Per = integer { default = 10  valuedice = 3d6 }
+        Will = integer { default = 10  valuedice = gurpsCheck }
+        Per = integer { default = 10  valuedice = gurpsCheck }
         'Basic speed' = integer { default = 500  step = 25  render = hundredthsText ('Basic speed') }
         'Basic move' = integer { default = 5 }
         Initiative = integer
@@ -605,7 +622,7 @@ creatureTable = ruleset
             editable = none
             visible = none
         }
-        Dodge = integer { default = 8  valuedice = 3d6 }
+        Dodge = integer { default = 8  valuedice = gurpsCheck }
         Parry = string {}
         DR = integer { default = 0 }
         SM = integer { default = 0  render = signedText (SM) }
@@ -622,7 +639,7 @@ creatureTable = ruleset
             'To hit' = integer
             {
                 default = 10
-                valuedice = 3d6
+                valuedice = gurpsCheck
                 action = creatureAttackKind (Reach)
                 reach = creatureAttackDistance (Reach)
                 range = creatureAttackDistance (Reach)

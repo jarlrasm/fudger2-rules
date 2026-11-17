@@ -28,20 +28,22 @@ wfrpResult (target, roll) =
     Outcome = wfrpLevel (target, roll)
 }
 
-difficultyOf (char) =
-    switch char.Character.Difficulty
-        case "Very Easy" then 60
-        case "Easy" then 40
-        case "Average" then 20
-        case "Difficult" then -10
-        case "Hard" then -20
-        case "Very Hard" then -30
-        else 0
-
 wfrpRoll (modifier) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
     ((baseline, throws)->wfrpResult (max (0, baseline + modifier), d100Value (first (first (throws).rolls), first (item (1, throws).rolls)))))
 
-wfrpDice (char) = wfrpRoll (difficultyOf (char))
+autoText (roll) = if roll < 6 then ", automatic success" else if roll > 95 then ", automatic failure" else ""
+
+wfrpUnset (base, roll) =
+{
+    Text = toString (roll) + " vs " + toString (base) + " before difficulty, SL " + slText (base / 10 - roll / 10) + autoText (roll)
+    Value = base / 10 - roll / 10
+    Outcome = if roll < 6 then "Success" else if roll > 95 then (if isDouble (roll) or roll == 100 then "Fumble" else "Failure") else ""
+}
+
+wfrpAskedRoll = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
+    ((baseline, throws)->if answered then wfrpResult (max (0, baseline + asked), d100Value (first (first (throws).rolls), first (item (1, throws).rolls))) else wfrpUnset (baseline, d100Value (first (first (throws).rolls), first (item (1, throws).rolls)))))
+
+wfrpDice (char) = ask ("Difficulty modifier", wfrpAskedRoll)
 
 plainD100 = wfrpRoll (0)
 
@@ -128,16 +130,6 @@ characterTable = ruleset
         Height = string {}
         Hair = string {}
         Eyes = string {}
-        Difficulty = selector
-        {
-            options = ["Very Hard", "Hard", "Difficult", "Challenging", "Average", "Easy", "Very Easy"]
-            labels = ["-30", "-20", "-10", "+0", "+20", "+40", "+60"]
-            colors = ["red", "red", "red", "white", "green", "green", "green"]
-            hold = ["", "", "Ctrl", "", "Shift", "", ""]
-            default = "Challenging"
-            editable = live
-            save = nosave
-        }
     }
 
     Characteristics = table
@@ -450,7 +442,7 @@ WarhammerFantasy = system
         {
             title = "Success Levels"
             topic = "Play"
-            text = ["Roll d100 at or under the skill. Success Levels (tens of the target minus tens of the roll) decide how well it went.", "Pick the difficulty on the sheet before rolling."]
+            text = ["Roll d100 at or under the skill. Success Levels (tens of the target minus tens of the roll) decide how well it went.", "Each test asks for the difficulty modifier, such as 20 for Average or -10 for Difficult. Leave it blank when only the GM knows it."]
         },
         hint
         {

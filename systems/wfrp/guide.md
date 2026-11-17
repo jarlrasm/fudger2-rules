@@ -1,7 +1,7 @@
 # Playing Warhammer Fantasy Roleplay (4th edition)
 
 ## Rolling
-Tests are d100 **at or under** a skill (characteristic plus advances) or a characteristic. Set the Difficulty slider first: Very Easy +60, Easy +40, Average +20, Challenging +0 (the default), Difficult −10, Hard −20, Very Hard −30. Shift picks Average, Ctrl Difficult.
+Tests are d100 **at or under** a skill (characteristic plus advances) or a characteristic. Each test asks for the difficulty modifier: Very Easy 60, Easy 40, Average 20, Challenging 0, Difficult −10, Hard −20, Very Hard −30. Leave it blank when only the GM knows it: the roll then shows the Success Levels against the bare skill, and each 10 of modifier moves them by one.
 
 - **Success Levels (SL):** the tens digit of the target minus the tens digit of the roll. The roll shows it. Dramatic tests care about SL; simple tests only about pass or fail.
 - 01–05 always succeed and 96–00 always fail.

@@ -4,7 +4,7 @@
 Attributes and skills are dice codes like 3D+2: roll that many d6 and add the pips. One die is the Wild Die. A 6 on it rolls again and adds. A 1 on the first roll can mean a complication. Skills add to their attribute.
 
 ## Difficulty
-Roll against a difficulty number: Very Easy 1-5, Easy 6-10, Moderate 11-15, Difficult 16-20, Very Difficult 21-30, Heroic 31+. These are listed on the sheet.
+Roll against a difficulty number: Very Easy 1-5, Easy 6-10, Moderate 11-15, Difficult 16-20, Very Difficult 21-30, Heroic 31+. These are listed on the sheet. Each roll asks for the difficulty. Leave it blank when only the GM knows it, and the roll shows just the total.
 
 ## Combat
 1. Call initiative. It rolls Initiative (under General), which is the character's Perception code. Highest goes first. The Actions penalty doesn't apply to it.

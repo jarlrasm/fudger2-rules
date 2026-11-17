@@ -3,7 +3,7 @@
 ## Rolling
 A check is **2d6 + characteristic DM + skill level** against a target of 8 (Average). The sheet works the DM out from each characteristic (6–8 is +0, 9–11 is +1, 3–5 is −1 and so on). An untrained skill is −3, unless the traveller has Jack of all Trades.
 
-- Set **Difficulty** to change the target: Simple 2, Easy 4, Routine 6, Average 8, Difficult 10, Very Difficult 12, Formidable 14.
+- Each check asks for the target: Simple 2, Easy 4, Routine 6, Average 8, Difficult 10, Very Difficult 12, Formidable 14. Leave it blank when only the referee knows it, and the roll shows just the total. Attacks always roll against 8.
 - **Effect** is the total minus the target. Effect 6 or more is exceptional; it also scales damage and how well something went.
 - **Boon** rolls 3d6 and keeps the best two, **Bane** keeps the worst two (Shift and Ctrl).
 - Each skill row has a Characteristic picker: the referee says which characteristic suits the task (Pilot with DEX to dodge, with INT to plot a course).
