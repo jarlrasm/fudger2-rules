@@ -79,7 +79,7 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 weaponAttack (name, target, attribute, damage, kind, distance) = custom
 {
     Name = name
-    Skill = integer { value = target  valuedice = dbDice (characterTable, attribute)  action = kind  reach = 2  range = distance }
+    Skill = integer { value = target  valuedice = dbDice (characterTable, attribute)  action = kind  reach = distance  range = distance }
     Damage = damage
 }
 
@@ -206,9 +206,9 @@ characterTable = ruleset
     'Secondary Skills' = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Animism = skill ("INT")
-        Elementalism = skill ("INT")
-        Mentalism = skill ("INT")
+        Animism = skill ("WIL")
+        Elementalism = skill ("WIL")
+        Mentalism = skill ("WIL")
     }
 
     Abilities = list
