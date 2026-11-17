@@ -72,6 +72,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = ['Derived Attributes', Agent.Initiative, Skills.Dodge, Attacks] }
     Agent = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -248,7 +249,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
     Statistics = table
     {
         tableLayout = layout { columns = 3  size = wide }

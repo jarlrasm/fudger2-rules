@@ -60,6 +60,7 @@ moveFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Stats, Status, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -171,7 +172,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Monster] }
     Monster = table
     {
         tableLayout = layout { columns = 3  size = wide }

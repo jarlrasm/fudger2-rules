@@ -21,6 +21,7 @@ fudgeRoll = ask ("Difficulty", fudgevalues, -3, ([4df], ((baseline, throws)->fud
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Damage, 'Important stuff'.Fudgepoints, 'Melee weapons', 'Ranged weapons'] }
     Attributes = keyvalues
         {
             singular = "Attribute"

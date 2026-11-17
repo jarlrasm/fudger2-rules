@@ -42,6 +42,7 @@ plainFate = fateRoll (0, false)
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Character.'Fate Points', Aspects, Stress, Consequences] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -151,7 +152,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Aspects, Stress] }
     Aspects = table
     {
         tableLayout = layout { size = wide }

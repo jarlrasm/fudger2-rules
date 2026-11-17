@@ -47,6 +47,7 @@ pool (start) = custom
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Pools, 'Damage Track', Character.Armor, Character.Effort, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -172,6 +173,7 @@ creatureTable = ruleset
 {
     rulesetConfiguration =
     {
+        important = [Stats]
         defaultImage = "/images/armour.svg"
         sortedBy = sort { prefix = "Level" sort = Stats.Level }
     }

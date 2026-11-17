@@ -68,6 +68,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Combat, Stats, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -177,6 +178,7 @@ creatureTable = ruleset
 {
     rulesetConfiguration =
     {
+        important = [Stats, Attacks]
         defaultImage = "/images/armour.svg"
         sortedBy = sort { prefix = "LV" sort = Stats.Level }
     }

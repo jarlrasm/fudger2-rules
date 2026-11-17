@@ -139,6 +139,7 @@ cardOrder (text) = rankValue (text) * 4 + suitValue (text)
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Character.Bennies, Attributes, Derived, Status, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -293,7 +294,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Traits, Stats] }
     Traits = table
     {
         tableLayout = layout { columns = 5  size = wide }

@@ -74,6 +74,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Traits, Defense, 'Hope and Health', Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -224,6 +225,7 @@ creatureTable = ruleset
 {
     rulesetConfiguration =
     {
+        important = [Stats]
         defaultImage = "/images/armour.svg"
         sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
         filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]

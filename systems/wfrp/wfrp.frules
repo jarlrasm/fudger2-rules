@@ -117,6 +117,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Characteristics, Wounds, Conditions, 'Fate and Fortune', Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -303,7 +304,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Characteristics, State, Attacks] }
     Characteristics = table
     {
         tableLayout = layout { columns = 5  size = wide }

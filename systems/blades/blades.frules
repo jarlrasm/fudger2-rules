@@ -53,6 +53,7 @@ dotted (n) = if n > 0 then 1 else 0
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Stress, Harm, Prowess] }
     Scoundrel = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -274,7 +275,7 @@ crewTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Threat] }
     Threat = table
     {
         tableLayout = layout { columns = 3  size = wide }

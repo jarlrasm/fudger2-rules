@@ -71,6 +71,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+  rulesetConfiguration = { important = [Stats, Saves, Health, Attacks] }
   Basics = table
   {
     tableLayout = layout
@@ -498,6 +499,7 @@ creatureTable = ruleset
 {
   rulesetConfiguration =
   {
+      important = [Stats]
       defaultImage = "/images/armour.svg"
   }
   Stats = table

@@ -105,6 +105,7 @@ skill (level) = custom
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Characteristics, Status, Attacks] }
     Traveller = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -262,7 +263,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }

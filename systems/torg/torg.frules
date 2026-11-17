@@ -173,6 +173,7 @@ attacksFor (char) =
 
 creatureTable = ruleset
 {
+  rulesetConfiguration = { important = [Basics, 'Combat skills', 'Attack rolls'] }
   'Attributes' = keyvalues
   {
     singular = "Attribute"
@@ -537,6 +538,7 @@ creatureTable = ruleset
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = ['Damage', 'Possibilities', 'Combat Skills', Attacks] }
     Basics = table
   {
     Race = string {}

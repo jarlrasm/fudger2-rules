@@ -117,6 +117,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Status, Combat, Attacks, Skills.Dodge] }
     Investigator = table
     {
         tableLayout = layout { columns = 2 }
@@ -307,7 +308,7 @@ creatureAttack (name, target, damage, kind, distance) = custom
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, 'Natural Attacks'] }
     Characteristics = table
     {
         tableLayout = layout { columns = 3  size = wide }

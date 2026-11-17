@@ -90,6 +90,7 @@ attackFor (char, weapon) =
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = ['Derived Ratings', 'Condition Monitors', Attacks] }
     Runner = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -259,7 +260,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats] }
     Stats = table
     {
         tableLayout = layout { columns = 5  size = wide }

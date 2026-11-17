@@ -335,6 +335,7 @@ skillPoints(char) = sum (map ((s)->trainingPoints (s.data.skillStats), char.'Lea
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Attributes, 'Secondary characteristics', 'Active defenses', Attacks] }
     Attributes = table
         {
             ST = integer {
@@ -593,6 +594,7 @@ creatureTable = ruleset
 {
     rulesetConfiguration =
     {
+        important = [Attributes, 'Secondary characteristics', Attacks]
         defaultImage = "/images/armour.svg"
     }
     Attributes = table

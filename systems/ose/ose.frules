@@ -84,6 +84,7 @@ spellSlots (level) = custom
 
 characterTable = ruleset
 {
+    rulesetConfiguration = { important = [Combat, 'Saving Throws', Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -241,6 +242,7 @@ creatureTable = ruleset
 {
     rulesetConfiguration =
     {
+        important = [Stats, Attacks]
         defaultImage = "/images/armour.svg"
         sortedBy = sort { prefix = "HD" sort = Stats.'Hit Dice' }
     }
