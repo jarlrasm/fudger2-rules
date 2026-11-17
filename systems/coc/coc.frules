@@ -29,11 +29,11 @@ cocResult (skill, roll, extra, canPush) =
 
 tensColor (extra) = if extra > 0 then "green" else if extra < 0 then "red" else ""
 
-cocRoll (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }],
-    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra, true)))
+cocRoll (extra) = ([dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->cocResult (baseline, cocPick (extra, item (1, throws).rolls, first (throws).rolls), extra, true)))
 
-cocPushed (extra) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }],
-    ((baseline, throws)->cocResult (baseline, cocPick (extra, first (throws).rolls, item (1, throws).rolls), extra, false)))
+cocPushed (extra) = ([dice { number = 1 + abs (extra)  sides = 10  label = "Tens"  color = tensColor (extra) }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->cocResult (baseline, cocPick (extra, item (1, throws).rolls, first (throws).rolls), extra, false)))
 
 cocDice (char) =
     switch char.Combat.Dice
