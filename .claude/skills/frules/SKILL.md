@@ -37,6 +37,14 @@ For name generators and settings, also run `./test.sh tests/NameLibrariesTests.e
 
 The test lives in the fudger2 app repo, runs in Docker, and reads this repo's `systems/` by default (override with `RULES_DIR`). To check a draft without touching `rules.json`, copy `common.frules` and the draft into a scratch folder laid out like `systems/` with its own `rules.json`, and point `RULES_DIR` at it. Includes are resolved by path starting with `/systems/`, so keep the same paths.
 
+From a nested worktree, the test can't find the rules on its own: set `RULES_DIR` to the worktree's `systems/`.
+
+For a built-in library, `python3 tools/check_library.py <system>.frules <library>.json` checks that every item names a type and ruleset the system has, and that every table and field it fills in exists. Libraries made by a script in `tools/` (`srd2024.py`, `cepheus_import.py` and the `*_import.py` files) are fixed in the script and regenerated, not edited by hand.
+
+To see a sheet, `~/claude-sheet-preview/render.py /systems/<system>/<file>.frules [characters|creatures]` renders it headless to a PNG in `~/claude-sheet-preview/shots/`. It reads the main checkout in `/home/jarl/Development/fudger2-rules`, not a worktree, and needs its server on 127.0.0.1:8766.
+
+Rules that use an engine feature not yet in production need the app deployed first. Say so in the commit message.
+
 Parsing only proves the syntax. Names that don't resolve and values of the wrong type fail silently at runtime (a blank cell, `0`, or "X not supported"), so double-check every reference against the table it points to.
 
 ## Gotchas that break files
@@ -53,3 +61,6 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **`otherLibararyTypes` is spelled with the typo.** The code reads that exact name.
 - **Don't add to a shared name setting.** Merging into `fantasyNameSetting` from one system would change it for all of them, and its lists would add up. Write your own `nameSetting` instead.
 - **Name generators are JSON, not frules.** `#` and quotes are fine there, and names must be original, not taken from published settings.
+- **`toInt` of text with a unit is `0`.** `toInt ("30 m")` and `toInt ("Range 80")` both give 0, so ranges read that way silently become "next to the target". Take the first number with `firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")`.
+- **A dice group with no dice still shows its label.** For an optional extra die (advantage, a bonus or penalty die), give the group `label = ""` when it is off, or chat names the wrong mode. Its `rolls` is then empty, so check `count (rolls) == 0` before reading `first`.
+- **Ship types are called `Spaceships`.** Name generators offer ship names to the `Spaceships` kind, so an extra entity type called Starships gets no ship names.

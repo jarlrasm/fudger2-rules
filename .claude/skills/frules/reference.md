@@ -139,7 +139,7 @@ v5Pool (pool, hunger) = ([dice { number = max (0, pool - hunger)  sides = 10 }, 
     ((baseline, throws)-> v5Result (first (throws).rolls, item (1, throws).rolls)))
 ```
 
-A whole roll goes to chat as one line, each group in its colour.
+A whole roll goes to chat as one line, each group in its colour. Groups show in the order they are listed, so put them in the order the game reads them, such as Tens before Units for a d100. A group with `number = 0` has empty `rolls`, but its label still shows.
 
 ### Results with an outcome, and pushing
 
@@ -177,6 +177,8 @@ Where 0 can't be a real number (a DC, a DV, a threshold), test `asked > 0`. Wher
 
 When the number gives the roll its meaning but some uses must not ask, such as initiative, keep a version without `ask` for those: `asked` is 0 there and `answered` is false. Keep a version of the roll that takes the number as a parameter for creatures and tests.
 
+Make a roll do what the game does with it. A roll-under game (GURPS, d100 systems, Mothership) compares the dice with the skill and returns the outcome and margin; adding the skill to the dice gives a meaningless number. Criticals and automatic results belong in the result too.
+
 A record is written with braces after `=` like a table: `name = { Text = "x"  Outcome = "y" }` at the top level, or returned from a function.
 
 ### Battlemap actions
@@ -194,6 +196,8 @@ A field with `action` is an action. In a running battle, whoever has the current
 ```
 Tohit = modifier { value = tohit  valuedice = D20Roll (characterTable)  action = kind  reach = distance  range = distance }
 ```
+
+Decide melee or ranged from what the game says, such as the weapon's skill or group, rather than from whether Range has a number: thrown weapons have both, and some melee weapons list a range. A thrown weapon can get both rows. Read ranges with a unit through `firstNumber` (see the `toInt` gotcha in SKILL.md).
 
 Weapon lists that come from `secondary` have no rolled fields, so each system builds a computed `Attacks` list from them, one row per weapon, with a rolled field that carries `action`:
 
@@ -266,6 +270,7 @@ Fudge = system
 | `distanceUnit` | Optional. The unit `reach`, `range` and other rule distances are written in, e.g. `"ft"`, `"m"` or `"yd"`. A battlemap in another unit converts them (5 ft = 1.5 m, 1 yd = 0.9 m). |
 | `squareSize` | Optional. How far a square is, in `distanceUnit`, on a map that never had its scale set. Without it such maps are 1 m. |
 | `distanceUnits` | Optional. Makes the unit sheets show distances in a campaign setting, e.g. `["ft", "m"]`. The first is the default. The campaign stores its choice as `distance` in its configuration. |
+| `hints` | Optional. Getting-started notes shown in the create campaign dialog, grouped by `topic` (default "Getting started"): a list of `hint { title = "Checks"  topic = "Play"  text = ["paragraph", "paragraph"] }`. `deck = "Drama deck"` adds a tick box that puts that built-in deck in the new campaign. Keep them in step with `guide.md` when rolls change. |
 
 ### Styling a sheet
 

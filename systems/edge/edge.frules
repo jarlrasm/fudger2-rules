@@ -12,7 +12,7 @@ edgeResult (rolls, mode) =
     Value = edgeDice (rolls, mode)
 }
 
-edgeModeRoll (mode) = ([dice { number = 2  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else "Penalty die" }],
+edgeModeRoll (mode) = ([dice { number = 2  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else if mode == "Penalty" then "Penalty die" else "" }],
     ((baseline, throws)-> edgeResult (concat (first (throws).rolls, item (1, throws).rolls), mode)))
 
 edgeRoll (char) = edgeModeRoll (char.Basics.Roll)
