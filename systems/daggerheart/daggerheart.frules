@@ -60,7 +60,7 @@ traitValue (char, name) =
 weaponAttack (name, bonus, damage, kind, distance) = custom
 {
     Name = name
-    Attack = modifier { value = bonus  valuedice = dualityDice (characterTable)  action = kind  reach = 5  range = distance }
+    Attack = modifier { value = bonus  valuedice = dualityDice (characterTable)  action = kind  reach = distance  range = distance }
     Damage = damage
 }
 
