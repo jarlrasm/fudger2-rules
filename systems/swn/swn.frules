@@ -1,0 +1,342 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+attributeModifier (score) =
+    if score < 4 then -2
+    else if score < 8 then -1
+    else if score < 14 then 0
+    else if score < 18 then 1
+    else 2
+
+checkResult (total, difficulty) =
+{
+    Text = toString (total) + (if difficulty > 0 then " vs " + toString (difficulty) + (if total >= difficulty then ": success" else ": failure") else "")
+    Value = total
+    Outcome = if difficulty < 1 then "" else if total >= difficulty then "Success" else "Failure"
+}
+
+skillCheck (difficulty) = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), difficulty)))
+
+skillAsked = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), asked)))
+
+skillDice = ask ("Difficulty", skillAsked)
+
+attackResult (natural, total, ac) =
+{
+    Text = toString (total) + (if ac > 0 then " + AC " + toString (ac) + " = " + toString (total + ac) + (if natural == 20 or total + ac >= 20 then ": hit" else ": miss") else "")
+    Value = total
+    Outcome = if natural == 20 then "Hit" else if natural == 1 then "Miss" else if ac < 1 then "" else if total + ac >= 20 then "Hit" else "Miss"
+}
+
+attackRoll (ac) = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), ac)))
+
+attackAsked = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
+
+attackDice = ask ("Target AC", attackAsked)
+
+saveResult (natural, target) =
+{
+    Text = toString (natural) + " vs " + toString (target) + (if natural >= target then ": saved" else ": failed")
+    Value = natural
+    Outcome = if natural >= target then "Success" else "Failure"
+}
+
+saveDice = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline)))
+
+attribute (dummy) = custom
+{
+    Score = integer { default = 10  minvalue = 3  maxvalue = 18 }
+    Modifier = modifier { value = attributeModifier (Score)  editable = none }
+}
+
+noAttribute = { Modifier = 0 }
+
+noSkill = { Level = -1 }
+
+modOf (char, name) = valueOr (valueOr (char.Attributes, name, noAttribute), "Modifier", 0)
+
+skill (attr) = custom
+{
+    Level = integer { default = -1  minvalue = -1  maxvalue = 4 }
+    Attribute = string { default = attr  keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+    Check = modifier { value = Level + modOf (characterTable, Attribute)  valuedice = skillDice  editable = none }
+}
+
+skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -1)
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, bonus, damage, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = attackDice  action = kind  reach = 2  range = distance }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        char.Combat.'Attack Bonus' + skillLevel (char, weaponStat (weapon, "Skill")) + modOf (char, weaponStat (weapon, "Attribute")),
+        weaponStat (weapon, "Damage"),
+        if weaponStat (weapon, "Skill") == "Shoot" then "ranged" else "melee",
+        firstNumber (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Combat, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Expert", "Psychic", "Warrior", "Adventurer"] }
+        Background = string {}
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        XP = integer { default = 0  editable = live }
+        Homeworld = string {}
+        Species = string { default = "Human" }
+        Goals = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        STR = attribute (0)
+        DEX = attribute (0)
+        CON = attribute (0)
+        INT = attribute (0)
+        WIS = attribute (0)
+        CHA = attribute (0)
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { default = 6  minvalue = 1 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Mortally wounded" else ""  visible = none  indicator = "#d64545" }
+        AC = integer { default = 10 }
+        'Attack Bonus' = modifier { default = 0 }
+        'System Strain' = integer { default = 0  minvalue = 0  maxvalue = Attributes.CON.Score  editable = live  indicator = "#3fa34d" }
+        'Max Strain' = integer { value = Attributes.CON.Score  editable = none }
+        Initiative = integer { default = 0  valuedice = ([1d8], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + Attributes.DEX.Modifier)  Value = first (first (throws).rolls) + Attributes.DEX.Modifier })) }
+        Physical = integer { value = 16 - Character.Level - max (Attributes.STR.Modifier, Attributes.CON.Modifier)  valuedice = saveDice  editable = none }
+        Evasion = integer { value = 16 - Character.Level - max (Attributes.DEX.Modifier, Attributes.INT.Modifier)  valuedice = saveDice  editable = none }
+        Mental = integer { value = 16 - Character.Level - max (Attributes.WIS.Modifier, Attributes.CHA.Modifier)  valuedice = saveDice  editable = none }
+        Luck = integer { value = 16 - Character.Level  valuedice = saveDice  editable = none }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Administer = skill ("INT")
+        Connect = skill ("CHA")
+        Exert = skill ("STR")
+        Fix = skill ("INT")
+        Heal = skill ("INT")
+        Know = skill ("INT")
+        Lead = skill ("CHA")
+        Notice = skill ("WIS")
+        Perform = skill ("CHA")
+        Pilot = skill ("DEX")
+        Program = skill ("INT")
+        Punch = skill ("STR")
+        Shoot = skill ("DEX")
+        Sneak = skill ("DEX")
+        Stab = skill ("STR")
+        Survive = skill ("WIS")
+        Talk = skill ("CHA")
+        Trade = skill ("CHA")
+        Work = skill ("INT")
+    }
+
+    Psychics = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Effort' = integer { default = 0  minvalue = 0 }
+        'Committed Effort' = integer { default = 0  minvalue = 0  editable = live }
+        Biopsionics = integer { default = -1  minvalue = -1  maxvalue = 4 }
+        Metapsionics = integer { default = -1  minvalue = -1  maxvalue = 4 }
+        Precognition = integer { default = -1  minvalue = -1  maxvalue = 4 }
+        Telekinesis = integer { default = -1  minvalue = -1  maxvalue = 4 }
+        Telepathy = integer { default = -1  minvalue = -1  maxvalue = 4 }
+        Teleportation = integer { default = -1  minvalue = -1  maxvalue = 4 }
+    }
+
+    Foci = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Focus"
+        editable = character
+        valueType = custom { Name = string {}  Level = integer { default = 1  minvalue = 1  maxvalue = 2 }  Description = string {} }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Combat.'Attack Bonus' + skillLevel (characterTable, "Punch") + Attributes.STR.Modifier, "d2", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Encumbrance = table
+    {
+        tableLayout = layout { columns = 3 }
+        Readied = integer { value = Attributes.STR.Score / 2  editable = none }
+        Stowed = integer { value = Attributes.STR.Score  editable = none }
+        Credits = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hit Dice' = integer { default = 1 }
+        'Max HP' = integer { default = 4 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Down" else ""  visible = none  indicator = "#d64545" }
+        AC = integer { default = 10 }
+        Attack = modifier { default = 1  valuedice = attackDice  action = melee  reach = 2 }
+        Damage = string { default = "1d6" }
+        Move = string { default = "10m" }
+        Morale = integer { default = 8  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": breaks"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": holds"  Outcome = "Success" })) }
+        Skill = modifier { default = 1  valuedice = skillDice }
+        Save = integer { default = 15  valuedice = saveDice }
+        Initiative = integer { default = 0  valuedice = 1d8 }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { important = [Ship] }
+    Ship = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Hull = string { keys = ["Strike Fighter", "Shuttle", "Free Merchant", "Patrol Boat", "Corvette", "Heavy Frigate", "Bulk Freighter", "Fleet Cruiser", "Battleship", "Carrier", "Small Station", "Large Station"] }
+        Class = string { keys = ["Fighter", "Frigate", "Cruiser", "Capital"] }
+        'Max HP' = integer { default = 20 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Disabled" else ""  visible = none  indicator = "#d64545" }
+        AC = integer { default = 13 }
+        Armor = integer { default = 5 }
+        Speed = integer { default = 3 }
+        'Spike Drive' = integer { default = 1 }
+        Crew = string { default = "1/10" }
+        Power = string {}
+        Mass = string {}
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = attackDice  action = ranged }
+            Damage = string {}
+            Notes = string {}
+        }
+    }
+    Fittings = table
+    {
+        tableLayout = layout { size = wide }
+        Fittings = string { multiline = true }
+        Defenses = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Skill = string { keys = ["Stab", "Shoot", "Punch"] }
+        Attribute = string { keys = ["STR", "DEX"] }
+        Damage = string {}
+        Range = string {}
+        Shock = string {}
+        Magazine = string {}
+        Cost = string {}
+        Encumbrance = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        Encumbrance = string {}
+        TL = string {}
+    }
+}
+
+StarsWithoutNumber = system
+{
+    hints = [
+        hint
+        {
+            title = "Skill checks"
+            topic = "Play"
+            text = ["Roll 2d6 + skill + attribute modifier against a difficulty: 6 easy, 8 typical, 10 hard, 12 very hard, 14 nearly impossible. Untrained is -1."]
+        },
+        hint
+        {
+            title = "Attacks"
+            topic = "Combat"
+            text = ["Roll d20 + attack bonus + skill + attribute modifier + the target's AC. 20 or more hits. A miss in melee may still deal Shock."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Each side, or each character, rolls 1d8 + DEX modifier. Highest acts first."]
+        },
+        hint
+        {
+            title = "Sandbox"
+            topic = "Getting started"
+            text = ["Build a sector of worlds with tags, factions and problems, and let the players choose where to go."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Weapons = weaponStats
+    Gear = gearStats
+    secondaryTypes = ["Weapons", "Gear"]
+    extraEntityTypes = [entityTypeDescription ("Spaceships", "spaceship", true, "/systems/starwars/spaceship-entity.svg", [])]
+    description = "Stars Without Number Revised: sandbox science fiction with old-school bones"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 2d6, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/swn/swn.css"]
+    libraries = ["/systems/names/scifi.json", "/systems/names/bluecollar.json", "/systems/names/cyberpunk.json"]
+    nameSettings = [spaceNameSetting, blueCollarSpaceNameSetting, neonStreetsNameSetting]
+}
