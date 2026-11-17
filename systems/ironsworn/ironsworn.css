@@ -1,0 +1,65 @@
+@import url("/systems/sheet.css");
+
+/* Ironsworn: ink on grey paper. Plain black rules and a strong serif,
+   the five stats as circles, the momentum and condition meters in a row,
+   vows as progress tracks, the oracles at the end. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c7c7c2;
+    --surface: #f5f5f0;
+    --surface-alt: #eaeae4;
+    --surface-sunken: #dfdfd8;
+    --surface-muted: #c9c9c2;
+    --text: #111111;
+    --text-muted: #383838;
+    --text-faint: #6a6a6a;
+    --on-accent: #f5f5f0;
+    --border: #7d7d78;
+    --border-strong: #111111;
+    --accent: #111111;
+    --accent-hover: #383838;
+    --accent-soft: #e0e0d8;
+    --link: #3a3a6a;
+    --danger: #7a1a1a;
+    --danger-hover: #7a1a1a;
+    --danger-soft: #e0e0d8;
+    --success: #3f7a3a;
+    --paper: #f5f5f0;
+    --card-bg: #eaeae4;
+    --dice-bg: #111111;
+    --dice-text: #f5f5f0;
+}
+
+.entityView {
+    --sheet-font: "Crimson Text", Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-align: center;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .table-stats > table > tbody > tr {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.entityView .table-stats button.dicethrow {
+    border-radius: 50%;
+    width: 2.4em;
+    height: 2.4em;
+    font-size: 1.3em;
+}
+.entityView .table-debilities > table > tbody > tr > td:first-child { font-style: italic; }
+.entityView .table-bonds,
+.entityView .table-journey,
+.entityView .table-fight { --block: 33.333%; }
+.entityView .table-assets,
+.entityView .table-moves { --block: 50%; }
+.entityView .table-oracles > table > thead th { background: var(--text); color: var(--surface); }
