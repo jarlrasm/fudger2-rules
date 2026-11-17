@@ -12,7 +12,7 @@ specialRoll (natural) =
 
 cypherOutcome (natural, target) =
     if natural == 1 then "Fumble"
-    else if natural > 18 then "Critical"
+    else if natural > 18 and natural >= target then "Critical"
     else if natural >= target then "Success"
     else "Failure"
 
