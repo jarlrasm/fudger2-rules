@@ -95,7 +95,7 @@ strikeBonus (char, weapon) =
     attackAttribute (char, weapon) + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - statusPenalty (char)
 
 strikeDamage (char, weapon) =
-    weaponStat (weapon, "Damage") + (if isRanged (weapon) then "" else signedText (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
+    weaponStat (weapon, "Damage") + (if isRanged (weapon) and not (contains (toLower (weaponStat (weapon, "Traits")), "thrown")) then "" else signedText (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
 
 strike (name, bonus, damage, kind, reachFeet, distance) = custom
 {
