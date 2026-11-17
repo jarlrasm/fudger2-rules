@@ -7,17 +7,11 @@ bonus(points,difficulty)=
       else
       if points < 2 then   0
       else
-      if points < 3 then   1
+      if points < 4 then   1
       else
-       if points < 5 then  2
+       if points < 8 then  2
       else
-       if points < 9 then 3
-      else
-      if points < 13 then   4
-      else
-      if points < 17 then   5
-      else
-        6
+        3 + (points - 8) / 4
       ) -
       (switch difficulty
         case "Easy" then 0
