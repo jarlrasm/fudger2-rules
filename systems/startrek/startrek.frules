@@ -20,12 +20,9 @@ staResult (rolls, target, crit, range, difficulty) =
 }
 
 staRoll (target, department, focus, diceCount, range, difficulty) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
-    ((baseline, throws)->staResult (first (throws).rolls, target, if focus then department else 1, range, difficulty)))
+    ((baseline, throws)->staResult (first (throws).rolls, target, if focus then department else 1, range, if difficulty > 0 then difficulty else asked)))
 
-staAsked (target, department, focus, diceCount, range) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
-    ((baseline, throws)->staResult (first (throws).rolls, target, if focus then department else 1, range, asked)))
-
-staDice (target, department, focus, diceCount, range) = ask ("Difficulty", staAsked (target, department, focus, diceCount, range))
+staDice (target, department, focus, diceCount, range) = ask ("Difficulty", staRoll (target, department, focus, diceCount, range, 0))
 
 challengeFaces = ["1", "2", "", "", "E", "E"]
 
@@ -36,8 +33,6 @@ challengeRoll (n, bonus) = ([dice { number = max (0, n)  sides = 6  faces = chal
         Text = toString (bonus + sum (map ((x)->challengeValue (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x > 4, first (throws).rolls)) > 0 then ", " + plural (count (filter ((x)->x > 4, first (throws).rolls)), "Effect", "Effects") else "")
         Value = bonus + sum (map ((x)->challengeValue (x), first (throws).rolls))
     }))
-
-valueIn (record, name) = valueOr (record, name, 0)
 
 attributeNames = ["Control", "Daring", "Fitness", "Insight", "Presence", "Reason"]
 
@@ -51,7 +46,7 @@ taskTable = table
     Focus = bool { default = false  editable = live }
     Dice = integer { default = 2  minvalue = 1  maxvalue = 5  editable = live }
     'Complication Range' = integer { default = 1  minvalue = 1  maxvalue = 5  editable = live }
-    Target = integer { value = valueIn (Attributes, Attribute) + valueIn (Departments, Department)  valuedice = staDice (Target, valueIn (Departments, Department), Focus, Dice, 'Complication Range')  editable = none }
+    Target = integer { value = valueOr (Attributes, Attribute, 0) + valueOr (Departments, Department, 0)  valuedice = staDice (Target, valueOr (Departments, Department, 0), Focus, Dice, 'Complication Range')  editable = none }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")

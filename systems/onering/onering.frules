@@ -55,7 +55,9 @@ torAttackResult (feats, successDice, tn, weary, miserable, favour) =
     Outcome = torResult (feats, successDice, tn, weary, miserable, favour).Outcome
 }
 
-heroRoll (char, rating, tn, favoured) = torRoll (rating, tn, char.Condition.Weary, char.Condition.Miserable, rollFavour (char, favoured))
+isWeary (char) = char.Condition.Weary or char.Condition.Load >= char.Condition.Endurance
+
+heroRoll (char, rating, tn, favoured) = torRoll (rating, tn, isWeary (char), char.Condition.Miserable, rollFavour (char, favoured))
 
 rollFavour (char, favoured) =
     if char.Condition.Roll != "Normal" then char.Condition.Roll
@@ -75,7 +77,7 @@ weaponStat (weapon, field) = valueOr (weapon.data.warGearStats.Stats, field, "")
 weaponAttack (name, rating, damage, injury, kind) = custom
 {
     Name = name
-    Attack = integer { value = rating  valuedice = ask ("Enemy Parry", torAttack (rating, characterTable.Attributes.'Strength TN', characterTable.Condition.Weary, characterTable.Condition.Miserable, characterTable.Condition.Roll))  action = kind  reach = 2  range = if kind == "ranged" then 100 else 0 }
+    Attack = integer { value = rating  valuedice = ask ("Enemy Parry", torAttack (rating, characterTable.Attributes.'Strength TN', isWeary (characterTable), characterTable.Condition.Miserable, characterTable.Condition.Roll))  action = kind  reach = 2  range = if kind == "ranged" then 100 else 0 }
     Damage = damage
     Injury = injury
 }
@@ -129,7 +131,7 @@ characterTable = ruleset
         Weary = bool { default = false  editable = live  indicator = "#d4b106" }
         Miserable = bool { default = false  editable = live  indicator = "#8e5cc4" }
         Wounded = bool { default = false  editable = live  indicator = "#d64545" }
-        Down = string { value = if Endurance < 1 then "Unconscious" else if Load > Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
+        Down = string { value = if Endurance < 1 then "Unconscious" else if Load >= Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
         Roll = selector { options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
         Injury = string { editable = live }
     }
@@ -180,7 +182,7 @@ characterTable = ruleset
     Armour = table
     {
         tableLayout = layout { columns = 3 }
-        Armour = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = torRoll (Armour, 0, false, false, "Normal") }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
         Helm = integer { default = 0  minvalue = 0  maxvalue = 1 }
         Shield = integer { default = 0  minvalue = 0  maxvalue = 3 }
     }
@@ -233,7 +235,7 @@ creatureTable = ruleset
         Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         'Hate or Resolve' = integer { default = 3  editable = live }
         Parry = modifier { default = 0 }
-        Armour = integer { default = 2  valuedice = torRoll (Armour, 0, false, false, "Normal") }
+        Armour = integer { default = 2  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
         'Fell Abilities' = string { multiline = true }
     }
     'Combat Proficiencies' = list

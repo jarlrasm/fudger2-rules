@@ -74,7 +74,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Luck = slots { number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
-        Harm = slots { number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dying"]  indicator = "#d64545" }
+        Harm = slots { number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
         Down = string { value = harmState (Harm.realvalue)  visible = none  indicator = "#d64545" }
         Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
         Armour = integer { default = 0 }

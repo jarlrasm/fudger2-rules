@@ -16,11 +16,9 @@ mmResult (natural, total, dc) =
     Outcome = if dc < 1 then (if natural == 20 then "Critical" else "") else if critDegrees (natural, total, dc) > 0 then "Success" else "Failure"
 }
 
-mmCheck (dc) = ([1d20], ((baseline, throws)->mmResult (first (first (throws).rolls), baseline + first (first (throws).rolls), dc)))
+mmCheck (dc) = ([1d20], ((baseline, throws)->mmResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dc > 0 then dc else asked)))
 
-mmAsked = ([1d20], ((baseline, throws)->mmResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
-
-mmDice = ask ("DC", mmAsked)
+mmDice = ask ("DC", mmCheck (0))
 
 attackResult (natural, total, defence) =
 {
@@ -51,7 +49,7 @@ toughnessCheck (rank) = ([1d20], ((baseline, throws)->toughnessResult (first (fi
 
 toughnessDice = ask ("Damage rank", ([1d20], ((baseline, throws)->toughnessResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked))))
 
-ability (dummy) = custom
+ability = custom
 {
     Rank = integer { default = 0  minvalue = -5  maxvalue = 20 }
     Check = modifier { value = Rank  valuedice = mmDice  editable = none }
@@ -88,14 +86,14 @@ characterTable = ruleset
     Abilities = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = ability (0)
-        Stamina = ability (0)
-        Agility = ability (0)
-        Dexterity = ability (0)
-        Fighting = ability (0)
-        Intellect = ability (0)
-        Awareness = ability (0)
-        Presence = ability (0)
+        Strength = ability {}
+        Stamina = ability {}
+        Agility = ability {}
+        Dexterity = ability {}
+        Fighting = ability {}
+        Intellect = ability {}
+        Awareness = ability {}
+        Presence = ability {}
     }
 
     Defenses = table

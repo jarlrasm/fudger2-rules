@@ -25,23 +25,23 @@ attackDice (bonus, net) = ask ("Evasion or E-Defense", lancerAsked (bonus, net, 
 checkDice (bonus, net) = ([1d20, dice { number = abs (net)  sides = 6  color = if net < 0 then "red" else "green"  label = accuracyLabel (net) }],
     ((baseline, throws)->lancerResult (first (first (throws).rolls), max (0, max (item (1, throws).rolls)), net, bonus, 10, false)))
 
-structureText (lowest, left) =
-    if left < 1 then "Destroyed"
+structureText (lowest, ones, left) =
+    if left < 1 or ones > 1 then "Destroyed"
     else if lowest > 4 then "Glancing blow: impaired until the end of your next turn"
     else if lowest > 1 then "System trauma: destroy a weapon or system, or roll Hull to keep it"
     else if left > 1 then "Direct hit: roll a Hull check, on a failure the mech is destroyed"
     else "Direct hit: the mech is destroyed"
 
-stressText (lowest, left) =
-    if left < 1 then "Reactor meltdown"
+stressText (lowest, ones, left) =
+    if left < 1 or ones > 1 then "Reactor meltdown"
     else if lowest > 4 then "Emergency shunt: impaired until the end of your next turn"
     else if lowest > 1 then "Destabilized power plant: exposed until you clear it"
     else if left > 1 then "Meltdown risk: roll an Engineering check, on a failure the reactor goes critical"
     else "Irreversible meltdown: the reactor explodes in 1d6 turns"
 
-damageRoll (left, isStress) = ([dice { number = max (1, 5 - left)  sides = 6 }],
+damageRoll (left, isStress) = ([dice { number = max (1, 4 - left)  sides = 6 }],
     ((baseline, throws)->{
-        Text = toString (min (first (throws).rolls)) + ": " + (if isStress then stressText (min (first (throws).rolls), left) else structureText (min (first (throws).rolls), left))
+        Text = toString (min (first (throws).rolls)) + ": " + (if isStress then stressText (min (first (throws).rolls), count (filter ((x)->x == 1, first (throws).rolls)), left) else structureText (min (first (throws).rolls), count (filter ((x)->x == 1, first (throws).rolls)), left))
         Value = min (first (throws).rolls)
         Outcome = "Failure"
     }))
@@ -274,9 +274,9 @@ creatureTable = ruleset
             Name = string {}
             Bonus = modifier { default = 1 }
             Accuracy = integer { default = 0 }
-            Attack = integer { value = Bonus  valuedice = attackDice (Bonus, Accuracy)  action = ranged  range = 10 }
+            Range = string { default = "Range 10" }
+            Attack = integer { value = Bonus  valuedice = attackDice (Bonus, Accuracy)  action = if contains (Range, "Threat") then "melee" else "ranged"  reach = max (1, firstNumber (Range))  range = max (1, firstNumber (Range)) }
             Damage = string {}
-            Range = string {}
         }
     }
     Notes = table

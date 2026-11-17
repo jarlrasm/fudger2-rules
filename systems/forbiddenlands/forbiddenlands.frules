@@ -15,7 +15,7 @@ flResult (base, skill, gear, pushed) =
     Text = flText (base, skill, gear, pushed)
     Value = sixes (base) + sixes (skill) + sixes (gear)
     Outcome = if sixes (base) + sixes (skill) + sixes (gear) > 0 then "Success" else "Failure"
-    Push = if pushed then 0 else flPush (filter ((x)->x == 6 or x == 1, base), filter ((x)->x == 6, skill), filter ((x)->x == 6 or x == 1, gear), count (filter ((x)->x > 1 and x < 6, base)), count (filter ((x)->x < 6, skill)), count (filter ((x)->x > 1 and x < 6, gear)))
+    Push = if pushed or count (filter ((x)->x > 1 and x < 6, concat (base, gear))) + count (filter ((x)->x < 6, skill)) == 0 then 0 else flPush (filter ((x)->x == 6 or x == 1, base), filter ((x)->x == 6, skill), filter ((x)->x == 6 or x == 1, gear), count (filter ((x)->x > 1 and x < 6, base)), count (filter ((x)->x < 6, skill)), count (filter ((x)->x > 1 and x < 6, gear)))
 }
 
 flPush (keptBase, keptSkill, keptGear, base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
@@ -24,7 +24,7 @@ flPush (keptBase, keptSkill, keptGear, base, skill, gear) = ([dice { number = ma
 flRoll (base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
     ((baseline, throws)->flResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, false)))
 
-attribute (dummy) = custom
+attribute = custom
 {
     Max = integer { default = 3  minvalue = 1  maxvalue = 6 }
     Current = integer { default = Max  minvalue = 0  editable = live }
@@ -71,7 +71,7 @@ resourceRoll (dieSize) = ([dice { number = if dieSize > 5 then 1 else 0  sides =
 
 resource (start) = custom
 {
-    Die = integer { default = start  minvalue = 0  maxvalue = 12  step = 2  editable = live  render = if Die < 6 then "none" else "d" + toString (Die) }
+    Die = integer { default = start  minvalue = 4  maxvalue = 12  step = 2  editable = live  render = if Die < 6 then "none" else "d" + toString (Die) }
     Roll = integer { value = Die  valuedice = resourceRoll (Die)  editable = none  render = "roll" }
 }
 
@@ -93,10 +93,10 @@ characterTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = attribute (0)
-        Agility = attribute (0)
-        Wits = attribute (0)
-        Empathy = attribute (0)
+        Strength = attribute {}
+        Agility = attribute {}
+        Wits = attribute {}
+        Empathy = attribute {}
     }
 
     Status = table
@@ -171,8 +171,8 @@ characterTable = ruleset
         tableLayout = layout { columns = 2 }
         Food = resource (6)
         Water = resource (6)
-        Arrows = resource (0)
-        Torches = resource (0)
+        Arrows = resource (4)
+        Torches = resource (4)
     }
 
     Gear = list

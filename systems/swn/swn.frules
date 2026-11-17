@@ -15,24 +15,20 @@ checkResult (total, difficulty) =
     Outcome = if difficulty < 1 then "" else if total >= difficulty then "Success" else "Failure"
 }
 
-skillCheck (difficulty) = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), difficulty)))
+skillCheck (difficulty) = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), if difficulty > 0 then difficulty else asked)))
 
-skillAsked = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), asked)))
-
-skillDice = ask ("Difficulty", skillAsked)
+skillDice = ask ("Difficulty", skillCheck (0))
 
 attackResult (natural, total, ac) =
 {
-    Text = toString (total) + (if ac > 0 then " + AC " + toString (ac) + " = " + toString (total + ac) + (if natural == 20 or total + ac >= 20 then ": hit" else ": miss") else "")
+    Text = toString (total) + (if ac > 0 then " + AC " + toString (ac) + " = " + toString (total + ac) + (if natural == 20 or (natural != 1 and total + ac >= 20) then ": hit" else ": miss") else "")
     Value = total
     Outcome = if natural == 20 then "Hit" else if natural == 1 then "Miss" else if ac < 1 then "" else if total + ac >= 20 then "Hit" else "Miss"
 }
 
-attackRoll (ac) = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), ac)))
+attackRoll (ac) = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if ac > 0 then ac else asked)))
 
-attackAsked = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
-
-attackDice = ask ("Target AC", attackAsked)
+attackDice = ask ("Target AC", attackRoll (0))
 
 saveResult (natural, target) =
 {
@@ -43,7 +39,7 @@ saveResult (natural, target) =
 
 saveDice = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline)))
 
-attribute (dummy) = custom
+attribute = custom
 {
     Score = integer { default = 10  minvalue = 3  maxvalue = 18 }
     Modifier = modifier { value = attributeModifier (Score)  editable = none }
@@ -100,12 +96,12 @@ characterTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 6  size = wide }
-        STR = attribute (0)
-        DEX = attribute (0)
-        CON = attribute (0)
-        INT = attribute (0)
-        WIS = attribute (0)
-        CHA = attribute (0)
+        STR = attribute {}
+        DEX = attribute {}
+        CON = attribute {}
+        INT = attribute {}
+        WIS = attribute {}
+        CHA = attribute {}
     }
 
     Combat = table

@@ -20,13 +20,11 @@ mbResult (natural, total, dr) =
     Outcome = mbOutcome (natural, total, dr)
 }
 
-mbTest (dr) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), dr)))
+mbTest (dr) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dr > 0 then dr else asked)))
 
-mbAsked = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
+mbDice = ask ("DR", 12, mbTest (0))
 
-mbDice = ask ("DR", 12, mbAsked)
-
-ability (dummy) = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
@@ -65,10 +63,10 @@ characterTable = ruleset
     Abilities = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = ability (0)
-        Agility = ability (0)
-        Presence = ability (0)
-        Toughness = ability (0)
+        Strength = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Agility = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Presence = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Toughness = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
     }
 
     Status = table
@@ -140,7 +138,7 @@ creatureTable = ruleset
         Morale = integer { default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": fights on"  Outcome = "Success" })) }
         Armour = string { default = "-d2" }
         Attack = string { default = "d6" }
-        'Damage Roll' = integer { default = 0  valuedice = 1d6  action = melee  reach = 2 }
+        'Damage Roll' = integer { default = 0  valuedice = ([dice { number = 1  sides = max (2, dieSize (Attack)) }], ((baseline, throws)->first (first (throws).rolls)))  action = melee  reach = 2 }
         Special = string { multiline = true }
     }
     Notes = table
