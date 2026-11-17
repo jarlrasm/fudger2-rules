@@ -27,10 +27,10 @@ dualityResult (modifier, hope, fear, extra, difficulty) =
     Color = if hope == fear then "green" else if hope > fear then "yellow" else "purple"
 }
 
-dualityRoll (mode, difficulty) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+dualityRoll (mode, difficulty) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
     ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), difficulty)))
 
-dualityAskedRoll (mode) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+dualityAskedRoll (mode) = ([dice { number = 1  sides = 12  color = "yellow"  label = "Hope" }, dice { number = 1  sides = 12  color = "purple"  label = "Fear" }, dice { number = if mode == "Normal" then 0 else 1  sides = 6  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
     ((baseline, throws)->dualityResult (baseline, first (item (0, throws).rolls), first (item (1, throws).rolls), advantageDie (mode, item (2, throws).rolls), asked)))
 
 dualityDice (char) = ask ("Difficulty", dualityAskedRoll (char.Character.Roll))

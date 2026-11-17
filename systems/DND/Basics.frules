@@ -212,10 +212,10 @@ attackResult (total, natural, ac) =
 
 rollPenalty (char) = 2 * exhaustionLevel (char)
 
-askedCheck (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Normal" then 0 else 1  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+askedCheck (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Advantage" or mode == "Disadvantage" then 1 else 0  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
     ((baseline, throws)->checkResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), asked)))
 
-askedAttack (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Normal" then 0 else 1  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else "Disadvantage" }],
+askedAttack (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if mode == "Advantage" or mode == "Disadvantage" then 1 else 0  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
     ((baseline, throws)->attackResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), asked)))
 
 D20Roll (char) = ask ("DC", askedCheck (char.Basics.Roll, rollPenalty (char)))
