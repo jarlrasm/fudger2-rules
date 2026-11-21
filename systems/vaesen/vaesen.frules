@@ -1,0 +1,261 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+vaesenText (successes, pushed) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + (if pushed then ", pushed: mark a physical or mental condition" else "")
+
+vaesenResult (rolls, kept, canPush) =
+{
+    Text = vaesenText (kept + sixes (rolls), not (canPush))
+    Value = kept + sixes (rolls)
+    Outcome = if kept + sixes (rolls) > 0 then "Success" else "Failure"
+    Push = if canPush and count (filter ((x)->x < 6, rolls)) > 0 then vaesenPush (sixes (rolls), count (filter ((x)->x < 6, rolls))) else 0
+    PushLabel = "Push (mark a condition)"
+}
+
+vaesenPush (kept, rerolled) = ([dice { number = rerolled  sides = 6 }],
+    ((baseline, throws)->vaesenResult (first (throws).rolls, kept, false)))
+
+vaesenRoll (pool) = ([dice { number = max (1, pool)  sides = 6 }],
+    ((baseline, throws)->vaesenResult (first (throws).rolls, 0, true)))
+
+physicalPenalty (char) =
+    (if char.Conditions.Exhausted then 1 else 0) + (if char.Conditions.Battered then 1 else 0) + (if char.Conditions.Wounded then 1 else 0)
+
+mentalPenalty (char) =
+    (if char.Conditions.Angry then 1 else 0) + (if char.Conditions.Frightened then 1 else 0) + (if char.Conditions.Hopeless then 1 else 0)
+
+skill (attribute, physical) = custom
+{
+    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Pool = integer { value = max (1, attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  valuedice = vaesenRoll (attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  editable = none }
+}
+
+noSkill = { Pool = 1 }
+
+poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 1)
+
+weaponStat (weapon, field) = valueOr (weapon.data.vaesenWeapon.Stats, field, "")
+
+rangeMetres (text) =
+    switch text
+        case "Engaged" then 2
+        case "Short" then 10
+        case "Long" then 50
+        else 2
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = vaesenRoll (pool)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Range") == "Engaged" or weaponStat (weapon, "Range") == "" then
+        weaponAttack (weapon.Name, poolOf (char, "Close combat") + toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "melee", 2)
+    else
+        weaponAttack (weapon.Name, poolOf (char, "Ranged combat") + toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+
+brokenState (char) =
+    if char.Conditions.'Physically broken' and char.Conditions.'Mentally broken' then "Broken"
+    else if char.Conditions.'Physically broken' then "Physically broken"
+    else if char.Conditions.'Mentally broken' then "Mentally broken"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Archetype = string { keys = ["Academic", "Doctor", "Hunter", "Occultist", "Officer", "Priest", "Private Detective", "Servant", "Vagabond", "Writer"] }
+        Age = string { default = "Middle-aged"  keys = ["Young", "Middle-aged", "Old"] }
+        Motivation = string {}
+        Trauma = string {}
+        'Dark secret' = string {}
+        Relationships = string { multiline = true }
+        Experience = integer { default = 0  editable = live }
+        Modifier = modifier { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Physique = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Physique - physicalPenalty (characterTable) + Character.Modifier) }
+        Precision = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Precision - physicalPenalty (characterTable) + Character.Modifier) }
+        Logic = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Logic - mentalPenalty (characterTable) + Character.Modifier) }
+        Empathy = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Empathy - mentalPenalty (characterTable) + Character.Modifier) }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Agility = skill (Attributes.Physique, true)
+        'Close combat' = skill (Attributes.Physique, true)
+        Force = skill (Attributes.Physique, true)
+        Medicine = skill (Attributes.Precision, true)
+        'Ranged combat' = skill (Attributes.Precision, true)
+        Stealth = skill (Attributes.Precision, true)
+        Investigation = skill (Attributes.Logic, false)
+        Learning = skill (Attributes.Logic, false)
+        Vigilance = skill (Attributes.Logic, false)
+        Inspiration = skill (Attributes.Empathy, false)
+        Manipulation = skill (Attributes.Empathy, false)
+        Observation = skill (Attributes.Empathy, false)
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
+        Battered = bool { default = false  editable = live  indicator = "#e8913a" }
+        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
+        'Physically broken' = bool { default = false  editable = live }
+        Angry = bool { default = false  editable = live  indicator = "#d64545" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
+        'Mentally broken' = bool { default = false  editable = live }
+        State = string { value = brokenState (characterTable)  visible = none  indicator = "#d64545" }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        'Critical injuries' = string { multiline = true  editable = live }
+    }
+
+    Talents = list
+    {
+        singular = "Talent"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Resources = integer { default = 4  minvalue = 1  maxvalue = 8 }
+        Armor = string {}
+        Equipment = string { multiline = true }
+        Memento = string {}
+        Insights = string { multiline = true }
+        Defects = string { multiline = true }
+    }
+}
+
+vaesenTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Vaesen, Attacks] }
+    Vaesen = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Vaesen"  keys = ["Vaesen", "Human", "Animal"] }
+        Might = integer { default = 3  valuedice = vaesenRoll (Might) }
+        Physique = integer { default = 3  valuedice = vaesenRoll (Physique) }
+        Precision = integer { default = 3  valuedice = vaesenRoll (Precision) }
+        Logic = integer { default = 3  valuedice = vaesenRoll (Logic) }
+        Empathy = integer { default = 3  valuedice = vaesenRoll (Empathy) }
+        Armor = integer { default = 0 }
+        Conditions = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max conditions' = integer { default = 3 }
+        State = string { value = if Conditions >= 'Max conditions' then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        Magic = integer { default = 0 }
+        Fear = string {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Card = integer { default = 1  minvalue = 1  maxvalue = 6 }
+            Name = string {}
+            Effect = string { multiline = true }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Powers = string { multiline = true }
+        Weaknesses = string { multiline = true }
+        'Defeat' = string { multiline = true }
+        Signs = string { multiline = true }
+    }
+}
+
+vaesenWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Bonus = string { default = "1" }
+        Damage = string { default = "1" }
+        Range = string { default = "Engaged"  keys = ["Engaged", "Short", "Long"] }
+        Availability = string {}
+        Notes = string {}
+    }
+}
+
+Vaesen = system
+{
+    hints = [
+        hint
+        {
+            title = "Thinned blood"
+            topic = "Getting started"
+            text = ["Player characters can see the vaesen. Pick an archetype; spread points over Physique, Precision, Logic and Empathy (2 to 5) and the twelve skills. Add the initiative card deck to the session."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll a d6 per point of attribute plus skill. Each six is a success. You may push once: reroll the dice that were not sixes, then mark a condition, physical or mental."]
+        },
+        hint
+        {
+            title = "Conditions"
+            topic = "Combat"
+            text = ["Physical conditions (Exhausted, Battered, Wounded) give -1 to Physique and Precision rolls; mental ones (Angry, Frightened, Hopeless) to Logic and Empathy. Taking damage with all three of a kind marked breaks the character and brings a critical injury."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Deal initiative: each character and vaesen gets a card from 1 to 10 and acts in that order."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = vaesenTable
+    entityTypeNames = [entityTypeName ("Creature", "Vaesen", "Vaesen")]
+    Weapons = vaesenWeapon
+    secondaryTypes = ["Weapons"]
+    description = "Vaesen: Nordic horror in the 19th century, Year Zero dice pools and conditions"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    initiativeDeck = "Initiative Cards"
+    quickdice = [1d6, 2d6, 3d6, 4d6, 1d10]
+    cssFiles = ["/systems/vaesen/vaesen.css"]
+    libraries = ["/systems/vaesen/initiativedeck.json", "/systems/names/norwegian.json", "/systems/names/viking.json", "/systems/names/victorian.json", "/systems/names/gothic.json"]
+    nameSettings = [gaslightNameSetting, modernNorwayNameSetting, gothicHorrorNameSetting]
+}
