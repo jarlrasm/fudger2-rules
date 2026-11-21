@@ -1,0 +1,442 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+ringCode (face) =
+    switch face
+        case 1 then 1
+        case 2 then 10
+        case 3 then 11
+        case 4 then 100
+        case 5 then 101
+        else 100
+
+skillCode (face) =
+    switch face
+        case 1 then 1
+        case 2 then 1
+        case 3 then 11
+        case 4 then 11
+        case 5 then 11
+        case 6 then 100
+        case 7 then 100
+        case 8 then 101
+        case 9 then 101
+        case 10 then 111
+        case 11 then 100
+        else 101
+
+successesOf (code) = code / 100
+
+opportunitiesOf (code) = mod (code / 10, 10)
+
+strifeOf (code) = if mod (code, 10) == 0 then 1 else 0
+
+keptCount (codes, keep) = min (keep, count (codes))
+
+cutoff (codes, keep) = if keptCount (codes, keep) == 0 then 1000 else item (keptCount (codes, keep) - 1, reverse (sort (codes)))
+
+partOf (kind, code) =
+    switch kind
+        case "S" then successesOf (code)
+        case "O" then opportunitiesOf (code)
+        else strifeOf (code)
+
+keptTotal (codes, keep, kind) =
+    sum (map ((x)->partOf (kind, x), filter ((x)->x > cutoff (codes, keep), codes)))
+    + (keptCount (codes, keep) - count (filter ((x)->x > cutoff (codes, keep), codes))) * partOf (kind, cutoff (codes, keep))
+
+allCodes (ringRolls, skillRolls) = concat (map ((x)->ringCode (x), ringRolls), map ((x)->skillCode (x), skillRolls))
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "s")
+
+l5rText (s, o, t, tn) =
+    plural (s, "success") + ", " + plural (o, "opportunity") + ", " + toString (t) + " strife"
+    + (if tn > 0 then " vs TN " + toString (tn) + ": " + (if s >= tn then "success" + (if s > tn then ", " + plural (s - tn, "bonus success") else "") else "failure") else "")
+
+l5rResult (s, o, t, tn) =
+{
+    Text = replace ("opportunitys", "opportunities", replace ("successs", "successes", l5rText (s, o, t, tn)))
+    Value = s
+    Outcome = if tn > 0 then (if s >= tn then "Success" else "Failure") else ""
+}
+
+keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice) = ring + count (ringRolls) + count (skillRolls) - ringDice - skillDice
+
+l5rKept (ring, ringRolls, skillRolls, ringDice, skillDice, tn) =
+    l5rResult (
+        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "S"),
+        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "O"),
+        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "T"),
+        tn)
+
+l5rPool (ring, rank, tn, initiative) = ([dice { number = max (1, ring)  sides = 6  color = "black"  label = "Ring"  explode = 6  faces = ["", "OT", "O", "ST", "S", "ET"] }, dice { number = max (0, rank)  sides = 12  color = "white"  label = "Skill"  explode = 11  faces = ["", "", "O", "O", "O", "ST", "ST", "S", "S", "SO", "ET", "E"] }],
+    ((baseline, throws)->
+        if initiative then baseline + keptTotal (allCodes (first (throws).rolls, item (1, throws).rolls), keepLimit (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank)), "S")
+        else l5rKept (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank), if tn < 0 then asked else tn)))
+
+l5rRoll (ring, rank, tn) = l5rPool (ring, rank, tn, false)
+
+l5rCheck (ring, rank) = ask ("TN", l5rPool (ring, rank, -1, false))
+
+initiativeRoll (ring, rank) = l5rPool (ring, rank, 0, true)
+
+ringOf (char) =
+    switch char.Character.Approach
+        case "Earth" then char.Rings.Earth
+        case "Fire" then char.Rings.Fire
+        case "Water" then char.Rings.Water
+        case "Void" then char.Rings.Void
+        else char.Rings.Air
+
+skill = custom
+{
+    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Check = integer { value = Rank  valuedice = l5rCheck (ringOf (characterTable), Rank)  editable = none }
+}
+
+noSkill = { Rank = 0 }
+
+skillRank (char, name) = valueOr (valueOr (char.Skills.Martial, name, noSkill), "Rank", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.l5rWeapon.Stats, field, "")
+
+rangeMetres (band) =
+    switch band
+        case 0 then 2
+        case 1 then 2
+        case 2 then 5
+        case 3 then 10
+        case 4 then 25
+        case 5 then 100
+        else 1000
+
+bandOf (text) = toInt (first (split ("-", replace ("–", "-", text))))
+
+lastBand (text) = toInt (first (reverse (split ("-", replace ("–", "-", text)))))
+
+weaponSkill (weapon) = if weaponStat (weapon, "Skill") == "" then "Martial Arts Melee" else weaponStat (weapon, "Skill")
+
+weaponAttack (name, rank, damage, deadliness, kind, reachMetres, rangeMetresValue) = custom
+{
+    Name = name
+    Attack = integer { value = rank  valuedice = l5rCheck (ringOf (characterTable), rank)  action = kind  reach = reachMetres  range = rangeMetresValue  editable = none }
+    Damage = damage
+    Deadliness = deadliness
+}
+
+attackFor (char, weapon) =
+    if contains (weaponSkill (weapon), "Ranged") then
+        weaponAttack (weapon.Name, skillRank (char, weaponSkill (weapon)), weaponStat (weapon, "Damage"), weaponStat (weapon, "Deadliness"), "ranged", 2, rangeMetres (lastBand (weaponStat (weapon, "Range"))))
+    else
+        weaponAttack (weapon.Name, skillRank (char, weaponSkill (weapon)), weaponStat (weapon, "Damage"), weaponStat (weapon, "Deadliness"), "melee", rangeMetres (lastBand (weaponStat (weapon, "Range"))), 0)
+
+downState (fatigue, endurance, strife, composure) =
+    if fatigue > endurance then "Incapacitated"
+    else if strife > composure then "Unmasked"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Rings, Status, Attacks, Conditions] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Clan = string { keys = ["Crab", "Crane", "Dragon", "Lion", "Phoenix", "Scorpion", "Unicorn", "Ronin"] }
+        Family = string {}
+        School = string {}
+        'School rank' = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Giri = string {}
+        Ninjo = string {}
+        Approach = selector { options = ["Air", "Earth", "Fire", "Water", "Void"]  labels = ["Air", "Earth", "Fire", "Water", "Void"]  colors = ["", "", "", "", ""]  default = "Air"  editable = live  save = nosave }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Rings = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Air = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Earth = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Fire = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Water = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Void = integer { default = 1  minvalue = 1  maxvalue = 5 }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4 }
+        Endurance = integer { value = (Rings.Earth + Rings.Fire) * 2  editable = none }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Composure = integer { value = (Rings.Earth + Rings.Water) * 2  editable = none }
+        Strife = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Focus = integer { value = Rings.Fire + Rings.Air  editable = none }
+        Vigilance = integer { value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
+        'Void points' = slots { number = Rings.Void  editable = live }
+        Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = Focus  valuedice = initiativeRoll (Rings.Air, skillRank (characterTable, "Tactics"))  editable = none }
+    }
+
+    'Honor and Glory' = table
+    {
+        tableLayout = layout { columns = 3 }
+        Honor = integer { default = 40  minvalue = 0  maxvalue = 100 }
+        Glory = integer { default = 40  minvalue = 0  maxvalue = 100 }
+        Status = integer { default = 30  minvalue = 0  maxvalue = 100 }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Artisan = table
+        {
+            Aesthetics = skill {}
+            Composition = skill {}
+            Design = skill {}
+            Smithing = skill {}
+        }
+        Martial = table
+        {
+            Fitness = skill {}
+            'Martial Arts Melee' = skill {}
+            'Martial Arts Ranged' = skill {}
+            'Martial Arts Unarmed' = skill {}
+            Meditation = skill {}
+            Tactics = skill {}
+        }
+        Scholar = table
+        {
+            Culture = skill {}
+            Government = skill {}
+            Medicine = skill {}
+            Sentiment = skill {}
+            Theology = skill {}
+        }
+        Social = table
+        {
+            Command = skill {}
+            Courtesy = skill {}
+            Games = skill {}
+            Performance = skill {}
+        }
+        Trade = table
+        {
+            Commerce = skill {}
+            Labor = skill {}
+            Seafaring = skill {}
+            Skulduggery = skill {}
+            Survival = skill {}
+        }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4 }
+        Afflicted = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Bleeding = bool { default = false  editable = live  indicator = "#d64545" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Disoriented = bool { default = false  editable = live  indicator = "#d4b106" }
+        Exhausted = bool { default = false  editable = live  indicator = "#555555" }
+        Immobilized = bool { default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        Critical = string { editable = live  indicator = "#d64545"  indicatorLabel = "Injured" }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Techniques = list
+    {
+        singular = "Technique"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { keys = ["Kata", "Kihō", "Invocation", "Ritual", "Shūji", "Mahō", "Ninjutsu"] }
+            Rank = integer { default = 1 }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Traits = list
+    {
+        singular = "Advantage or disadvantage"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Kind = string { keys = ["Distinction", "Passion", "Adversity", "Anxiety"] }
+            Ring = string { keys = ["Air", "Earth", "Fire", "Water", "Void"] }
+            Notes = string {}
+        }
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2 }
+        Koku = integer { default = 0 }
+        Bu = integer { default = 0 }
+        Zeni = integer { default = 0 }
+        'Armor and gear' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+npcRingOf (npc) =
+    switch npc.Character.Approach
+        case "Earth" then npc.Rings.Earth
+        case "Fire" then npc.Rings.Fire
+        case "Water" then npc.Rings.Water
+        case "Void" then npc.Rings.Void
+        else npc.Rings.Air
+
+npcSkill = custom
+{
+    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Check = integer { value = Rank  valuedice = l5rCheck (npcRingOf (npcTable), Rank)  editable = none }
+}
+
+npcTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Rings, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Type = string { keys = ["Adversary", "Minion"] }
+        Conflict = string { keys = ["Combat", "Intrigue", "Both"] }
+        Demeanor = string {}
+        Approach = selector { options = ["Air", "Earth", "Fire", "Water", "Void"]  labels = ["Air", "Earth", "Fire", "Water", "Void"]  colors = ["", "", "", "", ""]  default = "Air"  editable = live  save = nosave }
+    }
+    Rings = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Air = integer { default = 2 }
+        Earth = integer { default = 2 }
+        Fire = integer { default = 2 }
+        Water = integer { default = 2 }
+        Void = integer { default = 2 }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Endurance = integer { default = 8 }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Composure = integer { default = 8 }
+        Strife = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Focus = integer { default = 4 }
+        Vigilance = integer { default = 2 }
+        Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = Focus  valuedice = initiativeRoll (Rings.Air, 'Skill groups'.Martial.Rank)  editable = none }
+    }
+    'Skill groups' = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Artisan = npcSkill {}
+        Martial = npcSkill {}
+        Scholar = npcSkill {}
+        Social = npcSkill {}
+        Trade = npcSkill {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = integer { value = 'Skill groups'.Martial.Rank  valuedice = l5rCheck (npcRingOf (npcTable), 'Skill groups'.Martial.Rank)  action = melee  reach = 2  editable = none }
+            Damage = integer { default = 3 }
+            Deadliness = integer { default = 3 }
+            Range = string { default = "0-1" }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Abilities = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+l5rWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { default = "Martial Arts Melee"  keys = ["Martial Arts Melee", "Martial Arts Ranged", "Martial Arts Unarmed"] }
+        Range = string { default = "0-1" }
+        Damage = string { default = "3" }
+        Deadliness = string { default = "3" }
+        Grips = string {}
+        Qualities = string {}
+    }
+}
+
+l5rArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Physical = string { default = "1" }
+        Supernatural = string { default = "0" }
+        Qualities = string {}
+    }
+}
+
+LegendOfTheFiveRings = system
+{
+    hints = [
+        hint
+        {
+            title = "Rings and approaches"
+            topic = "Getting started"
+            text = ["Every check uses a ring and a skill. Pick the approach on the sheet before rolling: Air for subtle, Earth for steady, Fire for bold, Water for adaptable, Void for selfless."]
+        },
+        hint
+        {
+            title = "Keeping dice"
+            topic = "Play"
+            text = ["Roll ring dice (d6) and skill dice (d12) and keep up to the ring's value. Fudger keeps the best dice for you: successes first, then opportunities, then less strife. Explosive successes roll again and their extra dice are kept free. Meet the TN in successes to succeed."]
+        },
+        hint
+        {
+            title = "Strife and fatigue"
+            topic = "Combat"
+            text = ["Kept strife symbols add strife. When strife passes composure the character is unmasked. When fatigue passes endurance they are incapacitated. A strike deals the weapon's damage plus bonus successes minus resistance as fatigue; spending two opportunities on a crit uses the deadliness."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: a Tactics check with Air whose kept successes add to Focus. Use Vigilance instead when caught unprepared."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = npcTable
+    entityTypeNames = [entityTypeName ("Creature", "NPC", "NPCs")]
+    Weapons = l5rWeapon
+    Armor = l5rArmor
+    secondaryTypes = ["Weapons", "Armor"]
+    description = "Legend of the Five Rings 5th edition: ring and skill dice, keep up to your ring, strife and honor"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 1d12]
+    cssFiles = ["/systems/l5r/l5r.css"]
+    libraries = ["/systems/names/samurai.json", "/systems/names/chinese.json"]
+    nameSettings = [feudalJapanNameSetting, easternNameSetting]
+}
