@@ -1,0 +1,73 @@
+@import url("/systems/sheet.css");
+
+/* Pathfinder First Edition: a parchment sheet with black title bars, the six
+   ability scores in a strip of boxes, defense and offense numbers side by
+   side, and the long skill list in two columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d8ccb4;
+    --surface: #fbf6ea;
+    --surface-alt: #f1e8d4;
+    --surface-sunken: #e8dcc2;
+    --surface-muted: #d5c7a8;
+    --text: #1b1712;
+    --text-muted: #45392a;
+    --text-faint: #7b6c55;
+    --on-accent: #fbf6ea;
+    --border: #a8977a;
+    --border-strong: #1b1712;
+    --accent: #6e2413;
+    --accent-hover: #8c301b;
+    --accent-soft: #eed9c9;
+    --link: #6e2413;
+    --danger: #9b2a1c;
+    --danger-hover: #6e2413;
+    --danger-soft: #eed9c9;
+    --success: #3d6b33;
+    --paper: #fbf6ea;
+    --card-bg: #f1e8d4;
+    --dice-bg: #1b1712;
+    --dice-text: #fbf6ea;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Trebuchet MS", "Gill Sans", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--text);
+    color: var(--surface);
+    padding: 2px 8px;
+    font-style: italic;
+}
+.entityView .table-abilities > table > tbody,
+.entityView .table-statistics > table > tbody {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    border: 2px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-weight: 700; text-transform: uppercase; }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "class "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-combat { --block: 50%; clear: left; }
+.entityView .table-saves,
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-saves .customtype > div:nth-child(1)::before { content: "base "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-saves .customtype > div:nth-child(2)::before { content: "magic "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-saves .customtype > div:nth-child(3)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-feats,
+.entityView .table-class-features,
+.entityView .table-equipment,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-feats { clear: left; }
+.entityView .table-skills .customtype > div:nth-child(3)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
