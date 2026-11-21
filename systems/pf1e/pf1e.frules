@@ -537,7 +537,7 @@ pf1Spell = ruleset
         defaultImage = "/images/spell.svg"
         filters = [
             filter { name = "School" prefix = "" filter = Stats.School },
-            filter { name = "Class" prefix = "" filter = map ((x)->first (split (" ", x)), split (", ", Stats.Level)) }
+            filter { name = "Class" prefix = "" filter = map ((x)->first (split (" ", x)), split ("; ", Stats.Level)) }
         ]
     }
     Stats = table
