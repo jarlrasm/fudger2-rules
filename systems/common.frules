@@ -25,6 +25,13 @@ entityTypeDescription(name,singular,forEncounters, image, secondaries)=ruleset
     Secondaries=secondaries
 }
 
+entityTypeName(type,singular,plural)=ruleset
+{
+    Type=type
+    Singular=singular
+    Plural=plural
+}
+
 valueOr(item, key, fallback)=
     if count (filter ((x)->x.Key == key, toList (item))) > 0 then
         first (filter ((x)->x.Key == key, toList (item))).Value
