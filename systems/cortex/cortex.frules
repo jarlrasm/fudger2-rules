@@ -1,0 +1,238 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieKeys = ["d4", "d6", "d8", "d10", "d12"]
+
+sidesOf (die) = toInt (replace ("d", "", die))
+
+codesOf (throws) = reverse (sort (fold ([], (acc, t)->concat (acc, map ((r)->r * 100 + t.sides, filter ((r)->r > 1, t.rolls))), throws)))
+
+allRolls (throws) = fold ([], (acc, t)->concat (acc, t.rolls), throws)
+
+hitches (throws) = count (filter ((r)->r == 1, allRolls (throws)))
+
+valueOfCode (code) = code / 100
+
+sidesOfCode (code) = mod (code, 100)
+
+cortexTotal (codes) =
+    if count (codes) == 0 then 0
+    else if count (codes) == 1 then valueOfCode (first (codes))
+    else valueOfCode (first (codes)) + valueOfCode (item (1, codes))
+
+effectSides (codes) =
+    if count (codes) < 3 then 4
+    else max (map ((n)->sidesOfCode (item (n, codes)), filter ((n)->n < count (codes), [2, 3, 4, 5, 6])))
+
+stepUp (sides) = if sides >= 12 then 12 else sides + 2
+
+heroic (total, difficulty) = difficulty > 0 and total >= difficulty + 5
+
+cortexText (total, effect, hitchCount, botch, difficulty) =
+    (if botch then "Botch! every die came up 1"
+    else "Total " + toString (total) + ", effect d" + toString (if heroic (total, difficulty) then stepUp (effect) else effect)
+        + (if difficulty > 0 then " vs " + toString (difficulty) + ": " + (if heroic (total, difficulty) then "heroic success" else if total > difficulty then "success" else "failure") else ""))
+    + (if hitchCount > 0 and not (botch) then ", " + toString (hitchCount) + (if hitchCount == 1 then " hitch" else " hitches") else "")
+
+cortexResult (throws, difficulty) =
+{
+    Text = cortexText (cortexTotal (codesOf (throws)), effectSides (codesOf (throws)), hitches (throws), count (codesOf (throws)) == 0, difficulty)
+    Value = cortexTotal (codesOf (throws))
+    Outcome = if count (codesOf (throws)) == 0 then "Botch" else if difficulty == 0 then "" else if heroic (cortexTotal (codesOf (throws)), difficulty) then "Heroic success" else if cortexTotal (codesOf (throws)) > difficulty then "Success" else "Failure"
+}
+
+cortexPool (attrSides, skillSides, distinctionSides, assetSides, difficulty) = ([dice { number = if attrSides > 0 then 1 else 0  sides = max (4, attrSides)  label = if attrSides > 0 then "Attribute" else "" }, dice { number = if skillSides > 0 then 1 else 0  sides = max (4, skillSides)  label = if skillSides > 0 then "Skill" else ""  color = "blue" }, dice { number = if distinctionSides > 0 then 1 else 0  sides = max (4, distinctionSides)  label = if distinctionSides > 0 then "Distinction" else ""  color = "purple" }, dice { number = if assetSides > 0 then 1 else 0  sides = max (4, assetSides)  label = if assetSides > 0 then "Asset" else ""  color = "green" }],
+    ((baseline, throws)->cortexResult (throws, if difficulty < 0 then asked else difficulty)))
+
+optionalSides (choice) = if choice == "None" then 0 else sidesOf (choice)
+
+attributeSides (char) =
+    switch char.Character.Attribute
+        case "Agility" then sidesOf (char.Attributes.Agility)
+        case "Alertness" then sidesOf (char.Attributes.Alertness)
+        case "Intelligence" then sidesOf (char.Attributes.Intelligence)
+        case "Strength" then sidesOf (char.Attributes.Strength)
+        case "Vitality" then sidesOf (char.Attributes.Vitality)
+        else sidesOf (char.Attributes.Willpower)
+
+cortexRoll (char, skillSides) = ask ("Difficulty", cortexPool (attributeSides (char), skillSides, optionalSides (char.Character.Distinction), optionalSides (char.Character.Asset), -1))
+
+stressState (physical, mental, emotional) =
+    if physical == "Out" or mental == "Out" or emotional == "Out" then "Taken out"
+    else ""
+
+stressKeys = ["None", "d4", "d6", "d8", "d10", "d12", "Out"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Character, Attributes, Stress, Skills] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        'Plot points' = integer { default = 1  minvalue = 0  editable = live }
+        Attribute = selector { options = ["Agility", "Alertness", "Intelligence", "Strength", "Vitality", "Willpower"]  labels = ["Agi", "Ale", "Int", "Str", "Vit", "Wil"]  colors = ["", "", "", "", "", ""]  default = "Agility"  editable = live  save = nosave }
+        Distinction = selector { options = ["None", "d4", "d8"]  labels = ["None", "d4", "d8"]  colors = ["", "red", "purple"]  default = "None"  editable = live  save = nosave }
+        Asset = selector { options = ["None", "d6", "d8", "d10", "d12"]  labels = ["None", "d6", "d8", "d10", "d12"]  colors = ["", "green", "green", "green", "green"]  default = "None"  editable = live  save = nosave }
+    }
+
+    Distinctions = list
+    {
+        singular = "Distinction"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d8"  keys = ["d4", "d8"] }
+            'Hinder and Shine' = string { multiline = true }
+        }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3 }
+        Agility = string { default = "d8"  keys = dieKeys }
+        Alertness = string { default = "d8"  keys = dieKeys }
+        Intelligence = string { default = "d8"  keys = dieKeys }
+        Strength = string { default = "d8"  keys = dieKeys }
+        Vitality = string { default = "d8"  keys = dieKeys }
+        Willpower = string { default = "d8"  keys = dieKeys }
+    }
+
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = campaign
+        keys = ["Craft", "Drive", "Fight", "Focus", "Influence", "Know", "Labor", "Move", "Notice", "Operate", "Perform", "Shoot", "Sneak", "Survive", "Treat", "Trick"]
+        tableLayout = layout { columns = 2  size = wide }
+        valueType = custom
+        {
+            Die = string { default = "d6"  keys = dieKeys }
+            Roll = integer { value = sidesOf (Die)  valuedice = cortexRoll (characterTable, sidesOf (Die))  editable = none  render = Die }
+        }
+    }
+
+    Stress = table
+    {
+        tableLayout = layout { columns = 3 }
+        Physical = string { default = "None"  keys = stressKeys  editable = live }
+        Mental = string { default = "None"  keys = stressKeys  editable = live }
+        Emotional = string { default = "None"  keys = stressKeys  editable = live }
+        Down = string { value = stressState (Physical, Mental, Emotional)  visible = none  indicator = "#d64545" }
+    }
+
+    Complications = list
+    {
+        singular = "Complication"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d6"  keys = dieKeys }
+        }
+    }
+
+    Assets = list
+    {
+        singular = "Asset"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d6"  keys = dieKeys }
+            Signature = bool { default = false }
+        }
+    }
+
+    'SFX and abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "SFX"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Milestones = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Values = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+gmcTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Character, Pool, Stress] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { default = "Minor"  keys = ["Extra", "Minor", "Major", "Mob", "Boss"] }
+        Description = string {}
+        Distinction = selector { options = ["None", "d4", "d8"]  labels = ["None", "d4", "d8"]  colors = ["", "red", "purple"]  default = "None"  editable = live  save = nosave }
+    }
+    Pool = keyvalues
+    {
+        singular = "Trait"
+        editablekeys = character
+        keys = ["Fight", "Notice", "Sneak"]
+        tableLayout = layout { columns = 2  size = wide }
+        valueType = custom
+        {
+            First = string { default = "d8"  keys = dieKeys }
+            Second = string { default = "d6"  keys = ["None", "d4", "d6", "d8", "d10", "d12"] }
+            Roll = integer { value = sidesOf (First)  valuedice = ask ("Difficulty", cortexPool (sidesOf (First), optionalSides (Second), optionalSides (Character.Distinction), 0, -1))  editable = none  render = First + " + " + Second }
+        }
+    }
+    Stress = table
+    {
+        tableLayout = layout { columns = 3 }
+        Physical = string { default = "None"  keys = stressKeys  editable = live }
+        Mental = string { default = "None"  keys = stressKeys  editable = live }
+        Emotional = string { default = "None"  keys = stressKeys  editable = live }
+        Down = string { value = stressState (Physical, Mental, Emotional)  visible = none  indicator = "#d64545" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        SFX = string { multiline = true }
+    }
+}
+
+CortexPrime = system
+{
+    hints = [
+        hint
+        {
+            title = "Prime sets"
+            topic = "Getting started"
+            text = ["Each character has three Distinctions, six Attributes and Skills, each rated as a die from d4 to d12. The GM can rename the skill list in the campaign."]
+        },
+        hint
+        {
+            title = "Building a pool"
+            topic = "Play"
+            text = ["Pick the attribute and, if one fits, a distinction (d8, or d4 for a plot point) and an asset on the sheet, then roll a skill. Fudger adds the best two dice as the total and keeps the largest other die as the effect die. Ones are hitches the GM can buy as complications."]
+        },
+        hint
+        {
+            title = "Stress and complications"
+            topic = "Combat"
+            text = ["A winning roll's effect die becomes stress, or steps up stress already there. Stress past d12 takes the character out. Complications are dice the GM adds to opposing pools."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Cortex uses action order: whoever acts picks who goes next. There is no initiative roll."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = gmcTable
+    entityTypeNames = [entityTypeName ("Creature", "GM character", "GM characters")]
+    description = "Cortex Prime: dice pools of stepped dice, total plus an effect die, stress and complications"
+    quickdice = [1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/cortex/cortex.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/heroes.json", "/systems/names/scifi.json", "/systems/names/cyberpunk.json", "/systems/names/weirdwest.json", "/systems/names/spies.json"]
+    nameSettings = [fantasyNameSetting, superheroesNameSetting, spaceNameSetting, neonStreetsNameSetting, weirdWestNameSetting, spyThrillerNameSetting]
+}
