@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* The Cosmere RPG: a Roshar sheet in storm blue and spren gold. Light blue
+   panels with thin gold rules, attributes in pairs over their three
+   defenses, the eighteen skills in physical, cognitive and spiritual
+   columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #cfd8e0;
+    --surface: #f8fafc;
+    --surface-alt: #eaf0f5;
+    --surface-sunken: #dde6ee;
+    --surface-muted: #c5d1dc;
+    --text: #142333;
+    --text-muted: #34485c;
+    --text-faint: #6b7d8f;
+    --on-accent: #ffffff;
+    --border: #8ea2b5;
+    --border-strong: #1d3a57;
+    --accent: #1d4f7a;
+    --accent-hover: #2a679c;
+    --accent-soft: #d9e7f3;
+    --link: #1d4f7a;
+    --danger: #a3302a;
+    --danger-hover: #7e231f;
+    --danger-soft: #f4dcd9;
+    --success: #2f6e4b;
+    --paper: #f8fafc;
+    --card-bg: #eaf0f5;
+    --dice-bg: #1d4f7a;
+    --dice-text: #f5d97a;
+}
+
+.entityView {
+    --sheet-font: "Lato", "Segoe UI", Helvetica, sans-serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 6px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    letter-spacing: 0.1em;
+    background: var(--accent);
+    color: #f5d97a;
+    padding: 2px 10px;
+    border-bottom: 2px solid #c9a646;
+}
+.entityView .table-attributes { --block: 50%; }
+.entityView .table-defenses { --block: 50%; }
+.entityView .table-resources { --block: 100%; }
+.entityView .table-physical,
+.entityView .table-cognitive,
+.entityView .table-spiritual { --block: 33.333%; clear: none; }
+.entityView .table-physical { clear: left; }
+.entityView .table-surges,
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-talents,
+.entityView .table-connections,
+.entityView .table-equipment { --block: 33.333%; }
+.entityView .table-talents { clear: left; }

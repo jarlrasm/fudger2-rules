@@ -1,0 +1,353 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+plotBonus (face) =
+    switch face
+        case 1 then 2
+        case 2 then 4
+        else 0
+
+plotText (face) =
+    if face == 1 or face == 2 then ", complication (+" + toString (plotBonus (face)) + ")"
+    else if face >= 5 then ", opportunity"
+    else ""
+
+natural (rolls, mode) =
+    if count (rolls) < 2 then first (rolls)
+    else if mode == "Advantage" then max (rolls)
+    else min (rolls)
+
+cosmereText (total, d20, plot, dc) =
+    toString (total)
+    + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if total >= dc then "success" else "failure") else "")
+    + (if d20 == 20 then ", natural 20: opportunity" else if d20 == 1 then ", natural 1: complication" else "")
+    + plotText (plot)
+
+cosmereOutcome (total, dc) = if dc == 0 then "" else if total >= dc then "Success" else "Failure"
+
+cosmereResult (bonus, d20, plot, dc) =
+{
+    Text = cosmereText (bonus + d20 + plotBonus (plot), d20, plot, dc)
+    Value = bonus + d20 + plotBonus (plot)
+    Outcome = cosmereOutcome (bonus + d20 + plotBonus (plot), dc)
+}
+
+plotFace (rolls) = if count (rolls) == 0 then 3 else first (rolls)
+
+cosmereRoll (mode, stakes, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else ""  label = if mode == "Normal" then "" else mode }, dice { number = if stakes then 1 else 0  sides = 6  color = "purple"  label = if stakes then "Plot" else ""  faces = ["C+2", "C+4", "", "", "O", "O"] }],
+    ((baseline, throws)->cosmereResult (baseline, natural (first (throws).rolls, mode), plotFace (item (1, throws).rolls), if dc < 0 then asked else dc)))
+
+cosmereTest (char) = ask ("DC", cosmereRoll (char.Character.Roll, char.Character.Stakes == "Raised", -1))
+
+cosmereAttack (char) = ask ("Defense", cosmereRoll (char.Character.Roll, char.Character.Stakes == "Raised", -1))
+
+plainCosmere = cosmereRoll ("Normal", false, 0)
+
+skill (attribute) = custom
+{
+    Ranks = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Modifier = modifier { value = Ranks + attribute  valuedice = cosmereTest (characterTable)  editable = none }
+}
+
+noSkill = { Modifier = 0 }
+
+skillModifier (char, name) =
+    valueOr (valueOr (char.Physical, name, valueOr (char.Cognitive, name, valueOr (char.Spiritual, name, noSkill))), "Modifier", 0)
+
+weaponStat (weapon, field) = valueOr (weapon.data.cosmereWeapon.Stats, field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, bonus, damage, kind, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = cosmereAttack (characterTable)  action = kind  reach = 5  range = rangeFeet  editable = none }
+    Damage = damage
+}
+
+weaponSkill (weapon) = if weaponStat (weapon, "Skill") == "" then "Light Weaponry" else weaponStat (weapon, "Skill")
+
+isRanged (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0 and not (contains (toLower (weaponStat (weapon, "Traits")), "thrown"))
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, skillModifier (char, weaponSkill (weapon)), weaponStat (weapon, "Damage"), if isRanged (weapon) then "ranged" else "melee", firstNumber (weaponStat (weapon, "Range")))
+
+downState (health) = if health <= 0 then "Unconscious" else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Defenses, Resources, Attacks, Conditions] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Ancestry = string { keys = ["Human", "Singer"] }
+        Paths = string { keys = ["Agent", "Envoy", "Hunter", "Leader", "Scholar", "Warrior"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        Purpose = string {}
+        Obstacle = string {}
+        Goals = string { multiline = true }
+        Roll = selector { options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Stakes = selector { options = ["Normal", "Raised"]  labels = ["Normal", "Raised"]  colors = ["white", "purple"]  hold = ["", "Alt"]  default = "Normal"  editable = live  save = nosave }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Speed = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Intellect = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Willpower = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Awareness = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Presence = integer { default = 0  minvalue = 0  maxvalue = 10 }
+    }
+
+    Defenses = table
+    {
+        tableLayout = layout { columns = 3 }
+        Physical = integer { value = 10 + Attributes.Strength + Attributes.Speed + 'Physical bonus'  editable = none }
+        Cognitive = integer { value = 10 + Attributes.Intellect + Attributes.Willpower + 'Cognitive bonus'  editable = none }
+        Spiritual = integer { value = 10 + Attributes.Awareness + Attributes.Presence + 'Spiritual bonus'  editable = none }
+        'Physical bonus' = integer { default = 0 }
+        'Cognitive bonus' = integer { default = 0 }
+        'Spiritual bonus' = integer { default = 0 }
+        Deflect = integer { default = 0 }
+    }
+
+    Resources = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Max Health' = integer { default = 10 }
+        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
+        Down = string { value = downState (Health)  visible = none  indicator = "#d64545" }
+        'Max Focus' = integer { value = 2 + Attributes.Willpower  editable = none }
+        Focus = integer { default = 'Max Focus'  editable = live  indicator = "#3a7bd5" }
+        'Max Investiture' = integer { default = 0 }
+        Investiture = integer { default = 0  editable = live }
+        Movement = integer { default = 25  render = distance (Movement) }
+        'Recovery die' = string { default = "d4"  keys = ["d4", "d6", "d8", "d10", "d12", "d20"] }
+        'Senses range' = integer { default = 5  render = distance ('Senses range') }
+        Turn = string { default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
+    }
+
+    Physical = table
+    {
+        tableLayout = layout { columns = 1 }
+        Agility = skill (Attributes.Speed)
+        Athletics = skill (Attributes.Strength)
+        'Heavy Weaponry' = skill (Attributes.Strength)
+        'Light Weaponry' = skill (Attributes.Speed)
+        Stealth = skill (Attributes.Speed)
+        Thievery = skill (Attributes.Speed)
+    }
+
+    Cognitive = table
+    {
+        tableLayout = layout { columns = 1 }
+        Crafting = skill (Attributes.Intellect)
+        Deduction = skill (Attributes.Intellect)
+        Discipline = skill (Attributes.Willpower)
+        Intimidation = skill (Attributes.Willpower)
+        Lore = skill (Attributes.Intellect)
+        Medicine = skill (Attributes.Intellect)
+    }
+
+    Spiritual = table
+    {
+        tableLayout = layout { columns = 1 }
+        Deception = skill (Attributes.Presence)
+        Insight = skill (Attributes.Awareness)
+        Leadership = skill (Attributes.Presence)
+        Perception = skill (Attributes.Awareness)
+        Persuasion = skill (Attributes.Presence)
+        Survival = skill (Attributes.Awareness)
+    }
+
+    Surges = keyvalues
+    {
+        singular = "Surge or skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { columns = 2  size = wide }
+        valueType = custom
+        {
+            Ranks = integer { default = 0  minvalue = 0  maxvalue = 5 }
+            Attribute = string { default = "Awareness"  keys = ["Strength", "Speed", "Intellect", "Willpower", "Awareness", "Presence"] }
+            Modifier = modifier { value = Ranks + (switch Attribute case "Strength" then Attributes.Strength case "Speed" then Attributes.Speed case "Intellect" then Attributes.Intellect case "Willpower" then Attributes.Willpower case "Presence" then Attributes.Presence else Attributes.Awareness)  valuedice = cosmereTest (characterTable)  editable = none }
+        }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4 }
+        Afflicted = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Determined = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Disoriented = bool { default = false  editable = live  indicator = "#d4b106" }
+        Empowered = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Exhausted = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Focused = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Immobilized = bool { default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+        Slowed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Surprised = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Injuries = string { editable = live  indicator = "#d64545" }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Talents = list
+    {
+        singular = "Talent"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Connections = list
+    {
+        singular = "Connection"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2 }
+        Armor = string {}
+        Spheres = integer { default = 0 }
+        Gear = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+adversaryTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Adversary, Defenses, Attacks] }
+    Adversary = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 4 }
+        Role = string { default = "Rival"  keys = ["Minion", "Rival", "Boss"] }
+        Type = string {}
+        Size = string { default = "Medium" }
+        'Max Health' = integer { default = 15 }
+        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
+        Down = string { value = downState (Health)  visible = none  indicator = "#d64545" }
+        Focus = integer { default = 3  editable = live }
+        Investiture = integer { default = 0  editable = live }
+        Movement = string { default = "25 ft." }
+        Deflect = integer { default = 0 }
+        Roll = selector { options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+    }
+    Defenses = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Physical = integer { default = 12 }
+        Cognitive = integer { default = 12 }
+        Spiritual = integer { default = 12 }
+    }
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Athletics", "Perception"]
+        tableLayout = layout { columns = 3  size = wide }
+        valueType = custom
+        {
+            Modifier = modifier { default = 2  valuedice = ask ("DC", cosmereRoll (Adversary.Roll, false, -1)) }
+        }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 4  valuedice = ask ("Defense", cosmereRoll (Adversary.Roll, false, -1))  action = melee  reach = 5 }
+            Damage = string {}
+            Notes = string {}
+        }
+    }
+    Features = list
+    {
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+
+cosmereWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { default = "Light Weaponry"  keys = ["Light Weaponry", "Heavy Weaponry", "Athletics"] }
+        Damage = string {}
+        Range = string {}
+        Traits = string {}
+        'Expert traits' = string {}
+        Price = string {}
+    }
+}
+
+CosmereRPG = system
+{
+    hints = [
+        hint
+        {
+            title = "Radiants and paths"
+            topic = "Getting started"
+            text = ["A hero has six attributes, three defenses that come from them, and ranks in 18 skills. Their heroic path and later Radiant order add talents and surges; add each surge to Surges with the attribute it uses."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d20 + skill against a DC or a defense. Set advantage or disadvantage on the sheet. When the stakes are raised, a plot die rolls along: C+2 and C+4 add to the roll but bring a complication; O is an opportunity."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["A hit deals the weapon's damage plus the attribute, minus deflect. At 0 health a hero falls unconscious and takes an injury. Focus pays for reactions and talents."]
+        },
+        hint
+        {
+            title = "Fast and slow turns"
+            topic = "Initiative"
+            text = ["There is no initiative roll. Each round heroes choose a fast turn (2 actions, before enemies) or a slow turn (3 actions, after fast enemies). Set Turn on the sheet."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["ft", "m"]
+    characters = characterTable
+    creatures = adversaryTable
+    entityTypeNames = [entityTypeName ("Creature", "Adversary", "Adversaries")]
+    Weapons = cosmereWeapon
+    secondaryTypes = ["Weapons"]
+    description = "The Cosmere RPG: d20 tests with the plot die, three defenses, fast and slow turns"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8]
+    cssFiles = ["/systems/cosmere/cosmere.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/chinese.json", "/systems/names/desert.json"]
+    nameSettings = [fantasyNameSetting, easternNameSetting, desertRealmsNameSetting]
+}
