@@ -1,0 +1,65 @@
+@import url("/systems/sheet.css");
+
+/* Draw Steel: the hero sheet's bold black and gold. Heavy black title bars,
+   five characteristic boxes in a row, stamina and recoveries beside the
+   heroic resource, and the abilities as wide cards with their three tiers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d6d2c9;
+    --surface: #fbfaf7;
+    --surface-alt: #f0ede6;
+    --surface-sunken: #e6e2d8;
+    --surface-muted: #cfc9bc;
+    --text: #141414;
+    --text-muted: #3a3a3a;
+    --text-faint: #707070;
+    --on-accent: #141414;
+    --border: #8f8a7f;
+    --border-strong: #141414;
+    --accent: #d9a62e;
+    --accent-hover: #e8b743;
+    --accent-soft: #f6e8c4;
+    --link: #8a6512;
+    --danger: #a32020;
+    --danger-hover: #7d1818;
+    --danger-soft: #f6e8c4;
+    --success: #2f6b3a;
+    --paper: #fbfaf7;
+    --card-bg: #f0ede6;
+    --dice-bg: #141414;
+    --dice-text: #d9a62e;
+}
+
+.entityView {
+    --sheet-font: "Source Sans Pro", "Segoe UI", Helvetica, sans-serif;
+    --title-font: "Bebas Neue", "Oswald", "Impact", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--text);
+    color: var(--accent);
+    padding: 2px 10px;
+    font-size: 1.15em;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    flex-direction: column;
+    border: 2px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child { font-family: var(--title-font); font-size: 1.2em; text-transform: uppercase; }
+.entityView .table-health { --block: 50%; }
+.entityView .table-resources { --block: 50%; }
+.entityView .table-movement { --block: 50%; clear: left; }
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-skills,
+.entityView .table-features { --block: 50%; clear: left; }
+.entityView .table-features { clear: none; }
+.entityView .table-abilities .customtype > div:nth-child(8),
+.entityView .table-abilities .customtype > div:nth-child(9),
+.entityView .table-abilities .customtype > div:nth-child(10) { border-left: 3px solid var(--accent); padding-left: 4px; }

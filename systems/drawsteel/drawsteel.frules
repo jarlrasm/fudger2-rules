@@ -1,0 +1,290 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+modeBonus (mode) =
+    switch mode
+        case "Edge" then 2
+        case "Bane" then -2
+        else 0
+
+baseTier (total) =
+    if total >= 17 then 3
+    else if total >= 12 then 2
+    else 1
+
+shiftedTier (total, natural, mode) =
+    if natural >= 19 then 3
+    else if mode == "Double edge" then min (3, baseTier (total) + 1)
+    else if mode == "Double bane" then max (1, baseTier (total) - 1)
+    else baseTier (total)
+
+tierEffect (tier, t1, t2, t3) =
+    switch tier
+        case 3 then t3
+        case 2 then t2
+        else t1
+
+powerText (total, natural, mode, t1, t2, t3) =
+    toString (total) + ": tier " + toString (shiftedTier (total, natural, mode))
+    + (if natural >= 19 then ", critical" else "")
+    + (if tierEffect (shiftedTier (total, natural, mode), t1, t2, t3) == "" then "" else ", " + tierEffect (shiftedTier (total, natural, mode), t1, t2, t3))
+
+powerOutcome (tier, natural) =
+    if natural >= 19 then "Critical"
+    else switch tier
+        case 3 then "Success"
+        case 2 then "Partial success"
+        else "Failure"
+
+powerResult (bonus, natural, mode, t1, t2, t3) =
+{
+    Text = powerText (bonus + natural + modeBonus (mode), natural, mode, t1, t2, t3)
+    Value = bonus + natural + modeBonus (mode)
+    Outcome = powerOutcome (shiftedTier (bonus + natural + modeBonus (mode), natural, mode), natural)
+}
+
+powerRoll (mode, t1, t2, t3) = ([dice { number = 2  sides = 10  color = if contains (mode, "edge") or contains (mode, "Edge") then "green" else if contains (mode, "ane") then "red" else ""  label = if mode == "Normal" then "" else mode }],
+    ((baseline, throws)->powerResult (baseline, sum (first (throws).rolls), mode, t1, t2, t3)))
+
+testDice (char) = powerRoll (char.Hero.Roll, "", "", "")
+
+characteristicOf (char, name) =
+    switch name
+        case "Might" then char.Characteristics.Might
+        case "Agility" then char.Characteristics.Agility
+        case "Reason" then char.Characteristics.Reason
+        case "Intuition" then char.Characteristics.Intuition
+        case "Presence" then char.Characteristics.Presence
+        else 0
+
+stateOf (stamina, maxStamina) =
+    if stamina <= 0 - maxStamina / 2 then "Dead"
+    else if stamina <= 0 then "Dying"
+    else if stamina <= maxStamina / 2 then "Winded"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Hero, Characteristics, Health, Abilities, Conditions] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Ancestry = string { keys = ["Devil", "Dragon Knight", "Dwarf", "Hakaan", "High Elf", "Human", "Memonek", "Orc", "Polder", "Revenant", "Time Raider", "Wode Elf"] }
+        Culture = string {}
+        Career = string {}
+        Class = string { keys = ["Censor", "Conduit", "Elementalist", "Fury", "Null", "Shadow", "Tactician", "Talent", "Troubadour"] }
+        Subclass = string {}
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        Victories = integer { default = 0  minvalue = 0  editable = live }
+        Roll = selector { options = ["Double bane", "Bane", "Normal", "Edge", "Double edge"]  labels = ["2 bane", "Bane", "Normal", "Edge", "2 edge"]  colors = ["red", "red", "white", "green", "green"]  hold = ["", "Ctrl", "", "Shift", ""]  default = "Normal"  editable = live  save = nosave }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Might = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Agility = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Reason = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Intuition = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Presence = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max Stamina' = integer { default = 18 }
+        Stamina = integer { default = 'Max Stamina'  editable = live  indicator = "#d64545" }
+        Temporary = integer { default = 0  minvalue = 0  editable = live }
+        State = string { value = stateOf (Stamina, 'Max Stamina')  editable = none  indicator = "#d64545" }
+        Recoveries = integer { default = 8  minvalue = 0  editable = live }
+        'Recovery value' = integer { value = 'Max Stamina' / 3  editable = none }
+        Recover = button { onClick = updates { (Stamina.realvalue) = min ('Max Stamina', Stamina + 'Recovery value')  (Recoveries.realvalue) = max (0, Recoveries - 1) } }
+    }
+
+    Resources = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Heroic resource' = string { default = "Wrath"  keys = ["Clarity", "Discipline", "Drama", "Essence", "Ferocity", "Focus", "Insight", "Piety", "Wrath"] }
+        Amount = integer { default = 0  minvalue = 0  editable = live }
+        Surges = integer { default = 0  minvalue = 0  editable = live }
+        'Hero tokens' = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Movement = table
+    {
+        tableLayout = layout { columns = 4 }
+        Speed = integer { default = 5 }
+        Size = string { default = "1M"  keys = ["1T", "1S", "1M", "1L", "2", "3", "4", "5"] }
+        Stability = integer { default = 0 }
+        Disengage = integer { default = 1 }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 3 }
+        Bleeding = bool { default = false  editable = live  indicator = "#d64545" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Grabbed = bool { default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+        Slowed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Taunted = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Weakened = bool { default = false  editable = live  indicator = "#3fa34d" }
+    }
+
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Cost = string {}
+            Keywords = string {}
+            Type = string { default = "Main action"  keys = ["Main action", "Maneuver", "Move action", "Triggered action", "Free triggered action", "Free maneuver"] }
+            Distance = string {}
+            Target = string {}
+            Characteristic = string { default = "Might"  keys = ["Might", "Agility", "Reason", "Intuition", "Presence", "None"] }
+            'Tier 1' = string {}
+            'Tier 2' = string {}
+            'Tier 3' = string {}
+            Roll = modifier { value = characteristicOf (characterTable, Characteristic)  valuedice = powerRoll (characterTable.Hero.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  editable = none  action = if contains (toLower (Distance), "ranged") then "ranged" else if contains (toLower (Distance), "melee") then "melee" else ""  reach = 1  range = bonusWithValue ([[Distance]], "[Rr]anged ([0-9]+)") }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { columns = 2 }
+        valueType = custom
+        {
+            Characteristic = string { default = "Reason"  keys = ["Might", "Agility", "Reason", "Intuition", "Presence"] }
+            Test = modifier { value = characteristicOf (characterTable, Characteristic) + 2  valuedice = testDice (characterTable)  editable = none }
+        }
+    }
+
+    Features = list
+    {
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    'Kits and gear' = table
+    {
+        tableLayout = layout { columns = 2 }
+        Kit = string {}
+        Wealth = integer { default = 1 }
+        Renown = integer { default = 0 }
+        Gear = string { multiline = true }
+        'Complication' = string { multiline = true }
+    }
+}
+
+monsterTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        important = [Monster, Characteristics, Abilities]
+        sortedBy = sort { prefix = "Level" sort = Monster.Level }
+    }
+    Monster = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 1 }
+        Organization = string { default = "Platoon"  keys = ["Minion", "Horde", "Platoon", "Elite", "Leader", "Solo"] }
+        Role = string { keys = ["Ambusher", "Artillery", "Brute", "Controller", "Defender", "Harrier", "Hexer", "Mount", "Support"] }
+        Keywords = string {}
+        EV = integer { default = 3 }
+        'Max Stamina' = integer { default = 20 }
+        Stamina = integer { default = 'Max Stamina'  editable = live  indicator = "#d64545" }
+        State = string { value = if Stamina <= 0 then "Dead" else if Stamina <= 'Max Stamina' / 2 then "Winded" else ""  editable = none  indicator = "#d64545" }
+        Speed = integer { default = 5 }
+        Size = string { default = "1M" }
+        Stability = integer { default = 0 }
+        'Free strike' = integer { default = 2 }
+        Immunity = string {}
+        Weakness = string {}
+        Movement = string {}
+        Roll = selector { options = ["Double bane", "Bane", "Normal", "Edge", "Double edge"]  labels = ["2 bane", "Bane", "Normal", "Edge", "2 edge"]  colors = ["red", "red", "white", "green", "green"]  hold = ["", "Ctrl", "", "Shift", ""]  default = "Normal"  editable = live  save = nosave }
+    }
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Might = modifier { default = 0  valuedice = powerRoll (Monster.Roll, "", "", "") }
+        Agility = modifier { default = 0  valuedice = powerRoll (Monster.Roll, "", "", "") }
+        Reason = modifier { default = 0  valuedice = powerRoll (Monster.Roll, "", "", "") }
+        Intuition = modifier { default = 0  valuedice = powerRoll (Monster.Roll, "", "", "") }
+        Presence = modifier { default = 0  valuedice = powerRoll (Monster.Roll, "", "", "") }
+    }
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Main action" }
+            Distance = string {}
+            Target = string {}
+            Bonus = modifier { default = 2  valuedice = powerRoll (Monster.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  action = if contains (toLower (Distance), "ranged") then "ranged" else "melee"  reach = 1  range = bonusWithValue ([[Distance]], "[Rr]anged ([0-9]+)") }
+            'Tier 1' = string {}
+            'Tier 2' = string {}
+            'Tier 3' = string {}
+            Effect = string { multiline = true }
+        }
+    }
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+
+DrawSteel = system
+{
+    hints = [
+        hint
+        {
+            title = "Heroes"
+            topic = "Getting started"
+            text = ["A hero has an ancestry, culture, career, class and kit, and five characteristics from -5 to +5. Write abilities into the Abilities list with their three tier effects, so a roll shows the effect it reaches."]
+        },
+        hint
+        {
+            title = "Power rolls"
+            topic = "Play"
+            text = ["Roll 2d10 + characteristic: 11 or less is tier 1, 12 to 16 tier 2, 17 or more tier 3. An edge adds 2 and a bane subtracts 2; a double edge or bane moves the tier instead. A natural 19 or 20 is a critical, always tier 3."]
+        },
+        hint
+        {
+            title = "Damage and stamina"
+            topic = "Combat"
+            text = ["At half stamina a hero is winded, at 0 dying, and dead at minus their winded value. Spend a Recovery to regain a third of max stamina. Heroic resources build each turn and pay for heroic abilities."]
+        },
+        hint
+        {
+            title = "Taking turns"
+            topic = "Initiative"
+            text = ["Draw Steel has no individual initiative. Roll a d10: on 6 or higher the heroes go first. Then sides alternate, each side picking which of its creatures acts next."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 1
+    characters = characterTable
+    creatures = monsterTable
+    entityTypeNames = [entityTypeName ("Character", "Hero", "Heroes"), entityTypeName ("Creature", "Monster", "Monsters")]
+    description = "Draw Steel: 2d10 power rolls in three tiers, heroic resources and no misses"
+    quickdice = [2d10, 1d10, 1d3, 1d6]
+    cssFiles = ["/systems/drawsteel/drawsteel.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/faerie.json", "/systems/names/barbarian.json"]
+    nameSettings = [fantasyNameSetting, faerieCourtsNameSetting, swordAndSorceryNameSetting]
+}
