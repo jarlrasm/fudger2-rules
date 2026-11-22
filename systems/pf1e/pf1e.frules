@@ -1,0 +1,616 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) = score / 2 - 5
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+pf1Text (total, natural, dc, automatic) =
+    toString (total)
+    + (if dc > 0 then " vs " + toString (dc) + ": " + pf1Outcome (total, natural, dc, automatic) else "")
+    + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+
+pf1Outcome (total, natural, dc, automatic) =
+    if automatic and natural == 20 then "Success"
+    else if automatic and natural == 1 then "Failure"
+    else if total >= dc then "Success"
+    else "Failure"
+
+pf1Result (total, natural, dc, automatic) =
+{
+    Text = pf1Text (total, natural, dc, automatic)
+    Value = total
+    Outcome = if dc > 0 then pf1Outcome (total, natural, dc, automatic) else if natural == 20 and automatic then "Critical threat" else ""
+}
+
+attackOutcome (total, natural, ac, threat) =
+    if natural == 1 then "Miss"
+    else if natural >= threat and (total >= ac or ac == 0) then "Critical threat"
+    else if natural == 20 then "Hit"
+    else if ac == 0 then ""
+    else if total >= ac then "Hit"
+    else "Miss"
+
+attackResult (total, natural, ac, threat) =
+{
+    Text = toString (total) + (if ac > 0 then " vs AC " + toString (ac) else "") + (if attackOutcome (total, natural, ac, threat) == "" then "" else ": " + attackOutcome (total, natural, ac, threat)) + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = attackOutcome (total, natural, ac, threat)
+}
+
+pf1Roll (dc, automatic) = ([1d20], ((baseline, throws)->pf1Result (baseline + first (first (throws).rolls), first (first (throws).rolls), dc, automatic)))
+
+pf1AskedRoll (automatic) = ([1d20], ((baseline, throws)->pf1Result (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, automatic)))
+
+pf1Check = ask ("DC", pf1AskedRoll (false))
+
+pf1Save = ask ("DC", pf1AskedRoll (true))
+
+pf1AttackRoll (threat) = ([1d20], ((baseline, throws)->attackResult (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, threat)))
+
+pf1Attack (threat) = ask ("Target AC", pf1AttackRoll (threat))
+
+plainPf1 = pf1Roll (0, false)
+
+threatRange (critical) =
+    if contains (critical, "15") then 15
+    else if contains (critical, "17") then 17
+    else if contains (critical, "18") then 18
+    else if contains (critical, "19") then 19
+    else 20
+
+conditionPenalty (char) =
+    (if char.Conditions.Shaken or char.Conditions.Frightened then 2 else 0) + (if char.Conditions.Sickened then 2 else 0)
+
+sizeModifier (size) =
+    switch size
+        case "Fine" then 8
+        case "Diminutive" then 4
+        case "Tiny" then 2
+        case "Small" then 1
+        case "Large" then -1
+        case "Huge" then -2
+        case "Gargantuan" then -4
+        case "Colossal" then -8
+        else 0
+
+iterativePenalty (char) =
+    switch char.Combat.Attack
+        case "Second" then -5
+        case "Third" then -10
+        case "Fourth" then -15
+        else 0
+
+ability = custom
+{
+    Score = integer { default = 10  minvalue = 1  maxvalue = 40 }
+    Modifier = modifier { value = abilityModifier (Score)  valuedice = pf1Check  editable = none }
+}
+
+save (abilityMod) = custom
+{
+    Base = integer { default = 0 }
+    Magic = integer { default = 0 }
+    Misc = integer { default = 0 }
+    Total = modifier { value = Base + abilityMod + Magic + Misc - conditionPenalty (characterTable)  valuedice = pf1Save  editable = none }
+}
+
+skill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { default = 0  minvalue = 0 }
+    'Class skill' = bool { default = false }
+    Misc = integer { default = 0 }
+    Total = modifier { value = Ranks + abilityMod + (if 'Class skill' and Ranks > 0 then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
+}
+
+trainedSkill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { default = 0  minvalue = 0 }
+    'Class skill' = bool { default = false }
+    Misc = integer { default = 0 }
+    Total = modifier { value = if Ranks == 0 then 0 else Ranks + abilityMod + (if 'Class skill' then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, ruleset, field) = valueOr (valueOr (valueOr (item.data, ruleset, noStats), "Stats", noStats.Stats), field, "")
+
+armorStat (item, field) = toInt (itemStat (item, "pf1Armor", field))
+
+armorPieces (char) = filter ((x)->itemStat (x, "pf1Armor", "Type") != "Shield", char.Armor)
+
+shields (char) = filter ((x)->itemStat (x, "pf1Armor", "Type") == "Shield", char.Armor)
+
+armorBonus (char) = sum (map ((x)->armorStat (x, "Armor Bonus"), armorPieces (char)))
+
+shieldBonus (char) = sum (map ((x)->armorStat (x, "Armor Bonus"), shields (char)))
+
+maxDex (char, dex) =
+    if count (armorPieces (char)) == 0 then dex
+    else min (dex, min (map ((x)->if itemStat (x, "pf1Armor", "Max Dex") == "" then 99 else armorStat (x, "Max Dex"), armorPieces (char))))
+
+checkPenalty (char) = abs (sum (map ((x)->armorStat (x, "Check Penalty"), char.Armor)))
+
+isRanged (weapon) =
+    contains (toLower (itemStat (weapon, "pf1Weapon", "Proficiency")), "ranged") or (firstNumber (itemStat (weapon, "pf1Weapon", "Range")) > 0 and not (contains (toLower (itemStat (weapon, "pf1Weapon", "Special")), "thrown")) and not (contains (toLower (itemStat (weapon, "pf1Weapon", "Proficiency")), "melee")))
+
+reachOf (weapon) = if contains (toLower (itemStat (weapon, "pf1Weapon", "Special")), "reach") then 10 else 5
+
+weaponAttack (name, bonus, damage, critical, kind, reachFeet, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = pf1Attack (threatRange (critical))  action = kind  reach = reachFeet  range = rangeFeet }
+    Damage = damage
+    Critical = critical
+}
+
+meleeBonus (char) = char.Combat.BAB + char.Abilities.Str.Modifier + sizeModifier (char.Character.Size) + iterativePenalty (char) - conditionPenalty (char)
+
+rangedBonus (char) = char.Combat.BAB + char.Abilities.Dex.Modifier + sizeModifier (char.Character.Size) + iterativePenalty (char) - conditionPenalty (char)
+
+damageText (weapon, char, strength) =
+    (if char.Character.Size == "Small" then itemStat (weapon, "pf1Weapon", "Dmg S") else itemStat (weapon, "pf1Weapon", "Dmg M"))
+    + (if strength > 0 then "+" + toString (strength) else if strength < 0 then toString (strength) else "")
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, rangedBonus (char), damageText (weapon, char, 0), itemStat (weapon, "pf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "pf1Weapon", "Range")) * 10)
+    else
+        weaponAttack (weapon.Name, meleeBonus (char), damageText (weapon, char, char.Abilities.Str.Modifier), itemStat (weapon, "pf1Weapon", "Critical"), "melee", reachOf (weapon), 0)
+
+thrownFor (char, weapon) =
+    weaponAttack (weapon.Name + " (thrown)", rangedBonus (char), damageText (weapon, char, char.Abilities.Str.Modifier), itemStat (weapon, "pf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "pf1Weapon", "Range")) * 5)
+
+thrownWeapons (char) = filter ((x)->contains (toLower (itemStat (x, "pf1Weapon", "Special")), "thrown") or (firstNumber (itemStat (x, "pf1Weapon", "Range")) > 0 and not (isRanged (x))), char.Weapons)
+
+hpState (current, maxHp, con) =
+    if current <= 0 - con then "Dead"
+    else if current < 0 then "Dying"
+    else if current == 0 then "Disabled"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Saves, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        Race = string { keys = ["Dwarf", "Elf", "Gnome", "Half-elf", "Half-orc", "Halfling", "Human"] }
+        Alignment = string { keys = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] }
+        Deity = string {}
+        Size = string { default = "Medium"  keys = ["Small", "Medium", "Large"] }
+        Speed = integer { default = 30  render = distance (Speed) }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Str = ability {}
+        Dex = ability {}
+        Con = ability {}
+        Int = ability {}
+        Wis = ability {}
+        Cha = ability {}
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max HP' = integer { default = 10 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Nonlethal' = integer { default = 0  minvalue = 0  editable = live }
+        Down = string { value = hpState (HP, 'Max HP', Abilities.Con.Score)  visible = none  indicator = "#d64545" }
+        Initiative = modifier { value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainPf1  editable = none }
+        'Initiative misc' = integer { default = 0 }
+        BAB = integer { default = 0 }
+        Attack = selector { options = ["First", "Second", "Third", "Fourth"]  labels = ["1st", "2nd", "3rd", "4th"]  colors = ["", "red", "red", "red"]  default = "First"  editable = live  save = nosave }
+        AC = integer { value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + Dodge + 'AC misc'  editable = none }
+        Touch = integer { value = 10 + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
+        'Flat footed' = integer { value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + min (0, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + 'AC misc'  editable = none }
+        'Natural armor' = integer { default = 0 }
+        Deflection = integer { default = 0 }
+        Dodge = integer { default = 0 }
+        'AC misc' = integer { default = 0 }
+        CMB = modifier { value = BAB + Abilities.Str.Modifier - sizeModifier (Character.Size) - conditionPenalty (characterTable)  valuedice = ask ("CMD", pf1AttackRoll (20))  editable = none }
+        CMD = integer { value = 10 + BAB + Abilities.Str.Modifier + Abilities.Dex.Modifier - sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
+        'Damage reduction' = string {}
+        'Spell resistance' = integer { default = 0 }
+    }
+
+    Saves = table
+    {
+        tableLayout = layout { columns = 3 }
+        Fortitude = save (Abilities.Con.Modifier)
+        Reflex = save (Abilities.Dex.Modifier)
+        Will = save (Abilities.Wis.Modifier)
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4 }
+        Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Sickened = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { default = false  editable = live  indicator = "#e8913a" }
+        Grappled = bool { default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        'Negative levels' = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+    }
+
+    Skills = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Appraise = skill (Abilities.Int.Modifier, 0)
+        Bluff = skill (Abilities.Cha.Modifier, 0)
+        Climb = skill (Abilities.Str.Modifier, checkPenalty (characterTable))
+        Craft = skill (Abilities.Int.Modifier, 0)
+        Diplomacy = skill (Abilities.Cha.Modifier, 0)
+        'Disable Device' = trainedSkill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Disguise = skill (Abilities.Cha.Modifier, 0)
+        'Escape Artist' = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Fly = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        'Handle Animal' = trainedSkill (Abilities.Cha.Modifier, 0)
+        Heal = skill (Abilities.Wis.Modifier, 0)
+        Intimidate = skill (Abilities.Cha.Modifier, 0)
+        'Knowledge arcana' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge dungeoneering' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge engineering' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge geography' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge history' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge local' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge nature' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge nobility' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge planes' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge religion' = trainedSkill (Abilities.Int.Modifier, 0)
+        Linguistics = trainedSkill (Abilities.Int.Modifier, 0)
+        Perception = skill (Abilities.Wis.Modifier, 0)
+        Perform = skill (Abilities.Cha.Modifier, 0)
+        Profession = trainedSkill (Abilities.Wis.Modifier, 0)
+        Ride = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        'Sense Motive' = skill (Abilities.Wis.Modifier, 0)
+        'Sleight of Hand' = trainedSkill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Spellcraft = trainedSkill (Abilities.Int.Modifier, 0)
+        Stealth = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Survival = skill (Abilities.Wis.Modifier, 0)
+        Swim = skill (Abilities.Str.Modifier, checkPenalty (characterTable))
+        'Use Magic Device' = trainedSkill (Abilities.Cha.Modifier, 0)
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat (map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons), map ((weapon)->thrownFor (characterTable, weapon), thrownWeapons (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Feats = list
+    {
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    'Class features' = list
+    {
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Spellcasting = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        'Caster level' = integer { default = 0 }
+        'Casting ability' = string { default = "Int"  keys = ["Int", "Wis", "Cha"] }
+        'Concentration' = modifier { value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = pf1Check  editable = none }
+        'Level 0' = slots { number = 4  editable = live }
+        'Level 1' = slots { number = 0  editable = live }
+        'Level 2' = slots { number = 0  editable = live }
+        'Level 3' = slots { number = 0  editable = live }
+        'Level 4' = slots { number = 0  editable = live }
+        'Level 5' = slots { number = 0  editable = live }
+        'Level 6' = slots { number = 0  editable = live }
+        'Level 7' = slots { number = 0  editable = live }
+        'Level 8' = slots { number = 0  editable = live }
+        'Level 9' = slots { number = 0  editable = live }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 4 }
+        PP = integer { default = 0 }
+        GP = integer { default = 0 }
+        SP = integer { default = 0 }
+        CP = integer { default = 0 }
+        Languages = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Defense, Offense]
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "CR" sort = Stats.CR }
+        filters = [
+            filter { name = "CR" prefix = "CR" filter = Stats.CR },
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        CR = string { default = "1" }
+        XP = integer { default = 400 }
+        Alignment = string { default = "N" }
+        Size = string { default = "Medium"  keys = ["Fine", "Diminutive", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"] }
+        Type = string {}
+        Initiative = modifier { default = 0  valuedice = plainPf1 }
+        Perception = modifier { default = 0  valuedice = pf1Check }
+        Senses = string {}
+    }
+    Defense = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        AC = integer { default = 12 }
+        Touch = integer { default = 10 }
+        'Flat footed' = integer { default = 12 }
+        'Max HP' = integer { default = 10 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = if HP <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Fortitude = modifier { default = 0  valuedice = pf1Save }
+        Reflex = modifier { default = 0  valuedice = pf1Save }
+        Will = modifier { default = 0  valuedice = pf1Save }
+        'Defensive abilities' = string {}
+        DR = string {}
+        Immune = string {}
+        Resist = string {}
+        SR = integer { default = 0 }
+        Weaknesses = string {}
+    }
+    Offense = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Speed = string { default = "30 ft." }
+        Space = string { default = "5 ft." }
+        Reach = string { default = "5 ft." }
+        'Special attacks' = string { multiline = true }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = pf1Attack (20)  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = pf1Attack (20)  action = ranged }
+            Damage = string {}
+        }
+    }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Str = integer { default = 10 }
+        Dex = integer { default = 10 }
+        Con = integer { default = 10 }
+        Int = integer { default = 10 }
+        Wis = integer { default = 10 }
+        Cha = integer { default = 10 }
+        BAB = integer { default = 0 }
+        CMB = modifier { default = 0  valuedice = ask ("CMD", pf1AttackRoll (20)) }
+        CMD = integer { default = 10 }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Feats = string { multiline = true }
+        Skills = string { multiline = true }
+        Languages = string {}
+        'Special qualities' = string {}
+        'Special abilities' = string { multiline = true }
+        Ecology = string { multiline = true }
+    }
+}
+
+pf1Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [
+            filter { name = "Proficiency" prefix = "" filter = Stats.Proficiency },
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Proficiency = string { keys = ["Simple light melee", "Simple one-handed melee", "Simple two-handed melee", "Simple ranged", "Martial light melee", "Martial one-handed melee", "Martial two-handed melee", "Martial ranged", "Exotic light melee", "Exotic one-handed melee", "Exotic two-handed melee", "Exotic ranged", "Unarmed"] }
+        'Dmg S' = string {}
+        'Dmg M' = string {}
+        Critical = string { default = "x2" }
+        Range = string {}
+        Type = string {}
+        Special = string {}
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+pf1Armor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { keys = ["Light", "Medium", "Heavy", "Shield"] }
+        'Armor Bonus' = string { default = "0" }
+        'Max Dex' = string {}
+        'Check Penalty' = string { default = "0" }
+        'Spell Failure' = string {}
+        Speed = string {}
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+pf1Item = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Slot" prefix = "" filter = Stats.Slot }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Slot = string {}
+        Aura = string {}
+        CL = string {}
+        Price = string {}
+        Weight = string {}
+    }
+}
+
+pf1Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "School" prefix = "" filter = Stats.School },
+            filter { name = "Class" prefix = "" filter = map ((x)->first (split (" ", x)), split ("; ", Stats.Level)) }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        School = string {}
+        Level = string {}
+        'Casting Time' = string {}
+        Components = string {}
+        Range = string {}
+        Duration = string {}
+        'Saving Throw' = string {}
+        'Spell Resistance' = string {}
+    }
+}
+
+pf1Feat = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { default = "General" }
+        Prerequisites = string {}
+    }
+}
+
+Pathfinder1e = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a character"
+            topic = "Getting started"
+            text = ["Set ability scores, class and level, then ranks in skills. Tick Class skill for the +3 on trained class skills. Add weapons, armor, feats and spells from the built-in library."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 + modifier against a DC. Leave the DC blank when only the GM knows it. Saves succeed on a natural 20 and fail on a natural 1."]
+        },
+        hint
+        {
+            title = "Full attacks"
+            topic = "Combat"
+            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits is a critical threat: roll again to confirm."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (d20 + Dex + misc) to join the list. Highest goes first."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["ft", "m"]
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = pf1Weapon
+    Armor = pf1Armor
+    Equipment = pf1Item
+    Spells = pf1Spell
+    Feats = pf1Feat
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Spells", "Feats"]
+    description = "Pathfinder 1st edition: d20, BAB and iterative attacks, skill ranks"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8]
+    cssFiles = ["/systems/pf1e/pf1e.css"]
+    libraries = ["/systems/pf1e/pf1e.json", "/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/desert.json", "/systems/names/pirates.json", "/systems/names/chinese.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, desertRealmsNameSetting, highSeasNameSetting, easternNameSetting]
+}

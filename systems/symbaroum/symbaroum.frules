@@ -1,0 +1,303 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+symText (roll, target, extra) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if roll == 1 then "critical success" else if roll == 20 then "fumble" else if roll <= target then "success" else "failure")
+    + (if extra == "" then "" else ", " + extra)
+
+symOutcome (roll, target) =
+    if roll == 1 then "Critical success"
+    else if roll == 20 then "Fumble"
+    else if roll <= target then "Success"
+    else "Failure"
+
+symResult (roll, target, extra) =
+{
+    Text = symText (roll, target, extra)
+    Value = target - roll
+    Outcome = symOutcome (roll, target)
+}
+
+symRoll (opposing, extra) = ([1d20],
+    ((baseline, throws)->symResult (first (first (throws).rolls), baseline + 10 - (if opposing < 0 then asked else opposing), extra)))
+
+symTest = ask ("Opposing attribute", 10, symRoll (-1, ""))
+
+symAttack (damage) = ask ("Target Defense", 10, symRoll (-1, if damage == "" then "" else "damage " + damage))
+
+initiativeResult (quick, vigilant) =
+{
+    Text = "Quick " + toString (quick) + ", Vigilant " + toString (vigilant)
+    Value = quick
+}
+
+initiativeRoll (vigilant) = ([dice { number = 0  sides = 20  label = "" }],
+    ((baseline, throws)->initiativeResult (baseline, vigilant)))
+
+attribute = custom
+{
+    Value = integer { default = 10  minvalue = 5  maxvalue = 15 }
+    Test = integer { value = Value + 'Modifier'  valuedice = symTest  editable = none }
+    'Modifier' = integer { default = 0  minvalue = -10  maxvalue = 10 }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.symWeapon.Stats, field, "")
+
+armorStat (item, field) = valueOr (item.data.symArmor.Stats, field, "")
+
+attributeValue (char, name) =
+    switch name
+        case "Cunning" then char.Attributes.Cunning.Value
+        case "Discreet" then char.Attributes.Discreet.Value
+        case "Persuasive" then char.Attributes.Persuasive.Value
+        case "Quick" then char.Attributes.Quick.Value
+        case "Resolute" then char.Attributes.Resolute.Value
+        case "Strong" then char.Attributes.Strong.Value
+        case "Vigilant" then char.Attributes.Vigilant.Value
+        else char.Attributes.Accurate.Value
+
+weaponAttack (name, target, damage, kind) = custom
+{
+    Name = name
+    Attack = integer { value = target  valuedice = symAttack (damage)  action = kind  reach = 2  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, attributeValue (char, if weaponStat (weapon, "Attribute") == "" then "Accurate" else weaponStat (weapon, "Attribute")), weaponStat (weapon, "Damage"), if weaponStat (weapon, "Type") == "Ranged" then "ranged" else "melee")
+
+impeding (char) = sum (map ((x)->toInt (armorStat (x, "Impeding")), char.Armor))
+
+protection (char) = if count (char.Armor) == 0 then "" else armorStat (first (char.Armor), "Protection")
+
+downState (toughness) = if toughness <= 0 then "Dying" else ""
+
+corruptionState (total, threshold, resolute) =
+    if total >= resolute then "Abomination"
+    else if total >= threshold then "Blight-marked"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Toughness, Corruption, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string { keys = ["Ambrian", "Barbarian", "Changeling", "Goblin", "Ogre", "Troll", "Elf", "Dwarf", "Undead"] }
+        Occupation = string {}
+        Archetype = string { keys = ["Mystic", "Rogue", "Warrior", "Hunter"] }
+        Shadow = string {}
+        'Personal goal' = string {}
+        Quote = string {}
+        Experience = integer { default = 0  editable = live }
+        'Unspent experience' = integer { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Accurate = attribute {}
+        Cunning = attribute {}
+        Discreet = attribute {}
+        Persuasive = attribute {}
+        Quick = attribute {}
+        Resolute = attribute {}
+        Strong = attribute {}
+        Vigilant = attribute {}
+    }
+
+    Toughness = table
+    {
+        tableLayout = layout { columns = 3 }
+        Max = integer { value = max (10, Attributes.Strong.Value) + 'Max bonus'  editable = none }
+        'Max bonus' = integer { default = 0 }
+        Current = integer { default = Max  editable = live  indicator = "#d64545" }
+        'Pain threshold' = integer { value = (Attributes.Strong.Value + 1) / 2  editable = none }
+        Down = string { value = downState (Current)  visible = none  indicator = "#d64545" }
+        Defense = integer { value = Attributes.Quick.Value - impeding (characterTable)  valuedice = ask ("Attacker Accurate", 10, symRoll (-1, ""))  editable = none }
+        Armor = string { value = protection (characterTable)  editable = none }
+        Initiative = integer { value = Attributes.Quick.Value  valuedice = initiativeRoll (Attributes.Vigilant.Value)  editable = none }
+    }
+
+    Corruption = table
+    {
+        tableLayout = layout { columns = 3 }
+        Permanent = integer { default = 0  minvalue = 0 }
+        Temporary = integer { default = 0  minvalue = 0  editable = live }
+        Total = integer { value = Permanent + Temporary  editable = none }
+        Threshold = integer { value = (Attributes.Resolute.Value + 1) / 2  editable = none }
+        State = string { value = corruptionState (Total, Threshold, Attributes.Resolute.Value)  editable = none  indicator = "#8e5cc4" }
+    }
+
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Level = string { default = "Novice"  keys = ["Novice", "Adept", "Master"] }
+            Type = string { default = "Ability"  keys = ["Ability", "Mystical power", "Ritual", "Trait", "Boon", "Burden"] }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2 }
+        Thaler = integer { default = 0 }
+        Shillings = integer { default = 0 }
+        Orteg = integer { default = 0 }
+        Artifacts = string { multiline = true }
+        Gear = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Creature, Attributes, Attacks] }
+    Creature = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string {}
+        Resistance = string { default = "Ordinary"  keys = ["Weak", "Ordinary", "Challenging", "Strong", "Mighty", "Legendary"] }
+        Toughness = integer { default = 10 }
+        Current = integer { default = Toughness  editable = live  indicator = "#d64545" }
+        'Pain threshold' = integer { default = 5 }
+        Defense = integer { default = 10 }
+        Armor = string { default = "" }
+        Down = string { value = downState (Current)  visible = none  indicator = "#d64545" }
+        Corruption = string { default = "0" }
+        Shadow = string {}
+        Tactics = string { multiline = true }
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Accurate = integer { default = 10 }
+        Cunning = integer { default = 10 }
+        Discreet = integer { default = 10 }
+        Persuasive = integer { default = 10 }
+        Quick = integer { default = 10 }
+        Resolute = integer { default = 10 }
+        Strong = integer { default = 10 }
+        Vigilant = integer { default = 10 }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Accurate = integer { default = 10  action = melee  reach = 2 }
+            Damage = string { default = "4" }
+            Qualities = string {}
+        }
+    }
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+
+symWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { default = "Single-handed"  keys = ["Short", "Single-handed", "Long", "Heavy", "Unarmed", "Ranged"] }
+        Damage = string { default = "1d8" }
+        Attribute = string { default = "Accurate"  keys = ["Accurate", "Cunning", "Discreet", "Persuasive", "Quick", "Resolute", "Strong", "Vigilant"] }
+        Qualities = string {}
+        Cost = string {}
+    }
+}
+
+symArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { default = "Light"  keys = ["Light", "Medium", "Heavy"] }
+        Protection = string { default = "1d4" }
+        Impeding = string { default = "0" }
+        Qualities = string {}
+        Cost = string {}
+    }
+}
+
+Symbaroum = system
+{
+    hints = [
+        hint
+        {
+            title = "Eight attributes"
+            topic = "Getting started"
+            text = ["Attributes run from 5 to 15 and add up to 80 at the start. Toughness is Strong (at least 10), the pain threshold half of Strong, and the corruption threshold half of Resolute."]
+        },
+        hint
+        {
+            title = "Roll under"
+            topic = "Play"
+            text = ["Roll d20 equal to or under the attribute. Fudger asks for the opposing attribute (10 when nobody opposes): the target goes down by every point it is above 10. A 1 is a critical success, a 20 a fumble."]
+        },
+        hint
+        {
+            title = "Players roll everything"
+            topic = "Combat"
+            text = ["Players roll attacks against the enemy's Defense and roll Defense (Quick) against the enemy's Accurate. Damage is the weapon's die minus the target's armor die. Damage over the pain threshold lets the attacker add an effect."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Initiative is Quick, with Vigilant breaking ties. Roll Initiative on the sheet to put it in the list."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = symWeapon
+    Armor = symArmor
+    secondaryTypes = ["Weapons", "Armor"]
+    description = "Symbaroum: dark fantasy where the players roll every d20 under eight attributes"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10]
+    cssFiles = ["/systems/symbaroum/symbaroum.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/gothic.json", "/systems/names/faerie.json"]
+    nameSettings = [oldWorldNameSetting, gothicHorrorNameSetting, faerieCourtsNameSetting]
+}

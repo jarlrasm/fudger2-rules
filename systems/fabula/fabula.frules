@@ -1,0 +1,358 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieKeys = ["d6", "d8", "d10", "d12"]
+
+sidesOf (die) = toInt (replace ("d", "", die))
+
+stepDown (sides, steps) = max (6, sides - 2 * steps)
+
+fabulaText (total, a, b, dl, damage) =
+    toString (total)
+    + (if a == 1 and b == 1 then ", fumble!"
+       else (if dl > 0 then " vs " + toString (dl) + ": " + (if a == b and a >= 6 then "critical success" else if total >= dl then "success" else "failure") else if a == b and a >= 6 then ", critical success" else "")
+            + (if damage >= 0 and (dl == 0 or total >= dl or (a == b and a >= 6)) then ", damage " + toString (max (a, b) + damage) else ""))
+
+fabulaOutcome (total, a, b, dl) =
+    if a == 1 and b == 1 then "Fumble"
+    else if a == b and a >= 6 then "Critical success"
+    else if dl == 0 then ""
+    else if total >= dl then "Success"
+    else "Failure"
+
+fabulaResult (bonus, a, b, dl, damage) =
+{
+    Text = fabulaText (bonus + a + b, a, b, dl, damage)
+    Value = bonus + a + b
+    Outcome = fabulaOutcome (bonus + a + b, a, b, dl)
+}
+
+fabulaRoll (firstSides, secondSides, dl, damage) = ([dice { number = 1  sides = firstSides }, dice { number = 1  sides = secondSides }],
+    ((baseline, throws)->fabulaResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), if dl < 0 then asked else dl, damage)))
+
+short (name) =
+    switch toLower (name)
+        case "dex" then "Dexterity"
+        case "ins" then "Insight"
+        case "mig" then "Might"
+        case "wlp" then "Willpower"
+        case "wil" then "Willpower"
+        else name
+
+currentSides (char, name) =
+    switch short (name)
+        case "Dexterity" then char.Attributes.Dexterity.Current
+        case "Insight" then char.Attributes.Insight.Current
+        case "Might" then char.Attributes.Might.Current
+        case "Willpower" then char.Attributes.Willpower.Current
+        else 6
+
+pairOf (text) = split ("+", replace (" ", "", text))
+
+firstOf (text) = first (pairOf (text))
+
+secondOf (text) = if count (pairOf (text)) > 1 then item (1, pairOf (text)) else first (pairOf (text))
+
+fabulaCheck (char, pair) = ask ("Difficulty", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, -1))
+
+fabulaAttack (char, pair, damage) = ask ("Defense", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, damage))
+
+attribute (base, steps) = custom
+{
+    Base = string { default = "d8"  keys = dieKeys }
+    Current = integer { value = stepDown (sidesOf (Base), steps)  editable = none  render = "d" + toString (Current) }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.fabulaWeapon.Stats, field, "")
+
+weaponAttack (name, pair, bonus, damage, damageType, kind) = custom
+{
+    Name = name
+    Accuracy = modifier { value = bonus  valuedice = fabulaAttack (characterTable, pair, damage)  action = kind  reach = 1  editable = none  render = pair + (if bonus > 0 then " +" + toString (bonus) else "") }
+    Damage = "HR + " + toString (damage) + " " + damageType
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, if weaponStat (weapon, "Accuracy") == "" then "Dex + Mig" else weaponStat (weapon, "Accuracy"), toInt (weaponStat (weapon, "Accuracy bonus")), toInt (weaponStat (weapon, "Damage")), weaponStat (weapon, "Damage type"), if weaponStat (weapon, "Range") == "Ranged" then "ranged" else "melee")
+
+crisisState (hp, maxHp) =
+    if hp <= 0 then "Out of the fight"
+    else if hp <= maxHp / 2 then "Crisis"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Points, Statuses, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 5  minvalue = 5  maxvalue = 50 }
+        Identity = string {}
+        Theme = string { keys = ["Ambition", "Anger", "Belonging", "Doubt", "Duty", "Guilt", "Hope", "Justice", "Mercy", "Vengeance"] }
+        Origin = string {}
+        Classes = string {}
+        Experience = integer { default = 0  editable = live }
+        Zenit = integer { default = 500 }
+        Fabula = integer { default = 3  minvalue = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Dexterity = attribute ("d8", (if Statuses.Slow then 1 else 0) + (if Statuses.Enraged then 1 else 0))
+        Insight = attribute ("d8", (if Statuses.Dazed then 1 else 0) + (if Statuses.Enraged then 1 else 0))
+        Might = attribute ("d8", (if Statuses.Weak then 1 else 0) + (if Statuses.Poisoned then 1 else 0))
+        Willpower = attribute ("d8", (if Statuses.Shaken then 1 else 0) + (if Statuses.Poisoned then 1 else 0))
+    }
+
+    Points = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Max HP' = integer { value = sidesOf (Attributes.Might.Base) * 5 + Character.Level + 'HP bonus'  editable = none }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        State = string { value = crisisState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
+        'Max MP' = integer { value = sidesOf (Attributes.Willpower.Base) * 5 + Character.Level + 'MP bonus'  editable = none }
+        MP = integer { default = 'Max MP'  editable = live  indicator = "#3a7bd5" }
+        'HP bonus' = integer { default = 0 }
+        'Max IP' = integer { default = 6 }
+        IP = integer { default = 6  editable = live }
+        'MP bonus' = integer { default = 0 }
+        Defense = integer { value = Attributes.Dexterity.Current + 'Defense bonus'  editable = none }
+        'Magic Defense' = integer { value = Attributes.Insight.Current + 'Magic Defense bonus'  editable = none }
+        Initiative = modifier { value = 'Initiative bonus'  valuedice = fabulaRoll (Attributes.Dexterity.Current, Attributes.Insight.Current, 0, -1)  editable = none }
+        'Defense bonus' = integer { default = 0 }
+        'Magic Defense bonus' = integer { default = 0 }
+        'Initiative bonus' = integer { default = 0 }
+    }
+
+    Statuses = table
+    {
+        tableLayout = layout { columns = 3 }
+        Slow = bool { default = false  editable = live  indicator = "#d4b106" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Weak = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Enraged = bool { default = false  editable = live  indicator = "#d64545" }
+        Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
+    }
+
+    Checks = keyvalues
+    {
+        singular = "Check"
+        editablekeys = character
+        keys = ["Dex + Dex", "Dex + Ins", "Dex + Mig", "Ins + Ins", "Ins + Wlp", "Mig + Mig", "Mig + Wlp", "Wlp + Wlp"]
+        tableLayout = layout { columns = 4  size = wide }
+        valueType = custom
+        {
+            Roll = modifier { value = 0  valuedice = fabulaCheck (characterTable, Key)  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Spell"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            MP = string {}
+            Target = string {}
+            Duration = string {}
+            Offensive = bool { default = false }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Skills = list
+    {
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Class = string {}
+            Level = integer { default = 1 }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Bonds = list
+    {
+        singular = "Bond"
+        editable = character
+        valueType = custom
+        {
+            With = string {}
+            Feelings = string {}
+            Strength = integer { default = 1  minvalue = 1  maxvalue = 3 }
+        }
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2 }
+        Armor = string {}
+        Shield = string {}
+        Accessory = string {}
+        Backpack = string { multiline = true }
+    }
+}
+
+npcSides (npc, name) =
+    switch short (name)
+        case "Dexterity" then sidesOf (npc.Attributes.Dexterity)
+        case "Insight" then sidesOf (npc.Attributes.Insight)
+        case "Might" then sidesOf (npc.Attributes.Might)
+        case "Willpower" then sidesOf (npc.Attributes.Willpower)
+        else 6
+
+npcTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        important = [NPC, Points, Attacks]
+        sortedBy = sort { prefix = "Level" sort = NPC.Level }
+    }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 5 }
+        Species = string { keys = ["Beast", "Construct", "Demon", "Elemental", "Humanoid", "Monster", "Plant", "Undead"] }
+        Rank = string { default = "Soldier"  keys = ["Soldier", "Elite", "Champion 2", "Champion 3", "Champion 4", "Champion 5", "Villain"] }
+        Traits = string {}
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Dexterity = string { default = "d8"  keys = dieKeys }
+        Insight = string { default = "d8"  keys = dieKeys }
+        Might = string { default = "d8"  keys = dieKeys }
+        Willpower = string { default = "d8"  keys = dieKeys }
+    }
+    Points = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { default = 40 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        State = string { value = crisisState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
+        'Max MP' = integer { default = 30 }
+        MP = integer { default = 'Max MP'  editable = live }
+        Defense = integer { default = 8 }
+        'Magic Defense' = integer { default = 8 }
+        Initiative = integer { default = 8 }
+    }
+    Affinities = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Physical = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Air = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Bolt = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Dark = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Earth = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Fire = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Ice = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Light = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+        Poison = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Check = string { default = "Dex + Mig" }
+            Bonus = integer { default = 0 }
+            Damage = integer { default = 5 }
+            Type = string { default = "physical" }
+            Roll = modifier { value = Bonus  valuedice = ask ("Defense", fabulaRoll (npcSides (npcTable, firstOf (Check)), npcSides (npcTable, secondOf (Check)), -1, Damage))  action = melee  reach = 1  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Spells = string { multiline = true }
+        'Other actions' = string { multiline = true }
+        'Special rules' = string { multiline = true }
+    }
+}
+
+fabulaWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string { keys = ["Arcane", "Bow", "Brawling", "Dagger", "Firearm", "Flail", "Heavy", "Spear", "Sword", "Thrown"] }
+        Accuracy = string { default = "Dex + Mig" }
+        'Accuracy bonus' = string { default = "0" }
+        Damage = string { default = "6" }
+        'Damage type' = string { default = "physical" }
+        Range = string { default = "Melee"  keys = ["Melee", "Ranged"] }
+        Hands = string { default = "One-handed"  keys = ["One-handed", "Two-handed"] }
+        Cost = string {}
+        Quality = string {}
+    }
+}
+
+FabulaUltima = system
+{
+    hints = [
+        hint
+        {
+            title = "Attributes as dice"
+            topic = "Getting started"
+            text = ["Dexterity, Insight, Might and Willpower are dice from d6 to d12. Statuses step them down: Slow, Dazed, Weak, Shaken, and Enraged or Poisoned for two at once. Fudger shows the current die next to the base."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll two attribute dice and add them. The higher die is the High Roll, added to weapon damage. Matching dice of 6 or more are a critical success; double 1 is a fumble. Add any check you need to the Checks list, e.g. Ins + Wlp."]
+        },
+        hint
+        {
+            title = "Crisis"
+            topic = "Combat"
+            text = ["At half HP or less a character is in Crisis. At 0 they surrender or sacrifice themselves. Accuracy checks beat Defense, magic checks beat Magic Defense."]
+        },
+        hint
+        {
+            title = "Conflict turns"
+            topic = "Initiative"
+            text = ["Each side alternates turns. Roll the party's best Dex + Ins initiative check against the villains' initiative to see which side starts."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = npcTable
+    entityTypeNames = [entityTypeName ("Creature", "NPC", "NPCs")]
+    Weapons = fabulaWeapon
+    secondaryTypes = ["Weapons"]
+    description = "Fabula Ultima: a tabletop JRPG with attribute dice, high rolls and bonds"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 1d8, 1d10, 1d12, 1d20]
+    cssFiles = ["/systems/fabula/fabula.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/chinese.json", "/systems/names/samurai.json", "/systems/names/faerie.json"]
+    nameSettings = [fantasyNameSetting, easternNameSetting, feudalJapanNameSetting, faerieCourtsNameSetting]
+}

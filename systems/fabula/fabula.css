@@ -1,0 +1,63 @@
+@import url("/systems/sheet.css");
+
+/* Fabula Ultima: a bright JRPG menu. Cream panels with rounded corners and
+   teal headers, the four attribute dice as big badges, HP, MP and IP as
+   game-style bars of numbers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #dfe8ea;
+    --surface: #fffdf7;
+    --surface-alt: #f3f7f5;
+    --surface-sunken: #e6efed;
+    --surface-muted: #cddcda;
+    --text: #1f2b2e;
+    --text-muted: #3f5357;
+    --text-faint: #75898c;
+    --on-accent: #ffffff;
+    --border: #94adb0;
+    --border-strong: #1f6f78;
+    --accent: #1f8a94;
+    --accent-hover: #26a3ad;
+    --accent-soft: #d5eef0;
+    --link: #1f6f78;
+    --danger: #c2413b;
+    --danger-hover: #9b322d;
+    --danger-soft: #f7dcda;
+    --success: #3f8a4a;
+    --paper: #fffdf7;
+    --card-bg: #f3f7f5;
+    --dice-bg: #e0a33a;
+    --dice-text: #1f2b2e;
+}
+
+.entityView {
+    --sheet-font: "Nunito", "Trebuchet MS", "Segoe UI", sans-serif;
+    --title-font: "Nunito", "Trebuchet MS", sans-serif;
+    --block-radius: 12px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: linear-gradient(90deg, var(--accent), #46b3a2);
+    color: var(--on-accent);
+    border-radius: 10px 10px 0 0;
+    padding: 3px 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 6px;
+    background: var(--accent-soft);
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-weight: 800; text-transform: uppercase; color: var(--border-strong); }
+.entityView .table-attributes .customtype > div:nth-child(2) { font-size: 1.4em; font-weight: 800; }
+.entityView .table-points { --block: 66.666%; }
+.entityView .table-skills,
+.entityView .table-bonds { --block: 50%; }
+.entityView .table-skills { clear: left; }
+.entityView .table-equipment { --block: 50%; }

@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* Marvel Multiverse: a comic-book page. White panels with heavy black
+   outlines, red title banners in a bold condensed face, and the six abilities
+   as boxed panels with score, defense and check. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9e4da;
+    --surface: #ffffff;
+    --surface-alt: #f5f2ec;
+    --surface-sunken: #ece7dd;
+    --surface-muted: #d9d2c4;
+    --text: #111111;
+    --text-muted: #333333;
+    --text-faint: #6c6c6c;
+    --on-accent: #ffffff;
+    --border: #8c8c8c;
+    --border-strong: #111111;
+    --accent: #c8102e;
+    --accent-hover: #e01a3a;
+    --accent-soft: #fbdde2;
+    --link: #c8102e;
+    --danger: #c8102e;
+    --danger-hover: #9b0c23;
+    --danger-soft: #fbdde2;
+    --success: #1f6f3f;
+    --paper: #ffffff;
+    --card-bg: #f5f2ec;
+    --dice-bg: #c8102e;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    --title-font: "Bebas Neue", "Impact", "Arial Black", sans-serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 2px 10px;
+    font-size: 1.15em;
+    border-bottom: 3px solid var(--border-strong);
+}
+.entityView .table-abilities > table > tbody { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    border: 3px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-family: var(--title-font); font-size: 1.3em; text-transform: uppercase; color: var(--accent); }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "def "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-status { --block: 66.666%; }
+.entityView .table-traits,
+.entityView .table-tags { --block: 50%; }

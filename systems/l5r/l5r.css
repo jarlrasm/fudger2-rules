@@ -1,0 +1,71 @@
+@import url("/systems/sheet.css");
+
+/* Legend of the Five Rings: rice paper with ink-black brush titles and
+   vermilion seals. The five rings sit in a row of circles, endurance,
+   composure, focus and vigilance beside them, and the skills in their five
+   groups across the page. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e4dccb;
+    --surface: #fbf8f0;
+    --surface-alt: #f2ece0;
+    --surface-sunken: #e9e1d1;
+    --surface-muted: #d8cdb7;
+    --text: #1a1715;
+    --text-muted: #403a33;
+    --text-faint: #7d7366;
+    --on-accent: #fbf8f0;
+    --border: #b3a68e;
+    --border-strong: #1a1715;
+    --accent: #a3221b;
+    --accent-hover: #c02a22;
+    --accent-soft: #f2d8d2;
+    --link: #a3221b;
+    --danger: #a3221b;
+    --danger-hover: #7c1914;
+    --danger-soft: #f2d8d2;
+    --success: #3d6b45;
+    --paper: #fbf8f0;
+    --card-bg: #f2ece0;
+    --dice-bg: #1a1715;
+    --dice-text: #fbf8f0;
+}
+
+.entityView {
+    --sheet-font: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    border-bottom: 3px solid var(--text);
+    font-weight: 700;
+}
+.entityView .table-rings > table > tbody > tr {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 3px solid var(--text);
+    border-radius: 50%;
+    aspect-ratio: 1;
+    width: 96px;
+    margin: 4px auto;
+    justify-content: center;
+}
+.entityView .table-rings > table > tbody > tr > td:first-child { font-family: var(--title-font); font-weight: 700; }
+.entityView .table-rings > table > tbody > tr:nth-child(1) { border-color: #6d8fae; }
+.entityView .table-rings > table > tbody > tr:nth-child(2) { border-color: #4f7a3a; }
+.entityView .table-rings > table > tbody > tr:nth-child(3) { border-color: #b8352a; }
+.entityView .table-rings > table > tbody > tr:nth-child(4) { border-color: #2f5f8c; }
+.entityView .table-rings > table > tbody > tr:nth-child(5) { border-color: #3a2f4f; }
+.entityView .table-status { --block: 66.666%; clear: left; }
+.entityView .table-skills .customtype > div:nth-child(2) { font-weight: 700; }
+.entityView .table-conditions,
+.entityView .table-techniques,
+.entityView .table-traits,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-conditions { clear: left; }

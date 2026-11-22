@@ -1,0 +1,54 @@
+@import url("/systems/sheet.css");
+
+/* Cortex Prime: the handbook's clean grey and orange. Trait sets as labelled
+   panels, die ratings in bold, stress tracks in a row. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9dadc;
+    --surface: #fafafa;
+    --surface-alt: #eef0f2;
+    --surface-sunken: #e3e6e9;
+    --surface-muted: #cdd1d6;
+    --text: #1d2228;
+    --text-muted: #444c55;
+    --text-faint: #7a838d;
+    --on-accent: #ffffff;
+    --border: #9aa2ab;
+    --border-strong: #1d2228;
+    --accent: #e06f1f;
+    --accent-hover: #f08236;
+    --accent-soft: #fbe3d1;
+    --link: #b85412;
+    --danger: #b3261e;
+    --danger-hover: #8c1d17;
+    --danger-soft: #fbe3d1;
+    --success: #2e7d4f;
+    --paper: #fafafa;
+    --card-bg: #eef0f2;
+    --dice-bg: #e06f1f;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Source Sans Pro", "Segoe UI", Helvetica, sans-serif;
+    --title-font: "Oswald", "Arial Narrow", sans-serif;
+    --block-radius: 4px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--text);
+    color: var(--on-accent);
+    border-left: 8px solid var(--accent);
+    padding: 2px 8px;
+}
+.entityView .table-character { --block: 100%; }
+.entityView .table-distinctions { --block: 50%; clear: left; }
+.entityView .table-attributes,
+.entityView .table-stress { --block: 50%; }
+.entityView .table-skills .customtype > div:nth-child(2) { font-weight: 700; }
+.entityView .table-complications,
+.entityView .table-assets { --block: 50%; }

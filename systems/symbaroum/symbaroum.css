@@ -1,0 +1,56 @@
+@import url("/systems/sheet.css");
+
+/* Symbaroum: an old-forest sheet. Dark moss and bone, with golden leaf-gilt
+   titles in a narrow serif, the eight attributes in two rows of framed
+   boxes, toughness and corruption side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2f3a2c;
+    --surface: #efe8d6;
+    --surface-alt: #e4dcc5;
+    --surface-sunken: #d9cfb3;
+    --surface-muted: #c8bc9b;
+    --text: #1e1d16;
+    --text-muted: #403c2d;
+    --text-faint: #786f55;
+    --on-accent: #efe8d6;
+    --border: #9b8d68;
+    --border-strong: #3c4a35;
+    --accent: #8c6b1f;
+    --accent-hover: #a8822a;
+    --accent-soft: #eadcb4;
+    --link: #6b4f14;
+    --danger: #8e2a1f;
+    --danger-hover: #6b1f17;
+    --danger-soft: #eadcb4;
+    --success: #3e6b2f;
+    --paper: #efe8d6;
+    --card-bg: #e4dcc5;
+    --dice-bg: #3c4a35;
+    --dice-text: #e8c66a;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", Garamond, Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: #e8c66a;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--accent);
+    padding: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-family: var(--title-font); font-weight: 700; color: var(--border-strong); }
+.entityView .table-attributes .customtype > div:nth-child(3)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-toughness,
+.entityView .table-corruption { --block: 50%; }

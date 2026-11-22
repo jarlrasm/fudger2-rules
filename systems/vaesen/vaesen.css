@@ -1,0 +1,57 @@
+@import url("/systems/sheet.css");
+
+/* Vaesen: an old ledger from the Society. Aged paper, sepia ink and a
+   slender serif, thin double rules round each block, the four attributes
+   with their three skills beneath, and the conditions as two rows of ticks. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #cfc4ad;
+    --surface: #f7f1e3;
+    --surface-alt: #eee5d0;
+    --surface-sunken: #e4d8bd;
+    --surface-muted: #d2c3a2;
+    --text: #2b2219;
+    --text-muted: #4e4030;
+    --text-faint: #85735c;
+    --on-accent: #f7f1e3;
+    --border: #a8957a;
+    --border-strong: #4e3b28;
+    --accent: #5e4429;
+    --accent-hover: #7a5a37;
+    --accent-soft: #eadcc3;
+    --link: #5e4429;
+    --danger: #7d2a1f;
+    --danger-hover: #5f1f17;
+    --danger-soft: #eadcc3;
+    --success: #43603a;
+    --paper: #f7f1e3;
+    --card-bg: #eee5d0;
+    --dice-bg: #4e3b28;
+    --dice-text: #f7f1e3;
+}
+
+.entityView {
+    --sheet-font: "IM Fell English", "Baskerville", Georgia, serif;
+    --title-font: "IM Fell English SC", "Baskerville", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 3px double var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-strong);
+    font-weight: 700;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border-strong);
+    padding: 4px;
+    font-size: 1.15em;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-family: var(--title-font); text-transform: uppercase; }
+.entityView .table-conditions { --block: 66.666%; }
+.entityView .table-talents { --block: 33.333%; }

@@ -1,0 +1,185 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+moveOutcome (total) =
+    if total > 9 then "Strong hit"
+    else if total > 6 then "Weak hit"
+    else "Miss"
+
+moveText (total) =
+    if total > 9 then "10+: you do it"
+    else if total > 6 then "7-9: you do it, at a cost or with a hard choice"
+    else "6-: miss, mark potential, and the GM makes a move"
+
+moveResult (total) =
+{
+    Text = toString (total) + ", " + moveText (total)
+    Value = total
+    Outcome = moveOutcome (total)
+}
+
+masksRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + sum (first (throws).rolls))))
+
+masksDice (char) = masksRoll (char.Hero.Forward)
+
+blowText (total) =
+    if total > 9 then "10+: choose one: remove yourself from the situation, lose control in a terrible way, or take two from the 7-9 list"
+    else if total > 6 then "7-9: choose one: lose your footing, lose your grip, lose track of someone you protect, or someone gains influence over you"
+    else "6-: you stand strong, mark potential and say how you weather it"
+
+blowResult (total) =
+{
+    Text = toString (total) + ", " + blowText (total)
+    Value = total
+    Outcome = if total > 9 then "Failure" else if total > 6 then "Partial" else "Success"
+}
+
+powerfulBlow = ([2d6], ((baseline, throws)->blowResult (baseline + sum (first (throws).rolls))))
+
+conditionsMarked (char) =
+    (if char.Conditions.Afraid then 1 else 0) + (if char.Conditions.Angry then 1 else 0) + (if char.Conditions.Guilty then 1 else 0)
+    + (if char.Conditions.Hopeless then 1 else 0) + (if char.Conditions.Insecure then 1 else 0)
+
+penalty (flag) = if flag then 2 else 0
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Labels, Conditions, 'Basic Moves'] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Playbook = string { keys = ["The Beacon", "The Bull", "The Delinquent", "The Doomed", "The Janus", "The Legacy", "The Nova", "The Outsider", "The Protege", "The Transformed"] }
+        'Hero name' = string {}
+        'Real name' = string {}
+        Look = string {}
+        Abilities = string { multiline = true }
+        Potential = slots { number = 5  editable = live  allowedchange = increaseAndClear }
+        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        'Team pool' = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Labels = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Danger = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Freak = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Savior = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Superior = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Mundane = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Afraid = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Angry = bool { default = false  editable = live  indicator = "#d64545" }
+        Guilty = bool { default = false  editable = live  indicator = "#555555" }
+        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { default = false  editable = live  indicator = "#d4b106" }
+        Out = string { value = if conditionsMarked (characterTable) == 5 then "Taken out" else ""  visible = none  indicator = "#d64545" }
+    }
+
+    'Basic Moves' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Directly Engage a Threat' = modifier { value = Labels.Danger - penalty (Conditions.Afraid)  valuedice = masksDice (characterTable)  editable = none  action = melee  reach = 2 }
+        'Unleash Your Powers' = modifier { value = Labels.Freak - penalty (Conditions.Hopeless)  valuedice = masksDice (characterTable)  editable = none }
+        'Defend Someone' = modifier { value = Labels.Savior - penalty (Conditions.Insecure)  valuedice = masksDice (characterTable)  editable = none }
+        'Assess the Situation' = modifier { value = Labels.Superior - penalty (Conditions.Guilty)  valuedice = masksDice (characterTable)  editable = none }
+        'Provoke Someone' = modifier { value = Labels.Superior - penalty (Conditions.Guilty)  valuedice = masksDice (characterTable)  editable = none }
+        'Comfort or Support' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
+        'Pierce the Mask' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
+        'Take a Powerful Blow' = modifier { value = conditionsMarked (characterTable)  valuedice = powerfulBlow  editable = none }
+    }
+
+    Influence = list
+    {
+        singular = "Has influence over me"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            'Over me' = bool { default = true }
+            'I have over them' = bool { default = false }
+        }
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Move"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Playbook = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Playbook feature' = string { multiline = true }
+        'Moment of truth' = string { multiline = true }
+        Advancements = string { multiline = true }
+        'When our team first came together' = string { multiline = true }
+    }
+}
+
+villainTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Villain, Conditions] }
+    Villain = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Type = string { default = "Villain"  keys = ["Villain", "Henchman", "Mook", "Mook group", "Monster", "Ally", "Civilian"] }
+        Drive = string {}
+        Abilities = string { multiline = true }
+        Moves = string { multiline = true }
+    }
+    Conditions = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Afraid = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Angry = bool { default = false  editable = live  indicator = "#d64545" }
+        Guilty = bool { default = false  editable = live  indicator = "#555555" }
+        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { default = false  editable = live  indicator = "#d4b106" }
+        'Taken out' = bool { default = false  editable = live  indicator = "#d64545" }
+    }
+}
+
+Masks = system
+{
+    hints = [
+        hint
+        {
+            title = "Young heroes"
+            topic = "Getting started"
+            text = ["Pick a playbook. Its five labels (Danger, Freak, Savior, Superior, Mundane) are how the hero sees themself right now, and they shift as others influence them."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["Roll 2d6 + label: 10+ success, 7-9 success at a cost, 6- a miss: mark potential and the GM makes a move. Each condition gives -2 to its moves; the sheet subtracts it."]
+        },
+        hint
+        {
+            title = "Conditions and blows"
+            topic = "Combat"
+            text = ["Instead of hit points, heroes mark conditions: Afraid, Angry, Guilty, Hopeless, Insecure. A hero with all five marked is taken out. Take a Powerful Blow rolls 2d6 plus the conditions marked: a high roll is bad."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["There is no initiative. Follow the fiction and move the spotlight between heroes."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = villainTable
+    entityTypeNames = [entityTypeName ("Character", "Hero", "Heroes"), entityTypeName ("Creature", "Villain", "Villains")]
+    description = "Masks: A New Generation: Powered by the Apocalypse teenage superheroes, labels and conditions"
+    quickdice = [2d6]
+    cssFiles = ["/systems/masks/masks.css"]
+    libraries = ["/systems/names/heroes.json", "/systems/names/scifi.json"]
+    nameSettings = [superheroesNameSetting, spaceNameSetting]
+}

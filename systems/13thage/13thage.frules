@@ -1,0 +1,303 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) = score / 2 - 5
+
+middle (a, b, c) = a + b + c - max (a, b, c) - min (a, b, c)
+
+levelMultiplier (level) =
+    switch level
+        case 1 then 3
+        case 2 then 4
+        case 3 then 5
+        case 4 then 6
+        case 5 then 8
+        case 6 then 10
+        case 7 then 12
+        case 8 then 16
+        case 9 then 20
+        else 24
+
+naturalNote (natural) =
+    if natural == 20 then ", natural 20: critical hit"
+    else if natural == 1 then ", natural 1: fumble"
+    else if mod (natural, 2) == 0 then ", natural even"
+    else ", natural odd"
+
+attackText (total, natural, defense, escalation) =
+    toString (total)
+    + (if escalation > 0 then " (escalation +" + toString (escalation) + ")" else "")
+    + (if defense > 0 then " vs " + toString (defense) + ": " + (if natural == 20 then "critical hit" else if natural == 1 then "miss" else if total >= defense then "hit" else "miss") else "")
+    + naturalNote (natural)
+
+attackOutcome (total, natural, defense) =
+    if natural == 20 then "Critical hit"
+    else if natural == 1 then "Fumble"
+    else if defense == 0 then ""
+    else if total >= defense then "Hit"
+    else "Miss"
+
+attackResult (bonus, natural, defense, escalation) =
+{
+    Text = attackText (bonus + natural + escalation, natural, defense, escalation)
+    Value = bonus + natural + escalation
+    Outcome = attackOutcome (bonus + natural + escalation, natural, defense)
+}
+
+attackRoll (defense, escalation) = ([1d20],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), defense, escalation)))
+
+askedAttack = ask ("Escalation die", 0, ([1d20], ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), 0, asked))))
+
+checkResult (total, natural, dc) =
+{
+    Text = toString (total) + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if total >= dc then "success" else "failure") else "") + (if natural == 20 then ", natural 20" else if natural == 1 then ", natural 1" else "")
+    Value = total
+    Outcome = if dc == 0 then "" else if total >= dc then "Success" else "Failure"
+}
+
+checkRoll (dc) = ([1d20], ((baseline, throws)->checkResult (baseline + first (first (throws).rolls), first (first (throws).rolls), if dc < 0 then asked else dc)))
+
+skillCheck = ask ("DC", checkRoll (-1))
+
+iconResult (rolls) =
+{
+    Text = toString (count (filter ((x)->x == 6, rolls))) + " full benefit, " + toString (count (filter ((x)->x == 5, rolls))) + " with a complication"
+    Value = count (filter ((x)->x >= 5, rolls))
+    Outcome = if count (filter ((x)->x == 6, rolls)) > 0 then "Success" else if count (filter ((x)->x == 5, rolls)) > 0 then "Complication" else ""
+}
+
+iconRoll (diceCount) = ([dice { number = diceCount  sides = 6 }], ((baseline, throws)->iconResult (first (throws).rolls)))
+
+ability = custom
+{
+    Score = integer { default = 10  minvalue = 3  maxvalue = 30 }
+    Modifier = modifier { value = abilityModifier (Score)  editable = none }
+    'Mod plus level' = modifier { value = abilityModifier (Score) + Character.Level  valuedice = skillCheck  editable = none }
+}
+
+abilityMod (char, name) =
+    switch name
+        case "Str" then char.Abilities.Str.Modifier
+        case "Con" then char.Abilities.Con.Modifier
+        case "Dex" then char.Abilities.Dex.Modifier
+        case "Int" then char.Abilities.Int.Modifier
+        case "Wis" then char.Abilities.Wis.Modifier
+        else char.Abilities.Cha.Modifier
+
+hpState (hp, maxHp) =
+    if hp <= 0 - maxHp / 2 then "Dead"
+    else if hp <= 0 then "Unconscious"
+    else if hp <= maxHp / 4 then "Staggered"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Defenses, Health, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string { keys = ["Dwarf", "Dark Elf", "High Elf", "Wood Elf", "Gnome", "Half-Elf", "Half-Orc", "Halfling", "Human", "Dragonic", "Holy One", "Forgeborn", "Tiefling"] }
+        Class = string { keys = ["Barbarian", "Bard", "Cleric", "Fighter", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        'One unique thing' = string {}
+        Incremental = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        Gold = integer { default = 25 }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Str = ability {}
+        Con = ability {}
+        Dex = ability {}
+        Int = ability {}
+        Wis = ability {}
+        Cha = ability {}
+    }
+
+    Defenses = table
+    {
+        tableLayout = layout { columns = 3 }
+        AC = integer { value = 'AC base' + middle (Abilities.Con.Modifier, Abilities.Dex.Modifier, Abilities.Wis.Modifier) + Character.Level  editable = none }
+        PD = integer { value = 'PD base' + middle (Abilities.Str.Modifier, Abilities.Con.Modifier, Abilities.Dex.Modifier) + Character.Level  editable = none }
+        MD = integer { value = 'MD base' + middle (Abilities.Int.Modifier, Abilities.Wis.Modifier, Abilities.Cha.Modifier) + Character.Level  editable = none }
+        'AC base' = integer { default = 12 }
+        'PD base' = integer { default = 10 }
+        'MD base' = integer { default = 10 }
+        Initiative = modifier { value = Abilities.Dex.Modifier + Character.Level + 'Initiative bonus'  valuedice = attackRoll (0, 0)  editable = none }
+        'Initiative bonus' = integer { default = 0 }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 3 }
+        'HP base' = integer { default = 7 }
+        'Max HP' = integer { value = ('HP base' + Abilities.Con.Modifier) * levelMultiplier (Character.Level)  editable = none }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        State = string { value = hpState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
+        Recoveries = integer { default = 8  minvalue = 0  editable = live }
+        'Recovery die' = string { default = "d8"  keys = ["d6", "d8", "d10", "d12"] }
+        Recovery = string { value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier)  editable = none }
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string { default = "Melee basic attack" }
+            Ability = string { default = "Str"  keys = ["Str", "Con", "Dex", "Int", "Wis", "Cha"] }
+            Bonus = integer { default = 0 }
+            Defense = string { default = "AC"  keys = ["AC", "PD", "MD"] }
+            Attack = modifier { value = abilityMod (characterTable, Ability) + characterTable.Character.Level + Bonus  valuedice = askedAttack  action = if contains (toLower (Name), "ranged") then "ranged" else "melee"  reach = 1  editable = none }
+            Hit = string {}
+            Miss = string {}
+        }
+    }
+
+    Backgrounds = keyvalues
+    {
+        singular = "Background"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { columns = 2 }
+        valueType = custom
+        {
+            Points = integer { default = 2  minvalue = 1  maxvalue = 5 }
+            Ability = string { default = "Int"  keys = ["Str", "Con", "Dex", "Int", "Wis", "Cha"] }
+            Check = modifier { value = Points + abilityMod (characterTable, Ability) + characterTable.Character.Level  valuedice = skillCheck  editable = none }
+        }
+    }
+
+    Icons = keyvalues
+    {
+        singular = "Icon relationship"
+        editablekeys = character
+        keys = []
+        tableLayout = layout { columns = 2 }
+        valueType = custom
+        {
+            Relationship = string { default = "Positive"  keys = ["Positive", "Conflicted", "Negative"] }
+            Dice = integer { default = 1  minvalue = 1  maxvalue = 3  valuedice = iconRoll (Dice) }
+        }
+    }
+
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Power or spell"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Usage = string { default = "At-will"  keys = ["At-will", "Recharge", "Battle", "Daily", "Cyclic"] }
+            Used = bool { default = false  editable = live }
+            Effect = string { multiline = true }
+        }
+    }
+
+    Talents = list
+    {
+        singular = "Talent or feat"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 2 }
+        Armor = string {}
+        Weapons = string {}
+        'Magic items' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+monsterTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        important = [Monster, Attacks]
+        sortedBy = sort { prefix = "Level" sort = Monster.Level }
+    }
+    Monster = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { default = 1 }
+        Size = string { default = "Normal"  keys = ["Normal", "Large", "Huge"] }
+        Role = string { default = "Troop"  keys = ["Archer", "Blocker", "Caster", "Leader", "Mook", "Spoiler", "Troop", "Wrecker"] }
+        Type = string {}
+        Initiative = modifier { default = 3  valuedice = attackRoll (0, 0) }
+        AC = integer { default = 17 }
+        PD = integer { default = 14 }
+        MD = integer { default = 12 }
+        'Max HP' = integer { default = 27 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        State = string { value = if HP <= 0 then "Dead" else if HP <= 'Max HP' / 2 then "Staggered" else ""  editable = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 6  valuedice = attackRoll (0, 0)  action = melee  reach = 1 }
+            Defense = string { default = "AC"  keys = ["AC", "PD", "MD"] }
+            Hit = string {}
+            Triggers = string {}
+        }
+    }
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ability"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+
+ThirteenthAge = system
+{
+    hints = [
+        hint
+        {
+            title = "One unique thing"
+            topic = "Getting started"
+            text = ["Each hero has a one unique thing, backgrounds instead of skills, and relationships with the icons. Set the base AC, PD, MD and HP from the class; the sheet adds the middle modifiers and level."]
+        },
+        hint
+        {
+            title = "Escalation die"
+            topic = "Combat"
+            text = ["From the second round the escalation die goes up by 1 each round, to 6. Heroes add it to attack rolls: Fudger asks for it when you attack. Natural even and odd rolls trigger many powers."]
+        },
+        hint
+        {
+            title = "Checks and icons"
+            topic = "Play"
+            text = ["Skill checks are d20 + ability + level + background points against a DC. At the start of a session roll each icon relationship's dice: a 6 is a full benefit, a 5 a benefit with a complication."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative once per battle: d20 + Dex + level. Monsters roll d20 + their initiative bonus."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = monsterTable
+    entityTypeNames = [entityTypeName ("Creature", "Monster", "Monsters")]
+    description = "13th Age: d20 heroics with the escalation die, icons and one unique thing"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/13thage/13thage.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/barbarian.json", "/systems/names/desert.json"]
+    nameSettings = [fantasyNameSetting, swordAndSorceryNameSetting, desertRealmsNameSetting]
+}

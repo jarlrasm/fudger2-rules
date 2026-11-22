@@ -1,0 +1,60 @@
+@import url("/systems/sheet.css");
+
+/* 13th Age: the rulebook's parchment and deep red, with the defenses as
+   three shields and the attacks listed with hit and miss effects. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ddd2bd;
+    --surface: #fcf7ec;
+    --surface-alt: #f3ead7;
+    --surface-sunken: #e9ddc5;
+    --surface-muted: #d6c6a6;
+    --text: #22190f;
+    --text-muted: #4a3a28;
+    --text-faint: #7f6c55;
+    --on-accent: #fcf7ec;
+    --border: #ab9775;
+    --border-strong: #5a1a14;
+    --accent: #8b1e16;
+    --accent-hover: #a8281e;
+    --accent-soft: #f1d8cf;
+    --link: #8b1e16;
+    --danger: #8b1e16;
+    --danger-hover: #6a1711;
+    --danger-soft: #f1d8cf;
+    --success: #406b30;
+    --paper: #fcf7ec;
+    --card-bg: #f3ead7;
+    --dice-bg: #8b1e16;
+    --dice-text: #fcf7ec;
+}
+
+.entityView {
+    --sheet-font: "Crimson Text", Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 4px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+}
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-family: var(--title-font); font-weight: 700; }
+.entityView .table-abilities .customtype > div:nth-child(3)::before { content: "+lvl "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-defenses,
+.entityView .table-health { --block: 50%; }
+.entityView .table-defenses > table > tbody > tr:nth-child(-n+3) { font-size: 1.25em; font-weight: 700; }
+.entityView .table-backgrounds,
+.entityView .table-icons { --block: 50%; }
+.entityView .table-talents,
+.entityView .table-gear { --block: 50%; }

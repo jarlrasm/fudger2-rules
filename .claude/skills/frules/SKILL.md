@@ -63,4 +63,8 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Name generators are JSON, not frules.** `#` and quotes are fine there, and names must be original, not taken from published settings.
 - **`toInt` of text with a unit is `0`.** `toInt ("30 m")` and `toInt ("Range 80")` both give 0, so ranges read that way silently become "next to the target". Take the first number with `firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")`.
 - **A dice group with no dice still shows its label.** For an optional extra die (advantage, a bonus or penalty die), give the group `label = ""` when it is off, or chat names the wrong mode. Its `rolls` is then empty, so check `count (rolls) == 0` before reading `first`.
+- **Only `custom` and `table` work as parameterless field types.** `attr = custom { ... }` used as `Str = attr {}` is fine, but `die = string { ... }` or `stat = modifier { ... }` used the same way draws "string not supported". Write those fields out, or make them a field template with a parameter.
+- **A roll's dice list must be literal in the roll pair.** `([dice {...}, dice {...}], lambda)` parses; a function that returns the dice list does not. Put the choices in the dice' `number` and `sides` instead, and use one roll function with flags.
+- **Don't define `testRoll` or `testValue`.** The tests in the app add those names to the system, and a same-named function merges with them.
+- **Quoted names can't hold `-`, `(` or `)`.** `'Flat-footed'` and `'Dmg (M)'` fail to parse, and the error points at the start of the ruleset, not the field.
 - **Ship types are called `Spaceships`.** Name generators offer ship names to the `Spaceships` kind, so an extra entity type called Starships gets no ship names.

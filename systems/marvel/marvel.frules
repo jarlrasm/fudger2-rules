@@ -1,0 +1,186 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+marvelValue (face) = if face == 1 then 6 else face
+
+keptPair (rolls, mode) =
+    if count (rolls) < 3 then sum (rolls)
+    else if mode == "Edge" then item (1, sort (rolls)) + item (2, sort (rolls))
+    else item (0, sort (rolls)) + item (1, sort (rolls))
+
+isFantastic (marvel) = marvel == 1
+
+isUltimate (rolls, marvel, mode) = marvel == 1 and keptPair (rolls, mode) == 12
+
+d616Text (total, marvel, tn, damage, ultimate) =
+    toString (total)
+    + (if tn > 0 then " vs " + toString (tn) + ": " + (if ultimate then "Ultimate Fantastic success" else if total >= tn and isFantastic (marvel) then "Fantastic success" else if total >= tn then "success" else "failure") else if isFantastic (marvel) then " (Marvel die M)" else "")
+    + (if damage > 0 and (tn == 0 or total >= tn) then ", damage " + toString (if isFantastic (marvel) and tn > 0 then damage * 2 else damage) else "")
+
+d616Outcome (total, marvel, tn, ultimate) =
+    if tn == 0 then (if isFantastic (marvel) then "Fantastic" else "")
+    else if ultimate then "Ultimate Fantastic success"
+    else if total >= tn and isFantastic (marvel) then "Fantastic success"
+    else if total >= tn then "Success"
+    else "Failure"
+
+d616Result (bonus, rolls, marvel, tn, rank, damageBonus, mode) =
+{
+    Text = d616Text (bonus + keptPair (rolls, mode) + marvelValue (marvel), marvel, tn, if rank > 0 then marvelValue (marvel) * rank + damageBonus else 0, isUltimate (rolls, marvel, mode))
+    Value = bonus + keptPair (rolls, mode) + marvelValue (marvel)
+    Outcome = d616Outcome (bonus + keptPair (rolls, mode) + marvelValue (marvel), marvel, tn, isUltimate (rolls, marvel, mode))
+}
+
+d616 (tn, rank, damageBonus, mode) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Edge" then "green" else if mode == "Trouble" then "red" else ""  label = if mode == "Normal" then "" else mode }, dice { number = 1  sides = 6  color = "red"  label = "Marvel"  faces = ["M", "2", "3", "4", "5", "6"] }],
+    ((baseline, throws)->d616Result (baseline, first (throws).rolls, first (item (1, throws).rolls), if tn < 0 then asked else tn, rank, damageBonus, mode)))
+
+d616Check (char) = ask ("TN", d616 (-1, 0, 0, char.Hero.Roll))
+
+d616Attack (char, damageBonus) = ask ("Defense", d616 (-1, char.Hero.Rank, damageBonus, char.Hero.Roll))
+
+plainD616 = d616 (0, 0, 0, "Normal")
+
+ability (attack) = custom
+{
+    Score = integer { default = 0  minvalue = -3  maxvalue = 20 }
+    Defense = integer { value = Score + 10  editable = none }
+    Check = modifier { value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  editable = none }
+}
+
+downState (health, focus) =
+    if health <= 0 then "Knocked out"
+    else if focus <= 0 then "Demoralized"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Abilities, Status, Powers] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Real name' = string {}
+        Rank = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Origin = string { keys = ["Alien", "Born Mutant", "Cosmic", "Gods", "High Tech", "Magic", "Mutant", "Special Training", "Weird Science", "Unknown"] }
+        Occupation = string {}
+        Size = string { default = "Average"  keys = ["Microscopic", "Miniature", "Tiny", "Little", "Small", "Average", "Big", "Huge", "Giant", "Titanic", "Gigantic"] }
+        Teams = string {}
+        Roll = selector { options = ["Trouble", "Normal", "Edge"]  labels = ["Trouble", "Normal", "Edge"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Melee = ability (true)
+        Agility = ability (true)
+        Resilience = ability (false)
+        Vigilance = ability (false)
+        Ego = ability (true)
+        Logic = ability (true)
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max Health' = integer { value = max (10, Abilities.Resilience.Score * 30)  editable = none }
+        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
+        'Max Focus' = integer { value = max (10, Abilities.Vigilance.Score * 30)  editable = none }
+        Focus = integer { default = 'Max Focus'  editable = live  indicator = "#8e5cc4" }
+        Karma = integer { default = Hero.Rank  minvalue = 0  editable = live }
+        'Health damage reduction' = integer { default = 0 }
+        'Focus damage reduction' = integer { default = 0 }
+        Initiative = modifier { value = Abilities.Vigilance.Score  valuedice = plainD616  editable = none }
+        Down = string { value = downState (Health, Focus)  visible = none  indicator = "#d64545" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Ensnared = bool { default = false  editable = live  indicator = "#e8913a" }
+    }
+
+    Speed = table
+    {
+        tableLayout = layout { columns = 3 }
+        Run = integer { default = 5 }
+        Climb = integer { default = 3 }
+        Swim = integer { default = 3 }
+        Jump = integer { default = 3 }
+        Flight = integer { default = 0 }
+        Glide = integer { default = 0 }
+    }
+
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Power"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            'Power set' = string {}
+            Action = string { keys = ["Standard", "Movement", "Reaction", "Free", "Permanent"] }
+            Cost = string {}
+            Effect = string { multiline = true }
+        }
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Tags = list
+    {
+        singular = "Tag"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Personality = string { multiline = true }
+        History = string { multiline = true }
+        Gear = string { multiline = true }
+        'Base of operations' = string {}
+    }
+}
+
+MarvelMultiverse = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a hero"
+            topic = "Getting started"
+            text = ["Pick a rank, spread ability points over Melee, Agility, Resilience, Vigilance, Ego and Logic, then add powers, traits and tags. Health and Focus are 30 times Resilience and Vigilance."]
+        },
+        hint
+        {
+            title = "The d616"
+            topic = "Play"
+            text = ["Roll three d6, one of them the red Marvel die, and add the ability. A Marvel die showing M counts as 6 and makes a success Fantastic. Set Edge or Trouble on the sheet: Edge keeps the best two of three normal dice, Trouble the worst."]
+        },
+        hint
+        {
+            title = "Attacks and damage"
+            topic = "Combat"
+            text = ["Attacks are Melee, Agility, Ego or Logic checks against the target's defense in that ability. Damage is the Marvel die times rank plus the ability score, doubled on a Fantastic success, then reduced by damage reduction."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: a d616 plus Vigilance. Fantastic initiative also grants an extra point of Karma."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = characterTable
+    entityTypeNames = [entityTypeName ("Character", "Hero", "Heroes")]
+    description = "Marvel Multiverse Role-Playing Game: the d616, six abilities and ranks of power"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [3d6, 1d6]
+    cssFiles = ["/systems/marvel/marvel.css"]
+    libraries = ["/systems/names/heroes.json", "/systems/names/spies.json", "/systems/names/scifi.json"]
+    nameSettings = [superheroesNameSetting, spyThrillerNameSetting, spaceNameSetting]
+}
