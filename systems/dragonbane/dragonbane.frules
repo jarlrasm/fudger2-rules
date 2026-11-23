@@ -64,10 +64,10 @@ attributeValue (char, name) =
 
 skill (attribute) = custom
 {
-    Trained = bool { default = false }
-    Improvement = integer { default = 0  minvalue = 0  maxvalue = 14 }
-    Value = integer { value = min (18, baseChance (attributeValue (characterTable, attribute)) * (if Trained then 2 else 1) + Improvement)  valuedice = dbDice (characterTable, attribute)  editable = none }
-    Advancement = bool { default = false  editable = live }
+    Trained = bool { description = "Trained skills start at twice the base chance from the attribute." default = false }
+    Improvement = integer { description = "Points added to the skill from advancement." default = 0  minvalue = 0  maxvalue = 14 }
+    Value = integer { description = "Skill level. Roll d20 at or under it to succeed; a 1 is a dragon, a 20 a demon." value = min (18, baseChance (attributeValue (characterTable, attribute)) * (if Trained then 2 else 1) + Improvement)  valuedice = dbDice (characterTable, attribute)  editable = none }
+    Advancement = bool { description = "Mark after rolling a dragon or demon. Roll to improve the skill at the end of the session." default = false  editable = live }
 }
 
 noSkill = { Value = 0 }
@@ -109,10 +109,11 @@ characterTable = ruleset
         Kin = string { keys = ["Human", "Halfling", "Dwarf", "Elf", "Mallard", "Wolfkin"] }
         Age = string { keys = ["Young", "Adult", "Old"] }
         Profession = string { keys = ["Artisan", "Bard", "Fighter", "Hunter", "Knight", "Mage", "Mariner", "Merchant", "Scholar", "Thief"] }
-        Weakness = string {}
+        Weakness = string { description = "A flaw or fear. Overcoming it in play earns an extra advancement." }
         Appearance = string { multiline = true }
         Roll = selector
         {
+            description = "Boon rolls two d20s and keeps the lower, bane keeps the higher."
             options = ["Bane", "Normal", "Boon"]
             labels = ["Bane", "Normal", "Boon"]
             colors = ["red", "white", "green"]
@@ -125,43 +126,45 @@ characterTable = ruleset
 
     Attributes = table
     {
+        description = "The six attributes, from 3 to 18. Each has a condition that gives a bane."
         tableLayout = layout { columns = 6  size = wide }
-        STR = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "STR") }
-        CON = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CON") }
-        AGL = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "AGL") }
-        INT = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "INT") }
-        WIL = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "WIL") }
-        CHA = integer { default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CHA") }
+        STR = integer { description = "Strength: muscle, used for heavy weapons and lifting." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "STR") }
+        CON = integer { description = "Constitution: health and stamina. Sets HP." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CON") }
+        AGL = integer { description = "Agility: speed, balance and light weapons." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "AGL") }
+        INT = integer { description = "Intelligence: knowledge, reasoning and awareness." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "INT") }
+        WIL = integer { description = "Willpower: mental strength and magic. Sets WP." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "WIL") }
+        CHA = integer { description = "Charisma: charm and force of personality." default = 10  minvalue = 3  maxvalue = 18  valuedice = dbDice (characterTable, "CHA") }
     }
 
     Conditions = table
     {
+        description = "Conditions give a bane on rolls with their attribute. Rest removes them."
         tableLayout = layout { columns = 6  size = wide }
-        Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
-        Sickly = bool { default = false  editable = live  indicator = "#3fa34d" }
-        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
-        Angry = bool { default = false  editable = live  indicator = "#d64545" }
-        Scared = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Disheartened = bool { default = false  editable = live  indicator = "#555555" }
+        Exhausted = bool { description = "Gives a bane on STR rolls." default = false  editable = live  indicator = "#d4b106" }
+        Sickly = bool { description = "Gives a bane on CON rolls." default = false  editable = live  indicator = "#3fa34d" }
+        Dazed = bool { description = "Gives a bane on AGL rolls." default = false  editable = live  indicator = "#d4b106" }
+        Angry = bool { description = "Gives a bane on INT rolls." default = false  editable = live  indicator = "#d64545" }
+        Scared = bool { description = "Gives a bane on WIL rolls." default = false  editable = live  indicator = "#8e5cc4" }
+        Disheartened = bool { description = "Gives a bane on CHA rolls." default = false  editable = live  indicator = "#555555" }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max HP' = integer { value = Attributes.CON  editable = none }
-        HP = integer { default = 'Max HP'  minvalue = 0  editable = live }
-        'Max WP' = integer { value = Attributes.WIL  editable = none }
-        WP = integer { default = 'Max WP'  minvalue = 0  editable = live }
-        'Damage Bonus STR' = damageBonus (Attributes.STR)
-        'Damage Bonus AGL' = damageBonus (Attributes.AGL)
-        Movement = integer { default = 10 }
-        Initiative = integer { default = 0  valuedice = 1d10 }
-        'Death Rolls' = integer { value = Attributes.CON  valuedice = deathRoll  editable = none }
-        'Death Successes' = slots { number = 3  editable = live }
-        'Death Failures' = slots { number = 3  editable = live  indicator = "#d64545" }
+        'Max HP' = integer { description = "Hit points when unhurt, equal to CON." value = Attributes.CON  editable = none }
+        HP = integer { description = "Current hit points. At 0 the character is dying and makes death rolls." default = 'Max HP'  minvalue = 0  editable = live }
+        'Max WP' = integer { description = "Willpower points when rested, equal to WIL." value = Attributes.WIL  editable = none }
+        WP = integer { description = "Willpower points left, spent on heroic abilities and spells." default = 'Max WP'  minvalue = 0  editable = live }
+        'Damage Bonus STR' = string { description = "Extra damage for melee weapons that use STR." value = damageBonus (Attributes.STR)  editable = none }
+        'Damage Bonus AGL' = string { description = "Extra damage for ranged and light weapons that use AGL." value = damageBonus (Attributes.AGL)  editable = none }
+        Movement = integer { description = "How far you move in a round, in metres." default = 10 }
+        Initiative = integer { description = "Initiative card drawn each round. Lowest acts first." default = 0  valuedice = 1d10 }
+        'Death Rolls' = integer { description = "Roll d20 at or under CON each round while dying." value = Attributes.CON  valuedice = deathRoll  editable = none }
+        'Death Successes' = slots { description = "Three successes and you stabilise." number = 3  editable = live }
+        'Death Failures' = slots { description = "Three failures and you die." number = 3  editable = live  indicator = "#d64545" }
         Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
-        'Round Rest' = bool { default = false  editable = live }
-        'Stretch Rest' = bool { default = false  editable = live }
+        'Round Rest' = bool { description = "A round rest recovers d6 WP once per shift." default = false  editable = live }
+        'Stretch Rest' = bool { description = "A stretch rest recovers HP and WP and a condition." default = false  editable = live }
     }
 
     Skills = table
@@ -247,10 +250,11 @@ characterTable = ruleset
 
     Armor = table
     {
+        description = "Armor rating reduces damage from each hit."
         tableLayout = layout { columns = 4  size = wide }
-        'Armor Rating' = integer { default = 0 }
-        Helmet = integer { default = 0 }
-        'Bane on' = string {}
+        'Armor Rating' = integer { description = "Damage stopped by body armor." default = 0 }
+        Helmet = integer { description = "Damage stopped by a helmet." default = 0 }
+        'Bane on' = string { description = "Skills that get a bane while wearing this armor." }
     }
 
     Inventory = list
@@ -267,8 +271,8 @@ characterTable = ruleset
         Gold = integer { default = 0  editable = live }
         Silver = integer { default = 0  editable = live }
         Copper = integer { default = 0  editable = live }
-        Encumbrance = integer { value = (Attributes.STR + 1) / 2  editable = none }
-        Memento = string {}
+        Encumbrance = integer { description = "How many items you can carry without being slowed: half STR." value = (Attributes.STR + 1) / 2  editable = none }
+        Memento = string { description = "A small keepsake that does not count against your load." }
     }
 }
 
@@ -278,12 +282,12 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Ferocity = integer { default = 1 }
+        Ferocity = integer { description = "How many actions the monster takes each round." default = 1 }
         Size = string { keys = ["Small", "Normal", "Large", "Huge", "Swarm"] }
         Movement = integer { default = 10 }
-        Armor = integer { default = 0 }
-        'Max HP' = integer { default = 12 }
-        HP = integer { default = 'Max HP'  editable = live }
+        Armor = integer { description = "Armor rating reduces damage from each hit." default = 0 }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 12 }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
         Initiative = integer { default = 0  valuedice = 1d10 }
         Down = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
     }
@@ -294,13 +298,14 @@ creatureTable = ruleset
         editable = character
         valueType = custom
         {
-            Roll = integer { default = 1  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
+            Roll = integer { description = "Roll d6 on the monster's attack table." default = 1  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
             Name = string {}
             Effect = string {}
         }
     }
     'NPC Skills' = keyvalues
     {
+        description = "Skill levels for the NPC. Roll d20 at or under the value."
         singular = "Skill"
         editablekeys = character
         keys = ["Awareness", "Evade", "Swords"]
