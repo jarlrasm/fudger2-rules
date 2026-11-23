@@ -58,8 +58,8 @@ panicResult (total) =
 
 skill (attribute) = custom
 {
-    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Pool = integer { value = attribute + Level  valuedice = yzeDice (characterTable, attribute + Level)  editable = none }
+    Level = integer { description = "Skill level from 0 to 5, added to the attribute's dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Pool = integer { description = "Base dice from attribute plus skill level. A 6 on any die is a success." value = attribute + Level  valuedice = yzeDice (characterTable, attribute + Level)  editable = none }
 }
 
 noSkill = { Pool = 0 }
@@ -79,7 +79,7 @@ rangeMetres (text) =
 weaponAttack (name, pool, damage, kind, distance) = custom
 {
     Name = name
-    Pool = integer { value = pool  valuedice = yzeDice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Pool = integer { description = "Dice rolled for this attack. A 6 is a hit, extra 6s add damage." value = pool  valuedice = yzeDice (characterTable, pool)  action = kind  reach = 2  range = distance }
     Damage = damage
 }
 
@@ -97,41 +97,42 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Career = string { keys = ["Colonial Marine", "Colonial Marshal", "Company Agent", "Kid", "Medic", "Mercenary", "Officer", "Pilot", "Roughneck", "Scientist", "Synthetic"] }
         Appearance = string {}
-        'Personal Agenda' = string { multiline = true }
-        Buddy = string {}
-        Rival = string {}
+        'Personal Agenda' = string { description = "A secret goal for this session. Pursuing it can earn experience." multiline = true }
+        Buddy = string { description = "A fellow crew member you trust and look out for." }
+        Rival = string { description = "A fellow crew member you resent or distrust." }
         'Signature Item' = string {}
-        Modifier = modifier { default = 0  editable = live }
+        Modifier = modifier { description = "Extra dice added to or taken from the next roll, from gear or the situation." default = 0  editable = live }
     }
 
     Attributes = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Strength) }
-        Agility = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Agility) }
-        Wits = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Wits) }
-        Empathy = integer { default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Empathy) }
+        Strength = integer { description = "Raw muscle and toughness. Also sets your Health." default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Strength) }
+        Agility = integer { description = "Speed, reflexes and fine motor control." default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Agility) }
+        Wits = integer { description = "Perception, intelligence and mental stability." default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Wits) }
+        Empathy = integer { description = "Reading and influencing people, and caring for them." default = 3  minvalue = 1  maxvalue = 5  valuedice = yzeDice (characterTable, Empathy) }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max Health' = integer { value = Attributes.Strength  editable = none }
-        Health = integer { default = 'Max Health'  minvalue = 0  editable = live }
+        'Max Health' = integer { description = "Health when unhurt, equal to Strength." value = Attributes.Strength  editable = none }
+        Health = integer { description = "Current health. At 0 you are Broken and need help or a critical injury roll." default = 'Max Health'  minvalue = 0  editable = live }
         Broken = string { value = if Health < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
-        Stress = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#d4b106"  indicatorLabel = "Stress" }
-        'Panic Roll' = integer { value = Stress  valuedice = panicRoll  editable = none }
-        Radiation = integer { default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
-        Initiative = integer { default = 0  valuedice = 1d10 }
+        Stress = integer { description = "Each point adds a yellow stress die to rolls. A 1 on a stress die means panic." default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#d4b106"  indicatorLabel = "Stress" }
+        'Panic Roll' = integer { description = "Roll d6 plus stress level to see how badly the character panics." value = Stress  valuedice = panicRoll  editable = none }
+        Radiation = integer { description = "Radiation points taken. Each can cause lasting harm." default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        Initiative = integer { description = "Initiative card or roll for this turn. Lowest acts first." default = 0  valuedice = 1d10 }
         Starving = bool { default = false  editable = live  indicator = "#d4b106" }
         Dehydrated = bool { default = false  editable = live  indicator = "#d4b106" }
         Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
         Freezing = bool { default = false  editable = live  indicator = "#3a7bd5" }
-        'Critical Injuries' = string { multiline = true  editable = live }
+        'Critical Injuries' = string { description = "Lasting injuries from being Broken, with their effects." multiline = true  editable = live }
     }
 
     Skills = table
     {
+        description = "Twelve skills, three for each attribute. Roll attribute plus skill level in dice."
         tableLayout = layout { columns = 3  size = wide }
         'Heavy Machinery' = skill (Attributes.Strength)
         Stamina = skill (Attributes.Strength)
@@ -149,6 +150,7 @@ characterTable = ruleset
 
     Talents = list
     {
+        description = "Special tricks from your career that bend the rules."
         tableLayout = layout { size = wide }
         source = secondary.Talents
         singular = "Talent"
@@ -182,13 +184,14 @@ characterTable = ruleset
 
     Consumables = table
     {
+        description = "Supplies roll a die per unit when used. Each 1 uses one up."
         tableLayout = layout { columns = 4  size = wide }
         Air = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Air  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
         Food = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Food  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
         Water = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Water  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
         Power = integer { default = 0  minvalue = 0  editable = live  valuedice = ([dice { number = Power  sides = 6  color = "yellow"  label = "Supply" }], ((baseline, throws)->{ Text = toString (count (filter ((x)->x == 1, first (throws).rolls))) + " used up"  Value = baseline - count (filter ((x)->x == 1, first (throws).rolls)) })) }
         Cash = integer { default = 0  editable = live }
-        Encumbrance = integer { value = Attributes.Strength * 2  editable = none }
+        Encumbrance = integer { description = "How many normal items you can carry: twice Strength." value = Attributes.Strength * 2  editable = none }
     }
 }
 
@@ -198,13 +201,13 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Speed = integer { default = 1 }
-        Health = integer { default = 4 }
-        'Current Health' = integer { default = Health  editable = live }
-        Armor = integer { default = 0 }
-        'Acid Splash' = integer { default = 0 }
-        Mobility = integer { default = 5  valuedice = yzeRoll (Mobility, 0) }
-        Observation = integer { default = 5  valuedice = yzeRoll (Observation, 0) }
+        Speed = integer { description = "Actions per round for the creature." default = 1 }
+        Health = integer { description = "Health when unhurt." default = 4 }
+        'Current Health' = integer { description = "Current health. At 0 the creature is down." default = Health  editable = live }
+        Armor = integer { description = "Armor rating. Roll this many dice against each hit to stop damage." default = 0 }
+        'Acid Splash' = integer { description = "Strength of the acid that sprays out when the creature is hurt." default = 0 }
+        Mobility = integer { description = "Dice for moving, dodging and keeping up." default = 5  valuedice = yzeRoll (Mobility, 0) }
+        Observation = integer { description = "Dice for spotting and tracking prey." default = 5  valuedice = yzeRoll (Observation, 0) }
         Initiative = integer { default = 0  valuedice = 1d10 }
         Down = string { value = if 'Current Health' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
     }
