@@ -7,7 +7,9 @@ page where its name stands on a line of its own (or on two lines, wrapped).
 
 --pages limits where a type's items are looked for (PDF page numbers, as
 pdftotext counts them). --prefix also accepts a line that starts with the
-name, for items listed in table rows. Items found on no page keep a reference
+name (followed by a space, full stop or colon), for items listed in table
+rows or run into their text. --label gives text that may stand before a
+name, such as "Extra:". Items found on no page keep a reference
 to the document without a page. With --document-only the library only gets
 the document. tools/srd_references.py does the same for the DnD SRD 5.2.1,
 whose layout needs more rules.
@@ -25,6 +27,7 @@ parser.add_argument("--name", required=True)
 parser.add_argument("--url", required=True)
 parser.add_argument("--pages", action="append", default=[], help="Type=first-last")
 parser.add_argument("--prefix", action="append", default=[], help="a type whose items may start a line")
+parser.add_argument("--label", action="append", default=[], help="Type=text that may stand before a name, such as Extras=Extra: ")
 parser.add_argument("--document-only", action="store_true")
 parser.add_argument("libraries", nargs="+")
 args = parser.parse_args()
@@ -53,11 +56,13 @@ def page_of(entity, book, limits):
     name = normal(entity["name"])
     first, last = limits.get(entity["type"], (1, len(book)))
     prefix = entity["type"] in args.prefix
+    labels = [normal(spec.partition("=")[2]) + " " for spec in args.label if spec.partition("=")[0] == entity["type"]]
+    wanted = [name] + [label + name for label in labels]
     for number in range(first, min(last, len(book)) + 1):
         lines = book[number - 1]
         # A long name in a narrow column wraps onto the next line.
         for line in lines + [a + " " + b for a, b in zip(lines, lines[1:])]:
-            if line == name or (prefix and line.startswith(name + " ")):
+            if line in wanted or (prefix and any(line.startswith(w + end) for w in wanted for end in (" ", ".", ":"))):
                 return number
     return None
 
