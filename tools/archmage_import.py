@@ -6,11 +6,13 @@ Age, the 13th Age Bestiary and 13 True Ways, licensed under the Open Game
 License v1.0a. Its game mechanics are Open Game Content; proper names,
 dialogue, plots and the like are Product Identity. This takes the monster
 stat blocks (game mechanics only, without the flavour text) from the Monster
-Reference chapter.
+Reference chapter, the class spells, and the magic items. Spells and magic
+items are found by their heading fonts, which pdftohtml reports.
 
     python3 tools/archmage_import.py 13thAgeArchmageEngineSRD.pdf systems/13thage/13thage.json
 """
 
+import html
 import json
 import re
 import subprocess
@@ -164,20 +166,195 @@ def monster(name, page, body):
     }
 
 
+# Headings, by pdftohtml font size and colour.
+CHAPTER = {("19", "#b76d0a"), ("24", "#b76d0a")}
+SECTION = ("18", "#794807")
+ENTRY = ("17", "#b76d0a")
+CLASSES = ["Barbarian", "Bard", "Chaos Mage", "Cleric", "Commander", "Druid", "Fighter", "Monk", "Necromancer", "Occultist", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"]
+CLASS_PAGES = (31, 318)
+ITEM_PAGES = (677, 711)
+SPELL_TYPE = re.compile(r"^((Ranged|Close-quarters|Close|Melee)?\s*spell|Bardic song)$", re.I)
+USAGE = re.compile(r"^(At-Will|Daily|Recharge.*|Once per battle.*|Cyclic.*|Twice per battle.*|Per battle.*)$", re.I)
+FEAT = re.compile(r"^(Adventurer|Champion|Epic)( Feat| Tier)?s?$")
+
+
+def xml_lines(first, last):
+    """The text of the pages as lines, each with its page and heading font.
+    Runs on one line (such as the "th" of "5th") are joined."""
+    out = subprocess.run(["pdftohtml", "-xml", "-i", "-q", "-stdout", "-f", str(first), "-l", str(last), PDF], capture_output=True, text=True, check=True).stdout
+    fonts = {m.group(1): (m.group(2), m.group(3)) for m in re.finditer(r'<fontspec id="(\d+)" size="(\d+)" family="[^"]*" color="([^"]*)"', out)}
+    lines = []
+    for page in out.split('<page number="')[1:]:
+        number = int(page.split('"')[0])
+        for m in re.finditer(r'<text top="(\d+)" left="\d+" width="\d+" height="\d+" font="(\d+)">(.*?)</text>', page):
+            top, font, raw = int(m.group(1)), fonts[m.group(2)], m.group(3)
+            italic = raw.startswith("<i>")
+            text = html.unescape(re.sub(r"<b>(.*?)</b>", r"**\1**", raw))
+            text = re.sub(r"</?i>", "", text)
+            if text.startswith("13") and font[0] == "15" or text.startswith("Copyright ©") or (font[0] == "15" and "Archmage Engine, version" in text):
+                continue
+            if lines and lines[-1]["page"] == number and abs(lines[-1]["top"] - top) <= 6:
+                lines[-1]["text"] += text
+                continue
+            lines.append({"page": number, "top": top, "font": font, "italic": italic, "text": text})
+    for line in lines:
+        line["text"] = re.sub(r"\s+", " ", line["text"]).strip()
+        line["text"] = re.sub(r"\*\*\s*\*\*", "", line["text"])
+        line["text"] = re.sub(r"\*\*([^*]*?)\s+\*\*", r"**\1** ", line["text"]).strip()
+    return [l for l in lines if l["text"] and l["text"] not in ("th", "13")]
+
+
+def paragraphs(texts):
+    """Lines of running text joined into paragraphs: a new one starts at a field
+    such as **Hit:**, a feat heading, or a line after a line that ends a sentence
+    short of the margin."""
+    result = []
+    for text in texts:
+        starts = text.startswith("**") or FEAT.match(text) or re.match(r"^\d+(st|nd|rd|th) level spell", text) or not result
+        if starts or result[-1].endswith((".", ":", ")")) and len(result[-1]) < 60:
+            result.append(text)
+        else:
+            result[-1] += ("" if result[-1].endswith("-") else " ") + text
+    return result
+
+
+def field(lines, name):
+    found = next((l for l in lines if l.startswith(f"**{name}:**")), "")
+    return found[len(name) + 5:].strip()
+
+
+def spells():
+    lines = xml_lines(*CLASS_PAGES)
+    result, seen, klass, level = [], set(), "", 0
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        text = line["text"]
+        if line["font"] in CHAPTER and text in CLASSES:
+            klass, level = text, 0
+        elif line["font"] == SECTION and re.search(r"Level (Spells|Songs|Battle Cries|Invocations)$", text):
+            found = re.match(r"(\d+)", text)
+            level = int(found.group(1)) if found else level
+        elif line["font"] == ENTRY and not FEAT.match(text) and any(SPELL_TYPE.match(l["text"]) for l in lines[i + 1:i + 3]):
+            body, j = [], i + 1
+            while j < len(lines):
+                nxt = lines[j]
+                heading = nxt["font"] in CHAPTER or nxt["font"] == SECTION or (nxt["font"] == ENTRY and not FEAT.match(nxt["text"]))
+                if heading:
+                    break
+                body.append(("### " if nxt["font"] == ENTRY else "") + nxt["text"])
+                j += 1
+            name = text.rstrip(" .")
+            stated = re.search(r"\s*\((\d+)(?:st|nd|rd|th) level\+?\)$", name)
+            if stated:
+                name = name[:stated.start()]
+            spell_level = int(stated.group(1)) if stated else level
+            key = (klass, name.lower())
+            if klass and key not in seen:
+                seen.add(key)
+                head = [b for b in body[:4] if not b.startswith("**") and not b.startswith("###")]
+                kind = next((h for h in head if SPELL_TYPE.match(h)), "")
+                usage = next((h for h in head if USAGE.match(h)), "")
+                action = next((h for h in head if h not in (kind, usage) and re.search(r"action", h, re.I) and len(h) < 60), "")
+                text_lines = paragraphs([b for b in body if b not in (kind, usage, action) and not b.startswith("###")] )
+                description = []
+                for b in body:
+                    if b in (kind, usage, action):
+                        continue
+                    if b.startswith("### "):
+                        description.append("\n**" + b[4:] + "**")
+                    else:
+                        description.append(b)
+                described = "\n\n".join(paragraphs([d.strip() for d in description if d.strip()]))
+                summary = ", ".join(x for x in [kind, usage, action] if x)
+                result.append({
+                    "type": "Spells",
+                    "name": name,
+                    "description": f"*{klass}, level {spell_level}. {summary}.*\n\n{described}".strip(),
+                    "images": {},
+                    "rulesets": [{"system": SYSTEM, "implementation": {"spellStats": {"Stats": {
+                        "Class": klass,
+                        "Level": spell_level,
+                        "Type": kind,
+                        "Usage": usage,
+                        "Action": action,
+                        "Target": field(text_lines, "Target"),
+                        "Attack": field(text_lines, "Attack"),
+                    }}}}],
+                    "references": [{"document": "srd", "page": line["page"]}],
+                })
+            i = j
+            continue
+        i += 1
+    return result
+
+
+def magic_items():
+    lines = xml_lines(*ITEM_PAGES)
+    start = next(i for i, l in enumerate(lines) if l["text"] == "Magic Item Descriptions")
+    result, seen, slot, tier, default = [], set(), "", "", ""
+    i = start + 1
+    while i < len(lines):
+        line = lines[i]
+        text = line["text"]
+        if line["font"] == SECTION:
+            slot, tier, default = text, "", ""
+        elif line["font"] == ENTRY and line["italic"] and text == "Default Bonus":
+            body, j = [], i + 1
+            while j < len(lines) and lines[j]["font"] not in (ENTRY, SECTION):
+                body.append(lines[j]["text"])
+                j += 1
+            default = " ".join(body)
+            i = j
+            continue
+        elif line["font"] == ENTRY and line["italic"] and FEAT.match(text):
+            tier = FEAT.match(text).group(1)
+        elif line["font"] == ENTRY and slot:
+            body, j = [], i + 1
+            while j < len(lines) and lines[j]["font"] not in (ENTRY, SECTION) and lines[j]["font"] not in CHAPTER:
+                body.append(lines[j]["text"])
+                j += 1
+            name = text.rstrip(" .")
+            if (slot, name.lower()) not in seen:
+                seen.add((slot, name.lower()))
+                described = " ".join(body)
+                quirk = re.search(r"Quirk:\s*(.+?)\s*$", described)
+                usage = re.search(r"\b(Recharge \d+\+|Daily|Once per battle|Once per day|At-Will)", described)
+                result.append({
+                    "type": "Magic Items",
+                    "name": f"{name} ({slot.split(',')[0]})",
+                    "description": "\n\n".join(x for x in [f"*{slot}, {tier.lower() or 'any'} tier.*", described, f"**Default bonus:** {default}" if default else ""] if x),
+                    "images": {},
+                    "rulesets": [{"system": SYSTEM, "implementation": {"magicItemStats": {"Stats": {
+                        "Slot": slot,
+                        "Tier": tier,
+                        "Default bonus": default,
+                        "Usage": usage.group(1) if usage else "",
+                        "Quirk": quirk.group(1) if quirk else "",
+                    }}}}],
+                    "references": [{"document": "srd", "page": line["page"]}],
+                })
+            i = j
+            continue
+        i += 1
+    return result
+
+
 seen, entities = set(), []
 for name, page, body in blocks():
     if name.lower() in seen:
         continue
     seen.add(name.lower())
     entities.append(monster(name, page, body))
+entities += spells() + magic_items()
 
 library = {
     "name": "13th Age Archmage Engine",
-    "description": "Monsters from the 13th Age Archmage Engine SRD (version 3.0) by Fire Opal Media and Pelgrane Press, game mechanics only, Open Game Content under the Open Game License v1.0a. See LICENSE-13thage.md next to this library.",
+    "description": "Monsters, class spells and magic items from the 13th Age Archmage Engine SRD (version 3.0) by Fire Opal Media and Pelgrane Press, game mechanics only, Open Game Content under the Open Game License v1.0a. See LICENSE-13thage.md next to this library.",
     "url": URL,
     "gamemaster": "",
     "documents": [{"key": "srd", "name": "13th Age Archmage Engine SRD", "url": "/systems/13thage/13thAgeArchmageEngineSRD.pdf", "public": True}],
     "entities": entities,
 }
 json.dump(library, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-print(len(entities), "monsters")
+print(len(entities), "entities:", {t: sum(1 for e in entities if e["type"] == t) for t in ["Creature", "Spells", "Magic Items"]})

@@ -199,6 +199,14 @@ characterTable = ruleset
         }
     }
 
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
     Talents = list
     {
         singular = "Talent or feat"
@@ -213,6 +221,14 @@ characterTable = ruleset
         Weapons = string {}
         'Magic items' = string { multiline = true }
         Notes = string { multiline = true }
+    }
+
+    'Magic Items' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Magic Items'
+        singular = "Magic item"
+        editable = character
     }
 }
 
@@ -262,6 +278,43 @@ monsterTable = ruleset
     }
 }
 
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Level" prefix = "Level" filter = Stats.Level }]
+    }
+    Stats = table
+    {
+        Class = string {}
+        Level = integer { default = 1 }
+        Type = string {}
+        Usage = string {}
+        Action = string {}
+        Target = string {}
+        Attack = string {}
+    }
+}
+
+magicItemStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Slot" prefix = "" filter = Stats.Slot }, filter { name = "Tier" prefix = "" filter = Stats.Tier }]
+    }
+    Stats = table
+    {
+        Slot = string {}
+        Tier = string { keys = ["", "Adventurer", "Champion", "Epic"] }
+        'Default bonus' = string {}
+        Usage = string {}
+        Quirk = string {}
+    }
+}
+
 ThirteenthAge = system
 {
     hints = [
@@ -293,6 +346,9 @@ ThirteenthAge = system
     distanceUnit = "m"
     characters = characterTable
     creatures = monsterTable
+    Spells = spellStats
+    'Magic Items' = magicItemStats
+    secondaryTypes = ["Spells", "Magic Items"]
     entityTypeNames = [entityTypeName ("Creature", "Monster", "Monsters")]
     description = "13th Age: d20 heroics with the escalation die, icons and one unique thing"
     initiativeCompare (item1, item2) = compare (item1, item2)
