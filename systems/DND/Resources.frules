@@ -97,12 +97,14 @@ classResourcesTable = table
 
 restTable = table
 {
+    description = "Resting heals and gets back spent uses of features."
     tableLayout = layout
     {
         rowTitle = hidden
     }
     'Short rest' = button
     {
+        description = "An hour of rest: spend Hit Dice to heal, and get some features back."  reference = ["srd", 187]
         editable = live
         onClick = updates
             {
@@ -123,6 +125,7 @@ restTable = table
     }
     'Long rest' = button
     {
+        description = "Eight hours of rest: regain all Hit Points, half the Hit Dice and most features."  reference = ["srd", 185]
         editable = live
         onClick = updates
             {

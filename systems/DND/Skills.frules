@@ -15,12 +15,14 @@ skillModifier (char, abilityMod, proficient, expertise, skillName) =
 
 skillTable = table
       {
+        description = "Ability checks the character can be proficient in. Expertise doubles the bonus."  reference = ["srd", 9]
         tableLayout = layout
         {
           columns = 2
         }
           Acrobatics = custom
           {
+              description = "Dex: stay on your feet, tumble, balance."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Acrobatics")
@@ -35,6 +37,7 @@ skillTable = table
             }
           'Animal Handling' = custom
           {
+              description = "Wis: calm, train or read an animal."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Animal Handling")
@@ -49,6 +52,7 @@ skillTable = table
             }
           Arcana = custom
           {
+              description = "Int: recall lore about magic, spells and planes."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Arcana")
@@ -63,6 +67,7 @@ skillTable = table
             }
           Athletics = custom
           {
+              description = "Str: jump, climb, swim, or shove."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Str'.Modifier, Proficient, Expertise, "Athletics")
@@ -77,6 +82,7 @@ skillTable = table
             }
           Deception = custom
           {
+              description = "Cha: lie convincingly, in words or in actions."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Deception")
@@ -91,6 +97,7 @@ skillTable = table
             }
           History = custom
           {
+              description = "Int: recall events, people and nations of the past."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "History")
@@ -105,6 +112,7 @@ skillTable = table
             }
           Insight = custom
           {
+              description = "Wis: read moods and motives, and spot lies."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Insight")
@@ -119,6 +127,7 @@ skillTable = table
             }
           Intimidation = custom
           {
+              description = "Cha: awe or threaten someone into doing what you want."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Intimidation")
@@ -133,6 +142,7 @@ skillTable = table
             }
           Investigation = custom
           {
+              description = "Int: find clues and work out what they mean."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Investigation")
@@ -147,6 +157,7 @@ skillTable = table
             }
           Medicine = custom
           {
+              description = "Wis: diagnose an illness or stabilise the dying."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Medicine")
@@ -161,6 +172,7 @@ skillTable = table
             }
           Nature = custom
           {
+              description = "Int: recall lore about terrain, plants, animals and weather."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Nature")
@@ -175,6 +187,7 @@ skillTable = table
             }
           Perception = custom
           {
+              description = "Wis: notice things with your senses."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Perception")
@@ -189,6 +202,7 @@ skillTable = table
             }
           Performance = custom
           {
+              description = "Cha: act, tell a story, play music or dance."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Performance")
@@ -203,6 +217,7 @@ skillTable = table
             }
           Persuasion = custom
           {
+              description = "Cha: convince someone honestly and politely."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Cha'.Modifier, Proficient, Expertise, "Persuasion")
@@ -217,6 +232,7 @@ skillTable = table
             }
           Religion = custom
           {
+              description = "Int: recall lore about gods, rites and holy symbols."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Int'.Modifier, Proficient, Expertise, "Religion")
@@ -231,6 +247,7 @@ skillTable = table
             }
           'Sleight of Hand' = custom
           {
+              description = "Dex: pick a pocket, palm or hide an object."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Sleight of Hand")
@@ -245,6 +262,7 @@ skillTable = table
             }
           Stealth = custom
           {
+              description = "Dex: escape notice by moving quietly and hiding."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Dex'.Modifier, Proficient, Expertise, "Stealth")
@@ -259,6 +277,7 @@ skillTable = table
             }
           Survival = custom
           {
+              description = "Wis: follow tracks, forage, and find your way."
               Modifier=modifier
               {
                 value=skillModifier (characterTable, 'Ability scores'.'Wis'.Modifier, Proficient, Expertise, "Survival")

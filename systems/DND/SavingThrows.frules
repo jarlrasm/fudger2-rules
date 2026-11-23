@@ -19,8 +19,10 @@ saveModifier (char, attr, abilityMod, proficient) =
 
 savingThrowsTable = table
       {
+          description = "Rolls to resist spells, traps and other dangers, one per ability."  reference = ["srd", 7]
           Str=custom
           {
+              description = "Strength saving throw: the Strength modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Str", 'Ability scores'.'Str'.Modifier, Proficient)
@@ -33,6 +35,7 @@ savingThrowsTable = table
             }
           Dex=custom
           {
+              description = "Dexterity saving throw: the Dexterity modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Dex", 'Ability scores'.'Dex'.Modifier, Proficient)
@@ -45,6 +48,7 @@ savingThrowsTable = table
             }
           Con=custom
           {
+              description = "Constitution saving throw: the Constitution modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Con", 'Ability scores'.'Con'.Modifier, Proficient)
@@ -57,6 +61,7 @@ savingThrowsTable = table
             }
           Int=custom
           {
+              description = "Intelligence saving throw: the Intelligence modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Int", 'Ability scores'.'Int'.Modifier, Proficient)
@@ -69,6 +74,7 @@ savingThrowsTable = table
             }
           Wis=custom
           {
+              description = "Wisdom saving throw: the Wisdom modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Wis", 'Ability scores'.'Wis'.Modifier, Proficient)
@@ -81,6 +87,7 @@ savingThrowsTable = table
             }
           Cha=custom
           {
+              description = "Charisma saving throw: the Charisma modifier, plus the Proficiency Bonus if proficient."
               Modifier=modifier
               {
                 value=saveModifier (characterTable, "Cha", 'Ability scores'.'Cha'.Modifier, Proficient)
