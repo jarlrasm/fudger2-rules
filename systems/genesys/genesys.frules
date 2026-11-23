@@ -93,10 +93,10 @@ characteristicNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", 
 
 skill (usual) = custom
 {
-    Career = bool { default = false }
-    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Characteristic = string { default = usual  keys = characteristicNames  editable = live }
-    Pool = integer { value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = checkPool (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = toString (min (Rank, characteristicValue (characterTable, Characteristic))) + "Y " + toString (max (Rank, characteristicValue (characterTable, Characteristic)) - min (Rank, characteristicValue (characterTable, Characteristic))) + "G" }
+    Career = bool { description = "Career skills cost less experience to raise." default = false }
+    Rank = integer { description = "Skill ranks from 0 to 5. Ranks upgrade green ability dice to yellow proficiency dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Characteristic = string { description = "The characteristic used for this check, normally the usual one." default = usual  keys = characteristicNames  editable = live }
+    Pool = integer { description = "Dice pool: the higher of rank and characteristic in dice, the lower of them upgraded." value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = checkPool (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = toString (min (Rank, characteristicValue (characterTable, Characteristic))) + "Y " + toString (max (Rank, characteristicValue (characterTable, Characteristic)) - min (Rank, characteristicValue (characterTable, Characteristic))) + "G" }
 }
 
 noSkill = { Rank = 0 }
@@ -150,56 +150,58 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Archetype = string {}
+        Archetype = string { description = "The character's species or background type, which sets starting characteristics." }
         Career = string {}
         Setting = string { keys = ["Fantasy", "Steampunk", "Weird War", "Modern", "Science Fiction", "Space Opera"] }
-        Motivation = string { multiline = true }
-        'Total XP' = integer { default = 0 }
-        'Available XP' = integer { default = 0  editable = live }
+        Motivation = string { description = "What drives the character: a desire, a fear, a strength or a flaw." multiline = true }
+        'Total XP' = integer { description = "All experience earned so far." default = 0 }
+        'Available XP' = integer { description = "Experience left to spend." default = 0  editable = live }
         Money = integer { default = 0  editable = live }
-        'Story Points' = integer { default = 0  editable = live  indicator = "#3a7bd5" }
+        'Story Points' = integer { description = "Spend one to upgrade a die in your pool, or pass it to the GM for later." default = 0  editable = live  indicator = "#3a7bd5" }
     }
 
     Check = table
     {
+        description = "Extra dice for the next check: purple difficulty, red challenge, black setback, blue boost."
         tableLayout = layout { columns = 5  size = wide }
-        Difficulty = integer { default = 2  minvalue = 0  maxvalue = 5  editable = live }
-        Challenge = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Setback = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Boost = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Upgrades = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Difficulty = integer { description = "Purple difficulty dice, from 1 for easy to 5 for formidable." default = 2  minvalue = 0  maxvalue = 5  editable = live }
+        Challenge = integer { description = "Red challenge dice: difficulty dice upgraded by the GM." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Setback = integer { description = "Black setback dice from bad conditions." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Boost = integer { description = "Blue boost dice from good conditions." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Upgrades = integer { description = "How many dice in your pool to upgrade." default = 0  minvalue = 0  maxvalue = 5  editable = live }
     }
 
     Characteristics = table
     {
         tableLayout = layout { columns = 6  size = wide }
-        Brawn = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Brawn, 0) }
-        Agility = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Agility, 0) }
-        Intellect = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Intellect, 0) }
-        Cunning = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Cunning, 0) }
-        Willpower = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Willpower, 0) }
-        Presence = integer { default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Presence, 0) }
+        Brawn = integer { description = "Physical strength and toughness." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Brawn, 0) }
+        Agility = integer { description = "Speed, coordination and aim." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Agility, 0) }
+        Intellect = integer { description = "Intelligence and learning." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Intellect, 0) }
+        Cunning = integer { description = "Cleverness, street smarts and guile." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Cunning, 0) }
+        Willpower = integer { description = "Discipline and self-control." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Willpower, 0) }
+        Presence = integer { description = "Charisma and leadership." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Presence, 0) }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Soak = integer { value = Characteristics.Brawn + Armor  editable = none }
+        Soak = integer { description = "Damage stopped from each hit: Brawn plus armor." value = Characteristics.Brawn + Armor  editable = none }
         Armor = integer { default = 0 }
-        'Wound Threshold' = integer { default = 10 + Characteristics.Brawn }
-        Wounds = integer { default = 0  minvalue = 0  editable = live }
-        'Strain Threshold' = integer { default = 10 + Characteristics.Willpower }
-        Strain = integer { default = 0  minvalue = 0  editable = live }
-        'Melee Defense' = integer { default = 0 }
-        'Ranged Defense' = integer { default = 0 }
+        'Wound Threshold' = integer { description = "Wounds beyond this incapacitate the character." default = 10 + Characteristics.Brawn }
+        Wounds = integer { description = "Wounds taken. Beyond the threshold you are out and suffer a critical injury." default = 0  minvalue = 0  editable = live }
+        'Strain Threshold' = integer { description = "Strain beyond this knocks the character out." default = 10 + Characteristics.Willpower }
+        Strain = integer { description = "Strain taken from stress, effort and talents." default = 0  minvalue = 0  editable = live }
+        'Melee Defense' = integer { description = "Upgrades the difficulty of melee attacks against you." default = 0 }
+        'Ranged Defense' = integer { description = "Upgrades the difficulty of ranged attacks against you." default = 0 }
         Incapacitated = string { value = if Wounds > 'Wound Threshold' then "Incapacitated" else if Strain > 'Strain Threshold' then "Incapacitated by strain" else ""  visible = none  indicator = "#d64545" }
-        'Critical Injuries' = string { multiline = true  editable = live }
-        'Initiative Cool' = integer { value = rankOf (characterTable, "Cool")  valuedice = initiativePool (Characteristics.Presence, rankOf (characterTable, "Cool"))  editable = none }
-        Initiative = integer { value = rankOf (characterTable, "Vigilance")  valuedice = initiativePool (Characteristics.Willpower, rankOf (characterTable, "Vigilance"))  editable = none }
+        'Critical Injuries' = string { description = "Lasting injuries from critical hits, with their effects." multiline = true  editable = live }
+        'Initiative Cool' = integer { description = "Initiative check when you are ready for a fight: Cool plus Presence." value = rankOf (characterTable, "Cool")  valuedice = initiativePool (Characteristics.Presence, rankOf (characterTable, "Cool"))  editable = none }
+        Initiative = integer { description = "Initiative check when you are caught by surprise: Vigilance plus Willpower." value = rankOf (characterTable, "Vigilance")  valuedice = initiativePool (Characteristics.Willpower, rankOf (characterTable, "Vigilance"))  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills, each linked to a characteristic. Roll a pool built from both."
         tableLayout = layout { columns = 2  size = wide }
         Alchemy = skill ("Intellect")
         Astrocartography = skill ("Intellect")
@@ -238,6 +240,7 @@ characterTable = ruleset
 
     Talents = list
     {
+        description = "Special abilities bought with experience."
         tableLayout = layout { size = wide }
         source = secondary.Talents
         singular = "Talent"
@@ -283,16 +286,16 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Kind = string { default = "Rival"  keys = ["Minion", "Rival", "Nemesis"] }
+        Kind = string { description = "Minions die fast, rivals hold out, nemeses match the heroes." default = "Rival"  keys = ["Minion", "Rival", "Nemesis"] }
         Brawn = integer { default = 2 }
         Agility = integer { default = 2 }
         Intellect = integer { default = 2 }
         Cunning = integer { default = 2 }
         Willpower = integer { default = 2 }
         Presence = integer { default = 2 }
-        Soak = integer { default = 3 }
-        'Wound Threshold' = integer { default = 12 }
-        Wounds = integer { default = 0  editable = live  indicator = "#d64545" }
+        Soak = integer { description = "Damage stopped from each hit." default = 3 }
+        'Wound Threshold' = integer { description = "Wounds beyond this defeat the adversary." default = 12 }
+        Wounds = integer { description = "Wounds taken." default = 0  editable = live  indicator = "#d64545" }
         'Melee Defense' = integer { default = 0 }
         'Ranged Defense' = integer { default = 0 }
         Initiative = integer { default = 0  valuedice = initiativePool (2, 1) }

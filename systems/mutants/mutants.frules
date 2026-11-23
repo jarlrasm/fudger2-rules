@@ -51,20 +51,20 @@ toughnessDice = ask ("Damage rank", ([1d20], ((baseline, throws)->toughnessResul
 
 ability = custom
 {
-    Rank = integer { default = 0  minvalue = -5  maxvalue = 20 }
-    Check = modifier { value = Rank  valuedice = mmDice  editable = none }
+    Rank = integer { description = "Ability rank, from -5 to 20. Each rank costs 2 power points." default = 0  minvalue = -5  maxvalue = 20 }
+    Check = modifier { description = "Roll d20 plus the rank for an ability check." value = Rank  valuedice = mmDice  editable = none }
 }
 
 skill (abilityRank) = custom
 {
-    Ranks = integer { default = 0  minvalue = 0  maxvalue = 20 }
-    Bonus = modifier { value = abilityRank + Ranks  valuedice = mmDice  editable = none }
+    Ranks = integer { description = "Skill ranks bought, added to the linked ability." default = 0  minvalue = 0  maxvalue = 20 }
+    Bonus = modifier { description = "Skill bonus: ability rank plus skill ranks, added to d20." value = abilityRank + Ranks  valuedice = mmDice  editable = none }
 }
 
 defence (abilityRank) = custom
 {
-    Ranks = integer { default = 0  minvalue = 0  maxvalue = 20 }
-    Total = modifier { value = abilityRank + Ranks  valuedice = mmDice  editable = none }
+    Ranks = integer { description = "Ranks bought in this defense, added to the linked ability." default = 0  minvalue = 0  maxvalue = 20 }
+    Total = modifier { description = "Defense total: ability rank plus ranks. Attacks aim at 10 plus this." value = abilityRank + Ranks  valuedice = mmDice  editable = none }
 }
 
 characterTable = ruleset
@@ -75,56 +75,60 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         'Hero Name' = string {}
         Identity = string {}
-        'Power Level' = integer { default = 10  minvalue = 1  maxvalue = 20 }
-        'Power Points' = integer { value = 'Power Level' * 15  editable = none }
-        'Points Spent' = integer { value = pointsSpent (characterTable)  editable = none }
+        'Power Level' = integer { description = "Power level: the cap on attack, defense and effect ranks." default = 10  minvalue = 1  maxvalue = 20 }
+        'Power Points' = integer { description = "Points to build the hero: 15 per power level." value = 'Power Level' * 15  editable = none }
+        'Points Spent' = integer { description = "Points used so far on abilities, skills, powers and the rest." value = pointsSpent (characterTable)  editable = none }
         Group = string {}
         Base = string {}
-        Complications = string { multiline = true }
+        Complications = string { description = "Troubles in the hero's life that earn hero points when they come up." multiline = true }
     }
 
     Abilities = table
     {
+        description = "The eight abilities, each bought with power points."
         tableLayout = layout { columns = 4  size = wide }
-        Strength = ability {}
-        Stamina = ability {}
-        Agility = ability {}
-        Dexterity = ability {}
-        Fighting = ability {}
-        Intellect = ability {}
-        Awareness = ability {}
-        Presence = ability {}
+        Strength = ability { description = "Raw might: lifting, close damage and jumping." }
+        Stamina = ability { description = "Health and endurance. Adds to Toughness and Fortitude." }
+        Agility = ability { description = "Balance, speed and Dodge." }
+        Dexterity = ability { description = "Hand-eye coordination and ranged attacks." }
+        Fighting = ability { description = "Close combat skill and Parry." }
+        Intellect = ability { description = "Reasoning and learning." }
+        Awareness = ability { description = "Intuition and willpower. Adds to Will." }
+        Presence = ability { description = "Force of personality and social influence." }
     }
 
     Defenses = table
     {
+        description = "Defenses resist attacks and effects."
         tableLayout = layout { columns = 5  size = wide }
         Dodge = defence (Abilities.Agility.Rank)
         Parry = defence (Abilities.Fighting.Rank)
         Fortitude = defence (Abilities.Stamina.Rank)
-        Toughness = modifier { value = Abilities.Stamina.Rank + Protection - Condition.Bruised  valuedice = toughnessDice  editable = none }
+        Toughness = modifier { description = "Resisting damage: Stamina plus protection, minus each bruise." value = Abilities.Stamina.Rank + Protection - Condition.Bruised  valuedice = toughnessDice  editable = none }
         Will = defence (Abilities.Awareness.Rank)
-        Protection = integer { default = 0  minvalue = 0 }
-        Initiative = modifier { value = Abilities.Agility.Rank + 4 * 'Improved Initiative'  valuedice = mmCheck (0)  editable = none }
-        'Improved Initiative' = integer { default = 0  minvalue = 0 }
+        Protection = integer { description = "Ranks of the Protection effect, added to Toughness." default = 0  minvalue = 0 }
+        Initiative = modifier { description = "Initiative: Agility, plus 4 per rank of Improved Initiative." value = Abilities.Agility.Rank + 4 * 'Improved Initiative'  valuedice = mmCheck (0)  editable = none }
+        'Improved Initiative' = integer { description = "Ranks of the Improved Initiative advantage." default = 0  minvalue = 0 }
     }
 
     Condition = table
     {
+        description = "Hero points and damage conditions."
         tableLayout = layout { columns = 4  size = wide }
-        'Hero Points' = integer { default = 1  minvalue = 0  editable = live  indicator = "#d4b106"  indicatorLabel = "Hero Points" }
-        Bruised = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
-        Staggered = bool { default = false  editable = live  indicator = "#e8913a" }
-        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
-        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
-        Hindered = bool { default = false  editable = live  indicator = "#3a7bd5" }
-        Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
+        'Hero Points' = integer { description = "Spend to reroll, recover, or pull off a heroic feat." default = 1  minvalue = 0  editable = live  indicator = "#d4b106"  indicatorLabel = "Hero Points" }
+        Bruised = integer { description = "Each failed Toughness check adds a bruise: -1 to later Toughness checks." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Dazed = bool { description = "Dazed: you can only take a standard action or a move, not both." default = false  editable = live  indicator = "#d4b106" }
+        Staggered = bool { description = "Staggered: dazed and hindered at once." default = false  editable = live  indicator = "#e8913a" }
+        Incapacitated = bool { description = "Incapacitated: defenseless and unaware of what goes on." default = false  editable = live  indicator = "#555555" }
+        Impaired = bool { description = "Impaired: -2 on checks." default = false  editable = live  indicator = "#d4b106" }
+        Hindered = bool { description = "Hindered: half speed." default = false  editable = live  indicator = "#3a7bd5" }
+        Vulnerable = bool { description = "Vulnerable: your active defenses are halved." default = false  editable = live  indicator = "#e8913a" }
         Other = string { editable = live  indicator = "#8e5cc4" }
     }
 
     Skills = table
     {
+        description = "Skills, each linked to an ability."
         tableLayout = layout { columns = 4  size = wide }
         Acrobatics = skill (Abilities.Agility.Rank)
         Athletics = skill (Abilities.Strength.Rank)
@@ -146,6 +150,7 @@ characterTable = ruleset
 
     Offense = list
     {
+        description = "Attacks the hero can make, with their effect rank."
         tableLayout = layout { size = wide }
         singular = "Attack"
         editable = character
@@ -161,6 +166,7 @@ characterTable = ruleset
 
     Powers = list
     {
+        description = "Powers built from effects, with ranks and point cost."
         tableLayout = layout { size = wide }
         singular = "Power"
         editable = character
@@ -176,6 +182,7 @@ characterTable = ruleset
 
     Advantages = list
     {
+        description = "Special feats and talents bought with points."
         tableLayout = layout { size = wide }
         source = secondary.Advantages
         singular = "Advantage"
@@ -185,8 +192,8 @@ characterTable = ruleset
     'Advantage Ranks' = table
     {
         tableLayout = layout { columns = 2 }
-        'Advantage Points' = integer { default = 0  minvalue = 0 }
-        'Equipment Points' = integer { default = 0  minvalue = 0 }
+        'Advantage Points' = integer { description = "Power points spent on advantages." default = 0  minvalue = 0 }
+        'Equipment Points' = integer { description = "Power points spent on equipment." default = 0  minvalue = 0 }
     }
 }
 
@@ -208,15 +215,15 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Power Level' = integer { default = 8 }
-        Minion = bool { default = false }
-        Dodge = integer { default = 6 }
-        Parry = integer { default = 6 }
-        Toughness = modifier { default = 6  valuedice = toughnessDice }
-        Fortitude = modifier { default = 6  valuedice = mmDice }
-        Will = modifier { default = 6  valuedice = mmDice }
+        'Power Level' = integer { description = "Power level of the threat." default = 8 }
+        Minion = bool { description = "Minions are out with any failed Toughness check." default = false }
+        Dodge = integer { description = "Defense against ranged and area attacks." default = 6 }
+        Parry = integer { description = "Defense against close attacks." default = 6 }
+        Toughness = modifier { description = "Damage resistance." default = 6  valuedice = toughnessDice }
+        Fortitude = modifier { description = "Resistance to poison, disease and fatigue." default = 6  valuedice = mmDice }
+        Will = modifier { description = "Resistance to mental attacks." default = 6  valuedice = mmDice }
         Initiative = modifier { default = 2  valuedice = mmCheck (0) }
-        Bruised = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Bruised = integer { description = "Bruises: -1 to later Toughness checks each." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
         Staggered = bool { default = false  editable = live  indicator = "#e8913a" }
         Incapacitated = bool { default = false  editable = live  indicator = "#555555" }

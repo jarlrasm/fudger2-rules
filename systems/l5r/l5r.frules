@@ -90,8 +90,8 @@ ringOf (char) =
 
 skill = custom
 {
-    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Check = integer { value = Rank  valuedice = l5rCheck (ringOf (characterTable), Rank)  editable = none }
+    Rank = integer { description = "Skill rank from 0 to 5: how many skill dice you roll with the ring dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Check = integer { description = "Roll ring dice plus skill dice and keep as many as the ring." value = Rank  valuedice = l5rCheck (ringOf (characterTable), Rank)  editable = none }
 }
 
 noSkill = { Rank = 0 }
@@ -144,47 +144,49 @@ characterTable = ruleset
         Clan = string { keys = ["Crab", "Crane", "Dragon", "Lion", "Phoenix", "Scorpion", "Unicorn", "Ronin"] }
         Family = string {}
         School = string {}
-        'School rank' = integer { default = 1  minvalue = 1  maxvalue = 6 }
-        Giri = string {}
-        Ninjo = string {}
-        Approach = selector { options = ["Air", "Earth", "Fire", "Water", "Void"]  labels = ["Air", "Earth", "Fire", "Water", "Void"]  colors = ["", "", "", "", ""]  default = "Air"  editable = live  save = nosave }
-        Experience = integer { default = 0  editable = live }
+        'School rank' = integer { description = "How far you have progressed in your school's curriculum." default = 1  minvalue = 1  maxvalue = 6 }
+        Giri = string { description = "Your duty: what your lord or clan expects of you." }
+        Ninjo = string { description = "Your personal desire, which may clash with your duty." }
+        Approach = selector { description = "Which ring you approach the task with. It sets the ring dice and what you keep." options = ["Air", "Earth", "Fire", "Water", "Void"]  labels = ["Air", "Earth", "Fire", "Water", "Void"]  colors = ["", "", "", "", ""]  default = "Air"  editable = live  save = nosave }
+        Experience = integer { description = "Experience points to spend on rings, skills and techniques." default = 0  editable = live }
     }
 
     Rings = table
     {
+        description = "The five rings, the elements that shape how a samurai acts."
         tableLayout = layout { columns = 5  size = wide }
-        Air = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Earth = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Fire = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Water = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Void = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Air = integer { description = "Air: grace, subtlety and precision." default = 1  minvalue = 1  maxvalue = 5 }
+        Earth = integer { description = "Earth: patience, caution and steadfastness." default = 1  minvalue = 1  maxvalue = 5 }
+        Fire = integer { description = "Fire: passion, creativity and drive." default = 1  minvalue = 1  maxvalue = 5 }
+        Water = integer { description = "Water: flexibility, adaptability and awareness." default = 1  minvalue = 1  maxvalue = 5 }
+        Void = integer { description = "Void: insight beyond the self. Sets your void points." default = 1  minvalue = 1  maxvalue = 5 }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4 }
-        Endurance = integer { value = (Rings.Earth + Rings.Fire) * 2  editable = none }
-        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Composure = integer { value = (Rings.Earth + Rings.Water) * 2  editable = none }
-        Strife = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
-        Focus = integer { value = Rings.Fire + Rings.Air  editable = none }
-        Vigilance = integer { value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
-        'Void points' = slots { number = Rings.Void  editable = live }
+        Endurance = integer { description = "Fatigue you can take before you are incapacitated: (Earth + Fire) x 2." value = (Rings.Earth + Rings.Fire) * 2  editable = none }
+        Fatigue = integer { description = "Fatigue taken from wounds and exertion." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Composure = integer { description = "Strife you can take before you are compromised: (Earth + Water) x 2." value = (Rings.Earth + Rings.Water) * 2  editable = none }
+        Strife = integer { description = "Strife taken from emotional strain and opportunities spent." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Focus = integer { description = "Target number to hit you in a skirmish: Fire + Air." value = Rings.Fire + Rings.Air  editable = none }
+        Vigilance = integer { description = "Target number to hit you when unaware, and your initiative when surprised." value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
+        'Void points' = slots { description = "Spend a void point to keep an extra die or fuel some techniques." number = Rings.Void  editable = live }
         Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
-        Initiative = integer { value = Focus  valuedice = initiativeRoll (Rings.Air, skillRank (characterTable, "Tactics"))  editable = none }
+        Initiative = integer { description = "Turn order: roll Tactics with Air when ready, or use Vigilance when surprised." value = Focus  valuedice = initiativeRoll (Rings.Air, skillRank (characterTable, "Tactics"))  editable = none }
     }
 
     'Honor and Glory' = table
     {
         tableLayout = layout { columns = 3 }
-        Honor = integer { default = 40  minvalue = 0  maxvalue = 100 }
-        Glory = integer { default = 40  minvalue = 0  maxvalue = 100 }
-        Status = integer { default = 30  minvalue = 0  maxvalue = 100 }
+        Honor = integer { description = "How true the samurai is to bushidō, from 0 to 100." default = 40  minvalue = 0  maxvalue = 100 }
+        Glory = integer { description = "Fame and reputation, from 0 to 100." default = 40  minvalue = 0  maxvalue = 100 }
+        Status = integer { description = "Social rank in the Emerald Empire, from 0 to 100." default = 30  minvalue = 0  maxvalue = 100 }
     }
 
     Skills = table
     {
+        description = "Skills in five groups. Roll with the ring that fits your approach."
         tableLayout = layout { columns = 5  size = wide }
         Artisan = table
         {
@@ -229,6 +231,7 @@ characterTable = ruleset
 
     Conditions = table
     {
+        description = "Conditions from attacks, wounds and strain, each with its own effect."
         tableLayout = layout { columns = 4 }
         Afflicted = bool { default = false  editable = live  indicator = "#3fa34d" }
         Bleeding = bool { default = false  editable = live  indicator = "#d64545" }
@@ -238,7 +241,7 @@ characterTable = ruleset
         Immobilized = bool { default = false  editable = live  indicator = "#e8913a" }
         Prone = bool { default = false  editable = live  indicator = "#e8913a" }
         Unconscious = bool { default = false  editable = live  indicator = "#555555" }
-        Critical = string { editable = live  indicator = "#d64545"  indicatorLabel = "Injured" }
+        Critical = string { description = "Critical strike results, the serious injuries the samurai has suffered." editable = live  indicator = "#d64545"  indicatorLabel = "Injured" }
     }
 
     Weapons = list
@@ -273,6 +276,7 @@ characterTable = ruleset
 
     Traits = list
     {
+        description = "Distinctions, passions, adversities and anxieties that shape the samurai."
         singular = "Advantage or disadvantage"
         editable = character
         valueType = custom
@@ -287,9 +291,9 @@ characterTable = ruleset
     Equipment = table
     {
         tableLayout = layout { columns = 2 }
-        Koku = integer { default = 0 }
-        Bu = integer { default = 0 }
-        Zeni = integer { default = 0 }
+        Koku = integer { description = "Gold koku, the largest unit of money." default = 0 }
+        Bu = integer { description = "Silver bu: five to a koku." default = 0 }
+        Zeni = integer { description = "Copper zeni: ten to a bu." default = 0 }
         'Armor and gear' = string { multiline = true }
         Notes = string { multiline = true }
     }
@@ -305,7 +309,7 @@ npcRingOf (npc) =
 
 npcSkill = custom
 {
-    Rank = integer { default = 0  minvalue = 0  maxvalue = 5 }
+    Rank = integer { description = "Rank in this skill group, rolled as skill dice." default = 0  minvalue = 0  maxvalue = 5 }
     Check = integer { value = Rank  valuedice = l5rCheck (npcRingOf (npcTable), Rank)  editable = none }
 }
 
@@ -332,12 +336,12 @@ npcTable = ruleset
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Endurance = integer { default = 8 }
+        Endurance = integer { description = "Fatigue the NPC can take before it is incapacitated." default = 8 }
         Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Composure = integer { default = 8 }
+        Composure = integer { description = "Strife the NPC can take before it is compromised." default = 8 }
         Strife = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
-        Focus = integer { default = 4 }
-        Vigilance = integer { default = 2 }
+        Focus = integer { description = "Target number to hit the NPC in a skirmish." default = 4 }
+        Vigilance = integer { description = "Target number to hit the NPC when it is unaware." default = 2 }
         Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
         Initiative = integer { value = Focus  valuedice = initiativeRoll (Rings.Air, 'Skill groups'.Martial.Rank)  editable = none }
     }

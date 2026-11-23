@@ -13,16 +13,18 @@ characterTable = ruleset
 
     Saves = table
     {
+        description = "Saving throws, Perception and initiative, each with a proficiency rank."
         tableLayout = layout { columns = 4  size = wide }
         Fortitude = proficiency (Attributes.CON)
         Reflex = proficiency (Attributes.DEX)
         Will = proficiency (Attributes.WIS)
         Perception = proficiency (Attributes.WIS)
-        Initiative = modifier { value = Perception.Modifier  valuedice = 1d20  editable = none }
+        Initiative = modifier { description = "Initiative usually rolls Perception." value = Perception.Modifier  valuedice = 1d20  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills, each tied to an attribute and a proficiency rank."
         tableLayout = layout { columns = 2  size = wide }
         Acrobatics = proficiency (Attributes.DEX)
         Arcana = proficiency (Attributes.INT)
@@ -44,15 +46,16 @@ characterTable = ruleset
 
     Lore = keyvalues
     {
+        description = "Lore skills for narrow subjects, based on INT."
         singular = "Lore"
         editablekeys = character
         keys = []
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Rank = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+            Rank = string { description = "Proficiency rank in this lore." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
             Item = integer { default = 0 }
-            Modifier = modifier { value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+            Modifier = modifier { description = "Total: INT plus proficiency plus item bonus." value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
         }
     }
 
@@ -122,10 +125,10 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 4 }
-        PP = integer { default = 0  editable = live }
-        GP = integer { default = 15  editable = live }
-        SP = integer { default = 0  editable = live }
-        CP = integer { default = 0  editable = live }
+        PP = integer { description = "Platinum pieces, worth 10 gold each." default = 0  editable = live }
+        GP = integer { description = "Gold pieces." default = 15  editable = live }
+        SP = integer { description = "Silver pieces, ten to a gold." default = 0  editable = live }
+        CP = integer { description = "Copper pieces, a hundred to a gold." default = 0  editable = live }
     }
 
     Notes = table

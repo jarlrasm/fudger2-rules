@@ -13,16 +13,18 @@ characterTable = ruleset
 
     Saves = table
     {
+        description = "Saving throws, Perception and initiative, each with a proficiency rank."
         tableLayout = layout { columns = 4  size = wide }
         Fortitude = proficiency (Attributes.CON)
         Reflex = proficiency (Attributes.DEX)
         Will = proficiency (Attributes.WIS)
         Perception = proficiency (Attributes.WIS)
-        Initiative = modifier { value = Perception.Modifier  valuedice = 1d20  editable = none }
+        Initiative = modifier { description = "Initiative usually rolls Perception." value = Perception.Modifier  valuedice = 1d20  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills, each tied to an attribute and a proficiency rank."
         tableLayout = layout { columns = 2  size = wide }
         Acrobatics = proficiency (Attributes.DEX)
         Arcana = proficiency (Attributes.INT)
@@ -46,15 +48,16 @@ characterTable = ruleset
 
     Lore = keyvalues
     {
+        description = "Lore skills for narrow subjects, based on INT."
         singular = "Lore"
         editablekeys = character
         keys = []
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Rank = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+            Rank = string { description = "Proficiency rank in this lore." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
             Item = integer { default = 0 }
-            Modifier = modifier { value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+            Modifier = modifier { description = "Total: INT plus proficiency plus item bonus." value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
         }
     }
 
@@ -81,14 +84,15 @@ characterTable = ruleset
 
     Ammunition = list
     {
+        description = "Rounds left in each weapon's magazine."
         tableLayout = layout { size = wide }
         singular = "Magazine"
         editable = live
         valueType = custom
         {
             Weapon = string {}
-            Rounds = integer { default = 10  minvalue = 0  editable = live }
-            Capacity = integer { default = 10 }
+            Rounds = integer { description = "Rounds left. Reload to fill back to capacity." default = 10  minvalue = 0  editable = live }
+            Capacity = integer { description = "How many rounds a full magazine holds." default = 10 }
         }
     }
 
@@ -102,6 +106,7 @@ characterTable = ruleset
 
     Augmentations = list
     {
+        description = "Cybernetic and biotech augmentations installed in the body."
         tableLayout = layout { size = wide }
         source = secondary.Augmentations
         singular = "Augmentation"
@@ -145,8 +150,8 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 2 }
-        Credits = integer { default = 150  editable = live }
-        UPB = integer { default = 0  editable = live }
+        Credits = integer { description = "Credits, the money of the galaxy." default = 150  editable = live }
+        UPB = integer { description = "Universal polymer base, the raw material for building gear." default = 0  editable = live }
     }
 
     Notes = table
@@ -202,15 +207,15 @@ shipStats = ruleset
     Ship = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Tier = integer { default = 1 }
+        Tier = integer { description = "Ship tier: how advanced and powerful the ship is." default = 1 }
         Frame = string {}
         Size = string {}
         Speed = string {}
         Maneuverability = string {}
-        AC = integer { default = 15 }
-        'Hull Points' = integer { default = 50 }
-        'Current Hull' = integer { default = 50  editable = live  indicator = "#d64545" }
-        Shields = integer { default = 0  editable = live }
+        AC = integer { description = "Armor Class of the ship." default = 15 }
+        'Hull Points' = integer { description = "Hull points when undamaged." default = 50 }
+        'Current Hull' = integer { description = "Hull points left. At 0 the ship is disabled." default = 50  editable = live  indicator = "#d64545" }
+        Shields = integer { description = "Shield points that absorb damage before the hull." default = 0  editable = live }
         Sensors = string {}
         Crew = string { multiline = true }
     }

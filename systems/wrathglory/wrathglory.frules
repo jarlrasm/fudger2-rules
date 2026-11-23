@@ -41,8 +41,8 @@ wgDice (pool) = ask ("DN", wgAsked (pool))
 
 skill (attr) = custom
 {
-    Rating = integer { default = 0  minvalue = 0  maxvalue = 8 }
-    Pool = integer { value = attr + Rating  valuedice = wgDice (attr + Rating)  editable = none }
+    Rating = integer { description = "Skill rating from 0 to 8, added to the attribute for the dice pool." default = 0  minvalue = 0  maxvalue = 8 }
+    Pool = integer { description = "Dice pool: attribute plus skill. Each 4 or 5 is one icon, each 6 two." value = attr + Rating  valuedice = wgDice (attr + Rating)  editable = none }
 }
 
 poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
@@ -75,48 +75,51 @@ characterTable = ruleset
         Species = string { keys = ["Human", "Adeptus Astartes", "Primaris Astartes", "Aeldari", "Ork", "Squat", "Ratling", "Ogryn"] }
         Archetype = string {}
         Faction = string {}
-        Tier = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Rank = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Keywords = string {}
+        Tier = integer { description = "Tier of play: how powerful the campaign's heroes are." default = 1  minvalue = 1  maxvalue = 5 }
+        Rank = integer { description = "Rank within the tier, gained from experience." default = 1  minvalue = 1  maxvalue = 5 }
+        Keywords = string { description = "Keywords that tie the character to factions, faiths and gear." }
         Background = string { multiline = true }
     }
 
     Attributes = table
     {
+        description = "The seven attributes, rolled as dice pools."
         tableLayout = layout { columns = 7  size = wide }
-        Strength = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Strength) }
-        Toughness = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Toughness) }
-        Agility = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Agility) }
-        Initiative = integer { default = 2  minvalue = 1  maxvalue = 12 }
-        Willpower = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Willpower) }
-        Intellect = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Intellect) }
-        Fellowship = integer { default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Fellowship) }
+        Strength = integer { description = "Muscle, lifting and melee damage." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Strength) }
+        Toughness = integer { description = "Endurance and resisting harm. Sets resilience and wounds." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Toughness) }
+        Agility = integer { description = "Speed, coordination and shooting." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Agility) }
+        Initiative = integer { description = "Reflexes and close combat. Sets defence." default = 2  minvalue = 1  maxvalue = 12 }
+        Willpower = integer { description = "Mental strength and faith. Sets shock and resolve." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Willpower) }
+        Intellect = integer { description = "Reasoning, knowledge and technical skill." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Intellect) }
+        Fellowship = integer { description = "Charisma and dealing with people. Sets influence." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Fellowship) }
     }
 
     Traits = table
     {
+        description = "Defence, resilience, wounds, shock and other traits."
         tableLayout = layout { columns = 4  size = wide }
-        Defence = integer { value = Attributes.Initiative - 1  editable = none }
-        Resilience = integer { value = Attributes.Toughness + 1 + Armour.Rating  editable = none }
-        'Max Wounds' = integer { value = Character.Tier * 2 + Attributes.Toughness  editable = none }
-        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        'Max Shock' = integer { value = Attributes.Willpower + Character.Tier  editable = none }
-        Shock = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Defence = integer { description = "What attackers must reach to hit you: Initiative minus 1." value = Attributes.Initiative - 1  editable = none }
+        Resilience = integer { description = "What damage must beat to wound you: Toughness plus 1 plus armour." value = Attributes.Toughness + 1 + Armour.Rating  editable = none }
+        'Max Wounds' = integer { description = "Wounds you can take: twice the tier plus Toughness." value = Character.Tier * 2 + Attributes.Toughness  editable = none }
+        Wounds = integer { description = "Wounds taken. Beyond the maximum you are dying." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Shock' = integer { description = "Shock you can take: Willpower plus tier." value = Attributes.Willpower + Character.Tier  editable = none }
+        Shock = integer { description = "Shock taken. Beyond the maximum you are exhausted." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
         Down = string { value = if Wounds > 'Max Wounds' then "Dying" else if Shock > 'Max Shock' then "Exhausted" else ""  visible = none  indicator = "#d64545" }
-        Determination = integer { value = Attributes.Toughness  valuedice = wgPool (Attributes.Toughness, 0)  editable = none }
-        Conviction = integer { value = Attributes.Willpower  editable = none }
-        Resolve = integer { value = Attributes.Willpower - 1  editable = none }
-        Influence = integer { value = Attributes.Fellowship - 1  editable = none }
-        'Passive Awareness' = integer { value = poolOf (characterTable, "Awareness") / 2  editable = none }
-        Speed = integer { default = 6 }
-        Wealth = integer { value = Character.Tier  editable = none }
-        Wrath = integer { default = 2  minvalue = 0  editable = live }
-        Faith = integer { default = 0  minvalue = 0  editable = live }
-        Corruption = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Determination = integer { description = "Roll Toughness to turn wounds into shock." value = Attributes.Toughness  valuedice = wgPool (Attributes.Toughness, 0)  editable = none }
+        Conviction = integer { description = "Resistance to corruption and the warp, from Willpower." value = Attributes.Willpower  editable = none }
+        Resolve = integer { description = "Resistance to fear and terror: Willpower minus 1." value = Attributes.Willpower - 1  editable = none }
+        Influence = integer { description = "Social weight and reach: Fellowship minus 1." value = Attributes.Fellowship - 1  editable = none }
+        'Passive Awareness' = integer { description = "Your awareness when not looking: half the Awareness pool." value = poolOf (characterTable, "Awareness") / 2  editable = none }
+        Speed = integer { description = "Metres moved in a turn." default = 6 }
+        Wealth = integer { description = "Wealth, set by tier." value = Character.Tier  editable = none }
+        Wrath = integer { description = "Wrath points: spend to reroll failures or resist death. Earned from wrath dice." default = 2  minvalue = 0  editable = live }
+        Faith = integer { description = "Faith points, spent on faith-based talents." default = 0  minvalue = 0  editable = live }
+        Corruption = integer { description = "Corruption from Chaos. Too much and you fall." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
     }
 
     Skills = table
     {
+        description = "Skills, each tied to an attribute."
         tableLayout = layout { columns = 3  size = wide }
         Athletics = skill (Attributes.Strength)
         Awareness = skill (Attributes.Intellect)
@@ -140,9 +143,10 @@ characterTable = ruleset
 
     Armour = table
     {
+        description = "Armour rating, added to resilience."
         tableLayout = layout { columns = 2 }
         Name = string {}
-        Rating = integer { default = 0  minvalue = 0 }
+        Rating = integer { description = "Armour rating, added to resilience." default = 0  minvalue = 0 }
         Traits = string {}
     }
 
@@ -165,6 +169,7 @@ characterTable = ruleset
 
     Talents = list
     {
+        description = "Talents bought with experience."
         tableLayout = layout { size = wide }
         source = secondary.Talents
         singular = "Talent"
@@ -181,6 +186,7 @@ characterTable = ruleset
 
     'Psychic Powers' = list
     {
+        description = "Psychic powers the character can manifest."
         tableLayout = layout { size = wide }
         source = secondary.'Psychic Powers'
         singular = "Power"
@@ -195,17 +201,17 @@ creatureTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Class = string { keys = ["Troops", "Elite", "Adversary", "Monstrous Creature"] }
-        Defence = integer { default = 3 }
-        Resilience = integer { default = 4 }
-        'Max Wounds' = integer { default = 1 }
-        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Defence = integer { description = "What attackers must reach to hit the threat." default = 3 }
+        Resilience = integer { description = "What damage must beat to wound the threat." default = 4 }
+        'Max Wounds' = integer { description = "Wounds the threat can take." default = 1 }
+        Wounds = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Down = string { value = if Wounds >= 'Max Wounds' then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Shock = integer { default = 0  minvalue = 0  editable = live }
+        Shock = integer { description = "Shock taken." default = 0  minvalue = 0  editable = live }
         Speed = integer { default = 6 }
-        Determination = integer { default = 3  valuedice = wgPool (Determination, 0) }
+        Determination = integer { description = "Roll to turn wounds into shock." default = 3  valuedice = wgPool (Determination, 0) }
         Conviction = integer { default = 2 }
         Resolve = integer { default = 2 }
-        Skills = integer { default = 4  valuedice = wgDice (Skills) }
+        Skills = integer { description = "The threat's general skill pool." default = 4  valuedice = wgDice (Skills) }
     }
     Attacks = list
     {

@@ -90,6 +90,7 @@ characterTable = ruleset
 
       'High Score' = integer
       {
+        description = "Your best result so far, kept as a record across characters."
         default=0
         editable=live
       }
@@ -97,6 +98,7 @@ characterTable = ruleset
 
     Class = table
     {
+      description = "The character's class, which adjusts stats, saves and how stress is handled."
       tableLayout = layout
       {
         columns = 1
@@ -104,21 +106,25 @@ characterTable = ruleset
       
       Marine = bool
       {
+        description = "Tough and trained for combat. Their fear spreads to the crew when they panic."
         editable=live
         radiogroup="class"
       }
       Android = bool
       {
+        description = "Synthetic crew member. Unnerves others but keeps cool itself."
         editable=live
         radiogroup="class"
       }
       Scientist = bool
       {
+        description = "Expert in a field of study. Their failed sanity saves stress the crew."
         editable=live
         radiogroup="class"
       }
       Teamster = bool
       {
+        description = "Spacer and worker, the backbone of any crew. Gets to reroll a skill."
         editable=live
         radiogroup="class"
       }
@@ -127,23 +133,28 @@ characterTable = ruleset
   
   Stats = table
   {
+    description = "Stats. Roll d100 under the stat to succeed; doubles are criticals."
     Strength = integer
     {
+      description = "Lifting, pushing and hitting hard."
       default = 0
       valuedice = hundred
     }
     Speed = integer
     {
+      description = "Quickness, reflexes and acting first."
       default=0
       valuedice=hundred
     }
     Intellect = integer
     {
+      description = "Knowledge, reasoning and recall."
       default=0
       valuedice=hundred
     }
     Combat = integer
     {
+      description = "Fighting skill, rolled to hit in combat."
       default=0
       valuedice = hundred
     }
@@ -151,18 +162,22 @@ characterTable = ruleset
 
   Saves = table
   {
+    description = "Saves resist harm. Roll d100 under the save."
     Sanity = integer
     {
+      description = "Resisting hallucinations, delusions and mental strain."
       default=0
       valuedice=hundred
     }
     Fear = integer
     {
+      description = "Resisting panic and terror."
       default=0
       valuedice=hundred
     }
     Body = integer
     {
+      description = "Resisting hunger, disease and toxins."
       default=0
       valuedice=hundred
     }
@@ -177,6 +192,7 @@ characterTable = ruleset
     }
     Health = table
     {
+      description = "Health points. When they run out, you take a wound and reset."
       Current = integer
       {
         default = 0
@@ -189,6 +205,7 @@ characterTable = ruleset
     }
     Wounds = table
     {
+      description = "Wounds taken. Reach the maximum and you die."
       Current = integer
       {
         default = 0
@@ -203,6 +220,7 @@ characterTable = ruleset
     }
     Stress = table
     {
+      description = "Stress builds up from failures. Higher stress makes panic checks harder."
       Current = integer
       {
         default = 2
@@ -210,6 +228,7 @@ characterTable = ruleset
       }
       Minimum = integer
       {
+        description = "Stress never goes below this."
         default = 2
       }
     }
@@ -217,83 +236,100 @@ characterTable = ruleset
 
   'Trained 10' = table
     {
+      description = "Trained skills add +10 to rolls."
       Linguistics = custom
       {
+        description = "Languages and communication, including alien ones."
         Proficient = bool
         {}
       }
       Zoology = custom
       {
+        description = "Animal life and behaviour."
         Proficient = bool
         {}
       }
       Botany = custom
       {
+        description = "Plants and fungi."
         Proficient = bool
         {}
       }
       Geology = custom
       {
+        description = "Rocks, minerals and the ground."
         Proficient = bool
         {}
       }
       'Industrial Equipment' = custom
       {
+        description = "Running heavy machines like loaders and cranes."
         Proficient = bool
         {}
       }
       'Jury Rigging' = custom
       {
+        description = "Quick fixes with whatever is at hand."
         Proficient = bool
         {}
       }
       Chemistry = custom
       {
+        description = "Chemicals, reactions and compounds."
         Proficient = bool
         {}
       }
       Computers = custom
       {
+        description = "Using and programming computers."
         Proficient = bool
         {}
       }
       'Zero G' = custom
       {
+        description = "Working and moving in zero gravity."
         Proficient = bool
         {}
       }
       Mathematics = custom
       {
+        description = "Numbers, calculation and statistics."
         Proficient = bool
         {}
       }
       Art = custom
       {
+        description = "Making and judging art."
         Proficient = bool
         {}
       }
       Archaeology = custom
       {
+        description = "Ancient cultures and their remains."
         Proficient = bool
         {}
       }
       Theology = custom
       {
+        description = "Religions and belief systems."
         Proficient = bool
         {}
       }
       'Military Training' = custom
       {
+        description = "Combat tactics, weapons and discipline."
         Proficient = bool
         {}
       }
       Rimwise = custom
       {
+        description = "Street smarts in the stations and colonies of the rim."
         Proficient = bool
         {}
       }
       Athletics = custom
       {
+        description = "Running, climbing, swimming and endurance."
         Proficient = bool
         {}
       }
@@ -301,78 +337,94 @@ characterTable = ruleset
 
     'Expert 15' = table
     {
+      description = "Expert skills add +15 to rolls."
       Psychology = custom
       {
+        description = "Understanding minds and behaviour."
         Proficient = bool
         {}
       }
       Pathology = custom
       {
+        description = "Disease and its causes."
         Proficient = bool
         {}
       }
       'Field Medicine' = custom
       {
+        description = "Treating wounds in the field."
         Proficient = bool
         {}
       }
       Ecology = custom
       {
+        description = "Ecosystems and how they fit together."
         Proficient = bool
         {}
       }
       'Asteroid Mining' = custom
       {
+        description = "Finding and extracting ore in space."
         Proficient = bool
         {}
       }
       'Mechanical Repair' = custom
       {
+        description = "Fixing machines and engines."
         Proficient = bool
         {}
       }
       Explosives = custom
       {
+        description = "Making and defusing explosives."
         Proficient = bool
         {}
       }
       Pharmacology = custom
       {
+        description = "Drugs and their effects."
         Proficient = bool
         {}
       }
       Hacking = custom
       {
+        description = "Breaking into computer systems."
         Proficient = bool
         {}
       }
       Piloting = custom
       {
+        description = "Flying ships and vehicles."
         Proficient = bool
         {}
       }
       Physics = custom
       {
+        description = "Matter, energy and how they behave."
         Proficient = bool
         {}
       }
       Mysticism = custom
       {
+        description = "Spiritual and occult knowledge."
         Proficient = bool
         {}
       }
       'Wilderness Survival' = custom
       {
+        description = "Staying alive outdoors on hostile worlds."
         Proficient = bool
         {}
       }
       Firearms = custom
       {
+        description = "Shooting guns of all kinds."
         Proficient = bool
         {}
       }
       'Hand to hand Combat' = custom
       {
+        description = "Fighting up close with fists and blades."
         Proficient = bool
         {}
       }
@@ -380,58 +432,70 @@ characterTable = ruleset
 
     'Master 20' = table
     {
+      description = "Master skills add +20 to rolls."
       Sophontology = custom
       {
+        description = "Understanding alien minds and cultures."
         Proficient = bool
         {}
       }
       Exobiology = custom
       {
+        description = "Life beyond Earth."
         Proficient = bool
         {}
       }
       Surgery = custom
       {
+        description = "Operating on the body."
         Proficient = bool
         {}
       }
       Planetology = custom
       {
+        description = "How planets form and work."
         Proficient = bool
         {}
       }
       Robotics = custom
       {
+        description = "Building and programming robots."
         Proficient = bool
         {}
       }
       Engineering = custom
       {
+        description = "Designing and building large systems."
         Proficient = bool
         {}
       }
       Cybernetics = custom
       {
+        description = "Implants and machine-body interfaces."
         Proficient = bool
         {}
       }
       'Artificial Intelligence' = custom
       {
+        description = "Machine minds and how they think."
         Proficient = bool
         {}
       }
       Hyperspace = custom
       {
+        description = "Faster-than-light travel and its dangers."
         Proficient = bool
         {}
       }
       Xenoesotericism = custom
       {
+        description = "Knowledge of strange forces beyond understanding."
         Proficient = bool
         {}
       }
       Command = custom
       {
+        description = "Leading a crew and keeping order under pressure."
         Proficient = bool
         {}
       }
@@ -439,6 +503,7 @@ characterTable = ruleset
   
   Traits = list
   {
+    description = "Traits that adjust stats, saves and skills."
     tableLayout = layout
     {
         size = wide
@@ -506,16 +571,17 @@ creatureTable = ruleset
   {
     Combat = integer
     {
+      description = "Combat skill for the creature's attacks."
       valuedice = hundred
       action = melee
     }
     Attack = string {}
-    Instinct = integer {}
-    AP = integer {}
-    Wounds = integer {}
-    'Current Wounds' = integer { editable=live  indicator = "#d64545"  indicatorLabel = "Wounds" }
-    Health = integer {}
-    'Current Health' = integer { editable=live }
+    Instinct = integer { description = "Roll under this to see if the creature acts on instinct." }
+    AP = integer { description = "Armor points: damage stopped from each hit." }
+    Wounds = integer { description = "Wounds the creature can take before it dies." }
+    'Current Wounds' = integer { description = "Wounds taken." editable=live  indicator = "#d64545"  indicatorLabel = "Wounds" }
+    Health = integer { description = "Health points per wound." }
+    'Current Health' = integer { description = "Health left before the next wound." editable=live }
     Special = string {}
   }
 }

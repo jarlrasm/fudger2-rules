@@ -26,15 +26,15 @@ flRoll (base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color =
 
 attribute = custom
 {
-    Max = integer { default = 3  minvalue = 1  maxvalue = 6 }
-    Current = integer { default = Max  minvalue = 0  editable = live }
-    Roll = integer { value = Current  valuedice = flRoll (Current, 0, 0)  editable = none }
+    Max = integer { description = "Attribute score at full strength, from 2 to 5." default = 3  minvalue = 1  maxvalue = 6 }
+    Current = integer { description = "Current score. Damage and stress lower it; at 0 you are broken." default = Max  minvalue = 0  editable = live }
+    Roll = integer { description = "Base dice for rolls with this attribute." value = Current  valuedice = flRoll (Current, 0, 0)  editable = none }
 }
 
 skill (attr) = custom
 {
-    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Roll = integer { value = Level  valuedice = flRoll (attr, Level, 0)  editable = none }
+    Level = integer { description = "Skill level from 0 to 5, rolled as extra skill dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Roll = integer { description = "Roll the attribute's base dice plus these skill dice. Each 6 is a success." value = Level  valuedice = flRoll (attr, Level, 0)  editable = none }
 }
 
 levelOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", 0)
@@ -71,8 +71,8 @@ resourceRoll (dieSize) = ([dice { number = if dieSize > 5 then 1 else 0  sides =
 
 resource (start) = custom
 {
-    Die = integer { default = start  minvalue = 4  maxvalue = 12  step = 2  editable = live  render = if Die < 6 then "none" else "d" + toString (Die) }
-    Roll = integer { value = Die  valuedice = resourceRoll (Die)  editable = none  render = "roll" }
+    Die = integer { description = "Resource die. Roll it when used; a 1 or 2 shrinks it a size." default = start  minvalue = 4  maxvalue = 12  step = 2  editable = live  render = if Die < 6 then "none" else "d" + toString (Die) }
+    Roll = integer { description = "Roll the resource die to see if supplies run low." value = Die  valuedice = resourceRoll (Die)  editable = none  render = "roll" }
 }
 
 characterTable = ruleset
@@ -84,14 +84,15 @@ characterTable = ruleset
         Kin = string { keys = ["Human", "Elf", "Half-elf", "Dwarf", "Halfling", "Wolfkin", "Orc", "Goblin"] }
         Profession = string { keys = ["Druid", "Fighter", "Hunter", "Minstrel", "Peddler", "Rider", "Rogue", "Sorcerer"] }
         Age = string { keys = ["Young", "Adult", "Old"] }
-        Reputation = integer { default = 0 }
-        Pride = string {}
-        'Dark Secret' = string { multiline = true }
+        Reputation = integer { description = "How well known the character is. Others may recognise them." default = 0 }
+        Pride = string { description = "What the character is most proud of. Once per session it can give a free success." }
+        'Dark Secret' = string { description = "Something hidden from the past that may come back." multiline = true }
         Appearance = string { multiline = true }
     }
 
     Attributes = table
     {
+        description = "The four attributes. Damage hits Strength, fear hits Wits and Empathy."
         tableLayout = layout { columns = 4  size = wide }
         Strength = attribute {}
         Agility = attribute {}
@@ -101,19 +102,21 @@ characterTable = ruleset
 
     Status = table
     {
+        description = "Willpower, earned by pushing rolls and spent on talents and spells."
         tableLayout = layout { columns = 4  size = wide }
-        Willpower = integer { default = 0  minvalue = 0  maxvalue = 10  editable = live }
+        Willpower = integer { description = "Willpower points, gained when pushed rolls cost attribute points." default = 0  minvalue = 0  maxvalue = 10  editable = live }
         Broken = string { value = if Attributes.Strength.Current < 1 or Attributes.Agility.Current < 1 or Attributes.Wits.Current < 1 or Attributes.Empathy.Current < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
-        Sleepy = bool { default = false  editable = live  indicator = "#555555" }
-        Thirsty = bool { default = false  editable = live  indicator = "#d4b106" }
-        Hungry = bool { default = false  editable = live  indicator = "#d4b106" }
-        Cold = bool { default = false  editable = live  indicator = "#3a7bd5" }
-        'Critical Injuries' = string { multiline = true  editable = live }
-        Experience = integer { default = 0  editable = live }
+        Sleepy = bool { description = "Without sleep you cannot heal." default = false  editable = live  indicator = "#555555" }
+        Thirsty = bool { description = "Thirst blocks healing and costs Agility over time." default = false  editable = live  indicator = "#d4b106" }
+        Hungry = bool { description = "Hunger blocks healing and costs Strength over time." default = false  editable = live  indicator = "#d4b106" }
+        Cold = bool { description = "Cold blocks healing and costs Wits over time." default = false  editable = live  indicator = "#3a7bd5" }
+        'Critical Injuries' = string { description = "Lasting injuries from being broken, with their effects." multiline = true  editable = live }
+        Experience = integer { description = "Experience earned in play, spent on skills and talents." default = 0  editable = live }
     }
 
     Skills = table
     {
+        description = "Sixteen skills, four for each attribute."
         tableLayout = layout { columns = 4  size = wide }
         Might = skill (Attributes.Strength.Current)
         Endurance = skill (Attributes.Strength.Current)
@@ -160,14 +163,16 @@ characterTable = ruleset
 
     Armour = table
     {
+        description = "Gear dice from armour. Roll them when hit; each 6 stops one damage."
         tableLayout = layout { columns = 3 }
-        'Body Armour' = integer { default = 0  minvalue = 0  valuedice = flRoll (0, 0, 'Body Armour') }
-        Helmet = integer { default = 0  minvalue = 0  valuedice = flRoll (0, 0, Helmet) }
+        'Body Armour' = integer { description = "Armour dice from body armour." default = 0  minvalue = 0  valuedice = flRoll (0, 0, 'Body Armour') }
+        Helmet = integer { description = "Armour dice from a helmet." default = 0  minvalue = 0  valuedice = flRoll (0, 0, Helmet) }
         Shield = integer { default = 0  minvalue = 0  editable = live }
     }
 
     Consumables = table
     {
+        description = "Food, water, arrows and torches as resource dice. Roll when used; a 1 or 2 shrinks the die."
         tableLayout = layout { columns = 2 }
         Food = resource (6)
         Water = resource (6)
@@ -198,13 +203,13 @@ creatureTable = ruleset
     Monster = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = integer { default = 6 }
-        'Current Strength' = integer { default = Strength  minvalue = 0  editable = live }
+        Strength = integer { description = "Strength when unhurt. Damage lowers it." default = 6 }
+        'Current Strength' = integer { description = "Current strength. At 0 the monster is broken." default = Strength  minvalue = 0  editable = live }
         Down = string { value = if 'Current Strength' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
-        Agility = integer { default = 3  valuedice = flRoll (Agility, 0, 0) }
-        Armour = integer { default = 0  valuedice = flRoll (0, 0, Armour) }
-        Movement = integer { default = 1 }
-        'Monster Attack' = integer { default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
+        Agility = integer { description = "Dice for dodging, moving and quick actions." default = 3  valuedice = flRoll (Agility, 0, 0) }
+        Armour = integer { description = "Armour dice that stop damage." default = 0  valuedice = flRoll (0, 0, Armour) }
+        Movement = integer { description = "Zones the monster moves each turn." default = 1 }
+        'Monster Attack' = integer { description = "Roll d6 on the monster's attack table." default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = "Attack " + toString (first (first (throws).rolls))  Value = first (first (throws).rolls) }))  action = melee  reach = 2 }
         Skills = string {}
     }
     Attacks = list

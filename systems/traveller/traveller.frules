@@ -59,9 +59,9 @@ plainCheck = travellerRoll ("Normal", 8)
 
 characteristic = custom
 {
-    Value = integer { default = 7  minvalue = 0  maxvalue = 15 }
-    Current = integer { default = Value  editable = live }
-    DM = integer { value = dmOf (Current)  valuedice = travellerDice (characterTable)  editable = none }
+    Value = integer { description = "Characteristic score, usually 2 to 12 from 2d6." default = 7  minvalue = 0  maxvalue = 15 }
+    Current = integer { description = "Current score. Physical damage lowers STR, DEX and END." default = Value  editable = live }
+    DM = integer { description = "Dice modifier from the current score: -2 at 1-2, up to +2 at 12-14." value = dmOf (Current)  valuedice = travellerDice (characterTable)  editable = none }
 }
 
 charDM (char, name) =
@@ -98,9 +98,9 @@ attackFor (char, weapon) =
 
 skill (level) = custom
 {
-    Level = integer { default = level  minvalue = -3 }
-    Characteristic = string { default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
-    Check = modifier { value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
+    Level = integer { description = "Skill level. -3 means untrained; 0 is basic training." default = level  minvalue = -3 }
+    Characteristic = string { description = "The characteristic that fits this use of the skill." default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
+    Check = modifier { description = "Skill level plus characteristic DM. Roll 2d6 plus this; 8 or more succeeds." value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
 }
 
 characterTable = ruleset
@@ -112,9 +112,10 @@ characterTable = ruleset
         Species = string { default = "Human" }
         Age = integer { default = 18 }
         Homeworld = string {}
-        Rads = integer { default = 0  editable = live }
+        Rads = integer { description = "Radiation absorbed. Large doses cause sickness and lasting harm." default = 0  editable = live }
         Dice = selector
         {
+            description = "Boon rolls 3d6 and keeps the best two; bane keeps the worst two."
             options = ["Bane", "Normal", "Boon"]
             labels = ["Bane", "Normal", "Boon"]
             colors = ["red", "white", "green"]
@@ -127,30 +128,32 @@ characterTable = ruleset
 
     Characteristics = table
     {
+        description = "The six characteristics. Damage comes off END first, then STR or DEX."
         tableLayout = layout { columns = 3  size = wide }
-        STR = characteristic {}
-        DEX = characteristic {}
-        END = characteristic {}
-        INT = characteristic {}
-        EDU = characteristic {}
-        SOC = characteristic {}
-        PSI = integer { default = 0 }
-        UPP = string { value = toString (STR.Value) + "-" + toString (DEX.Value) + "-" + toString (END.Value) + "-" + toString (INT.Value) + "-" + toString (EDU.Value) + "-" + toString (SOC.Value) }
+        STR = characteristic { description = "Strength: physical power, melee damage." }
+        DEX = characteristic { description = "Dexterity: coordination and shooting." }
+        END = characteristic { description = "Endurance: stamina and the first to soak damage." }
+        INT = characteristic { description = "Intellect: reasoning and quick thinking." }
+        EDU = characteristic { description = "Education: learning and training." }
+        SOC = characteristic { description = "Social standing: rank and status in society." }
+        PSI = integer { description = "Psionic strength, if the character has been tested." default = 0 }
+        UPP = string { description = "Universal personality profile: the six scores in a row." value = toString (STR.Value) + "-" + toString (DEX.Value) + "-" + toString (END.Value) + "-" + toString (INT.Value) + "-" + toString (EDU.Value) + "-" + toString (SOC.Value) }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Initiative = modifier { value = Characteristics.DEX.DM  valuedice = 2d6  editable = none }
+        Initiative = modifier { description = "Initiative: 2d6 plus DEX DM." value = Characteristics.DEX.DM  valuedice = 2d6  editable = none }
         Unconscious = string { value = if zeroedPhysical (characterTable) == 2 then "Unconscious" else ""  visible = none  indicator = "#555555" }
         Dead = string { value = if zeroedPhysical (characterTable) == 3 then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
-        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
-        Armour = integer { default = 0  editable = live }
+        Fatigued = bool { description = "Fatigued: bane on all checks until you rest." default = false  editable = live  indicator = "#d4b106" }
+        Stunned = bool { description = "Stunned: you can only react until the effect wears off." default = false  editable = live  indicator = "#d4b106" }
+        Armour = integer { description = "Armour protection, subtracted from each hit." default = 0  editable = live }
     }
 
     Skills = table
     {
+        description = "Skills. Roll 2d6 plus skill level and characteristic DM; 8 or more succeeds."
         tableLayout = layout { columns = 2  size = wide }
         Admin = skill (-3)
         Advocate = skill (-3)
@@ -195,15 +198,16 @@ characterTable = ruleset
 
     Specialities = keyvalues
     {
+        description = "Specialities of skills such as Pilot or Science, at their own levels."
         singular = "Speciality"
         editablekeys = character
         keys = []
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Level = integer { default = 0 }
+            Level = integer { description = "Skill level in this speciality." default = 0 }
             Characteristic = string { default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
-            Check = modifier { value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
+            Check = modifier { description = "Speciality level plus characteristic DM." value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
         }
     }
 
@@ -245,7 +249,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 2  size = wide }
         'Career History' = string { multiline = true }
         'Ranks and Awards' = string { multiline = true }
-        Allies = string { multiline = true }
+        Allies = string { description = "Allies, contacts, rivals and enemies made during the career." multiline = true }
         Contacts = string { multiline = true }
         Rivals = string { multiline = true }
         Enemies = string { multiline = true }
@@ -254,10 +258,10 @@ characterTable = ruleset
     Finances = table
     {
         tableLayout = layout { columns = 3 }
-        Credits = integer { default = 0  editable = live }
-        Pension = integer { default = 0 }
-        Debt = integer { default = 0  editable = live }
-        'Ship Shares' = integer { default = 0 }
+        Credits = integer { description = "Credits on hand." default = 0  editable = live }
+        Pension = integer { description = "Yearly pension from retirement." default = 0 }
+        Debt = integer { description = "Money owed, such as a ship mortgage." default = 0  editable = live }
+        'Ship Shares' = integer { description = "Shares in a ship from mustering out." default = 0 }
     }
 }
 
@@ -267,13 +271,13 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Hits' = integer { default = 10 }
-        'Current Hits' = integer { default = 10  editable = live }
+        'Hits' = integer { description = "Hits the creature can take." default = 10 }
+        'Current Hits' = integer { description = "Hits left. At 0 the creature is down." default = 10  editable = live }
         Speed = string { default = "6m" }
-        Armour = integer { default = 0 }
+        Armour = integer { description = "Armour subtracted from each hit." default = 0 }
         Skills = string {}
         Behaviour = string {}
-        Initiative = modifier { default = 0  valuedice = 2d6 }
+        Initiative = modifier { description = "Initiative modifier." default = 0  valuedice = 2d6 }
         Down = string { value = if 'Current Hits' < 1 then "Down" else ""  visible = none  indicator = "#d64545" }
     }
     Attacks = list

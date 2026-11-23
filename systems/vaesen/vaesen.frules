@@ -30,8 +30,8 @@ mentalPenalty (char) =
 
 skill (attribute, physical) = custom
 {
-    Level = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Pool = integer { value = max (1, attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  valuedice = vaesenRoll (attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  editable = none }
+    Level = integer { description = "Skill level from 0 to 5, added to the attribute's dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Pool = integer { description = "Dice pool: attribute plus skill, minus condition penalties. Each 6 is a success." value = max (1, attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  valuedice = vaesenRoll (attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  editable = none }
 }
 
 noSkill = { Pool = 1 }
@@ -74,25 +74,27 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Archetype = string { keys = ["Academic", "Doctor", "Hunter", "Occultist", "Officer", "Priest", "Private Detective", "Servant", "Vagabond", "Writer"] }
         Age = string { default = "Middle-aged"  keys = ["Young", "Middle-aged", "Old"] }
-        Motivation = string {}
-        Trauma = string {}
-        'Dark secret' = string {}
-        Relationships = string { multiline = true }
-        Experience = integer { default = 0  editable = live }
-        Modifier = modifier { default = 0  editable = live }
+        Motivation = string { description = "Why the character keeps facing the vaesen." }
+        Trauma = string { description = "The event that gave the character the Sight." }
+        'Dark secret' = string { description = "Something from the past the character keeps hidden." }
+        Relationships = string { description = "Ties to the other characters." multiline = true }
+        Experience = integer { description = "Experience earned in play, spent on skills and talents." default = 0  editable = live }
+        Modifier = modifier { description = "Extra dice added to or taken from the next roll." default = 0  editable = live }
     }
 
     Attributes = table
     {
+        description = "The four attributes, from 2 to 5."
         tableLayout = layout { columns = 4  size = wide }
-        Physique = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Physique - physicalPenalty (characterTable) + Character.Modifier) }
-        Precision = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Precision - physicalPenalty (characterTable) + Character.Modifier) }
-        Logic = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Logic - mentalPenalty (characterTable) + Character.Modifier) }
-        Empathy = integer { default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Empathy - mentalPenalty (characterTable) + Character.Modifier) }
+        Physique = integer { description = "Strength, toughness and endurance." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Physique - physicalPenalty (characterTable) + Character.Modifier) }
+        Precision = integer { description = "Coordination, aim and fine control." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Precision - physicalPenalty (characterTable) + Character.Modifier) }
+        Logic = integer { description = "Intelligence, reasoning and knowledge." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Logic - mentalPenalty (characterTable) + Character.Modifier) }
+        Empathy = integer { description = "Understanding and influencing people." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Empathy - mentalPenalty (characterTable) + Character.Modifier) }
     }
 
     Skills = table
     {
+        description = "Skills, three for each attribute."
         tableLayout = layout { columns = 3  size = wide }
         Agility = skill (Attributes.Physique, true)
         'Close combat' = skill (Attributes.Physique, true)
@@ -110,18 +112,19 @@ characterTable = ruleset
 
     Conditions = table
     {
+        description = "Physical and mental conditions. Each gives -1 to its kind of roll; all three and you are broken."
         tableLayout = layout { columns = 4  size = wide }
-        Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
-        Battered = bool { default = false  editable = live  indicator = "#e8913a" }
-        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
-        'Physically broken' = bool { default = false  editable = live }
-        Angry = bool { default = false  editable = live  indicator = "#d64545" }
-        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
-        'Mentally broken' = bool { default = false  editable = live }
+        Exhausted = bool { description = "Exhausted: -1 to physical rolls." default = false  editable = live  indicator = "#d4b106" }
+        Battered = bool { description = "Battered: -1 to physical rolls." default = false  editable = live  indicator = "#e8913a" }
+        Wounded = bool { description = "Wounded: -1 to physical rolls." default = false  editable = live  indicator = "#d64545" }
+        'Physically broken' = bool { description = "Physically broken: roll for a critical injury and you can't act physically." default = false  editable = live }
+        Angry = bool { description = "Angry: -1 to mental rolls." default = false  editable = live  indicator = "#d64545" }
+        Frightened = bool { description = "Frightened: -1 to mental rolls." default = false  editable = live  indicator = "#8e5cc4" }
+        Hopeless = bool { description = "Hopeless: -1 to mental rolls." default = false  editable = live  indicator = "#555555" }
+        'Mentally broken' = bool { description = "Mentally broken: roll for a critical mental effect and you can't act sanely." default = false  editable = live }
         State = string { value = brokenState (characterTable)  visible = none  indicator = "#d64545" }
-        Initiative = integer { default = 0  valuedice = 1d10 }
-        'Critical injuries' = string { multiline = true  editable = live }
+        Initiative = integer { description = "Initiative card or roll at the start of a fight." default = 0  valuedice = 1d10 }
+        'Critical injuries' = string { description = "Lasting injuries and mental scars, with their effects." multiline = true  editable = live }
     }
 
     Talents = list
@@ -151,12 +154,12 @@ characterTable = ruleset
     Gear = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        Resources = integer { default = 4  minvalue = 1  maxvalue = 8 }
+        Resources = integer { description = "How much money and standing the character has, from 1 to 8." default = 4  minvalue = 1  maxvalue = 8 }
         Armor = string {}
         Equipment = string { multiline = true }
-        Memento = string {}
-        Insights = string { multiline = true }
-        Defects = string { multiline = true }
+        Memento = string { description = "A keepsake that holds the character together. It can help resist fear." }
+        Insights = string { description = "Insights gained from the vaesen, which give bonuses." multiline = true }
+        Defects = string { description = "Defects caused by the vaesen, which give penalties." multiline = true }
     }
 }
 
@@ -167,18 +170,18 @@ vaesenTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Kind = string { default = "Vaesen"  keys = ["Vaesen", "Human", "Animal"] }
-        Might = integer { default = 3  valuedice = vaesenRoll (Might) }
+        Might = integer { description = "The vaesen's strength in conflicts and its fear power." default = 3  valuedice = vaesenRoll (Might) }
         Physique = integer { default = 3  valuedice = vaesenRoll (Physique) }
         Precision = integer { default = 3  valuedice = vaesenRoll (Precision) }
         Logic = integer { default = 3  valuedice = vaesenRoll (Logic) }
         Empathy = integer { default = 3  valuedice = vaesenRoll (Empathy) }
-        Armor = integer { default = 0 }
-        Conditions = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        'Max conditions' = integer { default = 3 }
+        Armor = integer { description = "Armor subtracted from each hit." default = 0 }
+        Conditions = integer { description = "Conditions taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max conditions' = integer { description = "Conditions the vaesen can take before it is broken." default = 3 }
         State = string { value = if Conditions >= 'Max conditions' then "Broken" else ""  visible = none  indicator = "#d64545" }
         Initiative = integer { default = 0  valuedice = 1d10 }
-        Magic = integer { default = 0 }
-        Fear = string {}
+        Magic = integer { description = "Magic dice for its powers." default = 0 }
+        Fear = string { description = "What a fear test against this vaesen costs." }
     }
     Attacks = list
     {

@@ -76,9 +76,9 @@ askOracle = ask ("Odds", ["Small chance", "Unlikely", "50/50", "Likely", "Almost
 vow = custom
 {
     Name = string {}
-    Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
-    Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
-    Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
+    Rank = string { description = "How hard the vow is. Harder vows mark less progress each time." default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
+    Ticks = integer { description = "Progress ticks. Four ticks fill one box of ten." default = 0  minvalue = 0  maxvalue = 40  editable = live }
+    Progress = integer { description = "Filled boxes. Roll this against two d10s to fulfil the vow." value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
     Mark = rankTicks (Rank)
 }
 
@@ -88,36 +88,37 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Experience = integer { default = 0  minvalue = 0  maxvalue = 30  editable = live }
-        Spent = integer { default = 0  minvalue = 0 }
+        Experience = integer { description = "Experience earned from fulfilled vows and other progress." default = 0  minvalue = 0  maxvalue = 30  editable = live }
+        Spent = integer { description = "Experience already spent on assets." default = 0  minvalue = 0 }
         Background = string { multiline = true }
     }
 
     Stats = table
     {
         tableLayout = layout { columns = 5  size = wide }
-        Edge = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Edge) }
-        Heart = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Heart) }
-        Iron = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Iron) }
-        Shadow = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Shadow) }
-        Wits = integer { default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Wits) }
+        Edge = integer { description = "Quickness, agility and skill at range." default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Edge) }
+        Heart = integer { description = "Courage, empathy and charm." default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Heart) }
+        Iron = integer { description = "Physical strength, endurance and close combat." default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Iron) }
+        Shadow = integer { description = "Stealth, deception and trickery." default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Shadow) }
+        Wits = integer { description = "Expertise, knowledge and observation." default = 1  minvalue = 1  maxvalue = 4  valuedice = isDice (characterTable, Wits) }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Health = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
-        Spirit = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
-        Supply = integer { default = 5  minvalue = 0  maxvalue = 5  editable = live }
-        Momentum = modifier { default = 2  minvalue = -6  maxvalue = 'Max Momentum'  editable = live }
-        'Max Momentum' = integer { value = 10 - debilityCount (Debilities)  editable = none }
-        'Momentum Reset' = integer { value = max (0, 2 - debilityCount (Debilities))  editable = none }
-        Adds = modifier { default = 0  editable = live  save = nosave }
+        Health = integer { description = "Physical condition, from 0 to 5. At 0 you face death." default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Spirit = integer { description = "Morale and mental state, from 0 to 5. At 0 you face desolation." default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Supply = integer { description = "Food, gear and ammunition, shared by the party, from 0 to 5." default = 5  minvalue = 0  maxvalue = 5  editable = live }
+        Momentum = modifier { description = "Momentum. Burn it to replace the action die, or suffer it when things go wrong." default = 2  minvalue = -6  maxvalue = 'Max Momentum'  editable = live }
+        'Max Momentum' = integer { description = "Highest momentum you can have: 10 minus your debilities." value = 10 - debilityCount (Debilities)  editable = none }
+        'Momentum Reset' = integer { description = "Momentum after burning it: 2 minus your debilities, at least 0." value = max (0, 2 - debilityCount (Debilities))  editable = none }
+        Adds = modifier { description = "Bonus added to the next action roll." default = 0  editable = live  save = nosave }
         Down = string { value = if Health < 1 then "Face Death" else if Spirit < 1 then "Face Desolation" else ""  visible = none  indicator = "#d64545" }
     }
 
     Debilities = table
     {
+        description = "Lasting conditions that lower your maximum momentum."
         tableLayout = layout { columns = 4  size = wide }
         Wounded = bool { default = false  editable = live  indicator = "#d64545" }
         Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
@@ -132,14 +133,15 @@ characterTable = ruleset
     'Suffer and Recover' = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Endure Harm' = integer { value = max (Status.Health, Stats.Iron)  valuedice = isDice (characterTable, max (Status.Health, Stats.Iron))  editable = none }
-        'Endure Stress' = integer { value = max (Status.Spirit, Stats.Heart)  valuedice = isDice (characterTable, max (Status.Spirit, Stats.Heart))  editable = none }
-        'Make Camp' = integer { value = Status.Supply  valuedice = isDice (characterTable, Status.Supply)  editable = none }
-        'Face Death' = integer { value = Stats.Heart  valuedice = isDice (characterTable, Stats.Heart)  editable = none }
+        'Endure Harm' = integer { description = "Roll to resist physical harm: the higher of Health and Iron." value = max (Status.Health, Stats.Iron)  valuedice = isDice (characterTable, max (Status.Health, Stats.Iron))  editable = none }
+        'Endure Stress' = integer { description = "Roll to resist stress: the higher of Spirit and Heart." value = max (Status.Spirit, Stats.Heart)  valuedice = isDice (characterTable, max (Status.Spirit, Stats.Heart))  editable = none }
+        'Make Camp' = integer { description = "Roll to rest and recover, with Supply." value = Status.Supply  valuedice = isDice (characterTable, Status.Supply)  editable = none }
+        'Face Death' = integer { description = "Roll with Heart when Health reaches 0." value = Stats.Heart  valuedice = isDice (characterTable, Stats.Heart)  editable = none }
     }
 
     Vows = list
     {
+        description = "Sworn quests, each tracked on a progress track."
         tableLayout = layout { size = wide }
         singular = "Vow"
         editable = character
@@ -148,6 +150,7 @@ characterTable = ruleset
 
     Bonds = table
     {
+        description = "Progress toward your bonds with people and places. Fill it to write your epilogue."
         tableLayout = layout { columns = 2 }
         Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
         Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
@@ -156,6 +159,7 @@ characterTable = ruleset
 
     Journey = table
     {
+        description = "Progress on the current journey."
         tableLayout = layout { columns = 2 }
         Destination = string {}
         Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
@@ -166,10 +170,10 @@ characterTable = ruleset
     Fight = table
     {
         tableLayout = layout { columns = 2 }
-        Initiative = bool { default = false  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
-        Strike = integer { value = Stats.Iron  valuedice = isDice (characterTable, Stats.Iron)  editable = none  action = melee  reach = 2 }
-        'Strike at Range' = integer { value = Stats.Edge  valuedice = isDice (characterTable, Stats.Edge)  editable = none  action = ranged }
-        Harm = integer { default = 1 }
+        Initiative = bool { description = "Having initiative means you act first and set the pace of the fight." default = false  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
+        Strike = integer { description = "Attack up close, with Iron." value = Stats.Iron  valuedice = isDice (characterTable, Stats.Iron)  editable = none  action = melee  reach = 2 }
+        'Strike at Range' = integer { description = "Attack at range, with Edge." value = Stats.Edge  valuedice = isDice (characterTable, Stats.Edge)  editable = none  action = ranged }
+        Harm = integer { description = "Harm dealt by a hit, which marks progress on the foe." default = 1 }
     }
 
     Assets = list
@@ -190,8 +194,9 @@ characterTable = ruleset
 
     Oracles = table
     {
+        description = "Random tables to answer questions and spark ideas."
         tableLayout = layout { columns = 3  size = wide }
-        'Ask the Oracle' = integer { default = 0  valuedice = askOracle  editable = none }
+        'Ask the Oracle' = integer { description = "Ask a yes or no question and roll to see how likely the answer is." default = 0  valuedice = askOracle  editable = none }
         Action = integer { default = 0  valuedice = oracleRoll (oracleAction)  editable = none }
         Theme = integer { default = 0  valuedice = oracleRoll (oracleTheme)  editable = none }
         'Pay the Price' = integer { default = 0  valuedice = oracleRoll (oraclePayThePrice)  editable = none }
@@ -226,11 +231,11 @@ creatureTable = ruleset
     Foe = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Rank = string { default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
-        Nature = string {}
-        Ticks = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live  indicator = "#d64545" }
+        Rank = string { description = "How tough the foe is. Tougher foes take less progress per hit." default = "Dangerous"  keys = ["Troublesome", "Dangerous", "Formidable", "Extreme", "Epic"] }
+        Nature = string { description = "What kind of foe it is." }
+        Ticks = integer { description = "Progress ticks against the foe. Fill the track to defeat it." default = 0  minvalue = 0  maxvalue = 40  editable = live  indicator = "#d64545" }
         Progress = integer { value = min (10, Ticks / 4)  valuedice = progressRoll (Ticks)  editable = none }
-        Harm = integer { value = switch Rank case "Troublesome" then 1 case "Dangerous" then 2 case "Formidable" then 3 case "Extreme" then 4 else 5  editable = none  action = melee  reach = 2 }
+        Harm = integer { description = "Harm the foe deals when it hits." value = switch Rank case "Troublesome" then 1 case "Dangerous" then 2 case "Formidable" then 3 case "Extreme" then 4 else 5  editable = none  action = melee  reach = 2 }
         'Ticks per Harm' = rankTicks (Rank)
         Down = string { value = if Ticks > 39 then "Defeated" else ""  visible = none  indicator = "#d64545" }
     }

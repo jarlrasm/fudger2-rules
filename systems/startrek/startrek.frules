@@ -41,12 +41,12 @@ departmentNames = ["Command", "Conn", "Engineering", "Security", "Medicine", "Sc
 taskTable = table
 {
     tableLayout = layout { columns = 3  size = wide }
-    Attribute = string { default = "Control"  keys = attributeNames  editable = live }
-    Department = string { default = "Command"  keys = departmentNames  editable = live }
-    Focus = bool { default = false  editable = live }
-    Dice = integer { default = 2  minvalue = 1  maxvalue = 5  editable = live }
-    'Complication Range' = integer { default = 1  minvalue = 1  maxvalue = 5  editable = live }
-    Target = integer { value = valueOr (Attributes, Attribute, 0) + valueOr (Departments, Department, 0)  valuedice = staDice (Target, valueOr (Departments, Department, 0), Focus, Dice, 'Complication Range')  editable = none }
+    Attribute = string { description = "The attribute for this task." default = "Control"  keys = attributeNames  editable = live }
+    Department = string { description = "The department for this task." default = "Command"  keys = departmentNames  editable = live }
+    Focus = bool { description = "A matching focus makes each die at or under the department a double success." default = false  editable = live }
+    Dice = integer { description = "How many d20s to roll: 2, plus any bought with momentum or threat." default = 2  minvalue = 1  maxvalue = 5  editable = live }
+    'Complication Range' = integer { description = "Rolls at or above 21 minus this number cause a complication." default = 1  minvalue = 1  maxvalue = 5  editable = live }
+    Target = integer { description = "Target number: attribute plus department. Each d20 at or under it is a success." value = valueOr (Attributes, Attribute, 0) + valueOr (Departments, Department, 0)  valuedice = staDice (Target, valueOr (Departments, Department, 0), Focus, Dice, 'Complication Range')  editable = none }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
@@ -76,49 +76,52 @@ characterTable = ruleset
         Environment = string {}
         Upbringing = string {}
         Career = string {}
-        Traits = string {}
+        Traits = string { description = "Species and personal traits that are true about the character." }
         Pronouns = string {}
     }
 
     Attributes = table
     {
+        description = "The six attributes, from 7 to 12."
         tableLayout = layout { columns = 3 }
-        Control = integer { default = 8  minvalue = 7  maxvalue = 12 }
-        Daring = integer { default = 8  minvalue = 7  maxvalue = 12 }
-        Fitness = integer { default = 8  minvalue = 7  maxvalue = 12 }
-        Insight = integer { default = 8  minvalue = 7  maxvalue = 12 }
-        Presence = integer { default = 8  minvalue = 7  maxvalue = 12 }
-        Reason = integer { default = 8  minvalue = 7  maxvalue = 12 }
+        Control = integer { description = "Precision, self-discipline and careful action." default = 8  minvalue = 7  maxvalue = 12 }
+        Daring = integer { description = "Boldness, speed and decisive action." default = 8  minvalue = 7  maxvalue = 12 }
+        Fitness = integer { description = "Strength, endurance and physical action." default = 8  minvalue = 7  maxvalue = 12 }
+        Insight = integer { description = "Empathy, intuition and understanding others." default = 8  minvalue = 7  maxvalue = 12 }
+        Presence = integer { description = "Charisma, leadership and persuasion." default = 8  minvalue = 7  maxvalue = 12 }
+        Reason = integer { description = "Logic, analysis and knowledge." default = 8  minvalue = 7  maxvalue = 12 }
     }
 
     Departments = table
     {
+        description = "The six departments, from 0 to 5: what you know and are trained in."
         tableLayout = layout { columns = 3 }
-        Command = integer { default = 1  minvalue = 0  maxvalue = 5 }
-        Conn = integer { default = 1  minvalue = 0  maxvalue = 5 }
-        Engineering = integer { default = 1  minvalue = 0  maxvalue = 5 }
-        Security = integer { default = 1  minvalue = 0  maxvalue = 5 }
-        Medicine = integer { default = 1  minvalue = 0  maxvalue = 5 }
-        Science = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        Command = integer { description = "Leadership, tactics and diplomacy." default = 1  minvalue = 0  maxvalue = 5 }
+        Conn = integer { description = "Piloting, navigation and starship operations." default = 1  minvalue = 0  maxvalue = 5 }
+        Engineering = integer { description = "Building, repairing and running technology." default = 1  minvalue = 0  maxvalue = 5 }
+        Security = integer { description = "Combat, security and tactical systems." default = 1  minvalue = 0  maxvalue = 5 }
+        Medicine = integer { description = "Healing, biology and psychology." default = 1  minvalue = 0  maxvalue = 5 }
+        Science = integer { description = "The physical and life sciences." default = 1  minvalue = 0  maxvalue = 5 }
     }
 
-    Task = taskTable {}
+    Task = taskTable { description = "Build a task roll: pick an attribute and a department." }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max Stress' = integer { default = Attributes.Fitness }
-        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
-        Injured = bool { default = false  editable = live  indicator = "#d64545" }
+        'Max Stress' = integer { description = "Stress you can take: Fitness plus bonuses." default = Attributes.Fitness }
+        Stress = integer { description = "Stress taken. Run out and the next injury takes you out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Injured = bool { description = "An injury that impairs the character until treated." default = false  editable = live  indicator = "#d64545" }
         Down = string { value = if Stress >= 'Max Stress' then "Out of stress" else ""  visible = none  indicator = "#d64545" }
-        Determination = integer { default = 1  minvalue = 0  maxvalue = 3  editable = live }
-        Reputation = integer { default = 10 }
-        'Personal Threat' = integer { default = 0  minvalue = 0  editable = live }
-        'Protection' = integer { default = 0 }
+        Determination = integer { description = "Spend to gain a bonus die at 1, reroll, or perform a heroic act tied to a value." default = 1  minvalue = 0  maxvalue = 3  editable = live }
+        Reputation = integer { description = "Standing in Starfleet, used at the end of missions." default = 10 }
+        'Personal Threat' = integer { description = "Threat the character can generate for the GM." default = 0  minvalue = 0  editable = live }
+        'Protection' = integer { description = "Reduces stress from each hit." default = 0 }
     }
 
     Values = list
     {
+        description = "Values: beliefs that can be challenged or used for determination."
         tableLayout = layout { size = wide }
         singular = "Value"
         editable = character
@@ -127,6 +130,7 @@ characterTable = ruleset
 
     Focuses = list
     {
+        description = "Focuses: specialities that make successes double."
         tableLayout = layout { size = wide }
         singular = "Focus"
         editable = character
@@ -135,6 +139,7 @@ characterTable = ruleset
 
     Talents = list
     {
+        description = "Talents that bend the rules."
         tableLayout = layout { size = wide }
         source = secondary.Talents
         singular = "Talent"
@@ -162,7 +167,7 @@ characterTable = ruleset
     {
         tableLayout = layout { size = wide }
         Equipment = string { multiline = true }
-        Milestones = string { multiline = true }
+        Milestones = string { description = "Milestones reached, which let the character grow." multiline = true }
     }
 }
 
@@ -172,12 +177,12 @@ creatureTable = ruleset
     NPC = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Type = string { keys = ["Minor", "Notable", "Major"] }
+        Type = string { description = "Minor NPCs go down from any injury, notable and major ones last longer." keys = ["Minor", "Notable", "Major"] }
         Species = string {}
-        'Max Stress' = integer { default = 8 }
-        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Max Stress' = integer { description = "Stress the NPC can take." default = 8 }
+        Stress = integer { description = "Stress taken." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
         Down = string { value = if Stress >= 'Max Stress' then "Defeated" else ""  visible = none  indicator = "#d64545" }
-        Protection = integer { default = 0 }
+        Protection = integer { description = "Reduces stress from each hit." default = 0 }
         Traits = string {}
     }
     Attributes = table
@@ -231,18 +236,19 @@ shipTable = ruleset
         Class = string {}
         Registry = string {}
         'Service Date' = integer { default = 2371 }
-        Scale = integer { default = 4  minvalue = 1  maxvalue = 7 }
-        'Max Shields' = integer { default = 10 }
-        Shields = integer { default = 'Max Shields'  minvalue = 0  editable = live }
-        Breaches = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Scale = integer { description = "Size of the ship, from 1 to 7. Sets resistance and how many breaches it can take." default = 4  minvalue = 1  maxvalue = 7 }
+        'Max Shields' = integer { description = "Shield strength when full." default = 10 }
+        Shields = integer { description = "Shields left. At 0 every hit causes a breach." default = 'Max Shields'  minvalue = 0  editable = live }
+        Breaches = integer { description = "Hull breaches. More than the scale destroys the ship." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Down = string { value = if Breaches > Scale then "Destroyed" else if Shields < 1 then "Shields down" else ""  visible = none  indicator = "#d64545" }
-        Power = integer { default = 8  editable = live }
-        Resistance = integer { value = Scale  editable = none }
-        Crew = string { keys = ["Untrained", "Basic", "Proficient", "Talented", "Exceptional"] }
+        Power = integer { description = "Power for the ship's systems each scene." default = 8  editable = live }
+        Resistance = integer { description = "Reduces damage from each hit, equal to scale." value = Scale  editable = none }
+        Crew = string { description = "How skilled the ship's crew is." keys = ["Untrained", "Basic", "Proficient", "Talented", "Exceptional"] }
         Traits = string {}
     }
     Systems = table
     {
+        description = "Ship systems, the ship's equivalent of attributes."
         tableLayout = layout { columns = 6  size = wide }
         Comms = integer { default = 8 }
         Computers = integer { default = 8 }

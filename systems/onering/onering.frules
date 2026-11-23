@@ -66,8 +66,8 @@ rollFavour (char, favoured) =
 
 skill (tn) = custom
 {
-    Favoured = bool { default = false }
-    Rating = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = heroRoll (characterTable, Rating, tn, Favoured) }
+    Favoured = bool { description = "A favoured skill rolls two Feat dice and keeps the better." default = false }
+    Rating = integer { description = "Skill rating: how many Success dice to add to the Feat die." default = 0  minvalue = 0  maxvalue = 6  valuedice = heroRoll (characterTable, Rating, tn, Favoured) }
 }
 
 proficiencyOf (char, name) = valueOr (char.Proficiencies, name, 0)
@@ -94,23 +94,24 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Culture = string { keys = ["Bardings", "Dwarves of Durin's Folk", "Elves of Lindon", "Hobbits of the Shire", "Men of Bree", "Rangers of the North"] }
         Calling = string { keys = ["Captain", "Champion", "Messenger", "Scholar", "Treasure Hunter", "Warden"] }
-        'Shadow Path' = string {}
+        'Shadow Path' = string { description = "The way the Shadow tempts this hero, drawn from the calling." }
         Age = integer { default = 30 }
-        'Cultural Blessing' = string {}
-        Patron = string {}
-        'Distinctive Features' = string {}
-        Flaws = string {}
+        'Cultural Blessing' = string { description = "A special gift from the hero's culture." }
+        Patron = string { description = "The loremaster character who sponsors the company." }
+        'Distinctive Features' = string { description = "Traits that describe the hero and can be invoked for help." }
+        Flaws = string { description = "Flaws gained from the Shadow, which cause trouble." }
     }
 
     Attributes = table
     {
+        description = "Strength, Heart and Wits, and the target numbers they set."
         tableLayout = layout { columns = 3  size = wide }
-        Strength = integer { default = 4  minvalue = 1  maxvalue = 8 }
-        Heart = integer { default = 4  minvalue = 1  maxvalue = 8 }
-        Wits = integer { default = 4  minvalue = 1  maxvalue = 8 }
-        'Strength TN' = integer { value = 20 - Strength  editable = none }
-        'Heart TN' = integer { value = 20 - Heart  editable = none }
-        'Wits TN' = integer { value = 20 - Wits  editable = none }
+        Strength = integer { description = "Physical power and endurance." default = 4  minvalue = 1  maxvalue = 8 }
+        Heart = integer { description = "Courage, empathy and spirit." default = 4  minvalue = 1  maxvalue = 8 }
+        Wits = integer { description = "Perception, cleverness and reason." default = 4  minvalue = 1  maxvalue = 8 }
+        'Strength TN' = integer { description = "Target number for Strength skills: 20 minus Strength." value = 20 - Strength  editable = none }
+        'Heart TN' = integer { description = "Target number for Heart skills: 20 minus Heart." value = 20 - Heart  editable = none }
+        'Wits TN' = integer { description = "Target number for Wits skills: 20 minus Wits." value = 20 - Wits  editable = none }
         'Endurance Base' = integer { default = 22 }
         'Hope Base' = integer { default = 8 }
         'Parry Base' = integer { default = 12 }
@@ -118,26 +119,28 @@ characterTable = ruleset
 
     Condition = table
     {
+        description = "Endurance, hope, shadow and the hero's state."
         tableLayout = layout { columns = 4  size = wide }
-        'Max Endurance' = integer { value = Attributes.Strength + Attributes.'Endurance Base'  editable = none }
-        Endurance = integer { default = 'Max Endurance'  editable = live }
-        Load = integer { default = 0  minvalue = 0  editable = live }
-        Fatigue = integer { default = 0  minvalue = 0  editable = live }
-        'Max Hope' = integer { value = Attributes.Heart + Attributes.'Hope Base'  editable = none }
-        Hope = integer { default = 'Max Hope'  minvalue = 0  editable = live }
-        Shadow = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
-        'Shadow Scars' = integer { default = 0  minvalue = 0 }
-        Parry = integer { value = Attributes.Wits + Attributes.'Parry Base' + Armour.Shield  editable = none }
-        Weary = bool { default = false  editable = live  indicator = "#d4b106" }
-        Miserable = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
+        'Max Endurance' = integer { description = "Endurance when rested: Strength plus the culture's base." value = Attributes.Strength + Attributes.'Endurance Base'  editable = none }
+        Endurance = integer { description = "Current endurance. At or below load you are weary; at 0 unconscious." default = 'Max Endurance'  editable = live }
+        Load = integer { description = "Weight of gear carried, which counts against endurance." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Fatigue from travel, added to load." default = 0  minvalue = 0  editable = live }
+        'Max Hope' = integer { description = "Hope when rested: Heart plus the culture's base." value = Attributes.Heart + Attributes.'Hope Base'  editable = none }
+        Hope = integer { description = "Spend hope to add an attribute bonus to a roll." default = 'Max Hope'  minvalue = 0  editable = live }
+        Shadow = integer { description = "Shadow points from fear, misdeeds and corruption. Shadow at or above hope makes you miserable." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        'Shadow Scars' = integer { description = "Lasting shadow that never goes away." default = 0  minvalue = 0 }
+        Parry = integer { description = "What attackers must beat: Wits plus base parry plus shield." value = Attributes.Wits + Attributes.'Parry Base' + Armour.Shield  editable = none }
+        Weary = bool { description = "Weary: Success dice showing 1 to 3 count as 0." default = false  editable = live  indicator = "#d4b106" }
+        Miserable = bool { description = "Miserable: an Eye on the Feat die is a failure." default = false  editable = live  indicator = "#8e5cc4" }
+        Wounded = bool { description = "Wounded: another wound leaves you dying." default = false  editable = live  indicator = "#d64545" }
         Down = string { value = if Endurance < 1 then "Unconscious" else if Load >= Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
-        Roll = selector { options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
-        Injury = string { editable = live }
+        Roll = selector { description = "Favoured rolls two Feat dice and keeps the better, ill-favoured the worse." options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Injury = string { description = "The wound the hero is suffering from, and how long it lasts." editable = live }
     }
 
     Skills = table
     {
+        description = "Skills, each tied to an attribute's target number."
         tableLayout = layout { columns = 3  size = wide }
         Awe = skill (Attributes.'Strength TN')
         Enhearten = skill (Attributes.'Heart TN')
@@ -161,6 +164,7 @@ characterTable = ruleset
 
     Proficiencies = table
     {
+        description = "Combat proficiencies with each kind of weapon."
         tableLayout = layout { columns = 2 }
         Axes = integer { default = 0  minvalue = 0  maxvalue = 6 }
         Bows = integer { default = 0  minvalue = 0  maxvalue = 6 }
@@ -171,20 +175,20 @@ characterTable = ruleset
     Standing = table
     {
         tableLayout = layout { columns = 2 }
-        Valour = integer { default = 1  minvalue = 1  maxvalue = 6 }
-        Wisdom = integer { default = 1  minvalue = 1  maxvalue = 6 }
-        Treasure = integer { default = 0  minvalue = 0  editable = live }
-        'Adventure Points' = integer { default = 0  editable = live }
-        'Skill Points' = integer { default = 0  editable = live }
-        Fellowship = integer { default = 0  editable = live }
+        Valour = integer { description = "Valour: courage, used to resist fear. Rises with rewards." default = 1  minvalue = 1  maxvalue = 6 }
+        Wisdom = integer { description = "Wisdom: wisdom and restraint, used to resist corruption. Rises with virtues." default = 1  minvalue = 1  maxvalue = 6 }
+        Treasure = integer { description = "Treasure carried, which adds to load." default = 0  minvalue = 0  editable = live }
+        'Adventure Points' = integer { description = "Adventure points, spent to raise skills and proficiencies." default = 0  editable = live }
+        'Skill Points' = integer { description = "Skill points, spent to raise skills." default = 0  editable = live }
+        Fellowship = integer { description = "Fellowship points shared by the company to regain hope." default = 0  editable = live }
     }
 
     Armour = table
     {
         tableLayout = layout { columns = 3 }
-        Armour = integer { default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
-        Helm = integer { default = 0  minvalue = 0  maxvalue = 1 }
-        Shield = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        Armour = integer { description = "Armour dice rolled to avoid a wound when the Feat die shows a Gandalf rune or Eye." default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
+        Helm = integer { description = "A helm adds a die to the armour roll." default = 0  minvalue = 0  maxvalue = 1 }
+        Shield = integer { description = "Shield bonus added to Parry." default = 0  minvalue = 0  maxvalue = 3 }
     }
 
     'War Gear' = list
@@ -227,15 +231,15 @@ creatureTable = ruleset
     Adversary = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Attribute Level' = integer { default = 4  valuedice = ask ("TN", torRoll ('Attribute Level', 0, false, false, "Normal")) }
-        'Max Endurance' = integer { default = 12 }
-        Endurance = integer { default = 'Max Endurance'  editable = live }
+        'Attribute Level' = integer { description = "The adversary's rating for all rolls." default = 4  valuedice = ask ("TN", torRoll ('Attribute Level', 0, false, false, "Normal")) }
+        'Max Endurance' = integer { description = "Endurance when unhurt." default = 12 }
+        Endurance = integer { description = "Current endurance. At 0 the adversary is out of the fight." default = 'Max Endurance'  editable = live }
         Down = string { value = if Endurance < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
-        Might = integer { default = 1 }
-        Wounds = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        'Hate or Resolve' = integer { default = 3  editable = live }
-        Parry = modifier { default = 0 }
-        Armour = integer { default = 2  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
+        Might = integer { description = "How many wounds it can ignore before being wounded for real." default = 1 }
+        Wounds = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Hate or Resolve' = integer { description = "Spent to power fell abilities." default = 3  editable = live }
+        Parry = modifier { description = "Bonus added to the Parry target." default = 0 }
+        Armour = integer { description = "Armour dice rolled against wounds." default = 2  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
         'Fell Abilities' = string { multiline = true }
     }
     'Combat Proficiencies' = list

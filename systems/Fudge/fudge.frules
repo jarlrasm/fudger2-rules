@@ -24,6 +24,7 @@ characterTable = ruleset
     rulesetConfiguration = { important = [Damage, 'Important stuff'.Fudgepoints, 'Melee weapons', 'Ranged weapons'] }
     Attributes = keyvalues
         {
+            description = "Broad natural abilities such as strength and wits, rated on the Fudge ladder from Terrible to Superb."
             singular = "Attribute"
             editablekeys = campaign
             keys = ["Str","Dex","Con","Int" ]
@@ -36,6 +37,7 @@ characterTable = ruleset
         }
     Skills = keyvalues
         {
+            description = "Trained abilities, rated on the ladder. Roll 4dF and add the result to the level."
             singular = "Skill"
             editablekeys = character
             keys = []
@@ -48,12 +50,14 @@ characterTable = ruleset
         }
     Gifts = list
     {
+        description = "Special talents or advantages beyond the normal attributes and skills."
         singular = "Gift"
         editable = character
         valueType = nameAndDescription
     }
     Faults = list
     {
+        description = "Flaws, quirks and disadvantages that make the character interesting."
         singular = "Fault"
         editable = character
         valueType = nameAndDescription
@@ -62,11 +66,13 @@ characterTable = ruleset
     {
         Fudgepoints = integer
         {
+            description = "Points to spend on luck: change a roll, avoid a wound or bend the story."
             default=0
             minvalue=0
         }
         Experiencepoints = integer
         {
+            description = "Points earned in play and spent to improve attributes and skills."
             default=0
             minvalue=0
         }
@@ -75,6 +81,7 @@ characterTable = ruleset
     {
         Scratch = slots
         {
+            description = "Minor wounds. When the boxes are full, further damage moves to Hurt."
             number = 3
             allowedchange = increase
             editable = live
@@ -83,6 +90,7 @@ characterTable = ruleset
             }
         Hurt = slots
         {
+            description = "A real wound that gives -1 to actions until healed."
             number = 1
             value = Hurt.realvalue + Scratch.overflowValue
             allowedchange = increase
@@ -92,6 +100,7 @@ characterTable = ruleset
         }
         'Very hurt' = slots
             {number = 1
+            description = "A serious wound that gives -2 to actions until healed."
             value = 'Very hurt'.realvalue + Hurt.overflowValue
             allowedchange = increase
             editable = live
@@ -100,6 +109,7 @@ characterTable = ruleset
             }
         Incapacitated = slots
             {number = 1
+            description = "So badly wounded the character can do almost nothing but crawl."
             value = Incapacitated.realvalue + 'Very hurt'.overflowValue
             allowedchange = increase
             editable = live
@@ -108,6 +118,7 @@ characterTable = ruleset
             }
         'Near death' = slots
             {number = 1
+            description = "Dying. The character needs help soon or will die."
             value ='Near death'.realvalue + Incapacitated.overflowValue
             allowedchange = increase
             editable = live}
@@ -119,6 +130,7 @@ characterTable = ruleset
             }
         Heal = button
             {editable = live
+            description = "Moves every wound one step down the track, as after healing."
             onClick = updates
                 {(Scratch.realvalue) = Hurt.realvalue
                 (Hurt.realvalue) = 'Very hurt'.realvalue

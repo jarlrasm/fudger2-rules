@@ -74,53 +74,54 @@ characterTable = ruleset
         Career = string {}
         Class = string { keys = ["Censor", "Conduit", "Elementalist", "Fury", "Null", "Shadow", "Tactician", "Talent", "Troubadour"] }
         Subclass = string {}
-        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
-        Victories = integer { default = 0  minvalue = 0  editable = live }
-        Roll = selector { options = ["Double bane", "Bane", "Normal", "Edge", "Double edge"]  labels = ["2 bane", "Bane", "Normal", "Edge", "2 edge"]  colors = ["red", "red", "white", "green", "green"]  hold = ["", "Ctrl", "", "Shift", ""]  default = "Normal"  editable = live  save = nosave }
+        Level = integer { description = "Hero level from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
+        Victories = integer { description = "Victories earned this adventure, turned into experience when you rest." default = 0  minvalue = 0  editable = live }
+        Roll = selector { description = "Edges add 2 to the power roll and banes take 2 away; doubles shift the tier instead." options = ["Double bane", "Bane", "Normal", "Edge", "Double edge"]  labels = ["2 bane", "Bane", "Normal", "Edge", "2 edge"]  colors = ["red", "red", "white", "green", "green"]  hold = ["", "Ctrl", "", "Shift", ""]  default = "Normal"  editable = live  save = nosave }
     }
 
     Characteristics = table
     {
         tableLayout = layout { columns = 5  size = wide }
-        Might = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
-        Agility = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
-        Reason = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
-        Intuition = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
-        Presence = modifier { default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Might = modifier { description = "Strength and brute force." default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Agility = modifier { description = "Speed, coordination and nimbleness." default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Reason = modifier { description = "Logic, education and wits." default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Intuition = modifier { description = "Instinct, awareness and empathy." default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
+        Presence = modifier { description = "Charisma, command and force of personality." default = 0  minvalue = -5  maxvalue = 5  valuedice = testDice (characterTable) }
     }
 
     Health = table
     {
         tableLayout = layout { columns = 4 }
-        'Max Stamina' = integer { default = 18 }
-        Stamina = integer { default = 'Max Stamina'  editable = live  indicator = "#d64545" }
-        Temporary = integer { default = 0  minvalue = 0  editable = live }
+        'Max Stamina' = integer { description = "Stamina when unhurt." default = 18 }
+        Stamina = integer { description = "Current stamina. At half you are winded, at 0 dying." default = 'Max Stamina'  editable = live  indicator = "#d64545" }
+        Temporary = integer { description = "Temporary stamina that is lost before your real stamina." default = 0  minvalue = 0  editable = live }
         State = string { value = stateOf (Stamina, 'Max Stamina')  editable = none  indicator = "#d64545" }
-        Recoveries = integer { default = 8  minvalue = 0  editable = live }
-        'Recovery value' = integer { value = 'Max Stamina' / 3  editable = none }
-        Recover = button { onClick = updates { (Stamina.realvalue) = min ('Max Stamina', Stamina + 'Recovery value')  (Recoveries.realvalue) = max (0, Recoveries - 1) } }
+        Recoveries = integer { description = "Spend one to regain a third of your stamina." default = 8  minvalue = 0  editable = live }
+        'Recovery value' = integer { description = "Stamina regained per recovery: a third of your maximum." value = 'Max Stamina' / 3  editable = none }
+        Recover = button { description = "Spend a recovery and heal the recovery value." onClick = updates { (Stamina.realvalue) = min ('Max Stamina', Stamina + 'Recovery value')  (Recoveries.realvalue) = max (0, Recoveries - 1) } }
     }
 
     Resources = table
     {
         tableLayout = layout { columns = 2 }
-        'Heroic resource' = string { default = "Wrath"  keys = ["Clarity", "Discipline", "Drama", "Essence", "Ferocity", "Focus", "Insight", "Piety", "Wrath"] }
-        Amount = integer { default = 0  minvalue = 0  editable = live }
-        Surges = integer { default = 0  minvalue = 0  editable = live }
-        'Hero tokens' = integer { default = 0  minvalue = 0  editable = live }
+        'Heroic resource' = string { description = "Your class resource, gained in combat and spent on heroic abilities." default = "Wrath"  keys = ["Clarity", "Discipline", "Drama", "Essence", "Ferocity", "Focus", "Insight", "Piety", "Wrath"] }
+        Amount = integer { description = "How much of your heroic resource you have right now." default = 0  minvalue = 0  editable = live }
+        Surges = integer { description = "Spend surges to add damage or extra effects to a strike." default = 0  minvalue = 0  editable = live }
+        'Hero tokens' = integer { description = "Shared party tokens spent on rerolls, extra stamina or heroic moments." default = 0  minvalue = 0  editable = live }
     }
 
     Movement = table
     {
         tableLayout = layout { columns = 4 }
-        Speed = integer { default = 5 }
-        Size = string { default = "1M"  keys = ["1T", "1S", "1M", "1L", "2", "3", "4", "5"] }
-        Stability = integer { default = 0 }
-        Disengage = integer { default = 1 }
+        Speed = integer { description = "Squares you can move with one move action." default = 5 }
+        Size = string { description = "How much space the creature takes up." default = "1M"  keys = ["1T", "1S", "1M", "1L", "2", "3", "4", "5"] }
+        Stability = integer { description = "How hard you are to push, pull or slide." default = 0 }
+        Disengage = integer { description = "Squares you can shift away safely with the disengage maneuver." default = 1 }
     }
 
     Conditions = table
     {
+        description = "Conditions caused by abilities. Each lasts until saved or ended."
         tableLayout = layout { columns = 3 }
         Bleeding = bool { default = false  editable = live  indicator = "#d64545" }
         Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
@@ -157,6 +158,7 @@ characterTable = ruleset
 
     Skills = keyvalues
     {
+        description = "Skills you have. A test with a skill adds 2 to the power roll."
         singular = "Skill"
         editablekeys = character
         keys = []
@@ -164,7 +166,7 @@ characterTable = ruleset
         valueType = custom
         {
             Characteristic = string { default = "Reason"  keys = ["Might", "Agility", "Reason", "Intuition", "Presence"] }
-            Test = modifier { value = characteristicOf (characterTable, Characteristic) + 2  valuedice = testDice (characterTable)  editable = none }
+            Test = modifier { description = "Characteristic plus 2 for a test with this skill." value = characteristicOf (characterTable, Characteristic) + 2  valuedice = testDice (characterTable)  editable = none }
         }
     }
 
@@ -179,10 +181,10 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Kit = string {}
-        Wealth = integer { default = 1 }
-        Renown = integer { default = 0 }
+        Wealth = integer { description = "Your wealth score, used to buy things without counting coins." default = 1 }
+        Renown = integer { description = "How well known the hero is." default = 0 }
         Gear = string { multiline = true }
-        'Complication' = string { multiline = true }
+        'Complication' = string { description = "An optional complication that gives a benefit and a drawback." multiline = true }
     }
 }
 
@@ -201,14 +203,14 @@ monsterTable = ruleset
         Organization = string { default = "Platoon"  keys = ["Minion", "Horde", "Platoon", "Elite", "Leader", "Solo"] }
         Role = string { keys = ["Ambusher", "Artillery", "Brute", "Controller", "Defender", "Harrier", "Hexer", "Mount", "Support"] }
         Keywords = string {}
-        EV = integer { default = 3 }
-        'Max Stamina' = integer { default = 20 }
-        Stamina = integer { default = 'Max Stamina'  editable = live  indicator = "#d64545" }
+        EV = integer { description = "Encounter value: how much this monster counts toward an encounter's budget." default = 3 }
+        'Max Stamina' = integer { description = "Stamina when unhurt." default = 20 }
+        Stamina = integer { description = "Current stamina. At 0 the monster is dead." default = 'Max Stamina'  editable = live  indicator = "#d64545" }
         State = string { value = if Stamina <= 0 then "Dead" else if Stamina <= 'Max Stamina' / 2 then "Winded" else ""  editable = none  indicator = "#d64545" }
         Speed = integer { default = 5 }
         Size = string { default = "1M" }
-        Stability = integer { default = 0 }
-        'Free strike' = integer { default = 2 }
+        Stability = integer { description = "How hard the monster is to push, pull or slide." default = 0 }
+        'Free strike' = integer { description = "Damage dealt by the monster's free strike." default = 2 }
         Immunity = string {}
         Weakness = string {}
         Movement = string {}

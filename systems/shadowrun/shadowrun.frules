@@ -60,10 +60,10 @@ attributeNames = ["Body", "Agility", "Reaction", "Strength", "Willpower", "Logic
 
 skill (usual) = custom
 {
-    Rank = integer { default = 0  minvalue = 0  maxvalue = 12 }
-    Attribute = string { default = usual  keys = attributeNames  editable = live }
-    Specialization = string {}
-    Pool = integer { value = skillPool (Rank, attributeValue (characterTable, Attribute))  valuedice = srDice (characterTable, skillPool (Rank, attributeValue (characterTable, Attribute)))  editable = none }
+    Rank = integer { description = "Skill rank from 0 to 12, added to the attribute for the dice pool." default = 0  minvalue = 0  maxvalue = 12 }
+    Attribute = string { description = "The attribute this skill rolls with, normally the usual one." default = usual  keys = attributeNames  editable = live }
+    Specialization = string { description = "A specialization adds 2 dice when it applies." }
+    Pool = integer { description = "Dice pool: rank plus attribute. Each 5 or 6 is a hit." value = skillPool (Rank, attributeValue (characterTable, Attribute))  valuedice = srDice (characterTable, skillPool (Rank, attributeValue (characterTable, Attribute)))  editable = none }
 }
 
 noSkill = { Rank = 0 }
@@ -98,59 +98,63 @@ characterTable = ruleset
         Role = string {}
         Ethnicity = string {}
         Age = integer { default = 25 }
-        Reputation = integer { default = 0 }
-        Heat = integer { default = 0  editable = live }
-        Karma = integer { default = 0  editable = live }
-        Nuyen = integer { default = 0  editable = live }
-        Lifestyle = string {}
-        Modifier = modifier { default = 0  editable = live }
+        Reputation = integer { description = "Street reputation, good or bad." default = 0 }
+        Heat = integer { description = "How much attention the runner draws from the law and the corps." default = 0  editable = live }
+        Karma = integer { description = "Karma earned in play, spent to improve the runner." default = 0  editable = live }
+        Nuyen = integer { description = "Money, in nuyen." default = 0  editable = live }
+        Lifestyle = string { description = "How and where the runner lives, and what it costs each month." }
+        Modifier = modifier { description = "Extra dice added to or taken from the next pool." default = 0  editable = live }
     }
 
     Attributes = table
     {
+        description = "Attributes, from 1 to about 6 for most metatypes. Add them to skills for dice pools."
         tableLayout = layout { columns = 4  size = wide }
-        Body = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Agility = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Reaction = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Strength = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Willpower = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Logic = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Intuition = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Charisma = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        Edge = integer { default = 2  minvalue = 1  maxvalue = 7 }
-        'Current Edge' = integer { default = Edge  minvalue = 0  maxvalue = 7  editable = live  indicator = "#8e5cc4"  indicatorLabel = "Edge" }
-        Magic = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Resonance = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Essence = string { default = "6.0" }
+        Body = integer { description = "Toughness, health and resisting damage." default = 3  minvalue = 1  maxvalue = 10 }
+        Agility = integer { description = "Coordination and fine control. Used for most weapons." default = 3  minvalue = 1  maxvalue = 10 }
+        Reaction = integer { description = "Reflexes and response time. Adds to initiative and defense." default = 3  minvalue = 1  maxvalue = 10 }
+        Strength = integer { description = "Raw muscle and melee damage." default = 3  minvalue = 1  maxvalue = 10 }
+        Willpower = integer { description = "Mental strength and stamina. Sets the stun monitor." default = 3  minvalue = 1  maxvalue = 10 }
+        Logic = integer { description = "Reasoning and memory." default = 3  minvalue = 1  maxvalue = 10 }
+        Intuition = integer { description = "Gut feeling and awareness. Adds to initiative." default = 3  minvalue = 1  maxvalue = 10 }
+        Charisma = integer { description = "Force of personality and social skill." default = 3  minvalue = 1  maxvalue = 10 }
+        Edge = integer { description = "Edge: luck and the knack for coming out on top. Caps how much edge you hold." default = 2  minvalue = 1  maxvalue = 7 }
+        'Current Edge' = integer { description = "Edge points held right now, gained in play and spent on edge actions." default = Edge  minvalue = 0  maxvalue = 7  editable = live  indicator = "#8e5cc4"  indicatorLabel = "Edge" }
+        Magic = integer { description = "Magical potential. 0 means mundane." default = 0  minvalue = 0  maxvalue = 10 }
+        Resonance = integer { description = "Technomancer potential for using the Matrix without a deck." default = 0  minvalue = 0  maxvalue = 10 }
+        Essence = string { description = "Essence, worn down by cyberware. Losing it hurts Magic and Resonance." default = "6.0" }
     }
 
     'Derived Ratings' = table
     {
+        description = "Initiative, defense and other rolls built from two attributes."
         tableLayout = layout { columns = 4  size = wide }
-        'Initiative Dice' = integer { default = 1  minvalue = 1  maxvalue = 5 }
-        Initiative = integer { value = Attributes.Reaction + Attributes.Intuition - 'Condition Monitors'.'Wound Modifier'  valuedice = ([dice { number = 'Initiative Dice'  sides = 6 }], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
-        'Defense Rating' = integer { default = Attributes.Body }
-        Composure = integer { value = Attributes.Willpower + Attributes.Charisma  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Charisma)  editable = none }
-        'Judge Intentions' = integer { value = Attributes.Willpower + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Intuition)  editable = none }
-        Memory = integer { value = Attributes.Logic + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Logic + Attributes.Intuition)  editable = none }
-        'Lift and Carry' = integer { value = Attributes.Body + Attributes.Willpower  valuedice = srDice (characterTable, Attributes.Body + Attributes.Willpower)  editable = none }
-        Defense = integer { value = Attributes.Reaction + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Reaction + Attributes.Intuition)  editable = none }
-        'Damage Resistance' = integer { value = Attributes.Body  valuedice = srDice (characterTable, Attributes.Body)  editable = none }
-        Movement = string { default = "10/15" }
+        'Initiative Dice' = integer { description = "Extra initiative dice from wired reflexes, magic or the Matrix." default = 1  minvalue = 1  maxvalue = 5 }
+        Initiative = integer { description = "Initiative score: Reaction plus Intuition plus initiative dice." value = Attributes.Reaction + Attributes.Intuition - 'Condition Monitors'.'Wound Modifier'  valuedice = ([dice { number = 'Initiative Dice'  sides = 6 }], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
+        'Defense Rating' = integer { description = "Rating compared to the attacker's attack rating to decide edge." default = Attributes.Body }
+        Composure = integer { description = "Pool to keep cool under pressure: Willpower plus Charisma." value = Attributes.Willpower + Attributes.Charisma  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Charisma)  editable = none }
+        'Judge Intentions' = integer { description = "Pool to read someone's motives: Willpower plus Intuition." value = Attributes.Willpower + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Intuition)  editable = none }
+        Memory = integer { description = "Pool to recall something: Logic plus Intuition." value = Attributes.Logic + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Logic + Attributes.Intuition)  editable = none }
+        'Lift and Carry' = integer { description = "Pool to lift and carry heavy things: Body plus Willpower." value = Attributes.Body + Attributes.Willpower  valuedice = srDice (characterTable, Attributes.Body + Attributes.Willpower)  editable = none }
+        Defense = integer { description = "Pool to avoid attacks: Reaction plus Intuition." value = Attributes.Reaction + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Reaction + Attributes.Intuition)  editable = none }
+        'Damage Resistance' = integer { description = "Pool to soak damage: Body, plus armor where it applies." value = Attributes.Body  valuedice = srDice (characterTable, Attributes.Body)  editable = none }
+        Movement = string { description = "Walking and running speed in metres." default = "10/15" }
     }
 
     'Condition Monitors' = table
     {
+        description = "Physical and stun damage boxes."
         tableLayout = layout { columns = 2  size = wide }
-        Physical = slots { number = 8 + (Attributes.Body + 1) / 2  editable = live  overflow = allow  indicator = "#d64545" }
-        Stun = slots { number = 8 + (Attributes.Willpower + 1) / 2  editable = live  indicator = "#d4b106" }
-        'Wound Modifier' = integer { value = Physical.realvalue / 3 + Stun.realvalue / 3  editable = none }
-        Overflow = integer { value = max (0, Physical.realvalue - (8 + (Attributes.Body + 1) / 2))  editable = none }
+        Physical = slots { description = "Physical damage boxes: 8 plus half Body. Overflow past them means dying." number = 8 + (Attributes.Body + 1) / 2  editable = live  overflow = allow  indicator = "#d64545" }
+        Stun = slots { description = "Stun damage boxes: 8 plus half Willpower. Filling them knocks you out." number = 8 + (Attributes.Willpower + 1) / 2  editable = live  indicator = "#d4b106" }
+        'Wound Modifier' = integer { description = "Every 3 boxes filled gives -1 to all pools." value = Physical.realvalue / 3 + Stun.realvalue / 3  editable = none }
+        Overflow = integer { description = "Physical damage past the monitor. Too much and the runner dies." value = max (0, Physical.realvalue - (8 + (Attributes.Body + 1) / 2))  editable = none }
         Down = string { value = if Physical.realvalue >= 8 + (Attributes.Body + 1) / 2 then "Dying" else if Stun.realvalue >= 8 + (Attributes.Willpower + 1) / 2 then "Unconscious" else ""  visible = none  indicator = "#555555" }
     }
 
     Skills = table
     {
+        description = "Skills, each tied to an attribute. Roll rank plus attribute."
         tableLayout = layout { columns = 2  size = wide }
         Astral = skill ("Intuition")
         Athletics = skill ("Agility")
@@ -175,6 +179,7 @@ characterTable = ruleset
 
     Qualities = list
     {
+        description = "Positive and negative qualities that shape the runner."
         tableLayout = layout { size = wide }
         source = secondary.Qualities
         singular = "Quality"
@@ -208,6 +213,7 @@ characterTable = ruleset
 
     Augmentations = list
     {
+        description = "Cyberware and bioware installed, with their essence cost."
         tableLayout = layout { size = wide }
         source = secondary.Augmentations
         singular = "Augmentation"
@@ -232,6 +238,7 @@ characterTable = ruleset
 
     Contacts = list
     {
+        description = "People the runner knows and can call on."
         tableLayout = layout { size = wide }
         singular = "Contact"
         editable = character
@@ -239,20 +246,21 @@ characterTable = ruleset
         {
             Name = string {}
             Type = string {}
-            Connection = integer { default = 1 }
-            Loyalty = integer { default = 1 }
+            Connection = integer { description = "How much pull the contact has." default = 1 }
+            Loyalty = integer { description = "How much the contact cares about the runner." default = 1 }
         }
     }
 
     IDs = list
     {
+        description = "Fake identities and licenses."
         tableLayout = layout { size = wide }
         singular = "SIN or License"
         editable = character
         valueType = custom
         {
             Name = string {}
-            Rating = integer { default = 1 }
+            Rating = integer { description = "How well the fake ID holds up to checks." default = 1 }
             Notes = string {}
         }
     }
@@ -264,7 +272,7 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 5  size = wide }
-        'Professional Rating' = integer { default = 2 }
+        'Professional Rating' = integer { description = "How skilled and dangerous the opposition is." default = 2 }
         B = integer { default = 3 }
         A = integer { default = 3 }
         R = integer { default = 3 }
@@ -274,12 +282,13 @@ creatureTable = ruleset
         I = integer { default = 3 }
         C = integer { default = 3 }
         Initiative = integer { value = R + I  valuedice = ([1d6], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
-        'Defense Rating' = integer { default = 3 }
-        'Condition Monitor' = slots { number = 10  editable = live  indicator = "#d64545" }
-        Defense = integer { value = R + I  valuedice = srRoll (R + I, 0, false)  editable = none }
+        'Defense Rating' = integer { description = "Rating compared to the attacker's attack rating to decide edge." default = 3 }
+        'Condition Monitor' = slots { description = "Damage boxes." number = 10  editable = live  indicator = "#d64545" }
+        Defense = integer { description = "Pool to avoid attacks." value = R + I  valuedice = srRoll (R + I, 0, false)  editable = none }
     }
     'Dice Pools' = keyvalues
     {
+        description = "The NPC's main dice pools."
         singular = "Pool"
         editablekeys = character
         keys = ["Firearms", "Close Combat"]

@@ -83,32 +83,32 @@ iterativePenalty (char) =
 
 ability = custom
 {
-    Score = integer { default = 10  minvalue = 1  maxvalue = 40 }
-    Modifier = modifier { value = abilityModifier (Score)  valuedice = pf1Check  editable = none }
+    Score = integer { description = "Ability score, usually 3 to 18 before bonuses." default = 10  minvalue = 1  maxvalue = 40 }
+    Modifier = modifier { description = "Modifier from the score: (score - 10) / 2, rounded down." value = abilityModifier (Score)  valuedice = pf1Check  editable = none }
 }
 
 save (abilityMod) = custom
 {
-    Base = integer { default = 0 }
-    Magic = integer { default = 0 }
-    Misc = integer { default = 0 }
-    Total = modifier { value = Base + abilityMod + Magic + Misc - conditionPenalty (characterTable)  valuedice = pf1Save  editable = none }
+    Base = integer { description = "Base save bonus from your class and level." default = 0 }
+    Magic = integer { description = "Bonus from magic items such as a cloak of resistance." default = 0 }
+    Misc = integer { description = "Other bonuses and penalties." default = 0 }
+    Total = modifier { description = "Total save: base plus ability, magic and misc, minus condition penalties." value = Base + abilityMod + Magic + Misc - conditionPenalty (characterTable)  valuedice = pf1Save  editable = none }
 }
 
 skill (abilityMod, armorPenalty) = custom
 {
-    Ranks = integer { default = 0  minvalue = 0 }
-    'Class skill' = bool { default = false }
-    Misc = integer { default = 0 }
-    Total = modifier { value = Ranks + abilityMod + (if 'Class skill' and Ranks > 0 then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
+    Ranks = integer { description = "Skill ranks. You can't have more ranks than your level." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "A class skill with at least one rank gets +3." default = false }
+    Misc = integer { description = "Other bonuses, such as racial or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill." value = Ranks + abilityMod + (if 'Class skill' and Ranks > 0 then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
 }
 
 trainedSkill (abilityMod, armorPenalty) = custom
 {
-    Ranks = integer { default = 0  minvalue = 0 }
-    'Class skill' = bool { default = false }
-    Misc = integer { default = 0 }
-    Total = modifier { value = if Ranks == 0 then 0 else Ranks + abilityMod + (if 'Class skill' then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
+    Ranks = integer { description = "Skill ranks. This skill can only be used with at least one rank." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "A class skill with at least one rank gets +3." default = false }
+    Misc = integer { description = "Other bonuses, such as racial or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill. Untrained, it can't be used." value = if Ranks == 0 then 0 else Ranks + abilityMod + (if 'Class skill' then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = pf1Check  editable = none }
 }
 
 noStats = { Stats = { Damage = "" } }
@@ -176,17 +176,18 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Class = string { keys = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"] }
-        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        Level = integer { description = "Character level, from 1 to 20." default = 1  minvalue = 1  maxvalue = 20 }
         Race = string { keys = ["Dwarf", "Elf", "Gnome", "Half-elf", "Half-orc", "Halfling", "Human"] }
         Alignment = string { keys = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] }
         Deity = string {}
-        Size = string { default = "Medium"  keys = ["Small", "Medium", "Large"] }
-        Speed = integer { default = 30  render = distance (Speed) }
-        Experience = integer { default = 0  editable = live }
+        Size = string { description = "Size changes attack, AC and combat maneuvers." default = "Medium"  keys = ["Small", "Medium", "Large"] }
+        Speed = integer { description = "Base land speed per move action." default = 30  render = distance (Speed) }
+        Experience = integer { description = "Experience points." default = 0  editable = live }
     }
 
     Abilities = table
     {
+        description = "The six ability scores and their modifiers."
         tableLayout = layout { columns = 3  size = wide }
         Str = ability {}
         Dex = ability {}
@@ -199,29 +200,30 @@ characterTable = ruleset
     Combat = table
     {
         tableLayout = layout { columns = 4 }
-        'Max HP' = integer { default = 10 }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
-        'Nonlethal' = integer { default = 0  minvalue = 0  editable = live }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 10 }
+        HP = integer { description = "Current hit points. Below 0 you are dying; at minus Con you die." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Nonlethal' = integer { description = "Nonlethal damage. When it equals your HP you are staggered, above it unconscious." default = 0  minvalue = 0  editable = live }
         Down = string { value = hpState (HP, 'Max HP', Abilities.Con.Score)  visible = none  indicator = "#d64545" }
-        Initiative = modifier { value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainPf1  editable = none }
+        Initiative = modifier { description = "Initiative: Dex modifier plus other bonuses." value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainPf1  editable = none }
         'Initiative misc' = integer { default = 0 }
-        BAB = integer { default = 0 }
-        Attack = selector { options = ["First", "Second", "Third", "Fourth"]  labels = ["1st", "2nd", "3rd", "4th"]  colors = ["", "red", "red", "red"]  default = "First"  editable = live  save = nosave }
-        AC = integer { value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + Dodge + 'AC misc'  editable = none }
-        Touch = integer { value = 10 + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
-        'Flat footed' = integer { value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + min (0, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + 'AC misc'  editable = none }
-        'Natural armor' = integer { default = 0 }
-        Deflection = integer { default = 0 }
-        Dodge = integer { default = 0 }
+        BAB = integer { description = "Base attack bonus from your class and level." default = 0 }
+        Attack = selector { description = "Which iterative attack of a full attack: each later one is 5 lower." options = ["First", "Second", "Third", "Fourth"]  labels = ["1st", "2nd", "3rd", "4th"]  colors = ["", "red", "red", "red"]  default = "First"  editable = live  save = nosave }
+        AC = integer { description = "Armor Class: 10 plus armor, shield, Dex, size, natural armor and other bonuses." value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + Dodge + 'AC misc'  editable = none }
+        Touch = integer { description = "AC against touch attacks: no armor, shield or natural armor." value = 10 + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
+        'Flat footed' = integer { description = "AC when caught off guard: no Dex or dodge bonus." value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + min (0, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + 'AC misc'  editable = none }
+        'Natural armor' = integer { description = "Natural armor bonus to AC from tough hide or spells." default = 0 }
+        Deflection = integer { description = "Deflection bonus to AC, often from a ring of protection." default = 0 }
+        Dodge = integer { description = "Dodge bonus to AC. Lost when flat-footed." default = 0 }
         'AC misc' = integer { default = 0 }
-        CMB = modifier { value = BAB + Abilities.Str.Modifier - sizeModifier (Character.Size) - conditionPenalty (characterTable)  valuedice = ask ("CMD", pf1AttackRoll (20))  editable = none }
-        CMD = integer { value = 10 + BAB + Abilities.Str.Modifier + Abilities.Dex.Modifier - sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
-        'Damage reduction' = string {}
-        'Spell resistance' = integer { default = 0 }
+        CMB = modifier { description = "Combat maneuver bonus for trips, grapples and bull rushes: BAB plus Str plus size." value = BAB + Abilities.Str.Modifier - sizeModifier (Character.Size) - conditionPenalty (characterTable)  valuedice = ask ("CMD", pf1AttackRoll (20))  editable = none }
+        CMD = integer { description = "Combat maneuver defense: 10 plus BAB, Str, Dex and size." value = 10 + BAB + Abilities.Str.Modifier + Abilities.Dex.Modifier - sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
+        'Damage reduction' = string { description = "Damage reduction: damage ignored from each hit, and what bypasses it." }
+        'Spell resistance' = integer { description = "Spell resistance: a caster must beat this with a caster level check." default = 0 }
     }
 
     Saves = table
     {
+        description = "Saving throws against spells, poison and traps."
         tableLayout = layout { columns = 3 }
         Fortitude = save (Abilities.Con.Modifier)
         Reflex = save (Abilities.Dex.Modifier)
@@ -230,20 +232,22 @@ characterTable = ruleset
 
     Conditions = table
     {
+        description = "Common conditions. Some give penalties to rolls."
         tableLayout = layout { columns = 4 }
-        Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Sickened = bool { default = false  editable = live  indicator = "#3fa34d" }
-        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
-        Entangled = bool { default = false  editable = live  indicator = "#e8913a" }
-        Grappled = bool { default = false  editable = live  indicator = "#e8913a" }
-        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
-        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
-        'Negative levels' = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Shaken = bool { description = "Shaken: -2 on attacks, saves, skills and ability checks." default = false  editable = live  indicator = "#8e5cc4" }
+        Frightened = bool { description = "Frightened: shaken, and must flee from the source of fear." default = false  editable = live  indicator = "#8e5cc4" }
+        Sickened = bool { description = "Sickened: -2 on attacks, damage, saves, skills and ability checks." default = false  editable = live  indicator = "#3fa34d" }
+        Fatigued = bool { description = "Fatigued: -2 Str and Dex, and you can't run or charge." default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { description = "Entangled: -2 on attacks, -4 Dex, half speed." default = false  editable = live  indicator = "#e8913a" }
+        Grappled = bool { description = "Grappled: -4 Dex, -2 on most rolls, and you can't move." default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { description = "Prone: -4 on melee attacks, harder to hit in melee, easier at range." default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { description = "Stunned: drop what you hold, no actions, -2 AC and no Dex bonus." default = false  editable = live  indicator = "#d4b106" }
+        'Negative levels' = integer { description = "Each negative level gives -1 on most rolls and -5 HP." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
     }
 
     Skills = table
     {
+        description = "Skills. Roll d20 plus the total. Some need training to use."
         tableLayout = layout { columns = 2  size = wide }
         Acrobatics = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
         Appraise = skill (Abilities.Int.Modifier, 0)
@@ -309,6 +313,7 @@ characterTable = ruleset
 
     Feats = list
     {
+        description = "Feats the character has taken."
         source = secondary.Feats
         singular = "Feat"
         editable = character
@@ -316,6 +321,7 @@ characterTable = ruleset
 
     'Class features' = list
     {
+        description = "Abilities from the character's class."
         singular = "Feature"
         editable = character
         valueType = nameAndDescription
@@ -323,11 +329,12 @@ characterTable = ruleset
 
     Spellcasting = table
     {
+        description = "Caster level, spell slots and concentration."
         tableLayout = layout { columns = 5  size = wide }
-        'Caster level' = integer { default = 0 }
-        'Casting ability' = string { default = "Int"  keys = ["Int", "Wis", "Cha"] }
-        'Concentration' = modifier { value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = pf1Check  editable = none }
-        'Level 0' = slots { number = 4  editable = live }
+        'Caster level' = integer { description = "Caster level, which sets spell range, duration and power." default = 0 }
+        'Casting ability' = string { description = "The ability that powers your spells." default = "Int"  keys = ["Int", "Wis", "Cha"] }
+        'Concentration' = modifier { description = "Concentration check: caster level plus casting ability modifier." value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = pf1Check  editable = none }
+        'Level 0' = slots { description = "Cantrips or orisons prepared per day." number = 4  editable = live }
         'Level 1' = slots { number = 0  editable = live }
         'Level 2' = slots { number = 0  editable = live }
         'Level 3' = slots { number = 0  editable = live }
@@ -357,10 +364,10 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 4 }
-        PP = integer { default = 0 }
-        GP = integer { default = 0 }
-        SP = integer { default = 0 }
-        CP = integer { default = 0 }
+        PP = integer { description = "Platinum pieces, worth 10 gold each." default = 0 }
+        GP = integer { description = "Gold pieces." default = 0 }
+        SP = integer { description = "Silver pieces, ten to a gold." default = 0 }
+        CP = integer { description = "Copper pieces, a hundred to a gold." default = 0 }
         Languages = string {}
         Notes = string { multiline = true }
     }
@@ -381,8 +388,8 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        CR = string { default = "1" }
-        XP = integer { default = 400 }
+        CR = string { description = "Challenge rating: how tough the creature is for a party of four." default = "1" }
+        XP = integer { description = "Experience awarded for defeating the creature." default = 400 }
         Alignment = string { default = "N" }
         Size = string { default = "Medium"  keys = ["Fine", "Diminutive", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"] }
         Type = string {}
@@ -393,20 +400,20 @@ creatureTable = ruleset
     Defense = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        AC = integer { default = 12 }
-        Touch = integer { default = 10 }
-        'Flat footed' = integer { default = 12 }
-        'Max HP' = integer { default = 10 }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        AC = integer { description = "Armor Class." default = 12 }
+        Touch = integer { description = "AC against touch attacks." default = 10 }
+        'Flat footed' = integer { description = "AC when caught off guard." default = 12 }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 10 }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live  indicator = "#d64545" }
         Down = string { value = if HP <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
-        Fortitude = modifier { default = 0  valuedice = pf1Save }
-        Reflex = modifier { default = 0  valuedice = pf1Save }
-        Will = modifier { default = 0  valuedice = pf1Save }
+        Fortitude = modifier { description = "Fortitude save bonus." default = 0  valuedice = pf1Save }
+        Reflex = modifier { description = "Reflex save bonus." default = 0  valuedice = pf1Save }
+        Will = modifier { description = "Will save bonus." default = 0  valuedice = pf1Save }
         'Defensive abilities' = string {}
-        DR = string {}
+        DR = string { description = "Damage reduction and what bypasses it." }
         Immune = string {}
         Resist = string {}
-        SR = integer { default = 0 }
+        SR = integer { description = "Spell resistance." default = 0 }
         Weaknesses = string {}
     }
     Offense = table
@@ -450,9 +457,9 @@ creatureTable = ruleset
         Int = integer { default = 10 }
         Wis = integer { default = 10 }
         Cha = integer { default = 10 }
-        BAB = integer { default = 0 }
-        CMB = modifier { default = 0  valuedice = ask ("CMD", pf1AttackRoll (20)) }
-        CMD = integer { default = 10 }
+        BAB = integer { description = "Base attack bonus." default = 0 }
+        CMB = modifier { description = "Combat maneuver bonus." default = 0  valuedice = ask ("CMD", pf1AttackRoll (20)) }
+        CMD = integer { description = "Combat maneuver defense." default = 10 }
     }
     Notes = table
     {

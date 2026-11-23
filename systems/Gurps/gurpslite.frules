@@ -147,6 +147,7 @@ skillLevel(name, level, points) = custom
 {
     Name = name
     Level = integer {
+        description = "Effective skill level. Roll 3d6 at or under it to succeed."
         value = level
         valuedice = gurpsCheck
     }
@@ -273,6 +274,7 @@ attack(name, level, mode, parry, reach, kind, distance) = custom
 {
     Name = name
     'To hit' = integer {
+        description = "Effective skill with this attack. Roll 3d6 at or under it to hit."
         value = level
         render = "To hit: " + toString (level)
         valuedice = gurpsCheck
@@ -338,22 +340,27 @@ characterTable = ruleset
     rulesetConfiguration = { important = [Attributes, 'Secondary characteristics', 'Active defenses', Attacks] }
     Attributes = table
         {
+            description = "The four basic attributes. Roll 3d6 at or under one to succeed."
             ST = integer {
+                description = "Strength: physical power and size. Sets HP, damage and lift."
                 valuedice=gurpsCheckAgainst (ST/10+10)
                 render=toString(ST/10+10)
                 step=10
             }
             DX=integer{
+                description = "Dexterity: agility and coordination. The base for most physical skills."
                 valuedice=gurpsCheckAgainst (DX/20+10)
                 render=toString(DX/20+10)
                 step=20
             }
             IQ=integer{
+                description = "Intelligence: brainpower and wits. Sets Will and Perception."
                 valuedice=gurpsCheckAgainst (IQ/20+10)
                 render=toString(IQ/20+10)
                 step=20
             }
             HT=integer{
+                description = "Health: energy and vitality. Sets Fatigue Points and resists illness."
                 valuedice=gurpsCheckAgainst (HT/10+10)
                 render=toString(HT/10+10)
                 step=10
@@ -363,8 +370,10 @@ characterTable = ruleset
     {
         HP = table
         {
+            description = "Hit points, from ST. At 0 or below you risk falling unconscious."
             Current=integer
                     {
+                        description = "Current hit points. Below a third of HP you move at half speed."
                         editable=live
                         maxvalue=Max
                         default=Max
@@ -377,18 +386,22 @@ characterTable = ruleset
         }
             Will=integer
                     {
+                        description = "Willpower, from IQ. Rolled to resist fear and mental pressure."
                         value=fromAttribute("Will")
                         editable=none
                     }
             Perception=integer
                     {
+                        description = "Perception, from IQ. Rolled to notice things."
                         value=fromAttribute("Per")
                         editable=none
                     }
         'Fatigue Points' = table
         {
+            description = "Fatigue points, from HT. Spent on extra effort and some spells."
             Current=integer
                     {
+                        description = "Current fatigue points. Below a third you are very tired."
                         editable=live
                         maxvalue=Max
                         default=Max
@@ -405,11 +418,12 @@ characterTable = ruleset
                         visible=none
                         indicator="#d64545"
                     }
-            'Basic speed'=quarterText (speedQuarters (characterTable))
-            'Basic move'=basicMove (characterTable)
-            'Basic lift'=poundsText (basicLift (fromAttribute ("ST")))
+            'Basic speed'=string { description = "Basic speed: (HT + DX) / 4. Sets Dodge and turn order." value = quarterText (speedQuarters (characterTable))  editable = none }
+            'Basic move'=integer { description = "Basic move: yards per second, from Basic speed." value = basicMove (characterTable)  editable = none }
+            'Basic lift'=string { description = "Basic lift: (ST x ST) / 5 in pounds, the weight you can lift with one hand." value = poundsText (basicLift (fromAttribute ("ST")))  editable = none }
             Initiative=integer
                     {
+                        description = "Turn order in combat: highest Basic speed acts first."
                         value=speedQuarters (characterTable) * 25
                         render=quarterText (speedQuarters (characterTable))
                         valuedice=basicSpeedOrder
@@ -418,6 +432,7 @@ characterTable = ruleset
     }
     'Bought secondary' = table
     {
+        description = "Points bought to raise secondary characteristics above their base."
         visible = editor
         HP = integer { step = 2 render = signedText (HP / 2) }
         Will = integer { step = 5 render = signedText (Will / 5) }
@@ -428,19 +443,23 @@ characterTable = ruleset
     }
     Encumbrance = table
     {
+        description = "How much weight you carry and how it slows you."
         'Carried weight' = poundsText (carriedWeight (characterTable))
         Level = item (encumbranceOf (characterTable), encumbranceNames)
         Move = encumberedMove (basicMove (characterTable), encumbranceOf (characterTable))
     }
     'Active defenses' = table
     {
+        description = "Rolls to avoid a hit. Roll 3d6 at or under the value."
         Dodge = integer
         {
+            description = "Dodge: Basic speed + 3, minus encumbrance."
             value = dodge (characterTable)
             valuedice = gurpsCheck
         }
         Block = integer
         {
+            description = "Block with a shield: half the shield skill + 3."
             visible = hasShield (characterTable)
             value = block (characterTable)
             valuedice = gurpsCheck
@@ -448,6 +467,7 @@ characterTable = ruleset
     }
     'Damage resistance' = table
     {
+        description = "Damage stopped by armour on each body part."
         tableLayout = layout { columns = 3 }
         Skull = drAt (characterTable, "skull")
         Face = drAt (characterTable, "face")
@@ -461,6 +481,7 @@ characterTable = ruleset
     }
     'Spent points' = table
     {
+        description = "Character points spent on each part of the character."
         Attributes = attributePoints (characterTable)
         Secondary = secondaryPoints (characterTable)
         Advantages = advantagePoints (characterTable)
@@ -600,23 +621,23 @@ creatureTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4 }
-        ST = integer { default = 10  valuedice = gurpsCheck }
-        DX = integer { default = 10  valuedice = gurpsCheck }
-        IQ = integer { default = 10  valuedice = gurpsCheck }
-        HT = integer { default = 10  valuedice = gurpsCheck }
+        ST = integer { description = "Strength: physical power and size." default = 10  valuedice = gurpsCheck }
+        DX = integer { description = "Dexterity: agility and coordination." default = 10  valuedice = gurpsCheck }
+        IQ = integer { description = "Intelligence: brainpower and wits." default = 10  valuedice = gurpsCheck }
+        HT = integer { description = "Health: energy and vitality." default = 10  valuedice = gurpsCheck }
     }
     'Secondary characteristics' = table
     {
         tableLayout = layout { columns = 4 }
-        HP = integer { default = 10 }
-        'Current HP' = integer { default = HP  editable = live }
+        HP = integer { description = "Hit points when unhurt." default = 10 }
+        'Current HP' = integer { description = "Current hit points." default = HP  editable = live }
         'HP state' = string { value = hpState ('Current HP', HP)  visible = none  indicator = "#d64545" }
-        FP = integer { default = 10 }
-        'Current FP' = integer { default = FP  editable = live }
-        Will = integer { default = 10  valuedice = gurpsCheck }
-        Per = integer { default = 10  valuedice = gurpsCheck }
-        'Basic speed' = integer { default = 500  step = 25  render = hundredthsText ('Basic speed') }
-        'Basic move' = integer { default = 5 }
+        FP = integer { description = "Fatigue points when rested." default = 10 }
+        'Current FP' = integer { description = "Current fatigue points." default = FP  editable = live }
+        Will = integer { description = "Willpower, rolled to resist fear and mental pressure." default = 10  valuedice = gurpsCheck }
+        Per = integer { description = "Perception, rolled to notice things." default = 10  valuedice = gurpsCheck }
+        'Basic speed' = integer { description = "Basic speed, which sets turn order." default = 500  step = 25  render = hundredthsText ('Basic speed') }
+        'Basic move' = integer { description = "Yards moved per second." default = 5 }
         Initiative = integer
         {
             value = 'Basic speed'
@@ -624,10 +645,10 @@ creatureTable = ruleset
             editable = none
             visible = none
         }
-        Dodge = integer { default = 8  valuedice = gurpsCheck }
+        Dodge = integer { description = "Roll 3d6 at or under this to dodge." default = 8  valuedice = gurpsCheck }
         Parry = string {}
-        DR = integer { default = 0 }
-        SM = integer { default = 0  render = signedText (SM) }
+        DR = integer { description = "Damage resistance from armour or tough hide." default = 0 }
+        SM = integer { description = "Size modifier. Bigger creatures are easier to hit." default = 0  render = signedText (SM) }
         Weight = string {}
     }
     Attacks = list

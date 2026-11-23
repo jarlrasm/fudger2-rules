@@ -42,9 +42,9 @@ plainD616 = d616 (0, 0, 0, "Normal")
 
 ability (attack) = custom
 {
-    Score = integer { default = 0  minvalue = -3  maxvalue = 20 }
-    Defense = integer { value = Score + 10  editable = none }
-    Check = modifier { value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  editable = none }
+    Score = integer { description = "Ability score, added to d616 rolls." default = 0  minvalue = -3  maxvalue = 20 }
+    Defense = integer { description = "What attackers must roll to hit you with this ability: score plus 10." value = Score + 10  editable = none }
+    Check = modifier { description = "Roll d616 plus the score. A 6 on the Marvel die is a fantastic success." value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  editable = none }
 }
 
 downState (health, focus) =
@@ -59,16 +59,17 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         'Real name' = string {}
-        Rank = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        Rank = integer { description = "Rank 1 to 6: from street hero to cosmic power. Sets karma and power count." default = 1  minvalue = 1  maxvalue = 6 }
         Origin = string { keys = ["Alien", "Born Mutant", "Cosmic", "Gods", "High Tech", "Magic", "Mutant", "Special Training", "Weird Science", "Unknown"] }
         Occupation = string {}
-        Size = string { default = "Average"  keys = ["Microscopic", "Miniature", "Tiny", "Little", "Small", "Average", "Big", "Huge", "Giant", "Titanic", "Gigantic"] }
+        Size = string { description = "Size changes reach, speed and how easy you are to hit." default = "Average"  keys = ["Microscopic", "Miniature", "Tiny", "Little", "Small", "Average", "Big", "Huge", "Giant", "Titanic", "Gigantic"] }
         Teams = string {}
-        Roll = selector { options = ["Trouble", "Normal", "Edge"]  labels = ["Trouble", "Normal", "Edge"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Roll = selector { description = "Edge rerolls one die and keeps the better; trouble rerolls and keeps the worse." options = ["Trouble", "Normal", "Edge"]  labels = ["Trouble", "Normal", "Edge"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
     }
 
     Abilities = table
     {
+        description = "The six MARVEL abilities. Melee, Agility, Ego and Logic also attack."
         tableLayout = layout { columns = 3  size = wide }
         Melee = ability (true)
         Agility = ability (true)
@@ -80,15 +81,16 @@ characterTable = ruleset
 
     Status = table
     {
+        description = "Health, focus, karma and conditions."
         tableLayout = layout { columns = 4 }
-        'Max Health' = integer { value = max (10, Abilities.Resilience.Score * 30)  editable = none }
-        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
-        'Max Focus' = integer { value = max (10, Abilities.Vigilance.Score * 30)  editable = none }
-        Focus = integer { default = 'Max Focus'  editable = live  indicator = "#8e5cc4" }
-        Karma = integer { default = Hero.Rank  minvalue = 0  editable = live }
-        'Health damage reduction' = integer { default = 0 }
-        'Focus damage reduction' = integer { default = 0 }
-        Initiative = modifier { value = Abilities.Vigilance.Score  valuedice = plainD616  editable = none }
+        'Max Health' = integer { description = "Health: Resilience times 30, at least 10." value = max (10, Abilities.Resilience.Score * 30)  editable = none }
+        Health = integer { description = "Current health. At 0 the hero is knocked out or worse." default = 'Max Health'  editable = live  indicator = "#d64545" }
+        'Max Focus' = integer { description = "Focus: Vigilance times 30, at least 10." value = max (10, Abilities.Vigilance.Score * 30)  editable = none }
+        Focus = integer { description = "Current focus, spent on powers and lost to mental attacks." default = 'Max Focus'  editable = live  indicator = "#8e5cc4" }
+        Karma = integer { description = "Karma points, spent to gain an edge on rolls." default = Hero.Rank  minvalue = 0  editable = live }
+        'Health damage reduction' = integer { description = "Reduces health damage from each hit." default = 0 }
+        'Focus damage reduction' = integer { description = "Reduces focus damage from each hit." default = 0 }
+        Initiative = modifier { description = "Initiative: d616 plus Vigilance." value = Abilities.Vigilance.Score  valuedice = plainD616  editable = none }
         Down = string { value = downState (Health, Focus)  visible = none  indicator = "#d64545" }
         Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
         Prone = bool { default = false  editable = live  indicator = "#e8913a" }
@@ -97,6 +99,7 @@ characterTable = ruleset
 
     Speed = table
     {
+        description = "How many spaces the hero moves with each kind of movement."
         tableLayout = layout { columns = 3 }
         Run = integer { default = 5 }
         Climb = integer { default = 3 }
@@ -108,6 +111,7 @@ characterTable = ruleset
 
     Powers = list
     {
+        description = "Powers, with their action type and focus cost."
         tableLayout = layout { size = wide }
         singular = "Power"
         editable = character
@@ -123,6 +127,7 @@ characterTable = ruleset
 
     Traits = list
     {
+        description = "Traits that give edges and troubles in certain situations."
         singular = "Trait"
         editable = character
         valueType = nameAndDescription
@@ -130,6 +135,7 @@ characterTable = ruleset
 
     Tags = list
     {
+        description = "Tags such as Secret Identity or Mutant, with their story effects."
         singular = "Tag"
         editable = character
         valueType = nameAndDescription

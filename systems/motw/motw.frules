@@ -56,41 +56,43 @@ characterTable = ruleset
         tableLayout = layout { columns = 3  size = wide }
         Playbook = string { keys = ["The Chosen", "The Crooked", "The Divine", "The Expert", "The Flake", "The Initiate", "The Monstrous", "The Mundane", "The Professional", "The Spell-Slinger", "The Spooky", "The Wronged"] }
         Look = string {}
-        Experience = slots { number = 5  editable = live  allowedchange = increaseAndClear }
+        Experience = slots { description = "Experience, marked on misses. Five marks give an improvement." number = 5  editable = live  allowedchange = increaseAndClear }
         History = string { multiline = true }
     }
 
     Ratings = table
     {
+        description = "Ratings, added to 2d6 for moves. 10+ is a full success, 7-9 a mixed one."
         tableLayout = layout { columns = 5  size = wide }
-        Charm = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
-        Cool = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
-        Sharp = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
-        Tough = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
-        Weird = modifier { default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Charm = modifier { description = "Charm: manipulating and talking people round." default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Cool = modifier { description = "Cool: staying calm and acting under pressure." default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Sharp = modifier { description = "Sharp: noticing things and working them out." default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Tough = modifier { description = "Tough: fighting and protecting people." default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
+        Weird = modifier { description = "Weird: magic and the supernatural." default = 0  minvalue = -1  maxvalue = 3  valuedice = motwDice (characterTable) }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 2 }
-        Luck = slots { number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
-        Harm = slots { number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
+        Luck = slots { description = "Spend luck to turn any roll into a 12 or avoid harm. Seven spent and you are doomed." number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
+        Harm = slots { description = "Harm taken. At 4 or more you are unstable and get worse; at 8 you die." number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
         Down = string { value = harmState (Harm.realvalue)  visible = none  indicator = "#d64545" }
-        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
-        Armour = integer { default = 0 }
+        Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        Armour = integer { description = "Armour reduces harm from each hit." default = 0 }
     }
 
     'Basic Moves' = table
     {
+        description = "The moves every hunter has, with the rating they roll."
         tableLayout = layout { columns = 2 }
-        'Act Under Pressure' = modifier { value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
-        'Help Out' = modifier { value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
-        'Investigate a Mystery' = modifier { value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
-        'Kick Some Ass' = modifier { value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none  action = melee  reach = 2 }
-        'Manipulate Someone' = modifier { value = Ratings.Charm  valuedice = motwDice (characterTable)  editable = none }
-        'Protect Someone' = modifier { value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none }
-        'Read a Bad Situation' = modifier { value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
-        'Use Magic' = modifier { value = Ratings.Weird  valuedice = motwDice (characterTable)  editable = none }
+        'Act Under Pressure' = modifier { description = "Do something under pressure or in danger. Roll +Cool." value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
+        'Help Out' = modifier { description = "Help another hunter. Roll +Cool." value = Ratings.Cool  valuedice = motwDice (characterTable)  editable = none }
+        'Investigate a Mystery' = modifier { description = "Learn things about the mystery. Roll +Sharp." value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
+        'Kick Some Ass' = modifier { description = "Fight a monster or minion. Roll +Tough." value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none  action = melee  reach = 2 }
+        'Manipulate Someone' = modifier { description = "Get someone to do what you want. Roll +Charm." value = Ratings.Charm  valuedice = motwDice (characterTable)  editable = none }
+        'Protect Someone' = modifier { description = "Take harm meant for someone else. Roll +Tough." value = Ratings.Tough  valuedice = motwDice (characterTable)  editable = none }
+        'Read a Bad Situation' = modifier { description = "Size up a dangerous place or situation. Roll +Sharp." value = Ratings.Sharp  valuedice = motwDice (characterTable)  editable = none }
+        'Use Magic' = modifier { description = "Cast a spell or use supernatural forces. Roll +Weird." value = Ratings.Weird  valuedice = motwDice (characterTable)  editable = none }
     }
 
     Moves = list
@@ -122,7 +124,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2  size = wide }
         Gear = string { multiline = true }
-        Improvements = string { multiline = true }
+        Improvements = string { description = "Upgrades to the hunter's gear, base or abilities." multiline = true }
     }
 }
 
@@ -133,12 +135,12 @@ creatureTable = ruleset
     {
         tableLayout = layout { columns = 3  size = wide }
         Type = string { keys = ["Monster", "Minion", "Bystander"] }
-        Motivation = string { keys = ["Beast (to run wild)", "Breeder (to give birth)", "Collector (to steal)", "Destroyer (to cause chaos)", "Devourer (to consume)", "Executioner (to punish)", "Parasite (to infest)", "Queen (to possess and control)", "Sorcerer (to usurp power)", "Tempter (to tempt)", "Torturer (to hurt)", "Trickster (to create mayhem)"] }
-        'Harm Capacity' = integer { default = 8 }
-        Harm = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Armour = integer { default = 0 }
+        Motivation = string { description = "What the monster wants, which guides how it acts." keys = ["Beast (to run wild)", "Breeder (to give birth)", "Collector (to steal)", "Destroyer (to cause chaos)", "Devourer (to consume)", "Executioner (to punish)", "Parasite (to infest)", "Queen (to possess and control)", "Sorcerer (to usurp power)", "Tempter (to tempt)", "Torturer (to hurt)", "Trickster (to create mayhem)"] }
+        'Harm Capacity' = integer { description = "Harm the monster can take before it dies." default = 8 }
+        Harm = integer { description = "Harm taken so far." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armour = integer { description = "Armour reduces harm from each hit." default = 0 }
         Down = string { value = if Harm >= 'Harm Capacity' then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Weakness = string {}
+        Weakness = string { description = "The only thing that can kill this monster, or that hurts it most." }
     }
     Attacks = list
     {

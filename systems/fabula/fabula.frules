@@ -59,8 +59,8 @@ fabulaAttack (char, pair, damage) = ask ("Defense", fabulaRoll (currentSides (ch
 
 attribute (base, steps) = custom
 {
-    Base = string { default = "d8"  keys = dieKeys }
-    Current = integer { value = stepDown (sidesOf (Base), steps)  editable = none  render = "d" + toString (Current) }
+    Base = string { description = "The attribute's normal die size, from d6 to d12." default = "d8"  keys = dieKeys }
+    Current = integer { description = "Die size right now, after statuses have stepped it down." value = stepDown (sidesOf (Base), steps)  editable = none  render = "d" + toString (Current) }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.fabulaWeapon.Stats, field, "")
@@ -86,18 +86,19 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Level = integer { default = 5  minvalue = 5  maxvalue = 50 }
-        Identity = string {}
-        Theme = string { keys = ["Ambition", "Anger", "Belonging", "Doubt", "Duty", "Guilt", "Hope", "Justice", "Mercy", "Vengeance"] }
-        Origin = string {}
+        Level = integer { description = "Character level, from 5 at the start up to 50." default = 5  minvalue = 5  maxvalue = 50 }
+        Identity = string { description = "A short phrase for who the character is." }
+        Theme = string { description = "The feeling that drives the character most." keys = ["Ambition", "Anger", "Belonging", "Doubt", "Duty", "Guilt", "Hope", "Justice", "Mercy", "Vengeance"] }
+        Origin = string { description = "Where the character comes from." }
         Classes = string {}
-        Experience = integer { default = 0  editable = live }
-        Zenit = integer { default = 500 }
-        Fabula = integer { default = 3  minvalue = 0  editable = live }
+        Experience = integer { description = "Experience points. Ten of them buy a level." default = 0  editable = live }
+        Zenit = integer { description = "Money." default = 500 }
+        Fabula = integer { description = "Fabula points, spent to reroll, invoke traits or bonds, or shape the story." default = 3  minvalue = 0  editable = live }
     }
 
     Attributes = table
     {
+        description = "The four attributes, rated as die sizes. Checks roll two of them."
         tableLayout = layout { columns = 4  size = wide }
         Dexterity = attribute ("d8", (if Statuses.Slow then 1 else 0) + (if Statuses.Enraged then 1 else 0))
         Insight = attribute ("d8", (if Statuses.Dazed then 1 else 0) + (if Statuses.Enraged then 1 else 0))
@@ -108,18 +109,18 @@ characterTable = ruleset
     Points = table
     {
         tableLayout = layout { columns = 3 }
-        'Max HP' = integer { value = sidesOf (Attributes.Might.Base) * 5 + Character.Level + 'HP bonus'  editable = none }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Max HP' = integer { description = "Hit points: Might die size times 5, plus level and bonuses." value = sidesOf (Attributes.Might.Base) * 5 + Character.Level + 'HP bonus'  editable = none }
+        HP = integer { description = "Current hit points. At half or less you are in crisis." default = 'Max HP'  editable = live  indicator = "#d64545" }
         State = string { value = crisisState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
-        'Max MP' = integer { value = sidesOf (Attributes.Willpower.Base) * 5 + Character.Level + 'MP bonus'  editable = none }
-        MP = integer { default = 'Max MP'  editable = live  indicator = "#3a7bd5" }
+        'Max MP' = integer { description = "Mind points: Willpower die size times 5, plus level and bonuses." value = sidesOf (Attributes.Willpower.Base) * 5 + Character.Level + 'MP bonus'  editable = none }
+        MP = integer { description = "Current mind points, spent on spells and some skills." default = 'Max MP'  editable = live  indicator = "#3a7bd5" }
         'HP bonus' = integer { default = 0 }
-        'Max IP' = integer { default = 6 }
-        IP = integer { default = 6  editable = live }
+        'Max IP' = integer { description = "Inventory points when fully stocked." default = 6 }
+        IP = integer { description = "Inventory points left, spent to use potions and other consumables." default = 6  editable = live }
         'MP bonus' = integer { default = 0 }
-        Defense = integer { value = Attributes.Dexterity.Current + 'Defense bonus'  editable = none }
-        'Magic Defense' = integer { value = Attributes.Insight.Current + 'Magic Defense bonus'  editable = none }
-        Initiative = modifier { value = 'Initiative bonus'  valuedice = fabulaRoll (Attributes.Dexterity.Current, Attributes.Insight.Current, 0, -1)  editable = none }
+        Defense = integer { description = "What an attack must reach to hit you: Dexterity die plus bonuses." value = Attributes.Dexterity.Current + 'Defense bonus'  editable = none }
+        'Magic Defense' = integer { description = "What a spell must reach to affect you: Insight die plus bonuses." value = Attributes.Insight.Current + 'Magic Defense bonus'  editable = none }
+        Initiative = modifier { description = "Bonus to the Dexterity plus Insight initiative check." value = 'Initiative bonus'  valuedice = fabulaRoll (Attributes.Dexterity.Current, Attributes.Insight.Current, 0, -1)  editable = none }
         'Defense bonus' = integer { default = 0 }
         'Magic Defense bonus' = integer { default = 0 }
         'Initiative bonus' = integer { default = 0 }
@@ -127,17 +128,19 @@ characterTable = ruleset
 
     Statuses = table
     {
+        description = "Statuses step attribute dice down while they last."
         tableLayout = layout { columns = 3 }
-        Slow = bool { default = false  editable = live  indicator = "#d4b106" }
-        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
-        Weak = bool { default = false  editable = live  indicator = "#3fa34d" }
-        Shaken = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Enraged = bool { default = false  editable = live  indicator = "#d64545" }
-        Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Slow = bool { description = "Slow lowers Dexterity one die size." default = false  editable = live  indicator = "#d4b106" }
+        Dazed = bool { description = "Dazed lowers Insight one die size." default = false  editable = live  indicator = "#d4b106" }
+        Weak = bool { description = "Weak lowers Might one die size." default = false  editable = live  indicator = "#3fa34d" }
+        Shaken = bool { description = "Shaken lowers Willpower one die size." default = false  editable = live  indicator = "#8e5cc4" }
+        Enraged = bool { description = "Enraged lowers Dexterity and Insight." default = false  editable = live  indicator = "#d64545" }
+        Poisoned = bool { description = "Poisoned lowers Might and Willpower." default = false  editable = live  indicator = "#3fa34d" }
     }
 
     Checks = keyvalues
     {
+        description = "Checks roll two attribute dice. Doubles of 6 or more are a critical, double 1s a fumble."
         singular = "Check"
         editablekeys = character
         keys = ["Dex + Dex", "Dex + Ins", "Dex + Mig", "Ins + Ins", "Ins + Wlp", "Mig + Mig", "Mig + Wlp", "Wlp + Wlp"]
@@ -196,13 +199,14 @@ characterTable = ruleset
 
     Bonds = list
     {
+        description = "Bonds of feeling with other people. Each feeling raises the bond's strength."
         singular = "Bond"
         editable = character
         valueType = custom
         {
             With = string {}
             Feelings = string {}
-            Strength = integer { default = 1  minvalue = 1  maxvalue = 3 }
+            Strength = integer { description = "Bond strength, added to checks when the bond is invoked." default = 1  minvalue = 1  maxvalue = 3 }
         }
     }
 
@@ -235,10 +239,10 @@ npcTable = ruleset
     NPC = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Level = integer { default = 5 }
+        Level = integer { description = "NPC level, which scales its stats." default = 5 }
         Species = string { keys = ["Beast", "Construct", "Demon", "Elemental", "Humanoid", "Monster", "Plant", "Undead"] }
-        Rank = string { default = "Soldier"  keys = ["Soldier", "Elite", "Champion 2", "Champion 3", "Champion 4", "Champion 5", "Villain"] }
-        Traits = string {}
+        Rank = string { description = "How tough the NPC is. Elites and champions count as several soldiers." default = "Soldier"  keys = ["Soldier", "Elite", "Champion 2", "Champion 3", "Champion 4", "Champion 5", "Villain"] }
+        Traits = string { description = "Words that describe the NPC's nature and behaviour." }
     }
     Attributes = table
     {
@@ -252,16 +256,17 @@ npcTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         'Max HP' = integer { default = 40 }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live  indicator = "#d64545" }
         State = string { value = crisisState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
         'Max MP' = integer { default = 30 }
-        MP = integer { default = 'Max MP'  editable = live }
-        Defense = integer { default = 8 }
-        'Magic Defense' = integer { default = 8 }
+        MP = integer { description = "Current mind points." default = 'Max MP'  editable = live }
+        Defense = integer { description = "What an attack must reach to hit the NPC." default = 8 }
+        'Magic Defense' = integer { description = "What a spell must reach to affect the NPC." default = 8 }
         Initiative = integer { default = 8 }
     }
     Affinities = table
     {
+        description = "How the NPC takes each kind of damage: vulnerable, resistant, immune or absorbing."
         tableLayout = layout { columns = 5  size = wide }
         Physical = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }
         Air = string { default = ""  keys = ["", "VU", "RS", "IM", "AB"] }

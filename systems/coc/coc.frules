@@ -47,17 +47,17 @@ plainD100 = cocRoll (0)
 
 characteristic (base) = custom
 {
-    Value = integer { default = base  valuedice = cocDice (characterTable) }
+    Value = integer { description = "Characteristic out of 100. Roll d100 at or under it; half is a hard and a fifth an extreme success." default = base  valuedice = cocDice (characterTable) }
     Half = Value / 2
     Fifth = Value / 5
 }
 
 skill (base) = custom
 {
-    Value = integer { default = base  valuedice = cocDice (characterTable) }
+    Value = integer { description = "Skill out of 100. Roll d100 at or under it; half is a hard and a fifth an extreme success." default = base  valuedice = cocDice (characterTable) }
     Half = Value / 2
     Fifth = Value / 5
-    Improve = bool { default = false  editable = live }
+    Improve = bool { description = "Tick after a successful use. At the end of the session, try to improve the skill." default = false  editable = live }
 }
 
 strAndSiz (char) = char.Characteristics.STR.Value + char.Characteristics.SIZ.Value
@@ -123,7 +123,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 2 }
         Player = string {}
         Occupation = string {}
-        Age = integer { default = 25 }
+        Age = integer { description = "Age changes characteristics at creation, for better or worse." default = 25 }
         Pronoun = string {}
         Residence = string {}
         Birthplace = string {}
@@ -131,6 +131,7 @@ characterTable = ruleset
 
     Characteristics = table
     {
+        description = "The eight characteristics that describe body, mind and social standing."
         tableLayout = layout { columns = 3 }
         STR = characteristic (50)
         DEX = characteristic (50)
@@ -147,26 +148,30 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         'Hit Points' = table
         {
+            description = "Hit points from CON and SIZ. Losing half in one blow is a major wound."
             Max = integer { value = (Characteristics.CON.Value + Characteristics.SIZ.Value) / 10  editable = none }
-            Current = integer { default = Max  editable = live }
-            'Major Wound' = bool { default = false  editable = live  indicator = "#d64545" }
+            Current = integer { description = "Current hit points. At 0 you fall unconscious, with a major wound you are dying." default = Max  editable = live }
+            'Major Wound' = bool { description = "A wound of half your hit points or more from a single hit." default = false  editable = live  indicator = "#d64545" }
             Dying = bool { default = false  editable = live  indicator = "#d64545" }
             Unconscious = bool { default = false  editable = live  indicator = "#555555" }
         }
         Sanity = table
         {
-            Start = integer { value = Characteristics.POW.Value  editable = none }
-            Max = integer { value = 99 - skillValue (characterTable, "Cthulhu Mythos")  editable = none }
-            Current = integer { default = Start  editable = live  valuedice = cocDice (characterTable) }
-            'Temporary Insanity' = bool { default = false  editable = live  indicator = "#8e5cc4" }
-            'Indefinite Insanity' = bool { default = false  editable = live  indicator = "#8e5cc4" }
+            description = "Sanity points. Losing your grip on reality leads to madness."
+            Start = integer { description = "Starting Sanity, equal to POW." value = Characteristics.POW.Value  editable = none }
+            Max = integer { description = "Highest Sanity you can have: 99 minus Cthulhu Mythos." value = 99 - skillValue (characterTable, "Cthulhu Mythos")  editable = none }
+            Current = integer { description = "Current Sanity. Roll under it for sanity checks when facing horrors." default = Start  editable = live  valuedice = cocDice (characterTable) }
+            'Temporary Insanity' = bool { description = "Losing 5 or more Sanity at once can bring a short bout of madness." default = false  editable = live  indicator = "#8e5cc4" }
+            'Indefinite Insanity' = bool { description = "Losing a fifth of your Sanity in a day brings lasting madness." default = false  editable = live  indicator = "#8e5cc4" }
         }
         Luck = table
         {
+            description = "Luck points. Roll under them for chance, or spend them to adjust a roll."
             Current = integer { default = 50  editable = live  valuedice = cocDice (characterTable) }
         }
         'Magic Points' = table
         {
+            description = "Magic points, from POW, spent to cast spells."
             Max = integer { value = Characteristics.POW.Value / 5  editable = none }
             Current = integer { default = Max  editable = live }
         }
@@ -174,6 +179,7 @@ characterTable = ruleset
 
     Skills = table
     {
+        description = "The skills, with starting values. Roll d100 at or under the value."
         tableLayout = layout { columns = 4  size = wide }
         Accounting = skill (5)
         Anthropology = skill (1)
@@ -224,6 +230,7 @@ characterTable = ruleset
 
     'Other Skills' = keyvalues
     {
+        description = "Extra skills such as a second language, art or science."
         singular = "Skill"
         editablekeys = character
         keys = []
@@ -231,7 +238,7 @@ characterTable = ruleset
         valueType = custom
         {
             Value = integer { default = 1  valuedice = cocDice (characterTable) }
-            Improve = bool { default = false  editable = live }
+            Improve = bool { description = "Tick after a successful use. At the end of the session, try to improve the skill." default = false  editable = live }
         }
     }
 
@@ -245,12 +252,13 @@ characterTable = ruleset
 
     Combat = table
     {
-        'Damage Bonus' = damageBonus (strAndSiz (characterTable))
-        Build = build (strAndSiz (characterTable))
-        Move = moveRate (Characteristics.STR.Value, Characteristics.DEX.Value, Characteristics.SIZ.Value)
-        Initiative = integer { value = Characteristics.DEX.Value  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        'Damage Bonus' = string { description = "Extra damage added to melee and thrown attacks, from STR and SIZ." value = damageBonus (strAndSiz (characterTable))  editable = none }
+        Build = integer { description = "Size and strength class, used for combat maneuvers." value = build (strAndSiz (characterTable))  editable = none }
+        Move = integer { description = "Movement rate, from STR, DEX and SIZ compared." value = moveRate (Characteristics.STR.Value, Characteristics.DEX.Value, Characteristics.SIZ.Value)  editable = none }
+        Initiative = integer { description = "Acting order in combat: highest DEX acts first." value = Characteristics.DEX.Value  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
         Dice = selector
         {
+            description = "Bonus or penalty dice for the next roll. Keep the best or worst tens die."
             options = ["Two penalty", "Penalty", "Normal", "Bonus", "Two bonus"]
             labels = ["2 pen", "Pen", "Normal", "Bonus", "2 bon"]
             colors = ["red", "red", "white", "green", "green"]
@@ -293,7 +301,7 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Spending Level' = string {}
+        'Spending Level' = string { description = "What the investigator can spend day to day, from Credit Rating." }
         Cash = string {}
         Assets = string { multiline = true }
     }
@@ -312,27 +320,27 @@ creatureTable = ruleset
     Characteristics = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        STR = integer { default = 50  valuedice = plainD100 }
-        CON = integer { default = 50  valuedice = plainD100 }
-        SIZ = integer { default = 50  valuedice = plainD100 }
-        DEX = integer { default = 50  valuedice = plainD100 }
-        INT = integer { default = 50  valuedice = plainD100 }
-        POW = integer { default = 50  valuedice = plainD100 }
+        STR = integer { description = "Strength out of 100." default = 50  valuedice = plainD100 }
+        CON = integer { description = "Constitution out of 100." default = 50  valuedice = plainD100 }
+        SIZ = integer { description = "Size out of 100." default = 50  valuedice = plainD100 }
+        DEX = integer { description = "Dexterity out of 100. Highest DEX acts first." default = 50  valuedice = plainD100 }
+        INT = integer { description = "Intelligence out of 100." default = 50  valuedice = plainD100 }
+        POW = integer { description = "Power: willpower and magic, out of 100." default = 50  valuedice = plainD100 }
     }
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Hit Points' = integer { default = 10 }
-        'Current HP' = integer { default = 10  editable = live }
+        'Hit Points' = integer { description = "Hit points when unhurt." default = 10 }
+        'Current HP' = integer { description = "Current hit points." default = 10  editable = live }
         'Damage Bonus' = string {}
         Build = integer { default = 0 }
         Move = integer { default = 8 }
-        'Magic Points' = integer { default = 10 }
+        'Magic Points' = integer { description = "Magic points for spells and powers." default = 10 }
         'Attacks per Round' = integer { default = 1 }
         Armour = string {}
-        'Sanity Loss' = string {}
-        Fighting = integer { default = 40  valuedice = plainD100 }
-        Dodge = integer { default = 25  valuedice = plainD100 }
+        'Sanity Loss' = string { description = "Sanity lost on seeing the creature: on a success, and on a failure." }
+        Fighting = integer { description = "Fighting skill for the creature's attacks." default = 40  valuedice = plainD100 }
+        Dodge = integer { description = "Skill for dodging attacks." default = 25  valuedice = plainD100 }
         Initiative = integer { value = Characteristics.DEX  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
         Dying = bool { default = false  editable = live  indicator = "#d64545" }
     }
