@@ -42,8 +42,8 @@ plainRed = redRoll (0)
 skill (stat) = custom
 {
     STAT = stat
-    Level = integer { default = 0  minvalue = 0  maxvalue = 10 }
-    Base = integer { value = stat + Level  valuedice = redDice (characterTable)  editable = none }
+    Level = integer { description = "Skill level from 0 to 10." default = 0  minvalue = 0  maxvalue = 10 }
+    Base = integer { description = "STAT plus skill level. Add a d10 and beat the difficulty." value = stat + Level  valuedice = redDice (characterTable)  editable = none }
 }
 
 noSkill = { Base = 0 }
@@ -87,23 +87,23 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Role = string { keys = ["Rockerboy", "Solo", "Netrunner", "Tech", "Medtech", "Media", "Exec", "Lawman", "Fixer", "Nomad"] }
-        'Role Ability' = string {}
-        Rank = integer { default = 4  minvalue = 1  maxvalue = 10 }
+        'Role Ability' = string { description = "The special ability of your role, such as Combat Awareness or Interface." }
+        Rank = integer { description = "Rank in the role ability, from 1 to 10." default = 4  minvalue = 1  maxvalue = 10 }
     }
 
     Stats = table
     {
         tableLayout = layout { columns = 5  size = wide }
-        INT = integer { default = 5  valuedice = plainRed }
-        REF = integer { default = 5  valuedice = plainRed }
-        DEX = integer { default = 5  valuedice = plainRed }
-        TECH = integer { default = 5  valuedice = plainRed }
-        COOL = integer { default = 5  valuedice = plainRed }
-        WILL = integer { default = 5  valuedice = plainRed }
-        LUCK = integer { default = 5 }
-        MOVE = integer { default = 5 }
-        BODY = integer { default = 5  valuedice = plainRed }
-        EMP = integer { default = 5  valuedice = plainRed }
+        INT = integer { description = "Intelligence: problem solving, memory and awareness." default = 5  valuedice = plainRed }
+        REF = integer { description = "Reflexes: response time and aim with ranged weapons." default = 5  valuedice = plainRed }
+        DEX = integer { description = "Dexterity: agility, balance and hand-to-hand fighting." default = 5  valuedice = plainRed }
+        TECH = integer { description = "Technique: skill with tools and machines." default = 5  valuedice = plainRed }
+        COOL = integer { description = "Cool: calm under pressure and how intimidating you are." default = 5  valuedice = plainRed }
+        WILL = integer { description = "Willpower: determination and the ability to push through pain." default = 5  valuedice = plainRed }
+        LUCK = integer { description = "Luck points, spent one for one to add to a roll. Refills each session." default = 5 }
+        MOVE = integer { description = "Movement: how far you go in a turn, in metres times two." default = 5 }
+        BODY = integer { description = "Body: size, toughness and stamina." default = 5  valuedice = plainRed }
+        EMP = integer { description = "Empathy: reading and relating to people. Humanity loss lowers it." default = 5  valuedice = plainRed }
     }
 
     Status = table
@@ -111,31 +111,36 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         'Hit Points' = table
         {
+            description = "Hit points from BODY and WILL."
             Max = integer { value = maxHitPoints (Stats.BODY, Stats.WILL)  editable = none }
-            Current = integer { default = Max  editable = live }
+            Current = integer { description = "Current hit points. Below half you are seriously wounded, below 1 mortally wounded." default = Max  editable = live }
             'Seriously Wounded' = (Max + 1) / 2
             Wounded = string { value = if Current < 1 then "Mortally Wounded" else if Current < 'Seriously Wounded' then "Seriously Wounded" else ""  visible = none  indicator = "#d64545" }
-            'Death Save' = integer { value = Stats.BODY  valuedice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) == 10 or first (first (throws).rolls) > baseline then { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": dies"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": survives"  Outcome = "Success" }))  editable = none }
+            'Death Save' = integer { description = "Roll a d10 under BODY each turn while mortally wounded to stay alive." value = Stats.BODY  valuedice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) == 10 or first (first (throws).rolls) > baseline then { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": dies"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": survives"  Outcome = "Success" }))  editable = none }
         }
         Luck = table
         {
+            description = "Luck points left this session."
             Current = integer { default = Stats.LUCK  editable = live }
         }
         Humanity = table
         {
+            description = "Humanity, which cyberware wears away. EMP drops with every 10 lost."
             Max = integer { value = Stats.EMP * 10  editable = none }
             Current = integer { default = Max  editable = live }
         }
         Armor = table
         {
+            description = "Stopping power of the armor worn. Each hit that gets through ablates it by 1."
             Head = integer { default = 0  editable = live }
             Body = integer { default = 0  editable = live }
         }
-        Initiative = integer { value = Stats.REF  valuedice = 1d10  editable = none }
+        Initiative = integer { description = "REF plus a d10. Highest acts first." value = Stats.REF  valuedice = 1d10  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills, each linked to a STAT. Roll STAT plus skill plus d10."
         tableLayout = layout { columns = 3  size = wide }
         Concentration = skill (Stats.WILL)
         'Conceal Reveal Object' = skill (Stats.INT)
@@ -207,6 +212,7 @@ characterTable = ruleset
 
     'Other Skills' = keyvalues
     {
+        description = "Extra skills such as languages or local expertise."
         singular = "Skill"
         editablekeys = character
         keys = []
@@ -290,9 +296,9 @@ characterTable = ruleset
     Money = table
     {
         tableLayout = layout { columns = 3 }
-        Eurobucks = integer { default = 0  editable = live }
-        Reputation = integer { default = 0 }
-        'Improvement Points' = integer { default = 0  editable = live }
+        Eurobucks = integer { description = "Money on hand." default = 0  editable = live }
+        Reputation = integer { description = "How well known you are on the street." default = 0 }
+        'Improvement Points' = integer { description = "Earned in play and spent to raise skills and role abilities." default = 0  editable = live }
         Housing = string {}
         Rent = string {}
     }
@@ -313,13 +319,13 @@ creatureTable = ruleset
         MOVE = integer { default = 5 }
         BODY = integer { default = 5 }
         EMP = integer { default = 5 }
-        'Hit Points' = integer { default = 35 }
-        'Current HP' = integer { default = 35  editable = live }
-        'Head SP' = integer { default = 7 }
-        'Body SP' = integer { default = 7 }
-        Initiative = integer { value = REF  valuedice = 1d10  editable = none }
-        'Death Save' = integer { value = BODY }
-        Evasion = integer { default = 10  valuedice = plainRed }
+        'Hit Points' = integer { description = "Hit points when unhurt." default = 35 }
+        'Current HP' = integer { description = "Current hit points." default = 35  editable = live }
+        'Head SP' = integer { description = "Stopping power of head armor." default = 7 }
+        'Body SP' = integer { description = "Stopping power of body armor." default = 7 }
+        Initiative = integer { description = "REF plus a d10. Highest acts first." value = REF  valuedice = 1d10  editable = none }
+        'Death Save' = integer { description = "Roll a d10 under this to survive while mortally wounded." value = BODY }
+        Evasion = integer { description = "Skill for dodging melee attacks and, with high REF, bullets." default = 10  valuedice = plainRed }
     }
     Attacks = list
     {
