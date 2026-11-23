@@ -55,42 +55,43 @@ characterTable = ruleset
         tableLayout = layout { columns = 3  size = wide }
         Class = string { keys = ["Classless", "Fanged Deserter", "Gutterborn Scum", "Esoteric Hermit", "Wretched Royalty", "Heretical Priest", "Occult Herbmaster"] }
         Traits = string { multiline = true }
-        'Broken Body' = string {}
-        'Bad Habit' = string {}
-        'Troubling Tales' = string { multiline = true }
+        'Broken Body' = string { description = "An old injury or deformity that marks the body." }
+        'Bad Habit' = string { description = "A vice or compulsion the character can't shake." }
+        'Troubling Tales' = string { description = "Dark stories from the past that still trouble the character." multiline = true }
     }
 
     Abilities = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Agility = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Presence = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Toughness = modifier { default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Strength = modifier { description = "Strength: hitting, lifting and grappling." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Agility = modifier { description = "Agility: dodging, sneaking and balance. Also your defence." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Presence = modifier { description = "Presence: perception, charm, ranged aim and powers." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Toughness = modifier { description = "Toughness: resisting poison, cold and falling unconscious." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Max HP' = integer { default = 6  minvalue = 1 }
-        HP = integer { default = 'Max HP'  editable = live }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 6  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 you are broken, below 0 dead." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 0 then "Dead" else if HP < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
-        Omens = integer { default = 1  minvalue = 0  editable = live  indicator = "#d4b106" }
-        'Omen Die' = integer { default = 0  valuedice = 1d2 }
-        Powers = integer { default = 0  minvalue = 0  editable = live }
-        'Power Uses' = integer { default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Presence + first (first (throws).rolls))) + " uses of powers today"  Value = max (0, Abilities.Presence + first (first (throws).rolls)) }))  editable = none }
-        Defence = modifier { value = Abilities.Agility  valuedice = mbDice  editable = none }
-        Initiative = integer { default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = toString (Abilities.Agility + first (first (throws).rolls))  Value = Abilities.Agility + first (first (throws).rolls) })) }
-        Infected = bool { default = false  editable = live  indicator = "#3fa34d" }
-        Silver = integer { default = 0  minvalue = 0  editable = live }
+        Omens = integer { description = "Omens: spend one to reroll, deal maximum damage, or lower damage taken." default = 1  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Omen Die' = integer { description = "Roll for omens at the start of each day." default = 0  valuedice = 1d2 }
+        Powers = integer { description = "Scrolls of power the character can read, if any." default = 0  minvalue = 0  editable = live }
+        'Power Uses' = integer { description = "Roll d4 plus Presence each morning: how many times you can use powers today." default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Presence + first (first (throws).rolls))) + " uses of powers today"  Value = max (0, Abilities.Presence + first (first (throws).rolls)) }))  editable = none }
+        Defence = modifier { description = "Defence test with Agility when attacked: roll d20 plus Agility." value = Abilities.Agility  valuedice = mbDice  editable = none }
+        Initiative = integer { description = "Party initiative: d6 plus Agility." default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = toString (Abilities.Agility + first (first (throws).rolls))  Value = Abilities.Agility + first (first (throws).rolls) })) }
+        Infected = bool { description = "Infected characters lose HP each day until cured." default = false  editable = live  indicator = "#3fa34d" }
+        Silver = integer { description = "Silver coins carried." default = 0  minvalue = 0  editable = live }
     }
 
     Armour = table
     {
+        description = "Armour tier 0 to 3. Each tier lowers damage but makes Agility tests harder."
         tableLayout = layout { columns = 3 }
-        Tier = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live }
-        Effect = armourText (Tier)
-        Shield = bool { default = false  editable = live }
+        Tier = integer { description = "Armour tier from 0 to 3." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Effect = string { description = "What the armour tier does: damage reduced and penalty to Agility tests." value = armourText (Tier)  editable = none }
+        Shield = bool { description = "A shield lowers damage by 1, or can be broken to stop one attack." default = false  editable = live }
     }
 
     Weapons = list
@@ -122,7 +123,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2  size = wide }
         Equipment = string { multiline = true }
-        'Carrying Capacity' = integer { value = Abilities.Strength + 8  editable = none }
+        'Carrying Capacity' = integer { description = "How many items you can carry without trouble: Strength plus 8." value = Abilities.Strength + 8  editable = none }
     }
 }
 
@@ -132,12 +133,12 @@ creatureTable = ruleset
     Creature = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Max HP' = integer { default = 6 }
-        HP = integer { default = 'Max HP'  editable = live }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 6 }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Morale = integer { default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": fights on"  Outcome = "Success" })) }
-        Armour = string { default = "-d2" }
-        Attack = string { default = "d6" }
+        Morale = integer { description = "Roll 2d6. Above morale and the creature flees or surrenders." default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": fights on"  Outcome = "Success" })) }
+        Armour = string { description = "Damage taken off each hit." default = "-d2" }
+        Attack = string { description = "The creature's damage die." default = "d6" }
         'Damage Roll' = integer { default = 0  valuedice = ([dice { number = 1  sides = max (2, dieSize (Attack)) }], ((baseline, throws)->first (first (throws).rolls)))  action = melee  reach = 2 }
         Special = string { multiline = true }
     }
