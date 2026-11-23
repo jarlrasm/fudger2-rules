@@ -66,9 +66,9 @@ mapPenalty (char, agile) =
 proficiency (attribute) = custom
 {
     Attribute = attribute
-    Rank = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
-    Item = integer { default = 0  minvalue = 0  maxvalue = 4 }
-    Modifier = modifier { value = attribute + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+    Rank = string { description = "Proficiency rank. Trained and above add level plus 2, 4, 6 or 8." default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    Item = integer { description = "Item bonus from gear, from 0 to 4." default = 0  minvalue = 0  maxvalue = 4 }
+    Modifier = modifier { description = "Total: attribute plus proficiency plus item bonus, minus status penalties." value = attribute + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
 }
 
 noStats = { Stats = { Damage = "" } }
@@ -110,12 +110,13 @@ strikeFor (char, weapon) =
     else
         strike (weapon.Name, strikeBonus (char, weapon), strikeDamage (char, weapon), "melee", if contains (toLower (weaponStat (weapon, "Traits")), "reach") then 10 else 5, 0)
 
-conditionValue (colour) = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = colour }
+conditionValue (colour) = integer { description = "Condition value. Most give a penalty equal to the value, or worse at higher values." default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = colour }
 
-conditionFlag (colour) = bool { default = false  editable = live  indicator = colour }
+conditionFlag (colour) = bool { description = "Mark while the condition lasts." default = false  editable = live  indicator = colour }
 
 pf2Conditions = table
 {
+    description = "Conditions with values and flags. The sheet applies their penalties."
     tableLayout = layout { columns = 5  size = wide }
     Clumsy = conditionValue ("#e8913a")
     Drained = conditionValue ("#d64545")
@@ -139,7 +140,7 @@ pf2Conditions = table
     Fatigued = conditionFlag ("#d4b106")
     Quickened = conditionFlag ("#3a7bd5")
     Unconscious = conditionFlag ("#555555")
-    Persistent = string { editable = live  indicator = "#d64545"  indicatorLabel = "Persistent damage" }
+    Persistent = string { description = "Persistent damage taken at the end of each turn until it ends." editable = live  indicator = "#d64545"  indicatorLabel = "Persistent damage" }
 }
 
 pf2Character = table
@@ -149,15 +150,16 @@ pf2Character = table
     Heritage = string {}
     Background = string {}
     Class = string {}
-    Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+    Level = integer { description = "Character level, from 1 to 20." default = 1  minvalue = 1  maxvalue = 20 }
     XP = integer { default = 0  editable = live }
-    'Hero Points' = slots { number = 3  editable = live }
-    'Key Attribute' = string { keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+    'Hero Points' = slots { description = "Spend one to reroll a check, or all to avoid dying." number = 3  editable = live }
+    'Key Attribute' = string { description = "Your class's main attribute. Sets the class DC." keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
     Size = string { default = "Medium"  keys = ["Tiny", "Small", "Medium", "Large"] }
-    Speed = integer { default = 25 }
+    Speed = integer { description = "Speed in feet per stride." default = 25 }
     Languages = string {}
     Roll = selector
     {
+        description = "Fortune rolls twice and keeps the better, misfortune the worse."
         options = ["Misfortune", "Normal", "Fortune"]
         labels = ["Misfortune", "Normal", "Fortune"]
         colors = ["red", "white", "green"]
@@ -168,6 +170,7 @@ pf2Character = table
     }
     Attack = selector
     {
+        description = "Multiple attack penalty: -5 for the second strike and -10 for the third, less with agile weapons."
         options = ["First", "Second", "Third"]
         labels = ["1st", "2nd MAP", "3rd MAP"]
         colors = ["white", "yellow", "red"]
@@ -179,37 +182,40 @@ pf2Character = table
 
 pf2Attributes = table
 {
+    description = "Attribute modifiers, from -5 to +7."
     tableLayout = layout { columns = 6  size = wide }
-    STR = modifier { default = 0  minvalue = -5  maxvalue = 7 }
-    DEX = modifier { default = 0  minvalue = -5  maxvalue = 7 }
-    CON = modifier { default = 0  minvalue = -5  maxvalue = 7 }
-    INT = modifier { default = 0  minvalue = -5  maxvalue = 7 }
-    WIS = modifier { default = 0  minvalue = -5  maxvalue = 7 }
-    CHA = modifier { default = 0  minvalue = -5  maxvalue = 7 }
+    STR = modifier { description = "Strength: melee damage, Athletics and carrying." default = 0  minvalue = -5  maxvalue = 7 }
+    DEX = modifier { description = "Dexterity: AC, Reflex, ranged attacks and finesse weapons." default = 0  minvalue = -5  maxvalue = 7 }
+    CON = modifier { description = "Constitution: hit points and Fortitude." default = 0  minvalue = -5  maxvalue = 7 }
+    INT = modifier { description = "Intelligence: skills, languages and arcane spells." default = 0  minvalue = -5  maxvalue = 7 }
+    WIS = modifier { description = "Wisdom: Perception, Will and divine or primal spells." default = 0  minvalue = -5  maxvalue = 7 }
+    CHA = modifier { description = "Charisma: social skills and occult spells." default = 0  minvalue = -5  maxvalue = 7 }
 }
 
 pf2Defenses = table
 {
+    description = "Hit points, armor class and class DC."
     tableLayout = layout { columns = 4  size = wide }
-    'Ancestry HP' = integer { default = 8 }
-    'Class HP' = integer { default = 8 }
-    'Max HP' = integer { value = 'Ancestry HP' + ('Class HP' + Attributes.CON) * Character.Level  editable = none }
-    HP = integer { default = 'Max HP'  editable = live }
-    'Temp HP' = integer { default = 0  editable = live }
+    'Ancestry HP' = integer { description = "Hit points from your ancestry, gained once." default = 8 }
+    'Class HP' = integer { description = "Hit points from your class, gained every level." default = 8 }
+    'Max HP' = integer { description = "Max HP: ancestry HP plus (class HP plus CON) per level." value = 'Ancestry HP' + ('Class HP' + Attributes.CON) * Character.Level  editable = none }
+    HP = integer { description = "Current hit points. At 0 you are dying." default = 'Max HP'  editable = live }
+    'Temp HP' = integer { description = "Temporary hit points, lost before real HP." default = 0  editable = live }
     Down = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
-    'Armor Rank' = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
+    'Armor Rank' = string { description = "Armor proficiency rank for the armor you wear." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Armor Item Bonus' = integer { default = 0 }
-    'Dex Cap' = integer { default = 5 }
+    'Dex Cap' = integer { description = "Highest Dex modifier the armor lets you add to AC." default = 5 }
     'Shield Bonus' = integer { default = 2  minvalue = 0 }
-    AC = integer { value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' + (if 'Shield Raised' then 'Shield Bonus' else 0) - (if Conditions.'Off Guard' then 2 else 0) - statusPenalty (characterTable)  editable = none }
-    'Shield Raised' = bool { default = false  editable = live  indicator = "#3a7bd5" }
-    'Class DC' = integer { value = 10 + keyAttribute (characterTable) + proficiencyBonus (Proficiencies.'Class DC', Character.Level) - statusPenalty (characterTable)  editable = none }
+    AC = integer { description = "Armor Class: 10 plus Dex, proficiency, armor and shield." value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' + (if 'Shield Raised' then 'Shield Bonus' else 0) - (if Conditions.'Off Guard' then 2 else 0) - statusPenalty (characterTable)  editable = none }
+    'Shield Raised' = bool { description = "Raise a shield to add its bonus to AC until your next turn." default = false  editable = live  indicator = "#3a7bd5" }
+    'Class DC' = integer { description = "DC for enemies to resist your class abilities." value = 10 + keyAttribute (characterTable) + proficiencyBonus (Proficiencies.'Class DC', Character.Level) - statusPenalty (characterTable)  editable = none }
     Resistances = string {}
     Weaknesses = string {}
 }
 
 pf2Proficiencies = table
 {
+    description = "Weapon and class DC proficiency ranks."
     tableLayout = layout { columns = 5  size = wide }
     Unarmed = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     Simple = string { default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
@@ -220,13 +226,14 @@ pf2Proficiencies = table
 
 pf2Spellcasting = table
 {
+    description = "Tradition, spell attack, spell DC and slots."
     tableLayout = layout { columns = 4  size = wide }
-    Tradition = string { keys = ["", "Arcane", "Divine", "Occult", "Primal"] }
+    Tradition = string { description = "The magical tradition your spells come from." keys = ["", "Arcane", "Divine", "Occult", "Primal"] }
     'Spell Attribute' = string { default = "INT"  keys = ["INT", "WIS", "CHA"] }
     'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
-    'Spell Attack' = modifier { value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
-    'Spell DC' = integer { value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  editable = none }
-    'Focus Points' = slots { number = 3  editable = live }
+    'Spell Attack' = modifier { description = "Spell attack roll: casting attribute plus proficiency." value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
+    'Spell DC' = integer { description = "DC for targets to resist your spells." value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  editable = none }
+    'Focus Points' = slots { description = "Focus points for focus spells. Refocus to regain them." number = 3  editable = live }
     'Slots Rank 1' = slots { number = 0  editable = live }
     'Slots Rank 2' = slots { number = 0  editable = live }
     'Slots Rank 3' = slots { number = 0  editable = live }
@@ -247,14 +254,14 @@ pf2Creature = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Level = integer { default = 1  minvalue = -1  maxvalue = 25 }
         Traits = string {}
-        Perception = modifier { default = 5  valuedice = plainPf2 }
+        Perception = modifier { description = "Perception bonus, also used for initiative." default = 5  valuedice = plainPf2 }
         Initiative = modifier { value = Perception  valuedice = 1d20  editable = none }
-        AC = integer { default = 15 }
-        Fortitude = modifier { default = 5  valuedice = plainPf2 }
-        Reflex = modifier { default = 5  valuedice = plainPf2 }
-        Will = modifier { default = 5  valuedice = plainPf2 }
+        AC = integer { description = "Armor Class." default = 15 }
+        Fortitude = modifier { description = "Fortitude save bonus." default = 5  valuedice = plainPf2 }
+        Reflex = modifier { description = "Reflex save bonus." default = 5  valuedice = plainPf2 }
+        Will = modifier { description = "Will save bonus." default = 5  valuedice = plainPf2 }
         'Max HP' = integer { default = 20 }
-        HP = integer { default = 'Max HP'  editable = live }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
         Speed = integer { default = 25 }
         Immunities = string {}
         Resistances = string {}
