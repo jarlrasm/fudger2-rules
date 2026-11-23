@@ -172,6 +172,8 @@ SECTION = ("18", "#794807")
 ENTRY = ("17", "#b76d0a")
 CLASSES = ["Barbarian", "Bard", "Chaos Mage", "Cleric", "Commander", "Druid", "Fighter", "Monk", "Necromancer", "Occultist", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"]
 CLASS_PAGES = (31, 318)
+RACE_PAGES = (17, 30)
+ONE_USE_PAGES = (677, 681)
 ITEM_PAGES = (677, 711)
 SPELL_TYPE = re.compile(r"^((Ranged|Close-quarters|Close|Melee)?\s*spell|Bardic song)$", re.I)
 USAGE = re.compile(r"^(At-Will|Daily|Recharge.*|Once per battle.*|Cyclic.*|Twice per battle.*|Per battle.*)$", re.I)
@@ -232,7 +234,7 @@ def spells():
         text = line["text"]
         if line["font"] in CHAPTER and text in CLASSES:
             klass, level = text, 0
-        elif line["font"] == SECTION and re.search(r"Level (Spells|Songs|Battle Cries|Invocations)$", text):
+        elif line["font"] == SECTION and re.search(r"Level (Spells|Songs|Battle Cries|Invocations)$|Level\+?\)$", text):
             found = re.match(r"(\d+)", text)
             level = int(found.group(1)) if found else level
         elif line["font"] == ENTRY and not FEAT.match(text) and any(SPELL_TYPE.match(l["text"]) for l in lines[i + 1:i + 3]):
@@ -340,21 +342,161 @@ def magic_items():
     return result
 
 
+SUBHEAD = re.compile(r"^((Adventurer|Champion|Epic)( Feat| Tier)?s?|Feat Tiers|(Opening|Flow|Finishing) Attack\b.*|.* Costs)$")
+POWER_SECTION = re.compile(r"^(\d+)(?:st|nd|rd|th) Level (Maneuvers|Commands|Tactics|Battle Cries|Powers)$|^(Adventure|Champion|Epic) Tier (Forms)$")
+TALENT_SECTION = re.compile(r"Talents$|^Iconic Spells & Feats$|^Class Features?$|^Racial Power$|^General Feats$")
+CANTRIP_PAGES = (302, 303)
+
+
+def entries(lines, start=0):
+    """Each entry heading with its body, the section and chapter it is in, and
+    its page. Feat tiers and the attacks of a monk form are kept in the body."""
+    chapter, section, i = "", "", start
+    while i < len(lines):
+        line = lines[i]
+        if line["font"] in CHAPTER:
+            chapter, section = line["text"], ""
+        elif line["font"] == SECTION:
+            section = line["text"]
+        elif line["font"] == ENTRY and not SUBHEAD.match(line["text"]):
+            body, j = [], i + 1
+            while j < len(lines):
+                nxt = lines[j]
+                if nxt["font"] in CHAPTER or nxt["font"] == SECTION or (nxt["font"] == ENTRY and not SUBHEAD.match(nxt["text"])):
+                    break
+                body.append(("### " if nxt["font"] == ENTRY else "") + nxt["text"])
+                j += 1
+            yield {"name": line["text"].rstrip(" ."), "chapter": chapter, "section": section, "page": line["page"], "body": body}
+            i = j
+            continue
+        i += 1
+
+
+def described(body, skip=()):
+    parts = []
+    for b in body:
+        if b in skip:
+            continue
+        parts.append("\n**" + b[4:] + "**" if b.startswith("### ") else b)
+    return "\n\n".join(paragraphs([p.strip() for p in parts if p.strip()]))
+
+
+def class_material():
+    """Class powers, talents, class features, racial powers, general feats and
+    wizard cantrips. Entries with a spell line are left to spells()."""
+    powers, talents, cantrips, seen = [], [], [], set()
+    lines = xml_lines(RACE_PAGES[0], CLASS_PAGES[1])
+    for entry in entries(lines):
+        body, name, section, chapter = entry["body"], entry["name"], entry["section"], entry["chapter"]
+        head = [b for b in body[:4] if not re.match(r"^\*\*[^*]+:\*\*", b) and not b.startswith("###")]
+        if any(SPELL_TYPE.match(h) for h in head[:2]):
+            continue
+        reference = [{"document": "srd", "page": entry["page"]}]
+        klass = chapter if chapter in CLASSES else ""
+        power = POWER_SECTION.match(section)
+        if klass == "Wizard" and CANTRIP_PAGES[0] <= entry["page"] <= CANTRIP_PAGES[1] and body and re.search(r"\b(cantrip|spell)\b", body[0]):
+            name = re.sub(r"\s*\(standard duration\)$", "", name)
+            if ("cantrip", name.lower()) in seen:
+                continue
+            seen.add(("cantrip", name.lower()))
+            cantrips.append({
+                "type": "Spells", "name": name,
+                "description": f"*Wizard cantrip.*\n\n{described(body)}",
+                "images": {},
+                "rulesets": [{"system": SYSTEM, "implementation": {"spellStats": {"Stats": {
+                    "Class": "Wizard", "Level": 0, "Type": "Cantrip", "Usage": "Cantrip", "Action": "", "Target": "", "Attack": ""}}}}],
+                "references": reference,
+            })
+        elif power and klass:
+            level = int(power.group(1)) if power.group(1) else {"Adventure": 1, "Champion": 5, "Epic": 8}[power.group(3)]
+            kind = (power.group(2) or power.group(4)).rstrip("s").replace("Battle Crie", "Battle cry")
+            if (klass, name.lower()) in seen:
+                continue
+            seen.add((klass, name.lower()))
+            kind_line = next((h for h in head if re.search(r"attack|action", h, re.I) and len(h) < 60), "")
+            usage = next((h for h in head if USAGE.match(h.replace("**", ""))), "")
+            text_lines = paragraphs([b for b in body if not b.startswith("###")])
+            powers.append({
+                "type": "Class Powers", "name": name,
+                "description": f"*{klass} {kind.lower()}, level {level}.*\n\n{described(body, (kind_line, usage))}",
+                "images": {},
+                "rulesets": [{"system": SYSTEM, "implementation": {"classPowerStats": {"Stats": {
+                    "Class": klass, "Kind": kind, "Level": level, "Type": kind_line, "Usage": usage.replace("**", ""),
+                    "Trigger": field(text_lines, "Triggering Roll") or field(text_lines, "Trigger"),
+                    "Attack": field(text_lines, "Attack")}}}}],
+                "references": reference,
+            })
+        elif TALENT_SECTION.search(section) and body:
+            if section == "Racial Power":
+                kind, owner = "Racial power", chapter
+            elif section == "General Feats":
+                kind, owner = "General feat", ""
+            elif section.startswith("Class Feature"):
+                kind, owner = "Class feature", klass
+            else:
+                kind, owner = "Talent", klass
+            if (kind == "Racial power" or klass) or kind == "General feat":
+                key = (kind, owner, name.lower())
+                if key in seen:
+                    continue
+                seen.add(key)
+                label = f"{owner} {kind.lower()}" if owner else kind
+                talents.append({
+                    "type": "Talents and Feats", "name": name,
+                    "description": f"*{label}.*\n\n{described(body)}",
+                    "images": {},
+                    "rulesets": [{"system": SYSTEM, "implementation": {"talentStats": {"Stats": {"Kind": kind, "Class": owner}}}}],
+                    "references": reference,
+                })
+    return powers, talents, cantrips
+
+
+def one_use_items():
+    """Potions, oils and runes, with their cost tables."""
+    result = []
+    lines = xml_lines(*ONE_USE_PAGES)
+    start = next(i for i, l in enumerate(lines) if l["text"] == "One-Use Items")
+    end = next(i for i, l in enumerate(lines) if l["text"] == "True Magic Items")
+    for entry in entries(lines[start:end]):
+        if entry["section"] not in ("Potions", "Oils", "Runes") or not entry["body"]:
+            continue
+        slot = entry["section"].rstrip("s")
+        result.append({
+            "type": "Magic Items", "name": entry["name"],
+            "description": f"*One-use item: {slot.lower()}.*\n\n{described(entry['body'])}",
+            "images": {},
+            "rulesets": [{"system": SYSTEM, "implementation": {"magicItemStats": {"Stats": {
+                "Slot": f"One-use {slot.lower()}", "Tier": "", "Default bonus": "", "Usage": "One use", "Quirk": ""}}}}],
+            "references": [{"document": "srd", "page": entry["page"]}],
+        })
+    return result
+
+
 seen, entities = set(), []
 for name, page, body in blocks():
     if name.lower() in seen:
         continue
     seen.add(name.lower())
     entities.append(monster(name, page, body))
-entities += spells() + magic_items()
+powers, talents, cantrips = class_material()
+entities += spells() + cantrips + powers + talents + magic_items() + one_use_items()
+
+# Some classes share a spell or feature name; tell those apart by class.
+names = {}
+for e in entities:
+    names[(e["type"], e["name"])] = names.get((e["type"], e["name"]), 0) + 1
+for e in entities:
+    owner = next(iter(e["rulesets"][0]["implementation"].values())).get("Stats", {}).get("Class", "")
+    if names[(e["type"], e["name"])] > 1 and owner:
+        e["name"] = f"{e['name']} ({owner})"
 
 library = {
     "name": "13th Age Archmage Engine",
-    "description": "Monsters, class spells and magic items from the 13th Age Archmage Engine SRD (version 3.0) by Fire Opal Media and Pelgrane Press, game mechanics only, Open Game Content under the Open Game License v1.0a. See LICENSE-13thage.md next to this library.",
+    "description": "Monsters, class spells, powers, talents and features, racial powers, feats and magic items from the 13th Age Archmage Engine SRD (version 3.0) by Fire Opal Media and Pelgrane Press, game mechanics only, Open Game Content under the Open Game License v1.0a. See LICENSE-13thage.md next to this library.",
     "url": URL,
     "gamemaster": "",
     "documents": [{"key": "srd", "name": "13th Age Archmage Engine SRD", "url": "/systems/13thage/13thAgeArchmageEngineSRD.pdf", "public": True}],
     "entities": entities,
 }
 json.dump(library, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-print(len(entities), "entities:", {t: sum(1 for e in entities if e["type"] == t) for t in ["Creature", "Spells", "Magic Items"]})
+print(len(entities), "entities:", {t: sum(1 for e in entities if e["type"] == t) for t in ["Creature", "Spells", "Class Powers", "Talents and Feats", "Magic Items"]})

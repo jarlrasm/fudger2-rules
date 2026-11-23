@@ -1,6 +1,6 @@
 # 13th Age content
 
-`13thage.json` contains the monster stat blocks, class spells and magic items of the *13th Age Archmage Engine* System Reference Document (version 3.0), converted with `tools/archmage_import.py` from `13thAgeArchmageEngineSRD.pdf`, which is shipped next to it unchanged. The PDF comes from Pelgrane Press (https://pelgranepress.com/media/SRD/13thAgeArchmageEngineSRD.pdf).
+`13thage.json` contains the monster stat blocks, class spells and cantrips, class powers, talents, class features, racial powers, general feats, magic items and one-use items of the *13th Age Archmage Engine* System Reference Document (version 3.0), converted with `tools/archmage_import.py` from `13thAgeArchmageEngineSRD.pdf`, which is shipped next to it unchanged. The PDF comes from Pelgrane Press (https://pelgranepress.com/media/SRD/13thAgeArchmageEngineSRD.pdf).
 
 The game mechanics in the library are Open Game Content under the Open Game License v1.0a (https://opengamingfoundation.org/ogl.html; the full text is in the PDF). Following the SRD's Product Identity declaration, the monsters' flavour text is left out. Trademarks, proper names (characters, icons, etc.), dialogue, plots, storylines, locations, characters, artworks and trade dress are Product Identity of Fire Opal Media and are not Open Content.
 
