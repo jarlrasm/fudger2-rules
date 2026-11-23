@@ -129,12 +129,14 @@ characterTable = ruleset
       Weight = string {}
       Move = integer
       {
+        description = "Move: metres covered in a round at normal speed."
         default = 10
         minvalue = 0
       }
     }
   'Attributes' = keyvalues
       {
+          description = "The six attributes, in dice and pips such as 3D+1."
           tableLayout = layout { columns = 3  size = wide }
           singular = "Attribute"
           keys = ["Dexterity","Knowledge","Mechanical","Perception","Strength","Technical" ]
@@ -142,6 +144,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Attribute in pips, shown as dice. Three pips make one die."
                 default=9
                 minvalue=1
                 maxvalue=25
@@ -153,6 +156,7 @@ characterTable = ruleset
       }
     'Dexterity Skills' = keyvalues
         {
+            description = "Skills for agility, aim and fighting."
             singular = "Dex Skill"
             editablekeys = character
             keys = ["Blaster", "Dodge", "Grenade", "Lightsaber","Melee", "Pick pocket"]
@@ -160,6 +164,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
                 default=0
@@ -171,6 +176,7 @@ characterTable = ruleset
         }
     'Knowledge Skills' = keyvalues
         {
+            description = "Skills for learning, lore and street smarts."
             singular = "Knowledge Skill"
             editablekeys = character
             keys = ["Alien species", "Bureaucracy", "Cultures", "Languages","Planetary systems", "Streetwise", "Survival"]
@@ -178,6 +184,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
                 
@@ -190,6 +197,7 @@ characterTable = ruleset
         }
     'Mechanical Skills' = keyvalues
         {
+            description = "Skills for piloting, riding and operating ship systems."
             singular = "Mechanical Skill"
             editablekeys = character
             keys = ["Astrogation", "Beast riding", "Com scan", "Gunnery","Repulsorlift operation", "Shields", "Spaceship piloting"]
@@ -197,6 +205,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
                 
@@ -209,6 +218,7 @@ characterTable = ruleset
         }
     'Perception Skills' = keyvalues
         {
+            description = "Skills for noticing, persuading and sneaking."
             singular = "Perception Skill"
             editablekeys = character
             keys = ["Bargain", "Con", "Gambling","Search", "Sneak"]
@@ -216,6 +226,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Perception'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Perception'.Points, General.Actions))
                 
@@ -227,6 +238,7 @@ characterTable = ruleset
         }
     'Strength Skills' = keyvalues
         {
+            description = "Skills for brawn and athletics."
             singular = "Strength Skill"
             editablekeys = character
             keys = ["Brawling", "Climbing jumping", "Lifting", "Swimming"]
@@ -234,6 +246,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Strength'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Strength'.Points, General.Actions))
                 
@@ -246,6 +259,7 @@ characterTable = ruleset
         }
     'Technical Skills' = keyvalues
         {
+            description = "Skills for repairing, programming and building."
             singular = "Technical Skill"
             editablekeys = character
             keys = ["Computer programming and repair", "Demolitions", "Droid programming and repair", "First aid", "Repulsorlift repair","Security","Spaceship repair"]
@@ -253,6 +267,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Skill in pips, shown as dice. Untrained skills use the attribute."
                 valuedice=starCheck (withActions(Points + Attributes.'Technical'.Points, General.Actions))
                 render=pointsToSkill(withActions(Points + Attributes.'Technical'.Points, General.Actions))
                 
@@ -267,25 +282,30 @@ characterTable = ruleset
               tableLayout = layout { columns = 4  size = wide }
               'Force Points'=integer
               {
+                description = "Spend a Force Point to double all your dice for one round."
                 default=0
                 minvalue=0
               }
               'Dark Side Points'=integer
               {
+                description = "Gained for using the Force in anger. Enough of them turn you to the dark side."
                 default=0
                 minvalue=0
               }
               'Character Points'=integer
               {
+                description = "Spend before a roll to add a die, or save them to improve skills."
                 default=0
                 minvalue=0
               }
               'Force sensitive' = bool
               {
+                description = "Tick if the character can learn Jedi skills and Force powers."
 
               }
               Initiative=integer
               {
+                description = "Initiative: roll Perception."
                 value=Attributes.'Perception'.Points
                 valuedice=starDice (Attributes.'Perception'.Points)
                 render=pointsToSkill(Attributes.'Perception'.Points)
@@ -293,6 +313,7 @@ characterTable = ruleset
               }
               Actions = selector
               {
+                description = "Actions this round. Each extra action takes 1D from every roll."
                 options = ["1", "2", "3", "4", "5"]
                 colors = ["white", "red", "red", "red", "red"]
                 default = "1"
@@ -301,6 +322,7 @@ characterTable = ruleset
               }
      }
     Injuries= table{
+      description = "The character's current injury level."
       'None'= bool
           {
                   editable=live
@@ -308,30 +330,35 @@ characterTable = ruleset
           }
       'Stunned'= bool
           {
+                  description = "Stunned: -1D on rolls for the rest of this round and the next."
                   editable=live
                   radiogroup="injury"
                   indicator="#d4b106"
           }
       'Wounded'= bool
           {
+                  description = "Wounded: -1D on all rolls until healed."
                   editable=live
                   radiogroup="injury"
                   indicator="#e8913a"
           }
       'Wounded twice'= bool
           {
+                  description = "Wounded twice: -2D on all rolls until healed."
                   editable=live
                   radiogroup="injury"
                   indicator="#e8913a"
           }
       'Incapacitated'= bool
           {
+                  description = "Incapacitated: unconscious for some time."
                   editable=live
                   radiogroup="injury"
                   indicator="#555555"
           }
       'Mortally wounded'= bool
           {
+                  description = "Mortally wounded: dying unless helped quickly."
                   editable=live
                   radiogroup="injury"
                   indicator="#d64545"
@@ -339,6 +366,7 @@ characterTable = ruleset
     }
        'Injury Levels'= table
         {
+          description = "Damage roll minus Strength roll, and the injury it causes."
           'Stunned'="0 - 3"
           'Wounded'="4 - 8"
           'Incapacitated'="9 - 12"
@@ -346,6 +374,7 @@ characterTable = ruleset
           'Killed'="16+"
         }
     Difficulty=table{
+      description = "Typical difficulty numbers to beat."
       'Very Easy' = "1 - 5"
       Easy = "6 - 10"
       Moderate = "11 - 15"
@@ -356,6 +385,7 @@ characterTable = ruleset
 
     'Jedi skills' = keyvalues
         {
+          description = "Jedi skills for using the Force."
           visible=boolToVisible (General.'Force sensitive')
           singular = "Jedi skill"
           keys = ["Control","Sense","Alter"]
@@ -363,6 +393,7 @@ characterTable = ruleset
           {
               Points=integer
               {
+                description = "Jedi skill in pips, shown as dice."
                 valuedice=starCheck (withActions(Points, General.Actions))
                 render=pointsToSkill(withActions(Points, General.Actions))
                 default=0
