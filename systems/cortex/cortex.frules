@@ -69,15 +69,16 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Concept = string {}
-        'Plot points' = integer { default = 1  minvalue = 0  editable = live }
-        Attribute = selector { options = ["Agility", "Alertness", "Intelligence", "Strength", "Vitality", "Willpower"]  labels = ["Agi", "Ale", "Int", "Str", "Vit", "Wil"]  colors = ["", "", "", "", "", ""]  default = "Agility"  editable = live  save = nosave }
-        Distinction = selector { options = ["None", "d4", "d8"]  labels = ["None", "d4", "d8"]  colors = ["", "red", "purple"]  default = "None"  editable = live  save = nosave }
-        Asset = selector { options = ["None", "d6", "d8", "d10", "d12"]  labels = ["None", "d6", "d8", "d10", "d12"]  colors = ["", "green", "green", "green", "green"]  default = "None"  editable = live  save = nosave }
+        Concept = string { description = "A short phrase that sums up who the character is." }
+        'Plot points' = integer { description = "Spend to add an extra die to the total, keep an extra effect die, or use some SFX." default = 1  minvalue = 0  editable = live }
+        Attribute = selector { description = "Which attribute die joins the next skill roll." options = ["Agility", "Alertness", "Intelligence", "Strength", "Vitality", "Willpower"]  labels = ["Agi", "Ale", "Int", "Str", "Vit", "Wil"]  colors = ["", "", "", "", "", ""]  default = "Agility"  editable = live  save = nosave }
+        Distinction = selector { description = "Distinction die for the next roll: d8 when it helps, d4 when it hinders, for a plot point." options = ["None", "d4", "d8"]  labels = ["None", "d4", "d8"]  colors = ["", "red", "purple"]  default = "None"  editable = live  save = nosave }
+        Asset = selector { description = "An asset die to add to the next roll." options = ["None", "d6", "d8", "d10", "d12"]  labels = ["None", "d6", "d8", "d10", "d12"]  colors = ["", "green", "green", "green", "green"]  default = "None"  editable = live  save = nosave }
     }
 
     Distinctions = list
     {
+        description = "Three short traits that describe the character, rolled as d8 or as d4 for a plot point."
         singular = "Distinction"
         editable = character
         valueType = custom
@@ -90,39 +91,43 @@ characterTable = ruleset
 
     Attributes = table
     {
+        description = "Raw abilities, each rated as a die from d4 to d12."
         tableLayout = layout { columns = 3 }
-        Agility = string { default = "d8"  keys = dieKeys }
-        Alertness = string { default = "d8"  keys = dieKeys }
-        Intelligence = string { default = "d8"  keys = dieKeys }
-        Strength = string { default = "d8"  keys = dieKeys }
-        Vitality = string { default = "d8"  keys = dieKeys }
-        Willpower = string { default = "d8"  keys = dieKeys }
+        Agility = string { description = "Speed, balance and coordination." default = "d8"  keys = dieKeys }
+        Alertness = string { description = "Awareness and quick reactions." default = "d8"  keys = dieKeys }
+        Intelligence = string { description = "Reasoning, memory and learning." default = "d8"  keys = dieKeys }
+        Strength = string { description = "Physical power and endurance under load." default = "d8"  keys = dieKeys }
+        Vitality = string { description = "Health, stamina and resistance to harm." default = "d8"  keys = dieKeys }
+        Willpower = string { description = "Determination and force of will." default = "d8"  keys = dieKeys }
     }
 
     Skills = keyvalues
     {
+        description = "What the character has learned, each rated as a die. Roll attribute plus skill plus extras."
         singular = "Skill"
         editablekeys = campaign
         keys = ["Craft", "Drive", "Fight", "Focus", "Influence", "Know", "Labor", "Move", "Notice", "Operate", "Perform", "Shoot", "Sneak", "Survive", "Treat", "Trick"]
         tableLayout = layout { columns = 2  size = wide }
         valueType = custom
         {
-            Die = string { default = "d6"  keys = dieKeys }
+            Die = string { description = "Skill die. d4 means untrained; bigger is better." default = "d6"  keys = dieKeys }
             Roll = integer { value = sidesOf (Die)  valuedice = cortexRoll (characterTable, sidesOf (Die))  editable = none  render = Die }
         }
     }
 
     Stress = table
     {
+        description = "Stress dice. Taking more than d12 of one kind takes the character out."
         tableLayout = layout { columns = 3 }
-        Physical = string { default = "None"  keys = stressKeys  editable = live }
-        Mental = string { default = "None"  keys = stressKeys  editable = live }
-        Emotional = string { default = "None"  keys = stressKeys  editable = live }
+        Physical = string { description = "Physical stress: injuries, fatigue and pain." default = "None"  keys = stressKeys  editable = live }
+        Mental = string { description = "Mental stress: confusion, distraction and doubt." default = "None"  keys = stressKeys  editable = live }
+        Emotional = string { description = "Emotional stress: fear, anger and grief." default = "None"  keys = stressKeys  editable = live }
         Down = string { value = stressState (Physical, Mental, Emotional)  visible = none  indicator = "#d64545" }
     }
 
     Complications = list
     {
+        description = "Problems that add a die to the opposition's pool until dealt with."
         singular = "Complication"
         editable = live
         valueType = custom
@@ -134,18 +139,20 @@ characterTable = ruleset
 
     Assets = list
     {
+        description = "Useful things, contacts or advantages, each worth a die when it helps."
         singular = "Asset"
         editable = live
         valueType = custom
         {
             Name = string {}
             Die = string { default = "d6"  keys = dieKeys }
-            Signature = bool { default = false }
+            Signature = bool { description = "A signature asset belongs to the character for good." default = false }
         }
     }
 
     'SFX and abilities' = list
     {
+        description = "Special effects that bend the rules, often for a plot point."
         tableLayout = layout { size = wide }
         singular = "SFX"
         editable = character
@@ -154,6 +161,7 @@ characterTable = ruleset
 
     Milestones = table
     {
+        description = "Values and goals that earn experience when the character acts on them."
         tableLayout = layout { columns = 2  size = wide }
         Values = string { multiline = true }
         Notes = string { multiline = true }
@@ -172,19 +180,21 @@ gmcTable = ruleset
     }
     Pool = keyvalues
     {
+        description = "The dice the character rolls for each thing it does."
         singular = "Trait"
         editablekeys = character
         keys = ["Fight", "Notice", "Sneak"]
         tableLayout = layout { columns = 2  size = wide }
         valueType = custom
         {
-            First = string { default = "d8"  keys = dieKeys }
-            Second = string { default = "d6"  keys = ["None", "d4", "d6", "d8", "d10", "d12"] }
+            First = string { description = "The main die for this kind of action." default = "d8"  keys = dieKeys }
+            Second = string { description = "A second die added to the pool." default = "d6"  keys = ["None", "d4", "d6", "d8", "d10", "d12"] }
             Roll = integer { value = sidesOf (First)  valuedice = ask ("Difficulty", cortexPool (sidesOf (First), optionalSides (Second), optionalSides (Character.Distinction), 0, -1))  editable = none  render = First + " + " + Second }
         }
     }
     Stress = table
     {
+        description = "Stress dice. Taking more than d12 of one kind takes the character out."
         tableLayout = layout { columns = 3 }
         Physical = string { default = "None"  keys = stressKeys  editable = live }
         Mental = string { default = "None"  keys = stressKeys  editable = live }
