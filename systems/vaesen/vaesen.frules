@@ -30,8 +30,8 @@ mentalPenalty (char) =
 
 skill (attribute, physical) = custom
 {
-    Level = integer { description = "Skill level from 0 to 5, added to the attribute's dice." default = 0  minvalue = 0  maxvalue = 5 }
-    Pool = integer { description = "Dice pool: attribute plus skill, minus condition penalties. Each 6 is a success." value = max (1, attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  valuedice = vaesenRoll (attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  editable = none }
+    Level = integer { description = "Skill level from 0 to 5, added to the attribute's dice." reference = ["yze", 8] default = 0  minvalue = 0  maxvalue = 5 }
+    Pool = integer { description = "Dice pool: attribute plus skill, minus condition penalties. Each 6 is a success." reference = ["yze", 9] value = max (1, attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  valuedice = vaesenRoll (attribute + Level + Character.Modifier - (if physical then physicalPenalty (characterTable) else mentalPenalty (characterTable)))  editable = none }
 }
 
 noSkill = { Pool = 1 }
@@ -76,15 +76,15 @@ characterTable = ruleset
         Age = string { default = "Middle-aged"  keys = ["Young", "Middle-aged", "Old"] }
         Motivation = string { description = "Why the character keeps facing the vaesen." }
         Trauma = string { description = "The event that gave the character the Sight." }
-        'Dark secret' = string { description = "Something from the past the character keeps hidden." }
-        Relationships = string { description = "Ties to the other characters." multiline = true }
-        Experience = integer { description = "Experience earned in play, spent on skills and talents." default = 0  editable = live }
-        Modifier = modifier { description = "Extra dice added to or taken from the next roll." default = 0  editable = live }
+        'Dark secret' = string { description = "Something from the past the character keeps hidden." reference = ["yze", 6] }
+        Relationships = string { description = "Ties to the other characters." reference = ["yze", 6] multiline = true }
+        Experience = integer { description = "Experience earned in play, spent on skills and talents." reference = ["yze", 7] default = 0  editable = live }
+        Modifier = modifier { description = "Extra dice added to or taken from the next roll." reference = ["yze", 10] default = 0  editable = live }
     }
 
     Attributes = table
     {
-        description = "The four attributes, from 2 to 5."
+        description = "The four attributes, from 2 to 5." reference = ["yze", 4]
         tableLayout = layout { columns = 4  size = wide }
         Physique = integer { description = "Strength, toughness and endurance." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Physique - physicalPenalty (characterTable) + Character.Modifier) }
         Precision = integer { description = "Coordination, aim and fine control." default = 3  minvalue = 2  maxvalue = 5  valuedice = vaesenRoll (Precision - physicalPenalty (characterTable) + Character.Modifier) }
@@ -94,7 +94,7 @@ characterTable = ruleset
 
     Skills = table
     {
-        description = "Skills, three for each attribute."
+        description = "Skills, three for each attribute." reference = ["yze", 8]
         tableLayout = layout { columns = 3  size = wide }
         Agility = skill (Attributes.Physique, true)
         'Close combat' = skill (Attributes.Physique, true)
@@ -112,19 +112,19 @@ characterTable = ruleset
 
     Conditions = table
     {
-        description = "Physical and mental conditions. Each gives -1 to its kind of roll; all three and you are broken."
+        description = "Physical and mental conditions. Each gives -1 to its kind of roll; all three and you are broken." reference = ["yze", 21]
         tableLayout = layout { columns = 4  size = wide }
-        Exhausted = bool { description = "Exhausted: -1 to physical rolls." default = false  editable = live  indicator = "#d4b106" }
-        Battered = bool { description = "Battered: -1 to physical rolls." default = false  editable = live  indicator = "#e8913a" }
-        Wounded = bool { description = "Wounded: -1 to physical rolls." default = false  editable = live  indicator = "#d64545" }
-        'Physically broken' = bool { description = "Physically broken: roll for a critical injury and you can't act physically." default = false  editable = live }
-        Angry = bool { description = "Angry: -1 to mental rolls." default = false  editable = live  indicator = "#d64545" }
-        Frightened = bool { description = "Frightened: -1 to mental rolls." default = false  editable = live  indicator = "#8e5cc4" }
-        Hopeless = bool { description = "Hopeless: -1 to mental rolls." default = false  editable = live  indicator = "#555555" }
-        'Mentally broken' = bool { description = "Mentally broken: roll for a critical mental effect and you can't act sanely." default = false  editable = live }
+        Exhausted = bool { description = "Exhausted: -1 to physical rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#d4b106" }
+        Battered = bool { description = "Battered: -1 to physical rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#e8913a" }
+        Wounded = bool { description = "Wounded: -1 to physical rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#d64545" }
+        'Physically broken' = bool { description = "Physically broken: roll for a critical injury and you can't act physically." reference = ["yze", 21] default = false  editable = live }
+        Angry = bool { description = "Angry: -1 to mental rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#d64545" }
+        Frightened = bool { description = "Frightened: -1 to mental rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#8e5cc4" }
+        Hopeless = bool { description = "Hopeless: -1 to mental rolls." reference = ["yze", 21] default = false  editable = live  indicator = "#555555" }
+        'Mentally broken' = bool { description = "Mentally broken: roll for a critical mental effect and you can't act sanely." reference = ["yze", 21] default = false  editable = live }
         State = string { value = brokenState (characterTable)  visible = none  indicator = "#d64545" }
-        Initiative = integer { description = "Initiative card or roll at the start of a fight." default = 0  valuedice = 1d10 }
-        'Critical injuries' = string { description = "Lasting injuries and mental scars, with their effects." multiline = true  editable = live }
+        Initiative = integer { description = "Initiative card or roll at the start of a fight." reference = ["yze", 15] default = 0  valuedice = 1d10 }
+        'Critical injuries' = string { description = "Lasting injuries and mental scars, with their effects." reference = [["yze", 22], ["yze", 23]] multiline = true  editable = live }
     }
 
     Talents = list
@@ -175,7 +175,7 @@ vaesenTable = ruleset
         Precision = integer { default = 3  valuedice = vaesenRoll (Precision) }
         Logic = integer { default = 3  valuedice = vaesenRoll (Logic) }
         Empathy = integer { default = 3  valuedice = vaesenRoll (Empathy) }
-        Armor = integer { description = "Armor subtracted from each hit." default = 0 }
+        Armor = integer { description = "Armor subtracted from each hit." reference = ["yze", 20] default = 0 }
         Conditions = integer { description = "Conditions taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         'Max conditions' = integer { description = "Conditions the vaesen can take before it is broken." default = 3 }
         State = string { value = if Conditions >= 'Max conditions' then "Broken" else ""  visible = none  indicator = "#d64545" }
