@@ -30,6 +30,8 @@ parser.add_argument("--prefix", action="append", default=[], help="a type whose 
 parser.add_argument("--label", action="append", default=[], help="Type=text that may stand before a name, such as Extras=Extra: ")
 parser.add_argument("--entry", action="append", default=[], help="Type=regex that the text after a name (the rest of its line and the next line) must match, to tell an entry from a mention in a list")
 parser.add_argument("--aliases", help="a JSON file of item name to other names to look for, such as the heading a variant is listed under")
+parser.add_argument("--only", help="look only for items whose description contains this text, such as the source they came from")
+parser.add_argument("--skip-missing", action="store_true", help="give no reference to items not found in this PDF")
 parser.add_argument("--document-only", action="store_true")
 parser.add_argument("libraries", nargs="+")
 args = parser.parse_args()
@@ -123,6 +125,8 @@ def main():
         placed, missing = {}, []
         if not args.document_only:
             for entity in library["entities"]:
+                if args.only and args.only not in entity.get("description", ""):
+                    continue
                 page = page_of(entity, book, limits)
                 reference = {"document": args.key}
                 if page:
@@ -130,6 +134,8 @@ def main():
                     placed[entity["type"]] = placed.get(entity["type"], 0) + 1
                 else:
                     missing.append(f"{entity['type']}: {entity['name']}")
+                    if args.skip_missing:
+                        continue
                 others = [r for r in entity.get("references", []) if r.get("document") != args.key]
                 entity["references"] = others + [reference]
         write(path, original, library)
