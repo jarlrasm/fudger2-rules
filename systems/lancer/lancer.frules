@@ -71,10 +71,10 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Callsign = string {}
         Background = string {}
-        'License Level' = integer { default = 0  minvalue = 0  maxvalue = 12 }
-        Grit = integer { value = ('License Level' + 1) / 2  editable = none }
-        Licenses = string {}
-        'Core Bonuses' = string {}
+        'License Level' = integer { description = "License level, from 0 to 12. Each level grants a license rank and more." default = 0  minvalue = 0  maxvalue = 12 }
+        Grit = integer { description = "Grit: half your license level, rounded up. Added to attacks, saves and HP." value = ('License Level' + 1) / 2  editable = none }
+        Licenses = string { description = "Manufacturer licenses and ranks, which unlock frames and gear." }
+        'Core Bonuses' = string { description = "Core bonuses, special upgrades taken every third license level." }
         History = string { multiline = true }
         Appearance = string { multiline = true }
     }
@@ -82,41 +82,43 @@ characterTable = ruleset
     Mech = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Hull = integer { default = 0  minvalue = 0  maxvalue = 6 }
-        Agility = integer { default = 0  minvalue = 0  maxvalue = 6 }
-        Systems = integer { default = 0  minvalue = 0  maxvalue = 6 }
-        Engineering = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Hull = integer { description = "HASE Hull: toughness, more HP and repair capacity." default = 0  minvalue = 0  maxvalue = 6 }
+        Agility = integer { description = "HASE Agility: speed and evasion." default = 0  minvalue = 0  maxvalue = 6 }
+        Systems = integer { description = "HASE Systems: electronic defense and tech attacks." default = 0  minvalue = 0  maxvalue = 6 }
+        Engineering = integer { description = "HASE Engineering: heat capacity and limited systems." default = 0  minvalue = 0  maxvalue = 6 }
     }
 
     Status = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max HP' = integer { value = 6 + Pilot.Grit  editable = none }
-        HP = integer { default = 'Max HP'  minvalue = 0  editable = live }
+        'Max HP' = integer { description = "Pilot hit points when on foot: 6 plus Grit." value = 6 + Pilot.Grit  editable = none }
+        HP = integer { description = "Current pilot hit points. At 0 the pilot is down and out." default = 'Max HP'  minvalue = 0  editable = live }
         Down = string { value = if HP < 1 then "Down and out" else ""  visible = none  indicator = "#d64545" }
-        Armor = integer { default = 0 }
-        Evasion = integer { default = 10 }
-        'E Defense' = integer { default = 10 }
+        Armor = integer { description = "Reduces damage from each hit." default = 0 }
+        Evasion = integer { description = "What an attack must reach to hit the pilot." default = 10 }
+        'E Defense' = integer { description = "What a tech attack must reach to affect the pilot." default = 10 }
         Speed = integer { default = 4 }
-        Accuracy = integer { default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
-        Attack = integer { value = Pilot.Grit  valuedice = attackDice (Pilot.Grit, Accuracy)  editable = none  action = ranged  range = 5 }
+        Accuracy = integer { description = "Accuracy adds d6s and keeps the highest; difficulty subtracts the highest instead." default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
+        Attack = integer { description = "Pilot attack bonus: Grit, plus accuracy dice." value = Pilot.Grit  valuedice = attackDice (Pilot.Grit, Accuracy)  editable = none  action = ranged  range = 5 }
         Damage = string { default = "1d3" }
     }
 
     'Skill Triggers' = keyvalues
     {
+        description = "Pilot skills. Bonuses of +2, +4 or +6 add to the d20 check."
         tableLayout = layout { columns = 2  size = wide }
         singular = "Trigger"
         editablekeys = character
         keys = ["Act Unseen or Unheard", "Apply Fists to Faces", "Assault", "Blow Something Up", "Charm", "Get a Hold of Something", "Get Somewhere Quickly", "Hack or Fix", "Investigate", "Lead or Inspire", "Patch", "Read a Situation", "Spot", "Survive", "Take Control"]
         valueType = custom
         {
-            Bonus = integer { default = 0  minvalue = 0  maxvalue = 6  step = 2  valuedice = checkDice (Bonus, 0) }
+            Bonus = integer { description = "Skill trigger bonus, added to the d20 roll." default = 0  minvalue = 0  maxvalue = 6  step = 2  valuedice = checkDice (Bonus, 0) }
         }
     }
 
     Talents = list
     {
+        description = "Talents with ranks that give mech and pilot abilities."
         tableLayout = layout { size = wide }
         singular = "Talent"
         editable = character
@@ -127,7 +129,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2  size = wide }
         'Pilot Gear' = string { multiline = true }
-        Reserves = string { multiline = true }
+        Reserves = string { description = "Spare parts, gear and favors earned during downtime." multiline = true }
     }
 }
 
@@ -139,7 +141,7 @@ mechTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Frame = string {}
         Size = string { keys = ["1/2", "1", "2", "3"] }
-        Grit = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Grit = integer { description = "Grit from the pilot's license level." default = 0  minvalue = 0  maxvalue = 6 }
         Hull = integer { default = 0  minvalue = 0  maxvalue = 6 }
         Agility = integer { default = 0  minvalue = 0  maxvalue = 6 }
         Systems = integer { default = 0  minvalue = 0  maxvalue = 6 }
@@ -147,6 +149,7 @@ mechTable = ruleset
     }
     Frame = table
     {
+        description = "The base statistics of the mech's frame before HASE."
         tableLayout = layout { columns = 4  size = wide }
         'Frame HP' = integer { default = 10 }
         'Frame Evasion' = integer { default = 8 }
@@ -157,33 +160,33 @@ mechTable = ruleset
         'Frame Sensors' = integer { default = 10 }
         'Frame Tech Attack' = integer { default = 0 }
         'Frame Save' = integer { default = 10 }
-        'System Points' = integer { default = 6 }
+        'System Points' = integer { description = "Points for systems, from the frame plus bonuses." default = 6 }
         Armor = integer { default = 1 }
         Traits = string { multiline = true }
     }
     Combat = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max HP' = integer { value = Frame.'Frame HP' + Mech.Hull * 2 + Mech.Grit  editable = none }
-        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
-        Structure = integer { default = 4  minvalue = 0  maxvalue = 4  editable = live }
-        'Structure Roll' = integer { value = Structure  valuedice = damageRoll (Structure, false)  editable = none }
-        'Heat Cap' = integer { value = Frame.'Frame Heat' + Mech.Engineering  editable = none }
-        Heat = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
-        Stress = integer { default = 4  minvalue = 0  maxvalue = 4  editable = live }
-        'Overheat Roll' = integer { value = Stress  valuedice = damageRoll (Stress, true)  editable = none }
+        'Max HP' = integer { description = "Mech HP: frame HP, plus twice Hull, plus Grit." value = Frame.'Frame HP' + Mech.Hull * 2 + Mech.Grit  editable = none }
+        HP = integer { description = "Current mech HP. At 0 the mech takes 1 structure damage and resets HP." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Structure = integer { description = "Structure left. At 0 the mech is destroyed." default = 4  minvalue = 0  maxvalue = 4  editable = live }
+        'Structure Roll' = integer { description = "Roll on the structure table after losing structure." value = Structure  valuedice = damageRoll (Structure, false)  editable = none }
+        'Heat Cap' = integer { description = "Heat you can take before you overheat: frame heat plus Engineering." value = Frame.'Frame Heat' + Mech.Engineering  editable = none }
+        Heat = integer { description = "Current heat. Over the cap, take 1 stress and reset." default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Stress = integer { description = "Reactor stress left. At 0 the reactor melts down." default = 4  minvalue = 0  maxvalue = 4  editable = live }
+        'Overheat Roll' = integer { description = "Roll on the overheating table after taking stress." value = Stress  valuedice = damageRoll (Stress, true)  editable = none }
         Down = string { value = if Structure < 1 then "Destroyed" else if Stress < 1 then "Meltdown" else ""  visible = none  indicator = "#d64545" }
-        Evasion = integer { value = Frame.'Frame Evasion' + Mech.Agility  editable = none }
-        'E Defense' = integer { value = Frame.'Frame E Defense' + Mech.Systems  editable = none }
-        Speed = integer { value = Frame.'Frame Speed' + Mech.Agility / 2  editable = none }
-        'Repair Cap' = integer { value = Frame.'Frame Repair' + Mech.Hull / 2  editable = none }
-        Repairs = integer { default = 'Repair Cap'  minvalue = 0  editable = live }
-        'Save Target' = integer { value = Frame.'Frame Save' + Mech.Grit  editable = none }
-        'Tech Attack' = integer { value = Frame.'Frame Tech Attack' + Mech.Systems  valuedice = attackDice (Frame.'Frame Tech Attack' + Mech.Systems, Accuracy)  editable = none  action = ranged  range = Frame.'Frame Sensors' }
-        'Limited Systems Bonus' = integer { value = Mech.Engineering / 2  editable = none }
-        Accuracy = integer { default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
-        Overshield = integer { default = 0  minvalue = 0  editable = live }
-        Burn = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Evasion = integer { description = "What an attack must reach to hit the mech: frame evasion plus Agility." value = Frame.'Frame Evasion' + Mech.Agility  editable = none }
+        'E Defense' = integer { description = "What a tech attack must reach to affect the mech: frame E-defense plus Systems." value = Frame.'Frame E Defense' + Mech.Systems  editable = none }
+        Speed = integer { description = "Spaces moved with one move." value = Frame.'Frame Speed' + Mech.Agility / 2  editable = none }
+        'Repair Cap' = integer { description = "Repairs the mech can hold: frame repair cap plus half Hull." value = Frame.'Frame Repair' + Mech.Hull / 2  editable = none }
+        Repairs = integer { description = "Repairs left, used to heal HP and fix damage." default = 'Repair Cap'  minvalue = 0  editable = live }
+        'Save Target' = integer { description = "Difficulty for enemies to save against your effects: frame save plus Grit." value = Frame.'Frame Save' + Mech.Grit  editable = none }
+        'Tech Attack' = integer { description = "Tech attack bonus: frame tech attack plus Systems." value = Frame.'Frame Tech Attack' + Mech.Systems  valuedice = attackDice (Frame.'Frame Tech Attack' + Mech.Systems, Accuracy)  editable = none  action = ranged  range = Frame.'Frame Sensors' }
+        'Limited Systems Bonus' = integer { description = "Extra uses for limited systems: half Engineering." value = Mech.Engineering / 2  editable = none }
+        Accuracy = integer { description = "Accuracy adds d6s and keeps the highest; difficulty subtracts the highest instead." default = 0  minvalue = -4  maxvalue = 4  editable = live  save = nosave }
+        Overshield = integer { description = "Temporary HP that is lost first and does not stack." default = 0  minvalue = 0  editable = live }
+        Burn = integer { description = "Burn damage taken at the end of each turn until a check ends it." default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
         Exposed = bool { default = false  editable = live  indicator = "#d64545" }
         Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
         Slowed = bool { default = false  editable = live  indicator = "#3a7bd5" }
@@ -195,6 +198,7 @@ mechTable = ruleset
     }
     Checks = table
     {
+        description = "Checks with each HASE stat: d20 plus the stat, 10 or more succeeds."
         tableLayout = layout { columns = 4  size = wide }
         'Hull Check' = integer { value = Mech.Hull  valuedice = checkDice (Mech.Hull, Combat.Accuracy)  editable = none }
         'Agility Check' = integer { value = Mech.Agility  valuedice = checkDice (Mech.Agility, Combat.Accuracy)  editable = none }
@@ -226,7 +230,7 @@ mechTable = ruleset
     Core = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        'Core Power' = string { multiline = true }
+        'Core Power' = string { description = "The frame's core power, usable once per mission." multiline = true }
         'Core Used' = bool { default = false  editable = live }
     }
 }
@@ -239,22 +243,22 @@ creatureTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Class = string { keys = ["Ace", "Archer", "Assault", "Bastion", "Berserker", "Breacher", "Demolisher", "Engineer", "Goliath", "Hive", "Hornet", "Mirage", "Operator", "Pyro", "Rainmaker", "Ronin", "Scout", "Seeder", "Sentinel", "Specter", "Support", "Witch"] }
         Template = string { keys = ["", "Grunt", "Elite", "Ultra", "Veteran", "Commander"] }
-        Tier = integer { default = 1  minvalue = 1  maxvalue = 3 }
+        Tier = integer { description = "Tier 1 to 3: how dangerous the NPC is." default = 1  minvalue = 1  maxvalue = 3 }
         'Max HP' = integer { default = 10 }
-        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
-        Structure = integer { default = 1  minvalue = 0  editable = live }
-        Stress = integer { default = 1  minvalue = 0  editable = live }
+        HP = integer { description = "Current HP." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Structure = integer { description = "Structure left. At 0 the NPC is destroyed." default = 1  minvalue = 0  editable = live }
+        Stress = integer { description = "Reactor stress left." default = 1  minvalue = 0  editable = live }
         Down = string { value = if Structure < 1 then "Destroyed" else ""  visible = none  indicator = "#d64545" }
-        Armor = integer { default = 0 }
-        Evasion = integer { default = 8 }
-        'E Defense' = integer { default = 8 }
-        'Heat Cap' = integer { default = 6 }
+        Armor = integer { description = "Reduces damage from each hit." default = 0 }
+        Evasion = integer { description = "What an attack must reach to hit the NPC." default = 8 }
+        'E Defense' = integer { description = "What a tech attack must reach to affect the NPC." default = 8 }
+        'Heat Cap' = integer { description = "Heat it can take before overheating." default = 6 }
         Heat = integer { default = 0  minvalue = 0  editable = live }
         Speed = integer { default = 4 }
         Sensors = integer { default = 10 }
-        Save = integer { default = 10 }
+        Save = integer { description = "Difficulty for saves against the NPC's effects." default = 10 }
         Size = string { default = "1" }
-        Activations = integer { default = 1 }
+        Activations = integer { description = "How many turns the NPC gets each round." default = 1 }
     }
     Stats = table
     {
