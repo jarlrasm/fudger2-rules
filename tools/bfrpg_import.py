@@ -8,7 +8,7 @@ same licence. Basic Fantasy uses ascending Armor Class; the library gives
 OSE's descending Armour Class (19 minus the ascending value), and THAC0 from
 the monster attack table by Hit Dice.
 
-    python3 tools/bfrpg_import.py <bfrpg checkout> systems/ose/bfrpg.json
+    python3 tools/bfrpg_import.py <bfrpg checkout> systems/ose/bfrpg.json [headings.json]
 """
 
 import json
@@ -18,6 +18,9 @@ from pathlib import Path
 
 RAW = Path(sys.argv[1])
 OUT = sys.argv[2]
+# Where to write each monster's heading in the book, for tools/pdf_references.py --aliases.
+HEADINGS = sys.argv[3] if len(sys.argv) > 3 else None
+headings = {}
 SYSTEM = "OldSchoolEssentials"
 URL = "/systems/ose/bfrpg.json"
 SAVES = {"fighter": "F", "magic-user": "MU", "cleric": "C", "thief": "T", "normal man": "NH"}
@@ -113,8 +116,11 @@ def monsters():
                 last = value
             stats[label] = values
         prose = clean("\n".join(line for line in chunk.split("\n") if not line.startswith("|") and not line.startswith("## ") and not line.startswith(" data-tag") and "data-tag" not in line))
+        heading = re.search(r"^#{2,4} (.+)$", chunk, re.M)
         for i, name in enumerate(names):
-            name = clean(name)
+            name = clean(name).replace("*", "").strip()
+            if heading:
+                headings[name] = [clean(heading.group(1)).replace("*", "").strip()]
             if not name or name.lower() in seen:
                 continue
             seen.add(name.lower())
@@ -242,4 +248,6 @@ library = {
     "entities": entities,
 }
 json.dump(library, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+if HEADINGS:
+    json.dump(headings, open(HEADINGS, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print(len(entities), "entities:", {t: sum(1 for e in entities if e["type"] == t) for t in sorted({e["type"] for e in entities})})

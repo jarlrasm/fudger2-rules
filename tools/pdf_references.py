@@ -28,6 +28,7 @@ parser.add_argument("--url", required=True)
 parser.add_argument("--pages", action="append", default=[], help="Type=first-last")
 parser.add_argument("--prefix", action="append", default=[], help="a type whose items may start a line")
 parser.add_argument("--label", action="append", default=[], help="Type=text that may stand before a name, such as Extras=Extra: ")
+parser.add_argument("--aliases", help="a JSON file of item name to other names to look for, such as the heading a variant is listed under")
 parser.add_argument("--document-only", action="store_true")
 parser.add_argument("libraries", nargs="+")
 args = parser.parse_args()
@@ -52,8 +53,18 @@ def ranges():
     return found
 
 
+ALIASES = json.load(open(args.aliases, encoding="utf-8")) if args.aliases else {}
+
+
 def page_of(entity, book, limits):
-    name = normal(entity["name"])
+    found = page_for(entity["name"], entity, book, limits)
+    for alias in ALIASES.get(entity["name"], []):
+        found = found or page_for(alias, entity, book, limits)
+    return found
+
+
+def page_for(item_name, entity, book, limits):
+    name = normal(item_name)
     first, last = limits.get(entity["type"], (1, len(book)))
     prefix = entity["type"] in args.prefix
     labels = [normal(spec.partition("=")[2]) + " " for spec in args.label if spec.partition("=")[0] == entity["type"]]
@@ -62,6 +73,7 @@ def page_of(entity, book, limits):
         lines = book[number - 1]
         # A long name in a narrow column wraps onto the next line.
         for line in lines + [a + " " + b for a, b in zip(lines, lines[1:])]:
+            line = line.rstrip("*").rstrip()
             if line in wanted or (prefix and any(line.startswith(w + end) for w in wanted for end in (" ", ".", ":"))):
                 return number
     return None
