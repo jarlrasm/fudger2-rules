@@ -33,9 +33,9 @@ dwDice (char) = dwRoll (char.Status.Forward + char.Status.Ongoing)
 
 stat (debility) = custom
 {
-    Score = integer { default = 10  minvalue = 1  maxvalue = 18 }
-    Debility = bool { default = false  editable = live  indicator = "#d4b106"  indicatorLabel = debility }
-    Modifier = modifier { value = statModifier (Score) - (if Debility then 1 else 0)  valuedice = dwDice (characterTable)  editable = none }
+    Score = integer { description = "Ability score from 3 to 18." default = 10  minvalue = 1  maxvalue = 18 }
+    Debility = bool { description = "A debility gives -1 to this stat until healed." default = false  editable = live  indicator = "#d4b106"  indicatorLabel = debility }
+    Modifier = modifier { description = "Modifier from the score, added to 2d6 for moves with this stat." value = statModifier (Score) - (if Debility then 1 else 0)  valuedice = dwDice (characterTable)  editable = none }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.equipmentStats.Stats, field, "")
@@ -67,14 +67,15 @@ characterTable = ruleset
         Class = string { keys = ["Bard", "Cleric", "Druid", "Fighter", "Paladin", "Ranger", "Thief", "Wizard"] }
         Race = string {}
         Alignment = string { keys = ["Good", "Lawful", "Neutral", "Chaotic", "Evil"] }
-        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
-        XP = slots { number = Level + 7  editable = live  allowedchange = increaseAndClear }
+        Level = integer { description = "Character level from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
+        XP = slots { description = "Experience, marked on misses and at the end of a session. Full means level up." number = Level + 7  editable = live  allowedchange = increaseAndClear }
         Look = string { multiline = true }
-        'Alignment Goal' = string {}
+        'Alignment Goal' = string { description = "How to act on your alignment and earn extra experience." }
     }
 
     Stats = table
     {
+        description = "The six stats. Each has a debility that lowers its modifier by one."
         tableLayout = layout { columns = 3  size = wide }
         STR = stat ("Weak")
         DEX = stat ("Shaky")
@@ -88,33 +89,34 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         'Base HP' = integer { default = 8 }
-        'Max HP' = integer { value = 'Base HP' + Stats.CON.Score  editable = none }
-        HP = integer { default = 'Max HP'  editable = live }
+        'Max HP' = integer { description = "Hit points when unhurt: class base plus CON score." value = 'Base HP' + Stats.CON.Score  editable = none }
+        HP = integer { description = "Current hit points. At 0 you take your Last Breath." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Last Breath" else ""  visible = none  indicator = "#d64545" }
-        Damage = string { default = "d8" }
+        Damage = string { description = "Your class damage die, rolled when you deal damage." default = "d8" }
         'Damage Roll' = integer { default = 0  valuedice = 1d8 }
-        Armor = integer { default = 0 }
-        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
-        Ongoing = modifier { default = 0  editable = live }
-        'Last Breath' = integer { default = 0  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > 9 then { Text = toString (sum (first (throws).rolls)) + ": you cheat death"  Outcome = "Strong hit" } else if sum (first (throws).rolls) > 6 then { Text = toString (sum (first (throws).rolls)) + ": Death offers a bargain"  Outcome = "Weak hit" } else { Text = toString (sum (first (throws).rolls)) + ": your time has come"  Outcome = "Miss" }))  editable = none }
+        Armor = integer { description = "Armor reduces the damage of each hit." default = 0 }
+        Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        Ongoing = modifier { description = "Bonus to every roll until the situation changes." default = 0  editable = live }
+        'Last Breath' = integer { description = "Roll 2d6 when dying: 10+ you live, 7-9 Death offers a bargain, 6- you die." default = 0  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > 9 then { Text = toString (sum (first (throws).rolls)) + ": you cheat death"  Outcome = "Strong hit" } else if sum (first (throws).rolls) > 6 then { Text = toString (sum (first (throws).rolls)) + ": Death offers a bargain"  Outcome = "Weak hit" } else { Text = toString (sum (first (throws).rolls)) + ": your time has come"  Outcome = "Miss" }))  editable = none }
     }
 
     'Basic Moves' = table
     {
+        description = "The moves every character has, with the stat they roll. 10+ strong hit, 7-9 weak hit."
         tableLayout = layout { columns = 3  size = wide }
-        'Hack and Slash' = modifier { value = Stats.STR.Modifier  valuedice = dwDice (characterTable)  editable = none  action = melee  reach = 5 }
-        Volley = modifier { value = Stats.DEX.Modifier  valuedice = dwDice (characterTable)  editable = none  action = ranged  range = 60 }
+        'Hack and Slash' = modifier { description = "Attack in melee. Roll +STR." value = Stats.STR.Modifier  valuedice = dwDice (characterTable)  editable = none  action = melee  reach = 5 }
+        Volley = modifier { description = "Shoot at range. Roll +DEX." value = Stats.DEX.Modifier  valuedice = dwDice (characterTable)  editable = none  action = ranged  range = 60 }
         'Defy Danger STR' = modifier { value = Stats.STR.Modifier  valuedice = dwDice (characterTable)  editable = none }
         'Defy Danger DEX' = modifier { value = Stats.DEX.Modifier  valuedice = dwDice (characterTable)  editable = none }
         'Defy Danger CON' = modifier { value = Stats.CON.Modifier  valuedice = dwDice (characterTable)  editable = none }
         'Defy Danger INT' = modifier { value = Stats.INT.Modifier  valuedice = dwDice (characterTable)  editable = none }
         'Defy Danger WIS' = modifier { value = Stats.WIS.Modifier  valuedice = dwDice (characterTable)  editable = none }
         'Defy Danger CHA' = modifier { value = Stats.CHA.Modifier  valuedice = dwDice (characterTable)  editable = none }
-        Defend = modifier { value = Stats.CON.Modifier  valuedice = dwDice (characterTable)  editable = none }
-        'Spout Lore' = modifier { value = Stats.INT.Modifier  valuedice = dwDice (characterTable)  editable = none }
-        'Discern Realities' = modifier { value = Stats.WIS.Modifier  valuedice = dwDice (characterTable)  editable = none }
-        Parley = modifier { value = Stats.CHA.Modifier  valuedice = dwDice (characterTable)  editable = none }
-        'Aid or Interfere' = modifier { default = 0  valuedice = dwDice (characterTable) }
+        Defend = modifier { description = "Protect someone or something. Roll +CON." value = Stats.CON.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Spout Lore' = modifier { description = "Recall useful knowledge. Roll +INT." value = Stats.INT.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Discern Realities' = modifier { description = "Study a situation closely to learn what is true. Roll +WIS." value = Stats.WIS.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        Parley = modifier { description = "Bargain with leverage. Roll +CHA." value = Stats.CHA.Modifier  valuedice = dwDice (characterTable)  editable = none }
+        'Aid or Interfere' = modifier { description = "Help or hinder someone. Roll plus your bond with them." default = 0  valuedice = dwDice (characterTable) }
     }
 
     Moves = list
@@ -127,6 +129,7 @@ characterTable = ruleset
 
     Bonds = list
     {
+        description = "Bonds with other characters. Resolving one earns experience."
         tableLayout = layout { size = wide }
         singular = "Bond"
         editable = character
@@ -163,8 +166,8 @@ characterTable = ruleset
     Load = table
     {
         tableLayout = layout { columns = 3 }
-        'Base Load' = integer { default = 9 }
-        'Max Load' = integer { value = 'Base Load' + Stats.STR.Modifier  editable = none }
+        'Base Load' = integer { description = "Class base load before STR." default = 9 }
+        'Max Load' = integer { description = "How much weight you can carry without slowing down." value = 'Base Load' + Stats.STR.Modifier  editable = none }
         Coin = integer { default = 0  editable = live }
         Spells = string { multiline = true }
     }
@@ -176,13 +179,13 @@ creatureTable = ruleset
     Monster = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Tags = string { default = "Solitary, Large" }
+        Tags = string { description = "Monster tags such as solitary, group, horde, large or magical." default = "Solitary, Large" }
         'Max HP' = integer { default = 10 }
         HP = integer { default = 'Max HP'  editable = live }
-        Armor = integer { default = 1 }
-        Damage = string { default = "d8" }
+        Armor = integer { description = "Armor reduces the damage of each hit." default = 1 }
+        Damage = string { description = "The monster's damage die." default = "d8" }
         'Damage Roll' = integer { default = 0  valuedice = 1d8  action = melee  reach = 5 }
-        Instinct = string {}
+        Instinct = string { description = "What the monster wants most, which guides how it acts." }
         Dead = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
     }
     Notes = table
