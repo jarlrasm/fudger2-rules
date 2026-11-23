@@ -189,7 +189,7 @@ characterTable = ruleset
         Career = string {}
         Assignment = string {}
         Rank = string {}
-        Condition = condition (Characteristics.'STR'.Current, Characteristics.'DEX'.Current, Characteristics.'END'.Current)
+        Condition = string { description = "Health from STR, DEX and END: wounded, unconscious or dead when they drop to 0." value = condition (Characteristics.'STR'.Current, Characteristics.'DEX'.Current, Characteristics.'END'.Current)  editable = none }
         'Map condition' = string
         {
             value = mapCondition (condition (Characteristics.'STR'.Current, Characteristics.'DEX'.Current, Characteristics.'END'.Current))
@@ -203,6 +203,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 2 }
         Roll = selector
         {
+            description = "Boon rolls 3d6 and keeps the best two; bane keeps the worst two."
             options = ["Bane", "Normal", "Boon"]
             labels = ["Bane", "Normal", "Boon"]
             colors = ["red", "white", "green"]
@@ -213,27 +214,31 @@ characterTable = ruleset
         }
         Initiative = modifier
         {
+            description = "Bonus to the initiative roll: the better of the DEX and INT modifiers."
             value = max (Characteristics.'DEX'.DM, Characteristics.'INT'.DM)
             valuedice = checkRoll (characterTable)
         }
         Unskilled = modifier
         {
+            description = "Modifier for a skill you have no level in, softened by Jack of All Trades."
             value = untrainedDM (characterTable)
             valuedice = checkRoll (characterTable)
         }
-        'Jack of All Trades' = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        'Jack of All Trades' = integer { description = "Reduces the penalty for using skills you are not trained in." default = 0  minvalue = 0  maxvalue = 3 }
     }
 
     Characteristics = keyvalues
     {
+        description = "The seven characteristics. Damage is taken from STR, DEX and END."
         singular = "Characteristic"
         keys = ["STR", "DEX", "END", "INT", "EDU", "CHA", "EMP"]
         valueType = custom
         {
-            Max = integer { default = 7  minvalue = 0  maxvalue = 15 }
-            Current = integer { default = Max  minvalue = 0  editable = live }
+            Max = integer { description = "Characteristic score when unhurt, usually 2 to 12." default = 7  minvalue = 0  maxvalue = 15 }
+            Current = integer { description = "Current score, lowered by damage, fatigue or EMP use." default = Max  minvalue = 0  editable = live }
             DM = modifier
             {
+                description = "Modifier from the current score, added to 2d6 checks against 8."
                 value = characteristicDM (Current)
                 valuedice = checkRoll (characterTable)
             }
@@ -242,16 +247,18 @@ characterTable = ruleset
 
     Skills = keyvalues
     {
+        description = "Skills. Roll 2d6 plus skill level plus characteristic DM; 8 or more succeeds."
         singular = "Skill"
         editablekeys = character
         keys = skillNames
         valueType = custom
         {
             Trained = bool { default = true }
-            Level = integer { default = 0  minvalue = 0 }
-            Characteristic = string { keys = ["", "STR", "DEX", "END", "INT", "EDU", "CHA", "EMP"]  default = ""  editable = live }
+            Level = integer { description = "Skill level, added to the check." default = 0  minvalue = 0 }
+            Characteristic = string { description = "The characteristic used for this check, picked to suit the task." keys = ["", "STR", "DEX", "END", "INT", "EDU", "CHA", "EMP"]  default = ""  editable = live }
             Check = modifier
             {
+                description = "Total modifier for a 2d6 check with this skill."
                 value = skillDM (characterTable, Trained, Level, Characteristic)
                 valuedice = checkRoll (characterTable)
             }
@@ -261,10 +268,10 @@ characterTable = ruleset
     Company = table
     {
         tableLayout = layout { columns = 2 }
-        Trust = integer { default = 0  editable = live }
-        'Dark Influence' = integer { default = 0  minvalue = 0  editable = live }
+        Trust = integer { description = "How much the cell's patrons trust the operative." default = 0  editable = live }
+        'Dark Influence' = integer { description = "How far the operative has been touched by the darkness. It brings gifts and costs." default = 0  minvalue = 0  editable = live }
         'Missions Completed' = integer { default = 0  minvalue = 0  editable = live }
-        'Dark Influence effect' = darkInfluenceEffect ('Dark Influence')
+        'Dark Influence effect' = string { description = "What the current dark influence does to the operative." value = darkInfluenceEffect ('Dark Influence')  editable = none }
         Training = string { multiline = true }
     }
 
@@ -365,20 +372,21 @@ minionTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 2 }
-        Hits = integer { default = 10 }
-        'Current Hits' = integer { default = Hits  minvalue = 0  editable = live }
+        Hits = integer { description = "Hits the minion can take." default = 10 }
+        'Current Hits' = integer { description = "Hits left. At 0 the minion is down." default = Hits  minvalue = 0  editable = live }
         'Map condition' = string { value = hitsCondition ('Current Hits', Hits)  visible = none  indicator = "#d64545" }
-        EMP = integer { default = 0 }
-        'Current EMP' = integer { default = EMP  minvalue = 0  editable = live }
+        EMP = integer { description = "Empathic energy for powers." default = 0 }
+        'Current EMP' = integer { description = "Empathic energy left." default = EMP  minvalue = 0  editable = live }
         Instability = string {}
         Speed = string { default = "6m" }
-        Protection = integer { default = 0 }
-        Initiative = modifier { default = 0  valuedice = 2d6 }
-        Check = modifier { default = 0  valuedice = 2d6 }
-        'Attack DM' = modifier { default = 0  valuedice = 2d6  action = melee  reach = 2 }
+        Protection = integer { description = "Armour that reduces damage from each hit." default = 0 }
+        Initiative = modifier { description = "Modifier to the minion's initiative roll." default = 0  valuedice = 2d6 }
+        Check = modifier { description = "Modifier for the minion's general checks." default = 0  valuedice = 2d6 }
+        'Attack DM' = modifier { description = "Modifier for the minion's attack roll." default = 0  valuedice = 2d6  action = melee  reach = 2 }
         'Attack damage' = string { default = "1D"  visible = editor }
         Damage = integer
         {
+            description = "Damage dealt by a hit."
             value = damageBonus ('Attack damage')
             render = 'Attack damage'
             valuedice = damageDice (damageDiceCount ('Attack damage'))
