@@ -71,9 +71,9 @@ iconRoll (diceCount) = ([dice { number = diceCount  sides = 6 }], ((baseline, th
 
 ability = custom
 {
-    Score = integer { default = 10  minvalue = 3  maxvalue = 30 }
-    Modifier = modifier { value = abilityModifier (Score)  editable = none }
-    'Mod plus level' = modifier { value = abilityModifier (Score) + Character.Level  valuedice = skillCheck  editable = none }
+    Score = integer { description = "The raw ability score, usually from 8 to 20." default = 10  minvalue = 3  maxvalue = 30 }
+    Modifier = modifier { description = "Bonus from the score: (score - 10) / 2, rounded down." value = abilityModifier (Score)  editable = none }
+    'Mod plus level' = modifier { description = "Ability modifier plus level, the usual bonus for checks with this ability." value = abilityModifier (Score) + Character.Level  valuedice = skillCheck  editable = none }
 }
 
 abilityMod (char, name) =
@@ -99,14 +99,15 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Race = string { keys = ["Dwarf", "Dark Elf", "High Elf", "Wood Elf", "Gnome", "Half-Elf", "Half-Orc", "Halfling", "Human", "Dragonic", "Holy One", "Forgeborn", "Tiefling"] }
         Class = string { keys = ["Barbarian", "Bard", "Cleric", "Fighter", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"] }
-        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
-        'One unique thing' = string {}
-        Incremental = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        Level = integer { description = "Character level from 1 to 10. Added to attacks, defenses and checks." default = 1  minvalue = 1  maxvalue = 10 }
+        'One unique thing' = string { description = "Something no one else in the world has, written by the player." }
+        Incremental = integer { description = "Small advances taken between levels, such as an extra power or more HP." default = 0  minvalue = 0  maxvalue = 4  editable = live }
         Gold = integer { default = 25 }
     }
 
     Abilities = table
     {
+        description = "The six abilities. Defenses use the middle modifier of three of them."
         tableLayout = layout { columns = 3  size = wide }
         Str = ability {}
         Con = ability {}
@@ -119,13 +120,13 @@ characterTable = ruleset
     Defenses = table
     {
         tableLayout = layout { columns = 3 }
-        AC = integer { value = 'AC base' + middle (Abilities.Con.Modifier, Abilities.Dex.Modifier, Abilities.Wis.Modifier) + Character.Level  editable = none }
-        PD = integer { value = 'PD base' + middle (Abilities.Str.Modifier, Abilities.Con.Modifier, Abilities.Dex.Modifier) + Character.Level  editable = none }
-        MD = integer { value = 'MD base' + middle (Abilities.Int.Modifier, Abilities.Wis.Modifier, Abilities.Cha.Modifier) + Character.Level  editable = none }
+        AC = integer { description = "Armor Class: how hard you are to hit with weapons and physical attacks." value = 'AC base' + middle (Abilities.Con.Modifier, Abilities.Dex.Modifier, Abilities.Wis.Modifier) + Character.Level  editable = none }
+        PD = integer { description = "Physical Defense: resists poison, breath weapons and being shoved." value = 'PD base' + middle (Abilities.Str.Modifier, Abilities.Con.Modifier, Abilities.Dex.Modifier) + Character.Level  editable = none }
+        MD = integer { description = "Mental Defense: resists charms, illusions and fear." value = 'MD base' + middle (Abilities.Int.Modifier, Abilities.Wis.Modifier, Abilities.Cha.Modifier) + Character.Level  editable = none }
         'AC base' = integer { default = 12 }
         'PD base' = integer { default = 10 }
         'MD base' = integer { default = 10 }
-        Initiative = modifier { value = Abilities.Dex.Modifier + Character.Level + 'Initiative bonus'  valuedice = attackRoll (0, 0)  editable = none }
+        Initiative = modifier { description = "Dex modifier plus level. Higher acts earlier in the round." value = Abilities.Dex.Modifier + Character.Level + 'Initiative bonus'  valuedice = attackRoll (0, 0)  editable = none }
         'Initiative bonus' = integer { default = 0 }
     }
 
@@ -133,12 +134,12 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 3 }
         'HP base' = integer { default = 7 }
-        'Max HP' = integer { value = ('HP base' + Abilities.Con.Modifier) * levelMultiplier (Character.Level)  editable = none }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Max HP' = integer { description = "Hit points when unhurt: class base plus Con, times a multiplier for level." value = ('HP base' + Abilities.Con.Modifier) * levelMultiplier (Character.Level)  editable = none }
+        HP = integer { description = "Current hit points. At half you are staggered, at 0 you go down." default = 'Max HP'  editable = live  indicator = "#d64545" }
         State = string { value = hpState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
-        Recoveries = integer { default = 8  minvalue = 0  editable = live }
+        Recoveries = integer { description = "How many times a day you can heal by rolling recovery dice." default = 8  minvalue = 0  editable = live }
         'Recovery die' = string { default = "d8"  keys = ["d6", "d8", "d10", "d12"] }
-        Recovery = string { value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier)  editable = none }
+        Recovery = string { description = "What one recovery heals: level times the recovery die, plus Con." value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier)  editable = none }
     }
 
     Attacks = list
@@ -152,7 +153,7 @@ characterTable = ruleset
             Ability = string { default = "Str"  keys = ["Str", "Con", "Dex", "Int", "Wis", "Cha"] }
             Bonus = integer { default = 0 }
             Defense = string { default = "AC"  keys = ["AC", "PD", "MD"] }
-            Attack = modifier { value = abilityMod (characterTable, Ability) + characterTable.Character.Level + Bonus  valuedice = askedAttack  action = if contains (toLower (Name), "ranged") then "ranged" else "melee"  reach = 1  editable = none }
+            Attack = modifier { description = "Total attack bonus: ability modifier plus level plus any bonus." value = abilityMod (characterTable, Ability) + characterTable.Character.Level + Bonus  valuedice = askedAttack  action = if contains (toLower (Name), "ranged") then "ranged" else "melee"  reach = 1  editable = none }
             Hit = string {}
             Miss = string {}
         }
@@ -160,20 +161,22 @@ characterTable = ruleset
 
     Backgrounds = keyvalues
     {
+        description = "Your history, as points that add to skill checks where the background fits."
         singular = "Background"
         editablekeys = character
         keys = []
         tableLayout = layout { columns = 2 }
         valueType = custom
         {
-            Points = integer { default = 2  minvalue = 1  maxvalue = 5 }
+            Points = integer { description = "Points in this background, added to checks where it applies." default = 2  minvalue = 1  maxvalue = 5 }
             Ability = string { default = "Int"  keys = ["Str", "Con", "Dex", "Int", "Wis", "Cha"] }
-            Check = modifier { value = Points + abilityMod (characterTable, Ability) + characterTable.Character.Level  valuedice = skillCheck  editable = none }
+            Check = modifier { description = "Points plus ability modifier plus level for a check with this background." value = Points + abilityMod (characterTable, Ability) + characterTable.Character.Level  valuedice = skillCheck  editable = none }
         }
     }
 
     Icons = keyvalues
     {
+        description = "Your ties to the Icons, the great powers of the Dragon Empire."
         singular = "Icon relationship"
         editablekeys = character
         keys = []
@@ -181,12 +184,13 @@ characterTable = ruleset
         valueType = custom
         {
             Relationship = string { default = "Positive"  keys = ["Positive", "Conflicted", "Negative"] }
-            Dice = integer { default = 1  minvalue = 1  maxvalue = 3  valuedice = iconRoll (Dice) }
+            Dice = integer { description = "Icon relationship dice. A 6 gives a benefit, a 5 a benefit with a cost." default = 1  minvalue = 1  maxvalue = 3  valuedice = iconRoll (Dice) }
         }
     }
 
     Powers = list
     {
+        description = "Class and race powers, with how often each can be used."
         tableLayout = layout { size = wide }
         singular = "Power or spell"
         editable = character
@@ -263,12 +267,12 @@ monsterTable = ruleset
         Size = string { default = "Normal"  keys = ["Normal", "Large", "Huge"] }
         Role = string { default = "Troop"  keys = ["Archer", "Blocker", "Caster", "Leader", "Mook", "Spoiler", "Troop", "Wrecker"] }
         Type = string {}
-        Initiative = modifier { default = 3  valuedice = attackRoll (0, 0) }
-        AC = integer { default = 17 }
-        PD = integer { default = 14 }
-        MD = integer { default = 12 }
+        Initiative = modifier { description = "Bonus to the monster's initiative roll." default = 3  valuedice = attackRoll (0, 0) }
+        AC = integer { description = "Armor Class: the target number for weapon attacks." default = 17 }
+        PD = integer { description = "Physical Defense: the target number for physical effects." default = 14 }
+        MD = integer { description = "Mental Defense: the target number for mental effects." default = 12 }
         'Max HP' = integer { default = 27 }
-        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        HP = integer { description = "Current hit points. The monster is staggered at half." default = 'Max HP'  editable = live  indicator = "#d64545" }
         State = string { value = if HP <= 0 then "Dead" else if HP <= 'Max HP' / 2 then "Staggered" else ""  editable = none  indicator = "#d64545" }
     }
     Attacks = list
