@@ -63,10 +63,11 @@ characterTable = ruleset
         Look = string { multiline = true }
         Heritage = string { keys = ["Akoros", "The Dagger Isles", "Iruvia", "Severos", "Skovlan", "Tycheros"] }
         Background = string { keys = ["Academic", "Labor", "Law", "Trade", "Military", "Noble", "Underworld"] }
-        Vice = string { keys = ["Faith", "Gambling", "Luxury", "Obligation", "Pleasure", "Stupor", "Weird"] }
-        'Vice Purveyor' = string {}
+        Vice = string { description = "What the scoundrel indulges in to clear stress between scores." keys = ["Faith", "Gambling", "Luxury", "Obligation", "Pleasure", "Stupor", "Weird"] }
+        'Vice Purveyor' = string { description = "The person or place where the vice is indulged." }
         Position = selector
         {
+            description = "How dangerous the action is: controlled, risky or desperate."
             options = ["Controlled", "Risky", "Desperate"]
             labels = ["Controlled", "Risky", "Desperate"]
             colors = ["green", "white", "red"]
@@ -76,6 +77,7 @@ characterTable = ruleset
         }
         Effect = selector
         {
+            description = "How much the action can achieve if it works: limited, standard or great."
             options = ["Limited", "Standard", "Great"]
             labels = ["Limited", "Standard", "Great"]
             colors = ["red", "white", "green"]
@@ -83,14 +85,14 @@ characterTable = ruleset
             editable = live
             save = nosave
         }
-        'Bonus Dice' = integer { default = 0  minvalue = -3  maxvalue = 3  editable = live }
+        'Bonus Dice' = integer { description = "Extra dice from help, a push or a devil's bargain, or dice lost to penalties." default = 0  minvalue = -3  maxvalue = 3  editable = live }
     }
 
     Stress = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        Stress = slots { number = 9  editable = live  indicator = "#8e5cc4" }
-        Trauma = slots { number = 4  editable = live  allowedchange = increase  indicator = "#d64545" }
+        Stress = slots { description = "Spent to push yourself, help others and resist consequences. Full stress means trauma." number = 9  editable = live  indicator = "#8e5cc4" }
+        Trauma = slots { description = "Each trauma is a lasting mark from too much stress. Four and the scoundrel retires." number = 4  editable = live  allowedchange = increase  indicator = "#d64545" }
         Traumas = string { keys = ["", "Cold", "Haunted", "Obsessed", "Paranoid", "Reckless", "Soft", "Unstable", "Vicious"] }
         'Other Traumas' = string {}
     }
@@ -98,54 +100,57 @@ characterTable = ruleset
     Harm = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        'Level 3' = string { editable = live  indicator = "#d64545"  indicatorLabel = "Harm 3: need help" }
-        'Level 2 A' = string { editable = live  indicator = "#e8913a"  indicatorLabel = "Harm 2: -1d" }
+        'Level 3' = string { description = "Severe harm. You need help to act at all." editable = live  indicator = "#d64545"  indicatorLabel = "Harm 3: need help" }
+        'Level 2 A' = string { description = "Moderate harm. Take -1d to rolls." editable = live  indicator = "#e8913a"  indicatorLabel = "Harm 2: -1d" }
         'Level 2 B' = string { editable = live }
-        'Level 1 A' = string { editable = live  indicator = "#d4b106"  indicatorLabel = "Harm 1: less effect" }
+        'Level 1 A' = string { description = "Lesser harm. Your actions have reduced effect." editable = live  indicator = "#d4b106"  indicatorLabel = "Harm 1: less effect" }
         'Level 1 B' = string { editable = live }
-        Healing = clock { segments = 4  editable = live }
-        Armor = bool { default = false  editable = live }
+        Healing = clock { description = "Healing progress. Fill it during downtime to reduce harm by one level." segments = 4  editable = live }
+        Armor = bool { description = "Armor that can be used once to reduce or avoid harm." default = false  editable = live }
         'Heavy Armor' = bool { default = false  editable = live }
         'Special Armor' = bool { default = false  editable = live }
     }
 
     Insight = table
     {
+        description = "Insight actions: noticing, learning and working things out."
         tableLayout = layout { columns = 1 }
-        Resistance = integer { value = dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker)  valuedice = resistanceRoll (dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker))  editable = none }
-        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
-        Hunt = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Hunt) }
-        Study = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Study) }
-        Survey = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Survey) }
-        Tinker = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Tinker) }
+        Resistance = integer { description = "Dice for resisting with Insight: one per action with a rating." value = dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker)  valuedice = resistanceRoll (dotted (Hunt) + dotted (Study) + dotted (Survey) + dotted (Tinker))  editable = none }
+        XP = slots { description = "Attribute XP. Mark when you roll a desperate action with this attribute." number = 6  editable = live  allowedchange = increaseAndClear }
+        Hunt = integer { description = "Track, find and shoot at range." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Hunt) }
+        Study = integer { description = "Read, research and examine closely." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Study) }
+        Survey = integer { description = "Look over a place or situation to spot what is coming." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Survey) }
+        Tinker = integer { description = "Build, repair and tamper with devices and locks." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Tinker) }
     }
 
     Prowess = table
     {
+        description = "Prowess actions: physical skill and force."
         tableLayout = layout { columns = 1 }
-        Resistance = integer { value = dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck)  valuedice = resistanceRoll (dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck))  editable = none }
-        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
-        Finesse = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Finesse) }
-        Prowl = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Prowl) }
-        Skirmish = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Skirmish)  action = melee  reach = 2 }
-        Wreck = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Wreck) }
+        Resistance = integer { description = "Dice for resisting with Prowess: one per action with a rating." value = dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck)  valuedice = resistanceRoll (dotted (Finesse) + dotted (Prowl) + dotted (Skirmish) + dotted (Wreck))  editable = none }
+        XP = slots { description = "Attribute XP. Mark when you roll a desperate action with this attribute." number = 6  editable = live  allowedchange = increaseAndClear }
+        Finesse = integer { description = "Act with fine control: sleight of hand, agile moves, careful driving." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Finesse) }
+        Prowl = integer { description = "Sneak, hide and move unseen." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Prowl) }
+        Skirmish = integer { description = "Fight at close range." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Skirmish)  action = melee  reach = 2 }
+        Wreck = integer { description = "Smash, break and destroy with brute force or sabotage." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Wreck) }
     }
 
     Resolve = table
     {
+        description = "Resolve actions: will, presence and social force."
         tableLayout = layout { columns = 1 }
-        Resistance = integer { value = dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway)  valuedice = resistanceRoll (dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway))  editable = none }
-        XP = slots { number = 6  editable = live  allowedchange = increaseAndClear }
-        Attune = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Attune) }
-        Command = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Command) }
-        Consort = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Consort) }
-        Sway = integer { default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Sway) }
+        Resistance = integer { description = "Dice for resisting with Resolve: one per action with a rating." value = dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway)  valuedice = resistanceRoll (dotted (Attune) + dotted (Command) + dotted (Consort) + dotted (Sway))  editable = none }
+        XP = slots { description = "Attribute XP. Mark when you roll a desperate action with this attribute." number = 6  editable = live  allowedchange = increaseAndClear }
+        Attune = integer { description = "Sense and channel the ghost field and arcane powers." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Attune) }
+        Command = integer { description = "Compel people with authority, threats or orders." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Command) }
+        Consort = integer { description = "Use your connections and socialize with people as an equal." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Consort) }
+        Sway = integer { description = "Influence by charm, lies or argument." default = 0  minvalue = 0  maxvalue = 4  valuedice = bladesDice (characterTable, Sway) }
     }
 
     'Playbook XP' = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        XP = slots { number = 8  editable = live  allowedchange = increaseAndClear }
+        XP = slots { description = "Playbook XP, marked for the playbook's triggers. Full means a new ability." number = 8  editable = live  allowedchange = increaseAndClear }
         'XP Triggers' = string { multiline = true }
     }
 
@@ -172,10 +177,10 @@ characterTable = ruleset
     Load = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Load = string { default = "Normal"  keys = ["Light", "Normal", "Heavy"]  editable = live }
-        Coin = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live }
-        Stash = integer { default = 0  minvalue = 0  maxvalue = 40  editable = live }
-        Fortune = integer { default = 1  minvalue = 0  valuedice = fortuneRoll (Fortune) }
+        Load = string { description = "How much gear you plan to carry on a score. Heavier is slower and louder." default = "Normal"  keys = ["Light", "Normal", "Heavy"]  editable = live }
+        Coin = integer { description = "Coin carried on you." default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        Stash = integer { description = "Coin saved away. Enough of it lets you retire." default = 0  minvalue = 0  maxvalue = 40  editable = live }
+        Fortune = integer { description = "Dice for a fortune roll when chance decides the outcome." default = 1  minvalue = 0  valuedice = fortuneRoll (Fortune) }
     }
 
     Items = list
@@ -215,15 +220,15 @@ crewTable = ruleset
         Type = string { keys = ["Assassins", "Bravos", "Cult", "Hawkers", "Shadows", "Smugglers"] }
         Reputation = string {}
         Lair = string {}
-        Tier = integer { default = 0  minvalue = 0  maxvalue = 5 }
-        Hold = string { default = "Strong"  keys = ["Weak", "Strong"] }
-        Rep = slots { number = 12  editable = live  allowedchange = increaseAndClear }
-        Heat = slots { number = 9  editable = live  allowedchange = increaseAndClear }
-        'Wanted Level' = slots { number = 4  editable = live }
-        Coin = integer { default = 2  minvalue = 0  editable = live }
-        Vault = integer { default = 4 }
-        'Crew XP' = slots { number = 8  editable = live  allowedchange = increaseAndClear }
-        'Engagement Roll' = integer { default = 1  minvalue = 0  valuedice = fortuneRoll ('Engagement Roll') }
+        Tier = integer { description = "Crew strength in the underworld, used for its rolls and quality." default = 0  minvalue = 0  maxvalue = 5 }
+        Hold = string { description = "How firmly the crew holds its tier." default = "Strong"  keys = ["Weak", "Strong"] }
+        Rep = slots { description = "Reputation gained from scores. Fill it to advance." number = 12  editable = live  allowedchange = increaseAndClear }
+        Heat = slots { description = "How much attention the crew draws from the law. Full means more wanted level." number = 9  editable = live  allowedchange = increaseAndClear }
+        'Wanted Level' = slots { description = "Wanted level. Higher brings more trouble and harsher entanglements." number = 4  editable = live }
+        Coin = integer { description = "Coin in the crew's shared purse." default = 2  minvalue = 0  editable = live }
+        Vault = integer { description = "How much coin the crew can store." default = 4 }
+        'Crew XP' = slots { description = "Crew XP, marked at the end of each session." number = 8  editable = live  allowedchange = increaseAndClear }
+        'Engagement Roll' = integer { description = "Dice for the engagement roll that starts each score." default = 1  minvalue = 0  valuedice = fortuneRoll ('Engagement Roll') }
     }
     'Crew Abilities' = list
     {
@@ -255,7 +260,7 @@ crewTable = ruleset
         {
             Name = string {}
             Kind = string { keys = ["Gang", "Expert"] }
-            Quality = integer { default = 1  valuedice = fortuneRoll (Quality) }
+            Quality = integer { description = "Quality of the cohort, its dice for actions." default = 1  valuedice = fortuneRoll (Quality) }
             Harm = string { editable = live }
         }
     }
@@ -279,11 +284,11 @@ creatureTable = ruleset
     Threat = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Tier = integer { default = 1 }
+        Tier = integer { description = "How powerful the threat is compared to the crew." default = 1 }
         Kind = string { keys = ["Person", "Gang", "Faction", "Spirit", "Horror"] }
-        Quality = integer { default = 1  valuedice = fortuneRoll (Quality) }
+        Quality = integer { description = "Dice the threat rolls for its actions." default = 1  valuedice = fortuneRoll (Quality) }
         Harm = string { editable = live  indicator = "#d64545" }
-        Defeat = clock { segments = 4  editable = live }
+        Defeat = clock { description = "Fill this to defeat or drive off the threat." segments = 4  editable = live }
         Notes = string { multiline = true }
     }
 }
