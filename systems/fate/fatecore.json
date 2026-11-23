@@ -1,6 +1,6 @@
 {
- "name": "Fate Core stunts",
- "description": "The example stunts for each skill in the Fate Core System Reference Document by Evil Hat Productions, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from https://github.com/brunobord/fate-srd-markdown. This work is based on Fate Core System, products of Evil Hat Productions, LLC, developed, authored, and edited by Leonard Balsera, Brian Engard, Jeremy Keller, Ryan Macklin, Mike Olson, Clark Valentine, Amanda Valentine, Fred Hicks, and Rob Donoghue, and licensed for our use under the Creative Commons Attribution 3.0 Unported license.",
+ "name": "Fate Core stunts and extras",
+ "description": "The example stunts for each skill, and the example extras, in the Fate Core System Reference Document by Evil Hat Productions, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from https://github.com/brunobord/fate-srd-markdown and https://github.com/fate-srd/fate-srd-content. This work is based on Fate Core System, products of Evil Hat Productions, LLC, developed, authored, and edited by Leonard Balsera, Brian Engard, Jeremy Keller, Ryan Macklin, Mike Olson, Clark Valentine, Amanda Valentine, Fred Hicks, and Rob Donoghue, and licensed for our use under the Creative Commons Attribution 3.0 Unported license.",
  "url": "/systems/fate/fatecore.json",
  "gamemaster": "",
  "entities": [
@@ -1024,6 +1024,321 @@
        "Stats": {
         "Skill": "Will",
         "Cost": "1 refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Collegia Arcana Magic",
+   "description": "**Permissions**: One aspect reflecting that you’ve been trained by the Collegia\n\n**Costs**: Skill ranks, specifically those invested in the Lore skill (Normally, you’d probably also charge points of refresh, because you’re adding new actions to a skill, but Amanda’s group is lazy and is handwaving it in favor of group consensus.)\n\nPeople who are trained in Collegia magic are able to use their knowledge to perform supernatural effects, adding the following actions to the Lore skill:\n\n**Overcome**: Use Lore to prepare and perform magical rituals successfully, or to answer questions about arcane phenomena.\n\n**Create an Advantage**: Use Lore to alter the environment with magic or place mental and physical impediments on a target, such as Slowed Movement or A Foggy Head. Characters can defend against this with Will.\n\n**Attack**: Use Lore to directly harm someone with magic, whether through conjuring of elements or mental assault. Targets can defend against this with Athletics or Will depending on the nature of the attack, or Lore if the target also has magical training.\n\n**Defend**: Use Lore to defend against hostile magics or other supernatural effects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Skill ranks, specifically those invested in the Lore skill"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Energy Blast",
+   "description": "**Costs**: 2 points of refresh\n\nYou can use Shoot to blast other people with energy, without needing a gun or other implement. You have free rein to decide what your blast is like, whether it’s some elemental force or just undefined bolts of light. (This doesn’t cost refresh, because you can already use Shoot for attacks.)\n\nYou get +2 when using your energy blasts to make attacks or create advantages, and they hit for Weapon:2. If your setting has mundane weapons, this power has a Weapon value that’s 2 higher than the strongest mundane weapons available.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "2 points of refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Super-Strength",
+   "description": "**Costs**: 2–6 points of refresh\n\nYour Fight attacks are Weapon:2, and nearly all “raw strength” applications of Physique are at +2. Every additional 2 points of refresh you spend adds a +2 to all bonuses.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "2–6 points of refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Super-Speed",
+   "description": "**Costs**: 3 points of refresh\n\nYou always go first in a conflict exchange. If someone else in the conflict has Super-Speed, compare skills as normal.\n\nYou take a +2 on all defense rolls with Athletics, or in contests relying purely on speed.\n\nExcept for absolute barriers like solid walls, you ignore all situation aspects that impede movement, and can place yourself in any zone you want at the start of every conflict exchange, because you had enough time to get there.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "3 points of refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Super-Resilience",
+   "description": "**Costs**: 1–3 refresh\n\nYou have Armor:2 vs. any defense roll against physical damage. Each additional point of refresh adds 2 to that total.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "1–3 refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "X-Ray Vision",
+   "description": "**Costs**: 2 refresh\n\nYou don’t roll Notice or Investigate actions if the object of your search is hidden behind an opaque object—just assume you automatically succeed.\n\nThis also helps you stay hidden, because you can see when people are looking for you and where they are. +2 to Stealth to avoid detection.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "2 refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Demonbane, The Enchanted Sword",
+   "description": "**Permissions**: Finding the sword during the game\n\n**Costs**: None\n\nThe sword Demonbane has an aspect called Slayer of Demon-Kind. If you are the sword’s bearer, you can invoke this aspect when fighting or opposing demons. You may also be subject to a compel due to the sword’s enchantment; it continually pushes its bearers to destroy demons with total abandon, and may cause you to lose sight of other objectives, prevent you from escaping a demon’s notice, or other complications.\n\nIn addition, invoking the sword’s aspect has another pair of special effects: it can banish any nameless NPC demon instantly, with no conflict or contest, and it can reveal the presence of a concealed demon under any circumstances.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "None"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Brace Jovannich’s Dueling Pistol",
+   "description": "**Permissions**: Possessing the aspect The Legacy of Brace\n\n**Costs**: One aspect slot (for the permission aspect) and one point of refresh\n\nBrace Jovannich is the most feared, most respected gunfighter the world of Aedeann has ever known. His gun, known worldwide for the slaying and maiming of hundreds, is yours now. Only you know why you don’t just throw it in a canal and save yourself the trouble of its reputation.\n\nPrepare for compels on that aspect when people recognize the gun and require proof that you’re worthy of it, vengeance for the wrongs it’s been a part of, or other kinds of unwanted attention. On the other hand, besides the obvious combat benefits, you can invoke the aspect when you’re using Brace’s fearsome reputation to your advantage.\n\nThe pistol gives you a +2 bonus to any Shoot attack made in a one-on-one duel. We’re talking formal duels here, not just singling someone out in a normal gunfight—you challenge or get challenged by someone, there are seconds, etc., etc. If you’re using Weapon values in your game, it also has a rating similar to other pistols.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "One aspect slot and one point of refresh"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Interface",
+   "description": "**Permissions**: Possession of an interface package (assumed if you take the skill)\n\n**Costs**: Skill ranks\n\nThe Interface skill allows you interact with computers and teched-up objects in a way that most people can’t. You can get inside the machine’s head, talk to it like most people would chat to a friend, and fight it like you’re in a bar brawl. Of course, that means the machine can also do that stuff to you.\n\n**Overcome**: Use Interface to fix a malfunctioning computer system, bypass security lockdowns and other obstacles by hacking your way through, force a piece of tech to trigger a programmed response, and keep a piece of tech from triggering a response.\n\n**Create an Advantage**: Use Interface to learn about the properties of a particular piece of tech (i.e. learn its aspects), to diagnose malfunctions in a computer system, to plant fake signals or false information in a computer system, and to create disruptions.\n\n**Attack**: Use Interface to break down a computer system directly.\n\n**Defend**: Use Interface to defend against attacks from computer systems. Failed defense rolls will result in physical stress and consequences—a cyber-interface means your actual, physical brain is at stake.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Skill ranks"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Media",
+   "description": "**Permissions**: Choosing “The Media” archetype at character creation\n\n**Costs**: Skill ranks and refresh, for associated stunts\n\nOthers can spread gossip and rumors, but you have your finger on the pulse of broadcast media. At your word, the events of the day become news, whether it’s on television, radio, or the Internet.\n\n**Overcome**: Use Media to disseminate information to the public, with whatever spin you want to put on it. More obscure or local incidents will be harder to spread, and it’ll be harder to make your own spin prevalent if the story’s already been picked up by other outlets. Success means that generally, the public believes what you want them to believe about the incident, though named NPCs may have more complex opinions.\n\n**Create an Advantage**: Use Media to place aspects on an event or an individual reflecting the reputation they gain from your stories.\n\n**Attack**: If you have sufficient leverage to psychologically harm someone through a smear campaign and/or media bullying, use this for attacks.\n\n**Defend**: Use Media to prevent damage to your own reputation or peace of mind from someone else using the Media skill.\n\n**Stunts**: **Want Ads**. You may use Media for the same kind of Overcome rolls you’d use Contacts for, by summoning services you need through classifieds.\n\n**Mob Justice**. You can incite people in public to physical violence with Media, and gain the use of two Average (+1) nameless NPCs for that scene, who will attack people at your direction.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Skill ranks and refresh, for associated stunts"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Resources, Revisited",
+   "description": "**Permissions**: None, anyone can take the skill\n\n**Costs**: Skill ranks\n\nAt creation, all characters get a special mild (A 20-spot From a Friend), moderate (Payday Loan), and severe (They Want To Break My Kneecaps) consequence that they can take in wealth-related conflicts.\n\nAdd the following actions to the Resources skill:\n\n**Attack**: You can make financial moves to destroy someone else’s resources or force them to overspend to deal with you, and thus inflict wealth stress and consequences. If you take someone out this way, it means some kind of permanent shift in their finances for the worse.\n\n**Defend**: Use Resources to maintain your status in the face of attempts to destroy your capital.\n\nAs an interesting advancement option, you might consider allowing permanent downgrades of the Resources skill as a tradeoff for upgrading certain extras, if that extra is something money can buy.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Skill ranks"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "The Galerider",
+   "description": "**Permissions**: None; understood as part of the game’s conceit\n\n**Costs**: Skill ranks, refresh, and aspect slots, invested by several characters\n\n**Aspects**: Fastest Ship in the Fleet, Hidden Cargo Compartments, Lord Tamarin Wants To Sink Her\n\n**Skills**: (representing the ship’s crew; PCs can use their own skills if higher)\n\nGood (+3) Notice\n\nFair (+2) Shoot, Sail (equivalent to Drive)\n\n**Stunts**: **Pour On The Speed**. The Galerider gives +2 on any Sail rolls to win a contest of speed.\n\n**Boobytrapped**: For a fate point, any PC can have Weapon:2 on an attack or add 2 to the Weapon value of any Fight attack that happens on board, by triggering any of the nasty traps scattered across the deck and interiors as part of their action.\n\nThis is for a game where every PC is the ruler of a separate nation state on a fantasy world, and the action deals a lot with international politics. The PCs get to build a separate character sheet for their nation state.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Skill ranks, refresh, and aspect slots, invested by several characters"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "The Plenary of Ghiraul",
+   "description": "**Permissions**: None; assumed as part of the game’s premise\n\n**Costs**: A special pool of aspects, skill ranks, and stunts\n\nThis small nation-state is known for its vast spy network and laws which protect the rich and powerful, usually at the expense of the peasantry. You rule it; congrats. When acting against other nations, use the skills here rather than the ones on your character sheet. In this case, your skills represent the efforts of your spies, nobles, artisans, and armies, respectively.\n\n**Aspects**: We’re Watching You; The Rich Eat the Poor; Sharp Minds, Dull Blades\n\n**Skills**: Great (+4) Investigate\n\nGood (+3) Resources\n\nFair (+2) Crafts\n\nAverage (+1) Fight\n\n**Stunts**: **Counter-Intelligence**. The Plenary can use Investigate to defend against other nations’ attempts to learn its aspects. Succeeding with style on this defense allows the Plenary to feed the nation an aspect that contains false information instead.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "A special pool of aspects, skill ranks, and stunts"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Lucas’s Arts",
+   "description": "**Permissions**: None, anyone can commune with a spirit for power\n\n**Costs**: Aspect slots, skill ranks, stress/consequences\n\nAt creation, characters get an extra three slots for aspects that they can assign to describe their relationship with an ancestor spirit. The aspect should include context, so something like Sujan Has It In For Meor Dammar and I Share Respect is appropriate.\n\nTo use ancestral powers, you must take a new skill called Commune.\n\n**Commune**\nThis is the skill for becoming one with and manipulating the energy of ancestral spirits.\n\n**Overcome**: Use Commune to negate the energy of unformed, minor spirits (read: unnamed NPCs) or to impose your will on an ancestral spirit with whom you are not currently bound. Failing one of these rolls is likely to cause you karmic stress or consequences.\n\n**Create an Advantage**: Use Commune to stack free invokes on your spirit aspects, or to retune the spiritual energy in an area to your favor.\n\n**Attack**: Use Commune to temporarily dispel hostile spirits and demons. (Note: You cannot attack humans or other corporeal entities directly with this action.)\n\n**Defend**: Use Commune to defend against hostile supernatural influences. Failing to defend from these attacks deals karmic stress. (Note: You cannot defend against supernaturally enhanced attacks from humans or other corporeal entities directly with this action.)\n\n**Special**: Commune adds stress and consequence slots to your karmic stress track, using the same rules for Physique and Will. Consequences from a karmic attack literally retune the universe around your character, so things like Poor Luck or Surrounded by Sadness are good candidates.\n\nEach of the ancestral spirits also gets a writeup, which describes their portfolio, general philosophy, and the benefits they can confer. You gain these benefits by expending a free invoke gained with the Commune skill (as in, only the Commune skill), or by spending two of your fate points. One benefit should always allow you to simply say that something happens in the story without a roll.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Aspect slots, skill ranks, stress/consequences"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Extras",
+   "name": "Schools of Power",
+   "description": "**Permissions**: One aspect that names which order you belong to\n\n**Costs**: Aspect slot (for the permission), skill ranks (kind of), refresh\n\nYour aspect allows you to take membership in one of several arcane orders. Those orders have a mini-sheet of their own, with aspects, skills, and stunts. Having a membership in an order lets you “adopt” part of the order’s character sheet as your own.\n\nYou can only belong to one order at a time, and leaving an order to join another is practically unheard of (read: interesting option for PCs to pursue over the course of a campaign).\n\n**The Black League**\n**Aspects**: Deception Is The Only Truth, The Dead Heed Us, Kill Your Betters Before They Kill You\n\n**Skills**: Great (+4) Learn\n\nGood (+3) Create\n\nFair (+2) Destroy\n\nAverage (+1) Change\n\n**Stunts**: **Necromancy**. +2 to any use of the Black League’s skills to affect corpses.\n\n**Keeping Secrets**. Once per scene, you may reroll any Deceive skill roll and keep the best result.\n\n**Shadow Play**. When using the Create skill, add an additional free invoke to any situation aspects you make involving darkness.\n\nThe magical skills are Create, Destroy, Learn, and Change. Each order prioritizes them from Great to Average. Use the lower of the order’s skill rank or your Lore skill rank when you’re performing magical actions.\n\nYou get one free stunt from among those possessed by your order, and you can get more by spending refresh. You can invoke or be compelled by the order’s aspects as though they were your own.\n\nYou call on your magical skills when something makes the use of your mundane skills impossible. For example, if you can no longer interrogate a suspect because the torture has killed him, you’d make an overcome roll with Learn to discover what you need to know through magic. If someone is suffering a deep, dark depression that no normal care can address, create an advantage with Change to alter their mood.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "FateCore",
+     "implementation": {
+      "extraStats": {
+       "Stats": {
+        "Aspects": "",
+        "Skills": "",
+        "Stunts": "",
+        "Cost": "Aspect slot, skill ranks, refresh"
        }
       }
      }
