@@ -45,8 +45,8 @@ plainCosmere = cosmereRoll ("Normal", false, 0)
 
 skill (attribute) = custom
 {
-    Ranks = integer { default = 0  minvalue = 0  maxvalue = 5 }
-    Modifier = modifier { value = Ranks + attribute  valuedice = cosmereTest (characterTable)  editable = none }
+    Ranks = integer { description = "Ranks in this skill, from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
+    Modifier = modifier { description = "Ranks plus the linked attribute, added to the d20 skill test." value = Ranks + attribute  valuedice = cosmereTest (characterTable)  editable = none }
 }
 
 noSkill = { Modifier = 0 }
@@ -82,55 +82,56 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Ancestry = string { keys = ["Human", "Singer"] }
         Paths = string { keys = ["Agent", "Envoy", "Hunter", "Leader", "Scholar", "Warrior"] }
-        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
-        Purpose = string {}
-        Obstacle = string {}
+        Level = integer { description = "Character level, which raises health, skills and talents." default = 1  minvalue = 1  maxvalue = 20 }
+        Purpose = string { description = "What drives the character forward." }
+        Obstacle = string { description = "What holds the character back or stands in their way." }
         Goals = string { multiline = true }
-        Roll = selector { options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
-        Stakes = selector { options = ["Normal", "Raised"]  labels = ["Normal", "Raised"]  colors = ["white", "purple"]  hold = ["", "Alt"]  default = "Normal"  editable = live  save = nosave }
+        Roll = selector { description = "Roll two d20s and keep the worse or the better one." options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Stakes = selector { description = "Raised stakes add the plot die to the roll, for good and bad twists." options = ["Normal", "Raised"]  labels = ["Normal", "Raised"]  colors = ["white", "purple"]  hold = ["", "Alt"]  default = "Normal"  editable = live  save = nosave }
     }
 
     Attributes = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Strength = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Speed = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Intellect = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Willpower = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Awareness = integer { default = 0  minvalue = 0  maxvalue = 10 }
-        Presence = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Strength = integer { description = "Physical power. Adds to Physical defense and strength skills." default = 0  minvalue = 0  maxvalue = 10 }
+        Speed = integer { description = "Quickness and agility. Adds to Physical defense and speed skills." default = 0  minvalue = 0  maxvalue = 10 }
+        Intellect = integer { description = "Reasoning and knowledge. Adds to Cognitive defense." default = 0  minvalue = 0  maxvalue = 10 }
+        Willpower = integer { description = "Resolve and self-control. Adds to Cognitive defense and focus." default = 0  minvalue = 0  maxvalue = 10 }
+        Awareness = integer { description = "Perception and intuition. Adds to Spiritual defense." default = 0  minvalue = 0  maxvalue = 10 }
+        Presence = integer { description = "Force of personality. Adds to Spiritual defense." default = 0  minvalue = 0  maxvalue = 10 }
     }
 
     Defenses = table
     {
         tableLayout = layout { columns = 3 }
-        Physical = integer { value = 10 + Attributes.Strength + Attributes.Speed + 'Physical bonus'  editable = none }
-        Cognitive = integer { value = 10 + Attributes.Intellect + Attributes.Willpower + 'Cognitive bonus'  editable = none }
-        Spiritual = integer { value = 10 + Attributes.Awareness + Attributes.Presence + 'Spiritual bonus'  editable = none }
+        Physical = integer { description = "Target number for attacks and effects against the body: 10 plus Strength and Speed." value = 10 + Attributes.Strength + Attributes.Speed + 'Physical bonus'  editable = none }
+        Cognitive = integer { description = "Target number against the mind: 10 plus Intellect and Willpower." value = 10 + Attributes.Intellect + Attributes.Willpower + 'Cognitive bonus'  editable = none }
+        Spiritual = integer { description = "Target number against the soul and social pressure: 10 plus Awareness and Presence." value = 10 + Attributes.Awareness + Attributes.Presence + 'Spiritual bonus'  editable = none }
         'Physical bonus' = integer { default = 0 }
         'Cognitive bonus' = integer { default = 0 }
         'Spiritual bonus' = integer { default = 0 }
-        Deflect = integer { default = 0 }
+        Deflect = integer { description = "Reduces damage from each hit, usually from armor." default = 0 }
     }
 
     Resources = table
     {
         tableLayout = layout { columns = 3 }
         'Max Health' = integer { default = 10 }
-        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
+        Health = integer { description = "Current health. At 0 the character is unconscious and may suffer an injury." default = 'Max Health'  editable = live  indicator = "#d64545" }
         Down = string { value = downState (Health)  visible = none  indicator = "#d64545" }
         'Max Focus' = integer { value = 2 + Attributes.Willpower  editable = none }
-        Focus = integer { default = 'Max Focus'  editable = live  indicator = "#3a7bd5" }
+        Focus = integer { description = "Spent on special actions, reactions and some talents. Recovers on rest." default = 'Max Focus'  editable = live  indicator = "#3a7bd5" }
         'Max Investiture' = integer { default = 0 }
-        Investiture = integer { default = 0  editable = live }
-        Movement = integer { default = 25  render = distance (Movement) }
-        'Recovery die' = string { default = "d4"  keys = ["d4", "d6", "d8", "d10", "d12", "d20"] }
+        Investiture = integer { description = "Stormlight or other power spent to fuel surges and Radiant abilities." default = 0  editable = live }
+        Movement = integer { description = "How far the character can move with one move action." default = 25  render = distance (Movement) }
+        'Recovery die' = string { description = "Die rolled to recover health and focus when resting." default = "d4"  keys = ["d4", "d6", "d8", "d10", "d12", "d20"] }
         'Senses range' = integer { default = 5  render = distance ('Senses range') }
-        Turn = string { default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
+        Turn = string { description = "Fast turns act with fewer actions before enemies; slow turns get more actions after." default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
     }
 
     Physical = table
     {
+        description = "Skills tied to Strength and Speed."
         tableLayout = layout { columns = 1 }
         Agility = skill (Attributes.Speed)
         Athletics = skill (Attributes.Strength)
@@ -142,6 +143,7 @@ characterTable = ruleset
 
     Cognitive = table
     {
+        description = "Skills tied to Intellect and Willpower."
         tableLayout = layout { columns = 1 }
         Crafting = skill (Attributes.Intellect)
         Deduction = skill (Attributes.Intellect)
@@ -153,6 +155,7 @@ characterTable = ruleset
 
     Spiritual = table
     {
+        description = "Skills tied to Awareness and Presence."
         tableLayout = layout { columns = 1 }
         Deception = skill (Attributes.Presence)
         Insight = skill (Attributes.Awareness)
@@ -164,6 +167,7 @@ characterTable = ruleset
 
     Surges = keyvalues
     {
+        description = "Radiant surges and other magical skills, each tied to an attribute."
         singular = "Surge or skill"
         editablekeys = character
         keys = []
@@ -183,7 +187,7 @@ characterTable = ruleset
         Determined = bool { default = false  editable = live  indicator = "#3a7bd5" }
         Disoriented = bool { default = false  editable = live  indicator = "#d4b106" }
         Empowered = bool { default = false  editable = live  indicator = "#3a7bd5" }
-        Exhausted = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Exhausted = integer { description = "Exhaustion levels. Each gives a penalty to tests." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
         Focused = bool { default = false  editable = live  indicator = "#3a7bd5" }
         Immobilized = bool { default = false  editable = live  indicator = "#e8913a" }
         Prone = bool { default = false  editable = live  indicator = "#e8913a" }
@@ -191,7 +195,7 @@ characterTable = ruleset
         Slowed = bool { default = false  editable = live  indicator = "#d4b106" }
         Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
         Surprised = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Injuries = string { editable = live  indicator = "#d64545" }
+        Injuries = string { description = "Lasting harm from falling to 0 health." editable = live  indicator = "#d64545" }
     }
 
     Weapons = list
@@ -229,7 +233,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Armor = string {}
-        Spheres = integer { default = 0 }
+        Spheres = integer { description = "Money carried, in infused gemstone spheres." default = 0 }
         Gear = string { multiline = true }
         Notes = string { multiline = true }
     }
@@ -245,17 +249,18 @@ adversaryTable = ruleset
         Role = string { default = "Rival"  keys = ["Minion", "Rival", "Boss"] }
         Type = string {}
         Size = string { default = "Medium" }
-        'Max Health' = integer { default = 15 }
-        Health = integer { default = 'Max Health'  editable = live  indicator = "#d64545" }
+        'Max Health' = integer { description = "Health when unhurt." default = 15 }
+        Health = integer { description = "Current health. At 0 the adversary is defeated." default = 'Max Health'  editable = live  indicator = "#d64545" }
         Down = string { value = downState (Health)  visible = none  indicator = "#d64545" }
-        Focus = integer { default = 3  editable = live }
+        Focus = integer { description = "Spent on special actions and reactions." default = 3  editable = live }
         Investiture = integer { default = 0  editable = live }
         Movement = string { default = "25 ft." }
-        Deflect = integer { default = 0 }
+        Deflect = integer { description = "Reduces damage from each hit." default = 0 }
         Roll = selector { options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
     }
     Defenses = table
     {
+        description = "Target numbers for attacks against the adversary."
         tableLayout = layout { columns = 3  size = wide }
         Physical = integer { default = 12 }
         Cognitive = integer { default = 12 }
@@ -263,6 +268,7 @@ adversaryTable = ruleset
     }
     Skills = keyvalues
     {
+        description = "Skill test bonuses for the adversary."
         singular = "Skill"
         editablekeys = character
         keys = ["Athletics", "Perception"]
