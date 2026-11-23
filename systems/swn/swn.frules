@@ -41,8 +41,8 @@ saveDice = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls
 
 attribute = custom
 {
-    Score = integer { default = 10  minvalue = 3  maxvalue = 18 }
-    Modifier = modifier { value = attributeModifier (Score)  editable = none }
+    Score = integer { description = "Attribute score from 3 to 18." default = 10  minvalue = 3  maxvalue = 18 }
+    Modifier = modifier { description = "Modifier from the score: -2 to +2." value = attributeModifier (Score)  editable = none }
 }
 
 noAttribute = { Modifier = 0 }
@@ -53,9 +53,9 @@ modOf (char, name) = valueOr (valueOr (char.Attributes, name, noAttribute), "Mod
 
 skill (attr) = custom
 {
-    Level = integer { default = -1  minvalue = -1  maxvalue = 4 }
-    Attribute = string { default = attr  keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
-    Check = modifier { value = Level + modOf (characterTable, Attribute)  valuedice = skillDice  editable = none }
+    Level = integer { description = "Skill level from 0 to 4. -1 means untrained." default = -1  minvalue = -1  maxvalue = 4 }
+    Attribute = string { description = "The attribute that fits this use of the skill." default = attr  keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+    Check = modifier { description = "Roll 2d6 plus skill level and attribute modifier against the difficulty." value = Level + modOf (characterTable, Attribute)  valuedice = skillDice  editable = none }
 }
 
 skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -1)
@@ -86,15 +86,16 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Class = string { keys = ["Expert", "Psychic", "Warrior", "Adventurer"] }
         Background = string {}
-        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
-        XP = integer { default = 0  editable = live }
+        Level = integer { description = "Character level, from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
+        XP = integer { description = "Experience points earned in play." default = 0  editable = live }
         Homeworld = string {}
         Species = string { default = "Human" }
-        Goals = string { multiline = true }
+        Goals = string { description = "What the character wants to achieve. Reaching a goal earns experience." multiline = true }
     }
 
     Attributes = table
     {
+        description = "The six attributes and their modifiers."
         tableLayout = layout { columns = 6  size = wide }
         STR = attribute {}
         DEX = attribute {}
@@ -107,22 +108,23 @@ characterTable = ruleset
     Combat = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max HP' = integer { default = 6  minvalue = 1 }
-        HP = integer { default = 'Max HP'  editable = live }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 6  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 you are mortally wounded." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Mortally wounded" else ""  visible = none  indicator = "#d64545" }
-        AC = integer { default = 10 }
-        'Attack Bonus' = modifier { default = 0 }
-        'System Strain' = integer { default = 0  minvalue = 0  maxvalue = Attributes.CON.Score  editable = live  indicator = "#3fa34d" }
-        'Max Strain' = integer { value = Attributes.CON.Score  editable = none }
-        Initiative = integer { default = 0  valuedice = ([1d8], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + Attributes.DEX.Modifier)  Value = first (first (throws).rolls) + Attributes.DEX.Modifier })) }
-        Physical = integer { value = 16 - Character.Level - max (Attributes.STR.Modifier, Attributes.CON.Modifier)  valuedice = saveDice  editable = none }
-        Evasion = integer { value = 16 - Character.Level - max (Attributes.DEX.Modifier, Attributes.INT.Modifier)  valuedice = saveDice  editable = none }
-        Mental = integer { value = 16 - Character.Level - max (Attributes.WIS.Modifier, Attributes.CHA.Modifier)  valuedice = saveDice  editable = none }
-        Luck = integer { value = 16 - Character.Level  valuedice = saveDice  editable = none }
+        AC = integer { description = "Armor class. Attacks roll d20 plus bonus plus AC-relevant modifiers against it." default = 10 }
+        'Attack Bonus' = modifier { description = "Base attack bonus from class and level." default = 0 }
+        'System Strain' = integer { description = "Strain from drugs, cyberware and healing. It can't exceed CON." default = 0  minvalue = 0  maxvalue = Attributes.CON.Score  editable = live  indicator = "#3fa34d" }
+        'Max Strain' = integer { description = "Most system strain you can carry: your CON score." value = Attributes.CON.Score  editable = none }
+        Initiative = integer { description = "Initiative: d8 plus DEX modifier." default = 0  valuedice = ([1d8], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + Attributes.DEX.Modifier)  Value = first (first (throws).rolls) + Attributes.DEX.Modifier })) }
+        Physical = integer { description = "Physical save: 16 minus level minus the best of STR and CON modifiers." value = 16 - Character.Level - max (Attributes.STR.Modifier, Attributes.CON.Modifier)  valuedice = saveDice  editable = none }
+        Evasion = integer { description = "Evasion save: 16 minus level minus the best of DEX and INT modifiers." value = 16 - Character.Level - max (Attributes.DEX.Modifier, Attributes.INT.Modifier)  valuedice = saveDice  editable = none }
+        Mental = integer { description = "Mental save: 16 minus level minus the best of WIS and CHA modifiers." value = 16 - Character.Level - max (Attributes.WIS.Modifier, Attributes.CHA.Modifier)  valuedice = saveDice  editable = none }
+        Luck = integer { description = "Luck save: 16 minus level." value = 16 - Character.Level  valuedice = saveDice  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills. Roll 2d6 plus skill and attribute; -1 means untrained."
         tableLayout = layout { columns = 2  size = wide }
         Administer = skill ("INT")
         Connect = skill ("CHA")
@@ -147,9 +149,10 @@ characterTable = ruleset
 
     Psychics = table
     {
+        description = "Psychic disciplines and the effort that powers them."
         tableLayout = layout { columns = 2 }
-        'Max Effort' = integer { default = 0  minvalue = 0 }
-        'Committed Effort' = integer { default = 0  minvalue = 0  editable = live }
+        'Max Effort' = integer { description = "Effort you can commit to psychic powers." default = 0  minvalue = 0 }
+        'Committed Effort' = integer { description = "Effort committed right now." default = 0  minvalue = 0  editable = live }
         Biopsionics = integer { default = -1  minvalue = -1  maxvalue = 4 }
         Metapsionics = integer { default = -1  minvalue = -1  maxvalue = 4 }
         Precognition = integer { default = -1  minvalue = -1  maxvalue = 4 }
@@ -160,6 +163,7 @@ characterTable = ruleset
 
     Foci = list
     {
+        description = "Foci: special talents that give a bonus or a new ability."
         tableLayout = layout { size = wide }
         singular = "Focus"
         editable = character
@@ -194,9 +198,9 @@ characterTable = ruleset
     Encumbrance = table
     {
         tableLayout = layout { columns = 3 }
-        Readied = integer { value = Attributes.STR.Score / 2  editable = none }
-        Stowed = integer { value = Attributes.STR.Score  editable = none }
-        Credits = integer { default = 0  editable = live }
+        Readied = integer { description = "Items you can keep ready for use: half STR." value = Attributes.STR.Score / 2  editable = none }
+        Stowed = integer { description = "Items you can carry packed away: your STR score." value = Attributes.STR.Score  editable = none }
+        Credits = integer { description = "Credits, the money of the stars." default = 0  editable = live }
     }
 }
 
@@ -206,17 +210,17 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Hit Dice' = integer { default = 1 }
+        'Hit Dice' = integer { description = "Hit dice: d8s of hit points, and the attack bonus." default = 1 }
         'Max HP' = integer { default = 4 }
         HP = integer { default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Down" else ""  visible = none  indicator = "#d64545" }
-        AC = integer { default = 10 }
+        AC = integer { description = "Armor class." default = 10 }
         Attack = modifier { default = 1  valuedice = attackDice  action = melee  reach = 2 }
         Damage = string { default = "1d6" }
         Move = string { default = "10m" }
-        Morale = integer { default = 8  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": breaks"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": holds"  Outcome = "Success" })) }
-        Skill = modifier { default = 1  valuedice = skillDice }
-        Save = integer { default = 15  valuedice = saveDice }
+        Morale = integer { description = "Roll 2d6. Above morale and the creature breaks and flees." default = 8  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": breaks"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": holds"  Outcome = "Success" })) }
+        Skill = modifier { description = "Bonus for the creature's skill checks." default = 1  valuedice = skillDice }
+        Save = integer { description = "Saving throw target for the creature." default = 15  valuedice = saveDice }
         Initiative = integer { default = 0  valuedice = 1d8 }
     }
     Notes = table
@@ -234,13 +238,13 @@ shipTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Hull = string { keys = ["Strike Fighter", "Shuttle", "Free Merchant", "Patrol Boat", "Corvette", "Heavy Frigate", "Bulk Freighter", "Fleet Cruiser", "Battleship", "Carrier", "Small Station", "Large Station"] }
         Class = string { keys = ["Fighter", "Frigate", "Cruiser", "Capital"] }
-        'Max HP' = integer { default = 20 }
-        HP = integer { default = 'Max HP'  editable = live }
+        'Max HP' = integer { description = "Hit points when undamaged." default = 20 }
+        HP = integer { description = "Current hit points. At 0 the ship is disabled." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Disabled" else ""  visible = none  indicator = "#d64545" }
-        AC = integer { default = 13 }
-        Armor = integer { default = 5 }
-        Speed = integer { default = 3 }
-        'Spike Drive' = integer { default = 1 }
+        AC = integer { description = "Armor class of the ship." default = 13 }
+        Armor = integer { description = "Armor subtracted from each hit." default = 5 }
+        Speed = integer { description = "How quickly the ship maneuvers in combat." default = 3 }
+        'Spike Drive' = integer { description = "Spike drive rating: how many hexes of space the ship jumps." default = 1 }
         Crew = string { default = "1/10" }
         Power = string {}
         Mass = string {}
