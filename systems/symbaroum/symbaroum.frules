@@ -37,9 +37,9 @@ initiativeRoll (vigilant) = ([dice { number = 0  sides = 20  label = "" }],
 
 attribute = custom
 {
-    Value = integer { default = 10  minvalue = 5  maxvalue = 15 }
-    Test = integer { value = Value + 'Modifier'  valuedice = symTest  editable = none }
-    'Modifier' = integer { default = 0  minvalue = -10  maxvalue = 10 }
+    Value = integer { description = "Attribute value from 5 to 15." default = 10  minvalue = 5  maxvalue = 15 }
+    Test = integer { description = "Roll d20 at or under the value plus modifier to succeed." value = Value + 'Modifier'  valuedice = symTest  editable = none }
+    'Modifier' = integer { description = "Modifier for this test, usually from the opposing attribute: 10 minus its value." default = 0  minvalue = -10  maxvalue = 10 }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.symWeapon.Stats, field, "")
@@ -87,58 +87,62 @@ characterTable = ruleset
         Race = string { keys = ["Ambrian", "Barbarian", "Changeling", "Goblin", "Ogre", "Troll", "Elf", "Dwarf", "Undead"] }
         Occupation = string {}
         Archetype = string { keys = ["Mystic", "Rogue", "Warrior", "Hunter"] }
-        Shadow = string {}
-        'Personal goal' = string {}
+        Shadow = string { description = "The dark side of the character's nature, seen by those with witchsight." }
+        'Personal goal' = string { description = "What the character wants to achieve." }
         Quote = string {}
-        Experience = integer { default = 0  editable = live }
-        'Unspent experience' = integer { default = 0  editable = live }
+        Experience = integer { description = "All experience earned so far." default = 0  editable = live }
+        'Unspent experience' = integer { description = "Experience left to spend on abilities." default = 0  editable = live }
     }
 
     Attributes = table
     {
+        description = "The eight attributes, from 5 to 15. Tests roll d20 at or under them."
         tableLayout = layout { columns = 4  size = wide }
-        Accurate = attribute {}
-        Cunning = attribute {}
-        Discreet = attribute {}
-        Persuasive = attribute {}
-        Quick = attribute {}
-        Resolute = attribute {}
-        Strong = attribute {}
-        Vigilant = attribute {}
+        Accurate = attribute { description = "Precision with weapons and fine work." }
+        Cunning = attribute { description = "Cleverness, knowledge and deceit." }
+        Discreet = attribute { description = "Stealth, sleight of hand and going unnoticed." }
+        Persuasive = attribute { description = "Charm, leadership and talking people round." }
+        Quick = attribute { description = "Speed, reflexes and defense against attacks." }
+        Resolute = attribute { description = "Willpower, magic and resisting corruption." }
+        Strong = attribute { description = "Muscle and endurance. Sets toughness and pain threshold." }
+        Vigilant = attribute { description = "Awareness, perception and initiative." }
     }
 
     Toughness = table
     {
+        description = "Toughness: how much damage you can take before dying."
         tableLayout = layout { columns = 3 }
-        Max = integer { value = max (10, Attributes.Strong.Value) + 'Max bonus'  editable = none }
+        Max = integer { description = "Toughness: Strong, at least 10, plus bonuses." value = max (10, Attributes.Strong.Value) + 'Max bonus'  editable = none }
         'Max bonus' = integer { default = 0 }
-        Current = integer { default = Max  editable = live  indicator = "#d64545" }
-        'Pain threshold' = integer { value = (Attributes.Strong.Value + 1) / 2  editable = none }
+        Current = integer { description = "Current toughness. At 0 you are dying." default = Max  editable = live  indicator = "#d64545" }
+        'Pain threshold' = integer { description = "Damage from one hit at or above this causes pain: half of Strong." value = (Attributes.Strong.Value + 1) / 2  editable = none }
         Down = string { value = downState (Current)  visible = none  indicator = "#d64545" }
-        Defense = integer { value = Attributes.Quick.Value - impeding (characterTable)  valuedice = ask ("Attacker Accurate", 10, symRoll (-1, ""))  editable = none }
-        Armor = string { value = protection (characterTable)  editable = none }
-        Initiative = integer { value = Attributes.Quick.Value  valuedice = initiativeRoll (Attributes.Vigilant.Value)  editable = none }
+        Defense = integer { description = "Defense test: roll Quick against the attacker to avoid being hit." value = Attributes.Quick.Value - impeding (characterTable)  valuedice = ask ("Attacker Accurate", 10, symRoll (-1, ""))  editable = none }
+        Armor = string { description = "The armor's protection die, rolled to reduce damage." value = protection (characterTable)  editable = none }
+        Initiative = integer { description = "Initiative: highest Quick acts first, Vigilant breaks ties." value = Attributes.Quick.Value  valuedice = initiativeRoll (Attributes.Vigilant.Value)  editable = none }
     }
 
     Corruption = table
     {
+        description = "Corruption from magic and the dark. Too much marks you, at Resolute you become an abomination."
         tableLayout = layout { columns = 3 }
-        Permanent = integer { default = 0  minvalue = 0 }
-        Temporary = integer { default = 0  minvalue = 0  editable = live }
-        Total = integer { value = Permanent + Temporary  editable = none }
-        Threshold = integer { value = (Attributes.Resolute.Value + 1) / 2  editable = none }
+        Permanent = integer { description = "Permanent corruption that never goes away." default = 0  minvalue = 0 }
+        Temporary = integer { description = "Temporary corruption, gone at the end of the scene." default = 0  minvalue = 0  editable = live }
+        Total = integer { description = "Total corruption, permanent plus temporary." value = Permanent + Temporary  editable = none }
+        Threshold = integer { description = "At or above this corruption threshold, you show a mark of corruption." value = (Attributes.Resolute.Value + 1) / 2  editable = none }
         State = string { value = corruptionState (Total, Threshold, Attributes.Resolute.Value)  editable = none  indicator = "#8e5cc4" }
     }
 
     Abilities = list
     {
+        description = "Abilities, powers, traits and burdens at novice, adept or master level."
         tableLayout = layout { size = wide }
         singular = "Ability"
         editable = character
         valueType = custom
         {
             Name = string {}
-            Level = string { default = "Novice"  keys = ["Novice", "Adept", "Master"] }
+            Level = string { description = "Novice, adept or master. Each level adds to the ability." default = "Novice"  keys = ["Novice", "Adept", "Master"] }
             Type = string { default = "Ability"  keys = ["Ability", "Mystical power", "Ritual", "Trait", "Boon", "Burden"] }
             Effect = string { multiline = true }
         }
@@ -171,9 +175,9 @@ characterTable = ruleset
     Equipment = table
     {
         tableLayout = layout { columns = 2 }
-        Thaler = integer { default = 0 }
-        Shillings = integer { default = 0 }
-        Orteg = integer { default = 0 }
+        Thaler = integer { description = "Gold thaler, the largest coin." default = 0 }
+        Shillings = integer { description = "Silver shillings, ten to a thaler." default = 0 }
+        Orteg = integer { description = "Copper orteg, ten to a shilling." default = 0 }
         Artifacts = string { multiline = true }
         Gear = string { multiline = true }
         Notes = string { multiline = true }
@@ -187,11 +191,11 @@ creatureTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Race = string {}
-        Resistance = string { default = "Ordinary"  keys = ["Weak", "Ordinary", "Challenging", "Strong", "Mighty", "Legendary"] }
-        Toughness = integer { default = 10 }
-        Current = integer { default = Toughness  editable = live  indicator = "#d64545" }
-        'Pain threshold' = integer { default = 5 }
-        Defense = integer { default = 10 }
+        Resistance = string { description = "How dangerous the creature is." default = "Ordinary"  keys = ["Weak", "Ordinary", "Challenging", "Strong", "Mighty", "Legendary"] }
+        Toughness = integer { description = "Toughness when unhurt." default = 10 }
+        Current = integer { description = "Current toughness." default = Toughness  editable = live  indicator = "#d64545" }
+        'Pain threshold' = integer { description = "Damage from one hit at or above this causes pain." default = 5 }
+        Defense = integer { description = "Attacks against the creature: players roll Defense against this." default = 10 }
         Armor = string { default = "" }
         Down = string { value = downState (Current)  visible = none  indicator = "#d64545" }
         Corruption = string { default = "0" }
