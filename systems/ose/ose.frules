@@ -55,8 +55,8 @@ xInSix = ([1d6], ((baseline, throws)->if first (first (throws).rolls) <= baselin
 
 ability = custom
 {
-    Score = integer { description = "Ability score from 3 to 18. Roll d20 at or under it for an ability check." default = 10  minvalue = 3  maxvalue = 18  valuedice = abilityCheck }
-    Modifier = modifier { description = "Modifier from the score: from -3 at 3 to +3 at 18." value = abilityModifier (Score)  editable = none }
+    Score = integer { description = "Ability score from 3 to 18. Roll d20 at or under it for an ability check." reference = ["bfrpg", 8] default = 10  minvalue = 3  maxvalue = 18  valuedice = abilityCheck }
+    Modifier = modifier { description = "Modifier from the score: from -3 at 3 to +3 at 18." reference = ["bfrpg", 8] value = abilityModifier (Score)  editable = none }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
@@ -78,7 +78,7 @@ attackFor (char, weapon) =
 
 spellSlots (level) = custom
 {
-    Slots = integer { description = "Spells of this level the character can memorise each day." default = 0 }
+    Slots = integer { description = "Spells of this level the character can memorise each day." reference = [["bfrpg", 11], ["bfrpg", 12]] default = 0 }
     Used = integer { description = "Slots used since the last rest." default = 0  editable = live }
 }
 
@@ -92,14 +92,14 @@ characterTable = ruleset
         Level = integer { description = "Character level. Higher levels bring more HP, better saves and attacks." default = 1  minvalue = 1  maxvalue = 14 }
         Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
         Title = string {}
-        XP = integer { description = "Experience points earned from treasure and defeated foes." default = 0  editable = live }
-        'XP for Next Level' = integer { description = "Experience needed for the next level." default = 2000 }
-        'Prime Requisite Bonus' = string { description = "Bonus or penalty to experience from the class's prime requisite." keys = ["-20%", "-10%", "None", "+5%", "+10%"] }
+        XP = integer { description = "Experience points earned from treasure and defeated foes." reference = ["bfrpg", 53] default = 0  editable = live }
+        'XP for Next Level' = integer { description = "Experience needed for the next level." reference = [["bfrpg", 11], ["bfrpg", 12]] default = 2000 }
+        'Prime Requisite Bonus' = string { description = "Bonus or penalty to experience from the class's prime requisite." reference = ["bfrpg", 8] keys = ["-20%", "-10%", "None", "+5%", "+10%"] }
     }
 
     Abilities = table
     {
-        description = "The six ability scores and their modifiers."
+        description = "The six ability scores and their modifiers." reference = ["bfrpg", 8]
         tableLayout = layout { columns = 3  size = wide }
         STR = ability {}
         INT = ability {}
@@ -115,24 +115,24 @@ characterTable = ruleset
         'Armour Class' = integer { description = "Descending armour class: lower is better, 9 is unarmoured." default = 9 }
         'Ascending AC' = integer { description = "Ascending armour class: 19 minus descending AC. Higher is better." value = 19 - 'Armour Class'  editable = none }
         THAC0 = integer { description = "To hit armour class 0, roll this or higher on d20. Lower is better." default = 19 }
-        'Attack Bonus' = integer { description = "Attack bonus for ascending AC: 19 minus THAC0." value = 19 - THAC0  editable = none }
-        'Max HP' = integer { description = "Hit points when unhurt." default = 4 }
-        HP = integer { description = "Current hit points. At 0 the character dies." default = 'Max HP'  editable = live }
+        'Attack Bonus' = integer { description = "Attack bonus for ascending AC: 19 minus THAC0." reference = ["bfrpg", 57] value = 19 - THAC0  editable = none }
+        'Max HP' = integer { description = "Hit points when unhurt." reference = ["bfrpg", 8] default = 4 }
+        HP = integer { description = "Current hit points. At 0 the character dies." reference = ["bfrpg", 62] default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Initiative = modifier { description = "Roll d6 plus DEX modifier for individual initiative." value = Abilities.DEX.Modifier  valuedice = 1d6  editable = none }
-        Movement = string { description = "Movement per turn, with the rate per round in brackets." default = "120' (40')" }
-        'Encounter Movement' = string { description = "Movement per round in an encounter." default = "40'" }
+        Initiative = modifier { description = "Roll d6 plus DEX modifier for individual initiative." reference = ["bfrpg", 55] value = Abilities.DEX.Modifier  valuedice = 1d6  editable = none }
+        Movement = string { description = "Movement per turn, with the rate per round in brackets." reference = ["bfrpg", 46] default = "120' (40')" }
+        'Encounter Movement' = string { description = "Movement per round in an encounter." reference = ["bfrpg", 46] default = "40'" }
     }
 
     'Saving Throws' = table
     {
-        description = "Roll d20 at or above the number to save. Lower numbers are better."
+        description = "Roll d20 at or above the number to save. Lower numbers are better." reference = ["bfrpg", 64]
         tableLayout = layout { columns = 5  size = wide }
-        'Death or Poison' = integer { description = "Save against death rays and poison." default = 12  valuedice = oseSave }
-        Wands = integer { description = "Save against magic wands." default = 13  valuedice = oseSave }
-        'Paralysis or Petrify' = integer { description = "Save against paralysis and turning to stone." default = 14  valuedice = oseSave }
-        Breath = integer { description = "Save against breath attacks." default = 15  valuedice = oseSave }
-        'Spells or Rods or Staves' = integer { description = "Save against spells, rods and staves." default = 16  valuedice = oseSave }
+        'Death or Poison' = integer { description = "Save against death rays and poison." reference = ["bfrpg", 65] default = 12  valuedice = oseSave }
+        Wands = integer { description = "Save against magic wands." reference = ["bfrpg", 65] default = 13  valuedice = oseSave }
+        'Paralysis or Petrify' = integer { description = "Save against paralysis and turning to stone." reference = ["bfrpg", 65] default = 14  valuedice = oseSave }
+        Breath = integer { description = "Save against breath attacks." reference = ["bfrpg", 65] default = 15  valuedice = oseSave }
+        'Spells or Rods or Staves' = integer { description = "Save against spells, rods and staves." reference = ["bfrpg", 65] default = 16  valuedice = oseSave }
         'Magic Save Modifier' = modifier { description = "WIS modifier, added to saves against magic." value = Abilities.WIS.Modifier  editable = none }
     }
 
@@ -140,26 +140,26 @@ characterTable = ruleset
     {
         description = "Chances out of six for common adventuring tasks."
         tableLayout = layout { columns = 4  size = wide }
-        'Open Doors' = integer { description = "Chance in six to force open a stuck door." default = 2  valuedice = xInSix }
-        'Find Secret Doors' = integer { description = "Chance in six to find a secret door when searching." default = 1  valuedice = xInSix }
-        'Find Room Traps' = integer { description = "Chance in six to find a trap in a room when searching." default = 1  valuedice = xInSix }
-        Listen = integer { description = "Chance in six to hear noises behind a door." default = 1  valuedice = xInSix }
+        'Open Doors' = integer { description = "Chance in six to force open a stuck door." reference = ["bfrpg", 47] default = 2  valuedice = xInSix }
+        'Find Secret Doors' = integer { description = "Chance in six to find a secret door when searching." reference = ["bfrpg", 48] default = 1  valuedice = xInSix }
+        'Find Room Traps' = integer { description = "Chance in six to find a trap in a room when searching." reference = ["bfrpg", 47] default = 1  valuedice = xInSix }
+        Listen = integer { description = "Chance in six to hear noises behind a door." reference = ["bfrpg", 47] default = 1  valuedice = xInSix }
         Languages = string { default = "Alignment, Common" }
         'Other Abilities' = string { multiline = true }
     }
 
     'Thief Skills' = table
     {
-        description = "Thief skills as percentages, except hear noise out of six."
+        description = "Thief skills as percentages, except hear noise out of six." reference = ["bfrpg", 13]
         tableLayout = layout { columns = 4  size = wide }
         visible = if Character.Class == "Thief" then visible else none
-        'Climb Sheer Surfaces' = integer { description = "Chance to climb sheer walls." default = 87  valuedice = percentCheck }
-        'Find or Remove Traps' = integer { description = "Chance to find or remove a small trap." default = 10  valuedice = percentCheck }
-        'Hear Noise' = integer { description = "Chance in six to hear noises." default = 2  valuedice = xInSix }
-        'Hide in Shadows' = integer { description = "Chance to hide unseen in shadows." default = 10  valuedice = percentCheck }
-        'Move Silently' = integer { description = "Chance to move without a sound." default = 20  valuedice = percentCheck }
-        'Open Locks' = integer { description = "Chance to pick a lock." default = 15  valuedice = percentCheck }
-        'Pick Pockets' = integer { description = "Chance to pick a pocket unnoticed." default = 20  valuedice = percentCheck }
+        'Climb Sheer Surfaces' = integer { description = "Chance to climb sheer walls." reference = ["bfrpg", 13] default = 87  valuedice = percentCheck }
+        'Find or Remove Traps' = integer { description = "Chance to find or remove a small trap." reference = ["bfrpg", 13] default = 10  valuedice = percentCheck }
+        'Hear Noise' = integer { description = "Chance in six to hear noises." reference = ["bfrpg", 13] default = 2  valuedice = xInSix }
+        'Hide in Shadows' = integer { description = "Chance to hide unseen in shadows." reference = ["bfrpg", 13] default = 10  valuedice = percentCheck }
+        'Move Silently' = integer { description = "Chance to move without a sound." reference = ["bfrpg", 13] default = 20  valuedice = percentCheck }
+        'Open Locks' = integer { description = "Chance to pick a lock." reference = ["bfrpg", 13] default = 15  valuedice = percentCheck }
+        'Pick Pockets' = integer { description = "Chance to pick a pocket unnoticed." reference = ["bfrpg", 13] default = 20  valuedice = percentCheck }
     }
 
     Weapons = list
@@ -189,7 +189,7 @@ characterTable = ruleset
 
     'Spell Slots' = table
     {
-        description = "Spell slots per spell level."
+        description = "Spell slots per spell level." reference = [["bfrpg", 11], ["bfrpg", 12]]
         tableLayout = layout { columns = 5  size = wide }
         visible = if Character.Class == "Cleric" or Character.Class == "Elf" or Character.Class == "Magic-User" then visible else none
         'Level 1' = spellSlots (1)
@@ -219,18 +219,18 @@ characterTable = ruleset
     Treasure = table
     {
         tableLayout = layout { columns = 5 }
-        PP = integer { description = "Platinum pieces, worth 5 gold each." default = 0  editable = live }
-        GP = integer { description = "Gold pieces." default = 0  editable = live }
-        EP = integer { description = "Electrum pieces, worth half a gold each." default = 0  editable = live }
-        SP = integer { description = "Silver pieces, ten to a gold." default = 0  editable = live }
-        CP = integer { description = "Copper pieces, a hundred to a gold." default = 0  editable = live }
-        'Encumbrance in coins' = integer { description = "Weight carried, measured in coins." default = 0 }
+        PP = integer { description = "Platinum pieces, worth 5 gold each." reference = ["bfrpg", 14] default = 0  editable = live }
+        GP = integer { description = "Gold pieces." reference = ["bfrpg", 14] default = 0  editable = live }
+        EP = integer { description = "Electrum pieces, worth half a gold each." reference = ["bfrpg", 14] default = 0  editable = live }
+        SP = integer { description = "Silver pieces, ten to a gold." reference = ["bfrpg", 14] default = 0  editable = live }
+        CP = integer { description = "Copper pieces, a hundred to a gold." reference = ["bfrpg", 14] default = 0  editable = live }
+        'Encumbrance in coins' = integer { description = "Weight carried, measured in coins." reference = ["bfrpg", 46] default = 0 }
         'Gems and Jewellery' = string { multiline = true }
     }
 
     Retainers = list
     {
-        description = "Hirelings who adventure with the character."
+        description = "Hirelings who adventure with the character." reference = ["bfrpg", 50]
         tableLayout = layout { size = wide }
         singular = "Retainer"
         editable = character
@@ -239,7 +239,7 @@ characterTable = ruleset
             Name = string {}
             Class = string {}
             Level = integer { default = 1 }
-            Loyalty = integer { description = "Roll 2d6 under loyalty when the retainer is in danger or asked too much." default = 7 }
+            Loyalty = integer { description = "Roll 2d6 under loyalty when the retainer is in danger or asked too much." reference = ["bfrpg", 50] default = 7 }
         }
     }
 }
@@ -255,17 +255,17 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Armour Class' = integer { description = "Descending armour class: lower is better." default = 7 }
-        'Hit Dice' = string { description = "Hit dice, each d8 hit points." default = "1" }
+        'Armour Class' = integer { description = "Descending armour class: lower is better." reference = ["bfrpg", 66] default = 7 }
+        'Hit Dice' = string { description = "Hit dice, each d8 hit points." reference = ["bfrpg", 66] default = "1" }
         Attacks = string {}
         'Max HP' = integer { description = "Hit points when unhurt." default = 4 }
         HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
         THAC0 = integer { description = "To hit armour class 0, roll this or higher on d20." default = 19 }
         Movement = string { default = "120' (40')" }
-        'Saves As' = string { description = "The class and level the monster saves as." default = "F1" }
-        Morale = integer { description = "Roll 2d6. Above morale and the monster flees or surrenders." default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + ": fights on"  Outcome = "Success" })) }
+        'Saves As' = string { description = "The class and level the monster saves as." reference = ["bfrpg", 66] default = "F1" }
+        Morale = integer { description = "Roll 2d6. Above morale and the monster flees or surrenders." reference = ["bfrpg", 61] default = 7  valuedice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + ": flees or surrenders"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + ": fights on"  Outcome = "Success" })) }
         Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
-        XP = integer { description = "Experience awarded for defeating the monster." default = 10 }
+        XP = integer { description = "Experience awarded for defeating the monster." reference = ["bfrpg", 53] default = 10 }
         'Number Appearing' = string {}
         'Treasure Type' = string {}
         Initiative = modifier { default = 0  valuedice = 1d6 }
@@ -285,7 +285,7 @@ creatureTable = ruleset
     }
     'Saving Throws' = table
     {
-        description = "Saving throws: death, wands, paralysis, breath and spells."
+        description = "Saving throws: death, wands, paralysis, breath and spells." reference = ["bfrpg", 65]
         tableLayout = layout { columns = 5  size = wide }
         D = integer { default = 12  valuedice = oseSave }
         W = integer { default = 13  valuedice = oseSave }
