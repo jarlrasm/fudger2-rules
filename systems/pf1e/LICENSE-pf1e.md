@@ -1,6 +1,6 @@
 # Pathfinder 1st edition content
 
-`pf1e.json` holds Open Game Content from the *Pathfinder Roleplaying Game Core Rulebook* and *Bestiary*: weapons, armor, magic items, spells, feats and monsters. It was converted with `tools/pf1e_import.py` from PSRD-Data (https://github.com/devonjones/PSRD-Data), which holds the Pathfinder Reference Document. It is used under the Open Game License 1.0a below. The rest of this folder (the sheet, rules file and guide) is not Open Game Content.
+`pf1e.json` holds Open Game Content from the *Pathfinder Roleplaying Game Core Rulebook* (weapons, armor, magic items, spells and feats), *Ultimate Equipment* (magic items) and *Bestiary* 1 to 4 (monsters). It was converted with `tools/pf1e_import.py` from PSRD-Data (https://github.com/devonjones/PSRD-Data), which holds the Pathfinder Reference Document. It is used under the Open Game License 1.0a below. The rest of this folder (the sheet, rules file and guide) is not Open Game Content.
 
 Pathfinder and Paizo are trademarks of Paizo Inc.; this project is not affiliated with Paizo Inc. Product Identity, such as the names of Golarion's deities, places and characters, is not Open Game Content and is not licensed here.
 
@@ -70,4 +70,21 @@ Pathfinder RPG Core Rulebook. Copyright 2009, Paizo Publishing, LLC; Author: Jas
 Jonathan Tweet, Monte Cook, and Skip Williams.
 Pathfinder Roleplaying Game Bestiary. Copyright 2009, Paizo Publishing, LLC; Author: Jason Bulmahn, based on material by
 Jonathan Tweet, Monte Cook, and Skip Williams.
+Pathfinder Roleplaying Game Bestiary 2. Copyright 2010, Paizo Publishing, LLC; Authors: Wolfgang Baur, Jason Bulmahn,
+Adam Daigle, Graeme Davis, Crystal Frasier, Joshua J. Frost, Tim Hitchcock, Brandon Hodge, James Jacobs, Steve Kenson,
+Hal MacLean, Martin Mason, Rob McCreary, Erik Mona, Jason Nelson, Patrick Renie, Sean K Reynolds, F. Wesley Schneider,
+Owen K.C. Stephens, James L. Sutter, Russ Taylor, and Greg A. Vaughan, based on material by Jonathan Tweet, Monte Cook,
+and Skip Williams.
+Pathfinder Roleplaying Game Bestiary 3. Copyright 2011, Paizo Publishing, LLC; Authors: Jesse Benner, Jason Bulmahn,
+Adam Daigle, James Jacobs, Michael Kenway, Rob McCreary, Patrick Renie, Chris Sims, F. Wesley Schneider, James L. Sutter,
+and Russ Taylor, based on material by Jonathan Tweet, Monte Cook, and Skip Williams.
+Pathfinder Roleplaying Game Bestiary 4. Copyright 2013, Paizo Publishing, LLC; Authors: Dennis Baker, Jesse Benner,
+Savannah Broadway, Ross Byers, Adam Daigle, Tim Hitchcock, Tracy Hurley, James Jacobs, Matt James, Rob McCreary,
+Jason Nelson, Tom Phillips, Stephen Radney-MacFarland, Sean K Reynolds, F. Wesley Schneider, Tork Shaw, and Russ Taylor.
+Pathfinder Roleplaying Game Ultimate Equipment. Copyright 2012, Paizo Publishing, LLC; Authors: Dennis Baker, Jesse Benner,
+Benjamin Bruck, Ross Byers, Brian J. Cortijo, Ryan Costello, Mike Ferguson, Matt Goetz, Jim Groves, Tracy Hurley,
+Matt James, Jonathan H. Keith, Michael Kenway, Hal MacLean, Jason Nelson, Tork Shaw, Owen K C Stephens, Russ Taylor,
+and numerous RPG Superstar contributors.
 ```
+
+Bestiaries 2 to 4 also credit third-party sources (such as the *Tome of Horrors*) in their own section 15 for some monsters; those lines are not repeated here.
