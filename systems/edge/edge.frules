@@ -30,6 +30,7 @@ characterTable = ruleset
 
     'Main trait' = keyvalues
     {
+      description = "Your defining trait, the thing the character is best at, in your own words."
       singular = "Main"
       editablekeys = character
       keys = ["Describe the main trait"]
@@ -37,6 +38,7 @@ characterTable = ruleset
       {
         Score = integer
         {
+          description = "Bonus added to the 2d6 roll when this trait applies."
           default = 0
           valuedice = edgeRoll (characterTable)
         }
@@ -44,6 +46,7 @@ characterTable = ruleset
     }
     'Side trait' = keyvalues
     {
+      description = "Lesser traits that round out the character, each in a few words."
       singular = "Side"
       editablekeys = character
       keys = ["Describe a side trait"]
@@ -51,6 +54,7 @@ characterTable = ruleset
       {
         Score = integer
         {
+          description = "Bonus added to the 2d6 roll when this trait applies."
           default = 0
           valuedice = edgeRoll (characterTable)
         }
@@ -59,6 +63,7 @@ characterTable = ruleset
 
     'Trouble' = table
     {
+      description = "A weakness or problem that keeps getting the character into trouble."
       tableLayout = layout
       {
         columns = 1
@@ -77,17 +82,20 @@ characterTable = ruleset
   {
     Fight = integer
     {
+      description = "Your knack for violence: brawling, shooting and surviving a fight."
       default=0
       valuedice = edgeRoll (characterTable)
       action = ranged
     }
     Sway = integer
     {
+      description = "Your knack for persuading, charming, bluffing or bullying people."
       default=0
       valuedice = edgeRoll (characterTable)
     }
     Weird = integer
     {
+      description = "Your knack for the strange: odd powers, uncanny luck or hidden lore."
       default=0
       valuedice = edgeRoll (characterTable)
     }
@@ -103,6 +111,7 @@ characterTable = ruleset
     }
     Strikes = slots
     {
+      description = "Harm taken. Three strikes and the character is out of the action."
       number = 3
       allowedchange = increaseAndClear
       editable = live
