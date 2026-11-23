@@ -84,13 +84,16 @@ ac(char) =
 
 basicsTable =table
   {
+    description = "Level, defences and the numbers used most in play."
     XP  = integer
         {
+            description = "Experience points. Enough of them raises the character's level."  reference = ["srd", 23]
             default=0
             minvalue=0
         }
     'Armour Class'=integer
               {
+                description = "How hard the character is to hit. An attack hits on a total equal to or above it."  reference = ["srd", 177]
                 value =
                         ac(characterTable) + acBonus(characterTable)
 
@@ -98,6 +101,7 @@ basicsTable =table
               }
     'Initiative'=modifier
               {
+                description = "A Dexterity check rolled at the start of combat to set the turn order."  reference = ["srd", 184]
                 value='Ability scores'.'Dex'.Modifier +
                   jackBonus(characterTable) + alertBonus(characterTable) + initiativeBonus(characterTable)
                 valuedice= InitiativeRoll (characterTable)
@@ -105,11 +109,13 @@ basicsTable =table
               }
     'Passive Perception' = integer
         {
+          description = "10 plus the Perception modifier. Used when the character notices things without rolling."  reference = ["srd", 186]
           value = 10 + Skills.Perception.Modifier
           editable=none
         }
     Speed = integer
         {
+          description = "How far the character can move on their turn."  reference = ["srd", 188]
           value = max (0, raceSpeed (Class.Race) + speedBonus (characterTable) - 5 * Conditions.Exhaustion)
           render = distance (max (0, raceSpeed (Class.Race) + speedBonus (characterTable) - 5 * Conditions.Exhaustion))
           editable=none
@@ -117,11 +123,14 @@ basicsTable =table
     Size = raceSize (Class.Race)
     Darkvision = integer
         {
+          description = "The range at which the character sees in darkness as if in dim light."  reference = ["srd", 180]
           value = raceDarkvision (Class.Race)
           editable=none
         }
     'Proficiency bonus'= integer
-        {value= (first
+        {
+          description = "Added to D20 Tests the character is proficient in. It grows with level."  reference = ["srd", 8]
+          value= (first
          (filter
           ((x)->x.Level < characterTable.Class.Main.Levels + 1,levelTable)
           )).ProficiencyBonus
@@ -129,11 +138,13 @@ basicsTable =table
         }
     'Heroic Inspiration' = bool
         {
+          description = "Spend it to reroll any one die, and keep the new roll."  reference = ["srd", 183]
           default = false
           editable = live
         }
     Roll = selector
         {
+                description = "Roll two d20s for the next D20 Tests: keep the higher with Advantage, the lower with Disadvantage."  reference = ["srd", 7]
                 options = ["Disadvantage", "Normal", "Advantage"]
                 labels = ["Dis", "Normal", "Adv"]
                 colors = ["red", "white", "green"]

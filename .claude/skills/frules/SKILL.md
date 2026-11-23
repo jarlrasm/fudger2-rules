@@ -25,6 +25,8 @@ Read [reference.md](reference.md) for the full language before writing anything 
 6. Write a play guide, `guide.md` next to the system's files, and point to it with `"guide"` in the system's (or extension's) `rules.json` entry. It tells an AI gamemaster how to play: how rolls are judged, combat, damage and healing, and which sheet fields matter. Use your own words, and keep it short. The MCP's `get_rules` tool serves it.
 7. Validate by parsing (see below). Fix and repeat until it passes.
 
+Give the main stats a `description` (hover text). Give them a `reference` only where you have checked the page in a PDF the system ships: `python3 -I tools/sheet_references.py <book>.pdf "Heading@first-last" ...` prints the pages where a heading stands on its own line. Don't write page numbers from memory. If many fields share one page, put the reference on their section only.
+
 ## Validate
 
 The Elm test suite parses every system listed in `rules.json`, resolving `#include`s, and reports the line and column of the first parse error:

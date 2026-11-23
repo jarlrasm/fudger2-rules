@@ -42,26 +42,27 @@ conditionEffects (blinded, charmed, deafened, frightened, grappled, incapacitate
 
 conditionsTable = table
 {
+    description = "Conditions on the character, and what they do."  reference = ["srd", 179]
     tableLayout = layout
     {
         columns = 3
     }
-    Blinded = bool { default = false  editable = live  indicator = "#555555" }
-    Charmed = bool { default = false  editable = live  indicator = "#8e5cc4" }
-    Deafened = bool { default = false  editable = live  indicator = "#555555" }
-    Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
-    Grappled = bool { default = false  editable = live  indicator = "#e8913a" }
-    Incapacitated = bool { default = false  editable = live  indicator = "#d4b106" }
-    Invisible = bool { default = false  editable = live  indicator = "#3a7bd5" }
-    Paralyzed = bool { default = false  editable = live  indicator = "#8e5cc4" }
-    Petrified = bool { default = false  editable = live  indicator = "#555555" }
-    Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
-    Prone = bool { default = false  editable = live  indicator = "#e8913a" }
-    Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
-    Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
-    Unconscious = bool { default = false  editable = live  indicator = "#555555" }
-    Exhaustion = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live  indicator = "#d64545" }
-    Concentration = string { editable = live  indicator = "#3a7bd5"  indicatorLabel = "Concentrating" }
+    Blinded = bool { description = "Can't see. Attacks against it have Advantage, and its attacks have Disadvantage."  reference = ["srd", 177]  default = false  editable = live  indicator = "#555555" }
+    Charmed = bool { description = "Can't attack the charmer, who has Advantage on social checks against it."  reference = ["srd", 178]  default = false  editable = live  indicator = "#8e5cc4" }
+    Deafened = bool { description = "Can't hear, and fails checks that need hearing."  reference = ["srd", 181]  default = false  editable = live  indicator = "#555555" }
+    Frightened = bool { description = "Disadvantage on checks and attacks while it sees the source, and can't move closer to it."  reference = ["srd", 182]  default = false  editable = live  indicator = "#8e5cc4" }
+    Grappled = bool { description = "Speed 0, and Disadvantage on attacks against anyone but the grappler."  reference = ["srd", 182]  default = false  editable = live  indicator = "#e8913a" }
+    Incapacitated = bool { description = "Can't take actions, bonus actions or reactions, and loses Concentration."  reference = ["srd", 184]  default = false  editable = live  indicator = "#d4b106" }
+    Invisible = bool { description = "Can't be seen. Attacks against it have Disadvantage, and its attacks have Advantage."  reference = ["srd", 184]  default = false  editable = live  indicator = "#3a7bd5" }
+    Paralyzed = bool { description = "Incapacitated and can't move. Fails Str and Dex saves, and close hits are critical."  reference = ["srd", 186]  default = false  editable = live  indicator = "#8e5cc4" }
+    Petrified = bool { description = "Turned to stone. Incapacitated, resists all damage, and fails Str and Dex saves."  reference = ["srd", 186]  default = false  editable = live  indicator = "#555555" }
+    Poisoned = bool { description = "Disadvantage on attack rolls and ability checks."  reference = ["srd", 186]  default = false  editable = live  indicator = "#3fa34d" }
+    Prone = bool { description = "Lying down. Can only crawl, and its attacks have Disadvantage."  reference = ["srd", 186]  default = false  editable = live  indicator = "#e8913a" }
+    Restrained = bool { description = "Speed 0. Disadvantage on attacks and Dex saves, and attacks against it have Advantage."  reference = ["srd", 187]  default = false  editable = live  indicator = "#e8913a" }
+    Stunned = bool { description = "Incapacitated, fails Str and Dex saves, and attacks against it have Advantage."  reference = ["srd", 189]  default = false  editable = live  indicator = "#d4b106" }
+    Unconscious = bool { description = "Incapacitated and Prone, drops what it holds, and close hits are critical."  reference = ["srd", 191]  default = false  editable = live  indicator = "#555555" }
+    Exhaustion = integer { description = "Each level is -2 to D20 Tests and -5 ft of Speed. Level 6 is death."  reference = ["srd", 181]  default = 0  minvalue = 0  maxvalue = 6  editable = live  indicator = "#d64545" }
+    Concentration = string { description = "The spell being kept up. Damage calls for a Con save, and a new such spell ends it."  reference = ["srd", 179]  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Concentrating" }
     Effects = string
     {
         value = conditionEffects (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)

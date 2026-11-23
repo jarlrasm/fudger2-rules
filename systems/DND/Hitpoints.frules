@@ -8,18 +8,22 @@ maxHitpoints(classname,level,conModifier) =
 
 hitpoints = table
   {
+    description = "How much damage the character can take before dropping."  reference = ["srd", 16]
     Current=integer
               {
+                description = "Hit Points left. At 0 the character falls Unconscious."  reference = ["srd", 183]
                 editable=live
                 default=Max
               }
     Max=integer
               {
+                  description = "Hit Points when fully healed, from class, level and Constitution."  reference = ["srd", 183]
                   value=maxHitpoints (Class.Main.Name, Class.Main.Levels, 'Ability scores'.'Con'.Modifier)
                   editable=none
               }
     Temporary=integer
               {
+                description = "A buffer lost before Hit Points. It doesn't stack, and goes on a Long Rest."  reference = ["srd", 190]
                 editable=live
                 default=0
                 minvalue=0
@@ -33,18 +37,21 @@ hitpoints = table
               }
     'Hit dice' = slots
               {
+                description = "Spend these on a Short Rest to heal. They come back on a Long Rest."  reference = ["srd", 183]
                 number = Class.Main.Levels
                 allowedchange = increaseAndClear
                 editable = live
               }
     'Death save successes' = slots
               {
+                description = "At 0 Hit Points, a d20 of 10 or more is a success. Three make the character Stable."  reference = ["srd", 17]
                 number = 3
                 allowedchange = increaseAndClear
                 editable = live
               }
     'Death save failures' = slots
               {
+                description = "At 0 Hit Points, a d20 under 10 is a failure. Three, and the character dies."  reference = ["srd", 17]
                 number = 3
                 allowedchange = increaseAndClear
                 editable = live

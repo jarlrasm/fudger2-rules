@@ -531,6 +531,7 @@ Attributes = keyvalues
 - `editablekeys`: who can add or remove keys. `campaign` (the GM, per campaign) or `character` (the player, per character). Leave it out for fixed keys.
 - `valueType = enum { default possiblevalues valuedice }`: a value picked from a list. Stored as the index, shown as the text.
 - `valueType = custom { fields }`: each key gets those fields as columns. In them, `Key` is the row's key, unless the row has a field named `Key`.
+- `descriptions = { Key = "..." }` and `references = { Key = ["srd", 14] }`: hover text and page references per key, since keys have no field of their own. Quote keys with spaces.
 
 ### list
 
@@ -618,6 +619,8 @@ characterTable = ruleset { Hitpoints = hitpoints {} }
 | `visible` | `editor` (editor only), `live` (play view only), `none` (hidden), anything else is visible. Can be an expression, e.g. a function returning `visible` or `none`. |
 | `tableLayout = layout { }` | `columns` (1 to 5), `rowTitle = hidden`, `size = wide` |
 | `singular` | Label for one entry, used on add buttons |
+| `description` | Hover text on the field's or section's name, e.g. `description = "Raw physical power."`. One short sentence, in our own words. |
+| `reference` | A book page, `["srd", 6]`, or a list of them, `[["srd", 6], ["Core", 12]]`. The key is a `documents` key in a library the campaign has, including the system's built-in `libraries`; it opens that PDF at the page. Any other key is shown as text ("Core p. 12"). Shown when the reader turns on Page references. |
 
 `default` and `value` can reference other fields, e.g. `default = Max`.
 

@@ -29,6 +29,17 @@ characterTable = ruleset
       {
           singular = "Ability score"
           keys = ["Str","Dex","Con","Int","Wis","Cha" ]
+          description = "The six abilities. The modifier, half the score minus 5, is added to rolls that use it."
+          reference = ["srd", 5]
+          descriptions =
+          {
+              Str = "Strength: physical might."
+              Dex = "Dexterity: agility, reflexes and balance."
+              Con = "Constitution: health and stamina."
+              Int = "Intelligence: reasoning and memory."
+              Wis = "Wisdom: perceptiveness and mental fortitude."
+              Cha = "Charisma: confidence, poise and charm."
+          }
           valueType = custom
           {
               Score=integer
