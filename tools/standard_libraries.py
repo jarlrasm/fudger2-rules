@@ -128,10 +128,12 @@ def fudge():
         entities.append(entity(s, "Creature", name, text, {"characterTable": {
             "Attributes": attributes, "Skills": skills, "Gifts": gifts(gs), "Faults": gifts(fs),
         }}))
-    return library(
+    basics = library(
         "Fudge basics",
         "Weapons, armour, gear and creatures for Fudge, written for Fudger. Damage is the weapon's offensive factor and Damage Capacity the armour's defensive factor. Fudge is a trademark of Grey Ghost Press.",
         "/systems/Fudge/fudge.json", entities)
+    basics["documents"] = [{"key": "srd", "name": "Fudge System Reference Document", "url": "/systems/Fudge/Fudge-SRD.pdf", "public": True}]
+    return basics
 
 
 EDGE_CREATURES = [
