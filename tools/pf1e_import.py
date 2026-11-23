@@ -2,9 +2,11 @@
 
 PSRD-Data (https://github.com/devonjones/PSRD-Data) holds the Pathfinder
 Reference Document, Paizo's Open Game Content, as SQLite databases. This uses
-the Core Rulebook (book-cr.db) and Bestiary (book-b1.db).
+the Core Rulebook (book-cr.db), the magic items of Ultimate Equipment
+(book-ue.db) and the Bestiaries 1 to 4 (book-b1.db to book-b4.db). Where two
+books have an item or monster of the same name, the first book wins.
 
-    python3 tools/pf1e_import.py <dir with book-cr.db and book-b1.db> systems/pf1e/pf1e.json
+    python3 tools/pf1e_import.py <dir with the book-*.db files> systems/pf1e/pf1e.json
 """
 
 import html
@@ -270,13 +272,26 @@ def creatures(db):
         })
 
 
+def unique(entities):
+    seen, result = set(), []
+    for e in entities:
+        if (e["type"], e["name"].lower()) not in seen:
+            seen.add((e["type"], e["name"].lower()))
+            result.append(e)
+    return result
+
+
 core = sqlite3.connect(RAW / "book-cr.db")
-bestiary = sqlite3.connect(RAW / "book-b1.db")
-entities = [*weapons(core), *armor(core), *items(core), *spells(core), *feats(core), *creatures(bestiary)]
+equipment = sqlite3.connect(RAW / "book-ue.db")
+bestiaries = [sqlite3.connect(RAW / f"book-b{n}.db") for n in range(1, 5)]
+entities = unique([
+    *weapons(core), *armor(core), *items(core), *items(equipment), *spells(core), *feats(core),
+    *(creature for bestiary in bestiaries for creature in creatures(bestiary)),
+])
 entities.sort(key=lambda e: (e["type"], e["name"]))
 library = {
     "name": "Pathfinder 1e core (OGL)",
-    "description": "Weapons, armor, magic items, spells and feats from the Pathfinder Roleplaying Game Core Rulebook and monsters from the Bestiary, Open Game Content under the Open Game License v1.0a. Converted from PSRD-Data (https://github.com/devonjones/PSRD-Data). See the LICENSE file next to this library.",
+    "description": "Weapons, armor, magic items, spells and feats from the Pathfinder Roleplaying Game Core Rulebook, magic items from Ultimate Equipment and monsters from Bestiaries 1 to 4, Open Game Content under the Open Game License v1.0a. Converted from PSRD-Data (https://github.com/devonjones/PSRD-Data). See the LICENSE file next to this library.",
     "url": "/systems/pf1e/pf1e.json",
     "gamemaster": "",
     "entities": entities,
