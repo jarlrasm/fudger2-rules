@@ -39,15 +39,15 @@ plainD100 = dgRoll (0)
 
 statistic (base) = custom
 {
-    Score = integer { default = base }
-    'x5' = integer { value = Score * 5  valuedice = dgDice (characterTable)  editable = none }
-    Feature = string {}
+    Score = integer { description = "Statistic score, usually 3 to 18." default = base }
+    'x5' = integer { description = "Five times the score, the percentage to roll under for a statistic test." value = Score * 5  valuedice = dgDice (characterTable)  editable = none }
+    Feature = string { description = "A word or two for a very high or low score, such as quick or frail." }
 }
 
 skill (base) = custom
 {
-    Value = integer { default = base  valuedice = dgDice (characterTable) }
-    Failed = bool { default = false  editable = live }
+    Value = integer { description = "Skill percentage. Roll d100 at or under it to succeed." default = base  valuedice = dgDice (characterTable) }
+    Failed = bool { description = "Tick after a failed roll. Failed skills may improve at the end of the operation." default = false  editable = live }
 }
 
 noSkill = { Value = 0 }
@@ -83,6 +83,7 @@ characterTable = ruleset
         Education = string {}
         Modifier = selector
         {
+            description = "Bonus or penalty to the next percentile roll, from 20 down to minus 20 and up."
             options = ["Minus 40", "Minus 20", "Normal", "Plus 20", "Plus 40"]
             labels = ["-40", "-20", "Normal", "+20", "+40"]
             colors = ["red", "red", "white", "green", "green"]
@@ -91,11 +92,12 @@ characterTable = ruleset
             editable = live
             save = nosave
         }
-        Initiative = integer { value = Statistics.Dexterity.Score  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Initiative = integer { description = "Acting order in combat: highest DEX acts first." value = Statistics.Dexterity.Score  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
     }
 
     Statistics = table
     {
+        description = "The six statistics. Tests roll d100 under five times the score."
         tableLayout = layout { }
         Strength = statistic (10)
         Constitution = statistic (10)
@@ -110,50 +112,55 @@ characterTable = ruleset
         tableLayout = layout { columns = 2 }
         'Hit Points' = table
         {
+            description = "Hit points from STR and CON. At 2 or less you are unconscious or dying."
             Maximum = integer { value = (Statistics.Strength.Score + Statistics.Constitution.Score + 1) / 2  editable = none }
-            Current = integer { default = Maximum  editable = live }
+            Current = integer { description = "Current hit points." default = Maximum  editable = live }
             Wounded = string { value = if Current < 3 then "Unconscious or dying" else ""  visible = none  indicator = "#d64545" }
         }
         'Willpower Points' = table
         {
+            description = "Willpower, from POW. Spend it to push yourself or project a bond."
             Maximum = integer { value = Statistics.Power.Score  editable = none }
-            Current = integer { default = Maximum  editable = live }
+            Current = integer { description = "Current willpower points. At 0 the agent collapses." default = Maximum  editable = live }
         }
         Sanity = table
         {
-            Maximum = integer { value = 99 - skillValue (characterTable, "Unnatural")  editable = none }
-            Current = integer { default = Statistics.Power.Score * 5  editable = live  valuedice = dgDice (characterTable) }
-            'Breaking Point' = integer { default = Statistics.Power.Score * 4  editable = live }
+            description = "Sanity points. Losing them to the unnatural, violence or helplessness breaks the mind."
+            Maximum = integer { description = "Highest Sanity you can have: 99 minus Unnatural." value = 99 - skillValue (characterTable, "Unnatural")  editable = none }
+            Current = integer { description = "Current Sanity. Roll under it when facing horror." default = Statistics.Power.Score * 5  editable = live  valuedice = dgDice (characterTable) }
+            'Breaking Point' = integer { description = "When Sanity falls to this, the agent gains a disorder and a new breaking point." default = Statistics.Power.Score * 4  editable = live }
             'Temporary Insanity' = bool { default = false  editable = live  indicator = "#8e5cc4" }
         }
         Adapted = table
         {
-            Violence = slots { number = 3  editable = live  labels = ["1", "2", "3"] }
-            Helplessness = slots { number = 3  editable = live  labels = ["1", "2", "3"] }
+            Violence = slots { description = "Marks of violence suffered. Three and the agent is adapted to it." number = 3  editable = live  labels = ["1", "2", "3"] }
+            Helplessness = slots { description = "Marks of helplessness suffered. Three and the agent is adapted to it." number = 3  editable = live  labels = ["1", "2", "3"] }
         }
     }
 
     Psychology = table
     {
         tableLayout = layout { }
-        Motivations = string { multiline = true }
+        Motivations = string { description = "What keeps the agent going, and the disorders that haunt them." multiline = true }
         Disorders = string { multiline = true }
     }
 
     Bonds = list
     {
+        description = "The people who matter most to the agent. Spend bond points to soak sanity loss."
         singular = "Bond"
         editable = character
         valueType = custom
         {
             Name = string {}
-            Score = integer { default = 10  editable = live }
-            Damaged = bool { default = false  editable = live }
+            Score = integer { description = "Strength of the bond. It falls when the bond is used or neglected." default = 10  editable = live }
+            Damaged = bool { description = "Tick when the bond has been damaged this operation." default = false  editable = live }
         }
     }
 
     Skills = table
     {
+        description = "Skills with starting values. Roll d100 at or under the value."
         tableLayout = layout { columns = 3  size = wide }
         Accounting = skill (10)
         Alertness = skill (20)
@@ -201,6 +208,7 @@ characterTable = ruleset
 
     'Other Skills' = keyvalues
     {
+        description = "Extra skills such as foreign languages, crafts and sciences."
         singular = "Skill"
         editablekeys = character
         keys = ["Foreign Language"]
@@ -208,7 +216,7 @@ characterTable = ruleset
         valueType = custom
         {
             Value = integer { default = 0  valuedice = dgDice (characterTable) }
-            Failed = bool { default = false  editable = live }
+            Failed = bool { description = "Tick after a failed roll. Failed skills may improve at the end of the operation." default = false  editable = live }
         }
     }
 
@@ -263,13 +271,13 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Hit Points' = integer { default = 10 }
-        'Current HP' = integer { default = 10  editable = live }
+        'Hit Points' = integer { description = "Hit points when unhurt." default = 10 }
+        'Current HP' = integer { description = "Current hit points." default = 10  editable = live }
         'Willpower Points' = integer { default = 10 }
-        Armor = integer { default = 0 }
-        Alertness = integer { default = 40  valuedice = plainD100 }
-        Dodge = integer { default = 30  valuedice = plainD100 }
-        'Sanity Loss' = string {}
+        Armor = integer { description = "Reduces damage from each hit." default = 0 }
+        Alertness = integer { description = "Skill for noticing agents and danger." default = 40  valuedice = plainD100 }
+        Dodge = integer { description = "Skill for dodging attacks." default = 30  valuedice = plainD100 }
+        'Sanity Loss' = string { description = "Sanity lost on seeing the creature: on a success, and on a failure." }
         Initiative = integer { value = Statistics.DEX  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
     }
     Attacks = list
