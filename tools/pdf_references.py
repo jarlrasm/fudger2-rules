@@ -28,6 +28,7 @@ parser.add_argument("--url", required=True)
 parser.add_argument("--pages", action="append", default=[], help="Type=first-last")
 parser.add_argument("--prefix", action="append", default=[], help="a type whose items may start a line")
 parser.add_argument("--label", action="append", default=[], help="Type=text that may stand before a name, such as Extras=Extra: ")
+parser.add_argument("--entry", action="append", default=[], help="Type=regex that the text after a name (the rest of its line and the next line) must match, to tell an entry from a mention in a list")
 parser.add_argument("--aliases", help="a JSON file of item name to other names to look for, such as the heading a variant is listed under")
 parser.add_argument("--document-only", action="store_true")
 parser.add_argument("libraries", nargs="+")
@@ -56,14 +57,33 @@ def ranges():
 ALIASES = json.load(open(args.aliases, encoding="utf-8")) if args.aliases else {}
 
 
+ENTRIES = {spec.partition("=")[0]: re.compile(spec.partition("=")[2], re.I) for spec in args.entry}
+
+
 def page_of(entity, book, limits):
-    found = page_for(entity["name"], entity, book, limits)
-    for alias in ALIASES.get(entity["name"], []):
-        found = found or page_for(alias, entity, book, limits)
-    return found
+    names = [entity["name"]] + ALIASES.get(entity["name"], [])
+    entry = ENTRIES.get(entity["type"])
+    if entry:
+        for name in names:
+            found = page_for(name, entity, book, limits, entry)
+            if found:
+                return found
+    for name in names:
+        found = page_for(name, entity, book, limits)
+        if found:
+            return found
+    return None
 
 
-def page_for(item_name, entity, book, limits):
+def entry_at(lines, index, name, entry):
+    """Whether the text after the name at this line looks like the entry
+    itself rather than a mention in a list or table."""
+    rest = lines[index][len(name):] if lines[index].startswith(name) else ""
+    following = lines[index + 1] if index + 1 < len(lines) else ""
+    return bool(entry.match(rest + "\n" + following))
+
+
+def page_for(item_name, entity, book, limits, entry=None):
     name = normal(item_name)
     first, last = limits.get(entity["type"], (1, len(book)))
     prefix = entity["type"] in args.prefix
@@ -71,6 +91,11 @@ def page_for(item_name, entity, book, limits):
     wanted = [name] + [label + name for label in labels]
     for number in range(first, min(last, len(book)) + 1):
         lines = book[number - 1]
+        if entry:
+            for index, line in enumerate(lines):
+                if any(line.startswith(w) for w in wanted) and entry_at(lines, index, next(w for w in wanted if line.startswith(w)), entry):
+                    return number
+            continue
         # A long name in a narrow column wraps onto the next line.
         for line in lines + [a + " " + b for a, b in zip(lines, lines[1:])]:
             line = line.rstrip("*").rstrip()
