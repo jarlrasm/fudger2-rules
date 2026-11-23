@@ -65,20 +65,20 @@ traitRoll (char, die) = ask ("Target number", swAskedRoll (dieSides (die), char.
 
 creatureTrait (startDie) = custom
 {
-    Die = string { default = startDie  keys = dieTypes }
-    Roll = integer { value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die }
+    Die = string { description = "Trait die from d4 to d12. Higher dice mean better odds of 4 or more." default = startDie  keys = dieTypes }
+    Roll = integer { description = "Roll the trait die, plus the wild die for wild cards, and keep the best. 4 succeeds." value = dieSides (Die)  valuedice = creatureRoll (Die, Stats.'Wild Card', Stats.Wounds)  editable = none  render = Die }
 }
 
 trait (startDie) = custom
 {
-    Die = string { default = startDie  keys = dieTypes }
-    Roll = integer { value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
+    Die = string { description = "Attribute die from d4 to d12." default = startDie  keys = dieTypes }
+    Roll = integer { description = "Roll the trait die and a d6 wild die, keep the best. 4 succeeds, each 4 over is a raise." value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
 }
 
 skill (startDie) = custom
 {
-    Die = string { default = startDie  keys = skillDieTypes }
-    Roll = integer { value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
+    Die = string { description = "Skill die from d4 to d12. Unskilled rolls a d4 at -2." default = startDie  keys = skillDieTypes }
+    Roll = integer { description = "Roll the skill die and a d6 wild die, keep the best. 4 succeeds, each 4 over is a raise." value = dieSides (Die)  valuedice = traitRoll (characterTable, Die)  editable = none  render = Die }
 }
 
 noSkill = { Die = "Unskilled" }
@@ -143,18 +143,19 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Concept = string {}
+        Concept = string { description = "A short phrase for who the character is." }
         Ancestry = string { default = "Human" }
-        Rank = string { default = "Novice"  keys = ["Novice", "Seasoned", "Veteran", "Heroic", "Legendary"] }
-        Advances = integer { default = 0  editable = live }
-        'Wild Card' = bool { default = true }
-        Modifier = modifier { default = 0  editable = live }
-        Bennies = integer { default = 3  minvalue = 0  editable = live  indicator = "#d4b106" }
-        Conviction = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Rank = string { description = "Rank rises every four advances and opens up new edges and powers." default = "Novice"  keys = ["Novice", "Seasoned", "Veteran", "Heroic", "Legendary"] }
+        Advances = integer { description = "Advances taken, earned at the end of sessions." default = 0  editable = live }
+        'Wild Card' = bool { description = "Wild cards are heroes and major villains: they roll a wild die and take three wounds." default = true }
+        Modifier = modifier { description = "Bonus or penalty for the next trait roll." default = 0  editable = live }
+        Bennies = integer { description = "Spend a benny to reroll a trait test or soak wounds." default = 3  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Conviction = bool { description = "Conviction adds a d6 to trait and damage rolls for a turn." default = false  editable = live  indicator = "#3a7bd5" }
     }
 
     Attributes = table
     {
+        description = "The five attributes, rated as dice."
         tableLayout = layout { columns = 5  size = wide }
         Agility = trait ("d6")
         Smarts = trait ("d6")
@@ -165,33 +166,36 @@ characterTable = ruleset
 
     Derived = table
     {
+        description = "Pace, Parry, Toughness and other derived values."
         tableLayout = layout { columns = 4  size = wide }
-        Pace = integer { default = 6 }
-        Parry = integer { value = 2 + (if skillDie (characterTable, "Fighting") == "Unskilled" then 0 else dieSides (skillDie (characterTable, "Fighting")) / 2 + dieBonus (skillDie (characterTable, "Fighting")) / 2) + 'Parry Bonus'  editable = none }
+        Pace = integer { description = "Movement in inches per turn." default = 6 }
+        Parry = integer { description = "What attackers must reach to hit you in melee: 2 plus half Fighting." value = 2 + (if skillDie (characterTable, "Fighting") == "Unskilled" then 0 else dieSides (skillDie (characterTable, "Fighting")) / 2 + dieBonus (skillDie (characterTable, "Fighting")) / 2) + 'Parry Bonus'  editable = none }
         'Parry Bonus' = integer { default = 0 }
-        Armor = integer { default = 0 }
-        Toughness = integer { value = 2 + dieSides (Attributes.Vigor.Die) / 2 + dieBonus (Attributes.Vigor.Die) / 2 + Armor + 'Toughness Bonus'  editable = none }
+        Armor = integer { description = "Armor worn, added to Toughness." default = 0 }
+        Toughness = integer { description = "Damage needed to shake you: 2 plus half Vigor, plus armor." value = 2 + dieSides (Attributes.Vigor.Die) / 2 + dieBonus (Attributes.Vigor.Die) / 2 + Armor + 'Toughness Bonus'  editable = none }
         'Toughness Bonus' = integer { default = 0 }
-        Running = integer { default = 6  valuedice = 1d6 }
-        Initiative = integer { default = 0  valuedice = actionCard }
+        Running = integer { description = "Extra movement when running: add a d6 to Pace." default = 6  valuedice = 1d6 }
+        Initiative = integer { description = "Action card drawn each round. Highest card acts first." default = 0  valuedice = actionCard }
     }
 
     Status = table
     {
+        description = "Shaken, wounds, fatigue and other states. Penalties stack."
         tableLayout = layout { columns = 4  size = wide }
-        Shaken = bool { default = false  editable = live  indicator = "#d4b106" }
-        Wounds = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
-        Fatigue = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live  indicator = "#e8913a" }
-        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
-        Distracted = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Vulnerable = bool { default = false  editable = live  indicator = "#e8913a" }
-        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
-        Entangled = bool { default = false  editable = live  indicator = "#e8913a" }
-        Penalty = integer { value = penaltyOf (characterTable)  editable = none }
+        Shaken = bool { description = "Shaken: you can only move and must recover before acting fully." default = false  editable = live  indicator = "#d4b106" }
+        Wounds = integer { description = "Each wound gives -1 to rolls. A wild card with more than three is incapacitated." default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
+        Fatigue = integer { description = "Each level of fatigue gives -1 to rolls. Two is exhausted, three incapacitated." default = 0  minvalue = 0  maxvalue = 3  editable = live  indicator = "#e8913a" }
+        Incapacitated = bool { description = "Out of the fight, possibly bleeding out." default = false  editable = live  indicator = "#555555" }
+        Distracted = bool { description = "Distracted: -2 to all trait rolls until the end of your next turn." default = false  editable = live  indicator = "#8e5cc4" }
+        Vulnerable = bool { description = "Vulnerable: attacks against you get +2." default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { description = "Stunned: you are prone, can't act, and become distracted and vulnerable." default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { description = "Entangled: you can't move and are distracted." default = false  editable = live  indicator = "#e8913a" }
+        Penalty = integer { description = "Total penalty to rolls from wounds and fatigue." value = penaltyOf (characterTable)  editable = none }
     }
 
     Skills = table
     {
+        description = "Skills, rated as dice. Core skills start at d4."
         tableLayout = layout { columns = 3  size = wide }
         Athletics = skill ("d4")
         'Common Knowledge' = skill ("d4")
@@ -229,6 +233,7 @@ characterTable = ruleset
 
     Hindrances = list
     {
+        description = "Flaws that make life harder and earn extra points at creation."
         tableLayout = layout { size = wide }
         source = secondary.Hindrances
         singular = "Hindrance"
@@ -237,6 +242,7 @@ characterTable = ruleset
 
     Edges = list
     {
+        description = "Special abilities and talents."
         tableLayout = layout { size = wide }
         source = secondary.Edges
         singular = "Edge"
@@ -263,9 +269,9 @@ characterTable = ruleset
     Powers = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Arcane Background' = string {}
-        'Power Points' = integer { default = 0 }
-        'Current Power Points' = integer { default = 'Power Points'  minvalue = 0  editable = live }
+        'Arcane Background' = string { description = "The source of the character's powers, such as magic or weird science." }
+        'Power Points' = integer { description = "Power points when rested, spent to activate powers." default = 0 }
+        'Current Power Points' = integer { description = "Power points left." default = 'Power Points'  minvalue = 0  editable = live }
     }
 
     'Known Powers' = list
@@ -287,8 +293,8 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 2 }
-        Money = integer { default = 500  editable = live }
-        'Load Limit' = integer { value = (dieSides (Attributes.Strength.Die) - 2) * 10 + dieBonus (Attributes.Strength.Die) * 20  editable = none }
+        Money = integer { description = "Money on hand." default = 500  editable = live }
+        'Load Limit' = integer { description = "Weight you can carry without penalty: from Strength." value = (dieSides (Attributes.Strength.Die) - 2) * 10 + dieBonus (Attributes.Strength.Die) * 20  editable = none }
     }
 }
 
@@ -297,6 +303,7 @@ creatureTable = ruleset
     rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Traits, Stats] }
     Traits = table
     {
+        description = "The creature's five attributes, rated as dice."
         tableLayout = layout { columns = 5  size = wide }
         Agility = creatureTrait ("d6")
         Smarts = creatureTrait ("d6")
@@ -307,16 +314,17 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Wild Card' = bool { default = false }
-        Pace = integer { default = 6 }
-        Parry = integer { default = 5 }
-        Toughness = integer { default = 5 }
+        'Wild Card' = bool { description = "Wild cards roll a wild die and take three wounds before falling." default = false }
+        Pace = integer { description = "Movement in inches per turn." default = 6 }
+        Parry = integer { description = "What attackers must reach to hit in melee." default = 5 }
+        Toughness = integer { description = "Damage needed to shake the creature." default = 5 }
         Shaken = bool { default = false  editable = live  indicator = "#d4b106" }
-        Wounds = integer { default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
-        Initiative = integer { default = 0  valuedice = actionCard }
+        Wounds = integer { description = "Wounds taken. Extras are out at one." default = 0  minvalue = 0  maxvalue = 4  editable = live  indicator = "#d64545" }
+        Initiative = integer { description = "Action card drawn each round." default = 0  valuedice = actionCard }
     }
     'Skill Dice' = keyvalues
     {
+        description = "The creature's main skill dice."
         singular = "Skill"
         editablekeys = character
         keys = ["Fighting", "Notice", "Shooting"]
