@@ -40,9 +40,9 @@ trainingEases (training) =
 
 pool (start) = custom
 {
-    Pool = integer { default = start  minvalue = 0 }
-    Current = integer { default = Pool  minvalue = 0  editable = live }
-    Edge = integer { default = 0  minvalue = 0 }
+    Pool = integer { description = "Pool size when fully rested." default = start  minvalue = 0 }
+    Current = integer { description = "Points left in the pool. Spend them on Effort and lose them to damage." default = Pool  minvalue = 0  editable = live }
+    Edge = integer { description = "Edge cuts the cost of spending from this pool, one point per point of Edge." default = 0  minvalue = 0 }
 }
 
 characterTable = ruleset
@@ -51,21 +51,22 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Descriptor = string {}
-        Type = string { keys = ["Warrior", "Adept", "Explorer", "Speaker"] }
-        Focus = string {}
+        Descriptor = string { description = "The adjective in your sentence: how the character goes about things." }
+        Type = string { description = "The noun in your sentence: the character's basic role." keys = ["Warrior", "Adept", "Explorer", "Speaker"] }
+        Focus = string { description = "The verb in your sentence: what makes the character unique." }
         Flavor = string {}
-        Tier = integer { default = 1  minvalue = 1  maxvalue = 6 }
-        XP = integer { default = 0  editable = live }
-        Effort = integer { default = 0  minvalue = 0  maxvalue = 6  editable = live }
-        'Max Effort' = integer { value = Tier  editable = none }
-        Armor = integer { default = 0 }
-        Cypher = integer { default = 2 }
-        Shins = integer { default = 0  editable = live }
+        Tier = integer { description = "How far the character has advanced, from 1 to 6." default = 1  minvalue = 1  maxvalue = 6 }
+        XP = integer { description = "Experience points. Spend 4 to advance, or use them to reroll." default = 0  editable = live }
+        Effort = integer { description = "Levels of Effort to apply to the next roll. Each eases the task one step." default = 0  minvalue = 0  maxvalue = 6  editable = live }
+        'Max Effort' = integer { description = "The most Effort you can apply to one task: equal to your tier." value = Tier  editable = none }
+        Armor = integer { description = "Reduces damage from each hit." default = 0 }
+        Cypher = integer { description = "How many cyphers you can carry at once." default = 2 }
+        Shins = integer { description = "Money." default = 0  editable = live }
     }
 
     Pools = table
     {
+        description = "Might, Speed and Intellect pools: health, stamina and the points you spend."
         tableLayout = layout { columns = 3  size = wide }
         Might = pool (10)
         Speed = pool (10)
@@ -74,9 +75,10 @@ characterTable = ruleset
 
     'Damage Track' = table
     {
+        description = "When a pool hits 0 you move one step down the track."
         tableLayout = layout { columns = 4  size = wide }
-        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
-        Debilitated = bool { default = false  editable = live  indicator = "#d64545" }
+        Impaired = bool { description = "Impaired: Effort costs 1 more point and rolls do not give special effects." default = false  editable = live  indicator = "#d4b106" }
+        Debilitated = bool { description = "Debilitated: you can only move a short distance." default = false  editable = live  indicator = "#d64545" }
         Dead = bool { default = false  editable = live  indicator = "#555555" }
         State = string { value = if Dead then "Dead" else if Debilitated then "Debilitated" else if Impaired then "Impaired" else "Hale" }
     }
@@ -84,33 +86,35 @@ characterTable = ruleset
     'Recovery Rolls' = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Recovery Bonus' = integer { value = Character.Tier  valuedice = 1d6  editable = none }
-        Used = slots { number = 4  editable = live  labels = ["1 action", "10 min", "1 hour", "10 hours"] }
+        'Recovery Bonus' = integer { description = "Points regained per recovery roll: 1d6 plus your tier." value = Character.Tier  valuedice = 1d6  editable = none }
+        Used = slots { description = "Recovery rolls used today. Each takes longer than the last." number = 4  editable = live  labels = ["1 action", "10 min", "1 hour", "10 hours"] }
     }
 
     Tasks = table
     {
+        description = "Steps by which each kind of task is eased, from training and assets."
         tableLayout = layout { columns = 3  size = wide }
-        Might = integer { default = 0  valuedice = cypherDice (characterTable) }
-        Speed = integer { default = 0  valuedice = cypherDice (characterTable) }
-        Intellect = integer { default = 0  valuedice = cypherDice (characterTable) }
-        Initiative = integer { default = 0  valuedice = 1d20 }
-        'Speed Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
-        'Might Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
-        'Intellect Defense' = integer { default = 0  valuedice = cypherDice (characterTable) }
+        Might = integer { description = "Steps by which tasks of strength and endurance are eased." default = 0  valuedice = cypherDice (characterTable) }
+        Speed = integer { description = "Steps by which tasks of quickness and agility are eased." default = 0  valuedice = cypherDice (characterTable) }
+        Intellect = integer { description = "Steps by which tasks of thought and will are eased." default = 0  valuedice = cypherDice (characterTable) }
+        Initiative = integer { description = "Roll at the start of combat. Beat the foes' target number to act first." default = 0  valuedice = 1d20 }
+        'Speed Defense' = integer { description = "Steps by which dodging attacks is eased." default = 0  valuedice = cypherDice (characterTable) }
+        'Might Defense' = integer { description = "Steps by which resisting poison, disease and force is eased." default = 0  valuedice = cypherDice (characterTable) }
+        'Intellect Defense' = integer { description = "Steps by which resisting mental attacks is eased." default = 0  valuedice = cypherDice (characterTable) }
     }
 
     Skills = keyvalues
     {
+        description = "Skills. Training eases a task one step, specialization two; inability hinders it."
         singular = "Skill"
         editablekeys = character
         keys = []
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Training = string { default = "Trained"  keys = ["Inability", "Practiced", "Trained", "Specialized"] }
-            Assets = integer { default = 0  minvalue = 0  maxvalue = 2 }
-            Roll = integer { value = trainingEases (Training) + Assets  valuedice = cypherDice (characterTable)  editable = none }
+            Training = string { description = "Inability hinders the task, trained eases it one step, specialized two." default = "Trained"  keys = ["Inability", "Practiced", "Trained", "Specialized"] }
+            Assets = integer { description = "Assets ease the task one step each, at most two." default = 0  minvalue = 0  maxvalue = 2 }
+            Roll = integer { description = "Total steps by which the task is eased." value = trainingEases (Training) + Assets  valuedice = cypherDice (characterTable)  editable = none }
         }
     }
 
@@ -137,6 +141,7 @@ characterTable = ruleset
 
     Cyphers = list
     {
+        description = "One-use devices with strange powers. Carrying too many is dangerous."
         tableLayout = layout { size = wide }
         source = secondary.Cyphers
         singular = "Cypher"
@@ -180,12 +185,12 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        Level = integer { default = 3  minvalue = 1  maxvalue = 10 }
-        'Target Number' = integer { value = Level * 3  editable = none }
-        Health = integer { default = 9 }
-        'Current Health' = integer { default = Health  editable = live }
-        Damage = integer { default = 3 }
-        Armor = integer { default = 0 }
+        Level = integer { description = "The creature's level from 1 to 10. Everything about it uses this number." default = 3  minvalue = 1  maxvalue = 10 }
+        'Target Number' = integer { description = "What players must roll to affect the creature: three times its level." value = Level * 3  editable = none }
+        Health = integer { description = "Health when unhurt." default = 9 }
+        'Current Health' = integer { description = "Current health. At 0 the creature is defeated." default = Health  editable = live }
+        Damage = integer { description = "Damage dealt by a hit." default = 3 }
+        Armor = integer { description = "Reduces damage from each hit." default = 0 }
         Movement = string { default = "Short" }
         Down = string { value = if 'Current Health' < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
     }
