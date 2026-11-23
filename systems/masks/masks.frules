@@ -52,35 +52,38 @@ characterTable = ruleset
         'Hero name' = string {}
         'Real name' = string {}
         Look = string {}
-        Abilities = string { multiline = true }
-        Potential = slots { number = 5  editable = live  allowedchange = increaseAndClear }
-        Forward = modifier { default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
-        'Team pool' = integer { default = 0  minvalue = 0  editable = live }
+        Abilities = string { description = "Your powers and what the hero can do with them." multiline = true }
+        Potential = slots { description = "Potential, marked on misses and some moves. Full means an advancement." number = 5  editable = live  allowedchange = increaseAndClear }
+        Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        'Team pool' = integer { description = "Team points, gained when the team comes together and spent to help." default = 0  minvalue = 0  editable = live }
     }
 
     Labels = table
     {
+        description = "Labels: how the hero sees themselves. Others can shift them up and down."
         tableLayout = layout { columns = 5  size = wide }
-        Danger = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
-        Freak = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
-        Savior = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
-        Superior = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
-        Mundane = modifier { default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Danger = modifier { description = "Danger: how strong and threatening you are." default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Freak = modifier { description = "Freak: how strange and powerful you are." default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Savior = modifier { description = "Savior: how much you protect and defend others." default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Superior = modifier { description = "Superior: how smart and capable you are." default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
+        Mundane = modifier { description = "Mundane: how normal and human you are." default = 0  minvalue = -3  maxvalue = 4  editable = live  valuedice = masksDice (characterTable) }
     }
 
     Conditions = table
     {
+        description = "Emotional conditions. Each gives -2 to some moves. Mark all five and you are taken out."
         tableLayout = layout { columns = 5  size = wide }
-        Afraid = bool { default = false  editable = live  indicator = "#8e5cc4" }
-        Angry = bool { default = false  editable = live  indicator = "#d64545" }
-        Guilty = bool { default = false  editable = live  indicator = "#555555" }
-        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
-        Insecure = bool { default = false  editable = live  indicator = "#d4b106" }
+        Afraid = bool { description = "Afraid: -2 to directly engage a threat." default = false  editable = live  indicator = "#8e5cc4" }
+        Angry = bool { description = "Angry: -2 to comfort or support and to pierce the mask." default = false  editable = live  indicator = "#d64545" }
+        Guilty = bool { description = "Guilty: -2 to provoke and to assess the situation." default = false  editable = live  indicator = "#555555" }
+        Hopeless = bool { description = "Hopeless: -2 to unleash your powers." default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { description = "Insecure: -2 to defend someone and to reject influence." default = false  editable = live  indicator = "#d4b106" }
         Out = string { value = if conditionsMarked (characterTable) == 5 then "Taken out" else ""  visible = none  indicator = "#d64545" }
     }
 
     'Basic Moves' = table
     {
+        description = "The moves every hero has, with the label they roll. 10+ strong hit, 7-9 weak hit."
         tableLayout = layout { columns = 2  size = wide }
         'Directly Engage a Threat' = modifier { value = Labels.Danger - penalty (Conditions.Afraid)  valuedice = masksDice (characterTable)  editable = none  action = melee  reach = 2 }
         'Unleash Your Powers' = modifier { value = Labels.Freak - penalty (Conditions.Hopeless)  valuedice = masksDice (characterTable)  editable = none }
@@ -89,18 +92,19 @@ characterTable = ruleset
         'Provoke Someone' = modifier { value = Labels.Superior - penalty (Conditions.Guilty)  valuedice = masksDice (characterTable)  editable = none }
         'Comfort or Support' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
         'Pierce the Mask' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
-        'Take a Powerful Blow' = modifier { value = conditionsMarked (characterTable)  valuedice = powerfulBlow  editable = none }
+        'Take a Powerful Blow' = modifier { description = "Roll when hit hard, plus the conditions you have marked. Higher is worse." value = conditionsMarked (characterTable)  valuedice = powerfulBlow  editable = none }
     }
 
     Influence = list
     {
+        description = "Who has influence over you, and over whom you have influence."
         singular = "Has influence over me"
         editable = live
         valueType = custom
         {
             Name = string {}
-            'Over me' = bool { default = true }
-            'I have over them' = bool { default = false }
+            'Over me' = bool { description = "They have influence over you: they can shift your labels." default = true }
+            'I have over them' = bool { description = "You have influence over them." default = false }
         }
     }
 
@@ -116,7 +120,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2  size = wide }
         'Playbook feature' = string { multiline = true }
-        'Moment of truth' = string { multiline = true }
+        'Moment of truth' = string { description = "What happens when you unmask your true self, once only." multiline = true }
         Advancements = string { multiline = true }
         'When our team first came together' = string { multiline = true }
     }
@@ -129,7 +133,7 @@ villainTable = ruleset
     {
         tableLayout = layout { columns = 3  size = wide }
         Type = string { default = "Villain"  keys = ["Villain", "Henchman", "Mook", "Mook group", "Monster", "Ally", "Civilian"] }
-        Drive = string {}
+        Drive = string { description = "What the villain wants." }
         Abilities = string { multiline = true }
         Moves = string { multiline = true }
     }
