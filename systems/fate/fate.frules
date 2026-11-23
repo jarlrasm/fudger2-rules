@@ -46,45 +46,45 @@ characterTable = ruleset
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Refresh = integer { description = "Fate points you start each session with." default = 3 }
-        'Fate Points' = integer { description = "Spend one to invoke an aspect for +2 or a reroll. Gain one when an aspect is compelled." default = 3  minvalue = 0  editable = live }
+        Refresh = integer { description = "Fate points you start each session with." reference = ["core", 43] default = 3 }
+        'Fate Points' = integer { description = "Spend one to invoke an aspect for +2 or a reroll. Gain one when an aspect is compelled." reference = ["core", 6] default = 3  minvalue = 0  editable = live }
         Description = string { multiline = true }
     }
 
     Aspects = table
     {
-        description = "Short phrases that are true about the character, invoked for bonuses or compelled for trouble."
+        description = "Short phrases that are true about the character, invoked for bonuses or compelled for trouble." reference = ["core", 30]
         tableLayout = layout { columns = 1  size = wide }
-        'High Concept' = string { description = "The core of who the character is, in one phrase." }
-        Trouble = string { description = "What keeps complicating the character's life." }
-        'Relationship' = string { description = "A tie to another player character." }
+        'High Concept' = string { description = "The core of who the character is, in one phrase." reference = ["core", 17] }
+        Trouble = string { description = "What keeps complicating the character's life." reference = ["core", 18] }
+        'Relationship' = string { description = "A tie to another player character." reference = ["core", 22] }
         'Other Aspect' = string {}
         'Another Aspect' = string {}
     }
 
     Skills = table
     {
-        description = "Skills on the ladder. Roll 4dF and add the rating."
+        description = "Skills on the ladder. Roll 4dF and add the rating." reference = ["core", 51]
         tableLayout = layout { columns = 3  size = wide }
-        Athletics = modifier { description = "Running, climbing, jumping and dodging." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Athletics) }
-        Burglary = modifier { description = "Breaking in, picking locks and casing places." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Burglary) }
-        Contacts = modifier { description = "Knowing people and finding the right person to ask." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Contacts) }
-        Crafts = modifier { description = "Making, fixing and breaking machinery." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Crafts) }
-        Deceive = modifier { description = "Lying, bluffing and disguise." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Deceive) }
-        Drive = modifier { description = "Handling vehicles under pressure." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Drive) }
-        Empathy = modifier { description = "Reading people and helping them recover from mental harm." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Empathy) }
-        Fight = modifier { description = "Hand-to-hand fighting, armed or not." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = melee  reach = 2  render = ladder (Fight) }
-        Investigate = modifier { description = "Searching for clues and piecing them together." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Investigate) }
-        Lore = modifier { description = "Book learning, history and the occult." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Lore) }
-        Notice = modifier { description = "Spotting things and reacting quickly." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Notice) }
-        Physique = modifier { description = "Strength, toughness and endurance. High Physique adds stress boxes." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Physique) }
-        Provoke = modifier { description = "Frightening, angering or intimidating people." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Provoke) }
-        Rapport = modifier { description = "Making friends and earning trust." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Rapport) }
-        Resources = modifier { description = "Money and possessions, used to buy help or influence." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Resources) }
-        Shoot = modifier { description = "Shooting and throwing at range." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged  render = ladder (Shoot) }
-        Stealth = modifier { description = "Staying hidden and moving quietly." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Stealth) }
-        Will = modifier { description = "Mental strength and resolve. High Will adds stress boxes." default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Will) }
-        Initiative = modifier { description = "Turn order in physical conflicts, from Notice." value = Notice  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none  render = ladder (Initiative) }
+        Athletics = modifier { description = "Running, climbing, jumping and dodging." reference = ["core", 52] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Athletics) }
+        Burglary = modifier { description = "Breaking in, picking locks and casing places." reference = ["core", 53] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Burglary) }
+        Contacts = modifier { description = "Knowing people and finding the right person to ask." reference = ["core", 54] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Contacts) }
+        Crafts = modifier { description = "Making, fixing and breaking machinery." reference = ["core", 54] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Crafts) }
+        Deceive = modifier { description = "Lying, bluffing and disguise." reference = ["core", 56] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Deceive) }
+        Drive = modifier { description = "Handling vehicles under pressure." reference = ["core", 57] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Drive) }
+        Empathy = modifier { description = "Reading people and helping them recover from mental harm." reference = ["core", 58] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Empathy) }
+        Fight = modifier { description = "Hand-to-hand fighting, armed or not." reference = ["core", 58] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = melee  reach = 2  render = ladder (Fight) }
+        Investigate = modifier { description = "Searching for clues and piecing them together." reference = ["core", 59] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Investigate) }
+        Lore = modifier { description = "Book learning, history and the occult." reference = ["core", 60] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Lore) }
+        Notice = modifier { description = "Spotting things and reacting quickly." reference = ["core", 61] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Notice) }
+        Physique = modifier { description = "Strength, toughness and endurance. High Physique adds stress boxes." reference = ["core", 62] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Physique) }
+        Provoke = modifier { description = "Frightening, angering or intimidating people." reference = ["core", 62] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Provoke) }
+        Rapport = modifier { description = "Making friends and earning trust." reference = ["core", 63] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Rapport) }
+        Resources = modifier { description = "Money and possessions, used to buy help or influence." reference = ["core", 64] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Resources) }
+        Shoot = modifier { description = "Shooting and throwing at range." reference = ["core", 65] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged  render = ladder (Shoot) }
+        Stealth = modifier { description = "Staying hidden and moving quietly." reference = ["core", 65] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Stealth) }
+        Will = modifier { description = "Mental strength and resolve. High Will adds stress boxes." reference = ["core", 66] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Will) }
+        Initiative = modifier { description = "Turn order in physical conflicts, from Notice." reference = ["core", 83] value = Notice  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none  render = ladder (Initiative) }
     }
 
     'Other Skills' = keyvalues
@@ -101,7 +101,7 @@ characterTable = ruleset
 
     Stunts = list
     {
-        description = "Special tricks that bend the rules for a skill."
+        description = "Special tricks that bend the rules for a skill." reference = ["core", 46]
         tableLayout = layout { size = wide }
         source = secondary.Stunts
         singular = "Stunt"
@@ -118,33 +118,33 @@ characterTable = ruleset
 
     Stress = table
     {
-        description = "Stress absorbs hits for a scene. Check a box worth at least the shifts taken."
+        description = "Stress absorbs hits for a scene. Check a box worth at least the shifts taken." reference = ["core", 84]
         tableLayout = layout { columns = 2  size = wide }
-        Physical = slots { description = "Physical stress boxes. Physique adds more." number = if Skills.Physique > 2 then 4 else if Skills.Physique > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#d64545" }
-        Mental = slots { description = "Mental stress boxes. Will adds more." number = if Skills.Will > 2 then 4 else if Skills.Will > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#8e5cc4" }
+        Physical = slots { description = "Physical stress boxes. Physique adds more." reference = ["core", 26] number = if Skills.Physique > 2 then 4 else if Skills.Physique > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#d64545" }
+        Mental = slots { description = "Mental stress boxes. Will adds more." reference = ["core", 26] number = if Skills.Will > 2 then 4 else if Skills.Will > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#8e5cc4" }
     }
 
     Consequences = table
     {
-        description = "Lasting harm that soaks shifts and becomes an aspect others can invoke."
+        description = "Lasting harm that soaks shifts and becomes an aspect others can invoke." reference = ["core", 85]
         tableLayout = layout { columns = 1  size = wide }
-        'Mild 2' = string { description = "Soaks 2 shifts. Clears after a scene of rest." editable = live  indicator = "#d64545"  indicatorLabel = "Mild consequence" }
-        'Moderate 4' = string { description = "Soaks 4 shifts. Clears after a session." editable = live  indicator = "#d64545"  indicatorLabel = "Moderate consequence" }
-        'Severe 6' = string { description = "Soaks 6 shifts. Clears after a scenario." editable = live  indicator = "#d64545"  indicatorLabel = "Severe consequence" }
+        'Mild 2' = string { description = "Soaks 2 shifts. Clears after a scene of rest." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Mild consequence" }
+        'Moderate 4' = string { description = "Soaks 4 shifts. Clears after a session." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Moderate consequence" }
+        'Severe 6' = string { description = "Soaks 6 shifts. Clears after a scenario." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Severe consequence" }
         'Extra Mild 2' = string { description = "An extra mild consequence for Superb Physique or Will." editable = live  visible = if Skills.Physique > 4 or Skills.Will > 4 then visible else none }
-        Taken = bool { description = "The character has been taken out of the conflict." default = false  editable = live  indicator = "#555555"  indicatorLabel = "Taken out" }
+        Taken = bool { description = "The character has been taken out of the conflict." reference = ["core", 89] default = false  editable = live  indicator = "#555555"  indicatorLabel = "Taken out" }
     }
 
     'Situation Aspects' = list
     {
-        description = "Aspects on the scene, often created by advantages."
+        description = "Aspects on the scene, often created by advantages." reference = ["core", 81]
         tableLayout = layout { size = wide }
         singular = "Aspect"
         editable = live
         valueType = custom
         {
             Aspect = string {}
-            'Free Invokes' = integer { description = "Free invokes left on the aspect." default = 1  minvalue = 0  editable = live }
+            'Free Invokes' = integer { description = "Free invokes left on the aspect." reference = ["core", 37] default = 1  minvalue = 0  editable = live }
         }
     }
 
@@ -182,8 +182,8 @@ creatureTable = ruleset
     Stress = table
     {
         tableLayout = layout { columns = 2  size = wide }
-        Boxes = slots { description = "Stress boxes that soak hits for a scene." number = 2  editable = live  indicator = "#d64545" }
-        Consequence = string { description = "A consequence the creature has taken." editable = live  indicator = "#d64545" }
+        Boxes = slots { description = "Stress boxes that soak hits for a scene." reference = ["core", 84] number = 2  editable = live  indicator = "#d64545" }
+        Consequence = string { description = "A consequence the creature has taken." reference = ["core", 85] editable = live  indicator = "#d64545" }
         'Taken Out' = bool { default = false  editable = live  indicator = "#555555" }
         Initiative = modifier { default = 0  valuedice = ([1d1], ((baseline, throws)->baseline)) }
     }
