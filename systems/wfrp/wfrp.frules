@@ -63,17 +63,17 @@ characteristicValue (char, name) =
 
 characteristic = custom
 {
-    Initial = integer { default = 30 }
-    Advances = integer { default = 0 }
-    Current = integer { value = Initial + Advances  valuedice = wfrpDice (characterTable)  editable = none }
-    Bonus = Current / 10
+    Initial = integer { description = "Starting value from species and dice, usually 20 to 50." default = 30 }
+    Advances = integer { description = "Advances bought with experience, each +1." default = 0 }
+    Current = integer { description = "Current value: initial plus advances. Roll d100 at or under it." value = Initial + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, used for damage, wounds and more." value = Current / 10  editable = none }
 }
 
 skill (base) = custom
 {
     Characteristic = base
-    Advances = integer { default = 0 }
-    Skill = integer { value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+    Advances = integer { description = "Advances in the skill, added to the characteristic." default = 0 }
+    Skill = integer { description = "Skill value. Roll d100 at or under it; each 10 under is a success level." value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
 }
 
 advancedValue (entry, fallback) =
@@ -125,8 +125,8 @@ characterTable = ruleset
         Class = string {}
         Career = string {}
         'Career Level' = string {}
-        'Career Path' = string {}
-        Status = string {}
+        'Career Path' = string { description = "The careers the character has followed." }
+        Status = string { description = "Social standing, which sets income and how people treat you." }
         Age = string {}
         Height = string {}
         Hair = string {}
@@ -135,71 +135,75 @@ characterTable = ruleset
 
     Characteristics = table
     {
+        description = "The ten characteristics, each rolled with d100."
         tableLayout = layout { columns = 5  size = wide }
-        WS = characteristic {}
-        BS = characteristic {}
-        S = characteristic {}
-        T = characteristic {}
-        I = characteristic {}
-        Ag = characteristic {}
-        Dex = characteristic {}
-        Int = characteristic {}
-        WP = characteristic {}
-        Fel = characteristic {}
+        WS = characteristic { description = "Weapon Skill: fighting in melee." }
+        BS = characteristic { description = "Ballistic Skill: shooting and throwing." }
+        S = characteristic { description = "Strength: muscle and melee damage." }
+        T = characteristic { description = "Toughness: resisting harm. Its bonus reduces damage." }
+        I = characteristic { description = "Initiative: reactions, perception and acting first." }
+        Ag = characteristic { description = "Agility: speed, dodging and moving." }
+        Dex = characteristic { description = "Dexterity: fine work and crafts." }
+        Int = characteristic { description = "Intelligence: reasoning and learning." }
+        WP = characteristic { description = "Willpower: courage, focus and resisting fear." }
+        Fel = characteristic { description = "Fellowship: charm and dealing with people." }
     }
 
     'Fate and Fortune' = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Fate = integer { default = 2 }
-        Fortune = integer { default = 2  editable = live }
-        Resilience = integer { default = 1 }
-        Resolve = integer { default = 1  editable = live }
-        Motivation = string {}
-        Advantage = integer { default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
-        Initiative = integer { value = Characteristics.I.Current  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
-        Movement = integer { default = 4 }
-        Walk = Movement * 2
-        Run = Movement * 4
+        Fate = integer { description = "Fate points: spend one to avoid death for good." default = 2 }
+        Fortune = integer { description = "Fortune points: spend for a reroll or extra success level. Refills each session." default = 2  editable = live }
+        Resilience = integer { description = "Resilience points: spend one to avoid a mutation or shrug off a critical." default = 1 }
+        Resolve = integer { description = "Resolve points: spend to ignore conditions or fear for a while." default = 1  editable = live }
+        Motivation = string { description = "What drives the character. Acting on it restores resolve." }
+        Advantage = integer { description = "Advantage gained in combat. Each point gives +10 to combat tests." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Initiative = integer { description = "Highest Initiative acts first." value = Characteristics.I.Current  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
+        Movement = integer { description = "Movement: yards moved per step." default = 4 }
+        Walk = integer { description = "Walking speed: twice Movement." value = Movement * 2  editable = none }
+        Run = integer { description = "Running speed: four times Movement." value = Movement * 4  editable = none }
     }
 
     Experience = table
     {
         tableLayout = layout { columns = 3 }
-        Current = integer { default = 0  editable = live }
-        Spent = integer { default = 0 }
+        Current = integer { description = "Experience left to spend." default = 0  editable = live }
+        Spent = integer { description = "Experience already spent." default = 0 }
         Total = Current + Spent
     }
 
     Wounds = table
     {
+        description = "Wounds: how much damage you can take before critical wounds."
         tableLayout = layout { columns = 3 }
-        'Hardy Talent' = integer { default = 0 }
-        Maximum = integer { value = Characteristics.S.Bonus + 2 * Characteristics.T.Bonus + Characteristics.WP.Bonus + 'Hardy Talent' * Characteristics.T.Bonus  editable = none }
-        Current = integer { default = Maximum  editable = live }
+        'Hardy Talent' = integer { description = "Ranks in the Hardy talent, each adding your Toughness Bonus to wounds." default = 0 }
+        Maximum = integer { description = "Wounds: Strength Bonus, twice Toughness Bonus and Willpower Bonus." value = Characteristics.S.Bonus + 2 * Characteristics.T.Bonus + Characteristics.WP.Bonus + 'Hardy Talent' * Characteristics.T.Bonus  editable = none }
+        Current = integer { description = "Current wounds. At 0 every hit gives a critical wound." default = Maximum  editable = live }
         Down = string { value = if Current < 1 then "Wounds 0" else ""  visible = none  indicator = "#d64545" }
-        'Critical Wounds' = string { multiline = true  editable = live }
+        'Critical Wounds' = string { description = "Critical wounds taken, with their effects." multiline = true  editable = live }
     }
 
     Conditions = table
     {
+        description = "Conditions, most stacking in levels. Each level usually gives -10 to tests."
         tableLayout = layout { columns = 4  size = wide }
-        Bleeding = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Blinded = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
-        Broken = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
-        Deafened = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
-        Entangled = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
-        Fatigued = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
-        Poisoned = integer { default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
-        Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
-        Ablaze = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
-        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
-        Surprised = bool { default = false  editable = live  indicator = "#d4b106" }
-        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        Bleeding = integer { description = "Bleeding: lose wounds each round, and risk dying at 0." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Blinded = integer { description = "Blinded: -10 per level to tests that need sight." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Broken = integer { description = "Broken: you flee or cower, -10 per level to most tests." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Deafened = integer { description = "Deafened: -10 per level to tests that need hearing." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Entangled = integer { description = "Entangled: you can't move, -10 per level to physical tests." default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Fatigued = integer { description = "Fatigued: -10 per level to all tests." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Poisoned = integer { description = "Poisoned: lose wounds each round, -10 per level to tests." default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        Stunned = integer { description = "Stunned: no actions, -10 per level to tests." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Ablaze = integer { description = "Ablaze: take damage each round until put out." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Prone = bool { description = "Prone: on the ground; easy to hit in melee." default = false  editable = live  indicator = "#e8913a" }
+        Surprised = bool { description = "Surprised: no action this round and easy to hit." default = false  editable = live  indicator = "#d4b106" }
+        Unconscious = bool { description = "Unconscious: helpless and out of action." default = false  editable = live  indicator = "#555555" }
     }
 
     'Basic Skills' = table
     {
+        description = "Basic skills anyone can use, based on a characteristic."
         tableLayout = layout { columns = 2  size = wide }
         Art = skill (Characteristics.Dex.Current)
         Athletics = skill (Characteristics.Ag.Current)
@@ -230,15 +234,16 @@ characterTable = ruleset
 
     'Advanced Skills' = keyvalues
     {
+        description = "Advanced skills that need training, such as Language or Lore."
         singular = "Skill"
         editablekeys = character
         keys = []
         tableLayout = layout { size = wide }
         valueType = custom
         {
-            Characteristic = string { default = "Int"  keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
-            Advances = integer { default = 0 }
-            Skill = integer { value = characteristicValue (characterTable, Characteristic) + Advances  valuedice = wfrpDice (characterTable)  editable = none }
+            Characteristic = string { description = "The characteristic this skill is based on." default = "Int"  keys = ["WS", "BS", "S", "T", "I", "Ag", "Dex", "Int", "WP", "Fel"] }
+            Advances = integer { description = "Advances in the skill." default = 0 }
+            Skill = integer { description = "Skill value: characteristic plus advances." value = characteristicValue (characterTable, Characteristic) + Advances  valuedice = wfrpDice (characterTable)  editable = none }
         }
     }
 
@@ -294,11 +299,11 @@ characterTable = ruleset
     Wealth = table
     {
         tableLayout = layout { columns = 4 }
-        'Gold Crowns' = integer { default = 0  editable = live }
-        Shillings = integer { default = 0  editable = live }
-        Brass = integer { default = 0  editable = live }
-        'Corruption Points' = integer { default = 0  editable = live  indicator = "#8e5cc4" }
-        Mutations = string { multiline = true }
+        'Gold Crowns' = integer { description = "Gold crowns: twenty shillings each." default = 0  editable = live }
+        Shillings = integer { description = "Silver shillings: twelve brass pennies each." default = 0  editable = live }
+        Brass = integer { description = "Brass pennies." default = 0  editable = live }
+        'Corruption Points' = integer { description = "Corruption from Chaos. Too much brings mutation." default = 0  editable = live  indicator = "#8e5cc4" }
+        Mutations = string { description = "Mutations from Chaos corruption." multiline = true }
     }
 }
 
@@ -308,7 +313,7 @@ creatureTable = ruleset
     Characteristics = table
     {
         tableLayout = layout { columns = 5  size = wide }
-        M = integer { default = 4 }
+        M = integer { description = "Movement: yards moved per step." default = 4 }
         WS = integer { default = 30  valuedice = plainD100 }
         BS = integer { default = 30  valuedice = plainD100 }
         S = integer { default = 30  valuedice = plainD100 }
@@ -319,13 +324,13 @@ creatureTable = ruleset
         Int = integer { default = 30  valuedice = plainD100 }
         WP = integer { default = 30  valuedice = plainD100 }
         Fel = integer { default = 30  valuedice = plainD100 }
-        W = integer { default = 10 }
+        W = integer { description = "Wounds the creature can take." default = 10 }
     }
     State = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Current Wounds' = integer { default = 10  editable = live }
-        Advantage = integer { default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        'Current Wounds' = integer { description = "Wounds left." default = 10  editable = live }
+        Advantage = integer { description = "Advantage gained in combat." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
         Initiative = integer { value = Characteristics.I  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none }
         Prone = bool { default = false  editable = live  indicator = "#e8913a" }
         Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
