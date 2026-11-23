@@ -82,11 +82,11 @@ characterTable = ruleset
         Subclass = string {}
         Ancestry = string {}
         Community = string {}
-        Level = integer { description = "Character level from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
-        Proficiency = integer { description = "How many damage dice you roll for a weapon hit." default = 1  minvalue = 1  maxvalue = 6 }
+        Level = integer { description = "Character level from 1 to 10." reference = ["srd", 42] default = 1  minvalue = 1  maxvalue = 10 }
+        Proficiency = integer { description = "How many damage dice you roll for a weapon hit." reference = ["srd", 5] default = 1  minvalue = 1  maxvalue = 6 }
         Roll = selector
         {
-            description = "Roll an extra d6 to add with advantage, or subtract with disadvantage."
+            description = "Roll an extra d6 to add with advantage, or subtract with disadvantage." reference = ["srd", 38]
             options = ["Disadvantage", "Normal", "Advantage"]
             labels = ["Dis", "Normal", "Adv"]
             colors = ["red", "white", "green"]
@@ -100,48 +100,48 @@ characterTable = ruleset
     Traits = table
     {
         tableLayout = layout { columns = 6  size = wide }
-        Agility = modifier { description = "Sprint, leap and maneuver." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
-        Strength = modifier { description = "Lift, smash and grapple." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
-        Finesse = modifier { description = "Control, hide and tinker with precision." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
-        Instinct = modifier { description = "Perceive, sense and navigate by gut feeling." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
-        Presence = modifier { description = "Charm, perform and deceive." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
-        Knowledge = modifier { description = "Recall, analyze and comprehend." default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Agility = modifier { description = "Sprint, leap and maneuver." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Strength = modifier { description = "Lift, smash and grapple." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Finesse = modifier { description = "Control, hide and tinker with precision." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Instinct = modifier { description = "Perceive, sense and navigate by gut feeling." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Presence = modifier { description = "Charm, perform and deceive." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
+        Knowledge = modifier { description = "Recall, analyze and comprehend." reference = ["srd", 4] default = 0  minvalue = -2  maxvalue = 6  valuedice = dualityDice (characterTable) }
     }
 
     Defense = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Evasion = integer { description = "What an attacker must reach to hit you." default = 10 }
-        'Armor Score' = integer { description = "How many armor slots your armor gives." default = 0 }
-        'Armor Slots' = slots { description = "Mark an armor slot to reduce the damage severity of a hit by one step." number = 'Armor Score'  editable = live }
-        'Major Threshold' = integer { description = "Damage at or above this marks 2 HP; below it marks 1." default = 6 }
-        'Severe Threshold' = integer { description = "Damage at or above this marks 3 HP." default = 12 }
+        Evasion = integer { description = "What an attacker must reach to hit you." reference = ["srd", 39] default = 10 }
+        'Armor Score' = integer { description = "How many armor slots your armor gives." reference = ["srd", 55] default = 0 }
+        'Armor Slots' = slots { description = "Mark an armor slot to reduce the damage severity of a hit by one step." reference = ["srd", 55] number = 'Armor Score'  editable = live }
+        'Major Threshold' = integer { description = "Damage at or above this marks 2 HP; below it marks 1." reference = ["srd", 39] default = 6 }
+        'Severe Threshold' = integer { description = "Damage at or above this marks 3 HP." reference = ["srd", 39] default = 12 }
     }
 
     'Hope and Health' = table
     {
         tableLayout = layout { columns = 1  size = wide }
         'HP Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
-        'Hit Points' = slots { description = "Marked hit points. Mark the last one and you must make a death move." number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        'Hit Points' = slots { description = "Marked hit points. Mark the last one and you must make a death move." reference = ["srd", 39] number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
         'Stress Slots' = integer { default = 6  minvalue = 1  maxvalue = 12 }
-        Stress = slots { description = "Marked stress. Mark the last one and you become vulnerable." number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
-        Hope = slots { description = "Hope, gained on rolls with Hope. Spend it to help allies, use experiences and features." number = 6  editable = live  indicator = "#d4b106" }
+        Stress = slots { description = "Marked stress. Mark the last one and you become vulnerable." reference = ["srd", 39] number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
+        Hope = slots { description = "Hope, gained on rolls with Hope. Spend it to help allies, use experiences and features." reference = ["srd", 38] number = 6  editable = live  indicator = "#d4b106" }
         Down = string { value = if 'Hit Points'.realvalue >= 'HP Slots' then "Death move" else ""  visible = none  indicator = "#555555" }
-        Vulnerable = bool { description = "Vulnerable: all rolls against you have advantage." default = false  editable = live  indicator = "#e8913a" }
-        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
-        Hidden = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        Vulnerable = bool { description = "Vulnerable: all rolls against you have advantage." reference = ["srd", 41] default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { description = "Restrained: you can't move, but can still act where you stand." reference = ["srd", 41] default = false  editable = live  indicator = "#e8913a" }
+        Hidden = bool { description = "Hidden: out of sight, so rolls against you have disadvantage." reference = ["srd", 41] default = false  editable = live  indicator = "#3a7bd5" }
     }
 
     Experiences = list
     {
-        description = "Backgrounds and skills you have. Spend a Hope to add the bonus to a fitting roll."
+        description = "Backgrounds and skills you have. Spend a Hope to add the bonus to a fitting roll." reference = ["srd", 5]
         tableLayout = layout { size = wide }
         singular = "Experience"
         editable = character
         valueType = custom
         {
             Experience = string {}
-            Bonus = modifier { description = "Bonus added when you spend a Hope to use this experience." default = 2  valuedice = dualityDice (characterTable) }
+            Bonus = modifier { description = "Bonus added when you spend a Hope to use this experience." reference = ["srd", 5] default = 2  valuedice = dualityDice (characterTable) }
         }
     }
 
@@ -196,7 +196,7 @@ characterTable = ruleset
     Gold = table
     {
         tableLayout = layout { columns = 3 }
-        Handfuls = integer { description = "Gold in handfuls. Ten handfuls make a bag." default = 1  minvalue = 0  maxvalue = 9  editable = live }
+        Handfuls = integer { description = "Gold in handfuls. Ten handfuls make a bag." reference = ["srd", 5] default = 1  minvalue = 0  maxvalue = 9  editable = live }
         Bags = integer { description = "Gold in bags. Ten bags make a chest." default = 0  minvalue = 0  maxvalue = 9  editable = live }
         Chests = integer { description = "Gold in chests." default = 0  minvalue = 0  editable = live }
     }
@@ -237,18 +237,18 @@ creatureTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Tier = integer { description = "How strong the adversary is, from tier 1 to 4." default = 1  minvalue = 1  maxvalue = 4 }
         Type = string { keys = ["Bruiser", "Horde", "Leader", "Minion", "Ranged", "Skulk", "Social", "Solo", "Standard", "Support"] }
-        Difficulty = integer { description = "What a player must roll to hit the adversary or beat its effects." default = 12 }
-        'Major Threshold' = integer { description = "Damage at or above this marks 2 HP." default = 7 }
-        'Severe Threshold' = integer { description = "Damage at or above this marks 3 HP." default = 12 }
+        Difficulty = integer { description = "What a player must roll to hit the adversary or beat its effects." reference = ["srd", 70] default = 12 }
+        'Major Threshold' = integer { description = "Damage at or above this marks 2 HP." reference = ["srd", 70] default = 7 }
+        'Severe Threshold' = integer { description = "Damage at or above this marks 3 HP." reference = ["srd", 70] default = 12 }
         'HP Slots' = integer { default = 5  minvalue = 1 }
-        HP = slots { description = "Marked hit points. Fully marked means defeated." number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
+        HP = slots { description = "Marked hit points. Fully marked means defeated." reference = ["srd", 70] number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
         'Stress Slots' = integer { default = 3  minvalue = 0 }
-        Stress = slots { description = "Marked stress, spent on the adversary's features." number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
-        ATK = modifier { description = "Bonus to the adversary's d20 attack roll." default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
+        Stress = slots { description = "Marked stress, spent on the adversary's features." reference = ["srd", 70] number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
+        ATK = modifier { description = "Bonus to the adversary's d20 attack roll." reference = ["srd", 70] default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
         Attack = string {}
         Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
         Damage = string {}
-        Motives = string { description = "What the adversary wants and how it acts." }
+        Motives = string { description = "What the adversary wants and how it acts." reference = ["srd", 70] }
     }
     Features = table
     {
