@@ -38,8 +38,8 @@ plainD20 = sdRoll ("Normal", 0)
 
 stat = custom
 {
-    Score = integer { default = 10  minvalue = 3  maxvalue = 18 }
-    Modifier = modifier { value = statModifier (Score)  valuedice = sdDice (characterTable)  editable = none }
+    Score = integer { description = "Stat score from 3 to 18." default = 10  minvalue = 3  maxvalue = 18 }
+    Modifier = modifier { description = "Modifier from the score, added to d20 checks with this stat." value = statModifier (Score)  valuedice = sdDice (characterTable)  editable = none }
 }
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
@@ -74,15 +74,16 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Ancestry = string { keys = ["Dwarf", "Elf", "Goblin", "Halfling", "Half-Orc", "Human"] }
         Class = string { keys = ["Fighter", "Priest", "Thief", "Wizard"] }
-        Level = integer { default = 1  minvalue = 0  maxvalue = 10 }
-        XP = integer { default = 0  editable = live }
+        Level = integer { description = "Character level. Level 0 characters are untrained villagers." default = 1  minvalue = 0  maxvalue = 10 }
+        XP = integer { description = "Experience points, earned mostly from treasure." default = 0  editable = live }
         Title = string {}
         Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
         Background = string {}
         Deity = string {}
-        'Attack Bonus' = integer { default = 0 }
+        'Attack Bonus' = integer { description = "Bonus to attack rolls from class and level." default = 0 }
         Roll = selector
         {
+            description = "Advantage rolls two d20s and keeps the better, disadvantage the worse."
             options = ["Disadvantage", "Normal", "Advantage"]
             labels = ["Dis", "Normal", "Adv"]
             colors = ["red", "white", "green"]
@@ -95,29 +96,31 @@ characterTable = ruleset
 
     Stats = table
     {
+        description = "The six stats and their modifiers."
         tableLayout = layout { columns = 3  size = wide }
-        STR = stat {}
-        DEX = stat {}
-        CON = stat {}
-        INT = stat {}
-        WIS = stat {}
-        CHA = stat {}
+        STR = stat { description = "Strength: melee attacks, climbing and lifting." }
+        DEX = stat { description = "Dexterity: ranged attacks, AC, initiative and sneaking." }
+        CON = stat { description = "Constitution: hit points and resisting poison or exhaustion." }
+        INT = stat { description = "Intelligence: wizard spells and knowledge." }
+        WIS = stat { description = "Wisdom: priest spells and perception." }
+        CHA = stat { description = "Charisma: persuasion and leadership." }
     }
 
     Combat = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        AC = integer { default = 10 + Stats.DEX.Modifier }
-        'Max HP' = integer { default = 4 }
-        HP = integer { default = 'Max HP'  editable = live }
+        AC = integer { description = "Armor Class: 10 plus DEX, or the armor's value." default = 10 + Stats.DEX.Modifier }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 4 }
+        HP = integer { description = "Current hit points. At 0 you are dying." default = 'Max HP'  editable = live }
         Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
-        Initiative = modifier { value = Stats.DEX.Modifier  valuedice = 1d20  editable = none }
-        Luck = bool { default = false  editable = live  indicator = "#d4b106"  indicatorLabel = "Luck token" }
-        Torch = clock { segments = 6  editable = live }
+        Initiative = modifier { description = "Initiative: d20 plus DEX modifier." value = Stats.DEX.Modifier  valuedice = 1d20  editable = none }
+        Luck = bool { description = "A luck token lets you reroll any roll once." default = false  editable = live  indicator = "#d4b106"  indicatorLabel = "Luck token" }
+        Torch = clock { description = "Torch time. A torch burns for an hour of real time." segments = 6  editable = live }
     }
 
     Talents = list
     {
+        description = "Talents rolled at levels with odd numbers, and from your class."
         tableLayout = layout { size = wide }
         singular = "Talent"
         editable = character
@@ -151,6 +154,7 @@ characterTable = ruleset
 
     'Spellcasting Check' = table
     {
+        description = "Spellcasting checks: d20 plus the stat against 10 plus the spell tier."
         visible = if Character.Class == "Priest" or Character.Class == "Wizard" then visible else none
         'Priest uses WIS' = modifier { value = Stats.WIS.Modifier  valuedice = sdDice (characterTable)  editable = none }
         'Wizard uses INT' = modifier { value = Stats.INT.Modifier  valuedice = sdDice (characterTable)  editable = none }
@@ -159,10 +163,10 @@ characterTable = ruleset
     Gear = table
     {
         tableLayout = layout { columns = 3  size = wide }
-        'Gear Slots' = integer { value = max (10, Stats.STR.Score)  editable = none }
-        GP = integer { default = 0  editable = live }
-        SP = integer { default = 0  editable = live }
-        CP = integer { default = 0  editable = live }
+        'Gear Slots' = integer { description = "Item slots you can fill: your STR score, at least 10." value = max (10, Stats.STR.Score)  editable = none }
+        GP = integer { description = "Gold pieces." default = 0  editable = live }
+        SP = integer { description = "Silver pieces, ten to a gold." default = 0  editable = live }
+        CP = integer { description = "Copper pieces, ten to a silver." default = 0  editable = live }
     }
 
     Items = list
@@ -185,11 +189,11 @@ creatureTable = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Level = integer { default = 1 }
-        AC = integer { default = 12 }
+        Level = integer { description = "Monster level, which sets its XP and toughness." default = 1 }
+        AC = integer { description = "Armor Class." default = 12 }
         'Max HP' = integer { default = 5 }
-        HP = integer { default = 'Max HP'  editable = live }
-        Movement = string { default = "Near" }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
+        Movement = string { description = "How far the monster moves each turn." default = "Near" }
         Alignment = string { keys = ["Lawful", "Neutral", "Chaotic"] }
         STR = modifier { default = 0  valuedice = plainD20 }
         DEX = modifier { default = 0  valuedice = plainD20 }
