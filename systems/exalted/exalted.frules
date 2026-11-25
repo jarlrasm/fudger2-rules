@@ -21,7 +21,7 @@ exAsked (pool) = ask ("Extra dice", 0, (n)->exRoll (pool + n))
 
 attackResult (rolls, defense) =
 {
-    Text = toString (successesIn (rolls)) + " successes" + (if defense > 0 then (if successesIn (rolls) >= defense then " vs Defense " + toString (defense) + ": hit, " + toString (successesIn (rolls) - defense) + " extra" else " vs Defense " + toString (defense) + ": miss") else "") + (if exOutcome (rolls) == "Botch" then ": botch" else "")
+    Text = toString (successesIn (rolls)) + (if successesIn (rolls) == 1 then " success" else " successes") + (if defense > 0 then (if successesIn (rolls) >= defense then " vs Defense " + toString (defense) + ": hit, " + toString (successesIn (rolls) - defense) + " extra" else " vs Defense " + toString (defense) + ": miss") else "") + (if exOutcome (rolls) == "Botch" then ": botch" else "")
     Value = successesIn (rolls) - defense
     Outcome = if exOutcome (rolls) == "Botch" then "Botch" else if defense > 0 then (if successesIn (rolls) >= defense then "Hit" else "Miss") else ""
 }
