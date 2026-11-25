@@ -371,7 +371,7 @@ creatureTable = ruleset
         'Melee Defense' = integer { default = 0 }
         'Ranged Defense' = integer { default = 0 }
         'Group Size' = integer { description = "Minions only: each member past the first adds a rank to the group's skills." default = 1  minvalue = 1  editable = live }
-        Initiative = integer { description = "Vigilance or Cool for initiative." default = 0  valuedice = initiativePool (Willpower, 1) }
+        Initiative = integer { description = "Ranks in Vigilance (or Cool) for initiative, rolled with Willpower." default = 1  minvalue = 0  valuedice = initiativePool (Willpower, Initiative) }
     }
     'Skill Pools' = keyvalues
     {

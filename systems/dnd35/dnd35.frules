@@ -486,7 +486,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Attack = modifier { default = 0  valuedice = d35Attack (20)  action = if 'Range ft' > 0 then "ranged" else "melee"  reach = 5  range = 'Range ft' }
+            Attack = modifier { default = 0  valuedice = d35Attack (20)  action = if 'Range ft' > 0 then "ranged" else "melee"  reach = max (5, firstNumber (Stats.Reach))  range = 'Range ft' }
             Damage = string {}
             'Range ft' = integer { default = 0 }
         }
