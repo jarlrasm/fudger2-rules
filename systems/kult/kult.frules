@@ -1,0 +1,323 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+kultOutcome (total) =
+    if total >= 15 then "Success"
+    else if total >= 10 then "Partial success"
+    else "Failure"
+
+kultText (total) =
+    toString (total) + ": " + (if total >= 15 then "Complete success" else if total >= 10 then "Partial success, at a cost or with a complication" else "Failure, the GM makes a move")
+
+kultResult (total) =
+{
+    Text = kultText (total)
+    Value = total
+    Outcome = kultOutcome (total)
+}
+
+kultRoll (attribute) = ask ("Modifier", 0, ([2d10], ((baseline, throws)->kultResult (sum (first (throws).rolls) + attribute + asked))))
+
+kultHarm (attribute) = ask ("Harm", ([2d10], ((baseline, throws)->{
+    Text = kultText (sum (first (throws).rolls) + attribute - asked) + (if answered then " (harm " + toString (asked) + ")" else "")
+    Value = sum (first (throws).rolls) + attribute - asked
+    Outcome = kultOutcome (sum (first (throws).rolls) + attribute - asked)
+})))
+
+move (attribute, harm) = custom
+{
+    Roll = integer { value = attribute  valuedice = if harm then kultHarm (attribute) else kultRoll (attribute)  editable = none }
+}
+
+attributeValue (char, name) =
+    switch name
+        case "Fortitude" then char.Attributes.Fortitude
+        case "Reflexes" then char.Attributes.Reflexes
+        case "Willpower" then char.Attributes.Willpower
+        case "Reason" then char.Attributes.Reason
+        case "Intuition" then char.Attributes.Intuition
+        case "Perception" then char.Attributes.Perception
+        case "Coolness" then char.Attributes.Coolness
+        case "Violence" then char.Attributes.Violence
+        case "Charisma" then char.Attributes.Charisma
+        case "Soul" then char.Attributes.Soul
+        else 0
+
+attributeNames = ["Fortitude", "Reflexes", "Willpower", "Reason", "Intuition", "Perception", "Coolness", "Violence", "Charisma", "Soul", "None"]
+
+stabilityLevel (n) =
+    switch n
+        case 0 then "Composed"
+        case 1 then "Uneasy"
+        case 2 then "Unfocused"
+        case 3 then "Shaken"
+        case 4 then "Distressed"
+        case 5 then "Neurotic"
+        case 6 then "Anxious"
+        case 7 then "Irrational"
+        case 8 then "Unhinged"
+        else "Broken"
+
+stressBand (n) =
+    if n == 0 then ""
+    else if n <= 2 then "Moderate stress"
+    else if n <= 5 then "Serious stress"
+    else if n <= 8 then "Critical stress"
+    else "Broken"
+
+woundState (char) =
+    if char.Wounds.'Critical wound'.realvalue > 0 and not (char.Wounds.Stabilized) then "Dying"
+    else if char.Wounds.'Critical wound'.realvalue > 0 then "Critically wounded"
+    else if char.Wounds.'Serious wounds'.realvalue > 0 then "Wounded"
+    else ""
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Harm = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "kultWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+attack (name, violence, harm, kind, distance) = custom
+{
+    Name = name
+    Roll = integer { value = violence  valuedice = kultRoll (violence)  action = kind  reach = 2  range = distance  editable = none }
+    Harm = harm
+}
+
+attackFor (char, weapon) =
+    attack (weapon.Name, char.Attributes.Violence, weaponStat (weapon, "Harm"), if weaponStat (weapon, "Distance") == "Arm" or weaponStat (weapon, "Distance") == "" then "melee" else "ranged", if weaponStat (weapon, "Distance") == "Room" then 10 else if weaponStat (weapon, "Distance") == "Field" then 100 else 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Wounds, Stability, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Archetype = string { description = "Such as the Academic, the Avenger, the Broken, the Careerist, the Criminal, the Descendant, the Drifter, the Occultist or the Veteran." }
+        Occupation = string {}
+        Looks = string { multiline = true }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "Passive attributes resist harm and stress; active attributes drive the basic moves. Values from -3 to +3."
+        tableLayout = layout { columns = 5  size = wide }
+        Fortitude = integer { description = "Passive: endure injury." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Fortitude) }
+        Reflexes = integer { description = "Passive: avoid harm." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Reflexes) }
+        Willpower = integer { description = "Passive: keep it together." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Willpower) }
+        Reason = integer { description = "Active: investigate." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Reason) }
+        Intuition = integer { description = "Active: read a person." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Intuition) }
+        Perception = integer { description = "Active: observe a situation." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Perception) }
+        Coolness = integer { description = "Active: act under pressure." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Coolness) }
+        Violence = integer { description = "Active: engage in combat." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Violence) }
+        Charisma = integer { description = "Active: influence others." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Charisma) }
+        Soul = integer { description = "Active: see through the illusion." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Soul) }
+    }
+
+    'Basic moves' = table
+    {
+        description = "The moves every character has. Each rolls 2d10 plus its attribute and asks for a modifier; Endure Injury asks for the harm instead."
+        tableLayout = layout { columns = 3  size = wide }
+        'Endure Injury' = move (Attributes.Fortitude, true)
+        'Avoid Harm' = move (Attributes.Reflexes, false)
+        'Keep It Together' = move (Attributes.Willpower, false)
+        'See Through the Illusion' = move (Attributes.Soul, false)
+        'Engage in Combat' = move (Attributes.Violence, false)
+        'Act Under Pressure' = move (Attributes.Coolness, false)
+        Investigate = move (Attributes.Reason, false)
+        'Read a Person' = move (Attributes.Intuition, false)
+        'Observe a Situation' = move (Attributes.Perception, false)
+        'Influence Other' = move (Attributes.Charisma, false)
+    }
+
+    Wounds = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Serious wounds' = slots { description = "Up to four serious wounds. A fifth becomes critical." number = 4  editable = live  indicator = "#d64545" }
+        'Critical wound' = slots { description = "A critical wound kills unless it is stabilized soon." number = 1  editable = live  indicator = "#d64545" }
+        Stabilized = bool { description = "The wounds have been treated and no longer get worse." default = false  editable = live }
+        State = string { value = woundState (characterTable)  visible = none  indicator = "#555555" }
+        Notes = string { description = "What each wound is." multiline = true  editable = live }
+    }
+
+    Stability = table
+    {
+        tableLayout = layout { columns = 1 }
+        Stability = integer { description = "From Composed (0) through moderate, serious and critical stress to Broken (9)." default = 0  minvalue = 0  maxvalue = 9  render = stabilityLevel (Stability)  editable = live }
+        Stress = string { value = stressBand (Stability)  visible = live  indicator = "#8e5cc4"  editable = none }
+        Conditions = string { description = "Temporary states such as Angry, Sad, Scared, Guilt-ridden or Obsessed." editable = live }
+    }
+
+    'Advantages' = list
+    {
+        source = secondary.Advantages
+        singular = "Advantage"
+        editable = character
+    }
+
+    'Disadvantages' = list
+    {
+        source = secondary.Disadvantages
+        singular = "Disadvantage"
+        editable = character
+    }
+
+    'Dark secrets' = list
+    {
+        description = "What the character hides, and what may find them."
+        singular = "Dark secret"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Relations = list
+    {
+        description = "People the character is tied to, with a bond of +1 or +2."
+        singular = "Relation"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Bond = integer { default = 1  minvalue = 0  maxvalue = 2 }
+            Notes = string {}
+        }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Unarmed", Attributes.Violence, "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Holdings = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Human", "Cultist", "Lictor", "Razide", "Nepharite", "Purgatide", "Dream being", "Other"] }
+        Wounds = string { description = "How much it takes: such as 2 serious wounds and 1 critical." default = "2 serious, 1 critical" }
+        Taken = integer { description = "Wounds taken so far." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Influence = string { description = "Its hold over people and places." }
+    }
+    Attacks = keyvalues
+    {
+        description = "Its combat moves and their harm. The GM makes moves; this rolls 2d10 plus the bonus when a number is wanted."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Strike"]
+        valueType = custom
+        {
+            Bonus = integer { default = 1  valuedice = kultRoll (Bonus)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 30 }
+            Harm = string { default = "2" }
+            Ranged = bool { default = false }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Moves = string { description = "The GM moves it can make." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+kultMove = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Attribute" prefix = "" filter = Stats.Attribute }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Attribute = string { description = "What the move rolls with, or None for moves that roll 2d10 alone." default = "None"  keys = attributeNames }
+        Archetype = string {}
+    }
+}
+
+kultWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Harm = string { default = "2" }
+        Distance = string { description = "Arm (melee), Room or Field." default = "Arm"  keys = ["Arm", "Room", "Field"] }
+        Ammo = string {}
+        Notes = string { description = "Attack options, such as a burst for +1 harm." }
+    }
+}
+
+kultItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Notes = string {}
+    }
+}
+
+KultDivinityLost = system
+{
+    hints = [
+        hint
+        {
+            title = "The Illusion"
+            topic = "Getting started"
+            text = ["Pick an archetype; set the ten attributes from -3 to +3; choose advantages, disadvantages and dark secrets, and relations with the other characters."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll 2d10 plus the attribute, plus any modifier the roll asks for. 15 or more is a complete success, 10 to 14 a success with a cost, 9 or less a failure and the GM makes a move. Endure Injury takes the harm off the roll."]
+        },
+        hint
+        {
+            title = "Wounds and stability"
+            topic = "Combat"
+            text = ["Harm becomes serious wounds, up to four, then a critical wound that kills unless stabilized. Shocks drop stability from Composed through moderate, serious and critical stress to Broken."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Advantages = kultMove
+    Disadvantages = kultMove
+    Weapons = kultWeapon
+    Gear = kultItem
+    secondaryTypes = ["Advantages", "Disadvantages", "Weapons", "Gear"]
+    description = "Kult: Divinity Lost: modern horror behind the Illusion, 2d10 moves, wounds and a stability track that ends in Broken"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [2d10]
+    cssFiles = ["/systems/kult/kult.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/cosmic.json", "/systems/names/gothic.json"]
+    nameSettings = [nightWorldNameSetting, cosmicHorrorNameSetting, gothicHorrorNameSetting]
+}
