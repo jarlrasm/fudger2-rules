@@ -20,6 +20,14 @@ saveModifier (char, attr, abilityMod, proficient) =
 savingThrowsTable = table
       {
           description = "Rolls to resist spells, traps and other dangers, one per ability."  reference = ["srd", 7]
+          'Aura of Protection' = integer
+          {
+              description = "How far the Paladin's Aura of Protection reaches: 10 feet, and 30 feet from level 18."
+              value = if hasClassFeature (characterTable, "Aura of Protection") then (if Class.Main.Levels >= 18 then 30 else 10) else 0
+              editable = none
+              visible = none
+              aura = "#d4b106"
+          }
           Str=custom
           {
               description = "Strength saving throw: the Strength modifier, plus the Proficiency Bonus if proficient."
