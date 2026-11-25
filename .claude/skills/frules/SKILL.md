@@ -60,6 +60,7 @@ describe "Vaesen"
 - `sheetsDraw` fails on any "not supported" cell, which catches field types and references that parse but don't render.
 - `rollShows location expression baseline throws expected` rolls an expression as if each dice group came up with the given numbers, one list per group, and compares the result's text. `askedShows` adds the asked number, `unsetShows` leaves it unset, and `asks` checks the prompt's label.
 - `offersPush` and `pushSets` check the push button and the sheet changes it makes. `valueIs` checks a computed value on a fresh character.
+- Buttons are tested in `Web/tests/RestButtonsTests.elm`: `clicks location entityType before buttonName expected` sets the `before` values, clicks the button in the play view, and checks the updates it sends.
 
 Test the edges the game cares about: a critical, a fumble, exactly the target, zero dice, an empty optional group, and a push after a partial success. The expression is added to the system as `testRoll` or `testValue`, so those names are taken. Add the system's location as a constant next to the others. Run it with `./test.sh tests/NewSystemsTests.elm`, with `RULES_DIR` from a worktree. The tests are app-repo commits, on their own branch.
 
@@ -109,4 +110,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Quoted names can't hold `-`, `(` or `)`.** `'Flat-footed'` and `'Dmg (M)'` fail to parse, and the error points at the start of the ruleset, not the field.
 - **An `editable = live` field shows an input, not a roll button.** Keep the stored number editable and put the roll on a separate computed field next to it (`Roll = modifier { value = Current  valuedice = ... }`).
 - **`description` must be a literal string.** The app doesn't evaluate it, so a field template's description can't depend on its parameters; give a shared template generic text, or put per-key text in the section's `descriptions`.
+- **Button targets must match how the field is stored.** Integers, strings and bools are stored at `(root.Table.Field)`, slots and clocks at `(root.Table.Field.realvalue)`, and keyvalues rows at `(root.Table.Key.Field)`. A radio-group bool also stores the picked name under the group: set `(root.Table.group)` too. List rows can't be targets. Use `root.` paths, and add `editable = live` so the button shows in play.
+- **One button update per line.** Inside `updates { }`, a value that ends in a bare name followed by the next target on the same line, `(a) = 'Max HP'  (b) = 0`, parses as a call `'Max HP' (b)`, and the second update is lost.
+- **A bool read by a rule needs `default = false`.** An unset bool without a default has no value to read, so a button that copies it stores nothing useful.
 - **Ship types are called `Spaceships`.** Name generators offer ship names to the `Spaceships` kind, so an extra entity type called Starships gets no ship names.
