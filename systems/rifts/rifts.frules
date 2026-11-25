@@ -1,0 +1,379 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+ppBonus (pp) = if pp >= 16 then (pp - 14) / 2 else 0
+
+psDamage (ps) = if ps >= 16 then ps - 15 else 0
+
+peSave (pe) = if pe >= 16 then (pe - 14) / 2 else 0
+
+meSave (me) = if me >= 16 then (me - 14) / 2 else 0
+
+iqSkill (iq) = if iq >= 16 then iq - 14 else 0
+
+strikeOutcome (roll) =
+    if roll == 20 then "Critical"
+    else if roll == 1 then "Miss"
+    else ""
+
+strikeResult (roll, plus, kind) =
+{
+    Text = kind + " " + toString (roll + plus) + (if roll == 20 then ": natural 20, critical (double damage)" else if roll == 1 then ": natural 1, automatic miss" else if roll + plus <= 4 then ": misses" else "")
+    Value = roll + plus
+    Outcome = if roll + plus <= 4 and roll != 20 then "Miss" else strikeOutcome (roll)
+}
+
+strikeRoll (plus) = ([1d20], ((baseline, throws)->strikeResult (first (first (throws).rolls), plus, "Strike")))
+
+defenseRoll (plus, kind) = ([1d20], ((baseline, throws)->{ Text = kind + " " + toString (first (first (throws).rolls) + plus) + (if first (first (throws).rolls) == 20 then ": natural 20" else "") + ", beats a strike it equals or exceeds"  Value = first (first (throws).rolls) + plus  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))
+
+percentResult (target, roll) =
+{
+    Text = toString (roll) + " vs " + toString (target) + "%: " + (if roll <= target then "Success" else "Failure")
+    Value = roll
+    Outcome = if roll <= target then "Success" else "Failure"
+}
+
+percentRoll (target) = ([1d100], ((baseline, throws)->percentResult (target, first (first (throws).rolls))))
+
+saveRoll (target, plus) = ([1d20], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + plus) + " vs " + toString (target) + ": " + (if first (first (throws).rolls) + plus >= target then "Saved" else "Failed")  Value = first (first (throws).rolls) + plus  Outcome = if first (first (throws).rolls) + plus >= target then "Success" else "Failure" }))
+
+horrorRoll (plus) = ask ("Horror Factor", ([1d20], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + plus) + (if asked > 0 then " vs HF " + toString (asked) + ": " + (if first (first (throws).rolls) + plus >= asked then "Saved" else "Frozen in fear, loses initiative and an attack") else "")  Value = first (first (throws).rolls) + plus  Outcome = if asked > 0 then (if first (first (throws).rolls) + plus >= asked then "Success" else "Failure") else "" })))
+
+initiativeRoll = ([1d20], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+diceCount (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)[dD]")
+
+diceSides (text) = bonusWithValue ([[text]], "[dD]([0-9]+)")
+
+diceBonus (text) = bonusWithValue ([[text]], "[dD][0-9]+\s*\+\s*([0-9]+)")
+
+isMega (text) = contains (toLower (text), "m.d") or contains (toLower (text), "md")
+
+damageRoll (text, extra) = ([dice { number = max (1, diceCount (text))  sides = max (2, diceSides (text))  color = if isMega (text) then "red" else "" }],
+    ((baseline, throws)->{ Text = toString (sum (first (throws).rolls) + diceBonus (text) + extra) + (if isMega (text) then " M.D." else " S.D.C.")  Value = sum (first (throws).rolls) + diceBonus (text) + extra }))
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "riftsWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+attack (name, plus, damageText, extra, kind, distance) = custom
+{
+    Name = name
+    Strike = modifier { value = plus  valuedice = strikeRoll (plus)  action = kind  reach = 5  range = distance  editable = none }
+    Damage = string { value = damageText + (if extra > 0 then " +" + toString (extra) else "")  editable = none }
+    Roll = integer { value = 0  render = "Damage"  valuedice = damageRoll (damageText, extra)  editable = none }
+}
+
+isRanged (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), 0, "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), if isMega (weaponStat (weapon, "Damage")) then 0 else psDamage (char.Attributes.PS), "melee", 5)
+
+downState (char) =
+    if char.Health.'Hit points' <= 0 then "Coma"
+    else if char.Health.'Hit points' < char.Health.'Max hit points' then "Wounded"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Combat, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        OCC = string { description = "Occupational Character Class, or R.C.C. for a racial class." }
+        Race = string { default = "Human" }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 15 }
+        Experience = integer { default = 0  editable = live }
+        Alignment = string { keys = ["Principled", "Scrupulous", "Unprincipled", "Anarchist", "Miscreant", "Aberrant", "Diabolic"] }
+        Origin = string { description = "Where the character comes from on Rifts Earth." }
+        Age = integer { default = 20 }
+        Credits = integer { description = "Universal credits." default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "The eight attributes, usually 3d6. 16 or more gives bonuses."
+        tableLayout = layout { columns = 4  size = wide }
+        IQ = integer { description = "Intelligence quotient. 16+ adds to skill percentages." default = 10 }
+        ME = integer { description = "Mental endurance. 16+ adds to saves against psionics and insanity." default = 10 }
+        MA = integer { description = "Mental affinity: charm and trust." default = 10 }
+        PS = integer { description = "Physical strength. 16+ adds to hand-to-hand damage." default = 10 }
+        PP = integer { description = "Physical prowess. 16+ adds to strike, parry and dodge." default = 10 }
+        PE = integer { description = "Physical endurance. 16+ adds to saves against magic, poison and coma." default = 10 }
+        PB = integer { description = "Physical beauty." default = 10 }
+        Spd = integer { description = "Speed: yards a melee round is Spd x 20 feet." default = 10 }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max hit points' = integer { description = "PE plus 1d6 per level." default = 15 }
+        'Hit points' = integer { description = "At 0 or below the character is in a coma; dead at minus PE." default = 'Max hit points'  editable = live  indicator = "#d64545" }
+        'Max SDC' = integer { description = "Structural Damage Capacity: physical toughness lost before hit points." default = 20 }
+        SDC = integer { default = 'Max SDC'  editable = live }
+        'Armor MDC' = integer { description = "Mega-Damage Capacity of the worn body armor. 1 M.D. is 100 S.D.C." default = 0  editable = live }
+        'Max armor MDC' = integer { default = 0 }
+        'Max PPE' = integer { description = "Potential Psychic Energy, spent on magic." default = 10 }
+        PPE = integer { default = 'Max PPE'  editable = live }
+        'Max ISP' = integer { description = "Inner Strength Points, spent on psionics." default = 0 }
+        ISP = integer { default = 'Max ISP'  editable = live }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#d64545" }
+        'Night of rest' = button
+        {
+            description = "Eight hours of rest: P.P.E. back by 40, I.S.P. by 16, S.D.C. by 4 and hit points by 2. Armor is repaired, not rested."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.PPE) = min ('Max PPE', PPE + 40)
+                (root.Health.ISP) = min ('Max ISP', ISP + 16)
+                (root.Health.SDC) = min ('Max SDC', SDC + 4)
+                (root.Health.'Hit points') = min ('Max hit points', 'Hit points' + 2)
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hand to hand' = string { keys = ["Basic", "Expert", "Martial Arts", "Assassin", "Commando"] }
+        'Attacks per melee' = integer { description = "Actions in a 15-second melee round." default = 4 }
+        Initiative = modifier { description = "Initiative bonus; roll 1d20 plus it." default = 0  valuedice = initiativeRoll }
+        Strike = modifier { description = "Strike bonus, PP included. A strike above 4 hits unless parried or dodged." default = ppBonus (Attributes.PP)  valuedice = strikeRoll (Strike) }
+        Parry = modifier { description = "Parry bonus. Equal to or above the strike parries." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Parry, "Parry") }
+        Dodge = modifier { description = "Dodge bonus. Dodging uses up an attack." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Dodge, "Dodge") }
+        'Roll with impact' = modifier { default = 0  valuedice = defenseRoll ('Roll with impact', "Roll with impact") }
+        'Pull punch' = modifier { default = 0  valuedice = defenseRoll ('Pull punch', "Pull punch") }
+        'Damage bonus' = modifier { description = "Hand-to-hand damage bonus from PS." value = psDamage (Attributes.PS)  editable = none }
+        'Critical range' = string { description = "Natural rolls that count as critical strikes." default = "20" }
+    }
+
+    Saves = table
+    {
+        description = "Saving throws roll 1d20 plus the bonus and must meet the target."
+        tableLayout = layout { columns = 4  size = wide }
+        'Vs magic' = modifier { description = "Save against magic: 12 or more." default = peSave (Attributes.PE)  valuedice = saveRoll (12, 'Vs magic') }
+        'Vs psionics' = modifier { description = "Save against psionics: 15 or more (12 for psychics)." default = meSave (Attributes.ME)  valuedice = saveRoll (15, 'Vs psionics') }
+        'Vs poison' = modifier { description = "Save against lethal poison: 14 or more." default = peSave (Attributes.PE)  valuedice = saveRoll (14, 'Vs poison') }
+        'Vs horror factor' = modifier { description = "Roll against a monster's Horror Factor; a failure freezes the character for a melee action." default = 0  valuedice = horrorRoll ('Vs horror factor') }
+        'Vs insanity' = modifier { description = "Save against insanity: 12 or more." default = meSave (Attributes.ME)  valuedice = saveRoll (12, 'Vs insanity') }
+        'Coma and death' = integer { description = "Percentile chance to survive a coma." default = 0  valuedice = percentRoll ('Coma and death') }
+    }
+
+    Skills = keyvalues
+    {
+        description = "O.C.C., related and secondary skills, rolled on 1d100 at or under the percentage."
+        tableLayout = layout { columns = 3  size = wide }
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Climbing", "Computer Operation", "Land Navigation", "Literacy", "Math Basic", "Pilot Hover Craft", "Prowl", "Radio Basic", "Running", "Swimming", "Wilderness Survival"]
+        valueType = custom
+        {
+            Percent = integer { default = 30  minvalue = 0  maxvalue = 98  valuedice = percentRoll (Percent) }
+        }
+    }
+
+    'Weapon proficiencies' = list
+    {
+        description = "W.P. skills add to strike with a weapon type; put the plus on the weapon."
+        singular = "W.P."
+        editable = character
+        valueType = string
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Punch", Combat.Strike, "1D4", psDamage (Attributes.PS), "melee", 5)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Powers = list
+    {
+        description = "Spells and psionic powers."
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Special abilities' = string { multiline = true }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Human", "D-Bee", "Dragon", "Demon", "Supernatural", "Robot", "Power armor", "Animal", "Other"] }
+        MDC = integer { description = "Mega-Damage Capacity, for mega-damage beings and machines. 0 for S.D.C. beings." default = 0  editable = live  indicator = "#d64545" }
+        'Hit points' = integer { default = 20  editable = live }
+        SDC = integer { default = 20  editable = live }
+        'Horror Factor' = integer { default = 0 }
+        'Attacks per melee' = integer { default = 4 }
+        Initiative = modifier { default = 0  valuedice = initiativeRoll }
+        Parry = modifier { default = 0  valuedice = defenseRoll (Parry, "Parry") }
+        Dodge = modifier { default = 0  valuedice = defenseRoll (Dodge, "Dodge") }
+        Saves = string { default = "+0 all" }
+        Down = string { value = if MDC <= 0 and 'Hit points' <= 0 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = keyvalues
+    {
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Claws"]
+        valueType = custom
+        {
+            Strike = modifier { default = 2  valuedice = strikeRoll (Strike)  action = if Range > 0 then "ranged" else "melee"  reach = 5  range = Range }
+            Damage = string { default = "2D6 M.D." }
+            Range = integer { description = "Feet; 0 for melee." default = 0 }
+            Roll = integer { value = 0  render = "Damage"  valuedice = damageRoll (Damage, 0)  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+riftsWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "Kind" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Melee", "Vibro-blade", "Energy pistol", "Energy rifle", "Rail gun", "Explosive", "Ancient", "Other"] }
+        Damage = string { description = "Dice and kind, such as 3D6 M.D. or 2D6 S.D.C." default = "1D6" }
+        Range = string { description = "In feet; empty for melee." }
+        'Rate of fire' = string {}
+        Payload = string {}
+        'Strike bonus' = string { description = "W.P. and aimed bonuses added to strike." default = "0" }
+        Cost = string {}
+    }
+}
+
+riftsArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        MDC = string { description = "Main body M.D.C." }
+        Mobility = string { keys = ["Excellent", "Good", "Fair", "Poor"] }
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+riftsPower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Spell", "Psionic", "Techno-wizard", "Other"] }
+        Level = string {}
+        Cost = string { description = "P.P.E. or I.S.P." }
+        Range = string {}
+        Duration = string {}
+        'Saving throw' = string {}
+    }
+}
+
+riftsItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+Rifts = system
+{
+    hints = [
+        hint
+        {
+            title = "Rifts Earth"
+            topic = "Getting started"
+            text = ["Roll eight attributes on 3d6, pick an O.C.C. or R.C.C. and its skills, and note hit points, S.D.C., armor M.D.C., P.P.E. and I.S.P."]
+        },
+        hint
+        {
+            title = "Skills"
+            topic = "Play"
+            text = ["Skills are percentages: roll 1d100 at or under the value."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Roll 1d20 for initiative. Each attack per melee is a strike: 1d20 plus bonuses, 5 or more hits; a natural 20 is a critical for double damage. The defender may parry or dodge on 1d20 and wins ties. Mega-damage (M.D.) weapons destroy S.D.C. things outright: 1 M.D. equals 100 S.D.C."]
+        },
+        hint
+        {
+            title = "Saving throws"
+            topic = "Play"
+            text = ["Roll 1d20 plus the save bonus: 12 against magic, 15 against psionics, 14 against poison. Against a monster's Horror Factor, the roll asks for its HF."]
+        }
+    ]
+    distanceUnit = "ft"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = riftsWeapon
+    Armor = riftsArmor
+    Powers = riftsPower
+    Equipment = riftsItem
+    secondaryTypes = ["Weapons", "Armor", "Powers", "Equipment"]
+    description = "Rifts (Palladium Megaversal system): a post-apocalyptic Earth of magic, mega-damage and dimensional rifts, d20 combat and percentile skills"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d100, 1d6]
+    cssFiles = ["/systems/rifts/rifts.css"]
+    libraries = ["/systems/names/wasteland.json", "/systems/names/fantasy.json", "/systems/names/scifi.json"]
+    nameSettings = [wastelandNameSetting, fantasyNameSetting, spaceNameSetting]
+}

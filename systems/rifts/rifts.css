@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* Rifts: the gunmetal look of the Megaversal sheets, steel grey blocks with
+   a hazard orange band for titles, the eight attributes in one row, and
+   hit points, S.D.C., M.D.C., P.P.E. and I.S.P. together. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1e2124;
+    --surface: #e9eaec;
+    --surface-alt: #dcdee2;
+    --surface-sunken: #c9ccd1;
+    --surface-muted: #a9adb4;
+    --text: #111316;
+    --text-muted: #383c43;
+    --text-faint: #6a6f78;
+    --on-accent: #111316;
+    --border: #8b9099;
+    --border-strong: #111316;
+    --accent: #e07a1f;
+    --accent-hover: #f08a2c;
+    --accent-soft: #f7dcc2;
+    --link: #b85c0f;
+    --danger: #b3261e;
+    --danger-hover: #8c1d17;
+    --danger-soft: #f3d3d0;
+    --success: #2e7d4f;
+    --paper: #e9eaec;
+    --card-bg: #dcdee2;
+    --dice-bg: #2b3036;
+    --dice-text: #f2a347;
+}
+
+.entityView {
+    --sheet-font: "Bahnschrift", "DIN Alternate", "Arial Narrow", Arial, sans-serif;
+    --title-font: "Eurostile", "Bank Gothic", "Arial Black", Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+.entityView .table-attributes > table > tbody { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border);
+    padding: 4px;
+}
+.entityView .table-weapon-proficiencies,
+.entityView .table-weapons { --block: 50%; }
+.entityView .table-weapon-proficiencies { clear: left; }
+.entityView .table-armor,
+.entityView .table-powers,
+.entityView .table-equipment { --block: 33.33%; }
+.entityView .table-armor { clear: left; }
