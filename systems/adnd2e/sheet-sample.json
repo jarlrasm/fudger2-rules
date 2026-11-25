@@ -1,0 +1,30 @@
+{
+  "values": {
+    "Character": { "Race": "Half-Elf", "Class": "Ranger", "Level": 4, "Alignment": "Neutral Good", "Kit": "Greenwood Ranger", "XP": 9200, "XP Bonus": "10%" },
+    "Abilities": {
+      "STR": { "Score": 17 }, "DEX": { "Score": 16 }, "CON": { "Score": 15 },
+      "INT": { "Score": 11 }, "WIS": { "Score": 14 }, "CHA": { "Score": 10 }
+    },
+    "Combat": { "Armor Class": 3, "Max HP": 34, "HP": 27, "Movement": 12, "Initiative Adj": 0 },
+    "Weapon Proficiencies": [ { "Weapon": "Long sword", "Specialized": false }, { "Weapon": "Long bow", "Specialized": false }, { "Weapon": "Dagger", "Specialized": false }, { "Weapon": "Spear", "Specialized": false } ],
+    "Nonweapon Proficiencies": [
+      { "Name": "Tracking", "Ability": "WIS", "Modifier": 0 },
+      { "Name": "Animal Lore", "Ability": "INT", "Modifier": 0 },
+      { "Name": "Set Snares", "Ability": "DEX", "Modifier": -1 },
+      { "Name": "Survival (forest)", "Ability": "INT", "Modifier": 0 },
+      { "Name": "Fire-building", "Ability": "WIS", "Modifier": -1 }
+    ],
+    "Thief Abilities": { "Move Silently.Points": 0, "Move Silently.Adjust": 25, "Hide in Shadows.Adjust": 15 },
+    "Money": { "GP": 46, "SP": 32, "CP": 15 },
+    "Background": { "Appearance": "Tall, green cloak patched at the elbows, a raven feather in the hood. Speaks little and watches the tree line.", "Notes": "Sworn to the circle of Hollowmere. Hunting the gnoll chieftain Grath who burned the Dellmoor mill. Animal companion: a lame wolfhound named Cinder." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Long sword", "values": { "Stats": { "Type": "S", "Size": "M", "Speed Factor": "5", "Damage SM": "1d8", "Damage L": "1d12", "Weight": "4", "Cost": "15 gp" } } },
+      { "name": "Long bow (flight arrows)", "values": { "Stats": { "Type": "Missile", "Size": "L", "Speed Factor": "8", "Damage SM": "1d6", "Damage L": "1d6", "Range": "7/14/21", "Rate of Fire": "2/1", "Weight": "3", "Cost": "75 gp" } } },
+      { "name": "Dagger", "values": { "Stats": { "Type": "P", "Size": "S", "Speed Factor": "2", "Damage SM": "1d4", "Damage L": "1d3", "Weight": "1", "Cost": "2 gp" } } }
+    ],
+    "Armor": [ { "name": "Studded leather", "values": { "Stats": { "AC": "7", "Weight": "25", "Cost": "20 gp" } } }, { "name": "Medium shield +1", "values": { "Stats": { "AC": "-2", "Weight": "10", "Cost": "magic" } } } ],
+    "Equipment": [ { "name": "Backpack" }, { "name": "Quiver of 24 flight arrows" }, { "name": "Rope, hemp (50 ft)" }, { "name": "Iron rations (1 week)" }, { "name": "Flint and steel" } ]
+  }
+}

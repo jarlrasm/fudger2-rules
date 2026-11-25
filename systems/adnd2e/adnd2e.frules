@@ -1,0 +1,582 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+classGroups = ["Warrior", "Wizard", "Priest", "Rogue"]
+
+groupOf (className) =
+    switch className
+        case "Fighter" then "Warrior"
+        case "Paladin" then "Warrior"
+        case "Ranger" then "Warrior"
+        case "Mage" then "Wizard"
+        case "Illusionist" then "Wizard"
+        case "Specialist Wizard" then "Wizard"
+        case "Cleric" then "Priest"
+        case "Druid" then "Priest"
+        case "Specialty Priest" then "Priest"
+        case "Thief" then "Rogue"
+        case "Bard" then "Rogue"
+        else "Warrior"
+
+thac0For (group, level) =
+    switch group
+        case "Warrior" then 21 - level
+        case "Priest" then 20 - 2 * ((level - 1) / 3)
+        case "Rogue" then 20 - (level - 1) / 2
+        else 20 - (level - 1) / 3
+
+warriorSave (level, n) =
+    if level < 1 then item (n, [16, 18, 17, 20, 19])
+    else if level < 3 then item (n, [14, 16, 15, 17, 17])
+    else if level < 5 then item (n, [13, 15, 14, 16, 16])
+    else if level < 7 then item (n, [11, 13, 12, 13, 14])
+    else if level < 9 then item (n, [10, 12, 11, 12, 13])
+    else if level < 11 then item (n, [8, 10, 9, 9, 11])
+    else if level < 13 then item (n, [7, 9, 8, 8, 10])
+    else if level < 15 then item (n, [5, 7, 6, 5, 8])
+    else if level < 17 then item (n, [4, 6, 5, 4, 7])
+    else item (n, [3, 5, 4, 4, 6])
+
+priestSave (level, n) =
+    if level < 4 then item (n, [10, 14, 13, 16, 15])
+    else if level < 7 then item (n, [9, 13, 12, 15, 14])
+    else if level < 10 then item (n, [7, 11, 10, 13, 12])
+    else if level < 13 then item (n, [6, 10, 9, 12, 11])
+    else if level < 16 then item (n, [5, 9, 8, 11, 10])
+    else if level < 19 then item (n, [4, 8, 7, 10, 9])
+    else item (n, [2, 6, 5, 8, 7])
+
+rogueSave (level, n) =
+    if level < 5 then item (n, [13, 14, 12, 16, 15])
+    else if level < 9 then item (n, [12, 12, 11, 15, 13])
+    else if level < 13 then item (n, [11, 10, 10, 14, 11])
+    else if level < 17 then item (n, [10, 8, 9, 13, 9])
+    else if level < 21 then item (n, [9, 6, 8, 12, 7])
+    else item (n, [8, 4, 7, 11, 5])
+
+wizardSave (level, n) =
+    if level < 6 then item (n, [14, 11, 13, 15, 12])
+    else if level < 11 then item (n, [13, 9, 11, 13, 10])
+    else if level < 16 then item (n, [11, 7, 9, 11, 8])
+    else if level < 21 then item (n, [10, 5, 7, 9, 6])
+    else item (n, [8, 3, 5, 7, 4])
+
+saveFor (group, level, n) =
+    switch group
+        case "Priest" then priestSave (level, n)
+        case "Rogue" then rogueSave (level, n)
+        case "Wizard" then wizardSave (level, n)
+        else warriorSave (level, n)
+
+exceptionalHit (pct) = if pct < 1 then 1 else if pct < 51 then 1 else if pct < 91 then 2 else if pct < 100 then 2 else 3
+exceptionalDamage (pct) = if pct < 1 then 2 else if pct < 51 then 3 else if pct < 76 then 3 else if pct < 91 then 4 else if pct < 100 then 5 else 6
+
+strHit (score, pct) =
+    if score < 4 then -3 else if score < 6 then -2 else if score < 8 then -1 else if score < 17 then 0 else if score < 18 then 1
+    else if pct > 0 then exceptionalHit (pct) else 1
+
+strDamage (score, pct) =
+    if score < 6 then -1 else if score < 16 then 0 else if score < 18 then 1
+    else if pct > 0 then exceptionalDamage (pct) else 2
+
+dexReaction (score) = if score < 6 then score - 6 else if score < 16 then 0 else if score < 17 then 1 else 2
+dexDefense (score) = if score < 7 then 7 - score else if score < 15 then 0 else if score < 18 then 14 - score else -4
+
+conHP (score, warrior) =
+    if score < 4 then -2 else if score < 7 then -1 else if score < 15 then 0 else if score < 16 then 1 else if score < 17 then 2
+    else if warrior then score - 14 else 2
+
+systemShock (score) = if score < 14 then 20 + 5 * score else if score < 15 then 88 else if score < 16 then 90 else if score < 17 then 95 else if score < 18 then 97 else 99
+resurrection (score) = if score < 14 then 25 + 5 * score else if score < 18 then 64 + 2 * score else 100
+
+intLanguages (score) = if score < 9 then 1 else if score < 12 then 2 else if score < 14 then 3 else if score < 16 then 4 else if score < 17 then 5 else if score < 18 then 6 else 7
+intSpellLevel (score) = if score < 9 then "None" else if score < 10 then "4th" else if score < 12 then "5th" else if score < 13 then "6th" else if score < 15 then "7th" else if score < 17 then "8th" else "9th"
+intLearn (score) = if score < 9 then 0 else if score < 18 then 5 * score - 10 else 85
+
+wisDefense (score) = if score < 5 then score - 6 else if score < 8 then -1 else if score < 15 then 0 else score - 14
+
+chaReaction (score) = if score < 8 then score - 8 else if score < 13 then 0 else if score < 16 then score - 12 else score - 11
+chaLoyalty (score) = if score < 9 then score - 9 else if score < 14 then 0 else if score < 15 then 1 else if score < 16 then 3 else if score < 17 then 4 else if score < 18 then 6 else 8
+
+hitText (total, natural, thac0, ac, answered) =
+    if not (answered) then toString (total) + ": hits AC " + toString (thac0 - total) + " or worse"
+    else toString (total) + " vs AC " + toString (ac) + ": " + attackOutcome (total, natural, thac0, ac)
+
+attackOutcome (total, natural, thac0, ac) =
+    if natural == 20 then "Hit"
+    else if natural == 1 then "Miss"
+    else if total >= thac0 - ac then "Hit"
+    else "Miss"
+
+attackResult (thac0, natural, total, ac, known) =
+{
+    Text = hitText (total, natural, thac0, ac, known)
+    Value = total
+    Outcome = if known then attackOutcome (total, natural, thac0, ac) else if natural == 20 then "Hit" else if natural == 1 then "Miss" else ""
+}
+
+adndAttack (thac0) = ask ("Target's AC", ([1d20], ((baseline, throws)->attackResult (thac0, first (first (throws).rolls), baseline + first (first (throws).rolls), asked, answered))))
+
+saveResult (target, natural, total) =
+{
+    Text = toString (total) + " vs " + toString (target) + ": " + (if natural == 20 or (natural > 1 and total >= target) then "Saved" else "Failed")
+    Value = total
+    Outcome = if natural == 20 or (natural > 1 and total >= target) then "Success" else "Failure"
+}
+
+adndSave (target) = ask ("Save modifier", 0, ([1d20], ((baseline, throws)->saveResult (target, first (first (throws).rolls), first (first (throws).rolls) + asked))))
+
+checkResult (score, natural) =
+{
+    Text = toString (natural) + " vs " + toString (score) + ": " + (if natural <= score and natural < 20 then "Success" else "Failure")
+    Value = natural
+    Outcome = if natural <= score and natural < 20 then "Success" else "Failure"
+}
+
+abilityCheck = ask ("Check modifier", 0, ([1d20], ((baseline, throws)->checkResult (baseline + asked, first (first (throws).rolls)))))
+
+percentResult (score, natural) =
+{
+    Text = toString (natural) + " vs " + toString (score) + "%: " + (if natural <= score then "Success" else "Failure")
+    Value = natural
+    Outcome = if natural <= score then "Success" else "Failure"
+}
+
+percentCheck = ([1d100], ((baseline, throws)->percentResult (baseline, first (first (throws).rolls))))
+
+diceCount (text) = bonusWithValue ([[text]], "^ *([0-9]+)d")
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+damageBonus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)") - bonusWithValue ([[text]], "d[0-9]+ *- *([0-9]+)")
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+lastNumber (text) = bonusWithValue ([[text]], "([0-9]+)[^0-9]*$")
+
+damageRoll (n, dieSides) = ([dice { number = n  sides = dieSides }], ((baseline, throws)->{ Text = toString (max (1, baseline + sum (first (throws).rolls))) + " damage"  Value = max (1, baseline + sum (first (throws).rolls)) }))
+
+signedZero (n) = if n < 0 then toString (n) else "+" + toString (n)
+
+signed (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n) else ""
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, thac0, hit, damageText, damageExtra, kind, distance, speedFactor) = custom
+{
+    Name = name
+    'To Hit' = modifier { value = hit  valuedice = adndAttack (thac0)  action = kind  reach = 10  range = distance  editable = none }
+    Damage = integer { value = damageBonus (damageText) + damageExtra  valuedice = damageRoll (diceCount (damageText), dieSize (damageText))  render = toString (diceCount (damageText)) + "d" + toString (dieSize (damageText)) + signed (damageBonus (damageText) + damageExtra)  editable = none }
+    Speed = "Speed " + speedFactor
+}
+
+attackFor (char, weapon) =
+    if lastNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Combat.THAC0, dexReaction (char.Abilities.DEX.Score) + toInt (weaponStat (weapon, "Magic Bonus")), weaponStat (weapon, "Damage SM"), toInt (weaponStat (weapon, "Magic Bonus")) + (if weaponStat (weapon, "Type") == "Thrown" then strDamage (char.Abilities.STR.Score, char.Abilities.STR.Exceptional) else 0), "ranged", 10 * lastNumber (weaponStat (weapon, "Range")), weaponStat (weapon, "Speed Factor"))
+    else
+        weaponAttack (weapon.Name, char.Combat.THAC0, strHit (char.Abilities.STR.Score, char.Abilities.STR.Exceptional) + toInt (weaponStat (weapon, "Magic Bonus")), weaponStat (weapon, "Damage SM"), strDamage (char.Abilities.STR.Score, char.Abilities.STR.Exceptional) + toInt (weaponStat (weapon, "Magic Bonus")), "melee", 10, weaponStat (weapon, "Speed Factor"))
+
+thiefSkill (base) = custom
+{
+    Base = integer { description = "The base chance every thief starts with." default = base  minvalue = 0  render = "base " + toString (Base) }
+    Points = integer { description = "Discretionary points from level advancement." default = 0  minvalue = 0  render = "points " + toString (Points) }
+    Adjust = modifier { description = "Race, Dexterity and armor adjustments." default = 0  render = "adj " + signedZero (Adjust) }
+    Chance = integer { value = Base + Points + Adjust  valuedice = percentCheck  editable = none }
+}
+
+spellLevel = custom
+{
+    Slots = integer { default = 0  minvalue = 0 }
+    Used = integer { default = 0  minvalue = 0  editable = live }
+}
+
+proficiencyAbilities = ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+
+abilityScore (char, name) =
+    switch name
+        case "STR" then char.Abilities.STR.Score
+        case "DEX" then char.Abilities.DEX.Score
+        case "CON" then char.Abilities.CON.Score
+        case "INT" then char.Abilities.INT.Score
+        case "WIS" then char.Abilities.WIS.Score
+        else char.Abilities.CHA.Score
+
+totalSlots (char) = char.'Spell Slots'.'1st'.Slots + char.'Spell Slots'.'2nd'.Slots + char.'Spell Slots'.'3rd'.Slots + char.'Spell Slots'.'4th'.Slots + char.'Spell Slots'.'5th'.Slots + char.'Spell Slots'.'6th'.Slots + char.'Spell Slots'.'7th'.Slots + char.'Spell Slots'.'8th'.Slots + char.'Spell Slots'.'9th'.Slots
+
+casterOnly (char) = if totalSlots (char) > 0 then visible else editor
+
+downState (hp) = if hp < -9 then "Dead" else if hp < 1 then "Dying" else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, 'Saving Throws', Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string { keys = ["Human", "Dwarf", "Elf", "Gnome", "Half-Elf", "Halfling"] }
+        Class = string { keys = ["Fighter", "Paladin", "Ranger", "Mage", "Illusionist", "Specialist Wizard", "Cleric", "Druid", "Specialty Priest", "Thief", "Bard"] }
+        Level = integer { default = 1  minvalue = 0  maxvalue = 20 }
+        Alignment = string { keys = ["Lawful Good", "Neutral Good", "Chaotic Good", "Lawful Neutral", "True Neutral", "Chaotic Neutral", "Lawful Evil", "Neutral Evil", "Chaotic Evil"] }
+        Kit = string { description = "A class kit, if any." }
+        'Class Group' = string { value = groupOf (Class)  editable = none }
+        XP = integer { default = 0  editable = live }
+        'XP Bonus' = string { description = "Bonus experience for a high prime requisite." keys = ["None", "10%"] default = "None" }
+    }
+
+    Abilities = table
+    {
+        description = "The six ability scores, 3 to 18, with what each one gives. Roll d20 at or under a score for an ability check."
+        tableLayout = layout { columns = 3  size = wide }
+        STR = custom
+        {
+            Score = integer { description = "Strength. Warriors with 18 roll for exceptional strength." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            Exceptional = integer { description = "Exceptional strength percentile for warriors with 18 (100 means 18/00)." default = 0  minvalue = 0  maxvalue = 100  render = if Exceptional > 0 then "18/" + toString (Exceptional) else "-" }
+            'Hit Prob' = string { description = "Adjustment to melee attack rolls." value = "Hit " + signedZero (strHit (Score, Exceptional))  editable = none }
+            'Dmg Adj' = string { description = "Adjustment to melee and thrown damage." value = "Dmg " + signedZero (strDamage (Score, Exceptional))  editable = none }
+        }
+        DEX = custom
+        {
+            Score = integer { description = "Dexterity." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            'Reaction Adj' = string { description = "Adjustment to surprise rolls." value = "Reaction " + signedZero (dexReaction (Score))  editable = none }
+            'Missile Adj' = string { description = "Adjustment to hit with missile weapons." value = "Missile " + signedZero (dexReaction (Score))  editable = none }
+            'Defensive Adj' = string { description = "Adjustment to Armor Class: negative is better." value = "AC " + signedZero (dexDefense (Score))  editable = none }
+        }
+        CON = custom
+        {
+            Score = integer { description = "Constitution." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            'HP Adj' = string { description = "Hit points per hit die; only warriors get more than +2." value = "HP " + signedZero (conHP (Score, groupOf (Character.Class) == "Warrior"))  editable = none }
+            'System Shock' = integer { description = "Percent chance to survive magical aging, petrification or polymorph." value = systemShock (Score)  valuedice = percentCheck  render = "Shock " + toString (systemShock (Score)) + "%"  editable = none }
+            'Resurrection Survival' = integer { description = "Percent chance to survive being raised from the dead." value = resurrection (Score)  valuedice = percentCheck  render = "Raise " + toString (resurrection (Score)) + "%"  editable = none }
+        }
+        INT = custom
+        {
+            Score = integer { description = "Intelligence." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            Languages = string { description = "Number of extra languages known." value = "Languages " + toString (intLanguages (Score))  editable = none }
+            'Spell Level' = string { description = "Highest wizard spell level the character can learn." value = "Max spell " + intSpellLevel (Score)  editable = none }
+            'Learn Spell' = integer { description = "Percent chance for a wizard to learn a new spell." value = intLearn (Score)  valuedice = percentCheck  render = "Learn " + toString (intLearn (Score)) + "%"  editable = none }
+        }
+        WIS = custom
+        {
+            Score = integer { description = "Wisdom." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            'Magical Defense Adj' = string { description = "Adjustment to saves against mind-affecting magic." value = "Magic defense " + signedZero (wisDefense (Score))  editable = none }
+        }
+        CHA = custom
+        {
+            Score = integer { description = "Charisma." default = 10  minvalue = 3  maxvalue = 25  valuedice = abilityCheck }
+            'Loyalty Base' = string { description = "Adjustment to henchmen's loyalty." value = "Loyalty " + signedZero (chaLoyalty (Score))  editable = none }
+            'Reaction Adj' = string { description = "Adjustment to encounter reactions." value = "Reaction " + signedZero (chaReaction (Score))  editable = none }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armor Class' = integer { description = "Descending: 10 is unarmored, lower is better. Include the Dexterity defensive adjustment." default = 10 }
+        THAC0 = integer { description = "To Hit Armor Class 0: roll this minus the target's AC or more on d20." default = thac0For (groupOf (Character.Class), Character.Level) }
+        'Max HP' = integer { default = 8  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 the character falls; at -10 they die." default = 'Max HP'  editable = live }
+        Movement = integer { description = "Movement rate; 12 for an unencumbered human." default = 12 }
+        'Initiative Adj' = modifier { description = "Weapon speed, spell casting time or other adjustments to initiative." default = 0  editable = live }
+        Initiative = integer { description = "d10 plus adjustments. Lowest acts first." value = 'Initiative Adj'  valuedice = 1d10  editable = none }
+        'Day of rest' = button { description = "A full day of rest heals 1 hit point and lets spellcasters memorize their spells again."  editable = live  onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + 1)
+                (root.'Spell Slots'.'1st'.Used) = 0
+                (root.'Spell Slots'.'2nd'.Used) = 0
+                (root.'Spell Slots'.'3rd'.Used) = 0
+                (root.'Spell Slots'.'4th'.Used) = 0
+                (root.'Spell Slots'.'5th'.Used) = 0
+                (root.'Spell Slots'.'6th'.Used) = 0
+                (root.'Spell Slots'.'7th'.Used) = 0
+                (root.'Spell Slots'.'8th'.Used) = 0
+                (root.'Spell Slots'.'9th'.Used) = 0
+            }
+        }
+        Down = string { value = downState (HP)  visible = none  indicator = "#d64545" }
+    }
+
+    'Saving Throws' = table
+    {
+        description = "Roll d20 at or over the number to save. The roll asks for a modifier, such as a magic item or Wisdom's magical defense."
+        tableLayout = layout { columns = 5  size = wide }
+        'Paralyzation Poison Death' = integer { default = saveFor (groupOf (Character.Class), Character.Level, 0)  valuedice = adndSave ('Paralyzation Poison Death') }
+        'Rod Staff Wand' = integer { default = saveFor (groupOf (Character.Class), Character.Level, 1)  valuedice = adndSave ('Rod Staff Wand') }
+        'Petrification Polymorph' = integer { default = saveFor (groupOf (Character.Class), Character.Level, 2)  valuedice = adndSave ('Petrification Polymorph') }
+        'Breath Weapon' = integer { default = saveFor (groupOf (Character.Class), Character.Level, 3)  valuedice = adndSave ('Breath Weapon') }
+        Spell = integer { default = saveFor (groupOf (Character.Class), Character.Level, 4)  valuedice = adndSave (Spell) }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each attack asks for the target's Armor Class. A natural 20 always hits and a natural 1 always misses."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Punch", characterTable.Combat.THAC0, strHit (characterTable.Abilities.STR.Score, characterTable.Abilities.STR.Exceptional), "1d2", strDamage (characterTable.Abilities.STR.Score, characterTable.Abilities.STR.Exceptional), "melee", 10, "1")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Weapon Proficiencies' = list
+    {
+        singular = "Weapon proficiency"
+        editable = character
+        valueType = custom
+        {
+            Weapon = string {}
+            Specialized = bool { default = false }
+        }
+    }
+
+    'Nonweapon Proficiencies' = list
+    {
+        description = "Roll d20 at or under the ability score plus the modifier."
+        singular = "Proficiency"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Ability = string { keys = proficiencyAbilities  default = "INT" }
+            Modifier = modifier { default = 0 }
+            Check = integer { value = abilityScore (characterTable, Ability) + Modifier  valuedice = abilityCheck  editable = none }
+        }
+    }
+
+    'Thief Abilities' = table
+    {
+        description = "Percentile skills for thieves and bards. Roll at or under the chance."
+        tableLayout = layout { columns = 2  size = wide }
+        'Pick Pockets' = thiefSkill (15)
+        'Open Locks' = thiefSkill (10)
+        'Find Remove Traps' = thiefSkill (5)
+        'Move Silently' = thiefSkill (10)
+        'Hide in Shadows' = thiefSkill (5)
+        'Detect Noise' = thiefSkill (15)
+        'Climb Walls' = thiefSkill (60)
+        'Read Languages' = thiefSkill (0)
+    }
+
+    'Spell Slots' = table
+    {
+        description = "Spells memorized per spell level, and how many are cast since the last rest."
+        visible = casterOnly (characterTable)
+        tableLayout = layout { columns = 3  size = wide }
+        '1st' = spellLevel {}
+        '2nd' = spellLevel {}
+        '3rd' = spellLevel {}
+        '4th' = spellLevel {}
+        '5th' = spellLevel {}
+        '6th' = spellLevel {}
+        '7th' = spellLevel {}
+        '8th' = spellLevel {}
+        '9th' = spellLevel {}
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        visible = casterOnly (characterTable)
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Money = table
+    {
+        tableLayout = layout { columns = 5 }
+        PP = integer { default = 0  editable = live }
+        GP = integer { default = 0  editable = live }
+        EP = integer { default = 0  editable = live }
+        SP = integer { default = 0  editable = live }
+        CP = integer { default = 0  editable = live }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+monsterDamage (text) = custom
+{
+    Damage = integer { value = damageBonus (text)  valuedice = damageRoll (diceCount (text), dieSize (text))  render = text  editable = none }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/adnd2e/monster.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armor Class' = integer { default = 7 }
+        Movement = string { default = "12" }
+        'Hit Dice' = string { default = "1" }
+        THAC0 = integer { default = 19 }
+        'Max HP' = integer { default = 5 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'No of Attacks' = string { default = "1" }
+        'Special Attacks' = string {}
+        'Special Defenses' = string {}
+        'Magic Resistance' = string { default = "Nil" }
+        Size = string { keys = ["T", "S", "M", "L", "H", "G"]  default = "M" }
+        Morale = string { description = "Morale rating; the GM rolls 2d10 over it to see the creature break." default = "Average (8-10)" }
+        Intelligence = string { default = "Average (8-10)" }
+        Alignment = string { default = "Neutral" }
+        'XP Value' = integer { default = 15 }
+        Initiative = integer { default = 0  valuedice = 1d10 }
+        Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        description = "Each attack rolls d20 against the target's Armor Class with the monster's THAC0."
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Bonus = modifier { default = 0  valuedice = adndAttack (Stats.THAC0)  action = if Ranged then "ranged" else "melee"  reach = 10  range = 'Long Range' }
+            Ranged = bool { default = false }
+            'Long Range' = integer { description = "Long range in feet, for ranged attacks." default = 0 }
+            Damage = string { default = "1d6" }
+            Roll = integer { value = damageBonus (Damage)  valuedice = damageRoll (diceCount (Damage), dieSize (Damage))  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+        Combat = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { description = "P piercing, S slashing, B bludgeoning, or Thrown and Missile for ranged." keys = ["P", "S", "B", "S/P", "P/B", "Thrown", "Missile"] }
+        Size = string { keys = ["S", "M", "L"] }
+        'Speed Factor' = string {}
+        'Damage SM' = string { default = "1d6" }
+        'Damage L' = string { default = "1d6" }
+        Range = string { description = "Short, medium and long range in tens of yards, such as 2/4/6." }
+        'Rate of Fire' = string {}
+        'Magic Bonus' = string { default = "0" }
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        AC = string { description = "The Armor Class it gives; a shield improves it by 1." }
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Level" prefix = "Level" filter = Stats.Level }, filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Wizard", "Priest"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 9 }
+        'School or Sphere' = string {}
+        Range = string {}
+        Components = string {}
+        Duration = string {}
+        'Casting Time' = string {}
+        'Area of Effect' = string {}
+        'Saving Throw' = string {}
+    }
+}
+
+ADnD2e = system
+{
+    hints = [
+        hint
+        {
+            title = "THAC0"
+            topic = "Combat"
+            text = ["Attacks ask for the target's Armor Class: you hit when the d20 plus adjustments is at least your THAC0 minus that AC. Leave it empty to see the lowest AC you hit."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Each round roll d10 plus weapon speed or casting time. The lowest goes first."]
+        },
+        hint
+        {
+            title = "Saving throws"
+            topic = "Play"
+            text = ["Saving throws follow the class group and level. Roll d20 at or over the number; the roll asks for a modifier."]
+        },
+        hint
+        {
+            title = "Proficiencies"
+            topic = "Getting started"
+            text = ["Nonweapon proficiencies roll d20 at or under the ability score plus the modifier. Thieves and bards spend points on their percentile abilities."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 10
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Equipment = equipmentStats
+    Spells = spellStats
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Spells"]
+    description = "Advanced Dungeons & Dragons 2nd edition: THAC0, descending Armor Class, five saving throws and class groups"
+    initiativeCompare (item1, item2) = compare (item2, item1)
+    quickdice = [1d20, 1d10, 1d100, 1d8, 1d6, 1d4]
+    cssFiles = ["/systems/adnd2e/adnd2e.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/barbarian.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, swordAndSorceryNameSetting]
+}
