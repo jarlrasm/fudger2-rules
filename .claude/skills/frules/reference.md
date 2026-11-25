@@ -240,6 +240,19 @@ Strikes = slots { number = 3  editable = live  indicator = "#d64545" }
 
 Systems that use it: D&D conditions, Exhaustion, Concentration and Down at 0 HP; Fudge's worst wound level; Star Wars injuries; Torg Shock, Wounds, Stymied and Weakened; Mothership Wounds; GURPS Reeling, HT to stay up and Death checks from HP; Dark Conspiracy Wounded, Unconscious, Dead and Down; Over the Edge Strikes.
 
+An integer, modifier or bool field with `aura = "<colour>"` draws an aura around the entity's battlemap token: a circle that moves with the token and rings the tokens inside it. The reach is in the system's `distanceUnit` and is measured from the token's edge.
+
+- An integer or modifier gives the reach itself, and there is no aura while it is 0 or less. A bool draws the aura while it is ticked, with the reach from `auraSize = <number>`.
+- The aura is named after the field; `auraLabel = "Aura of Courage"` names it instead. `auraShape = "cone"` makes it a cone that points the way the token faces.
+- A field the gamemaster hides from players gives an aura only the gamemaster sees. Auras from the sheet show in the token's aura editor but can only be changed on the sheet.
+
+```
+'Aura of Protection' = integer { value = if hasClassFeature (characterTable, "Aura of Protection") then 10 else 0  editable = none  visible = none  aura = "#d4b106" }
+Torch = bool { default = false  editable = live  aura = "#e8913a"  auraSize = 20 }
+```
+
+Systems that use it: D&D Aura of Protection.
+
 A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
 
 ## The system
