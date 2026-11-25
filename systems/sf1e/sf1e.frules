@@ -1,0 +1,734 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) = score / 2 - 5
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+sf1Outcome (total, natural, dc, automatic) =
+    if automatic and natural == 20 then "Success"
+    else if automatic and natural == 1 then "Failure"
+    else if total >= dc then "Success"
+    else "Failure"
+
+sf1Result (total, natural, dc, automatic) =
+{
+    Text = toString (total)
+        + (if dc > 0 then " vs DC " + toString (dc) + ": " + sf1Outcome (total, natural, dc, automatic) else "")
+        + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = if dc > 0 then sf1Outcome (total, natural, dc, automatic) else ""
+}
+
+sf1AttackOutcome (total, natural, ac) =
+    if natural == 1 then "Miss"
+    else if natural == 20 then "Critical hit"
+    else if ac == 0 then ""
+    else if total >= ac then "Hit"
+    else "Miss"
+
+sf1AttackResult (total, natural, ac, defense) =
+{
+    Text = toString (total)
+        + (if ac > 0 then " vs " + defense + " " + toString (ac) else "")
+        + (if sf1AttackOutcome (total, natural, ac) == "" then "" else ": " + sf1AttackOutcome (total, natural, ac))
+        + (if natural == 20 then " (natural 20, double damage)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = sf1AttackOutcome (total, natural, ac)
+}
+
+sf1Roll (dc, automatic) = ([1d20], ((baseline, throws)->sf1Result (baseline + first (first (throws).rolls), first (first (throws).rolls), dc, automatic)))
+
+sf1AskedRoll (automatic) = ([1d20], ((baseline, throws)->sf1Result (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, automatic)))
+
+sf1Check = ask ("DC", sf1AskedRoll (false))
+
+sf1Save = ask ("DC", sf1AskedRoll (true))
+
+sf1AttackRoll (defense, ac) = ([1d20], ((baseline, throws)->sf1AttackResult (baseline + first (first (throws).rolls), first (first (throws).rolls), ac, defense)))
+
+sf1AskedAttack (defense) = ([1d20], ((baseline, throws)->sf1AttackResult (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, defense)))
+
+sf1Attack (defense) = ask (defense, sf1AskedAttack (defense))
+
+plainSf1 = sf1Roll (0, false)
+
+conditionPenalty (char) =
+    (if char.Conditions.Shaken or char.Conditions.Frightened then 2 else 0) + (if char.Conditions.Sickened then 2 else 0)
+
+attackPenalty (char) =
+    conditionPenalty (char) + (if char.Conditions.'Off target' then 2 else 0) + (if char.Conditions.Entangled or char.Conditions.Grappled then 2 else 0)
+    + (if char.Combat.Attack == "Full attack" then 4 else 0)
+
+ability = custom
+{
+    Score = integer { description = "Ability score, usually 8 to 18 at first level." default = 10  minvalue = 1  maxvalue = 40 }
+    Modifier = modifier { description = "Modifier from the score: (score - 10) / 2, rounded down." value = abilityModifier (Score)  valuedice = sf1Check  editable = none }
+}
+
+save (abilityMod) = custom
+{
+    Base = integer { description = "Base save bonus from your class and level." default = 0 }
+    Misc = integer { description = "Other bonuses and penalties." default = 0 }
+    Total = modifier { description = "Total save: base plus ability and misc, minus condition penalties. A natural 20 always succeeds." value = Base + abilityMod + Misc - conditionPenalty (characterTable)  valuedice = sf1Save  editable = none }
+}
+
+skill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { description = "Skill ranks. You can't have more ranks than your level." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "A class skill with at least one rank gets +3." default = false }
+    Misc = integer { description = "Other bonuses, such as racial, theme or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill." value = Ranks + abilityMod + (if 'Class skill' and Ranks > 0 then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = sf1Check  editable = none }
+}
+
+trainedSkill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { description = "Skill ranks. This skill needs at least one rank for most uses." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "A class skill with at least one rank gets +3." default = false }
+    Misc = integer { description = "Other bonuses, such as racial, theme or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill. Untrained, only simple uses are allowed." value = Ranks + abilityMod + (if 'Class skill' and Ranks > 0 then 3 else 0) + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = sf1Check  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+armorStat (item, field) = toInt (itemStat (item, "sf1Armor", field))
+
+eacBonus (char) = sum (map ((x)->armorStat (x, "EAC Bonus"), char.Armor))
+
+kacBonus (char) = sum (map ((x)->armorStat (x, "KAC Bonus"), char.Armor))
+
+maxDex (char, dex) =
+    if count (char.Armor) == 0 then dex
+    else min (dex, min (map ((x)->if itemStat (x, "sf1Armor", "Max Dex") == "" then 99 else armorStat (x, "Max Dex"), char.Armor)))
+
+checkPenalty (char) = abs (sum (map ((x)->armorStat (x, "Check Penalty"), char.Armor)))
+
+weaponCategory (weapon) = toLower (itemStat (weapon, "sf1Weapon", "Category"))
+
+isMelee (weapon) = contains (weaponCategory (weapon), "melee") or weaponCategory (weapon) == ""
+
+isThrown (weapon) = contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "thrown") or contains (weaponCategory (weapon), "grenade")
+
+hasReach (weapon) = contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "reach")
+
+weaponAttack (name, bonus, damage, critical, kind, reachFeet, rangeFeet, defense) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = sf1Attack (defense)  action = kind  reach = reachFeet  range = rangeFeet  editable = none }
+    Damage = damage
+    Critical = critical
+}
+
+meleeBonus (char) = char.Combat.BAB + char.Abilities.Str.Modifier - attackPenalty (char)
+
+rangedBonus (char) = char.Combat.BAB + char.Abilities.Dex.Modifier - attackPenalty (char)
+
+thrownBonus (char) = char.Combat.BAB + char.Abilities.Str.Modifier - attackPenalty (char)
+
+damageType (weapon) = itemStat (weapon, "sf1Weapon", "Damage")
+
+targetDefense (weapon) =
+    if itemStat (weapon, "sf1Weapon", "Target") == "EAC" or itemStat (weapon, "sf1Weapon", "Target") == "KAC" then itemStat (weapon, "sf1Weapon", "Target")
+    else if contains (damageType (weapon), " E") or contains (damageType (weapon), " F") or contains (damageType (weapon), " C") or contains (damageType (weapon), " So") or contains (damageType (weapon), " A") then "EAC"
+    else "KAC"
+
+withBonus (text, bonus) = text + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
+
+operativeOrMelee (char, weapon) =
+    if contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "operative") then char.Abilities.Dex.Modifier - char.Abilities.Str.Modifier else 0
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, meleeBonus (char) + operativeOrMelee (char, weapon), withBonus (damageType (weapon), char.Abilities.Str.Modifier + char.Combat.'Weapon specialization'), itemStat (weapon, "sf1Weapon", "Critical"), "melee", if hasReach (weapon) then 10 else 5, 0, targetDefense (weapon))
+    else if isThrown (weapon) then
+        weaponAttack (weapon.Name, thrownBonus (char), withBonus (damageType (weapon), char.Abilities.Str.Modifier), itemStat (weapon, "sf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "sf1Weapon", "Range")) * 5, targetDefense (weapon))
+    else
+        weaponAttack (weapon.Name, rangedBonus (char), withBonus (damageType (weapon), char.Combat.'Weapon specialization'), itemStat (weapon, "sf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "sf1Weapon", "Range")) * 10, targetDefense (weapon))
+
+downState (hp, damageTaken, maxHp, resolve) =
+    if hp <= 0 and damageTaken >= maxHp then "Dead"
+    else if hp <= 0 and resolve <= 0 then "Dying"
+    else if hp <= 0 then "Unconscious"
+    else ""
+
+keyModifier (char) =
+    switch char.Character.'Key ability'
+        case "Str" then char.Abilities.Str.Modifier
+        case "Dex" then char.Abilities.Dex.Modifier
+        case "Con" then char.Abilities.Con.Modifier
+        case "Int" then char.Abilities.Int.Modifier
+        case "Wis" then char.Abilities.Wis.Modifier
+        else char.Abilities.Cha.Modifier
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Combat, Saves, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Envoy", "Mechanic", "Mystic", "Operative", "Solarian", "Soldier", "Technomancer", "Biohacker", "Vanguard", "Witchwarper", "Evolutionist", "Nanocyte", "Precog"] }
+        Level = integer { description = "Character level, from 1 to 20." default = 1  minvalue = 1  maxvalue = 20 }
+        Race = string { keys = ["Android", "Human", "Kasatha", "Lashunta", "Shirren", "Vesk", "Ysoki"] }
+        Theme = string { description = "The character's background, which gives an ability score bonus and theme knowledge." keys = ["Ace Pilot", "Bounty Hunter", "Icon", "Mercenary", "Outlaw", "Priest", "Scholar", "Spacefarer", "Xenoseeker", "Themeless"] }
+        'Key ability' = string { description = "Your class's key ability score, which sets Resolve Points and class DCs." default = "Str"  keys = ["Str", "Dex", "Con", "Int", "Wis", "Cha"] }
+        Alignment = string { keys = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] }
+        Deity = string {}
+        Size = string { default = "Medium"  keys = ["Small", "Medium", "Large"] }
+        Speed = integer { description = "Base land speed per move action." default = 30  render = distance (Speed) }
+        'Home world' = string {}
+        Experience = integer { description = "Experience points." default = 0  editable = live }
+        Languages = string {}
+    }
+
+    Abilities = table
+    {
+        description = "The six ability scores and their modifiers."
+        tableLayout = layout { columns = 3  size = wide }
+        Str = ability {}
+        Dex = ability {}
+        Con = ability {}
+        Int = ability {}
+        Wis = ability {}
+        Cha = ability {}
+    }
+
+    Health = table
+    {
+        description = "Stamina takes damage first, then Hit Points. Resolve fuels abilities and keeps you alive."
+        tableLayout = layout { columns = 3 }
+        'Max SP' = integer { description = "Stamina Points when fresh: class stamina plus Con modifier, per level." default = 7 }
+        SP = integer { description = "Current Stamina Points. Damage comes off Stamina first." default = 'Max SP'  minvalue = 0  editable = live  indicator = "#e8913a" }
+        'Max HP' = integer { description = "Hit Points when unhurt: race HP plus class HP per level." default = 10 }
+        HP = integer { description = "Current Hit Points. At 0 you are unconscious and dying." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Damage past 0' = integer { description = "Damage taken while at 0 HP. When it reaches your max HP you die." default = 0  minvalue = 0  editable = live }
+        'Max RP' = integer { description = "Resolve Points: half your level (at least 1) plus your key ability modifier." value = max (1, Character.Level / 2) + keyModifier (characterTable)  editable = none }
+        RP = integer { description = "Current Resolve Points. Spend them to regain Stamina, stabilize or use class abilities." default = 'Max RP'  minvalue = 0  editable = live }
+        Down = string { value = downState (HP, 'Damage past 0', 'Max HP', RP)  visible = none  indicator = "#d64545" }
+        'Rest 10 minutes' = button
+        {
+            description = "Rest 10 minutes and spend 1 Resolve Point to regain all your Stamina Points."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.SP) = if RP > 0 then 'Max SP' else SP
+                (root.Health.RP) = max (0, RP - 1)
+            }
+        }
+        'Full rest' = button
+        {
+            description = "Eight hours of rest restore all Stamina and Resolve, Hit Points equal to your level, and spells per day."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.SP) = 'Max SP'
+                (root.Health.HP) = min ('Max HP', HP + Character.Level)
+                (root.Health.RP) = 'Max RP'
+                (root.Health.'Damage past 0') = 0
+                (root.Conditions.Fatigued) = false
+                (root.Spellcasting.'Level 1'.realvalue) = 0
+                (root.Spellcasting.'Level 2'.realvalue) = 0
+                (root.Spellcasting.'Level 3'.realvalue) = 0
+                (root.Spellcasting.'Level 4'.realvalue) = 0
+                (root.Spellcasting.'Level 5'.realvalue) = 0
+                (root.Spellcasting.'Level 6'.realvalue) = 0
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        Initiative = modifier { description = "Initiative: Dex modifier plus other bonuses." value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainSf1  editable = none }
+        'Initiative misc' = integer { default = 0 }
+        BAB = integer { description = "Base attack bonus from your class and level." default = 0 }
+        Attack = selector { description = "A full attack makes two attacks, each at -4." options = ["Single", "Full attack"]  labels = ["Single", "Full"]  colors = ["", "red"]  default = "Single"  editable = live  save = nosave }
+        EAC = integer { description = "Energy Armor Class: 10 plus armor's EAC bonus and Dex (up to the armor's max)." value = 10 + eacBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + 'AC misc' - (if Conditions.'Flat footed' then 2 else 0)  editable = none }
+        KAC = integer { description = "Kinetic Armor Class: 10 plus armor's KAC bonus and Dex (up to the armor's max)." value = 10 + kacBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + 'AC misc' - (if Conditions.'Flat footed' then 2 else 0)  editable = none }
+        'AC vs maneuvers' = integer { description = "KAC + 8, the target for combat maneuvers such as grapple and trip." value = KAC + 8  editable = none }
+        'AC misc' = integer { default = 0 }
+        'Weapon specialization' = integer { description = "Extra damage from Weapon Specialization: your level, or half for small arms." default = 0 }
+        'Damage reduction' = string { description = "Damage reduction against kinetic damage, and what bypasses it." }
+        'Energy resistance' = string { description = "Resistance to energy damage, by type." }
+        'Spell resistance' = integer { default = 0 }
+    }
+
+    Saves = table
+    {
+        description = "Saving throws against spells, poison and hazards."
+        tableLayout = layout { columns = 3 }
+        Fortitude = save (Abilities.Con.Modifier)
+        Reflex = save (Abilities.Dex.Modifier)
+        Will = save (Abilities.Wis.Modifier)
+    }
+
+    Conditions = table
+    {
+        description = "Common conditions. Some give penalties to rolls."
+        tableLayout = layout { columns = 4 }
+        Shaken = bool { description = "Shaken: -2 on attacks, saves, skill and ability checks." default = false  editable = live  indicator = "#8e5cc4" }
+        Frightened = bool { description = "Frightened: shaken, and you must flee from the source of fear." default = false  editable = live  indicator = "#8e5cc4" }
+        Sickened = bool { description = "Sickened: -2 on attacks, damage, saves, skill and ability checks." default = false  editable = live  indicator = "#3fa34d" }
+        'Off target' = bool { description = "Off-target: -2 on attack rolls." default = false  editable = live  indicator = "#d4b106" }
+        'Flat footed' = bool { description = "Flat-footed: -2 to AC." default = false  editable = live  indicator = "#d4b106" }
+        Fatigued = bool { description = "Fatigued: -1 to AC, attacks, Reflex saves and Str and Dex checks; can't run or charge." default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { description = "Entangled: -2 on attacks and AC, half speed." default = false  editable = live  indicator = "#e8913a" }
+        Grappled = bool { description = "Grappled: -2 on attacks and AC, and you can't move." default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { description = "Prone: -4 on melee attacks, +4 AC against ranged, -4 AC against melee." default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { description = "Stunned: drop what you hold, no actions, -2 AC and flat-footed." default = false  editable = live  indicator = "#d4b106" }
+        Staggered = bool { description = "Staggered: a single move or standard action each turn." default = false  editable = live  indicator = "#d4b106" }
+        'Negative levels' = integer { description = "Each negative level gives -1 on most rolls." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+    }
+
+    Skills = table
+    {
+        description = "Skills. Roll d20 plus the total. Armor check penalty applies to Str and Dex skills."
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Athletics = skill (Abilities.Str.Modifier, checkPenalty (characterTable))
+        Bluff = skill (Abilities.Cha.Modifier, 0)
+        Computers = trainedSkill (Abilities.Int.Modifier, 0)
+        Culture = trainedSkill (Abilities.Int.Modifier, 0)
+        Diplomacy = skill (Abilities.Cha.Modifier, 0)
+        Disguise = skill (Abilities.Cha.Modifier, 0)
+        Engineering = trainedSkill (Abilities.Int.Modifier, 0)
+        Intimidate = skill (Abilities.Cha.Modifier, 0)
+        'Life Science' = trainedSkill (Abilities.Int.Modifier, 0)
+        Medicine = trainedSkill (Abilities.Int.Modifier, 0)
+        Mysticism = trainedSkill (Abilities.Wis.Modifier, 0)
+        Perception = skill (Abilities.Wis.Modifier, 0)
+        'Physical Science' = trainedSkill (Abilities.Int.Modifier, 0)
+        Piloting = skill (Abilities.Dex.Modifier, 0)
+        Profession = trainedSkill (Abilities.Wis.Modifier, 0)
+        'Sense Motive' = skill (Abilities.Wis.Modifier, 0)
+        'Sleight of Hand' = trainedSkill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Stealth = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Survival = skill (Abilities.Wis.Modifier, 0)
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        description = "Batteries, rounds and other charges, with what is left."
+        singular = "Ammunition"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Charges = integer { default = 20  minvalue = 0  editable = live }
+            Capacity = integer { default = 20 }
+        }
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Feats = list
+    {
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    'Class features' = list
+    {
+        description = "Abilities from class, race and theme."
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Spellcasting = table
+    {
+        description = "Caster level, spells per day and spell DCs for mystics, technomancers and witchwarpers."
+        tableLayout = layout { columns = 4  size = wide }
+        'Caster level' = integer { default = 0 }
+        'Casting ability' = string { default = "Wis"  keys = ["Int", "Wis", "Cha"] }
+        'Spell DC base' = integer { description = "Spell save DC: 10 + spell level + this." value = switch 'Casting ability' case "Int" then Abilities.Int.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Wis.Modifier  editable = none }
+        'Level 1' = slots { description = "Spells per day used at this level. Level 0 spells are unlimited." number = 0  editable = live }
+        'Level 2' = slots { number = 0  editable = live }
+        'Level 3' = slots { number = 0  editable = live }
+        'Level 4' = slots { number = 0  editable = live }
+        'Level 5' = slots { number = 0  editable = live }
+        'Level 6' = slots { number = 0  editable = live }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 3 }
+        Credits = integer { default = 0  editable = live }
+        UPBs = integer { description = "Universal polymer base, the raw stock of manufacturing." default = 0 }
+        Bulk = string { description = "Carried bulk. Over half your Str score you are encumbered." }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Defense, Attacks, 'Ranged attacks']
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "CR" sort = Stats.CR }
+        filters = [
+            filter { name = "CR" prefix = "CR" filter = Stats.CR },
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        CR = string { description = "Challenge rating." default = "1" }
+        XP = integer { default = 400 }
+        Alignment = string { default = "N" }
+        Size = string { default = "Medium"  keys = ["Fine", "Diminutive", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"] }
+        Type = string {}
+        Initiative = modifier { default = 0  valuedice = plainSf1 }
+        Perception = modifier { default = 0  valuedice = sf1Check }
+        Senses = string {}
+    }
+    Defense = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { default = 20 }
+        HP = integer { description = "Current hit points. Creatures have no Stamina." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = if HP <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        RP = integer { description = "Resolve Points, for creatures that have them." default = 0  editable = live }
+        EAC = integer { default = 13 }
+        KAC = integer { default = 15 }
+        Fort = modifier { default = 0  valuedice = sf1Save }
+        Ref = modifier { default = 0  valuedice = sf1Save }
+        Will = modifier { default = 0  valuedice = sf1Save }
+        'Defensive abilities' = string {}
+        DR = string {}
+        Immunities = string {}
+        Resistances = string {}
+        SR = integer { default = 0 }
+        Weaknesses = string {}
+    }
+    Offense = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Speed = string { default = "30 ft." }
+        Space = string { default = "5 ft." }
+        Reach = string { default = "5 ft." }
+        'Offensive abilities' = string { multiline = true }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Melee attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = sf1Attack ("KAC")  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = sf1Attack ("EAC")  action = ranged }
+            Damage = string {}
+        }
+    }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Str = modifier { default = 0  valuedice = sf1Check }
+        Dex = modifier { default = 0  valuedice = sf1Check }
+        Con = modifier { default = 0  valuedice = sf1Check }
+        Int = modifier { default = 0  valuedice = sf1Check }
+        Wis = modifier { default = 0  valuedice = sf1Check }
+        Cha = modifier { default = 0  valuedice = sf1Check }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Feats = string { multiline = true }
+        Languages = string {}
+        'Other abilities' = string {}
+        Gear = string { multiline = true }
+        'Special abilities' = string { multiline = true }
+        Ecology = string { multiline = true }
+    }
+}
+
+gunneryRoll = ask ("Target AC or TL", sf1AskedAttack ("AC or TL"))
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { important = [Ship, Shields, Weapons] }
+    Ship = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Tier = string { default = "1" }
+        Size = string { default = "Small"  keys = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"] }
+        Frame = string {}
+        Speed = integer { description = "Speed in hexes." default = 8 }
+        Maneuverability = string { default = "Average"  keys = ["Clumsy", "Poor", "Average", "Good", "Perfect"] }
+        'Drift rating' = integer { default = 1 }
+        AC = integer { description = "Armor Class, against direct-fire weapons." default = 12 }
+        TL = integer { description = "Target Lock, against tracking weapons." default = 12 }
+        'Max HP' = integer { description = "Hull Points." default = 30 }
+        HP = integer { description = "Current Hull Points." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        DT = integer { description = "Damage threshold: smaller hits do nothing." default = 0 }
+        CT = integer { description = "Critical threshold: each time this much damage is dealt, a system takes a critical hit." default = 6 }
+        'Power core' = string {}
+        'Piloting check' = modifier { default = 0  valuedice = sf1Check }
+    }
+    Shields = table
+    {
+        description = "Shield points in each of the four arcs."
+        tableLayout = layout { columns = 4  size = wide }
+        Forward = integer { default = 10  minvalue = 0  editable = live }
+        Port = integer { default = 10  minvalue = 0  editable = live }
+        Starboard = integer { default = 10  minvalue = 0  editable = live }
+        Aft = integer { default = 10  minvalue = 0  editable = live }
+    }
+    'Critical damage' = table
+    {
+        description = "Ship systems that have taken critical hits."
+        tableLayout = layout { columns = 3  size = wide }
+        'Life support' = string { default = "Normal"  keys = ["Normal", "Glitching", "Malfunctioning", "Wrecked"]  editable = live }
+        Sensors = string { default = "Normal"  keys = ["Normal", "Glitching", "Malfunctioning", "Wrecked"]  editable = live }
+        'Weapons array' = string { default = "Normal"  keys = ["Normal", "Glitching", "Malfunctioning", "Wrecked"]  editable = live }
+        Engines = string { default = "Normal"  keys = ["Normal", "Glitching", "Malfunctioning", "Wrecked"]  editable = live }
+        'Power core state' = string { default = "Normal"  keys = ["Normal", "Glitching", "Malfunctioning", "Wrecked"]  editable = live }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ship weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Arc = string { keys = ["Forward", "Port", "Starboard", "Aft", "Turret"] }
+            Gunnery = modifier { description = "Gunnery check: d20 + BAB or Piloting ranks + Dex." default = 0  valuedice = gunneryRoll  action = ranged }
+            Damage = string {}
+            Range = string { keys = ["Short", "Medium", "Long"] }
+            Special = string {}
+        }
+    }
+    Crew = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Captain = string {}
+        Pilot = string {}
+        Engineer = string {}
+        Gunners = string {}
+        'Science officer' = string {}
+        Systems = string { multiline = true }
+    }
+}
+
+sf1Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = toInt (Stats.Level) }
+        filters = [
+            filter { name = "Category" prefix = "" filter = Stats.Category },
+            filter { name = "Level" prefix = "Level" filter = Stats.Level }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string { keys = ["Basic melee", "Advanced melee", "Small arm", "Longarm", "Heavy weapon", "Sniper", "Grenade", "Special"] }
+        Level = string { default = "1" }
+        Price = string {}
+        Damage = string { description = "Damage dice and type: B, P, S kinetic; A, C, E, F, So energy." }
+        Target = string { description = "The Armor Class it attacks: EAC for energy, KAC for kinetic." keys = ["EAC", "KAC"] }
+        Range = string {}
+        Critical = string {}
+        Capacity = string {}
+        Usage = string {}
+        Bulk = string {}
+        Special = string {}
+    }
+}
+
+sf1Armor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = toInt (Stats.Level) }
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { keys = ["Light", "Heavy", "Powered"] }
+        Level = string { default = "1" }
+        Price = string {}
+        'EAC Bonus' = string { default = "0" }
+        'KAC Bonus' = string { default = "0" }
+        'Max Dex' = string {}
+        'Check Penalty' = string { default = "0" }
+        'Speed Adjustment' = string {}
+        'Upgrade Slots' = string {}
+        Bulk = string {}
+    }
+}
+
+sf1Item = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Level" sort = toInt (Stats.Level) }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string {}
+        Level = string { default = "1" }
+        Price = string {}
+        Bulk = string {}
+        Capacity = string {}
+        Usage = string {}
+    }
+}
+
+sf1Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Level" prefix = "" filter = split (", ", Stats.Level) },
+            filter { name = "School" prefix = "" filter = Stats.School }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Level = string { description = "Classes and levels, such as Mystic 1, Technomancer 1." }
+        School = string {}
+        'Casting Time' = string {}
+        Range = string {}
+        Targets = string { description = "Targets, area or effect." }
+        Duration = string {}
+        'Saving Throw' = string {}
+        'Spell Resistance' = string {}
+    }
+}
+
+sf1Feat = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Combat" prefix = "" filter = Stats.Combat }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Combat = string { default = "No"  keys = ["Yes", "No"] }
+        Prerequisites = string {}
+    }
+}
+
+Starfinder1e = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a character"
+            topic = "Getting started"
+            text = ["Pick a race, theme and class, set the ability scores and key ability, then skill ranks. Stamina and Hit Points go on the Health block. Add weapons, armor, feats and spells from the built-in library."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 + modifier against a DC. Leave the DC blank when only the GM knows it. Saves succeed on a natural 20 and fail on a natural 1."]
+        },
+        hint
+        {
+            title = "Attacks"
+            topic = "Combat"
+            text = ["Energy weapons target EAC, kinetic weapons KAC. A natural 20 that hits is a critical hit: double damage plus the weapon's critical effect. A full attack is two attacks at -4 each."]
+        },
+        hint
+        {
+            title = "Stamina, Hit Points and Resolve"
+            topic = "Combat"
+            text = ["Damage comes off Stamina first, then Hit Points. At 0 HP you are unconscious and lose 1 Resolve each round until stabilized. Rest 10 minutes and spend 1 Resolve to get all Stamina back."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (d20 + Dex + misc). Highest goes first. In starship combat, each crew member takes a role: captain, engineer, gunner, pilot or science officer."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["ft", "m"]
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Weapons = sf1Weapon
+    Armor = sf1Armor
+    Equipment = sf1Item
+    Spells = sf1Spell
+    Feats = sf1Feat
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Spells", "Feats"]
+    extraEntityTypes = [entityTypeDescription ("Spaceships", "starship", true, "/systems/starwars/spaceship-entity.svg", [])]
+    description = "Starfinder 1st edition: d20 science fantasy with Stamina, Resolve and starship combat"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10]
+    cssFiles = ["/systems/sf1e/sf1e.css"]
+    libraries = ["/systems/sf1e/sf1e.json", "/systems/names/scifi.json", "/systems/names/bluecollar.json", "/systems/names/cyberpunk.json"]
+    nameSettings = [spaceNameSetting, blueCollarSpaceNameSetting, neonStreetsNameSetting]
+}
