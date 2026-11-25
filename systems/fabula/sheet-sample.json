@@ -1,0 +1,19 @@
+{
+  "values": {
+    "Character": { "Level": 10, "Identity": "Runaway princess of the Crystal Court", "Theme": "Duty", "Origin": "Arcadia", "Classes": "Spiritist 3, Elementalist 4, Weaponmaster 3", "Experience": 4, "Zenit": 820, "Fabula": 4 },
+    "Attributes": { "Dexterity.Base": "d8", "Insight": { "Base": "d10" }, "Might.Base": "d6", "Willpower.Base": "d10" },
+    "Points": { "HP": 38, "MP": 52, "IP": 4 },
+    "Statuses": { "Shaken": true },
+    "Spells": [
+      { "Name": "Heal", "MP": "10 × T", "Target": "Up to three creatures", "Duration": "Instantaneous", "Effect": "Each target recovers 40 HP." },
+      { "Name": "Elemental Shroud", "MP": "5 × T", "Target": "Up to three creatures", "Duration": "Scene", "Effect": "Resistance to one damage type." },
+      { "Name": "Flare", "MP": "20", "Target": "One creature", "Duration": "Instantaneous", "Offensive": true, "Effect": "【WLP + INS】 HR + 25 fire damage." }
+    ],
+    "Skills": [ { "Name": "Spiritual Magic", "Class": "Spiritist", "Level": 3, "Effect": "Learn three Spiritist spells." }, { "Name": "Melee Weapon Mastery", "Class": "Weaponmaster", "Level": 2, "Effect": "+2 to Accuracy checks with melee weapons." } ],
+    "Bonds": [ { "With": "Garrick", "Feelings": "Admiration, Loyalty", "Strength": 2 }, { "With": "The Crystal Court", "Feelings": "Inferiority", "Strength": 1 } ],
+    "Equipment": { "Armor": "Silk shirt", "Shield": "Runic shield", "Accessory": "Mother's crystal pendant", "Backpack": "2 elixirs, 1 remedy, tent" }
+  },
+  "secondary": {
+    "Weapons": [ { "name": "Rapier", "values": { "Stats": { "Category": "Sword", "Accuracy": "Dex + Ins", "Accuracy bonus": "1", "Damage": "6", "Range": "Melee", "Hands": "One-handed" } } } ]
+  }
+}

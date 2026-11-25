@@ -341,6 +341,7 @@ For each system with open content:
 | `credits` | A list of attribution texts (markdown, links allowed) for open content the system ships |
 | `nameSettings` | The names of the system's name settings, in order |
 | `extensions` | Each with `name`, `location`, `description` and `guide` |
+| `sheetImage` | Path to `sheet.webp`, a filled-in character sheet shown in the create campaign dialog. Set by the app's `Web/sheet-image.py` from `sheet-sample.json` (see the SKILL's Sheet image section) |
 
 ### Card decks
 
