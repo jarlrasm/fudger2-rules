@@ -1,0 +1,119 @@
+@import url("/systems/sheet.css");
+
+/* Star Wars Roleplaying: the character sheet of the three core books. Warm
+   cream page, dark umber title bars in spaced capitals with an amber rule,
+   the six characteristics as a row of large rings, soak, wounds, strain and
+   defense in a band under them, the three skill tables side by side with
+   their dice pools, and weapons, motivations and the Force below. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #cfc4ad;
+    --surface: #fbf6ea;
+    --surface-alt: #f1e8d4;
+    --surface-sunken: #e6dbc2;
+    --surface-muted: #d3c5a6;
+    --text: #23180f;
+    --text-muted: #4a3a2b;
+    --text-faint: #7d6c5a;
+    --on-accent: #ffffff;
+    --border: #a8957a;
+    --border-strong: #3b2a1c;
+    --accent: #3b2a1c;
+    --accent-hover: #563f2b;
+    --accent-soft: #eadfcb;
+    --link: #8a4f12;
+    --danger: #a3301f;
+    --danger-hover: #822617;
+    --danger-soft: #f2d6d1;
+    --success: #2f6a3a;
+    --paper: #fbf6ea;
+    --card-bg: #f6efdf;
+    --dice-bg: #3b2a1c;
+    --dice-text: #ffffff;
+    --amber: #d08a1e;
+}
+
+.entityView {
+    --sheet-font: "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 10px 2px 10px 2px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.85em;
+    border-bottom: 3px solid var(--amber);
+}
+
+/* ---- Characteristics: six rings ---- */
+
+.entityView .table-characteristics > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 10px;
+    padding: 10px;
+}
+.entityView .table-characteristics > table > tbody > tr {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 4px;
+}
+.entityView .table-characteristics > table > tbody > tr > td {
+    display: block;
+    border: none;
+    padding: 0;
+    text-align: center;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child {
+    background: var(--accent);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75em;
+    padding: 1px 10px;
+    border-radius: 3px;
+}
+.entityView .table-characteristics button.dicethrow {
+    width: 2.6em;
+    height: 2.6em;
+    border-radius: 50%;
+    font-size: 1.4em;
+    background: var(--surface);
+    color: var(--accent);
+    border: 4px solid var(--amber);
+    box-shadow: 0 0 0 3px var(--accent);
+}
+
+/* ---- Status band ---- */
+
+.entityView .table-status > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ---- Skills: three tables side by side ---- */
+
+.entityView .table-general-skills { --block: 40%; clear: left; }
+.entityView .table-check { clear: left; }
+.entityView .table-combat-skills,
+.entityView .table-knowledge-skills { --block: 30%; }
+.entityView .table-general-skills > table > tbody > tr,
+.entityView .table-combat-skills > table > tbody > tr,
+.entityView .table-knowledge-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-check,
+.entityView .table-critical-roll,
+.entityView .table-force { --block: 30%; }
+
+/* ---- Lower half ---- */
+
+.entityView .table-critical-injuries,
+.entityView .table-armor,
+.entityView .table-gear,
+.entityView .table-experience { --block: 50%; }

@@ -194,7 +194,16 @@ Where a roll needs a number that changes the pool and another the result is judg
 w5Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", w5AskedPool (pool + n, char.Character.Rage)))
 ```
 
-Give the outer ask a default (0 for a bonus or penalty), so an empty field means none. The inner ask can have a default or levels, but not a lambda of its own, and the prompt takes its label from the dice the lambda builds for no answer, so don't make the inner ask depend on the first number. Only two numbers are asked; an `ask` around plain dice that already ask is not a second question. This needs the app from branch `claude/batch-3-systems` or later. Test it with `asksSecond location expression label`, `dieCountsAre` for the first number and `twiceAskedShows location expression baseline (Just first) (Just second) throws expected` in NewSystemsTests.elm.
+Give the outer ask a default (0 for a bonus or penalty), so an empty field means none. The inner ask can have a default or levels, and the prompt takes its label from the dice the lambda builds for no answer, so don't make the inner ask depend on the first number.
+
+Where both numbers change the dice, such as Star Wars' difficulty dice and the target's Defense in setback dice, give the inner ask a lambda too. The first answer goes to the outer lambda, the second to the inner one, and the roll's lambda still reads the second as `asked`:
+
+```
+swAttack (char, characteristic, ranks, startDifficulty) =
+    ask ("Difficulty dice", startDifficulty, (d)->ask ("Target's Defense", 0, (s)->swPool (characteristic, ranks, 0, d, 0, s)))
+```
+
+This needs the app from branch `claude/batch-4-systems` or later. Test it with `twiceDieCountsAre location expression (Just first) (Just second) [counts]`. Only two numbers are asked; an `ask` around plain dice that already ask is not a second question. This needs the app from branch `claude/batch-3-systems` or later. Test it with `asksSecond location expression label`, `dieCountsAre` for the first number and `twiceAskedShows location expression baseline (Just first) (Just second) throws expected` in NewSystemsTests.elm.
 
 When the number gives the roll its meaning but some uses must not ask, such as initiative, keep a version without `ask` for those: `asked` is 0 there and `answered` is false. Keep a version of the roll that takes the number as a parameter for creatures and tests.
 

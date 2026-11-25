@@ -1,0 +1,587 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+#include "/systems/genesys/dice.frules"
+
+forceLight (n) = if n == 10 or n == 11 or n == 12 then 2 else if n == 8 or n == 9 then 1 else 0
+forceDark (n) = if n == 7 then 2 else if n < 7 then 1 else 0
+
+forceText (light, dark) = toString (light) + " light side, " + toString (dark) + " dark side"
+
+forceRoll (n) = ([dice { number = n  sides = 12  color = "white"  label = "Force"  faces = ["D", "D", "D", "D", "D", "D", "DD", "L", "L", "LL", "LL", "LL"] }],
+    ((baseline, throws)->{
+        Text = if n < 1 then "No Force dice" else forceText (sum (map ((x)->forceLight (x), first (throws).rolls)), sum (map ((x)->forceDark (x), first (throws).rolls)))
+        Value = sum (map ((x)->forceLight (x), first (throws).rolls))
+    }))
+
+swPool (characteristic, ranks, upgrades, difficulty, upgradesDifficulty, setback) =
+    genesysPool (
+        upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), upgrades).Yellow,
+        upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), upgrades).Green,
+        max (0, 0 - setback),
+        upgradedPool (0, max (0, difficulty), upgradesDifficulty).Yellow,
+        upgradedPool (0, max (0, difficulty), upgradesDifficulty).Green,
+        max (0, setback))
+
+swCheck (char, characteristic, ranks) =
+    ask ("Difficulty dice", 2, (d)->ask ("Setback dice (negative for boost)", 0, (s)->swPool (characteristic, ranks, char.Check.'Upgrade Ability', d, char.Check.'Upgrade Difficulty', s)))
+
+swAttack (char, characteristic, ranks, startDifficulty) =
+    ask ("Difficulty dice", startDifficulty, (d)->ask ("Target's Defense", 0, (s)->swPool (characteristic, ranks, char.Check.'Upgrade Ability', d, char.Check.'Upgrade Difficulty', s)))
+
+characteristicValue (char, name) =
+    switch name
+        case "Brawn" then char.Characteristics.Brawn
+        case "Agility" then char.Characteristics.Agility
+        case "Intellect" then char.Characteristics.Intellect
+        case "Cunning" then char.Characteristics.Cunning
+        case "Willpower" then char.Characteristics.Willpower
+        else char.Characteristics.Presence
+
+characteristicNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", "Presence"]
+
+poolText (characteristic, ranks) = toString (min (characteristic, ranks)) + "Y " + toString (max (characteristic, ranks) - min (characteristic, ranks)) + "G"
+
+skill (usual) = custom
+{
+    Career = bool { description = "Career skills cost less experience to raise." default = false }
+    Rank = integer { description = "Skill ranks from 0 to 5. Ranks upgrade green ability dice to yellow proficiency dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Characteristic = string { description = "The characteristic for this check, normally the one printed next to the skill." default = usual  keys = characteristicNames  editable = live }
+    Pool = integer { description = "The dice pool: the higher of rank and characteristic in dice, the lower of them upgraded to proficiency." value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = swCheck (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = poolText (characteristicValue (characterTable, Characteristic), Rank) }
+}
+
+noSkill = { Rank = 0 }
+
+rankOf (char, name) =
+    max (valueOr (valueOr (char.'General Skills', name, noSkill), "Rank", 0), valueOr (valueOr (char.'Combat Skills', name, noSkill), "Rank", 0), valueOr (valueOr (char.'Knowledge Skills', name, noSkill), "Rank", 0))
+
+noStats = { Stats = { Skill = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+rangeMetres (band) =
+    switch band
+        case "Engaged" then 2
+        case "Short" then 10
+        case "Medium" then 40
+        case "Long" then 100
+        case "Extreme" then 1000
+        else 2
+
+bandDifficulty (band) =
+    switch band
+        case "Engaged" then 2
+        case "Short" then 1
+        case "Medium" then 2
+        case "Long" then 3
+        case "Extreme" then 4
+        else 2
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponCharacteristic (skillName) =
+    if skillName == "Ranged Light" or skillName == "Ranged Heavy" or skillName == "Gunnery" then "Agility"
+    else "Brawn"
+
+isMeleeSkill (skillName) = skillName == "Brawl" or skillName == "Melee" or skillName == "Lightsaber"
+
+damageText (char, damage) =
+    if contains (damage, "+") then toString (char.Characteristics.Brawn + firstNumber (damage)) else damage
+
+weaponAttack (name, characteristic, ranks, damage, critical, kind, distance, startDifficulty) = custom
+{
+    Name = name
+    Attack = integer { value = max (characteristic, ranks)  valuedice = swAttack (characterTable, characteristic, ranks, startDifficulty)  render = poolText (characteristic, ranks)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = "Damage " + damage
+    Crit = "Crit " + critical
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        characteristicValue (char, weaponCharacteristic (weaponStat (weapon, "Skill"))),
+        rankOf (char, weaponStat (weapon, "Skill")),
+        damageText (char, weaponStat (weapon, "Damage")),
+        weaponStat (weapon, "Critical"),
+        if isMeleeSkill (weaponStat (weapon, "Skill")) then "melee" else "ranged",
+        if isMeleeSkill (weaponStat (weapon, "Skill")) then 2 else rangeMetres (weaponStat (weapon, "Range")),
+        if isMeleeSkill (weaponStat (weapon, "Skill")) then 2 else bandDifficulty (weaponStat (weapon, "Range")))
+
+armorSoak (char) = sum (map ((a)->firstNumber (valueOr (valueOr (valueOr (a.data, "armorStats", { Stats = { Soak = "0" } }), "Stats", { Soak = "0" }), "Soak", "0")), char.Armor))
+
+criticalSeverity (total) =
+    if total > 150 then "Dead"
+    else if total > 125 then "Daunting"
+    else if total > 90 then "Hard"
+    else if total > 40 then "Average"
+    else "Easy"
+
+criticalRoll = ([1d100], ((baseline, throws)->{
+    Text = toString (baseline + first (first (throws).rolls)) + ": " + (if baseline + first (first (throws).rolls) > 150 then "Dead" else criticalSeverity (baseline + first (first (throws).rolls)) + " critical injury, look it up on the table")
+    Value = baseline + first (first (throws).rolls)
+    Outcome = if baseline + first (first (throws).rolls) > 150 then "Fumble" else ""
+}))
+
+forceOnly (rating) = if rating > 0 then visible else editor
+
+lineOnly (line, wanted) = if line == wanted or line == "" then visible else none
+
+downState (char) =
+    if char.Status.Wounds > char.Status.'Wound Threshold' then "Incapacitated"
+    else if char.Status.Strain > char.Status.'Strain Threshold' then "Knocked out by strain"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Characteristics, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Line = string { description = "The core book the character is built from: it sets whether they track Obligation, Duty or Morality." keys = ["Edge of the Empire", "Age of Rebellion", "Force and Destiny"] }
+        Species = string {}
+        Career = string {}
+        Specializations = string { description = "The specialization trees the character has bought into." }
+    }
+
+    Characteristics = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Brawn = integer { description = "Strength and toughness; adds to soak and the wound threshold." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Brawn, 0) }
+        Agility = integer { description = "Speed, coordination and aim." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Agility, 0) }
+        Intellect = integer { description = "Intelligence, learning and technical skill." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Intellect, 0) }
+        Cunning = integer { description = "Cleverness, street smarts and guile." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Cunning, 0) }
+        Willpower = integer { description = "Discipline and resolve; adds to the strain threshold." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Willpower, 0) }
+        Presence = integer { description = "Charisma, leadership and force of personality." default = 2  minvalue = 1  maxvalue = 6  valuedice = swCheck (characterTable, Presence, 0) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Soak = integer { description = "Damage taken off each hit: Brawn plus armor soak." value = Characteristics.Brawn + armorSoak (characterTable) + 'Extra Soak'  editable = none }
+        'Extra Soak' = integer { description = "Soak from talents or cybernetics." default = 0 }
+        'Wound Threshold' = integer { description = "Wounds beyond this incapacitate you and give a critical injury." default = 10 + Characteristics.Brawn }
+        Wounds = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live }
+        'Strain Threshold' = integer { description = "Strain beyond this knocks you out." default = 10 + Characteristics.Willpower }
+        Strain = integer { description = "Strain from stress, effort and threats." default = 0  minvalue = 0  editable = live }
+        'Melee Defense' = integer { description = "Setback dice added to melee attacks against you." default = 0  minvalue = 0  maxvalue = 4 }
+        'Ranged Defense' = integer { description = "Setback dice added to ranged attacks against you." default = 0  minvalue = 0  maxvalue = 4 }
+        'Night of rest' = button { description = "A full night's rest heals one wound and all strain."  editable = live  onClick = updates
+            {
+                (root.Status.Wounds) = max (0, Wounds - 1)
+                (root.Status.Strain) = 0
+            }
+        }
+        'Catch your breath' = button { description = "After an encounter, a Simple Discipline or Cool check recovers strain; this clears it all."  editable = live  onClick = updates
+            {
+                (root.Status.Strain) = 0
+            }
+        }
+        Staggered = bool { description = "Can't take actions, only maneuvers." default = false  editable = live  indicator = "#d4b106" }
+        Disoriented = bool { description = "Add a setback die to every check." default = false  editable = live  indicator = "#8e5cc4" }
+        Immobilized = bool { description = "Can't take maneuvers." default = false  editable = live  indicator = "#e8913a" }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#d64545" }
+        'Cool Initiative' = integer { description = "Initiative when you are ready for a fight: Cool and Presence." value = rankOf (characterTable, "Cool")  valuedice = initiativePool (Characteristics.Presence, rankOf (characterTable, "Cool"))  render = poolText (Characteristics.Presence, rankOf (characterTable, "Cool"))  editable = none }
+        Initiative = integer { description = "Initiative when you are surprised: Vigilance and Willpower." value = rankOf (characterTable, "Vigilance")  valuedice = initiativePool (Characteristics.Willpower, rankOf (characterTable, "Vigilance"))  render = poolText (Characteristics.Willpower, rankOf (characterTable, "Vigilance"))  editable = none }
+    }
+
+    'General Skills' = table
+    {
+        description = "Each skill uses the characteristic next to it. Roll the pool, then set the difficulty and setback dice."
+        tableLayout = layout { columns = 1 }
+        Astrogation = skill ("Intellect")
+        Athletics = skill ("Brawn")
+        Charm = skill ("Presence")
+        Coercion = skill ("Willpower")
+        Computers = skill ("Intellect")
+        Cool = skill ("Presence")
+        Coordination = skill ("Agility")
+        Deception = skill ("Cunning")
+        Discipline = skill ("Willpower")
+        Leadership = skill ("Presence")
+        Mechanics = skill ("Intellect")
+        Medicine = skill ("Intellect")
+        Negotiation = skill ("Presence")
+        Perception = skill ("Cunning")
+        'Piloting Planetary' = skill ("Agility")
+        'Piloting Space' = skill ("Agility")
+        Resilience = skill ("Brawn")
+        Skulduggery = skill ("Cunning")
+        Stealth = skill ("Agility")
+        Streetwise = skill ("Cunning")
+        Survival = skill ("Cunning")
+        Vigilance = skill ("Willpower")
+    }
+
+    'Combat Skills' = table
+    {
+        tableLayout = layout { columns = 1 }
+        Brawl = skill ("Brawn")
+        Gunnery = skill ("Agility")
+        Lightsaber = skill ("Brawn")
+        Melee = skill ("Brawn")
+        'Ranged Light' = skill ("Agility")
+        'Ranged Heavy' = skill ("Agility")
+    }
+
+    'Knowledge Skills' = table
+    {
+        tableLayout = layout { columns = 1 }
+        'Core Worlds' = skill ("Intellect")
+        Education = skill ("Intellect")
+        Lore = skill ("Intellect")
+        'Outer Rim' = skill ("Intellect")
+        Underworld = skill ("Intellect")
+        Warfare = skill ("Intellect")
+        Xenology = skill ("Intellect")
+    }
+
+    Check = table
+    {
+        description = "Upgrades for the next checks, from talents, Destiny Points or the GM."
+        tableLayout = layout { columns = 2 }
+        'Upgrade Ability' = integer { description = "Green ability dice upgraded to yellow proficiency dice, for example by a Destiny Point." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        'Upgrade Difficulty' = integer { description = "Purple difficulty dice upgraded to red challenge dice." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+    }
+
+    Force = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Force Rating' = integer { description = "White Force dice rolled for Force powers. Light side pips power them for light side users." default = 0  minvalue = 0  valuedice = forceRoll ('Force Rating') }
+        'Committed' = integer { description = "Force dice committed to ongoing powers." default = 0  minvalue = 0  editable = live }
+    }
+
+    'Critical Roll' = table
+    {
+        tableLayout = layout { columns = 1 }
+        'Roll Critical' = integer { description = "Roll d100 plus 10 for each critical injury you already have." value = 10 * count ('Critical Injuries')  valuedice = criticalRoll  editable = none }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attacks from your weapons. Melee is Average; ranged difficulty starts at the weapon's range band and the target's Defense adds setback dice."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.Brawn, rankOf (characterTable, "Brawl"), toString (Characteristics.Brawn), "5", "melee", 2, 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Critical Injuries' = list
+    {
+        description = "Lasting injuries. Each one adds 10 to the next critical injury roll."
+        singular = "Critical injury"
+        editable = live
+        valueType = custom
+        {
+            Severity = string { keys = ["Easy", "Average", "Hard", "Daunting"]  editable = live }
+            Injury = string { editable = live }
+        }
+    }
+
+    Experience = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Total XP' = integer { default = 0 }
+        'Available XP' = integer { default = 0  editable = live }
+        Credits = integer { default = 500  editable = live }
+        'Encumbrance Threshold' = integer { description = "5 plus Brawn; carry more and checks get harder." value = 5 + Characteristics.Brawn  editable = none }
+    }
+
+    Motivation = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Obligation Type' = string { visible = lineOnly (Character.Line, "Edge of the Empire") }
+        Obligation = integer { description = "How much the character owes; the GM rolls d100 against the group's total each session." default = 10  minvalue = 0  visible = lineOnly (Character.Line, "Edge of the Empire") }
+        'Duty Type' = string { visible = lineOnly (Character.Line, "Age of Rebellion") }
+        Duty = integer { description = "Service to the Alliance; the group's total raises its Contribution rank." default = 10  minvalue = 0  visible = lineOnly (Character.Line, "Age of Rebellion") }
+        Morality = integer { description = "From 0 (dark) to 100 (light). Conflict at the end of a session may lower it." default = 50  minvalue = 0  maxvalue = 100  visible = lineOnly (Character.Line, "Force and Destiny") }
+        Conflict = integer { description = "Conflict gained this session from dark side pips and deeds." default = 0  minvalue = 0  editable = live  visible = lineOnly (Character.Line, "Force and Destiny") }
+        'Emotional Strength' = string { visible = lineOnly (Character.Line, "Force and Destiny") }
+        'Emotional Weakness' = string { visible = lineOnly (Character.Line, "Force and Destiny") }
+        Motivations = string { description = "What drives the character: a desire, a fear, a belief or a relationship." multiline = true }
+    }
+
+    'Force Powers' = list
+    {
+        tableLayout = layout { size = wide }
+        visible = forceOnly (Force.'Force Rating')
+        source = secondary.'Force Powers'
+        singular = "Force power"
+        editable = character
+    }
+
+    Talents = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Description = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+adversaryKinds = ["Minion", "Rival", "Nemesis"]
+
+nemesisOnly (kind) = if kind == "Nemesis" then visible else none
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/swffg/adversary.svg"  important = [Stats, 'Skill Pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { description = "Minions act in groups and drop at their threshold, rivals take a few hits, nemeses match the heroes." default = "Rival"  keys = adversaryKinds }
+        Brawn = integer { default = 2 }
+        Agility = integer { default = 2 }
+        Intellect = integer { default = 2 }
+        Cunning = integer { default = 2 }
+        Willpower = integer { default = 2 }
+        Presence = integer { default = 2 }
+        Soak = integer { description = "Damage taken off each hit." default = 3 }
+        'Wound Threshold' = integer { description = "For minions, per member of the group." default = 12 }
+        Wounds = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Strain Threshold' = integer { default = 12  visible = nemesisOnly (Kind) }
+        Strain = integer { default = 0  minvalue = 0  editable = live  visible = nemesisOnly (Kind) }
+        'Melee Defense' = integer { default = 0 }
+        'Ranged Defense' = integer { default = 0 }
+        'Group Size' = integer { description = "Minions only: each member past the first adds a rank to the group's skills." default = 1  minvalue = 1  editable = live }
+        Initiative = integer { description = "Vigilance or Cool for initiative." default = 0  valuedice = initiativePool (Willpower, 1) }
+    }
+    'Skill Pools' = keyvalues
+    {
+        description = "Each skill as yellow proficiency and green ability dice."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Melee", "Ranged Light", "Vigilance"]
+        valueType = custom
+        {
+            Yellow = integer { default = 1  minvalue = 0 }
+            Green = integer { default = 1  minvalue = 0 }
+            Roll = integer { value = Yellow + Green  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (Yellow, Green, max (0, 0 - s), 0, max (0, d), max (0, s))))  render = toString (Yellow) + "Y " + toString (Green) + "G"  editable = none  action = if Key == "Melee" or Key == "Brawl" or Key == "Lightsaber" then "melee" else if contains (Key, "Ranged") or Key == "Gunnery" then "ranged" else ""  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Weapons = string { description = "Each weapon with its skill, damage, critical rating, range and qualities." multiline = true }
+        Talents = string { multiline = true }
+        Abilities = string { multiline = true }
+        Equipment = string { multiline = true }
+    }
+}
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/swffg/starship.svg"  important = [Profile, Damage] }
+    Profile = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Model = string {}
+        Silhouette = integer { description = "Size from 1 (a person) to 10 (a star destroyer)." default = 3  minvalue = 0  maxvalue = 10 }
+        Speed = integer { description = "How far the craft moves with one maneuver." default = 3  minvalue = 0  maxvalue = 6 }
+        Handling = modifier { description = "Boost dice (positive) or setback dice (negative) on piloting checks." default = 0 }
+        'Defense Fore' = integer { default = 1  minvalue = 0 }
+        'Defense Aft' = integer { default = 1  minvalue = 0 }
+        'Defense Port' = integer { default = 0  minvalue = 0 }
+        'Defense Starboard' = integer { default = 0  minvalue = 0 }
+        Armor = integer { description = "Soak against weapons, times ten against personal-scale weapons." default = 2  minvalue = 0 }
+        Hyperdrive = string { description = "Primary and backup class, or none." default = "None" }
+        Navicomputer = bool { default = false }
+        'Sensor Range' = string { keys = ["Close", "Short", "Medium", "Long", "Extreme"]  default = "Short" }
+        Crew = string {}
+        Passengers = integer { default = 0 }
+        Encumbrance = integer { description = "Cargo capacity." default = 10 }
+        Price = string {}
+    }
+    Damage = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hull Trauma Threshold' = integer { default = 15 }
+        'Hull Trauma' = integer { description = "Damage to the hull; past the threshold the craft is destroyed or disabled." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'System Strain Threshold' = integer { default = 12 }
+        'System Strain' = integer { description = "Strain on systems; past the threshold the craft goes dead in space." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Critical Hits' = string { multiline = true  editable = live }
+        Repair = button { description = "A day in a repair yard clears system strain." editable = live  onClick = updates
+            {
+                (root.Damage.'System Strain') = 0
+            }
+        }
+    }
+    'Ship Weapons' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Arc = string { keys = ["Fore", "Aft", "Port", "Starboard", "Turret", "All"] }
+            Damage = integer { default = 5 }
+            Crit = integer { default = 3 }
+            Range = string { keys = ["Close", "Short", "Medium", "Long", "Extreme"] }
+            Qualities = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Attachments = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+    }
+    Stats = table
+    {
+        Skill = string { keys = ["Brawl", "Melee", "Lightsaber", "Ranged Light", "Ranged Heavy", "Gunnery"] }
+        Damage = string { description = "A number, or +N to add to Brawn for melee weapons." }
+        Critical = string {}
+        Range = string { keys = ["Engaged", "Short", "Medium", "Long", "Extreme"] }
+        Encumbrance = string {}
+        'Hard Points' = string {}
+        Price = string {}
+        Rarity = string {}
+        Special = string { description = "Item qualities, such as Stun setting, Pierce 2 or Auto-fire." }
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Defense = string {}
+        Soak = string {}
+        Encumbrance = string {}
+        'Hard Points' = string {}
+        Price = string {}
+        Rarity = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Encumbrance = string {}
+        Price = string {}
+        Rarity = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Activation" prefix = "" filter = Stats.Activation }]
+    }
+    Stats = table
+    {
+        Activation = string { keys = ["Passive", "Active (Incidental)", "Active (Maneuver)", "Active (Action)", "Active (Incidental, Out of Turn)"] }
+        Ranked = bool { default = false }
+        Ranks = integer { default = 1  minvalue = 1 }
+        Specialization = string {}
+    }
+}
+
+forcePowerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/swffg/force.svg" }
+    Stats = table
+    {
+        'Minimum Force Rating' = integer { default = 1  minvalue = 1 }
+        Upgrades = string { multiline = true }
+    }
+}
+
+StarWarsFFG = system
+{
+    hints = [
+        hint
+        {
+            title = "Three lines, one game"
+            topic = "Getting started"
+            text = ["Pick the character's Line: Edge of the Empire tracks Obligation, Age of Rebellion tracks Duty, and Force and Destiny tracks Morality. The dice and skills are the same."]
+        },
+        hint
+        {
+            title = "Narrative dice"
+            topic = "Play"
+            text = ["Click a skill's pool. Set the purple difficulty dice (1 easy to 5 formidable) and the setback dice; a negative number adds blue boost dice instead. Successes cancel failures and advantages cancel threats.", "Upgrades from Destiny Points or talents go in the Check row before you roll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask for the difficulty, which starts at the weapon's range band, and the target's Defense in setback dice. Damage is the weapon's damage plus one per net success, less the target's soak."]
+        },
+        hint
+        {
+            title = "Destiny Points"
+            topic = "Play"
+            text = ["Roll a Force die per player at the start of the session: light pips are the players' Destiny Points, dark pips the GM's. Spending one flips it to the other side."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Cool Initiative when ready or Initiative (Vigilance) when surprised. Successes, then advantages, set the slots."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Vehicles = shipTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Gear = gearStats
+    Talents = talentStats
+    'Force Powers' = forcePowerStats
+    secondaryTypes = ["Weapons", "Armor", "Gear", "Talents", "Force Powers"]
+    extraEntityTypes = [
+        entityTypeDescription ("Spaceships", "starship", true, "/systems/swffg/starship.svg", []),
+        entityTypeDescription ("Vehicles", "vehicle", true, "/systems/swffg/vehicle.svg", [])
+    ]
+    description = "Star Wars Roleplaying: Edge of the Empire, Age of Rebellion and Force and Destiny, with narrative dice"
+    initiativeCompare (item1, item2) = compare (initiativeOrder (item1), initiativeOrder (item2))
+    quickdice = [1d8, 1d12, 1d6, 1d100]
+    cssFiles = ["/systems/swffg/swffg.css"]
+    libraries = ["/systems/names/scifi.json"]
+    nameSettings = [spaceNameSetting]
+}
