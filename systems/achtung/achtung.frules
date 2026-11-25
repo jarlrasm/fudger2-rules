@@ -88,11 +88,13 @@ attack (name, target, focusRange, spread, dieCount, qualities, kind, distance) =
     Qualities = qualities
 }
 
+fightingFocus (char) = focusRangeFor (ratingOf (char, "Fighting"), valueOr (valueOr (char.Skills, "Fighting", noSkill), "Focus", false))
+
 attackFor (char, weapon) =
     if isRanged (weapon) then
-        attack (weapon.Name, char.Attributes.Coordination + ratingOf (char, "Fighting"), 1, if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+        attack (weapon.Name, char.Attributes.Coordination + ratingOf (char, "Fighting"), fightingFocus (char), if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
     else
-        attack (weapon.Name, char.Attributes.Agility + ratingOf (char, "Fighting"), 1, if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")) + bonusDamage (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2)
+        attack (weapon.Name, char.Attributes.Agility + ratingOf (char, "Fighting"), fightingFocus (char), if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")) + bonusDamage (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2)
 
 bonusDamage (brawn) = if brawn >= 16 then 3 else if brawn >= 14 then 2 else if brawn >= 12 then 1 else 0
 
@@ -193,9 +195,9 @@ characterTable = ruleset
 
     Attacks = list
     {
-        description = "Melee rolls Agility plus Fighting, ranged Coordination plus Fighting. Damage is Challenge dice: 1, 2, blank, blank, and 1 with an Effect."
+        description = "Melee rolls Agility plus Fighting, ranged Coordination plus Fighting; tick Focus on Fighting when a focus fits. Damage is Challenge dice: 1, 2, blank, blank, and 1 with an Effect."
         tableLayout = layout { size = wide }
-        source = concat ([attack ("Unarmed", characterTable.Attributes.Agility + ratingOf (characterTable, "Fighting"), 1, if ratingOf (characterTable, "Fighting") == 0 then 2 else 1, 1 + bonusDamage (characterTable.Attributes.Brawn), "Stun", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([attack ("Unarmed", characterTable.Attributes.Agility + ratingOf (characterTable, "Fighting"), fightingFocus (characterTable), if ratingOf (characterTable, "Fighting") == 0 then 2 else 1, 1 + bonusDamage (characterTable.Attributes.Brawn), "Stun", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = attack

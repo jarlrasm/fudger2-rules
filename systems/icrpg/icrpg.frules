@@ -134,7 +134,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Hearts = integer { description = "Each heart is 10 hit points." default = 1  minvalue = 1  maxvalue = 10 }
         'Max HP' = integer { value = 10 * Hearts  editable = none }
-        HP = integer { default = 10  minvalue = 0  editable = live  indicator = "#d64545" }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
         Defense = integer { description = "10 plus CON plus armor loot: the Target for attacks against you." value = 10 + Stats.CON.Total + 'Armor Loot'  editable = none }
         'Armor Loot' = integer { default = 0  minvalue = 0 }
         Dying = bool { description = "At 0 HP you are dying: roll a d4 for the rounds you have left unless someone stabilizes you." default = false  editable = live  indicator = "#555555" }
@@ -190,7 +190,7 @@ monsterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Hearts = integer { default = 1  minvalue = 1 }
-        HP = integer { default = 10  minvalue = 0  editable = live  indicator = "#d64545" }
+        HP = integer { default = 10 * Hearts  minvalue = 0  editable = live  indicator = "#d64545" }
         Defense = integer { default = 12 }
         Bonus = modifier { description = "Added to its d20 rolls." default = 2  valuedice = icrpgTest }
         Down = string { value = if HP < 1 then "Down" else ""  visible = none  indicator = "#555555" }

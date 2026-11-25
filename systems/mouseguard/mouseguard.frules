@@ -33,13 +33,19 @@ noSkill = { Rating = 0 }
 
 rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", 0)
 
-ability (start, maxRating) = custom
+mgTestWith (char, pool, penalty) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - penalty, char.Rewards.'Spend Fate')))
+
+ability (start, maxRating, conditioned) = custom
 {
     Rating = integer { default = start  minvalue = 0  maxvalue = maxRating }
     Pass = integer { description = "Passed tests toward advancement." default = 0  minvalue = 0  editable = live }
     Fail = integer { description = "Failed tests toward advancement." default = 0  minvalue = 0  editable = live }
-    Roll = integer { value = Rating  valuedice = mgTest (characterTable, Rating)  render = toString (Rating) + "D"  editable = none }
+    Roll = integer { value = Rating  valuedice = mgTestWith (characterTable, Rating, if conditioned then conditionDice (characterTable) else 0)  render = toString (Rating) + "D"  editable = none }
 }
+
+beginnersLuck (char, abilityName) = (1 + (if abilityName == "Health" then char.Abilities.Health.Rating else char.Abilities.Will.Rating)) / 2
+
+skillPool (char, rating, abilityName) = if rating > 0 then rating else beginnersLuck (char, abilityName)
 
 noStats = { Stats = { Bonus = "" } }
 
@@ -94,12 +100,12 @@ characterTable = ruleset
     {
         description = "Roll the rating in d6s: each 4, 5 or 6 is a success. The roll asks for bonus dice and the Obstacle."
         tableLayout = layout { columns = 1 }
-        Nature = ability (3, 7)
+        Nature = ability (3, 7, true)
         'Max Nature' = integer { description = "Nature taxed below this recovers between missions." default = 3  minvalue = 1  maxvalue = 7 }
-        Will = ability (3, 6)
-        Health = ability (3, 6)
-        Resources = ability (1, 10)
-        Circles = ability (1, 10)
+        Will = ability (3, 6, true)
+        Health = ability (3, 6, true)
+        Resources = ability (1, 10, false)
+        Circles = ability (1, 10, false)
     }
 
     Skills = keyvalues
@@ -113,7 +119,8 @@ characterTable = ruleset
             Rating = integer { default = 0  minvalue = 0  maxvalue = 6 }
             Pass = integer { default = 0  minvalue = 0  editable = live }
             Fail = integer { default = 0  minvalue = 0  editable = live }
-            Roll = integer { value = Rating  valuedice = mgTest (characterTable, Rating)  render = toString (Rating) + "D"  editable = none }
+            Luck = string { description = "Health for a physical skill's Beginner's Luck at rating 0; Will otherwise. Half of it, rounded up." default = ""  keys = ["", "Will", "Health"] }
+            Roll = integer { value = skillPool (characterTable, Rating, Luck)  valuedice = mgTest (characterTable, skillPool (characterTable, Rating, Luck))  render = toString (skillPool (characterTable, Rating, Luck)) + "D" + (if Rating == 0 then " BL" else "")  editable = none }
         }
     }
 

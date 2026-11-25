@@ -56,6 +56,10 @@ groupAbility (group) =
         case "Staves" then "Dexterity"
         else "Dexterity"
 
+trainedIn (char, group) = group == "" or count (filter ((g)->toLower (g) == toLower (group), char.'Weapon Groups')) > 0
+
+untrained (char, group) = if trainedIn (char, group) then 0 else -2
+
 isRangedGroup (group) = group == "Bows" or group == "Thrown"
 
 weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
@@ -67,9 +71,9 @@ weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 
 attackFor (char, weapon) =
     if isRangedGroup (weaponStat (weapon, "Group")) then
-        weaponAttack (weapon.Name, char.Abilities.Dexterity + focusBonus (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long Range")))
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), char.Abilities.Dexterity + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long Range")))
     else
-        weaponAttack (weapon.Name, abilityValue (char, groupAbility (weaponStat (weapon, "Group"))) + focusBonus (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), abilityValue (char, groupAbility (weaponStat (weapon, "Group"))) + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
 
 spellpower (char) = 10 + char.Abilities.Magic + (if hasFocus (char, "Spirit Lore") or hasFocus (char, "Entropy Lore") or hasFocus (char, "Primal Lore") or hasFocus (char, "Creation Lore") then 2 else 0)
 
@@ -159,6 +163,7 @@ characterTable = ruleset
         'Armor Penalty' = integer { description = "Taken off Speed and Dexterity tests." value = armorPenalty (characterTable)  editable = none }
         Speed = integer { description = "10 plus Dexterity minus the armor penalty, in yards a move. Dwarves have 8." value = 10 + Abilities.Dexterity - armorPenalty (characterTable)  editable = none }
         Initiative = modifier { description = "A Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity  valuedice = initiativeRoll  editable = none }
+        'Casting Test' = modifier { description = "Magic plus 2 for a lore focus: roll against the spell's target number." value = spellpower (characterTable) - 10  valuedice = daSpell  editable = none  visible = mageOnly (Character.Class) }
         Spellpower = integer { description = "10 plus Magic plus 2 for a lore focus: the target number to resist your spells." value = spellpower (characterTable)  editable = none  visible = mageOnly (Character.Class) }
     }
 

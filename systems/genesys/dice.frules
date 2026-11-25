@@ -66,7 +66,7 @@ genesysPool (proficiency, ability, boost, challenge, difficulty, setback) = ([
         despairs (item (4, throws).rolls))))
 
 upgradedPool (yellow, green, upgrades) =
-    { Yellow = yellow + min (upgrades, green)  Green = green - min (upgrades, green) + max (0, upgrades - green) }
+    { Yellow = yellow + min (upgrades, green) + max (0, upgrades - green) / 2  Green = green - min (upgrades, green) + mod (max (0, upgrades - green), 2) }
 
 initiativeText (s, a) = toString (s) + " successes " + toString (a) + " advantages"
 
