@@ -1,0 +1,350 @@
+#include "/systems/common.frules"
+
+hitsIn (rolls) = count (filter ((x)->x >= 5, rolls))
+
+missesIn (rolls) = count (filter ((x)->x < 5, rolls))
+
+nodeSuccesses (rolls, node, computer) =
+    (if node >= 0 then hitsIn (rolls) else 0 - missesIn (rolls)) + (if computer == 5 then 1 else 0)
+
+paranoiaOutcome (successes, difficulty, answered) =
+    if not (answered) then ""
+    else if successes >= difficulty then "Success"
+    else "Failure"
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 or n == -1 then word else words)
+
+paranoiaText (successes, difficulty, answered, computer) =
+    plural (successes, "success", "successes")
+    + (if answered then " vs " + toString (difficulty) + ": " + paranoiaOutcome (successes, difficulty, answered) else "")
+    + (if computer == 6 then ". The Computer die: Friend Computer takes an interest" else "")
+
+paranoiaResult (rolls, node, computer, difficulty, answered) =
+{
+    Text = paranoiaText (nodeSuccesses (rolls, node, computer), difficulty, answered, computer)
+    Value = nodeSuccesses (rolls, node, computer)
+    Outcome = paranoiaOutcome (nodeSuccesses (rolls, node, computer), difficulty, answered)
+    Color = if computer == 6 then "red" else ""
+}
+
+nodeRoll (node, difficulty) = ([dice { number = abs (node)  sides = 6  label = if node < 0 then "Negative NODE" else "" }, dice { number = 1  sides = 6  color = "red"  label = "Computer"  faces = ["1", "2", "3", "4", "5", "C"] }],
+    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), difficulty, difficulty > 0)))
+
+nodeAsked (node) = ([dice { number = abs (node)  sides = 6  label = if node < 0 then "Negative NODE" else "" }, dice { number = 1  sides = 6  color = "red"  label = "Computer"  faces = ["1", "2", "3", "4", "5", "C"] }],
+    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), asked, answered)))
+
+woundPenalty (char) =
+    if char.Health.Wounds >= 3 then 2
+    else if char.Health.Wounds >= 2 then 1
+    else 0
+
+nodeDice (char, node) = ask ("Equipment bonus or penalty", 0, (n)->ask ("Difficulty", nodeAsked (node + n - woundPenalty (char))))
+
+statValue (char, name) =
+    switch name
+        case "Violence" then char.Stats.Violence
+        case "Brains" then char.Stats.Brains
+        case "Chutzpah" then char.Stats.Chutzpah
+        else char.Stats.Mechanics
+
+skill (stat) = custom
+{
+    Rating = integer { description = "From -5 to +5. A negative skill can make the NODE negative." default = 0  minvalue = -5  maxvalue = 5 }
+    NODE = modifier { description = "Stat plus skill: the number of dice. Each 5 or 6 is a success; a negative NODE takes one away for each die under 5." value = Rating + statValue (characterTable, stat)  valuedice = nodeDice (characterTable, Rating + statValue (characterTable, stat))  editable = none }
+}
+
+wounds = ["Fine", "Hurt", "Injured", "Maimed", "Dead"]
+
+woundName (n) = item (min (4, max (0, n)), wounds)
+
+noSkill = { Rating = 0 }
+
+skillRating (char, group, name) = valueOr (valueOr (group, name, noSkill), "Rating", 0)
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Skill = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "paranoiaWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, node, damage, kind, distance) = custom
+{
+    Name = name
+    NODE = modifier { value = node  valuedice = nodeDice (characterTable, node)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Skill") == "Melee" then
+        weaponAttack (weapon.Name, char.Stats.Violence + skillRating (char, char.Violence, "Melee"), weaponStat (weapon, "Damage"), "melee", 0)
+    else if weaponStat (weapon, "Skill") == "Throw" then
+        weaponAttack (weapon.Name, char.Stats.Violence + skillRating (char, char.Violence, "Throw"), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Stats.Violence + skillRating (char, char.Violence, "Guns"), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Citizen.Clone, Status, Health, Attacks] }
+    Citizen = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Clearance = string { description = "Security clearance, from Infrared up to Ultraviolet." default = "Red"  keys = ["Infrared", "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet", "Ultraviolet"] }
+        Sector = string { description = "Three-letter home sector, part of the name." }
+        Clone = integer { description = "Which clone of the six-pack is in play." default = 1  minvalue = 1  maxvalue = 6  editable = live }
+        'Service Group' = string { keys = ["Armed Forces", "Central Processing Unit", "HPD and Mind Control", "Internal Security", "Power Services", "Production Logistics and Commissary", "Research and Design", "Technical Services"] }
+        'Team Role' = string { description = "The mission job: Team Leader, Loyalty Officer, Equipment Guy, Happiness Officer and so on." }
+        Gender = string {}
+        Personality = string { description = "Three words the citizen lives by." }
+        'Secret Society' = string { visible = editor }
+        'Mutant Power' = string { visible = editor }
+    }
+
+    Stats = table
+    {
+        description = "The four stats, each from 0 to 5."
+        tableLayout = layout { columns = 4  size = wide }
+        Violence = integer { description = "Shooting, hitting and running." default = 1  minvalue = 0  maxvalue = 5  valuedice = nodeDice (characterTable, Violence) }
+        Brains = integer { description = "Knowing things and filling in forms." default = 1  minvalue = 0  maxvalue = 5  valuedice = nodeDice (characterTable, Brains) }
+        Chutzpah = integer { description = "Lying, charming and getting away with it." default = 1  minvalue = 0  maxvalue = 5  valuedice = nodeDice (characterTable, Chutzpah) }
+        Mechanics = integer { description = "Making machines do what you want, or at least something." default = 1  minvalue = 0  maxvalue = 5  valuedice = nodeDice (characterTable, Mechanics) }
+    }
+
+    Violence = table
+    {
+        tableLayout = layout { columns = 1 }
+        Athletics = skill ("Violence")
+        Guns = skill ("Violence")
+        Melee = skill ("Violence")
+        Throw = skill ("Violence")
+    }
+
+    Brains = table
+    {
+        tableLayout = layout { columns = 1 }
+        Science = skill ("Brains")
+        Psychology = skill ("Brains")
+        Bureaucracy = skill ("Brains")
+        'The Complex' = skill ("Brains")
+    }
+
+    Chutzpah = table
+    {
+        tableLayout = layout { columns = 1 }
+        Bluff = skill ("Chutzpah")
+        Charm = skill ("Chutzpah")
+        Intimidate = skill ("Chutzpah")
+        Stealth = skill ("Chutzpah")
+    }
+
+    Mechanics = table
+    {
+        tableLayout = layout { columns = 1 }
+        Operate = skill ("Mechanics")
+        Engineer = skill ("Mechanics")
+        Program = skill ("Mechanics")
+        Demolitions = skill ("Mechanics")
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Moxie = integer { description = "Composure under pressure. Spend it to reroll or to fuel a mutant power; at 0 the citizen loses it." default = 4  minvalue = 0  maxvalue = 8  editable = live }
+        'Treason Stars' = integer { description = "Five stars and the citizen is terminated on sight." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
+        'XP Points' = integer { description = "Earned by pleasing the Computer; spent on equipment, clearance and clones." default = 0  editable = live }
+        'Losing it' = bool { description = "Out of Moxie: the citizen acts on their worst impulse until talked down." default = false  editable = live  indicator = "#8e5cc4" }
+        'New mission' = button
+        {
+            description = "At the start of a mission Moxie comes back to 4."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Moxie) = 4
+                (root.Status.'Losing it') = false
+            }
+        }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 1  size = wide }
+        Wounds = integer { description = "0 Fine, 1 Hurt, 2 Injured (-1 NODE), 3 Maimed (-2 NODE), 4 Dead." default = 0  minvalue = 0  maxvalue = 4  render = woundName (Wounds)  editable = live  indicator = "#d64545" }
+        State = string { value = if Wounds > 0 then woundName (Wounds) else ""  visible = none  indicator = "#d64545" }
+        'Next clone' = button
+        {
+            description = "The current clone is dead. The next one arrives, unhurt, knowing what the last one knew, and keeping the Treason Stars."
+            editable = live
+            onClick = updates
+            {
+                (root.Citizen.Clone) = min (6, Citizen.Clone + 1)
+                (root.Health.Wounds) = 0
+                (root.Status.Moxie) = 4
+                (root.Status.'Losing it') = false
+            }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", characterTable.Stats.Violence + skillRating (characterTable, characterTable.Violence, "Melee"), "Hurt", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    'Mutant Powers' = list
+    {
+        source = secondary.'Mutant Powers'
+        singular = "Mutant power"
+        editable = character
+        visible = editor
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Mission = string { multiline = true }
+        'Secret Orders' = string { description = "Only for this player and the GM." multiline = true  visible = editor }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Citizen", "Troubleshooter", "Internal Security", "Bot", "Mutant", "Commie", "Other"] }
+        Clearance = string { keys = ["Infrared", "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet", "Ultraviolet"] }
+        Violence = integer { default = 1  valuedice = nodeRoll (Violence, 0) }
+        Brains = integer { default = 1  valuedice = nodeRoll (Brains, 0) }
+        Chutzpah = integer { default = 1  valuedice = nodeRoll (Chutzpah, 0) }
+        Mechanics = integer { default = 1  valuedice = nodeRoll (Mechanics, 0) }
+        Armor = string { default = "None" }
+        Wounds = integer { default = 0  minvalue = 0  maxvalue = 4  render = woundName (Wounds)  editable = live  indicator = "#d64545" }
+    }
+    Attacks = keyvalues
+    {
+        description = "NODE for each attack and the wound it deals."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Laser pistol", "Truncheon"]
+        valueType = custom
+        {
+            NODE = modifier { default = 3  valuedice = ask ("Difficulty", nodeAsked (NODE))  action = if contains (toLower (Key), "pistol") or contains (toLower (Key), "laser") or contains (toLower (Key), "gun") or contains (toLower (Key), "rifle") then "ranged" else "melee"  reach = 2 }
+            Damage = string { default = "Injured" }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+paranoiaWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { default = "Guns"  keys = ["Guns", "Melee", "Throw", "Demolitions"] }
+        Damage = string { description = "The wound a hit deals: Hurt, Injured, Maimed or Dead." default = "Injured" }
+        Range = string { description = "Metres; blank for melee." }
+        Clearance = string { keys = ["Infrared", "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet", "Ultraviolet"] }
+        Ammo = string {}
+    }
+}
+
+paranoiaItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Clearance = string { keys = ["Infrared", "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet", "Ultraviolet"] }
+        'NODE bonus' = string {}
+        Cost = string { description = "In XP points." }
+    }
+}
+
+paranoiaPower = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Cost = string { description = "Moxie spent to use it." default = "1 Moxie" }
+    }
+}
+
+paranoiaNameSetting = nameSetting
+{
+    name = "Underground complex"
+    characters = [generator { library = "Underground complex" variant = "Citizen" }, generator { library = "Underground complex" variant = "High clearance" }]
+    creatures = [generator { library = "Underground complex" variant = "Citizen" }, generator { library = "Underground complex" variant = "Bot" }, generator { library = "Underground complex" variant = "High clearance" }]
+    Location = [generator { library = "Underground complex" variant = "Sector" }, generator { library = "Underground complex" variant = "Service firm" }]
+    Equipment = generator { library = "Underground complex" variant = "Service firm" }
+}
+
+Paranoia = system
+{
+    hints = [
+        hint
+        {
+            title = "Troubleshooters"
+            topic = "Getting started"
+            text = ["Every player is a Red-clearance troubleshooter with six clones, a service group, a secret society they deny and a mutant power they hide. Keep secret orders off the shared sheet."]
+        },
+        hint
+        {
+            title = "NODE rolls"
+            topic = "Play"
+            text = ["Roll stat + skill d6s plus the red Computer die. Each 5 or 6 is a success; with a negative NODE each die under 5 takes one away. The prompt asks for equipment bonuses and the Difficulty. A C on the Computer die means Friend Computer takes an interest."]
+        },
+        hint
+        {
+            title = "Wounds and clones"
+            topic = "Combat"
+            text = ["Hits go Hurt, Injured, Maimed, Dead. When a clone dies, press Next clone: the replacement arrives unhurt, with the same Treason Stars."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["The GM decides who goes first, usually whoever talks first. Drag tokens into order in the initiative list."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = paranoiaWeapon
+    Equipment = paranoiaItem
+    'Mutant Powers' = paranoiaPower
+    secondaryTypes = ["Weapons", "Equipment", "Mutant Powers"]
+    description = "Paranoia (Perfect Edition): darkly funny dystopia under a paranoid computer, NODE d6 pools with the Computer die, Moxie, Treason Stars and six clones"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6]
+    cssFiles = ["/systems/paranoia/paranoia.css"]
+    libraries = ["/systems/names/clones.json"]
+    nameSettings = [paranoiaNameSetting]
+}

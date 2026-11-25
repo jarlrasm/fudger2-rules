@@ -1,0 +1,179 @@
+{
+  "name": "Underground complex names",
+  "description": "Clone citizens, sectors, service groups and bots for a cheerful underground dystopia run by a paranoid computer.",
+  "url": "/systems/names/clones.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Underground complex",
+      "description": "Citizens named by first name, clearance letter, home sector and clone number; three-letter sectors; service firms and serial-numbered bots.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": [
+          "Person",
+          "Place"
+        ],
+        "variants": [
+          "Citizen",
+          "High clearance",
+          "Sector",
+          "Service firm",
+          "Bot"
+        ],
+        "parts": {
+          "first": [
+            "Kim",
+            "Ted",
+            "Ann",
+            "Bob",
+            "Joe",
+            "Sue",
+            "Max",
+            "Ray",
+            "Liz",
+            "Dan",
+            "Gus",
+            "Ida",
+            "Lou",
+            "Meg",
+            "Ned",
+            "Pat",
+            "Rex",
+            "Sal",
+            "Tom",
+            "Val",
+            "Wes",
+            "Zoe",
+            "Ari",
+            "Bea",
+            "Cal",
+            "Dot",
+            "Eve",
+            "Flo",
+            "Hal",
+            "Jan",
+            "Kip",
+            "Lyn",
+            "Mo",
+            "Nan",
+            "Ole",
+            "Peg",
+            "Rae",
+            "Sid",
+            "Tia",
+            "Vic",
+            "Walt",
+            "Yul",
+            "Dee",
+            "Fay",
+            "Gil",
+            "Hap",
+            "Ivy",
+            "Jem",
+            "Kat",
+            "Lex"
+          ],
+          "low": [
+            "R:8",
+            "O:4",
+            "Y:3",
+            "G:2",
+            "IR:1"
+          ],
+          "high": [
+            "B:4",
+            "I:3",
+            "V:2",
+            "U:1"
+          ],
+          "clone": [
+            "1:8",
+            "2:5",
+            "3:4",
+            "4:3",
+            "5:2",
+            "6:2"
+          ],
+          "sector": {
+            "pattern": "LLL"
+          },
+          "fAdj": [
+            "Happy",
+            "Loyal",
+            "Bright",
+            "Sunny",
+            "Clean",
+            "Safe",
+            "Glad",
+            "Shiny",
+            "Prompt",
+            "Correct",
+            "Optimal",
+            "Cheery"
+          ],
+          "fNoun": [
+            "Nutrients",
+            "Hygiene",
+            "Fixtures",
+            "Recreation",
+            "Bulbs",
+            "Corridors",
+            "Uniforms",
+            "Scrubbers",
+            "Records",
+            "Refreshments",
+            "Mood Regulation",
+            "Filing"
+          ],
+          "fEnd": [
+            "Unlimited",
+            "Incorporated",
+            "Co-op",
+            "Associates",
+            "Services",
+            "Collective"
+          ],
+          "model": [
+            "DOC",
+            "JAN",
+            "SCRB",
+            "GRD",
+            "TAC",
+            "VND",
+            "DLV",
+            "HOV",
+            "MED",
+            "CLN"
+          ],
+          "serial": {
+            "pattern": "D-DDD"
+          }
+        },
+        "templates": {
+          "Citizen": [
+            "{first}-{low}-{sector}-{clone}"
+          ],
+          "High clearance": [
+            "{first}-{high}-{sector}-{clone}"
+          ],
+          "Sector": [
+            "{sector} Sector:4",
+            "Sector {sector}:2",
+            "{sector} Sub-Sector {serial}:1"
+          ],
+          "Service firm": [
+            "{fAdj} {fNoun} {fEnd}:3",
+            "{fNoun} {fEnd}:2",
+            "{fAdj} {fAdj} {fNoun}:1"
+          ],
+          "Bot": [
+            "{model}-{serial}:3",
+            "{model} {serial} \"{first}\":1"
+          ]
+        }
+      }
+    }
+  ]
+}
