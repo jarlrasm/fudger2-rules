@@ -1,5 +1,6 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
+#include "/systems/drawsteel/encounters.frules"
 
 modeBonus (mode) =
     switch mode
@@ -65,7 +66,7 @@ stateOf (stamina, maxStamina) =
 
 characterTable = ruleset
 {
-    rulesetConfiguration = { important = [Hero, Characteristics, Health, Abilities, Conditions] }
+    rulesetConfiguration = { important = [Hero, Characteristics, Health, Abilities, Conditions]  encounterStats = { Level = Hero.Level  Victories = Hero.Victories } }
     Hero = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -208,6 +209,7 @@ monsterTable = ruleset
         defaultImage = "/images/armour.svg"
         important = [Monster, Characteristics, Abilities]
         sortedBy = sort { prefix = "Level" sort = Monster.Level }
+        encounterStats = { EV = Monster.EV  Minion = Monster.Organization == "Minion" }
     }
     Monster = table
     {
@@ -296,6 +298,7 @@ DrawSteel = system
     squareSize = 1
     characters = characterTable
     creatures = monsterTable
+    encounterDifficulty (party, foes) = drawSteelDifficulty (party, foes)
     entityTypeNames = [entityTypeName ("Character", "Hero", "Heroes"), entityTypeName ("Creature", "Monster", "Monsters")]
     description = "Draw Steel: 2d10 power rolls in three tiers, heroic resources and no misses"
     quickdice = [2d10, 1d10, 1d3, 1d6]

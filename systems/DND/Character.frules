@@ -19,7 +19,9 @@ characterTable = ruleset
   rulesetConfiguration = configuration
   {
     important = [Basics, Hitpoints, Conditions, Attacks]
+    encounterStats = { Level = Class.Main.Levels }
     initative=characterTable.Basics.'Initiative'
+    encounterStats = { Level = Class.Main.Levels }
   }
   Basics = basicsTable{}
   Class = classTable{}

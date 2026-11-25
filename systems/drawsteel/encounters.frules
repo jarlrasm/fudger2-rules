@@ -1,0 +1,45 @@
+heroStrength (level) = 4 + 2 * level
+
+baseStrength (party) = sum (map ((hero)->heroStrength (hero.Level), party))
+
+oneHeroStrength (party) = baseStrength (party) / count (party)
+
+averageVictories (party) = sum (map ((hero)->hero.Victories, party)) / count (party)
+
+partyStrength (party) = baseStrength (party) + (averageVictories (party) / 2) * oneHeroStrength (party)
+
+minionEV (foes) = sum (map ((foe)->foe.EV, filter ((foe)->foe.Minion, foes)))
+
+spentEV (foes) = sum (map ((foe)->foe.EV, filter ((foe)->not (foe.Minion), foes))) + (minionEV (foes) + 3) / 4
+
+drawSteelSteps = ["Trivial", "Easy", "Standard", "Hard", "Extreme"]
+
+drawSteelStep (spent, strength, hero) =
+    if spent < strength - hero then
+        0
+    else if spent < strength then
+        1
+    else if spent <= strength + hero then
+        2
+    else if spent <= strength + 3 * hero then
+        3
+    else
+        4
+
+drawSteelLimit (step, strength, hero) =
+    switch step
+        case 0 then "Trivial below " + toString (strength - hero)
+        case 1 then "Easy below " + toString (strength)
+        case 2 then "Standard up to " + toString (strength + hero)
+        case 3 then "Hard up to " + toString (strength + 3 * hero)
+        else "Extreme over " + toString (strength + 3 * hero)
+
+drawSteelRating (spent, strength, hero) =
+    {
+        Label = item (drawSteelStep (spent, strength, hero), drawSteelSteps)
+        Step = drawSteelStep (spent, strength, hero)
+        Steps = drawSteelSteps
+        Detail = "EV " + toString (spent) + " / encounter strength " + toString (strength) + ", " + drawSteelLimit (drawSteelStep (spent, strength, hero), strength, hero)
+    }
+
+drawSteelDifficulty (party, foes) = drawSteelRating (spentEV (foes), partyStrength (party), oneHeroStrength (party))

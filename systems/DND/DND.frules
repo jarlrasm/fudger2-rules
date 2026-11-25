@@ -3,6 +3,7 @@
 #include "/systems/DND/Conditions.frules"
 #include "/systems/DND/Creature.frules"
 #include "/systems/DND/Character.frules"
+#include "/systems/DND/Encounters.frules"
 
 
 weaponStats =ruleset
@@ -281,9 +282,9 @@ DND5e = system
         },
         hint
         {
-            title = "A fair first fight"
+            title = "How hard a fight is"
             topic = "Encounters"
-            text = ["For four characters, one creature of their level, or a handful of weaker ones, makes a fair fight. Filter the library by Challenge rating."]
+            text = ["The encounter page rates the fight against the player characters as Low, Moderate, High or Deadly, from the XP of its creatures and each character's level. Add or remove creatures until it shows the fight you want."]
         },
         hint
         {
@@ -294,6 +295,7 @@ DND5e = system
     ]
     characters = characterTable
     creatures = creatureTable
+    encounterDifficulty (party, foes) = dndDifficulty (party, foes)
 
     'Ranged weapons'= weaponStats
     'Melee weapons'= weaponStats

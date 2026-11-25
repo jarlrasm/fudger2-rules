@@ -1,0 +1,63 @@
+pf2PartyLevel (party) = (2 * sum (map ((member)->member.Level, party)) + count (party)) / (2 * count (party))
+
+pf2CreatureXP (difference) =
+    if difference < -4 then
+        0
+    else
+        switch difference + 4
+            case 0 then 10
+            case 1 then 15
+            case 2 then 20
+            case 3 then 30
+            case 4 then 40
+            case 5 then 60
+            case 6 then 80
+            case 7 then 120
+            else 160
+
+pf2SpentXP (partyLevel, foes) = sum (map ((foe)->pf2CreatureXP (foe.Level - partyLevel), foes))
+
+pf2Threats = ["Trivial", "Low", "Moderate", "Severe", "Extreme"]
+
+pf2Budget (step, size) =
+    switch step
+        case 0 then 40 + 10 * (size - 4)
+        case 1 then 60 + 20 * (size - 4)
+        case 2 then 80 + 20 * (size - 4)
+        case 3 then 120 + 30 * (size - 4)
+        else 160 + 40 * (size - 4)
+
+pf2Step (spent, size) =
+    if spent <= pf2Budget (0, size) then
+        0
+    else if spent <= pf2Budget (1, size) then
+        1
+    else if spent <= pf2Budget (2, size) then
+        2
+    else if spent <= pf2Budget (3, size) then
+        3
+    else
+        4
+
+pf2TooHigh (partyLevel, foes) =
+    if count (filter ((foe)->foe.Level - partyLevel > 4, foes)) > 0 then
+        ". A creature more than 4 levels above the party is beyond these rules"
+    else
+        ""
+
+pf2Detail (spent, size, step, partyLevel) =
+    if spent > pf2Budget (4, size) then
+        toString (spent) + " XP, over the " + toString (pf2Budget (4, size)) + " XP Extreme budget, party level " + toString (partyLevel)
+    else
+        toString (spent) + " / " + toString (pf2Budget (step, size)) + " XP budget for " + item (step, pf2Threats) + ", party level " + toString (partyLevel)
+
+pf2Rating (spent, size, partyLevel, warning) =
+    {
+        Label = item (pf2Step (spent, size), pf2Threats)
+        Step = pf2Step (spent, size)
+        Steps = pf2Threats
+        Detail = pf2Detail (spent, size, pf2Step (spent, size), partyLevel) + warning
+    }
+
+pf2EncounterDifficulty (party, foes) =
+    pf2Rating (pf2SpentXP (pf2PartyLevel (party), foes), count (party), pf2PartyLevel (party), pf2TooHigh (pf2PartyLevel (party), foes))
