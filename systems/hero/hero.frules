@@ -1,0 +1,408 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+rollUnder (target) = ([3d6], ((baseline, throws)->heroResult (target, sum (first (throws).rolls))))
+
+heroOutcome (target, total) =
+    if total == 3 then "Critical success"
+    else if total == 18 then "Failure"
+    else if total <= target then "Success"
+    else "Failure"
+
+heroResult (target, total) =
+{
+    Text = toString (total) + " vs " + toString (target) + "-: " + heroOutcome (target, total) + (if total <= target and total != 18 then ", made by " + toString (target - total) else ", missed by " + toString (total - target))
+    Value = target - total
+    Outcome = heroOutcome (target, total)
+}
+
+charRoll (value) = 9 + (value + 2) / 5
+
+attackResult (ocv, total) =
+{
+    Text = toString (total) + ": " + (if total == 3 then "hits automatically" else if total == 18 then "misses automatically" else "hits DCV " + toString (11 + ocv - total) + " or less")
+    Value = 11 + ocv - total
+    Outcome = if total == 18 then "Miss" else if total == 3 then "Hit" else ""
+}
+
+attackRoll (ocv) = ([3d6], ((baseline, throws)->attackResult (ocv, sum (first (throws).rolls))))
+
+bodyOf (x) = if x == 1 then 0 else if x == 6 then 2 else 1
+
+normalDamage (dieCount, half) = ([dice { number = max (0, dieCount)  sides = 6 }, dice { number = if half then 1 else 0  sides = 6  color = "blue"  label = if half then "Half die" else "" }],
+    ((baseline, throws)->normalResult (first (throws).rolls, item (1, throws).rolls)))
+
+halfStun (rolls) = sum (map ((x)->(x + 1) / 2, rolls))
+
+halfBody (rolls) = count (filter ((x)->x >= 3, rolls))
+
+normalResult (rolls, halfRolls) =
+{
+    Text = toString (sum (rolls) + halfStun (halfRolls)) + " STUN, " + toString (sum (map ((x)->bodyOf (x), rolls)) + halfBody (halfRolls)) + " BODY"
+    Value = sum (rolls) + halfStun (halfRolls)
+}
+
+killingDamage (dieCount, half) = ([dice { number = max (0, dieCount)  sides = 6 }, dice { number = if half then 1 else 0  sides = 6  color = "blue"  label = if half then "Half die" else "" }, dice { number = 1  sides = 3  color = "red"  label = "STUN multiple" }],
+    ((baseline, throws)->killingResult (sum (first (throws).rolls) + halfStun (item (1, throws).rolls), first (item (2, throws).rolls))))
+
+killingResult (body, multiple) =
+{
+    Text = toString (body) + " BODY, " + toString (body * multiple) + " STUN (x" + toString (multiple) + ")"
+    Value = body
+}
+
+dieCountOf (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+hasHalf (text) = contains (text, "1/2") or contains (text, "½")
+
+isKilling (text) = contains (toLower (text), "k")
+
+damageFor (text) = if isKilling (text) then killingDamage (dieCountOf (text), hasHalf (text)) else normalDamage (dieCountOf (text), hasHalf (text))
+
+speedPhases (spd) =
+    switch spd
+        case 1 then "7"
+        case 2 then "6, 12"
+        case 3 then "4, 8, 12"
+        case 4 then "3, 6, 9, 12"
+        case 5 then "3, 5, 8, 10, 12"
+        case 6 then "2, 4, 6, 8, 10, 12"
+        case 7 then "2, 4, 6, 7, 9, 11, 12"
+        case 8 then "2, 3, 5, 6, 8, 9, 11, 12"
+        case 9 then "2, 3, 4, 6, 7, 8, 10, 11, 12"
+        case 10 then "2, 3, 4, 5, 6, 8, 9, 10, 11, 12"
+        case 11 then "2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12"
+        else "1 to 12"
+
+staticInitiative = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+heroState (char) =
+    if char.Health.BODY < 0 then "Dying"
+    else if char.Health.STUN <= 0 then "Knocked out"
+    else if char.Health.Stunned then "Stunned"
+    else ""
+
+usualBase (skillName) =
+    switch skillName
+        case "Perception" then "INT"
+        case "Computer Programming" then "INT"
+        case "Deduction" then "INT"
+        case "Concealment" then "INT"
+        case "Tactics" then "INT"
+        case "Acting" then "PRE"
+        case "Persuasion" then "PRE"
+        case "Streetwise" then "PRE"
+        else "DEX"
+
+charValue (char, name) =
+    switch name
+        case "STR" then char.Characteristics.STR
+        case "DEX" then char.Characteristics.DEX
+        case "CON" then char.Characteristics.CON
+        case "INT" then char.Characteristics.INT
+        case "EGO" then char.Characteristics.EGO
+        case "PRE" then char.Characteristics.PRE
+        else 0
+
+skillTarget (char, based, levels) = if based == "Flat" then 8 + levels else charRoll (charValue (char, based)) + levels
+
+noStats = { Stats = { Damage = "" } }
+
+powerStat (power, field) = valueOr (valueOr (valueOr (power.data, "heroPower", noStats), "Stats", noStats.Stats), field, "")
+
+attack (name, ocv, damageText, kind, distance) = custom
+{
+    Name = name
+    OCV = integer { value = ocv  valuedice = attackRoll (ocv)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = dieCountOf (damageText)  render = damageText  valuedice = damageFor (damageText)  editable = none }
+}
+
+isAttackPower (power) = dieCountOf (powerStat (power, "Damage")) > 0
+
+attackFor (char, power) =
+    if powerStat (power, "Range") == "No range" then
+        attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "melee", 2)
+    else
+        attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 10 * max (1, toInt (powerStat (power, "Active points"))))
+
+strengthDamage (str) = toString (str / 5) + (if mod (str, 5) >= 3 then " 1/2" else "") + "d6"
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Combat, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hero name' = string {}
+        'Alternate identity' = string {}
+        Genre = string { keys = ["Superheroic", "Heroic", "Pulp", "Fantasy", "Science fiction", "Espionage", "Other"] }
+        Campaign = string {}
+        'Total points' = integer { description = "Character points, from base points, complications and experience." default = 400 }
+        Experience = integer { default = 0  editable = live }
+        Height = string {}
+        Weight = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "Primary characteristics. A characteristic roll is 9 + CHAR/5 or less on 3d6."
+        tableLayout = layout { columns = 3  size = wide }
+        STR = integer { description = "Strength: lifting, and hand-to-hand damage of 1d6 per 5 STR." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (STR)) }
+        DEX = integer { description = "Dexterity: agility and reflexes. Sets the order of action in a phase." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (DEX)) }
+        CON = integer { description = "Constitution: health and stamina. A hit of more STUN than CON stuns." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (CON)) }
+        INT = integer { description = "Intelligence: reasoning and perception." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (INT)) }
+        EGO = integer { description = "Ego: willpower and mental resistance." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (EGO)) }
+        PRE = integer { description = "Presence: force of personality. Presence attacks roll 1d6 per 5 PRE." default = 10  minvalue = 0  valuedice = rollUnder (charRoll (PRE)) }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        OCV = integer { description = "Offensive Combat Value. An attack hits DCV 11 + OCV - 3d6 or less." default = 3  valuedice = attackRoll (OCV) }
+        DCV = integer { description = "Defensive Combat Value." default = 3 }
+        OMCV = integer { description = "Offensive Mental Combat Value." default = 3  valuedice = attackRoll (OMCV) }
+        DMCV = integer { description = "Defensive Mental Combat Value." default = 3 }
+        SPD = integer { description = "Speed: how many phases the character acts in each 12-segment turn." default = 2  minvalue = 1  maxvalue = 12 }
+        Phases = string { description = "The segments the character acts in." value = speedPhases (SPD)  editable = none }
+        Initiative = modifier { description = "Within a segment, the highest DEX acts first." value = Characteristics.DEX  valuedice = staticInitiative  editable = none }
+        'Hand to hand' = string { description = "Normal damage from STR: 1d6 per 5 points." value = strengthDamage (Characteristics.STR)  editable = none }
+        PD = integer { description = "Physical Defense, subtracted from physical normal damage STUN and BODY." default = 2 }
+        ED = integer { description = "Energy Defense, subtracted from energy damage." default = 2 }
+        rPD = integer { description = "Resistant Physical Defense, which also stops killing damage." default = 0 }
+        rED = integer { description = "Resistant Energy Defense." default = 0 }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max BODY' = integer { default = 10 }
+        BODY = integer { description = "Below 0 the character is dying; at -BODY dead." default = 'Max BODY'  editable = live  indicator = "#d64545" }
+        'Max STUN' = integer { default = 20 }
+        STUN = integer { description = "At 0 or less the character is knocked out." default = 'Max STUN'  editable = live }
+        'Max END' = integer { default = 20 }
+        END = integer { description = "Endurance, spent on powers and STR: 1 per 10 active points." default = 'Max END'  editable = live }
+        REC = integer { description = "Recovery: STUN and END regained in a Recovery." default = 4 }
+        Stunned = bool { description = "A single hit of more STUN than CON stuns: the character loses their next phase." default = false  editable = live  indicator = "#d4b106" }
+        State = string { value = heroState (characterTable)  visible = none  indicator = "#d64545" }
+        Recovery = button
+        {
+            description = "Take a Recovery: regain REC in STUN and END, and stop being stunned."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.STUN) = min ('Max STUN', STUN + REC)
+                (root.Health.END) = min ('Max END', END + REC)
+                (root.Health.Stunned) = false
+            }
+        }
+        'Full rest' = button
+        {
+            description = "After the fight and a rest: STUN and END back to full."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.STUN) = 'Max STUN'
+                (root.Health.END) = 'Max END'
+                (root.Health.Stunned) = false
+            }
+        }
+    }
+
+    Movement = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Running = integer { description = "Metres per phase." default = 12 }
+        Swimming = integer { default = 4 }
+        Leaping = integer { default = 4 }
+        Other = string { description = "Flight, Teleportation and other movement powers." }
+    }
+
+    Skills = keyvalues
+    {
+        description = "Skills roll 9 + CHAR/5 plus levels on 3d6, or 8 + levels for familiarity and flat skills."
+        tableLayout = layout { columns = 2  size = wide }
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Perception", "Acrobatics", "Acting", "Breakfall", "Climbing", "Computer Programming", "Concealment", "Deduction", "Persuasion", "Stealth", "Streetwise", "Tactics"]
+        valueType = custom
+        {
+            Based = string { description = "The characteristic the skill rolls with, or Flat." default = usualBase (Key)  keys = ["STR", "DEX", "CON", "INT", "EGO", "PRE", "Flat"] }
+            Levels = integer { description = "Points of the roll bought above the base." default = 0 }
+            Roll = integer { value = skillTarget (characterTable, Based, Levels)  render = toString (skillTarget (characterTable, Based, Levels)) + "-"  valuedice = rollUnder (skillTarget (characterTable, Based, Levels))  editable = none }
+        }
+    }
+
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Punch", Combat.OCV, strengthDamage (Characteristics.STR), "melee", 2)], map ((power)->attackFor (characterTable, power), filter ((power)->isAttackPower (power), characterTable.Powers)))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    'Perks and Talents' = list
+    {
+        singular = "Perk or talent"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Complications = list
+    {
+        description = "Hunteds, psychological complications, social complications and others, each worth points."
+        singular = "Complication"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Points = integer { default = 10 }
+        }
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Origin = string { multiline = true }
+        Personality = string { multiline = true }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        STR = integer { default = 10 }
+        DEX = integer { default = 10 }
+        CON = integer { default = 10 }
+        INT = integer { default = 10 }
+        EGO = integer { default = 10 }
+        PRE = integer { default = 10 }
+        OCV = integer { default = 3 }
+        DCV = integer { default = 3 }
+        SPD = integer { default = 2 }
+        PD = string { description = "PD, and resistant PD after a slash." default = "4/0" }
+        ED = string { default = "4/0" }
+        REC = integer { default = 4 }
+        BODY = integer { default = 10  editable = live  indicator = "#d64545" }
+        STUN = integer { default = 20  editable = live }
+        END = integer { default = 20  editable = live }
+        Phases = string { value = speedPhases (SPD)  editable = none }
+        Initiative = modifier { value = DEX  valuedice = staticInitiative  editable = none }
+        Down = string { value = if BODY < 0 then "Dying" else if STUN <= 0 then "Knocked out" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = keyvalues
+    {
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Punch"]
+        valueType = custom
+        {
+            OCV = integer { default = 3  valuedice = attackRoll (OCV)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 60 }
+            Damage = string { default = "2d6" }
+            Ranged = bool { default = false }
+            Roll = integer { value = dieCountOf (Damage)  render = Damage  valuedice = damageFor (Damage)  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true }
+        Skills = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+heroPower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "Kind" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Attack", "Defense", "Movement", "Sense", "Mental", "Adjustment", "Body-affecting", "Special"] }
+        Damage = string { description = "Dice of effect, such as 10d6 or 2d6 K for killing damage. Attack powers with dice show in Attacks." }
+        'Active points' = string { description = "Also sets range: 10 m per active point." default = "0" }
+        'Real cost' = string { default = "0" }
+        END = string { description = "Endurance per use: 1 per 10 active points unless reduced." default = "0" }
+        Range = string { default = "Ranged"  keys = ["Ranged", "No range", "Self", "Line of sight"] }
+        OCV = string { description = "OCV bonus or penalty with this attack." default = "0" }
+        Modifiers = string { description = "Advantages and limitations, such as Armor Piercing or Focus (OAF)." }
+    }
+}
+
+heroItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Price = string {}
+        Notes = string {}
+    }
+}
+
+HeroSystem = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a character"
+            topic = "Getting started"
+            text = ["Everything is bought with character points: characteristics, skills, powers. Complications such as Hunteds and psychological limits give points back. Superheroes usually start at 400 points, heroic characters at 175."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Skill and characteristic rolls are 3d6 at or under the target, 9 + CHAR/5 for most. An attack hits DCV 11 + OCV - the roll or less; the result says which DCV it hits."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Normal damage: the total is STUN, and each die counts 0, 1 or 2 BODY (1, 2 to 5, 6). Killing damage: the total is BODY, times 1d3 for STUN. Defenses come off both; only resistant defenses stop killing BODY. More STUN than CON in one hit stuns."]
+        },
+        hint
+        {
+            title = "Speed and phases"
+            topic = "Initiative"
+            text = ["A turn has 12 segments. SPD says in which segments a character acts; within a segment, the highest DEX goes first. Post-segment 12, everyone takes a free Recovery."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Powers = heroPower
+    Equipment = heroItem
+    secondaryTypes = ["Powers", "Equipment"]
+    description = "Hero System 6th edition (Champions): build anything with points, 3d6 rolls, speed phases and STUN and BODY damage"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [3d6, 1d6]
+    cssFiles = ["/systems/hero/hero.css"]
+    libraries = ["/systems/names/heroes.json", "/systems/names/spies.json", "/systems/names/fantasy.json", "/systems/names/scifi.json"]
+    nameSettings = [superheroesNameSetting, spyThrillerNameSetting, fantasyNameSetting, spaceNameSetting]
+}

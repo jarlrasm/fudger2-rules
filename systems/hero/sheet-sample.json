@@ -1,0 +1,22 @@
+{
+  "values": {
+    "Character": { "Hero name": "Kestrel", "Alternate identity": "Dana Okafor, aerospace engineer", "Genre": "Superheroic", "Campaign": "Millennium City", "Total points": 412, "Experience": 12, "Height": "1.72 m", "Weight": "61 kg" },
+    "Characteristics": { "STR": 15, "DEX": 23, "CON": 18, "INT": 20, "EGO": 13, "PRE": 15 },
+    "Combat": { "OCV": 8, "DCV": 8, "OMCV": 3, "DMCV": 5, "SPD": 5, "PD": 10, "ED": 10, "rPD": 10, "rED": 10 },
+    "Health": { "Max BODY": 12, "BODY": 9, "Max STUN": 36, "STUN": 21, "Max END": 40, "END": 28, "REC": 8 },
+    "Movement": { "Running": 12, "Swimming": 4, "Leaping": 4, "Other": "Flight 30 m (wing pack, OIF)" },
+    "Skills": { "Perception.Levels": 1, "Acrobatics.Levels": 1, "Breakfall.Levels": 0, "Computer Programming.Levels": 2, "Deduction.Levels": 0, "Tactics.Levels": 1, "Stealth.Levels": 0 },
+    "Perks and Talents": [ { "Name": "Combat Pilot", "Description": "Fly and fight with no penalty." }, { "Name": "Contact: Dr. Ibe at Vibora Bay Tech, 11-", "Description": "Old research partner with lab access." } ],
+    "Complications": [ { "Name": "Hunted: VIPER, 8- (more powerful, wants the wing pack)", "Points": 20 }, { "Name": "Psychological: Can't leave someone in danger (common, strong)", "Points": 15 }, { "Name": "Social: Secret identity", "Points": 15 }, { "Name": "Dependent NPC: younger brother Tunde, 8-", "Points": 10 } ],
+    "Background": { "Origin": "Built the Kestrel wing pack for a defence contract, then stole it back when VIPER bought the company.", "Personality": "Precise, wry, takes too many risks in the air.", "Appearance": "Grey and gold flight suit, mirrored visor, folding steel wings.", "Notes": "" }
+  },
+  "secondary": {
+    "Powers": [
+      { "name": "Talon Blasters", "values": { "Stats": { "Kind": "Attack", "Damage": "10d6", "Active points": "50", "Real cost": "33", "END": "5", "Range": "Ranged", "OCV": "0", "Modifiers": "Blast 10d6; OAF (gauntlets)" } } },
+      { "name": "Wing Edge", "values": { "Stats": { "Kind": "Attack", "Damage": "2 1/2d6 K", "Active points": "40", "Real cost": "27", "END": "4", "Range": "No range", "OCV": "1", "Modifiers": "HKA, Armor Piercing; OIF" } } },
+      { "name": "Flight Suit Armor", "values": { "Stats": { "Kind": "Defense", "Active points": "30", "Real cost": "20", "END": "0", "Range": "Self", "Modifiers": "Resistant Protection 10 PD/10 ED; OIF" } } },
+      { "name": "Wing Pack", "values": { "Stats": { "Kind": "Movement", "Active points": "30", "Real cost": "20", "END": "3", "Range": "Self", "Modifiers": "Flight 30 m; OIF" } } }
+    ],
+    "Equipment": [ { "name": "Comm earpiece", "values": { "Stats": { "Notes": "Encrypted, linked to the team's base." } } } ]
+  }
+}

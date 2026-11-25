@@ -1,0 +1,56 @@
+@import url("/systems/sheet.css");
+
+/* Hero System 6th edition: the plain black-and-white form of the official
+   sheet, boxed characteristic rows with their rolls, a bold blue band for
+   each section title, and combat values and health side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1b2a4a;
+    --surface: #ffffff;
+    --surface-alt: #eef2f8;
+    --surface-sunken: #dde4f0;
+    --surface-muted: #b9c4d8;
+    --text: #0d1424;
+    --text-muted: #34405a;
+    --text-faint: #6a7690;
+    --on-accent: #ffffff;
+    --border: #9aa6bd;
+    --border-strong: #0d1424;
+    --accent: #1f4fa8;
+    --accent-hover: #2b62c8;
+    --accent-soft: #dbe6fa;
+    --link: #1f4fa8;
+    --danger: #b3261e;
+    --danger-hover: #8c1d17;
+    --danger-soft: #f6d9d6;
+    --success: #1f7a3a;
+    --paper: #ffffff;
+    --card-bg: #eef2f8;
+    --dice-bg: #1f4fa8;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Impact", "Arial Black", Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-style: italic;
+}
+.entityView .table-characteristics { --block: 50%; }
+.entityView .table-characteristics > table > tbody > tr { border: 1px solid var(--border); padding: 2px 6px; }
+.entityView .table-combat { --block: 50%; }
+.entityView .table-combat > table > tbody { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.entityView .table-health { clear: left; }
+.entityView .table-perks-and-talents,
+.entityView .table-complications { --block: 50%; }
+.entityView .table-perks-and-talents { clear: left; }
+.entityView .table-equipment { --block: 50%; }
