@@ -1,0 +1,52 @@
+@import url("/systems/sheet.css");
+
+/* Cairn: a plain, earthy character card in birch-bark white with moss
+   green and charcoal, a hand-printed serif; the three attributes as big
+   boxes, HP, Armor, Gold and Fatigue in a row under them, then the ten
+   inventory slots, spellbooks and relics. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2f3a2c;
+    --surface: #f4f1e8;
+    --surface-alt: #e8e4d6;
+    --surface-sunken: #dbd5c2;
+    --surface-muted: #c2bba3;
+    --text: #1f211c;
+    --text-muted: #474b41;
+    --text-faint: #777b70;
+    --on-accent: #f4f1e8;
+    --border: #a39d88;
+    --border-strong: #2a2c26;
+    --accent: #4f6b3a;
+    --accent-hover: #5f7f46;
+    --accent-soft: #dbe5cf;
+    --link: #4f6b3a;
+    --danger: #8f2c22;
+    --danger-hover: #72231b;
+    --danger-soft: #efd5d1;
+    --success: #4f6b3a;
+    --paper: #f4f1e8;
+    --card-bg: #e8e4d6;
+    --dice-bg: #2a2c26;
+    --dice-text: #f4f1e8;
+}
+
+.entityView {
+    --sheet-font: "Crimson Pro", "Georgia", serif;
+    --title-font: "Uncial Antiqua", "Georgia", serif;
+    --block-radius: 6px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .table-abilities > table > tbody > tr { font-size: 1.1em; }
+.entityView .table-spellbooks,
+.entityView .table-relics,
+.entityView .table-scars { --block: 33.333%; }
+.entityView .table-spellbooks { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

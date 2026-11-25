@@ -1,0 +1,6993 @@
+{
+ "name": "Cairn",
+ "description": "Items, spellbooks, relics and the bestiary of Cairn 2nd edition by Yochai Gal, licensed under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/). Converted from https://github.com/yochaigal/cairn (commit 4180f39) and shared under the same licence.",
+ "url": "/systems/cairn/cairn.json",
+ "gamemaster": "",
+ "entities": [
+  {
+   "type": "Items",
+   "name": "Shield",
+   "description": "Shield (+1 Armor)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "10",
+        "Armor": "+1"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Helmet",
+   "description": "Helmet (+1 Armor)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "10",
+        "Armor": "+1"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Gambeson",
+   "description": "Gambeson (+1 Armor)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "15",
+        "Armor": "+1"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Brigandine",
+   "description": "Brigandine (1 Armor, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "20",
+        "Armor": "1",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chainmail",
+   "description": "Chainmail (2 Armor, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "40",
+        "Armor": "2",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Plate",
+   "description": "Plate (3 Armor, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Armor",
+        "Cost": "60",
+        "Armor": "3",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Dagger",
+   "description": "Dagger, Cudgel, Sickle, Staff, etc. (d6 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "5",
+        "Damage": "d6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Cudgel",
+   "description": "Dagger, Cudgel, Sickle, Staff, etc. (d6 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "5",
+        "Damage": "d6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sickle",
+   "description": "Dagger, Cudgel, Sickle, Staff, etc. (d6 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "5",
+        "Damage": "d6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Staff",
+   "description": "Dagger, Cudgel, Sickle, Staff, etc. (d6 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "5",
+        "Damage": "d6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Spear",
+   "description": "Spear, Sword, Mace, Axe, Flail, etc. (d8 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "10",
+        "Damage": "d8"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sword",
+   "description": "Spear, Sword, Mace, Axe, Flail, etc. (d8 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "10",
+        "Damage": "d8"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Mace",
+   "description": "Spear, Sword, Mace, Axe, Flail, etc. (d8 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "10",
+        "Damage": "d8"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Axe",
+   "description": "Spear, Sword, Mace, Axe, Flail, etc. (d8 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "10",
+        "Damage": "d8"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Flail",
+   "description": "Spear, Sword, Mace, Axe, Flail, etc. (d8 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "10",
+        "Damage": "d8"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Halberd",
+   "description": "Halberd, War Hammer, Long Sword, etc. (d10 damage, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "20",
+        "Damage": "d10",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "War Hammer",
+   "description": "Halberd, War Hammer, Long Sword, etc. (d10 damage, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "20",
+        "Damage": "d10",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Long Sword",
+   "description": "Halberd, War Hammer, Long Sword, etc. (d10 damage, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "20",
+        "Damage": "d10",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sling",
+   "description": "Sling (d6 damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "5",
+        "Damage": "d6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bow",
+   "description": "Bow (d6 damage, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "20",
+        "Damage": "d6",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Crossbow",
+   "description": "Crossbow (d8 damage, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Cost": "30",
+        "Damage": "d8",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Cart",
+   "description": "Cart (+4 slots, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "30",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wagon",
+   "description": "Wagon (+8 slots, slow)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "200"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Horse",
+   "description": "Horse (+4 slots)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "75"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Mule",
+   "description": "Mule (+6 slots, slow)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "30"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Carriage Seat",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Ship's Passage",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Transport",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Room & Board",
+   "description": "Room & Board (per night)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Private Room & Board",
+   "description": "Private Room & Board (fits 4)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "35"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Stable & Feed",
+   "description": "Stable & Feed (per night)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Medical Healing",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "50"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Rations",
+   "description": "Rations (3 uses)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "10",
+        "Uses": "3"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Animal Feed",
+   "description": "Animal Feed (3 uses, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Service",
+        "Cost": "5",
+        "Uses": "3",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Alchemist",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "30"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Animal Handler",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Blacksmith",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "15"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bodyguard",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Local Guide",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lockpick",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Navigator",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sailor",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Scholar",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "20"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Tracker",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Trapper",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Veteran Bodyguard",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Hireling",
+        "Cost": "20"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Air Bladder",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Antitoxin",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "20"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bandages",
+   "description": "Bandages (3 uses)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "30",
+        "Uses": "3"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bathing Goods",
+   "description": "Bathing Goods (Soap, Perfume, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Book",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "50"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Caltrops",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Card Deck",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chain",
+   "description": "Chain (10ft)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chalk",
+   "description": "Chalk (petty)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "1",
+        "Petty": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chest",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "25"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chisel",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Common Agents",
+   "description": "Common Agents (Glue, Grease, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Common Tools",
+   "description": "Common Tools (Hammer, Shovel, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Compass",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "75"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Complex Instruments",
+   "description": "Complex Instruments (Bagpipes, Fiddle, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "50"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Containers",
+   "description": "Containers (Sack, Waterskin, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Cooking Gear",
+   "description": "Cooking Gear (Pots, Utensils, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Costume Gear",
+   "description": "Costume Gear (Face Paint, Disguise)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Dowsing Rod",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Expeditionary Gear",
+   "description": "Expeditionary Gear (Climbing Spikes, Pulley, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Fire Oil",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Fishing Rod",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Games",
+   "description": "Games (Cards, Dice, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Gloves",
+   "description": "Gloves (petty)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "20",
+        "Petty": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Grappling Hook",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "25"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lantern",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Mirror",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Net",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Oil Can",
+   "description": "Oil Can (6 uses)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10",
+        "Uses": "6"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Outdoor Comfort",
+   "description": "Outdoor Comfort (Blanket, Hammock, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Parchment",
+   "description": "Parchment (3 uses)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10",
+        "Uses": "3"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Pole",
+   "description": "Pole (10ft)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Repellent",
+   "description": "Repellent (Wolfsbane, Mugwort, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Rope",
+   "description": "Rope (25ft)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sedative",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "30"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sewing Kit",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "20"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Simple Instruments",
+   "description": "Simple Instruments (Pipes, Lute, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "10"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Smoking Pipe",
+   "description": "Smoking Pipe (petty)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15",
+        "Petty": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Specialized Tools",
+   "description": "Specialized Tools (Ink, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "20"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Spiked Boots",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Spyglass",
+   "description": "",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "40"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Tent",
+   "description": "Tent (fits 2, bulky)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "20",
+        "Bulky": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Thieving Tools",
+   "description": "Thieving Tools (Lockpick, Metal File, etc.)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "25"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Torch",
+   "description": "Torch (3 uses)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "5",
+        "Uses": "3"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Trap",
+   "description": "Trap (d6 STR damage)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "35"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Whistle",
+   "description": "Whistle (petty)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15",
+        "Petty": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wilderness Clothes",
+   "description": "Wilderness Clothes (Poncho, Cloak, etc.) (petty)",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnItem": {
+       "Stats": {
+        "Kind": "Gear",
+        "Cost": "15",
+        "Petty": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Adhere",
+   "description": "An object is covered in extremely sticky slime.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Adjacent objects stick to the book with great force."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Anchor",
+   "description": "A strong wire sprouts from your arms, affixing itself to two points within 50ft on each side.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "If a rope is pulled through the iron loop on its spine, it becomes as heavy as an elephant."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Animate Object",
+   "description": "An object obeys your commands as best it can.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Moldable like clay. Childish laughter sprouts from its pages."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Anthropomorphize",
+   "description": "An animal either gains human intelligence or human appearance for one day.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Whimpers, purrs and growls depending on its treatment."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Arcane Eye",
+   "description": "You can see through a magical floating eyeball that flies around at your command.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Needs a spritz of water to open."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Astral Prison",
+   "description": "An object is frozen in time and space within an invulnerable crystal shell.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Silent, abstract, faces scream in anguish within."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Attract",
+   "description": "Two objects are strongly magnetically attracted to each other if they come within 10 feet.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Nearby compasses spin uselessly."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Auditory Illusion",
+   "description": "You create illusory sounds that seem to come from a direction of your choice.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Produces random and occasionally inopportune sounds throughout the day"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Babble",
+   "description": "A creature must loudly and clearly repeat everything you think. It is otherwise mute.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "When the text is read aloud, the words of others become unintelligible."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Bait Flower",
+   "description": "A plant sprouts from the ground that emanates the smell of decaying flesh.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Attracts flies."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Beast Form",
+   "description": "You and your possessions transform into a mundane animal.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Covered in thick fur, its edges lined with small teeth."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Befuddle",
+   "description": "A creature of your choice is unable to form new short-term memories for the duration of the spell.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Its contents shift and change each time it is opened."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Body Swap",
+   "description": "You switch bodies with a creature you touch. If one body dies, the other dies as well.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The front cover shows an image of the last creature to read it."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Charm",
+   "description": "A creature you can see treats you as a friend.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Warm to the touch, and smells of roses."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Command",
+   "description": "A target obeys a single three-word command that does not cause it harm.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Grows thinner over time, until finally disappearing forever."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Comprehend",
+   "description": "You become fluent in all languages for a short while.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Drips letters, staining whatever it touches."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Cone of Foam",
+   "description": "Dense foam sprays from your hand, coating the target.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Spongy and moist with a soapy residue."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Control Plants",
+   "description": "Nearby plants and trees obey you and gain the ability to move at a slow pace.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Leaves grow along the spine, and it smells faintly of decay."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Control Weather",
+   "description": "You may alter the type of weather at will, but you do not otherwise control it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Highly resistant to fire and water damage."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Cure Wounds",
+   "description": "Restore 1d4 STR per day to a creature you can touch.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells of vinegar and thyme. Turns red after use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Deafen",
+   "description": "All nearby creatures are deafened.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Nearby instruments occasionally sound off, as if in protest."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Detect Magic",
+   "description": "You can see or hear nearby magical auras.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Becomes warm to the touch if magic is used nearby."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Disassemble",
+   "description": "Any of your body parts may be detached and reattached at will, without causing pain or damage. You can still control them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Regenerates any torn or defaced pages."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Disguise",
+   "description": "You may alter the appearance of one character at will as long as they remain humanoid. Attempts to duplicate other characters will seem uncanny.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The surface makes a perfect mirror."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Displace",
+   "description": "An object appears to be up to 15ft from its actual position.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Bits of string, clothing, and leaves are sometimes stuffed inside."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Earthquake",
+   "description": "The ground begins shaking violently. Structures may be damaged or collapse.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Sand dribbles from the corners, seemingly without stop."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Elasticity",
+   "description": "Your body can stretch up to 10ft.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells of taffy, and is very flexible."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Elemental Wall",
+   "description": "A straight wall of ice or fire 50ft long and 10ft high rises from the ground.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Skin and warmer substances stick to it after use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Filch",
+   "description": "A visible item teleports to your hands.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "An ally's prized possession may occasionally be found tucked between its covers"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Fish Lung",
+   "description": "A target can breathe underwater until they surface again.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells strongly of the sea. Attracts wild animals."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Flare",
+   "description": "A bright ball of energy fires a trail of light into the sky, revealing your location to friend or foe.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Faintly glows in complete darkness"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Fog Cloud",
+   "description": "A dense fog spreads out from you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "When submersed in water, the book eventually turns all the liquid to vapor."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Frenzy",
+   "description": "A nearby creature erupts in a frenzy of violence.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Rough, sandpaper cover that destroys any book it touches."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Gate",
+   "description": "A portal to a random plane opens.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "A large hole is carved into the center, ending in a void. Items dropped within are never seen again"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Gravity Shift",
+   "description": "You can change the direction of gravity, but only for yourself.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Attaches itself to the largest object nearby."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Greed",
+   "description": "A creature develops the overwhelming urge to possess a visible item of your choice.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The cover changes depending on the owner, subtly hinting at their deepest desires."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Haste",
+   "description": "Your movement speed is tripled.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Pages flip wildly while open. Can cause paper cuts."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Hatred",
+   "description": "A creature develops a deep hatred of another creature or group and wishes to destroy them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Long term exposure to the book can cause suspicion, paranoia and distrust of others."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Hear Whispers",
+   "description": "You can hear faint sounds clearly.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The reader's voice is amplified for a short period of time afterwards."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Hover",
+   "description": "An object hovers, frictionless, 2ft above the ground. It can hold up to one humanoid.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Floats if dropped."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Hypnotize",
+   "description": "A creature enters a trance and will truthfully answer one yes or no question you ask it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Eye-catching, swirling spirals don its covers."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Icy Touch",
+   "description": "A thick ice layer spreads across a touched surface, up to 10ft in radius.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Gloves required. Nonflammable"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Identify Owner",
+   "description": "Letters appear over the object you touch, spelling out the name of the object’s owners, if there are any.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The book's interior lists the name of its previous owner."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Illuminate",
+   "description": "A floating light moves as you command.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "When held in light, the pages become a prism of vibrant rainbows."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Invisible Tether",
+   "description": "Two objects within 10ft of each other cannot be moved more than 10ft apart.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Its pages are not attached by glue or thread, yet stay together nonetheless."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Knock",
+   "description": "A nearby mundane or magical lock unlocks loudly.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Locked. A new owner \"produces\" the key after their next meal."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Leap",
+   "description": "You jump up to 10ft high, once.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "When thrown, it just keeps going."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Liquid Air",
+   "description": "The air around you becomes swimmable.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Floats of its own volition, bouncing off of whatever it touches."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Magic Dampener",
+   "description": "All nearby magical effects have their effectiveness halved.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Relics within 100ft of the spellbook cannot be recharged."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Manse",
+   "description": "A sturdy, furnished cottage appears for hours. You can permit and forbid entry to it at will.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "If left inside, both the book and the cottage vanish forever."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Marble Craze",
+   "description": "Your pockets are full of marbles and will refill every 30 seconds.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "When jostled, makes a playful rattling sound."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Masquerade",
+   "description": "A character's appearance and voice becomes identical to those of a character you touch.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Extended use causes the owner to develop unconscious yet noticeable tics."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Miniaturize",
+   "description": "A creature you touch is shrunk down to the size of a mouse.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The text is ludicrously, comically large."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Mirror Image",
+   "description": "An illusory duplicate of yourself appears and is under your control.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Over time, the owner begins to question who is the original, and who is the duplicate."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Mirrorwalk",
+   "description": "A mirror becomes a gateway to another mirror that you looked into today.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Will not open unless the owner politely knocks on the cover."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Multiarm",
+   "description": "You temporarily gain an extra arm.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "After use, the caster is wracked with phantom limb syndrome for a day."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Night Sphere",
+   "description": "A 50ft-wide sphere of darkness displaying the night sky appears before you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Displays a prominent constellation on its cover"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Objectify",
+   "description": "You become any inanimate object between the size of a grand piano and an apple.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The owner experiences intense pareidolia for days after use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Ooze Form",
+   "description": "You become a living jelly.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Slowly drips an acid that eventually eats away anything it touches."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Pacify",
+   "description": "A creature near you has an aversion to violence.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells of jasmine and incense. Attracts children."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Passage",
+   "description": "Creates a temporary path through wood, stone or brick.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "An object dropped on top of the book inevitably falls through the other side."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Phobia",
+   "description": "A nearby creature becomes terrified of an object of your choice.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Over time, haunting, abstract art begins to fill its pages."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Pit",
+   "description": "A pit 10ft wide and 10ft deep opens in the ground.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "A standard piton can be safely stored in its spine"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Primal Surge",
+   "description": "A creature rapidly evolves into a future version of its species.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The owner is haunted by strange visions of their own ancestors."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Push/Pull",
+   "description": "An object of any size is pulled directly towards you or pushed directly away from you with the strength of one man.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Any force against the book is comically amplified."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Raise Dead",
+   "description": "A skeleton rises from the ground to serve you. They are incredibly stupid and can only obey simple orders.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The owner becomes more and more fascinated with bones after each use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Raise Spirit",
+   "description": "The spirit of a nearby corpse manifests and will answer 1 question.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The answers (but not their questions) are forever inscribed in its pages."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Read Mind",
+   "description": "You can hear the surface thoughts of nearby creatures.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Long-term possession can cause the reader to mistake the thoughts of others as their own."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Repel",
+   "description": "Two objects are strongly magnetically repelled from each other within 10 feet.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Closed by two powerful straps that spring open at inopportune times."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Scry",
+   "description": "You can see through the eyes of a creature you touched earlier today.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The owner's eyes turn milky-white for an hour after use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Sculpt Elements",
+   "description": "Inanimate material behaves like clay in your hands.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Slowly decays on contact with wood or cloth. Bury in dirt or submerge in water to refresh."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Sense",
+   "description": "Choose one kind of object (key, gold, arrow, jug, etc). You can sense the nearest example.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The book's previous owner is always aware of the book's current location."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Shield",
+   "description": "A creature you touch is protected from mundane attacks for one minute.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Bound in rusty ring-mail and is quite heavy. If held, provides +1 Armor."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Shroud",
+   "description": "A creature you touch is invisible until they move.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Invisible to any but the book's current owner."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Shuffle",
+   "description": "Two creatures you can see instantly switch places.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "If stolen but not yet read, it reappears wherever its owner last left it."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Skillful Repair",
+   "description": "You make minor repairs to a nonliving object.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Sewn from the vellum of one hundred books, no two pages are alike."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Sleep",
+   "description": "A creature you can see falls into a light sleep.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Soft as a pillow, but yields only fitful sleep."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Slick",
+   "description": "Every surface in a 30ft radius becomes extremely slippery.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Gloves are required for handling, lest the book is dropped in a most comical fashion."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Smoke Form",
+   "description": "Your body becomes a living smoke that you can control.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells of campfire. The pages cannot be burnt, but are very sensitive to moisture."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Sniff",
+   "description": "You can smell even the faintest traces of scents.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Expresses a strong odor detectable only by its owner."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Snuff",
+   "description": "The source of any mundane light you can see is instantly snuffed out.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "If left in one place for long periods, nearby light sources eventually dim, then finally go out."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Sort",
+   "description": "Inanimate items sort themselves according to categories you set.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Rights itself when dropped or thrown."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Spellsaw",
+   "description": "A whirling blade flies from your chest, clearing any plant material in its way. It is otherwise harmless.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Wrapped in stained leather, it should be oiled at least once a month"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Spider Climb",
+   "description": "You can climb surfaces like a spider.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "New cobwebs must be pushed aside prior to each use. They are hard to remove."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Swarm",
+   "description": "You become a swarm of crows, rats, or piranhas. You can only be harmed by blast attacks.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Easily broken into a dozen distinct parts that slowly move towards one another over time."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Target Lure",
+   "description": "An object you touch becomes the target of any nearby spell.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Attracts all manner of magical creatures, spell leaks, and scrying."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Telekinesis",
+   "description": "You may mentally 1 move item under 60lbs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The owner can summon the book through mental command alone (WIL save or become deprived afterwards)."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Telepathy",
+   "description": "Two creatures can hear each other’s thoughts, no matter how far apart.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The holder can hear (but not respond) to the thoughts of whoever last possessed it, and vice versa."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Teleport",
+   "description": "An object or person you can see is transported from one place to another in a 50ft radius.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Can be destroyed to create a portal to another dimension."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Thicket",
+   "description": "A thicket of trees and dense brush up to 50ft wide suddenly sprouts up.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Wrapped in vines that must be destroyed again with each use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Time Control",
+   "description": "Time in a 50ft bubble slows down or increases by 10% for 30 seconds.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Alternates its appearance as either impossibly old or freshly written."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "True Sight",
+   "description": "You see through all nearby illusions.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Cannot be concealed by magic, and sticks out like a sore thumb."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Upwell",
+   "description": "A spring of seawater appears.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Hardened leather bindings caked in salt and living barnacles."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Vision",
+   "description": "You completely control what a creature sees.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "An unnerving, lidless eye graces the front cover."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Visual Illusion",
+   "description": "A silent, immobile, room-sized illusion of your choice appears.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Filled with rich, colorful pages very much like a children's bedtime story."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Ward",
+   "description": "A silver circle 50ft across appears on the ground. Choose one species that cannot cross it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The covers are decorated with bizarre, otherworldly creatures with thousands of eyes."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Web",
+   "description": "Your wrists shoot thick webbing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "The text is alien, yet somehow intelligible, for it is the language of dreams."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Widget",
+   "description": "A primitive version of a drawn tool or item appears before you and disappears after a short time.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Smells of iron and rust, sweat and effort. Faint sounds of harsh labor emanate from deep within its pages."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "Wizard Mark",
+   "description": "Your finger can shoot a stream of ulfire-colored paint. This paint is only visible to you and can be seen at any distance, even through solid objects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Inside the front cover is a small pocket containing a thin pad of paper, listing the name and date of death of all previous owners."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spellbooks",
+   "name": "X-Ray Vision",
+   "description": "You can see through walls, dirt, clothing, etc.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnSpell": {
+       "Stats": {
+        "Book quirk": "Long-term exposure can cause hair loss, blurry vision, and fatigue."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "A Blade Called Hope",
+   "description": "d6 damage.\n\nA thin, curved sword that glows with faint light, visible only in total darkness. When bathed in heavy sunlight, its first attack is Enhanced.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Assassin's Goblets",
+   "description": "A pair of fragile wine flutes. Any liquid poured into one is swapped with the other.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Babbleflask",
+   "description": "A foreign language is automatically understood and can be spoken back with fluency, so long as the drinker's native tongue is neither spoken nor heard.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "2 uses",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Barbed Epaulets",
+   "description": "+1 Armor.\n\nSpiked shoulder pads that poison anyone that touches them (STR save or lose consciousness).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Betterwand",
+   "description": "Vibrates with increased intensity when pointed at the best of a series of objects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "2 charges",
+        "Recharge": "Willingly accept a poor deal or trade while in possession of the wand."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Bloodmap",
+   "description": "A blank leather parchment that absorbs any blood spilled on its surface before rolling into a tight scroll. Unroll to see a rough map revealing the current location of any remaining blood. The image disappears after a few minutes.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Pour a pint of your own life essence onto the map, blood for blood. You are deprived until you can rest and eat a Ration."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Coin of the Father",
+   "description": "petty.\n\nFlip this worthless-looking hunk of flat metal in the air, and it will transform into d100 gold coins. The illusory coins disappear after one hour.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Carry the coin for three days without spending or earning any money."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Dryad's Tear",
+   "description": "Shatter this crystal to merge with a tree you can touch. You can perceive the goings-on within whatever forest that tree belongs to.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Empathy Rod",
+   "description": "When two creatures touch this wooden pole at the same time, their physical and emotional states become fully intertwined until they let go.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 charges",
+        "Recharge": "Give the rod to a former enemy as a gift. This is a one-way transaction."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Eyestone",
+   "description": "Choose an object created by living creatures. You can sense the nearest example.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 charges",
+        "Recharge": "Place in a bucket of rainwater overnight."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Falconstone",
+   "description": "Perceive the world through the eyes and ears of a nearby bird of prey. You feel whatever it feels but have no control over it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 charges",
+        "Recharge": "Kill and eat a common quarry, cooking the meat alongside the stone."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Footpad's Friend",
+   "description": "Soft leather shoes that adapt to fit any foot size. Leave behind footprints that scatter and turn in a confusing manner, making tracking nigh-impossible.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Gate Chalk",
+   "description": "petty.\n\nDraw a doorway on any flat surface to open a one-way passage to the Roots. Good luck.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Golden Wheat Paste",
+   "description": "When mixed with water, this substance chemically bonds any two objects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "2 uses",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Gossip Box",
+   "description": "Wind the crank to replay any sound made in the past day in your current location. Each crank goes back one hour.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Successfully spread one falsehood in the presence of the box."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Harbinger's Bell",
+   "description": "Hang at chest height to ring when danger is imminent.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Melt and reforge. Each time, roll a d6. On a 1-2, it breaks forever."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Homunculus Nail",
+   "description": "petty.\n\nPrick a finger with the pointy end and hammer into any small object to form a loyal servant [3 HP, 4 STR, 13 DEX, 5 WIL] completely devoted to you. If not destroyed, it will outlive you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Honest Earworm",
+   "description": "A foul-smelling, pinky-sized worm that feeds on earwax by crawling into the ear canal of a sleeping person. The victim then loses the ability to lie for 1d4 hours.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Jar of Ants",
+   "description": "Break to release a colony of fire ants [6 HP, 2 STR, 10 DEX, 1 WIL, bite (d10), detachment]. Consumes a ration every two days.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Last Breath",
+   "description": "d6 damage.\n\nA chipped short sword of dubious quality. Drive into the earth to form a crystal dome that encircles and immobilizes the wielder. The dome is impenetrable by mundane means, and shatters once the sword is lifted again.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Deliver a killing blow with the sword, absorbing the dying victim's soul into the blade. There is a cunning intelligence within that speaks to the wielder, forever asking for more souls, more!"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Lightsucker Candle",
+   "description": "Once lit, this black tallow wax sheds darkness rather than light, even in the brightest of days.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 uses",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Lover's Covenant",
+   "description": "A bottle of red-tinted ink, a broken heart emblazoned on the front. Write up a contract of any length. Any who sign are bound to obey by penalty of death.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Mace of the Kingslayer",
+   "description": "d8 damage.\n\nHold the weapon aloft and shout an order or declaration. Any who fail a WIL save must obey, against their better judgment.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "2 charges",
+        "Recharge": "Deliver a fatal blow to the leader of a group or faction."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Moth Mirror",
+   "description": "bulky.\n\nA full-length, double-sided glass mirror. Step into the mirror to be transported to another mirror you know. You come out of the other side as an enormous swarm of buzzing moths, striking those around you with paralysis (WIL save to avoid) as they gaze upon you in horror. You can revert to your normal form at will. The mirror only operates in one direction.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Muffle Dust",
+   "description": "A pouch of fine dust that muffles all sound in a 40ft radius when scattered.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "2 uses",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Nightstone",
+   "description": "Rare moon-shaped stones dredged from underwater caves and jungle dolines. Swallow whole to relieve all Fatigue and deprivation as if you had a good night's sleep and a good meal. The stone will eventually pass through your system. It isn't fun.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Obliteration Scroll",
+   "description": "petty.\n\nA single-page document filled with gibberish. Sign anywhere on the page to remove any knowledge of your existence from this plane of reality. No one will know or remember you, and any references to your name or lineage will vanish. The scroll disappears in a puff of smoke that smells faintly of sulfur.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Parliament's Promise",
+   "description": "+1 Armor.\n\nA helmet in the form of an owl's head. Its wearer can twist their head around like an owl and can see in darkness with perfect clarity. While wearing the helm, the wearer loses the ability to speak, uttering only the simplest of cooing noises.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Phoenix Ash",
+   "description": "Sprinkle over a corpse to resurrect the deceased. They return with full health but no memory of their past life.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Ring of the Snake",
+   "description": "petty.\n\nA wrought-iron serpent ring. Place it on your finger and fall into a sleep so deep that most will think you are dead. If the ring is removed, you will awaken feeling refreshed. Otherwise, the effect will wear off after one month.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Bury the ring with a corpse. A month later, exhume the corpse and retrieve it."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Roc Feather",
+   "description": "Hold while falling to float safely to the ground from any height.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Skull Whistle",
+   "description": "Produces a chilling scream that forces any who hear it (including the blower) to make a WIL save or become temporarily incapacitated.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 charges",
+        "Recharge": "Feed the instrument a clump of human hair pulled from a living skull."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Soul Clump",
+   "description": "A hard, fist-sized ball covered in small bumps. When rolled on a flat surface, it collects any objects smaller than its current mass, which subsequently increases as more items are attached to its surface. Only living creatures are immune.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Spystone",
+   "description": "A smooth, flat stone that is slightly warm to the touch. Squeeze to record audio in a 40ft radius. Squeeze again to play it back, as many times as you like.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "To record a new sound, skip the rock at least three times on a body of water and recover it."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Sticky Rope",
+   "description": "A 100ft rope that can stick to any surface.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Cut off 10ft of rope, which then withers away."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Stone Eater",
+   "description": "A rodent-sized centipede that consumes and digests stone, capable of cutting a small tunnel in under an hour. It can be used more than once, but only if you can catch it (DEX 18).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Stonewax Gum",
+   "description": "petty.\n\nChew, then spit. The gum will harden and stretch, making a perfect, unbreakable seal.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "3 uses",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Sponge Army",
+   "description": "A dozen miniature soldiers made of carved sea sponges. When splashed with water, they grow to full size [8 HP, 6 STR, 13 DEX, 5 WIL, hardened sponge (d6), detachment] and follow the orders of the person they see until they are destroyed or dry out completely (about 10 minutes).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Tupshead Crown",
+   "description": "+1 Armor, bulky.\n\nA beautifully rendered ram's head helm wrought from tough alpine oak. The horns can be used as weapons (d6+d6).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Veilsilk Grip",
+   "description": "petty.\n\nA hand wearing this glove can phase through solid objects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Snip off one of the fingers."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Voice of the Mountain",
+   "description": "A rough pebble imbued with the essence of a mountain spirit. Crush to call forth an earthquake or similar natural disaster. Do not expect to be spared.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Ward Stone",
+   "description": "A flat, unassuming river stone notched with faded symbols. Smash to release a silvery powder in a 20ft radius that pacifies anyone who breathes it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Whispergale",
+   "description": "A balloon-shaped plant that captures a spoken message and delivers it to a location within a day's walk.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 use",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Whistle-Rope",
+   "description": "15ft of highly flexible leather. Swirl in the air to generate a powerful subsonic effect that drives away wildlife. Also works underwater.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "",
+        "Recharge": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Wonder Bar",
+   "description": "Pressing the switch on the side of this iron bar freezes it in place, even in midair. Once frozen, it cannot be moved by any force until the switch is depressed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Hold the bar with both hands without letting go for one continuous hour (WIL save to succeed). You can make only one attempt each day."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Relics",
+   "name": "Wraith Lantern",
+   "description": "Write someone's name onto its glass, and the name will disappear. The lantern reveals a path to their current location, visible only to the holder (day or night).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "cairnRelic": {
+       "Stats": {
+        "Charges": "1 charge",
+        "Recharge": "Kill the last person found with the help of the lantern, trapping their spirit inside. The lantern must be nearby when they are killed."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Acolyte",
+   "description": "Holy servants bound to a particular deity. Typically travel in groups of four or more.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 1,
+        "Group": "Humanoid",
+        "STR": 8,
+        "DEX": 11,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "ceremonial dagger (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Holy servants bound to a particular deity. Typically travel in groups of four or more.\n- Carry a holy symbol (Ward once per day)."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Aranea",
+   "description": "Enormous spiders with greenish-black skin and large brains. Can shape shift into human form at will.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Insectoid",
+        "STR": 13,
+        "DEX": 12,
+        "WIL": 15
+       },
+       "Attack": {
+        "Attacks": "bite (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Enormous spiders with greenish-black skin and large brains. Can shape shift into human form at will.\n- Conduct their magical research in dark, web-filled caverns. Carry the Charm and Command spellbooks at all times.\n- Fire damage against Aranea is enhanced."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Bandit",
+   "description": "Outlaws who raid settlements, attack ships, or ambush travelers. Groups of four or more are a detachment.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 1,
+        "Group": "Humanoid",
+        "STR": 12,
+        "DEX": 12,
+        "WIL": 9
+       },
+       "Attack": {
+        "Attacks": "short sword (d6) or short bow (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Outlaws who raid settlements, attack ships, or ambush travelers. Groups of four or more are a detachment.\n- A detachment always travels with one leader wearing chain mail or similar (2 Armor) and a long sword (d10) or crossbow (d8).\n- Loyal: When testing Morale, save using the leader's WIL (13). If the leader dies, the others will flee."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Banshee",
+   "description": "Incorporeal spirits that linger long after death to haunt the living.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Mythical",
+        "STR": 6,
+        "DEX": 12,
+        "WIL": 15
+       },
+       "Attack": {
+        "Attacks": "ghostly touch (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Incorporeal spirits that linger long after death to haunt the living.\n- Unharmed by cold, heat, or the elements. Iron weapon damage is enhanced.\n- Wail: Anyone in earshot must make a WIL save or fall unconscious."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Basilisk",
+   "description": "Long, serpentine lizards that nest deep below the earth or in brambles just underfoot.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 10,
+        "Armor": 1,
+        "Group": "Lizard",
+        "STR": 12,
+        "DEX": 13,
+        "WIL": 13
+       },
+       "Attack": {
+        "Attacks": "bite (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Long, serpentine lizards that nest deep below the earth or in brambles just underfoot.\n- Fighting a Basilisk without meeting its gaze is difficult. (Attacks facing it are impaired.)\n- Gaze: A target facing the Basilisk is slowly petrified from the bottom up and completely frozen after three rounds. An antidote can be brewed from the Basilisk's gizzards. The creature's reflection is harmless."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Blink Dog",
+   "description": "Teleporting canines in service of a powerful master.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 5,
+        "Armor": 0,
+        "Group": "Magical",
+        "STR": 11,
+        "DEX": 14,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "bite (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Teleporting canines in service of a powerful master.\n- Can phase out of reality at will. Melee attacks against them are impaired."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Blood Elk",
+   "description": "Born from violence resulting from a greedy or selfish act.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 12,
+        "DEX": 13,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "horns (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Born from violence resulting from a greedy or selfish act.\n- Kill their victims for sustenance, but gains no succor. They are always hungry.\n- Critical Damage: Gores its victims by ripping out their entrails."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Boggart",
+   "description": "Wild, hairy tricksters that prize shiny trinkets above coin.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 4,
+        "DEX": 17,
+        "WIL": 13
+       },
+       "Attack": {
+        "Attacks": "",
+        "Damage": "d4"
+       },
+       "Notes": {
+        "Traits": "- Wild, hairy tricksters that prize shiny trinkets above coin.\n- Boggarts have true names that describe their true nature. Knowing these names gives a person control over them.\n- Magic: The Boggart can bring objects to life, sow confusion, create magical disguises, use telekinesis, and teleport."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Bone Construct",
+   "description": "Gigantic, four-armed constructs made of bone and sorcery.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 3,
+        "Group": "Construct",
+        "STR": 15,
+        "DEX": 5,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "sharpened arms (d8+d8), detachment",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Gigantic, four-armed constructs made of bone and sorcery.\n- Mindless guardians that stand ready to attack any creature other than their creator."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Bugbear",
+   "description": "Large, goblin-like creatures covered in fur.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 1,
+        "Group": "Goblinoid",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 11
+       },
+       "Attack": {
+        "Attacks": "club (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Large, goblin-like creatures covered in fur.\n- Prefer stealth and trickery to gain an advantage.\n- Often command parties of like creatures (typically goblins)."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Burrowing Horror",
+   "description": "Huge insectoids with multiple legs and shiny black eyes. Subsist from dirt, roots, and flesh.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 1,
+        "Group": "Insectoid",
+        "STR": 16,
+        "DEX": 11,
+        "WIL": 4
+       },
+       "Attack": {
+        "Attacks": "bite (d10), acid squirt (d8, blast)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Huge insectoids with multiple legs and shiny black eyes. Subsist from dirt, roots, and flesh.\n- Burrow just beneath surfaces to ambush unsuspecting creatures.\n- Critical Damage: Target loses a body part. Roll 1d6. 1: Head, 2-4: Leg, 5-6: Arm."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Cave Locust",
+   "description": "Giant plant-eating crickets that dwell in caves. Immune to most types of poison.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 2,
+        "Armor": 0,
+        "Group": "Insectoid",
+        "STR": 6,
+        "DEX": 12,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "bite (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Giant plant-eating crickets that dwell in caves. Immune to most types of poison.\n- Their natural coloration allows them to blend in with the stone. They emit loud shrieks when threatened."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Centaur",
+   "description": "Creatures with the lower body and legs of a horse, but a humanoid upper body.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 1,
+        "Group": "Hybrid",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "spear (d8) or short bow (d6)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Creatures with the lower body and legs of a horse, but a humanoid upper body.\n- Rarely found alone, preferring the company of their own."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Cobblehounds",
+   "description": "Immobile constructs typically used as guardians to great tombs or artifacts.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 2,
+        "Group": "Construct",
+        "STR": 14,
+        "DEX": 1,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "bite (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Immobile constructs typically used as guardians to great tombs or artifacts.\n- Unaffected by mundane persuasion techniques, but love a good bone."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Creeping Vines",
+   "description": "Appear as an inert, typical vine. Attacks passing creatures to use their corpses as fertilizer.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Plant",
+        "STR": 10,
+        "DEX": 12,
+        "WIL": 2
+       },
+       "Attack": {
+        "Attacks": "vines (d4, blast)",
+        "Damage": "d4"
+       },
+       "Notes": {
+        "Traits": "- Appear as an inert, typical vine. Attacks passing creatures to use their corpses as fertilizer.\n- Critical Damage: Target is pulled into the air where they asphyxiate within a few minutes."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Crypt Guardian",
+   "description": "Animated skeletons clothed in billowing robes. Their eye sockets are hypnotically red. Defend crypts and tombs, but will not attack if left undisturbed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 0,
+        "Group": "Undead",
+        "STR": 12,
+        "DEX": 11,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "ethereal claws (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Animated skeletons clothed in billowing robes. Their eye sockets are hypnotically red. Defend crypts and tombs, but will not attack if left undisturbed.\n- Non-magical attacks against them are impaired.\n- Can teleport any target in eyesight to a random room nearby."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Dryad",
+   "description": "Shy, protective tree spirits that manifest as beautiful, green-skinned humanoids.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 8,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "knotted arms (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Shy, protective tree spirits that manifest as beautiful, green-skinned humanoids.\n- Unable to travel far from the tree they are bound to. They perish if the tree is destroyed.\n- Befuddle: Target becomes confused, gradually moving further and further away from the host tree. WIL save once per round to break free."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Ettin",
+   "description": "The two-headed kin of giants. Prefer caves and underground hovels.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 10,
+        "Armor": 0,
+        "Group": "Giant",
+        "STR": 16,
+        "DEX": 8,
+        "WIL": 6
+       },
+       "Attack": {
+        "Attacks": "club (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- The two-headed kin of giants. Prefer caves and underground hovels.\n- Cannot be surprised."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Eye of Terror",
+   "description": "Floating spheres with large mouths, enormous eyes, and several small eyes set atop long stalks.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 15,
+        "Armor": 0,
+        "Group": "Extraplanar",
+        "STR": 9,
+        "DEX": 8,
+        "WIL": 16
+       },
+       "Attack": {
+        "Attacks": "bite (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Floating spheres with large mouths, enormous eyes, and several small eyes set atop long stalks.\n- They are highly intelligent, intensely greedy, and completely insane.\n- Can cast the following spells at will: Charm, Phobia, Telekinesis, Sleep, Shuffle, Vision. Magic used against them requires a WIL save or it fizzles out."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Frost Elf",
+   "description": "Beautiful, amoral, and long-lived.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 14,
+        "Armor": 1,
+        "Group": "Fey",
+        "STR": 8,
+        "DEX": 13,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "icicle dagger (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Beautiful, amoral, and long-lived.\n- Resistant to most forms of magic.\n- Can cast the following spells at will: Sleep, Teleport, Detect Magic."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Gargoyle",
+   "description": "Magical, slow-moving statues of monstrous winged creatures, typically employed as guards or watchdogs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 3,
+        "Group": "Construct",
+        "STR": 14,
+        "DEX": 4,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "claws (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Magical, slow-moving statues of monstrous winged creatures, typically employed as guards or watchdogs.\n- Prowl at nights but fear the day, when the sun's light freezes them in place.\n- Immune to charms and magical sleep."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Gelatinous Ooze",
+   "description": "Large shapeless masses of transparent jelly. Mindlessly hunt for food in dungeons and underground caverns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 1,
+        "Group": "Unusual",
+        "STR": 15,
+        "DEX": 6,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "devouring touch (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Large shapeless masses of transparent jelly. Mindlessly hunt for food in dungeons and underground caverns.\n- Critical Damage: The target is engulfed, losing d6 STR damage per round until they are consumed."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Ghost",
+   "description": "Incorporeal spirits of the restless dead, vulnerable only to magic and specific anointed rites.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Undead",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 15
+       },
+       "Attack": {
+        "Attacks": "life drain (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Incorporeal spirits of the restless dead, vulnerable only to magic and specific anointed rites.\n- Critical Damage: Target must save WIL or is possessed, acting only on behalf of the ghost's whims."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Ghoul",
+   "description": "Grey-skinned man-things wearing shredded clothes that crave only the flesh of the living.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Undead",
+        "STR": 14,
+        "DEX": 8,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "elongated claws (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Grey-skinned man-things wearing shredded clothes that crave only the flesh of the living.\n- Critical Damage: Target is deprived from their necrotic wound, dying in d4 days unless treated by a priest or skilled healer. If the body is not burned it later rises as a Ghoul as well."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Giant Scorpion",
+   "description": "Horse-sized arachnids commonly found in dry terrain or caverns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 1,
+        "Group": "Insectoid",
+        "STR": 11,
+        "DEX": 12,
+        "WIL": 4
+       },
+       "Attack": {
+        "Attacks": "claws (d10+d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Horse-sized arachnids commonly found in dry terrain or caverns.\n- Critical Damage: The stinger's poison liquefies the target's insides for an additional d8 STR damage. The STR loss is permanent."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Gnoll",
+   "description": "Ferocious humanoid hyenas spawned from arcane experiments long ago.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 1,
+        "Group": "Humanoid",
+        "STR": 12,
+        "DEX": 14,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "spear (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Ferocious humanoid hyenas spawned from arcane experiments long ago.\n- Deadly warriors, they attack as a pack (as detachment) or on their own."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Goblin",
+   "description": "Small, grotesque humanoids with skin in earthly tones of green, brown, and grey.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 0,
+        "Group": "Goblinoid",
+        "STR": 8,
+        "DEX": 12,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "dagger (d6) or sling (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Small, grotesque humanoids with skin in earthly tones of green, brown, and grey.\n- Avoid combat, only attacking when advantageous, using hit-and-run tactics.\n- Sometimes are found using dire wolves as mounts."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Green Dragon",
+   "description": "Forest-dwelling snakes topped with tall green scales. Collect great hoards of treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 2,
+        "Group": "Behemoth",
+        "STR": 14,
+        "DEX": 15,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "bite (d12), detachment",
+        "Damage": "d12"
+       },
+       "Notes": {
+        "Traits": "- Forest-dwelling snakes topped with tall green scales. Collect great hoards of treasure.\n- Use intelligence and cunning to manipulate the weak into their service.\n- Chlorine Gas: Anyone nearby must make a DEX save to escape its reach or lose 1d4 STR and becomes deprived."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Griffon",
+   "description": "Ravenous hybrids, with the head and wings of an eagle and the lower body of a lion.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 7,
+        "Armor": 0,
+        "Group": "Mythical",
+        "STR": 14,
+        "DEX": 15,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "claws (d6+d6), detachment",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Ravenous hybrids, with the head and wings of an eagle and the lower body of a lion.\n- Can be used as mounts if taken young and properly trained.\n- Fly and attack at astonishing speeds, diving in to scoop up their prey.\n- Critical Damage: Tears flesh and bone from its victim with its razor-sharp beak."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Grizzly Bear",
+   "description": "Reddish-brown bears commonly found in mountains, woodlands, and prairies.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 15,
+        "DEX": 13,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "claws (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Reddish-brown bears commonly found in mountains, woodlands, and prairies.\n- Prefer to eat fish and meat, and will attack the rare unfortunate who crosses their path.\n- Critical Damage: Bites the victim for an additional d6 STR damage. They bleed out very quickly."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Harpy",
+   "description": "Hideous monstrosities with the body of a giant eagle and a humanoid head.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Mythical",
+        "STR": 7,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "claws (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Hideous monstrosities with the body of a giant eagle and a humanoid head.\n- Their movements and flight are clumsy due to their disproportionate size. Rely on charmed victims to do anything of note.\n- Song: Anyone nearby must save WIL or be charmed by its voice, following the harpy and defending it from any threat."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Hellhound",
+   "description": "Monstrous, intelligent dogs that dwell near volcanoes.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Demon",
+        "STR": 12,
+        "DEX": 15,
+        "WIL": 9
+       },
+       "Attack": {
+        "Attacks": "bite (d8), fire breath (d6, blast)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Monstrous, intelligent dogs that dwell near volcanoes.\n- Immune to fire and heat damage. Hot enough to melt iron simply by biting it."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Hobgoblin",
+   "description": "Large and burly relatives of goblins. Dwell in underground fortresses until called for war.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 2,
+        "Group": "Goblinoid",
+        "STR": 14,
+        "DEX": 8,
+        "WIL": 11
+       },
+       "Attack": {
+        "Attacks": "mace (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Large and burly relatives of goblins. Dwell in underground fortresses until called for war.\n- Automatically succeed in Morale Saves if a commander is present.\n- Trained to fight together. Damage dealt is enhanced if an ally is also engaged with the same enemy."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Hooded Men",
+   "description": "The Watchers of the Wood; a cult that derive their power from leylines, rune stones, and the like.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 0,
+        "Group": "Humanoid",
+        "STR": 9,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "leystaff (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- The Watchers of the Wood; a cult that derive their power from leylines, rune stones, and the like.\n- Critical Damage: Leech a part of the victim's soul (1d4 WIL damage).\n- Carries two of the following spellbooks: Charm, Hypnotize, Push/Pull, Shield."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Hydra",
+   "description": "Large reptilians with nine serpentine heads. Very difficult to throw off once their quarry is detected.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 2,
+        "Group": "Lizard",
+        "STR": 13,
+        "DEX": 7,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "bite (d12, blast), detachment",
+        "Damage": "d12"
+       },
+       "Notes": {
+        "Traits": "- Large reptilians with nine serpentine heads. Very difficult to throw off once their quarry is detected.\n- On taking Critical Damage, the hydra loses one head. It then continues fighting until no heads remains."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Invisible Stalker",
+   "description": "Intelligent beings shaped into reality by a powerful wizard. Completely invisible and silent.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Incorporeal",
+        "STR": 12,
+        "DEX": 12,
+        "WIL": 15
+       },
+       "Attack": {
+        "Attacks": "fists (d4+d4)",
+        "Damage": "d4"
+       },
+       "Notes": {
+        "Traits": "- Intelligent beings shaped into reality by a powerful wizard. Completely invisible and silent.\n- Attacks deal direct STR damage (subtracting Armor)."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Killer Bees",
+   "description": "Oversized bees that build underground hives. Hyper-aggressive, attack anything that comes near.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 6,
+        "DEX": 14,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "sting (d6), detachment",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Oversized bees that build underground hives. Hyper-aggressive, attack anything that comes near.\n- Produce special honey that heals 1d6 STR. 3 uses.\n- When the bees cause STR damage, the stingers are lodged into the target, dealing d4 damage each round until removed."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Kobold",
+   "description": "Hairless humanoids with canine-like features and scaly skin. Can see perfectly in the dark, but are harmed by direct sunlight.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Armor": 0,
+        "Group": "Lizard",
+        "STR": 8,
+        "DEX": 13,
+        "WIL": 4
+       },
+       "Attack": {
+        "Attacks": "bite (d6), spear (d8)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Hairless humanoids with canine-like features and scaly skin. Can see perfectly in the dark, but are harmed by direct sunlight.\n- Use traps and ambush to defeat opponents. Often act in service of a more powerful creatures."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Lamia",
+   "description": "Centaur-like creatures that prey on the life force of others, seducing their victims through heightened charm and intelligence. Their upper bodies are typically humanoid, the lower half any number of animal hybrids.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Mythical",
+        "STR": 11,
+        "DEX": 12,
+        "WIL": 16
+       },
+       "Attack": {
+        "Attacks": "toothy bite (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Centaur-like creatures that prey on the life force of others, seducing their victims through heightened charm and intelligence. Their upper bodies are typically humanoid, the lower half any number of animal hybrids.\n- Inherently magical. Can create illusions, charm creatures, and disguise themselves at will.\n- Critical Damage: The target takes d6 WIL damage as their spirit is slowly sapped away. They then become enthralled to the Lamia, obeying its every command while in its presence."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Lich",
+   "description": "Powerful sorcerers that paid the ultimate price for immortality: their own life. Now their thirst for power knows no bounds.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 14,
+        "Armor": 1,
+        "Group": "Undead",
+        "STR": 8,
+        "DEX": 8,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "soul dagger (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Powerful sorcerers that paid the ultimate price for immortality: their own life. Now their thirst for power knows no bounds.\n- Maintain unlife by binding themselves to an earthly artifact, which is typically protected by at least d6 other undead servants.\n- Carry up to six of the following spellbooks: Animate Object, Arcane Eye, Deafen, Disassemble, Elemental Wall, Frenzy, Gate, Hover, Hatred, Identify Owner, Knock, Pacify, Raise Dead, Raise Spirit, Shield, Sleep, Smoke Form, Telekinesis, Telepathy, Teleport, Vision, Wizard Mark."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Manticore",
+   "description": "Spiteful monstrosities that wear a humanoid face, a lion's body, wings of a bat, and a scorpion's tail. Dwell in mountainous regions, abandoned castles, and forgotten dungeons.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Hybrid",
+        "STR": 15,
+        "DEX": 14,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "claws (d6+d6), tail spike (d8)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Spiteful monstrosities that wear a humanoid face, a lion's body, wings of a bat, and a scorpion's tail. Dwell in mountainous regions, abandoned castles, and forgotten dungeons.\n- Tail spikes act like darts, regrowing after a few days. A single spike is worth 150gp to a collector.\n- Critical Damage: Target is deprived until they get a good night's sleep. Until then, they act boorish, selfish, and cruel (or more so, if that already is their nature)."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Mimic",
+   "description": "Malicious shape shifters that take on the form of inanimate objects commonly found in dungeons.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 9,
+        "Armor": 2,
+        "Group": "Unusual",
+        "STR": 13,
+        "DEX": 6,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "bite (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Malicious shape shifters that take on the form of inanimate objects commonly found in dungeons.\n- Remain motionless while in disguise, surprising anyone that comes near.\n- The mimic's saliva is extremely sticky and difficult to remove. Alchemists will pay up to 150gp for even the smallest vial."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Mind Lasher",
+   "description": "Humanoid creatures with purple skin and squid-like heads. Dwell deep underground or in spacefaring vessels. Feed on the brains of other humanoids, absorbing their memories and life essence. Highly intelligent, but evil beyond belief.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 0,
+        "Group": "Extraplanar",
+        "STR": 8,
+        "DEX": 12,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "tentacles (d6, blast)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Humanoid creatures with purple skin and squid-like heads. Dwell deep underground or in spacefaring vessels. Feed on the brains of other humanoids, absorbing their memories and life essence. Highly intelligent, but evil beyond belief.\n- Mind Blast: Nearby targets must save WIL or lose 1d4 WIL and become paralyzed.\n- Critical Damage: A tentacle rips the victim's brain out of their skull."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Minotaur",
+   "description": "Large humanoids (typically male) with the head of a bull. Dwell in mazes or dungeons.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 1,
+        "Group": "Hybrid",
+        "STR": 16,
+        "DEX": 12,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "two-handed axe (d10), charge (d12)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Large humanoids (typically male) with the head of a bull. Dwell in mazes or dungeons.\n- Extraordinary trackers with an excellent sense of smell and navigation skills."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Mummy",
+   "description": "Undead humanoids wrapped in funerary cloth. Found in pyramids, ruins, temples, and tombs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Undead",
+        "STR": 12,
+        "DEX": 8,
+        "WIL": 6
+       },
+       "Attack": {
+        "Attacks": "necrotic touch (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Undead humanoids wrapped in funerary cloth. Found in pyramids, ruins, temples, and tombs.\n- Critical Damage: Target is infected with mummy rot, and is unable to recover STR until they are cured by a specialist healer. The target is also deprived."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Naga",
+   "description": "Humanoids with the lower body, tail, and neck of snakes. Dwell in hot jungles and temples lost to time.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 1,
+        "Group": "Lizard",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "sword (d6), bite (d10)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Humanoids with the lower body, tail, and neck of snakes. Dwell in hot jungles and temples lost to time.\n- Use cunning and hypnosis to capture other creatures to be enslaved.\n- Gaze: A target facing the Naga is hypnotized, falling under its will. Its victims cannot be compelled to violence."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Night Cat",
+   "description": "Intelligent, nocturnal marsupials that make their homes in forests and swamps. Hunt in",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 9,
+        "DEX": 14,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "claws (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Intelligent, nocturnal marsupials that make their homes in forests and swamps. Hunt in\n- Critical Damage: The Night Cat begins to eat the target (d4 STR damage) while they are"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Night Hag",
+   "description": "Hideous old women that dwell in dead forests, swamps, and bogs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 9,
+        "DEX": 11,
+        "WIL": 16
+       },
+       "Attack": {
+        "Attacks": "talons (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Hideous old women that dwell in dead forests, swamps, and bogs.\n- Carry three of the following spellbooks: Arcane Eye, Disguise, Fog Cloud, Identify Owner, Smoke Form."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Nightmare",
+   "description": "Intelligent, demonic horses with eyes like burning coals, smoldering nostrils, and flaming hooves.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Demon",
+        "STR": 15,
+        "DEX": 12,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "flaming hooves (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Intelligent, demonic horses with eyes like burning coals, smoldering nostrils, and flaming hooves.\n- Melee attacks against the Nightmare are impaired due to the thick clouds of smoke it produces."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Ogre",
+   "description": "Massive, gluttonous brutes of ill-spirit and low intelligence.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 1,
+        "Group": "Goblinoid",
+        "STR": 16,
+        "DEX": 8,
+        "WIL": 6
+       },
+       "Attack": {
+        "Attacks": "club (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Massive, gluttonous brutes of ill-spirit and low intelligence.\n- Easily impressed by shiny materials, keeping sacks of gold and treasure in their lairs."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Owlbear",
+   "description": "Bear-like carnivores with the face of an owl. Found in dense forests. Rumored spawn of a magical mishap.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 9,
+        "Armor": 0,
+        "Group": "Hybrid",
+        "STR": 16,
+        "DEX": 12,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "beak (d10), claws (d8+d8)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Bear-like carnivores with the face of an owl. Found in dense forests. Rumored spawn of a magical mishap.\n- Critical Damage: A piece of armor is rent and destroyed."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Phoenix",
+   "description": "Intelligent, hawk-like spirits of pure flame, found in isolated deserts and high mountains.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 0,
+        "Group": "Avian",
+        "STR": 15,
+        "DEX": 13,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "talons (d10+d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Intelligent, hawk-like spirits of pure flame, found in isolated deserts and high mountains.\n- If killed, they explode in a burst of flames. They are reborn 1d3 days later from the ashes.\n- Their feathers are highly-sought after for their healing properties."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Pixie",
+   "description": "Tiny humanoids with insectoid wings. Naturally invisible.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 3,
+        "DEX": 15,
+        "WIL": 13
+       },
+       "Attack": {
+        "Attacks": "",
+        "Damage": "d4"
+       },
+       "Notes": {
+        "Traits": "- Tiny humanoids with insectoid wings. Naturally invisible.\n- Can cast Sleep and Masquerade at will."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Purple Worm",
+   "description": "Gargantuan worms that lair in enormous burrows deep underground, only coming to the surface to eat. Found in high deserts and hot tundra.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 18,
+        "Armor": 1,
+        "Group": "Behemoth",
+        "STR": 18,
+        "DEX": 8,
+        "WIL": 6
+       },
+       "Attack": {
+        "Attacks": "bite (d12), detachment",
+        "Damage": "d12"
+       },
+       "Notes": {
+        "Traits": "- Gargantuan worms that lair in enormous burrows deep underground, only coming to the surface to eat. Found in high deserts and hot tundra.\n- Critical Damage: The target is devoured, taking d8 STR damage from the acid in the worm's stomach."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Red Cap",
+   "description": "Born from blood left to rot in the land of Fairy. Their hats are a deep red from the blood they bathe in.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 6,
+        "DEX": 12,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "dual sickles (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Born from blood left to rot in the land of Fairy. Their hats are a deep red from the blood they bathe in.\n- Ignore those with little to live for, as there is no pleasure in their murder.\n- Critical Damage: Target is eviscerated, the spray of their blood restoring STR loss suffered by the Red Cap."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Reptilian",
+   "description": "Amphibian humanoids that live in large tribes near swamps and jungles.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 5,
+        "Armor": 1,
+        "Group": "Lizard",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "bone spear (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Amphibian humanoids that live in large tribes near swamps and jungles.\n- Craft their armor and weapons from the bones of their prey. They will eat anything, including humanoids."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Root Goblin",
+   "description": "Avoid combat unless they have the advantage (such as greater numbers).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 0,
+        "Group": "Goblinoid",
+        "STR": 8,
+        "DEX": 14,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "spear (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Avoid combat unless they have the advantage (such as greater numbers).\n- Guard their stolen goods to the death.\n- Root Goblins prize spellbooks and are always willing to trade."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Root Witch",
+   "description": "Excellent tunnelers that hide underground near water. Wiggle tiny fronds into the air as lures.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Plant",
+        "STR": 9,
+        "DEX": 16,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "tuber-fingers (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Excellent tunnelers that hide underground near water. Wiggle tiny fronds into the air as lures.\n- Above-ground, appear vaguely humanoid with the face of a rotted tree stump.\n- Will exchange rare minerals for a “fresh corpse” of any kind."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Rust Monster",
+   "description": "Armadillo-like creatures with club-like tails and long antennae. Feed on iron and rusted metal.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 5,
+        "Armor": 0,
+        "Group": "Unusual",
+        "STR": 16,
+        "DEX": 13,
+        "WIL": 5
+       },
+       "Attack": {
+        "Attacks": "bite (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Armadillo-like creatures with club-like tails and long antennae. Feed on iron and rusted metal.\n- Any mundane metals their antennae touch instantly become rust. Can smell metal from a long distance away.\n- Critical Damage: Metal armor rusts into useless weight."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Sea Hag",
+   "description": "Ghostly, green-skinned hags that dwell in seaweed forests and warm shallow waters.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 11,
+        "DEX": 15,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "long claws (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Ghostly, green-skinned hags that dwell in seaweed forests and warm shallow waters.\n- Immune to magic from spellbooks.\n- Hideous Gaze: A target is overcome with fear (HP drops to 0). WIL save each round to break the spell."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Shadow",
+   "description": "Incorporeal monsters that look like animated shadows. Unharmed by mundane attacks, sleep or mind control.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 14,
+        "Armor": 0,
+        "Group": "Incorporeal",
+        "STR": 1,
+        "DEX": 18,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "draining touch (d6, ignores armor)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Incorporeal monsters that look like animated shadows. Unharmed by mundane attacks, sleep or mind control.\n- Critical Damage: Target loses d4 STR. If reduced to 0 STR, they become a shadow as well."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Shambling Mound",
+   "description": "Tall humanoids made of slimy vegetation. Dwell in dark swamps and damp undergrounds.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 9,
+        "Armor": 0,
+        "Group": "Plant",
+        "STR": 15,
+        "DEX": 6,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "tendrils (d8+d8), detachment",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Tall humanoids made of slimy vegetation. Dwell in dark swamps and damp undergrounds.\n- Critical Damage: Target is swallowed whole and dragged away."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Skeleton",
+   "description": "Frequently found serving a master or necromancer, often in groups of 3 or more.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 5,
+        "Armor": 1,
+        "Group": "Undead",
+        "STR": 8,
+        "DEX": 13,
+        "WIL": 0
+       },
+       "Attack": {
+        "Attacks": "rusty sword (d6) or bow (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Frequently found serving a master or necromancer, often in groups of 3 or more.\n- Found wearing whatever was on them at the time of their death.\n- If a skeleton is killed and its bones are not scattered, it reforms."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Sky Giant",
+   "description": "Towering, white-skinned giants that live in castles high in the mountains.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 1,
+        "Group": "Giant",
+        "STR": 16,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "mace (d10), detachment",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Towering, white-skinned giants that live in castles high in the mountains.\n- Missile attacks against them are impaired due to the powerful winds surrounding them."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Sphinx",
+   "description": "Mythical beasts with the upper body and head of a human, the wings of an eagle, and the body of a lion. Immune to magic of any kind.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 18,
+        "Armor": 0,
+        "Group": "",
+        "STR": 12,
+        "DEX": 13,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "claws (d8+d8, blast), beak (d10)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Mythical beasts with the upper body and head of a human, the wings of an eagle, and the body of a lion. Immune to magic of any kind.\n- Poses riddles to anyone they meet. Failure to answer correctly is usually met with death. They know almost everything worth knowing.\n- Roar: Anyone in earshot must save WIL or flee in fear."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Storm Giant",
+   "description": "Building-sized humanoids with bronze-hued skin and light-colored hair. Live on the highest mountain peaks and rockiest coastlines.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 18,
+        "Armor": 2,
+        "Group": "Giant",
+        "STR": 18,
+        "DEX": 16,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "great sword (d12), detachment",
+        "Damage": "d12"
+       },
+       "Notes": {
+        "Traits": "- Building-sized humanoids with bronze-hued skin and light-colored hair. Live on the highest mountain peaks and rockiest coastlines.\n- Unharmed by lightning, can summon storm clouds at their will. Can fly with the wind as a their chariot.\n- Thunderclap: Deals 4 STR damage against a single target. Targets wearing metal armor take double damage."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Swine Thing",
+   "description": "Obese humanoids that transform into massive porcine monstrosities to feast on human flesh.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 9,
+        "Armor": 0,
+        "Group": "Shape Shifter",
+        "STR": 16,
+        "DEX": 8,
+        "WIL": 13
+       },
+       "Attack": {
+        "Attacks": "gore (d6+d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Obese humanoids that transform into massive porcine monstrosities to feast on human flesh.\n- Prefer to hunt in isolated settlements close to forests and wetlands. Can only shapeshift at night.\n- Charm: Target obeys the swine's every command until it is killed. WIL save once per round to break free."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Titan",
+   "description": "Mythical, humanoid giants of radiant beauty and powerfully athletic bodies. Beneficent of character, but prone to megalomania.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 18,
+        "Armor": 3,
+        "Group": "Giant",
+        "STR": 16,
+        "DEX": 15,
+        "WIL": 18
+       },
+       "Attack": {
+        "Attacks": "lightning sword (d12), detachment",
+        "Damage": "d12"
+       },
+       "Notes": {
+        "Traits": "- Mythical, humanoid giants of radiant beauty and powerfully athletic bodies. Beneficent of character, but prone to megalomania.\n- Natives of other planes of existence, but sometimes have strongholds in the mortal world.\n- Can levitate, shape shift, and sculpt elements at will."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Treant",
+   "description": "Sentient, bipedal trees with a vaguely humanoid face on their trunks. Found in the deepest part of the wood.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 10,
+        "Armor": 3,
+        "Group": "Plant",
+        "STR": 15,
+        "DEX": 3,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "roots (d8+d8, blast)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Sentient, bipedal trees with a vaguely humanoid face on their trunks. Found in the deepest part of the wood.\n- Speak slowly and ponderously, with a deep voice. Timeless, living for thousands of years."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Triton",
+   "description": "Aquatic humanoids with silvery skin, blue-green hair, and scaled legs ending in fins. Dwell in warmer waters close to land.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Humanoid",
+        "STR": 12,
+        "DEX": 15,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "trident (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Aquatic humanoids with silvery skin, blue-green hair, and scaled legs ending in fins. Dwell in warmer waters close to land.\n- Lair in beautiful castles sculpted from sea rock and coral. Command vast schools of fish for both protection and food."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Troll",
+   "description": "Giant, warty humanoids of flesh and bark. Dwell underground or in deep forests, as well as the ruined homes of their former victims. Carnivorous.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 14,
+        "Armor": 1,
+        "Group": "Goblinoid",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 4
+       },
+       "Attack": {
+        "Attacks": "bite (d10), claws (d8+d8)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Giant, warty humanoids of flesh and bark. Dwell underground or in deep forests, as well as the ruined homes of their former victims. Carnivorous.\n- When taking Critical Damage, a Troll will continue fighting, despite loss of flesh and limb. Only when their STR is 0 are they truly killed. Unless their heads are bathed in acid, fire, or powerful magic, they will fully regenerate within 1d4 days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Unicorn",
+   "description": "Magical horses with a single long horn on their foreheads. Timid, but proud and willful, are seen as divine beings.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Mythical",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 14
+       },
+       "Attack": {
+        "Attacks": "horn (d10, ignores armor)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Magical horses with a single long horn on their foreheads. Timid, but proud and willful, are seen as divine beings.\n- Their hair is worth a small fortune due to its powerful healing properties."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Vampire",
+   "description": "Charming, undead creatures that drink the blood of mortals. Act at night and sleep in a coffin during the day. Can change into a bat at will.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 1,
+        "Group": "Undead",
+        "STR": 14,
+        "DEX": 12,
+        "WIL": 16
+       },
+       "Attack": {
+        "Attacks": "bite (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Charming, undead creatures that drink the blood of mortals. Act at night and sleep in a coffin during the day. Can change into a bat at will.\n- Regeneration: A damaged vampire regains 6 HP when it bites a target that has blood. If killed, it becomes a cloud of gas and retreats to its coffin, reforming at the next nightfall. Can only be killed if exposed to sunlight or if the coffin is destroyed.\n- Critical Damage: The vampire drains the target's essence, dealing d12 damage to WIL. If the target reaches 0 WIL this way, it dies and is raised as a thrall of the vampire."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Viper",
+   "description": "Poisonous snakes often found in caves, pits, and other dark places. An antitoxin can be made from their poison sacs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 5,
+        "DEX": 12,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "bite (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Poisonous snakes often found in caves, pits, and other dark places. An antitoxin can be made from their poison sacs.\n- Use heat and smell to track their victims.\n- Critical Damage: Target is poisoned, dying in 1d12 hours without a cure."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Warp Panther",
+   "description": "Grotesque panther-like predators with long razored tentacles growing out of their backs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Magical",
+        "STR": 13,
+        "DEX": 16,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "tentacles (d8+d8, blast), bite (d10)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Grotesque panther-like predators with long razored tentacles growing out of their backs.\n- Resistant to magical attacks. Caster must make a WIL save for the intended effect to succeed.\n- Can teleport a short distance away at will. Hate Blink Dogs."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Warrior Snail",
+   "description": "Giant armored snails with heavy, club-like tentacles.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 4,
+        "Armor": 2,
+        "Group": "Unusual",
+        "STR": 14,
+        "DEX": 6,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "tentacles (d8+d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Giant armored snails with heavy, club-like tentacles.\n- Some species have colorful shells that can reflect magical attacks."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Water Elemental",
+   "description": "Rare spirits of lakes, rivers, and seas.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 14,
+        "Armor": 0,
+        "Group": "Magical",
+        "STR": 15,
+        "DEX": 16,
+        "WIL": 4
+       },
+       "Attack": {
+        "Attacks": "spray (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Rare spirits of lakes, rivers, and seas.\n- Mundane attacks against the Water Elemental are impaired.\n- Critical Damage: Target is enveloped by the water and drowns in three rounds."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Werewolf",
+   "description": "Ferocious lycanthropes that can transform into a wolf-shape at will.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Armor": 0,
+        "Group": "Shape Shifter",
+        "STR": 15,
+        "DEX": 14,
+        "WIL": 6
+       },
+       "Attack": {
+        "Attacks": "claws (d6+d6), bite (d8)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Ferocious lycanthropes that can transform into a wolf-shape at will.\n- Mundane attacks are impaired against werewolves, but attacks with weapons made of silver are enhanced.\n- Critical Damage: Target becomes infected with lycanthropy, transforming into a werewolf by the next full moon."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Wight",
+   "description": "Grotesque, fallen warriors, raised from death for ill purpose. Often astride equally nightmarish steeds, leading lesser undead creatures into battle.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Armor": 3,
+        "Group": "Undead",
+        "STR": 16,
+        "DEX": 8,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "long sword (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Grotesque, fallen warriors, raised from death for ill purpose. Often astride equally nightmarish steeds, leading lesser undead creatures into battle.\n- Critical Damage: On a fail, any STR loss is permanent."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Will-o-Wisp",
+   "description": "Nocturnal spirits of cool flame, commonly found in dense woodlands, marshes, and swamps.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Armor": 0,
+        "Group": "Fey",
+        "STR": 6,
+        "DEX": 17,
+        "WIL": 12
+       },
+       "Attack": {
+        "Attacks": "",
+        "Damage": "d4"
+       },
+       "Notes": {
+        "Traits": "- Nocturnal spirits of cool flame, commonly found in dense woodlands, marshes, and swamps.\n- Known to lead travelers astray, to a corpse, or back home again."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Wolf",
+   "description": "Large canines that dwell primarily in forest or tundra.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Armor": 0,
+        "Group": "Beast",
+        "STR": 12,
+        "DEX": 14,
+        "WIL": 8
+       },
+       "Attack": {
+        "Attacks": "bite (d8)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Large canines that dwell primarily in forest or tundra.\n- Can be trained with effort if captured at a young age."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Wood Troll",
+   "description": "Large humanoids with elongated arms made of bark or root. They live in forests, sharing a deep connection with the vegetation around them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 10,
+        "Armor": 0,
+        "Group": "Goblinoid",
+        "STR": 15,
+        "DEX": 12,
+        "WIL": 7
+       },
+       "Attack": {
+        "Attacks": "bite (d8), club (d10)",
+        "Damage": "d8"
+       },
+       "Notes": {
+        "Traits": "- Large humanoids with elongated arms made of bark or root. They live in forests, sharing a deep connection with the vegetation around them.\n- If killed, they will slowly regenerate unless their corpse is taken out of the forest or burned with fire.\n- Critical Damage: Moss and twigs begin growing out of target's wounds."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Wyvern",
+   "description": "Large, intelligent, winged reptiles. Dwell in any terrain, but favor dry cliffs.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 11,
+        "Armor": 0,
+        "Group": "Avian",
+        "STR": 15,
+        "DEX": 14,
+        "WIL": 13
+       },
+       "Attack": {
+        "Attacks": "stinger (d10)",
+        "Damage": "d10"
+       },
+       "Notes": {
+        "Traits": "- Large, intelligent, winged reptiles. Dwell in any terrain, but favor dry cliffs.\n- Shy away from other creatures, preferring to silently stalk their targets from afar.\n- Critical Damage: The victim is impaled and held in place. The wyvern then bites their head off."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Zombie",
+   "description": "Re-animated corpse brought back through necromantic ritual or fell influence. Immune to all mind-influencing effects.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Cairn",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 2,
+        "Armor": 0,
+        "Group": "Undead",
+        "STR": 12,
+        "DEX": 6,
+        "WIL": 3
+       },
+       "Attack": {
+        "Attacks": "jagged nails (d6)",
+        "Damage": "d6"
+       },
+       "Notes": {
+        "Traits": "- Re-animated corpse brought back through necromantic ritual or fell influence. Immune to all mind-influencing effects.\n- If not utterly destroyed (by fire, complete dismemberment, etc.), the Zombie will rise again within a few minutes.\n- Critical Damage: Target is infected and becomes deprived. Without the services of a specialist or healer, they will become a zombie in 1d4 days."
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
