@@ -1,0 +1,369 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successesIn (rolls, chance) =
+    if chance then count (filter ((x)->x == 10, rolls))
+    else count (filter ((x)->x >= 8, rolls))
+
+cofdOutcome (rolls, chance) =
+    if chance and count (rolls) > 0 and first (rolls) == 1 then "Dramatic failure"
+    else if successesIn (rolls, chance) >= 5 then "Exceptional success"
+    else if successesIn (rolls, chance) > 0 then "Success"
+    else "Failure"
+
+cofdText (rolls, chance, weapon) =
+    (if chance then "Chance die: " else "")
+    + toString (successesIn (rolls, chance)) + (if successesIn (rolls, chance) == 1 then " success" else " successes")
+    + ": " + cofdOutcome (rolls, chance)
+    + (if weapon >= 0 and successesIn (rolls, chance) > 0 then ", " + toString (successesIn (rolls, chance) + weapon) + " damage" else "")
+
+cofdResult (rolls, chance, weapon) =
+{
+    Text = cofdText (rolls, chance, weapon)
+    Value = successesIn (rolls, chance)
+    Outcome = cofdOutcome (rolls, chance)
+}
+
+cofdRoll (pool, again, weapon) = ([dice { number = max (1, pool)  sides = 10  explode = if pool > 0 then again else 11  label = if pool > 0 then "" else "Chance"  color = if pool > 0 then "" else "red" }],
+    ((baseline, throws)->cofdResult (first (throws).rolls, pool <= 0, weapon)))
+
+againOf (char) =
+    switch char.Character.Again
+        case "9-again" then 9
+        case "8-again" then 8
+        else 10
+
+cofdDice (char, pool) = cofdRoll (pool + char.Character.Modifier - woundPenalty (char), againOf (char), -1)
+
+woundPenalty (char) = max (0, min (3, damageTotal (char) - (char.Advantages.Health - 3)))
+
+damageTotal (char) = char.Advantages.Bashing + char.Advantages.Lethal + char.Advantages.Aggravated
+
+healthState (char) =
+    if char.Advantages.Aggravated >= char.Advantages.Health then "Dead"
+    else if damageTotal (char) >= char.Advantages.Health and char.Advantages.Bashing == 0 then "Bleeding out"
+    else if damageTotal (char) >= char.Advantages.Health then "Unconscious"
+    else if woundPenalty (char) > 0 then "Wounded -" + toString (woundPenalty (char))
+    else ""
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+attributeNames = ["Intelligence", "Wits", "Resolve", "Strength", "Dexterity", "Stamina", "Presence", "Manipulation", "Composure"]
+
+attributeValue (char, name) =
+    switch name
+        case "Intelligence" then char.Attributes.Intelligence
+        case "Wits" then char.Attributes.Wits
+        case "Resolve" then char.Attributes.Resolve
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Presence" then char.Attributes.Presence
+        case "Manipulation" then char.Attributes.Manipulation
+        else char.Attributes.Composure
+
+skillPool (char, attributeName, dots, unskilled) = attributeValue (char, attributeName) + (if dots == 0 then unskilled else dots)
+
+skill (usual, unskilled) = custom
+{
+    Dots = integer { description = "Skill dots from 0 to 5. Unskilled rolls take -1, or -3 for Mental skills." default = 0  minvalue = 0  maxvalue = 5 }
+    With = string { description = "The attribute it rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
+    Pool = integer { description = "Attribute plus skill. Each 8 or more is a success; 10s roll again." value = skillPool (characterTable, With, Dots, unskilled)  valuedice = cofdDice (characterTable, skillPool (characterTable, With, Dots, unskilled))  editable = none }
+    Specialties = string {}
+}
+
+noSkill = { Dots = 0 }
+
+skillDots (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Dots", 0)
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "cofdWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, pool, again, damage, kind, rangeMetres) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = cofdRoll (pool, again, damage)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = damage
+}
+
+attackPool (char, attributeName, skillName, unskilled) =
+    attributeValue (char, attributeName) + (if skillDots (char, skillName) == 0 then unskilled else skillDots (char, skillName)) + char.Character.Modifier - woundPenalty (char)
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Ranged" then
+        weaponAttack (weapon.Name, attackPool (char, "Dexterity", "Firearms", -1), againOf (char), toInt (weaponStat (weapon, "Damage")), "ranged", firstNumber (weaponStat (weapon, "Ranges")) * 4)
+    else
+        weaponAttack (weapon.Name, attackPool (char, "Strength", "Weaponry", -1), againOf (char), toInt (weaponStat (weapon, "Damage")), "melee", 0)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Advantages, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        Age = integer { default = 30 }
+        Chronicle = string {}
+        Faction = string {}
+        Virtue = string { description = "Regain all Willpower when you act on it at a cost." }
+        Vice = string { description = "Regain one Willpower when you indulge it." }
+        Aspirations = string { description = "Short and long term goals; fulfilling one earns a Beat." multiline = true }
+        Modifier = modifier { description = "Dice added to or taken from the next pool: equipment, Willpower (+3), the target's Defense, and other penalties." default = 0  editable = live }
+        Again = string { description = "Which dice roll again: 10-again normally, 9 or 8 with special rules." default = "10-again"  keys = ["10-again", "9-again", "8-again"]  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "Nine attributes: Mental, Physical and Social, for power, finesse and resistance."
+        tableLayout = layout { columns = 3  size = wide }
+        Intelligence = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Intelligence) }
+        Strength = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Strength) }
+        Presence = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Presence) }
+        Wits = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Wits) }
+        Dexterity = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Dexterity) }
+        Manipulation = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Manipulation) }
+        Resolve = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Resolve) }
+        Stamina = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Stamina) }
+        Composure = integer { default = 1  minvalue = 1  maxvalue = 5  valuedice = cofdDice (characterTable, Composure) }
+    }
+
+    Skills = table
+    {
+        description = "Mental, Physical and Social skills."
+        tableLayout = layout { columns = 3  size = wide }
+        Academics = skill ("Intelligence", -3)
+        Athletics = skill ("Strength", -1)
+        'Animal Ken' = skill ("Presence", -1)
+        Computer = skill ("Intelligence", -3)
+        Brawl = skill ("Strength", -1)
+        Empathy = skill ("Wits", -1)
+        Crafts = skill ("Intelligence", -3)
+        Drive = skill ("Dexterity", -1)
+        Expression = skill ("Presence", -1)
+        Investigation = skill ("Wits", -3)
+        Firearms = skill ("Dexterity", -1)
+        Intimidation = skill ("Presence", -1)
+        Medicine = skill ("Intelligence", -3)
+        Larceny = skill ("Dexterity", -1)
+        Persuasion = skill ("Manipulation", -1)
+        Occult = skill ("Intelligence", -3)
+        Stealth = skill ("Dexterity", -1)
+        Socialize = skill ("Presence", -1)
+        Politics = skill ("Intelligence", -3)
+        Survival = skill ("Wits", -1)
+        Streetwise = skill ("Manipulation", -1)
+        Science = skill ("Intelligence", -3)
+        Weaponry = skill ("Strength", -1)
+        Subterfuge = skill ("Manipulation", -1)
+    }
+
+    Advantages = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Size = integer { default = 5 }
+        Health = integer { description = "Size plus Stamina." value = Size + Attributes.Stamina  editable = none }
+        Bashing = integer { description = "Bashing damage, from fists and falls. Heals in minutes." default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Lethal = integer { description = "Lethal damage, from blades and bullets. Heals in days." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Aggravated = integer { description = "Aggravated damage, from fire and the supernatural. Heals in weeks." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        State = string { value = healthState (characterTable)  visible = none  indicator = "#d64545" }
+        'Wound penalty' = integer { description = "Damage in the last three health boxes gives -1, -2 and -3 to every pool." value = woundPenalty (characterTable)  editable = none }
+        'Max Willpower' = integer { description = "Resolve plus Composure." value = Attributes.Resolve + Attributes.Composure  editable = none }
+        Willpower = integer { description = "Spend one for +3 dice or +2 Defense. Regain one each night." default = 'Max Willpower'  minvalue = 0  editable = live }
+        Integrity = integer { description = "How well the character holds together against the dark. Breaking points test it." default = 7  minvalue = 0  maxvalue = 10  editable = live }
+        Defense = integer { description = "The lower of Wits and Dexterity, plus Athletics. Subtracted from melee attacks." value = min (Attributes.Wits, Attributes.Dexterity) + skillDots (characterTable, "Athletics")  editable = none }
+        Initiative = modifier { description = "Dexterity plus Composure, plus a d10." value = Attributes.Dexterity + Attributes.Composure  valuedice = initiativeRoll  editable = none }
+        Speed = integer { description = "Strength plus Dexterity plus 5, in metres a turn." value = Attributes.Strength + Attributes.Dexterity + 5  editable = none }
+        Armor = string { description = "General and ballistic armor, such as 1/2." default = "0/0" }
+        Beats = integer { description = "Five Beats make an Experience." default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        Experiences = integer { default = 0  editable = live }
+        'Night of rest' = button
+        {
+            description = "A night's sleep clears bashing damage and restores 1 Willpower. Lethal damage heals one point every two days; mark it off by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Advantages.Bashing) = 0
+                (root.Advantages.Willpower) = min ('Max Willpower', Willpower + 1)
+            }
+        }
+    }
+
+    Conditions = list
+    {
+        description = "Conditions and tilts on the character. Resolving a condition earns a Beat."
+        singular = "Condition"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Merits = list
+    {
+        source = secondary.Merits
+        singular = "Merit"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", attackPool (characterTable, "Strength", "Brawl", -1), againOf (characterTable), 0, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Touchstones = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, 'Dice pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Mortal", "Ephemeral", "Vampire", "Werewolf", "Mage", "Other"] }
+        Health = integer { default = 7 }
+        Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Damage >= Health then "Down" else ""  visible = none  indicator = "#d64545" }
+        Willpower = integer { default = 4  editable = live }
+        Defense = integer { default = 2 }
+        Initiative = modifier { default = 4  valuedice = initiativeRoll }
+        Speed = integer { default = 10 }
+        Armor = string { default = "0/0" }
+        Power = integer { description = "For spirits and ephemeral beings: Power, Finesse and Resistance replace attributes." default = 0 }
+        Finesse = integer { default = 0 }
+        Resistance = integer { default = 0 }
+    }
+    'Dice pools' = keyvalues
+    {
+        description = "Pools the NPC rolls, such as attack or resist."
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Attack", "Shooting"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = cofdRoll (Dice, 10, -1)  action = if Key == "Shooting" then "ranged" else "melee"  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Merits = string { multiline = true }
+        Powers = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+cofdWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { default = "Melee"  keys = ["Melee", "Ranged"] }
+        Damage = string { description = "Added to successes for damage." default = "1" }
+        Ranges = string { description = "Short, medium and long range in metres, such as 20/40/80." }
+        Clip = string {}
+        Initiative = string {}
+        Strength = string { description = "Strength needed to use it without a penalty." }
+        Size = string {}
+        Availability = string {}
+    }
+}
+
+cofdMerit = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Mental", "Physical", "Social", "Fighting", "Supernatural"] }
+        Dots = string { default = "1" }
+        Prerequisites = string {}
+    }
+}
+
+cofdItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        'Dice bonus' = string {}
+        Durability = string {}
+        Size = string {}
+        Availability = string {}
+    }
+}
+
+ChroniclesOfDarkness = system
+{
+    hints = [
+        hint
+        {
+            title = "Mortals in the dark"
+            topic = "Getting started"
+            text = ["Pick a concept, a Virtue and a Vice, and three Aspirations. Spread dots over the nine attributes and the 24 skills, then Merits."]
+        },
+        hint
+        {
+            title = "Dice pools"
+            topic = "Play"
+            text = ["Roll attribute + skill d10s; each 8 or more is a success, 10s roll again, five successes are exceptional. Put equipment, Willpower (+3) and the target's Defense in Modifier before rolling. A pool of 0 or less rolls one chance die: only a 10 succeeds, a 1 is a dramatic failure."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["Successes on an attack plus the weapon's damage are the damage. Bashing, lethal and aggravated fill the health track; the last three boxes give -1 to -3."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: Dexterity + Composure + a d10. Highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = cofdWeapon
+    Merits = cofdMerit
+    Equipment = cofdItem
+    secondaryTypes = ["Weapons", "Merits", "Equipment"]
+    description = "Chronicles of Darkness 2nd edition: mortals against the horrors of the World of Darkness, d10 pools and 8-again successes"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10]
+    cssFiles = ["/systems/cofd/cofd.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/gothic.json", "/systems/names/cosmic.json"]
+    nameSettings = [nightWorldNameSetting, gothicHorrorNameSetting, cosmicHorrorNameSetting]
+}

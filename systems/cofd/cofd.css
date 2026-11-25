@@ -1,0 +1,56 @@
+@import url("/systems/sheet.css");
+
+/* Chronicles of Darkness: a stark grey page, black and white with a cold
+   teal accent and a narrow condensed serif; the nine attributes in Mental,
+   Physical and Social columns, the 24 skills under them, and health,
+   willpower and integrity in one block of trackers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #23272a;
+    --surface: #eef0ef;
+    --surface-alt: #e1e4e3;
+    --surface-sunken: #d3d7d6;
+    --surface-muted: #b9bfbe;
+    --text: #141718;
+    --text-muted: #3b4244;
+    --text-faint: #6c7577;
+    --on-accent: #eef0ef;
+    --border: #8f9998;
+    --border-strong: #1d2224;
+    --accent: #2b6b6b;
+    --accent-hover: #358585;
+    --accent-soft: #d4e6e6;
+    --link: #2b6b6b;
+    --danger: #8b1f1f;
+    --danger-hover: #6b1717;
+    --danger-soft: #edd5d5;
+    --success: #2b6b6b;
+    --paper: #eef0ef;
+    --card-bg: #e1e4e3;
+    --dice-bg: #1d2224;
+    --dice-text: #eef0ef;
+}
+
+.entityView {
+    --sheet-font: "Goudy Old Style", "Garamond", Georgia, serif;
+    --title-font: "Bodoni MT", "Didot", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    border-bottom: 3px double var(--border-strong);
+}
+.entityView .table-attributes > table > tbody,
+.entityView .table-skills > table > tbody { column-gap: 28px; }
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px solid var(--border); }
+.entityView .table-attributes button.dicethrow,
+.entityView .table-skills button.dicethrow { border-radius: 50%; min-width: 1.9em; min-height: 1.9em; }
+.entityView .table-conditions,
+.entityView .table-merits { --block: 50%; }
+.entityView .table-conditions { clear: left; }
