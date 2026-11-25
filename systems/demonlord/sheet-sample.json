@@ -1,15 +1,15 @@
 {
   "values": {
-    "Character": { "Ancestry": "Goblin", "Level": 2, "Novice path": "Rogue", "Professions": "Criminal (thief), ratcatcher", "Languages": "Common, Elvish", "Wealth": "Poor" },
-    "Attributes": { "Strength.Score": 8, "Agility.Score": 13, "Intellect.Score": 10, "Will.Score": 10 },
-    "Status": { "Health": 12, "Damage": 5, "Defense": 15, "Perception": 1, "Speed": 10, "Size": "1/2", "Power": 0, "Insanity": 2, "Corruption": 1, "Boons": 0, "Turn": "Fast" },
+    "Character": { "Ancestry": "Changeling", "Level": 2, "Novice path": "Rogue", "Professions": "Criminal: smuggler; Academic: heraldry", "Languages": "Common Tongue, Dwarvish", "Wealth": "Poor" },
+    "Attributes": { "Strength.Score": 9, "Agility.Score": 12, "Intellect.Score": 11, "Will.Score": 10 },
+    "Status": { "Health": 17, "Damage": 6, "Defense": 13, "Perception": 1, "Speed": 10, "Insanity": 1, "Corruption": 1, "Boons": 0, "Turn": "Fast" },
     "Afflictions": { "Frightened": true },
-    "Notes": { "Money": "3 ss, 12 cp", "Background": "Sold to a circus as a child; ran away with the ringmaster's purse.", "Marks of darkness": "Faint smell of sulphur", "Madness": "" }
+    "Notes": { "Money": "4 ss, 12 cp", "Background": "Grew up as a stand-in for a merchant's drowned son, until the family found out.", "Marks of darkness": "", "Madness": "Talks to her own reflection." }
   },
   "secondary": {
-    "Weapons": [ { "name": "Dagger", "values": { "Stats": { "Damage": "1d3", "Hands": "Off", "Properties": "Finesse, thrown (short range)", "Price": "5 cp" } } }, { "name": "Sling", "values": { "Stats": { "Damage": "1d3", "Hands": "Main", "Properties": "Range (medium)", "Price": "2 cp" } } } ],
-    "Armor": [ { "name": "Soft leather", "values": { "Stats": { "Defense": "11", "Type": "Light", "Price": "5 ss" } } } ],
-    "Talents": [ { "name": "Trickery", "values": { "Stats": { "Source": "Rogue", "Level": "1" } } }, { "name": "Shadowed", "values": { "Stats": { "Source": "Goblin", "Level": "0" } } } ],
-    "Equipment": [ { "name": "Thieves' tools", "values": { "Stats": { "Price": "5 ss" } } }, { "name": "Rope, 20 yards", "values": { "Stats": { "Price": "5 cp" } } } ]
+    "Weapons": [ { "name": "Dagger", "values": { "Stats": { "Damage": "1d3", "Hands": "Off", "Properties": "Finesse, thrown" } } }, { "name": "Light crossbow", "values": { "Stats": { "Damage": "1d6+1", "Hands": "Two", "Properties": "Range (long), reload" } } } ],
+    "Armor": [ { "name": "Soft leather", "values": { "Stats": { "Defense": "11", "Type": "Light" } } } ],
+    "Talents": [ { "name": "Steal Identity", "values": { "Stats": { "Source": "Changeling", "Level": "0" } } }, { "name": "Trickery", "values": { "Stats": { "Source": "Rogue", "Level": "1" } } }, { "name": "Exploit Opportunity", "values": { "Stats": { "Source": "Rogue", "Level": "1" } } } ],
+    "Equipment": [ { "name": "Lockpicks" }, { "name": "Hooded lantern" }, { "name": "Disguise kit" } ]
   }
 }

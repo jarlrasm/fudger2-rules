@@ -2525,16 +2525,6 @@
          "Name": "Flamethrower, hellhound-class",
          "Attack": 26,
          "Damage": "4d6 +12 F; critical Burn 4d6"
-        },
-        {
-         "Name": "Flamethrower, hellhound-class",
-         "Attack": 0,
-         "Damage": "4d6 F; critical Burn 4d6"
-        },
-        {
-         "Name": "Machine gun, medium",
-         "Attack": 0,
-         "Damage": "3d10 P"
         }
        ],
        "Statistics": {
@@ -3817,11 +3807,6 @@
          "Name": "Lesser Shadowstaff (melee)",
          "Attack": 4,
          "Damage": "1d4 + 2 B; critical See Weapon Entry"
-        },
-        {
-         "Name": "Lesser Shadowstaff (melee)",
-         "Attack": 0,
-         "Damage": "1d4 + @mod B"
         }
        ],
        "Ranged attacks": [
@@ -3913,11 +3898,6 @@
          "Name": "Arc rifle, aurora",
          "Attack": 21,
          "Damage": "2d12 +11 E; critical Arc 2d6"
-        },
-        {
-         "Name": "Arc rifle, aurora",
-         "Attack": 0,
-         "Damage": "2d12 E; critical Arc 2d6"
         }
        ],
        "Statistics": {
@@ -3985,11 +3965,6 @@
          "Name": "Bite",
          "Attack": 22,
          "Damage": "2d6 +15 P"
-        },
-        {
-         "Name": "Dragonglaive, thunderhead",
-         "Attack": 0,
-         "Damage": "2d8 + @mod E & S"
         }
        ],
        "Ranged attacks": [
@@ -3997,11 +3972,6 @@
          "Name": "Magnetar rifle, tactical",
          "Attack": 18,
          "Damage": "2d8 +9 P"
-        },
-        {
-         "Name": "Magnetar rifle, tactical",
-         "Attack": 0,
-         "Damage": "2d8 P"
         }
        ],
        "Statistics": {
@@ -4064,11 +4034,6 @@
          "Name": "Taclash, standard",
          "Attack": 5,
          "Damage": "1d4 +2 S"
-        },
-        {
-         "Name": "Taclash, standard",
-         "Attack": 0,
-         "Damage": "1d4 + @abilities.str.mod S"
         }
        ],
        "Ranged attacks": [
@@ -4080,16 +4045,6 @@
         {
          "Name": "Shock grenade I",
          "Attack": 8,
-         "Damage": "1d8 E"
-        },
-        {
-         "Name": "Laser rifle, azimuth",
-         "Attack": 0,
-         "Damage": "1d8 F; critical Burn 1d6"
-        },
-        {
-         "Name": "Shock grenade I",
-         "Attack": 0,
          "Damage": "1d8 E"
         }
        ],
@@ -4153,11 +4108,6 @@
          "Name": "Longsword, ultrathin",
          "Attack": 19,
          "Damage": "4d8 +12 S"
-        },
-        {
-         "Name": "Longsword, ultrathin",
-         "Attack": 0,
-         "Damage": "4d8 + @abilities.str.mod S"
         }
        ],
        "Ranged attacks": [
@@ -4165,11 +4115,6 @@
          "Name": "Sonic pistol, LFD",
          "Attack": 21,
          "Damage": "2d8 +11 So; critical Defense [DC 20]"
-        },
-        {
-         "Name": "Sonic pistol, LFD",
-         "Attack": 0,
-         "Damage": "2d8 So; critical Deafen"
         }
        ],
        "Statistics": {
@@ -5257,11 +5202,6 @@
          "Name": "Laser rifle, azimuth",
          "Attack": 8,
          "Damage": "1d8 +3 F; critical Burn 1d6"
-        },
-        {
-         "Name": "Laser rifle, azimuth",
-         "Attack": 0,
-         "Damage": "1d8 F; critical Burn 1d6"
         }
        ],
        "Statistics": {
@@ -5330,11 +5270,6 @@
         {
          "Name": "Flare gun, survival",
          "Attack": 3,
-         "Damage": "1d3 F; critical Burn 1d6"
-        },
-        {
-         "Name": "Flare gun, survival",
-         "Attack": 0,
          "Damage": "1d3 F; critical Burn 1d6"
         }
        ],
@@ -17637,7 +17572,7 @@
         "Casting Time": "10 min",
         "Range": "Planetary",
         "Targets": "",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -17662,7 +17597,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -17737,7 +17672,7 @@
         "Casting Time": "1 full",
         "Range": "Touch",
         "Targets": "at least 1 bulk of inert electronic equipment; see text",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -17812,7 +17747,7 @@
         "Casting Time": "1 standard action",
         "Range": "Long (400 ft. + 40 ft./level)",
         "Targets": "20 ft cylinder",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "Yes"
        }
@@ -17837,7 +17772,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "100 medium cylinder",
-        "Duration": "1 + 1*floor(@details.cl.value/3) round",
+        "Duration": "1 round + 1 round per 3 levels",
         "Saving Throw": "None",
         "Spell Resistance": "Yes"
        }
@@ -17887,7 +17822,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one living creature",
-        "Duration": "@details.cl.value day",
+        "Duration": "1 day/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -17912,7 +17847,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one humanoid creature",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -17937,7 +17872,7 @@
         "Casting Time": "10 min",
         "Range": "Long (400 ft. + 40 ft./level)",
         "Targets": "one creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -17987,7 +17922,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one undead creature",
-        "Duration": "@details.cl.value day",
+        "Duration": "1 day/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -18012,7 +17947,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one living creature/level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -18062,7 +17997,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "you",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -18087,7 +18022,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "15 ft sphere",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -18162,7 +18097,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "10 ft cube",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Fortitude negate",
         "Spell Resistance": "No"
        }
@@ -18212,7 +18147,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "constructs of the technological subtype with individual CRs no greater than your level + 1 and a total CR no greater than twice your level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -18237,7 +18172,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "5 ft sphere",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Reflex negate",
         "Spell Resistance": "Yes"
        }
@@ -18262,7 +18197,7 @@
         "Casting Time": "1 standard action",
         "Range": "100 ft.",
         "Targets": "20 ft sphere",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Reflex partial",
         "Spell Resistance": "Yes"
        }
@@ -18362,7 +18297,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature or camera",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -18437,7 +18372,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one living creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -18462,7 +18397,7 @@
         "Casting Time": "1 full",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "10 ft sphere",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -18562,7 +18497,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "120 ft sphere",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -18737,7 +18672,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -18862,7 +18797,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -18987,7 +18922,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "40 ft sphere",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -19062,7 +18997,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19112,7 +19047,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Fortitude negate",
         "Spell Resistance": "Yes"
        }
@@ -19237,7 +19172,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "20 ft sphere",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19287,7 +19222,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will disbelieve",
         "Spell Resistance": "No"
        }
@@ -19337,7 +19272,7 @@
         "Casting Time": "1 full",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19362,7 +19297,7 @@
         "Casting Time": "1 standard action",
         "Range": "25 ft.",
         "Targets": "10 ft sphere",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Reflex partial",
         "Spell Resistance": "No"
        }
@@ -19387,7 +19322,7 @@
         "Casting Time": "1 full",
         "Range": "Touch",
         "Targets": "1 bulk of inert electronic equipment; see text",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19412,7 +19347,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "up to one creature/level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Fortitude harmless",
         "Spell Resistance": "Yes"
        }
@@ -19437,7 +19372,7 @@
         "Casting Time": "1 full",
         "Range": "Touch",
         "Targets": "1 bulk of inert electronic equipment; see text",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19487,7 +19422,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "one living creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -19512,7 +19447,7 @@
         "Casting Time": "1 standard action",
         "Range": "100 ft.",
         "Targets": "one humanoid creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -19537,7 +19472,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "one portal up to 20 sq. ft./level",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19612,7 +19547,7 @@
         "Casting Time": "1 standard action",
         "Range": "Long (400 ft. + 40 ft./level)",
         "Targets": "one 20-ft. cube/level (S) text cube",
-        "Duration": "@details.cl.value*2 hour",
+        "Duration": "2 hours/level",
         "Saving Throw": "Will disbelieve",
         "Spell Resistance": "No"
        }
@@ -19662,7 +19597,7 @@
         "Casting Time": "1 standard action",
         "Range": "5 ft.",
         "Targets": "one magic or technological object",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -19712,7 +19647,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will partial",
         "Spell Resistance": "Yes"
        }
@@ -19737,7 +19672,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "up to one creature/level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will partial",
         "Spell Resistance": "Yes"
        }
@@ -19837,7 +19772,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature or object no more than 10 bulk/level",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -19862,7 +19797,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -19887,7 +19822,7 @@
         "Casting Time": "1 standard action",
         "Range": "Long (400 ft. + 40 ft./level)",
         "Targets": "any number of creatures, no two of which can be more than 180 ft. apart",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -19962,7 +19897,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -20012,7 +19947,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "up to one creature/level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value day",
+        "Duration": "1 day/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -20162,7 +20097,7 @@
         "Casting Time": "1 min",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -20262,7 +20197,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -20387,7 +20322,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature or object",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -20437,7 +20372,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Fortitude negate",
         "Spell Resistance": "Yes"
        }
@@ -20462,7 +20397,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -20762,7 +20697,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Fortitude partial",
         "Spell Resistance": "Yes"
        }
@@ -21012,7 +20947,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one Large or smaller creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Reflex negate",
         "Spell Resistance": "Yes"
        }
@@ -21037,7 +20972,7 @@
         "Casting Time": "1 standard action",
         "Range": "30 ft.",
         "Targets": "up to 10 creatures wearing armor within range",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Fortitude harmless",
         "Spell Resistance": "Yes"
        }
@@ -21062,7 +20997,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature wearing armor",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Fortitude harmless",
         "Spell Resistance": "Yes"
        }
@@ -21087,7 +21022,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature wearing armor",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Fortitude harmless",
         "Spell Resistance": "Yes"
        }
@@ -21112,7 +21047,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature wearing armor",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Fortitude harmless",
         "Spell Resistance": "Yes"
        }
@@ -21287,7 +21222,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -21312,7 +21247,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "up to one medium creature or vehicle/level",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will object",
         "Spell Resistance": "Yes"
        }
@@ -21337,7 +21272,7 @@
         "Casting Time": "1 standard action",
         "Range": "Long (400 ft. + 40 ft./level)",
         "Targets": "60 ft sphere",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will disbelieve",
         "Spell Resistance": "Yes"
        }
@@ -21387,7 +21322,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one creature",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -21412,7 +21347,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "up to one creature/level, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -21462,7 +21397,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one construct with the technological sybtype; see text",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "Yes"
        }
@@ -21487,7 +21422,7 @@
         "Casting Time": "10 min",
         "Range": "10 ft.",
         "Targets": "one dead creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "No"
        }
@@ -21512,7 +21447,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -21562,7 +21497,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "up to one living creature touched/3 levels",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -21587,7 +21522,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "one object or creature within long range (400 ft. + 40 ft./level)",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -21837,7 +21772,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "you plus up to one willing creature/3 levels, no two of which can be more than 30 ft. apart",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -21887,7 +21822,7 @@
         "Casting Time": "1 standard action",
         "Range": "Medium (100 ft. + 10 ft./level)",
         "Targets": "up to one creature/level",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -21912,7 +21847,7 @@
         "Casting Time": "1 standard action",
         "Range": "Personal",
         "Targets": "",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -22012,7 +21947,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value*10 minute",
+        "Duration": "10 minutes/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "No"
        }
@@ -22062,7 +21997,7 @@
         "Casting Time": "1 standard action",
         "Range": "Touch",
         "Targets": "one creature",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will harmless",
         "Spell Resistance": "Yes"
        }
@@ -22087,7 +22022,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one invisible, mindless, shapeless servant",
-        "Duration": "@details.cl.value hour",
+        "Duration": "1 hour/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -22112,7 +22047,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one creature with CR lower than your level; see text",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -22212,7 +22147,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -22312,7 +22247,7 @@
         "Casting Time": "1 standard action",
         "Range": "Close (25 ft. + 5 ft./2 levels)",
         "Targets": "one distracting, glowing servant",
-        "Duration": "@details.cl.value round",
+        "Duration": "1 round/level",
         "Saving Throw": "None",
         "Spell Resistance": "No"
        }
@@ -22337,7 +22272,7 @@
         "Casting Time": "1 standard action",
         "Range": "25 ft.",
         "Targets": "20 ft sphere",
-        "Duration": "@details.cl.value minute",
+        "Duration": "1 minute/level",
         "Saving Throw": "Will negate",
         "Spell Resistance": "Yes"
        }
@@ -23060,7 +22995,7 @@
         "Category": "Basic melee",
         "Level": "19",
         "Price": "540000",
-        "Damage": "8d6 + @abilities.str.mod B",
+        "Damage": "8d6 B",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -23088,7 +23023,7 @@
         "Category": "Basic melee",
         "Level": "1",
         "Price": "90",
-        "Damage": "1d4 + @abilities.str.mod B",
+        "Damage": "1d4 B",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -23116,7 +23051,7 @@
         "Category": "Basic melee",
         "Level": "1",
         "Price": "100",
-        "Damage": "1d4 + @abilities.str.mod B",
+        "Damage": "1d4 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23144,7 +23079,7 @@
         "Category": "Basic melee",
         "Level": "17",
         "Price": "214850",
-        "Damage": "5d10 + @abilities.str.mod B",
+        "Damage": "5d10 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23172,7 +23107,7 @@
         "Category": "Basic melee",
         "Level": "13",
         "Price": "52500",
-        "Damage": "3d10 + @abilities.str.mod B",
+        "Damage": "3d10 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23200,7 +23135,7 @@
         "Category": "Basic melee",
         "Level": "10",
         "Price": "16100",
-        "Damage": "2d8 + @abilities.str.mod B",
+        "Damage": "2d8 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23284,7 +23219,7 @@
         "Category": "Basic melee",
         "Level": "0",
         "Price": "",
-        "Damage": "1d6 + @abilities.str.mod B",
+        "Damage": "1d6 B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -23592,7 +23527,7 @@
         "Category": "Advanced melee",
         "Level": "12",
         "Price": "34800",
-        "Damage": "2d8 + @abilities.str.mod C",
+        "Damage": "2d8 C",
         "Target": "EAC",
         "Range": "10 ft.",
         "Critical": "Staggered",
@@ -23620,7 +23555,7 @@
         "Category": "Advanced melee",
         "Level": "5",
         "Price": "3360",
-        "Damage": "1d8 + @abilities.str.mod C",
+        "Damage": "1d8 C",
         "Target": "EAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -23648,7 +23583,7 @@
         "Category": "Advanced melee",
         "Level": "16",
         "Price": "184300",
-        "Damage": "8d10 + @abilities.str.mod S",
+        "Damage": "8d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 5d6",
@@ -23676,7 +23611,7 @@
         "Category": "Advanced melee",
         "Level": "4",
         "Price": "2230",
-        "Damage": "1d10 + @abilities.str.mod S",
+        "Damage": "1d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 1d6",
@@ -23704,7 +23639,7 @@
         "Category": "Advanced melee",
         "Level": "20",
         "Price": "815000",
-        "Damage": "12d10 + @abilities.str.mod S",
+        "Damage": "12d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 6d6",
@@ -23732,7 +23667,7 @@
         "Category": "Advanced melee",
         "Level": "10",
         "Price": "18100",
-        "Damage": "3d10 + @abilities.str.mod S",
+        "Damage": "3d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 2d6",
@@ -23760,7 +23695,7 @@
         "Category": "Basic melee",
         "Level": "17",
         "Price": "275000",
-        "Damage": "10d4 + @abilities.str.mod S",
+        "Damage": "10d4 S",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -23788,7 +23723,7 @@
         "Category": "Basic melee",
         "Level": "12",
         "Price": "32800",
-        "Damage": "4d4 + @abilities.str.mod S",
+        "Damage": "4d4 S",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -23816,7 +23751,7 @@
         "Category": "Basic melee",
         "Level": "14",
         "Price": "64400",
-        "Damage": "6d4 + @abilities.str.mod S",
+        "Damage": "6d4 S",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -23844,7 +23779,7 @@
         "Category": "Advanced melee",
         "Level": "18",
         "Price": "410200",
-        "Damage": "12d8 + @abilities.str.mod S",
+        "Damage": "12d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23872,7 +23807,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "43900",
-        "Damage": "5d8 + @abilities.str.mod S",
+        "Damage": "5d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23900,7 +23835,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "5500",
-        "Damage": "2d8 + @abilities.str.mod S",
+        "Damage": "2d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23928,7 +23863,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "5300",
-        "Damage": "2d12 + @abilities.str.mod P",
+        "Damage": "2d12 P",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -23956,7 +23891,7 @@
         "Category": "Advanced melee",
         "Level": "19",
         "Price": "546100",
-        "Damage": "13d12 + @abilities.str.mod P",
+        "Damage": "13d12 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -23984,7 +23919,7 @@
         "Category": "Advanced melee",
         "Level": "17",
         "Price": "248000",
-        "Damage": "10d12 + @abilities.str.mod P",
+        "Damage": "10d12 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24012,7 +23947,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "240",
-        "Damage": "1d12 + @abilities.str.mod P",
+        "Damage": "1d12 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24040,7 +23975,7 @@
         "Category": "Advanced melee",
         "Level": "11",
         "Price": "24600",
-        "Damage": "4d12 + @abilities.str.mod P",
+        "Damage": "4d12 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24068,7 +24003,7 @@
         "Category": "Advanced melee",
         "Level": "14",
         "Price": "71500",
-        "Damage": "7d12 + @abilities.str.mod P",
+        "Damage": "7d12 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24096,7 +24031,7 @@
         "Category": "Basic melee",
         "Level": "8",
         "Price": "9500",
-        "Damage": "2d6 + @abilities.str.mod S",
+        "Damage": "2d6 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24124,7 +24059,7 @@
         "Category": "Basic melee",
         "Level": "18",
         "Price": "331200",
-        "Damage": "10d6 + @abilities.str.mod S",
+        "Damage": "10d6 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24152,7 +24087,7 @@
         "Category": "Basic melee",
         "Level": "15",
         "Price": "109250",
-        "Damage": "7d6 + @abilities.str.mod S",
+        "Damage": "7d6 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24180,7 +24115,7 @@
         "Category": "Basic melee",
         "Level": "2",
         "Price": "475",
-        "Damage": "1d6 + @abilities.str.mod S",
+        "Damage": "1d6 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24208,7 +24143,7 @@
         "Category": "Basic melee",
         "Level": "11",
         "Price": "26000",
-        "Damage": "3d6 + @abilities.str.mod S",
+        "Damage": "3d6 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -24236,7 +24171,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "5430",
-        "Damage": "1d12 + @abilities.str.mod S",
+        "Damage": "1d12 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 1d8",
@@ -24264,7 +24199,7 @@
         "Category": "Advanced melee",
         "Level": "8",
         "Price": "8500",
-        "Damage": "2d8 + @abilities.str.mod F",
+        "Damage": "2d8 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "",
@@ -24292,7 +24227,7 @@
         "Category": "Advanced melee",
         "Level": "2",
         "Price": "750",
-        "Damage": "1d8 + @abilities.str.mod F",
+        "Damage": "1d8 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Wound",
@@ -24320,7 +24255,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "53200",
-        "Damage": "5d8 + @abilities.str.mod F",
+        "Damage": "5d8 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Wound",
@@ -24348,7 +24283,7 @@
         "Category": "Advanced melee",
         "Level": "19",
         "Price": "595000",
-        "Damage": "10d8 + @abilities.str.mod F",
+        "Damage": "10d8 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -25272,7 +25207,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "45700",
-        "Damage": "4d10 + @abilities.str.mod S",
+        "Damage": "4d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 2d8",
@@ -25496,7 +25431,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "95",
-        "Damage": "1d6 + @abilities.str.mod B",
+        "Damage": "1d6 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -25524,7 +25459,7 @@
         "Category": "Advanced melee",
         "Level": "10",
         "Price": "16900",
-        "Damage": "4d6 + @abilities.str.mod B",
+        "Damage": "4d6 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -25552,7 +25487,7 @@
         "Category": "Advanced melee",
         "Level": "19",
         "Price": "551000",
-        "Damage": "15d6 + @abilities.str.mod B",
+        "Damage": "15d6 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -25580,7 +25515,7 @@
         "Category": "Advanced melee",
         "Level": "16",
         "Price": "164500",
-        "Damage": "11d6 + @abilities.str.mod B",
+        "Damage": "11d6 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -25664,7 +25599,7 @@
         "Category": "Basic melee",
         "Level": "9",
         "Price": "14200",
-        "Damage": "3d4 + @abilities.str.mod B",
+        "Damage": "3d4 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "staggered [Fort]",
@@ -25860,7 +25795,7 @@
         "Category": "Advanced melee",
         "Level": "2",
         "Price": "490",
-        "Damage": "1d4 + @abilities.str.mod P",
+        "Damage": "1d4 P",
         "Target": "KAC",
         "Range": "",
         "Critical": "Injection DC +2",
@@ -25888,7 +25823,7 @@
         "Category": "Basic melee",
         "Level": "1",
         "Price": "95",
-        "Damage": "1d4 + @abilities.str.mod S",
+        "Damage": "1d4 S",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -25916,7 +25851,7 @@
         "Category": "Basic melee",
         "Level": "7",
         "Price": "6000",
-        "Damage": "2d4 + @abilities.str.mod S",
+        "Damage": "2d4 S",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -26280,7 +26215,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "375",
-        "Damage": "1d8 + @abilities.str.mod S",
+        "Damage": "1d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26308,7 +26243,7 @@
         "Category": "Advanced melee",
         "Level": "20",
         "Price": "727300",
-        "Damage": "14d8 + @abilities.str.mod S",
+        "Damage": "14d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26336,7 +26271,7 @@
         "Category": "Advanced melee",
         "Level": "9",
         "Price": "12100",
-        "Damage": "2d10 + @abilities.str.mod S",
+        "Damage": "2d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 2d6",
@@ -26364,7 +26299,7 @@
         "Category": "Advanced melee",
         "Level": "17",
         "Price": "245200",
-        "Damage": "10d8 + @abilities.str.mod S",
+        "Damage": "10d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26392,7 +26327,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "8420",
-        "Damage": "2d8 + @abilities.str.mod S",
+        "Damage": "2d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26420,7 +26355,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "375",
-        "Damage": "1d8 + @abilities.str.mod S",
+        "Damage": "1d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26448,7 +26383,7 @@
         "Category": "Advanced melee",
         "Level": "18",
         "Price": "368100",
-        "Damage": "8d10 + @abilities.str.mod S",
+        "Damage": "8d10 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Bleed 6d6",
@@ -26476,7 +26411,7 @@
         "Category": "Advanced melee",
         "Level": "11",
         "Price": "26300",
-        "Damage": "4d8 + @abilities.str.mod S",
+        "Damage": "4d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -26504,7 +26439,7 @@
         "Category": "Advanced melee",
         "Level": "14",
         "Price": "79500",
-        "Damage": "7d8 + @abilities.str.mod S",
+        "Damage": "7d8 S",
         "Target": "KAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -26728,7 +26663,7 @@
         "Category": "Advanced melee",
         "Level": "15",
         "Price": "107000",
-        "Damage": "10d4 + @abilities.str.mod S",
+        "Damage": "10d4 S",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Severe wound",
@@ -26896,7 +26831,7 @@
         "Category": "Basic melee",
         "Level": "16",
         "Price": "185300",
-        "Damage": "6d6 + @abilities.str.mod B",
+        "Damage": "6d6 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "knockdown",
@@ -27092,7 +27027,7 @@
         "Category": "Advanced melee",
         "Level": "9",
         "Price": "12200",
-        "Damage": "2d8 + @abilities.str.mod P",
+        "Damage": "2d8 P",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Bleed 1d8",
@@ -27120,7 +27055,7 @@
         "Category": "Advanced melee",
         "Level": "15",
         "Price": "95700",
-        "Damage": "7d8 + @abilities.str.mod P",
+        "Damage": "7d8 P",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Bleed 3d8",
@@ -27148,7 +27083,7 @@
         "Category": "Advanced melee",
         "Level": "2",
         "Price": "475",
-        "Damage": "1d8 + @abilities.str.mod P",
+        "Damage": "1d8 P",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -27344,7 +27279,7 @@
         "Category": "Advanced melee",
         "Level": "18",
         "Price": "364100",
-        "Damage": "7d10 + @abilities.str.mod E & F",
+        "Damage": "7d10 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27372,7 +27307,7 @@
         "Category": "Advanced melee",
         "Level": "6",
         "Price": "4650",
-        "Damage": "1d10 + @abilities.str.mod E & F",
+        "Damage": "1d10 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27400,7 +27335,7 @@
         "Category": "Advanced melee",
         "Level": "15",
         "Price": "126800",
-        "Damage": "5d10 + @abilities.str.mod E & F",
+        "Damage": "5d10 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27428,7 +27363,7 @@
         "Category": "Advanced melee",
         "Level": "10",
         "Price": "17000",
-        "Damage": "2d10 + @abilities.str.mod E & F",
+        "Damage": "2d10 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27680,7 +27615,7 @@
         "Category": "Advanced melee",
         "Level": "20",
         "Price": "920250",
-        "Damage": "10d8 + @abilities.str.mod E & F",
+        "Damage": "10d8 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27708,7 +27643,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "54300",
-        "Damage": "4d8 + @abilities.str.mod E & F",
+        "Damage": "4d8 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27736,7 +27671,7 @@
         "Category": "Advanced melee",
         "Level": "9",
         "Price": "14550",
-        "Damage": "2d8 + @abilities.str.mod E & F",
+        "Damage": "2d8 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27764,7 +27699,7 @@
         "Category": "Advanced melee",
         "Level": "18",
         "Price": "415600",
-        "Damage": "8d8 + @abilities.str.mod E & F",
+        "Damage": "8d8 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27792,7 +27727,7 @@
         "Category": "Advanced melee",
         "Level": "15",
         "Price": "127000",
-        "Damage": "5d8 + @abilities.str.mod E & F",
+        "Damage": "5d8 E & F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Severe wound",
@@ -27820,7 +27755,7 @@
         "Category": "Advanced melee",
         "Level": "16",
         "Price": "148200",
-        "Damage": "10d6 + @abilities.str.mod So & B",
+        "Damage": "10d6 So & B",
         "Target": "KAC",
         "Range": "",
         "Critical": "Knockdown",
@@ -27848,7 +27783,7 @@
         "Category": "Advanced melee",
         "Level": "12",
         "Price": "31300",
-        "Damage": "5d6 + @abilities.str.mod So & B",
+        "Damage": "5d6 So & B",
         "Target": "KAC",
         "Range": "",
         "Critical": "Knockdown",
@@ -27876,7 +27811,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "7340",
-        "Damage": "2d6 + @abilities.str.mod So & B",
+        "Damage": "2d6 So & B",
         "Target": "KAC",
         "Range": "",
         "Critical": "Knockdown",
@@ -27904,7 +27839,7 @@
         "Category": "Advanced melee",
         "Level": "2",
         "Price": "475",
-        "Damage": "1d6 + @abilities.str.mod So & B",
+        "Damage": "1d6 So & B",
         "Target": "KAC",
         "Range": "",
         "Critical": "Knockdown",
@@ -29164,7 +29099,7 @@
         "Category": "Advanced melee",
         "Level": "11",
         "Price": "23000",
-        "Damage": "2d12 + @abilities.str.mod E",
+        "Damage": "2d12 E",
         "Target": "EAC",
         "Range": "",
         "Critical": "Arc 2d4",
@@ -29192,7 +29127,7 @@
         "Category": "Advanced melee",
         "Level": "8",
         "Price": "9150",
-        "Damage": "1d12 + @abilities.str.mod E",
+        "Damage": "1d12 E",
         "Target": "EAC",
         "Range": "",
         "Critical": "Arc 1d4",
@@ -29220,7 +29155,7 @@
         "Category": "Advanced melee",
         "Level": "16",
         "Price": "80200",
-        "Damage": "3d12 + @abilities.str.mod E",
+        "Damage": "3d12 E",
         "Target": "EAC",
         "Range": "",
         "Critical": "Arc 3d4",
@@ -29248,7 +29183,7 @@
         "Category": "Advanced melee",
         "Level": "19",
         "Price": "545000",
-        "Damage": "6d12 + @abilities.str.mod E",
+        "Damage": "6d12 E",
         "Target": "EAC",
         "Range": "",
         "Critical": "Arc 6d4",
@@ -29276,7 +29211,7 @@
         "Category": "Advanced melee",
         "Level": "17",
         "Price": "246000",
-        "Damage": "7d8 + @abilities.str.mod F",
+        "Damage": "7d8 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Burn 4d12",
@@ -29304,7 +29239,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "6120",
-        "Damage": "2d4 + @abilities.str.mod F",
+        "Damage": "2d4 F",
         "Target": "EAC",
         "Range": "",
         "Critical": "Burn 1d8",
@@ -29584,7 +29519,7 @@
         "Category": "Basic melee",
         "Level": "11",
         "Price": "22650",
-        "Damage": "3d6 + @abilities.str.mod P",
+        "Damage": "3d6 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -29612,7 +29547,7 @@
         "Category": "Basic melee",
         "Level": "19",
         "Price": "552000",
-        "Damage": "12d6 + @abilities.str.mod P",
+        "Damage": "12d6 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -29640,7 +29575,7 @@
         "Category": "Basic melee",
         "Level": "8",
         "Price": "10000",
-        "Damage": "2d6 + @abilities.str.mod P",
+        "Damage": "2d6 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -29668,7 +29603,7 @@
         "Category": "Basic melee",
         "Level": "1",
         "Price": "375",
-        "Damage": "1d6 + @abilities.str.mod P",
+        "Damage": "1d6 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -29696,7 +29631,7 @@
         "Category": "Basic melee",
         "Level": "15",
         "Price": "107350",
-        "Damage": "7d6 + @abilities.str.mod P",
+        "Damage": "7d6 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -29724,7 +29659,7 @@
         "Category": "Basic melee",
         "Level": "1",
         "Price": "80",
-        "Damage": "1d4 + @abilities.str.mod B",
+        "Damage": "1d4 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "knockdown",
@@ -29752,7 +29687,7 @@
         "Category": "Basic melee",
         "Level": "7",
         "Price": "6150",
-        "Damage": "1d8 + @abilities.str.mod B",
+        "Damage": "1d8 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "knockdown",
@@ -29780,7 +29715,7 @@
         "Category": "Basic melee",
         "Level": "18",
         "Price": "320800",
-        "Damage": "8d8 + @abilities.str.mod B",
+        "Damage": "8d8 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "knockdown",
@@ -29808,7 +29743,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "45200",
-        "Damage": "3d8 + @abilities.str.mod B",
+        "Damage": "3d8 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "Knockdown",
@@ -29836,7 +29771,7 @@
         "Category": "Advanced melee",
         "Level": "7",
         "Price": "6320",
-        "Damage": "1d10 + @abilities.str.mod B",
+        "Damage": "1d10 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",
@@ -29864,7 +29799,7 @@
         "Category": "Advanced melee",
         "Level": "12",
         "Price": "40400",
-        "Damage": "4d8 + @abilities.str.mod F & P",
+        "Damage": "4d8 F & P",
         "Target": "KAC",
         "Range": "30 ft.",
         "Critical": "",
@@ -29892,7 +29827,7 @@
         "Category": "Advanced melee",
         "Level": "19",
         "Price": "602200",
-        "Damage": "8d12 + @abilities.str.mod P",
+        "Damage": "8d12 P",
         "Target": "KAC",
         "Range": "80 ft.",
         "Critical": "",
@@ -29920,7 +29855,7 @@
         "Category": "Advanced melee",
         "Level": "16",
         "Price": "183400",
-        "Damage": "8d8 + @abilities.str.mod F & P",
+        "Damage": "8d8 F & P",
         "Target": "KAC",
         "Range": "50 ft.",
         "Critical": "",
@@ -29948,7 +29883,7 @@
         "Category": "Advanced melee",
         "Level": "8",
         "Price": "9810",
-        "Damage": "4d4 + @abilities.str.mod P",
+        "Damage": "4d4 P",
         "Target": "KAC",
         "Range": "50 ft.",
         "Critical": "",
@@ -29976,7 +29911,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "110",
-        "Damage": "1d4 + @abilities.str.mod P",
+        "Damage": "1d4 P",
         "Target": "KAC",
         "Range": "20 ft.",
         "Critical": "",
@@ -30228,7 +30163,7 @@
         "Category": "Advanced melee",
         "Level": "9",
         "Price": "14300",
-        "Damage": "3d10 + @abilities.str.mod B",
+        "Damage": "3d10 B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Knockdown",
@@ -30256,7 +30191,7 @@
         "Category": "Advanced melee",
         "Level": "13",
         "Price": "44100",
-        "Damage": "5d10 + @abilities.str.mod B",
+        "Damage": "5d10 B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Knockdown",
@@ -30284,7 +30219,7 @@
         "Category": "Advanced melee",
         "Level": "17",
         "Price": "273000",
-        "Damage": "10d10 + @abilities.str.mod B",
+        "Damage": "10d10 B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Knockdown",
@@ -30312,7 +30247,7 @@
         "Category": "Advanced melee",
         "Level": "20",
         "Price": "905700",
-        "Damage": "14d10 + @abilities.str.mod F & B",
+        "Damage": "14d10 F & B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Knockdown",
@@ -30340,7 +30275,7 @@
         "Category": "Advanced melee",
         "Level": "5",
         "Price": "3360",
-        "Damage": "1d10 + @abilities.str.mod B",
+        "Damage": "1d10 B",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "Knockdown",
@@ -30368,7 +30303,7 @@
         "Category": "Advanced melee",
         "Level": "11",
         "Price": "24800",
-        "Damage": "5d4 + @abilities.str.mod S",
+        "Damage": "5d4 S",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -30396,7 +30331,7 @@
         "Category": "Advanced melee",
         "Level": "1",
         "Price": "240",
-        "Damage": "1d4 + @abilities.str.mod S",
+        "Damage": "1d4 S",
         "Target": "KAC",
         "Range": "10 ft.",
         "Critical": "",
@@ -30424,7 +30359,7 @@
         "Category": "Basic melee",
         "Level": "0",
         "Price": "",
-        "Damage": "1d3 + @abilities.str.mod B",
+        "Damage": "1d3 B",
         "Target": "KAC",
         "Range": "",
         "Critical": "",

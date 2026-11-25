@@ -1,15 +1,18 @@
 {
   "values": {
-    "Character": { "Concept": "Ex-cop turned night watchman", "Age": 46, "Chronicle": "The Saltmarsh Murders", "Faction": "Mortal", "Virtue": "Loyal", "Vice": "Cynical", "Aspirations": "Find out who left the symbols at the docks. Make peace with his daughter." },
-    "Attributes": { "Intelligence": 2, "Strength": 3, "Presence": 2, "Wits": 3, "Dexterity": 2, "Manipulation": 2, "Resolve": 3, "Stamina": 3, "Composure": 2 },
-    "Skills": { "Investigation.Dots": 3, "Firearms.Dots": 2, "Brawl.Dots": 2, "Intimidation.Dots": 2, "Streetwise.Dots": 2, "Drive.Dots": 1, "Athletics.Dots": 1, "Occult.Dots": 1, "Empathy.Dots": 1, "Investigation.Specialties": "Crime scenes" },
-    "Advantages": { "Bashing": 2, "Willpower": 4, "Integrity": 6, "Armor": "1/0", "Beats": 3, "Experiences": 2 },
-    "Conditions": [ { "Name": "Shaken", "Description": "Saw something in the warehouse he can't explain." } ],
-    "Notes": { "Touchstones": "His daughter Ellie, who no longer calls.", "History": "Twenty years on the force, pushed out after the Hensley case." }
+    "Character": { "Concept": "Night-shift paramedic who sees too much", "Age": 33, "Chronicle": "Tonight in Detroit", "Faction": "None", "Virtue": "Compassionate", "Vice": "Insomnia", "Aspirations": "Find out what is living under St. Agnes Hospital. Make peace with my sister." },
+    "Attributes": { "Intelligence": 3, "Strength": 2, "Presence": 2, "Wits": 3, "Dexterity": 2, "Manipulation": 1, "Resolve": 3, "Stamina": 3, "Composure": 2 },
+    "Skills": {
+      "Medicine.Dots": 3, "Medicine.Specialties": "Trauma", "Drive.Dots": 2, "Investigation.Dots": 2, "Empathy.Dots": 2, "Occult.Dots": 1,
+      "Athletics.Dots": 1, "Streetwise.Dots": 2, "Brawl.Dots": 1, "Socialize.Dots": 1, "Academics.Dots": 1
+    },
+    "Advantages": { "Bashing": 2, "Willpower": 3, "Integrity": 6, "Beats": 3, "Experiences": 2 },
+    "Conditions": [ { "Name": "Shaken", "Description": "Saw a patient's shadow move on its own." } ],
+    "Notes": { "Touchstones": "Her sister Dana", "History": "Twelve years on the ambulance; started keeping notes on calls that didn't add up." }
   },
   "secondary": {
-    "Weapons": [ { "name": "Revolver, light", "values": { "Stats": { "Kind": "Ranged", "Damage": "2", "Ranges": "20/40/80", "Clip": "6", "Initiative": "0", "Strength": "2", "Size": "1" } } }, { "name": "Nightstick", "values": { "Stats": { "Kind": "Melee", "Damage": "1", "Initiative": "-1", "Strength": "2", "Size": "2" } } } ],
-    "Merits": [ { "name": "Contacts (police)", "values": { "Stats": { "Kind": "Social", "Dots": "1" } } }, { "name": "Defensive Combat (Brawl)", "values": { "Stats": { "Kind": "Fighting", "Dots": "1" } } } ],
-    "Equipment": [ { "name": "Flashlight", "values": { "Stats": { "Dice bonus": "+1", "Durability": "2", "Size": "1" } } } ]
+    "Merits": [ { "name": "Unseen Sense (ghosts)", "values": { "Stats": { "Kind": "Supernatural", "Dots": "3" } } }, { "name": "Contacts (EMS, Police)", "values": { "Stats": { "Kind": "Social", "Dots": "2" } } } ],
+    "Weapons": [ { "name": "Trauma shears", "values": { "Stats": { "Kind": "Melee", "Damage": "0", "Size": "1" } } } ],
+    "Equipment": [ { "name": "First aid kit", "values": { "Stats": { "Dice bonus": "+2", "Size": "2" } } }, { "name": "Flashlight" } ]
   }
 }

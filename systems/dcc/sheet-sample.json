@@ -1,127 +1,15 @@
 {
   "values": {
-    "Character": {
-      "Class": "Warrior",
-      "Level": 1,
-      "Occupation": "Blacksmith",
-      "Alignment": "Chaotic",
-      "Title": "Bandit",
-      "Lucky roll": "Roll a die for melee attacks",
-      "Speed": 30,
-      "XP": 40,
-      "Languages": "Common"
-    },
-    "Abilities": {
-      "Strength.Score": 16,
-      "Strength.Max": 16,
-      "Agility.Score": 11,
-      "Agility.Max": 11,
-      "Stamina.Score": 14,
-      "Stamina.Max": 14,
-      "Personality.Score": 7,
-      "Personality.Max": 7,
-      "Intelligence.Score": 9,
-      "Intelligence.Max": 9,
-      "Luck.Score": 10,
-      "Luck.Max": 13
-    },
-    "Combat": {
-      "Max HP": 13,
-      "HP": 8,
-      "Initiative misc": 1,
-      "Deed die": 3,
-      "Crit die": 12,
-      "Crit table": "III"
-    },
-    "Saves": {
-      "Reflex.Class": 0,
-      "Fortitude.Class": 1,
-      "Will.Class": 0
-    },
-    "Class features": [
-      {
-        "Name": "Mighty deeds",
-        "Description": "Roll the deed die with each attack; 3 or more pulls off a stunt such as a trip or disarm."
-      },
-      {
-        "Name": "Lucky weapon",
-        "Description": "Luck modifier applies to attacks with the hammer."
-      }
-    ],
-    "Wealth": {
-      "GP": 12,
-      "SP": 34,
-      "CP": 61,
-      "Trade goods": "Steel tongs",
-      "Notes": "The only one of four villagers to survive the funnel."
-    }
+    "Character": { "Class": "Warrior", "Level": 1, "Occupation": "Gravedigger", "Alignment": "Chaotic", "Title": "Bandit", "Lucky roll": "Melee attack rolls", "Speed": 30, "XP": 15, "Languages": "Common" },
+    "Abilities": { "Strength.Score": 16, "Strength.Max": 16, "Agility.Score": 11, "Agility.Max": 11, "Stamina.Score": 14, "Stamina.Max": 14, "Personality.Score": 7, "Personality.Max": 7, "Intelligence.Score": 9, "Intelligence.Max": 9, "Luck.Score": 12, "Luck.Max": 13 },
+    "Combat": { "Max HP": 13, "HP": 8, "Deed die": 3, "Crit die": 12, "Crit table": "III", "Crit range": 19 },
+    "Saves": { "Reflex.Class": 1, "Fortitude.Class": 1 },
+    "Class features": [ { "Name": "Mighty Deed of Arms", "Description": "Roll the deed die with each attack; 3+ and the deed succeeds." }, { "Name": "Lucky weapon", "Description": "Add Luck modifier to attacks with the shovel he dug his way out with." } ],
+    "Wealth": { "GP": 3, "SP": 17, "CP": 42, "Trade goods": "Trowel, a bag of grave dirt" }
   },
   "secondary": {
-    "Weapons": [
-      {
-        "name": "Warhammer",
-        "values": {
-          "Stats": {
-            "Kind": "Melee",
-            "Damage": "1d8",
-            "Cost": "5 gp",
-            "Notes": "Lucky weapon"
-          }
-        }
-      },
-      {
-        "name": "Javelin",
-        "values": {
-          "Stats": {
-            "Kind": "Missile",
-            "Damage": "1d6",
-            "Range": "30/60/90",
-            "Cost": "1 gp"
-          }
-        }
-      }
-    ],
-    "Armor": [
-      {
-        "name": "Hide armor",
-        "values": {
-          "Stats": {
-            "AC Bonus": "3",
-            "Check Penalty": "-3",
-            "Fumble Die": "d12",
-            "Cost": "30 gp"
-          }
-        }
-      },
-      {
-        "name": "Shield",
-        "values": {
-          "Stats": {
-            "AC Bonus": "1",
-            "Check Penalty": "-1",
-            "Fumble Die": "d8",
-            "Cost": "10 gp"
-          }
-        }
-      }
-    ],
-    "Equipment": [
-      {
-        "name": "Torch",
-        "values": {
-          "Stats": {
-            "Cost": "1 cp"
-          }
-        }
-      },
-      {
-        "name": "Rope, 50 ft",
-        "values": {
-          "Stats": {
-            "Cost": "25 cp"
-          }
-        }
-      }
-    ]
+    "Weapons": [ { "name": "Battleaxe", "values": { "Stats": { "Kind": "Melee", "Damage": "1d10", "Notes": "Two-handed" } } }, { "name": "Shovel", "values": { "Stats": { "Kind": "Melee", "Damage": "1d5" } } } ],
+    "Armor": [ { "name": "Hide armor", "values": { "Stats": { "AC Bonus": "3", "Check Penalty": "-3", "Fumble Die": "d12" } } } ],
+    "Equipment": [ { "name": "Torch" }, { "name": "Rope, 50'" }, { "name": "Iron rations" } ]
   }
 }

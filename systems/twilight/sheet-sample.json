@@ -2,49 +2,55 @@
   "values": {
     "Character": {
       "Nationality": "American",
-      "Background": "Combat medic, 5th Infantry Division",
+      "Background": "Midwest farm kid, enlisted at 19",
       "Military branch": "Army",
-      "Rank": "Specialist",
-      "Moral code": "Never leave the wounded behind.",
-      "Big dream": "Get home to Ohio and open a clinic.",
-      "Buddy": "Sgt. Kowalski",
-      "Appearance": "Wiry, shaved head, red cross armband stained brown"
+      "Rank": "Sergeant",
+      "Moral code": "Never leave a wounded soldier behind.",
+      "Big dream": "Get home to Iowa and plant one more harvest.",
+      "Buddy": "Cpl. Tomasz Nowak",
+      "Appearance": "Sunburnt, patched BDUs, rosary around the wrist",
+      "Ammo dice": 2
     },
     "Attributes": {
-      "STR.Rating": "C",
-      "AGL.Rating": "B",
-      "INT.Rating": "B",
-      "EMP.Rating": "A"
+      "STR.Rating": "B",
+      "AGL.Rating": "C",
+      "INT.Rating": "C",
+      "EMP.Rating": "B"
     },
     "Status": {
-      "Damage": 1,
-      "Stress": 2,
+      "Damage": 2,
+      "Stress": 1,
       "CUF": "C",
-      "Rads": 14
+      "Rads": 15
     },
     "Skills": {
-      "Medical Aid.Rating": "B",
-      "Ranged Combat.Rating": "C",
-      "Mobility.Rating": "C",
-      "Recon.Rating": "D",
-      "Persuasion.Rating": "D",
+      "Ranged Combat.Rating": "B",
+      "Stamina.Rating": "B",
+      "Command.Rating": "C",
+      "Driving.Rating": "C",
+      "Recon.Rating": "C",
       "Survival.Rating": "D",
-      "Stamina.Rating": "D"
+      "Medical Aid.Rating": "D",
+      "Close Combat.Rating": "D"
     },
     "Specialties": [
       {
-        "Name": "Combat medic",
-        "Description": "+1 Medical Aid when treating injuries under fire."
+        "Name": "Rifleman",
+        "Description": "Modifier +1 when firing aimed shots with rifles."
       },
       {
-        "Name": "Counselor",
-        "Description": "+1 to help others recover stress."
+        "Name": "Farmer",
+        "Description": "+1 to find food when foraging."
       }
     ],
     "Ammunition": [
       {
-        "Name": "5.56mm",
-        "Rounds": 46
+        "Name": "5.56mm NATO",
+        "Rounds": 74
+      },
+      {
+        "Name": "40mm HE",
+        "Rounds": 3
       }
     ],
     "Armor": {
@@ -52,16 +58,13 @@
       "Torso": 2
     },
     "Injuries": {
-      "Critical injuries": "",
-      "Mental trauma": "Nightmares about Kalisz"
+      "Critical injuries": "Cracked rib (−1 to Mobility)"
     },
     "Supplies": {
-      "Food": 3,
-      "Water": 4,
+      "Food": 4,
+      "Water": 3,
       "Fuel": 0,
-      "Money": "40 zloty, 2 cans of tobacco",
-      "Encumbrance": "Normal",
-      "Notes": "Carries the platoon's last morphine."
+      "Money": "12 zł"
     }
   },
   "secondary": {
@@ -76,40 +79,33 @@
             "Crit": "3",
             "Range": "4",
             "Rate of fire": "3",
-            "Ammo": "5.56mm",
-            "Weight": "3.5"
+            "Ammo": "5.56mm"
           }
         }
       },
       {
-        "name": "Combat knife",
+        "name": "M203 grenade launcher",
         "values": {
           "Stats": {
-            "Kind": "Melee",
-            "Reliability": "5",
-            "Damage": "1",
-            "Crit": "2",
-            "Weight": "0.5"
+            "Kind": "Heavy",
+            "Damage": "2",
+            "Range": "4",
+            "Rate of fire": "1",
+            "Ammo": "40mm",
+            "Blast": "B"
           }
         }
       }
     ],
     "Gear": [
       {
-        "name": "Medkit",
-        "values": {
-          "Stats": {
-            "Weight": "1"
-          }
-        }
+        "name": "Flak vest"
       },
       {
-        "name": "Flak vest",
-        "values": {
-          "Stats": {
-            "Weight": "2"
-          }
-        }
+        "name": "Kevlar helmet"
+      },
+      {
+        "name": "Field radio"
       }
     ]
   }

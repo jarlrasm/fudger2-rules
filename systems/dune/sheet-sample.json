@@ -1,108 +1,19 @@
 {
   "values": {
-    "Character": {
-      "House": "House Varota",
-      "Archetype": "Mentat",
-      "Role": "Advisor",
-      "Faction": "Landsraad",
-      "Traits": "Mentat, Calculating, Loyal to Varota",
-      "Ambition": "Truth",
-      "Experience": 3,
-      "Pronouns": "he/him"
-    },
-    "Skills": {
-      "Battle": 4,
-      "Communicate": 6,
-      "Discipline": 6,
-      "Move": 4,
-      "Understand": 8
-    },
-    "Drives": {
-      "Duty": 6,
-      "Faith": 4,
-      "Justice": 5,
-      "Power": 7,
-      "Truth": 8
-    },
+    "Character": { "House": "House Vereth", "Archetype": "Swordmaster", "Role": "Swordmaster", "Faction": "Landsraad", "Traits": "Swordmaster of the Ginaz, Loyal to House Vereth, Scarred Veteran", "Ambition": "Justice: see the Harkonnen assassin answer for my brother's death.", "Experience": 3, "Pronouns": "he/him" },
+    "Skills": { "Battle": 8, "Communicate": 4, "Discipline": 7, "Move": 6, "Understand": 5 },
+    "Drives": { "Duty": 7, "Faith": 4, "Justice": 8, "Power": 5, "Truth": 6 },
     "Statements": {
-      "Truth statement": "A lie told once is a debt that grows.",
-      "Duty statement": "The House endures only if its servants endure.",
-      "Power statement": "Knowledge is the sharpest blade.",
-      "Faith statement": "",
-      "Justice statement": ""
+      "Duty statement": "My blade belongs to House Vereth.",
+      "Justice statement": "No murder of my blood goes unanswered.",
+      "Truth statement": "A lie in the dueling ring is a death sentence."
     },
-    "Test": {
-      "Skill": "Understand",
-      "Drive": "Truth",
-      "Focus": true,
-      "Dice": 2
-    },
-    "Status": {
-      "Determination": 2,
-      "Complications": "Sapho stains on his lips"
-    },
-    "Notes": {
-      "Relationships": "Owes his training to the Lady Irenka; distrusts the Spymaster.",
-      "History": "Sold to the Mentat school at nine, bought back by House Varota at nineteen."
-    },
-    "Focuses": [
-      "Understand: Data analysis",
-      "Understand: Politics",
-      "Communicate: Deceit",
-      "Discipline: Composure"
-    ]
+    "Test": { "Skill": "Battle", "Drive": "Justice", "Focus": true },
+    "Status": { "Determination": 2, "Complications": "Shield generator flickering" },
+    "Notes": { "Relationships": "Trains the heir, Lady Ysane; distrusts the Mentat.", "History": "Twelve years at the Ginaz school; returned to find his brother poisoned." }
   },
   "secondary": {
-    "Talents": [
-      {
-        "name": "Mentat discipline",
-        "values": {
-          "Stats": {
-            "Skill": "Understand",
-            "Requirement": "Mentat"
-          }
-        }
-      },
-      {
-        "name": "Subtle step",
-        "values": {
-          "Stats": {
-            "Skill": "Move"
-          }
-        }
-      }
-    ],
-    "Assets": [
-      {
-        "name": "Sapho juice",
-        "values": {
-          "Stats": {
-            "Kind": "Tool",
-            "Quality": "1",
-            "Keywords": "Focus, Mentat"
-          }
-        }
-      },
-      {
-        "name": "Personal shield",
-        "values": {
-          "Stats": {
-            "Kind": "Shield",
-            "Quality": "1",
-            "Keywords": "Holtzman"
-          }
-        }
-      },
-      {
-        "name": "Kindjal",
-        "values": {
-          "Stats": {
-            "Kind": "Melee weapon",
-            "Quality": "0",
-            "Keywords": "Blade"
-          }
-        }
-      }
-    ]
+    "Talents": [ { "name": "The Slow Blade", "values": { "Stats": { "Skill": "Battle" } } }, { "name": "Bolster", "values": { "Stats": { "Skill": "General" } } } ],
+    "Assets": [ { "name": "Ginaz sword", "values": { "Stats": { "Kind": "Melee weapon", "Quality": "1", "Keywords": "Blade, Heirloom" } } }, { "name": "Personal shield", "values": { "Stats": { "Kind": "Shield", "Keywords": "Holtzman" } } } ]
   }
 }
