@@ -1,0 +1,383 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+tensIn (rolls) = count (filter ((x)->x == 10, rolls))
+
+successesIn (normal, rage) =
+    count (filter ((x)->x > 5, concat (normal, rage))) + 2 * ((tensIn (normal) + tensIn (rage)) / 2)
+
+isCritical (normal, rage) = tensIn (normal) + tensIn (rage) > 1
+
+isBrutal (rage) = count (filter ((x)->x < 3, rage)) > 1
+
+w5Outcome (normal, rage, difficulty) =
+    if isBrutal (rage) then "Brutal"
+    else if difficulty == 0 and successesIn (normal, rage) > 0 then (if isCritical (normal, rage) then "Critical" else "")
+    else if successesIn (normal, rage) < max (1, difficulty) then (if successesIn (normal, rage) == 0 then "Total failure" else "Failure")
+    else if isCritical (normal, rage) then "Critical win"
+    else "Win"
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "es")
+
+w5Text (normal, rage, difficulty) =
+    plural (successesIn (normal, rage), "success")
+    + (if difficulty > 0 then " vs " + toString (difficulty) else "")
+    + (if w5Outcome (normal, rage, difficulty) == "" then "" else ": " + w5Outcome (normal, rage, difficulty))
+    + (if isBrutal (rage) then ", a violent action gets 4 more successes, anything else fails"
+       else if successesIn (normal, rage) >= max (1, difficulty) and difficulty > 0 then ", margin " + toString (successesIn (normal, rage) - difficulty)
+       else "")
+
+failedNormal (normal) = count (filter ((x)->x < 6, normal))
+
+w5Result (normal, rage, difficulty, canReroll, spend) =
+{
+    Text = w5Text (normal, rage, difficulty)
+    Value = successesIn (normal, rage)
+    Outcome = w5Outcome (normal, rage, difficulty)
+    Color = if isBrutal (rage) then "orange" else ""
+    Push = if canReroll and failedNormal (normal) > 0 then w5Reroll (filter ((x)->x > 5, normal), rage, min (3, failedNormal (normal)), difficulty) else 0
+    PushLabel = "Reroll with Willpower"
+    PushSets = spend
+}
+
+w5Reroll (kept, rage, rerolls, difficulty) = ([dice { number = rerolls  sides = 10  label = "Reroll" }],
+    ((baseline, throws)->w5Result (concat (kept, first (throws).rolls), rage, difficulty, false, [])))
+
+w5Pool (pool, rageDice, difficulty) = ([dice { number = max (0, pool - rageDice)  sides = 10 }, dice { number = min (max (0, pool), rageDice)  sides = 10  color = "red"  label = "Rage" }],
+    ((baseline, throws)->w5Result (first (throws).rolls, item (1, throws).rolls, difficulty, true, [])))
+
+w5AskedPool (pool, rageDice, spend) = ([dice { number = max (0, pool - rageDice)  sides = 10 }, dice { number = min (max (0, pool), rageDice)  sides = 10  color = "red"  label = "Rage" }],
+    ((baseline, throws)->w5Result (first (throws).rolls, item (1, throws).rolls, asked, true, spend)))
+
+willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
+
+w5Dice (char, pool, physical) = ask ("Difficulty", w5AskedPool (pool + char.Character.Modifier + (if physical then formBonus (char) else 0), char.Character.Rage, willpowerSpend (char)))
+
+isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
+
+rageCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": Rage holds"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": lose 1 Rage"  Outcome = "Failure" }))
+
+formBonus (char) =
+    switch char.Character.Form
+        case "Glabro" then 2
+        case "Crinos" then 4
+        case "Hispo" then 2
+        else 0
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Charisma" then char.Attributes.Charisma
+        case "Manipulation" then char.Attributes.Manipulation
+        case "Composure" then char.Attributes.Composure
+        case "Intelligence" then char.Attributes.Intelligence
+        case "Wits" then char.Attributes.Wits
+        else char.Attributes.Resolve
+
+attributeNames = ["Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Composure", "Intelligence", "Wits", "Resolve"]
+
+skill (usual) = custom
+{
+    Dots = integer { description = "Skill dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
+    With = string { description = "The attribute this skill rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
+    Pool = integer { description = "Dice pool: attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = w5Dice (characterTable, Dots + attributeValue (characterTable, With), isPhysical (With))  editable = none }
+    Specialty = string { description = "A specialty adds a die when it applies." }
+}
+
+noSkill = { Pool = 0 }
+
+skillDots (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Dots", 0)
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "w5Weapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, pool, physical, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = w5Dice (characterTable, pool, physical)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Composure + skillDots (char, "Firearms"), false, weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Strength + skillDots (char, "Melee"), true, weaponStat (weapon, "Damage"), "melee", 2)
+
+clawDamage (form) = if form == "Crinos" then "+3 aggravated" else if form == "Hispo" or form == "Lupus" then "+1 aggravated (bite)" else "+0 superficial"
+
+healthBoxes (char) = char.Attributes.Stamina + 3 + (if char.Character.Form == "Crinos" then 4 else if char.Character.Form == "Glabro" or char.Character.Form == "Hispo" then 2 else 0)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Character.Rage, Character.Form, Trackers, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        Chronicle = string {}
+        Tribe = string { keys = ["Black Furies", "Bone Gnawers", "Children of Gaia", "Galestalkers", "Ghost Council", "Glass Walkers", "Hart Wardens", "Red Talons", "Shadow Lords", "Silent Striders", "Silver Fangs"] }
+        Auspice = string { description = "The moon phase the Garou was born under, and their role." keys = ["Ragabash", "Theurge", "Philodox", "Galliard", "Ahroun"] }
+        Patron = string { description = "The spirit patron of the tribe." }
+        Pack = string {}
+        Rage = integer { description = "Rage dice replace normal dice in pools. Two Rage dice at 1 or 2 is a brutal result. At 0 Rage you lose the wolf." default = 1  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
+        Form = string { description = "Homid and Lupus are natural forms. Glabro and Hispo add 2 physical dice, Crinos 4." default = "Homid"  keys = ["Homid", "Glabro", "Crinos", "Hispo", "Lupus"]  editable = live  indicator = "#e8913a" }
+        Modifier = modifier { description = "Extra dice added to or taken from the next pool." default = 0  editable = live }
+        'Rage check' = integer { description = "Roll a d10 when you shift or use a gift: below 6 and you lose 1 Rage." default = 0  valuedice = rageCheck  editable = none }
+    }
+
+    Attributes = table
+    {
+        description = "The nine attributes: physical, social and mental, for power, finesse and resistance."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Strength, true) }
+        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Charisma, false) }
+        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Intelligence, false) }
+        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Dexterity, true) }
+        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Manipulation, false) }
+        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Wits, false) }
+        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Stamina, true) }
+        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Composure, false) }
+        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Resolve, false) }
+    }
+
+    Trackers = table
+    {
+        description = "Health, willpower, Harano and Hauglosk."
+        tableLayout = layout { columns = 2  size = wide }
+        'Health Superficial' = slots { description = "Superficial damage. A werewolf heals one each turn while in a shifted form." number = healthBoxes (characterTable)  editable = live  indicator = "#e8913a"  indicatorLabel = "Superficial" }
+        'Health Aggravated' = slots { description = "Aggravated damage, from silver, claws and fire." number = healthBoxes (characterTable)  editable = live  indicator = "#d64545"  indicatorLabel = "Aggravated" }
+        'Willpower Superficial' = slots { description = "Superficial willpower damage, from stress and rerolls." number = Attributes.Composure + Attributes.Resolve  editable = live }
+        'Willpower Aggravated' = slots { description = "Aggravated willpower damage." number = Attributes.Composure + Attributes.Resolve  editable = live }
+        Impaired = string { value = if 'Health Superficial'.realvalue + 'Health Aggravated'.realvalue >= healthBoxes (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        Harano = integer { description = "Despair at the dying world. At 5 the Garou may give up." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#555555" }
+        Hauglosk = integer { description = "Fanatic zeal and the loss of reason. At 5 the Garou falls to it." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#8e5cc4" }
+        'New session' = button { description = "Each session, superficial willpower damage heals by the higher of Composure or Resolve."  editable = live  onClick = updates { (root.Trackers.'Willpower Superficial'.realvalue) = max (0, 'Willpower Superficial'.realvalue - max (Attributes.Composure, Attributes.Resolve)) } }
+        'Back to Homid' = button { description = "Shift back to human form when the fight is over."  editable = live  onClick = updates { (root.Character.Form) = "Homid" } }
+    }
+
+    Renown = table
+    {
+        description = "Renown earned in the three virtues, which sets rank and gifts."
+        tableLayout = layout { columns = 3 }
+        Glory = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Honor = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Wisdom = integer { default = 0  minvalue = 0  maxvalue = 10 }
+    }
+
+    Skills = table
+    {
+        description = "Skills, each rolled with a fitting attribute."
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = skill ("Dexterity")
+        'Animal Ken' = skill ("Charisma")
+        Academics = skill ("Intelligence")
+        Brawl = skill ("Strength")
+        Etiquette = skill ("Charisma")
+        Awareness = skill ("Wits")
+        Craft = skill ("Dexterity")
+        Insight = skill ("Wits")
+        Finance = skill ("Intelligence")
+        Driving = skill ("Dexterity")
+        Intimidation = skill ("Charisma")
+        Investigation = skill ("Intelligence")
+        Firearms = skill ("Composure")
+        Leadership = skill ("Charisma")
+        Medicine = skill ("Intelligence")
+        Larceny = skill ("Dexterity")
+        Performance = skill ("Charisma")
+        Occult = skill ("Resolve")
+        Melee = skill ("Strength")
+        Persuasion = skill ("Charisma")
+        Politics = skill ("Intelligence")
+        Stealth = skill ("Dexterity")
+        Streetwise = skill ("Charisma")
+        Science = skill ("Intelligence")
+        Survival = skill ("Wits")
+        Subterfuge = skill ("Manipulation")
+        Technology = skill ("Intelligence")
+    }
+
+    Gifts = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gifts
+        singular = "Gift"
+        editable = character
+    }
+
+    Rites = list
+    {
+        singular = "Rite"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Claws, bite or brawl", Attributes.Strength + skillDots (characterTable, "Brawl"), true, clawDamage (Character.Form), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Advantages and Flaws' = list
+    {
+        description = "Merits, backgrounds and flaws, each rated in dots."
+        tableLayout = layout { size = wide }
+        singular = "Advantage"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Dots = integer { default = 1 }
+            Flaw = bool { default = false }
+        }
+    }
+
+    Touchstones = list
+    {
+        description = "The people and places that keep the Garou tied to the world, and the conviction each stands for."
+        tableLayout = layout { size = wide }
+        singular = "Touchstone"
+        editable = character
+        valueType = custom
+        {
+            Touchstone = string {}
+            Conviction = string {}
+        }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Chronicle Tenets' = string { multiline = true }
+        'Favor and Ban' = string { description = "The patron spirit's gift and the rule it demands." multiline = true }
+        History = string { multiline = true }
+        'Total Experience' = integer { default = 0 }
+        'Spent Experience' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, 'Exceptional Pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Mortal", "Fomori", "Bane", "Spirit", "Garou", "Vampire", "Hunter", "Other"] }
+        Physical = integer { description = "Pool for physical actions." default = 3  valuedice = w5Pool (Physical, 0, 0) }
+        Social = integer { description = "Pool for social actions." default = 3  valuedice = w5Pool (Social, 0, 0) }
+        Mental = integer { description = "Pool for mental actions." default = 3  valuedice = w5Pool (Mental, 0, 0) }
+        Health = slots { description = "Health boxes." number = 5  editable = live  indicator = "#d64545" }
+        Willpower = slots { description = "Willpower boxes." number = 3  editable = live }
+        Rage = integer { description = "Rage dice for Garou and other raging foes." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Initiative = integer { description = "Order in the fight, as the GM sets it." default = 0 }
+    }
+    'Exceptional Pools' = keyvalues
+    {
+        description = "Dice pools the NPC is especially good at."
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Brawl", "Firearms"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = w5Pool (Dice, Stats.Rage, 0)  action = if Key == "Firearms" then "ranged" else "melee"  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Gifts = string { multiline = true }
+        Charms = string { description = "Spirit charms and other powers." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+w5Weapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Damage = string {}
+        Range = string {}
+        Clips = string {}
+        Concealability = string {}
+        Silver = string { default = "No"  keys = ["No", "Yes"] }
+    }
+}
+
+w5Gift = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Source" prefix = "" filter = Stats.Source },
+            filter { name = "Renown" prefix = "" filter = Stats.Renown }
+        ]
+    }
+    Stats = table
+    {
+        Source = string { description = "Native, a tribe or an auspice." }
+        Renown = string { keys = ["Glory", "Honor", "Wisdom"] }
+        Cost = string { description = "Rage check, willpower or nothing." }
+        'Dice Pool' = string {}
+        Duration = string {}
+    }
+}
+
+Werewolf5e = system
+{
+    hints = [
+        hint
+        {
+            title = "Chronicle tenets"
+            topic = "Getting started"
+            text = ["Agree on the chronicle's tenets. Each Garou picks a tribe, an auspice and touchstones, and starts at Rage 1 or 2."]
+        },
+        hint
+        {
+            title = "Pools and Rage"
+            topic = "Play"
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. Rage dice are red: two of them at 1 or 2 is a brutal result. Reroll up to three normal dice with Willpower."]
+        },
+        hint
+        {
+            title = "Shifting"
+            topic = "Combat"
+            text = ["Shifting forms needs a Rage check. Crinos adds four dice to physical pools, health and aggravated claws, but frenzy and the Delirium follow."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Conflicts go by who is ready; drag tokens into order in the initiative list."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = w5Weapon
+    Gifts = w5Gift
+    secondaryTypes = ["Weapons", "Gifts"]
+    description = "Werewolf: the Apocalypse 5th edition: the Garou fight for a dying world, with Rage dice and forms"
+    quickdice = [1d10]
+    cssFiles = ["/systems/werewolf/werewolf.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/wasteland.json"]
+    nameSettings = [nightWorldNameSetting, norseNameSetting, wastelandNameSetting]
+}

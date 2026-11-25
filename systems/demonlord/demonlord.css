@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* Shadow of the Demon Lord: a scorched, blood-spattered page. Ash grey paper,
+   black frames, blood red titles in a hard serif, the four attributes as big
+   boxes and the status numbers in a strip beneath. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1c1a19;
+    --surface: #e6e1da;
+    --surface-alt: #d8d1c8;
+    --surface-sunken: #cbc2b6;
+    --surface-muted: #b7ac9e;
+    --text: #141212;
+    --text-muted: #3a3431;
+    --text-faint: #6f6560;
+    --on-accent: #f2ece4;
+    --border: #8a7f76;
+    --border-strong: #141212;
+    --accent: #8f1111;
+    --accent-hover: #b01717;
+    --accent-soft: #ecd0cb;
+    --link: #8f1111;
+    --danger: #8f1111;
+    --danger-hover: #6a0c0c;
+    --danger-soft: #ecd0cb;
+    --success: #3c5b2e;
+    --paper: #e6e1da;
+    --card-bg: #d8d1c8;
+    --dice-bg: #8f1111;
+    --dice-text: #f2ece4;
+}
+
+.entityView {
+    --sheet-font: "Georgia", "Times New Roman", serif;
+    --title-font: "Trajan Pro", "Cinzel", "Copperplate", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 3px solid var(--border-strong);
+    padding: 6px;
+    font-size: 1.2em;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-family: var(--title-font); text-transform: uppercase; color: var(--accent); }
+.entityView .table-attributes .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-talents,
+.entityView .table-armor,
+.entityView .table-magic,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-armor { clear: left; }

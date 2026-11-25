@@ -1,0 +1,544 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+criticalChance (skill) = max (1, (skill + 10) / 20)
+
+specialChance (skill) = max (1, (skill + 2) / 5)
+
+fumbleRange (skill) = max (1, (100 - min (skill, 100) + 10) / 20)
+
+rqLevel (skill, roll) =
+    if roll <= criticalChance (skill) then "Critical success"
+    else if roll <= specialChance (skill) and roll <= max (5, skill) then "Special success"
+    else if roll > 100 - fumbleRange (skill) then "Fumble"
+    else if roll <= 5 or (roll <= skill and roll < 96) then "Success"
+    else "Failure"
+
+rqResult (skill, roll) =
+{
+    Text = toString (roll) + " vs " + toString (skill) + ": " + rqLevel (skill, roll)
+    Value = roll
+    Outcome = rqLevel (skill, roll)
+}
+
+rqRoll (modifier) = ([1d100], ((baseline, throws)->rqResult (baseline + modifier, first (first (throws).rolls))))
+
+rqAskedRoll = ([1d100], ((baseline, throws)->rqResult (baseline + asked, first (first (throws).rolls))))
+
+rqCheck = ask ("Modifier", 0, rqAskedRoll)
+
+hitLocationOf (roll) =
+    if roll <= 4 then "Right leg"
+    else if roll <= 8 then "Left leg"
+    else if roll <= 11 then "Abdomen"
+    else if roll == 12 then "Chest"
+    else if roll <= 15 then "Right arm"
+    else if roll <= 18 then "Left arm"
+    else "Head"
+
+attackLevelText (skill, roll, location) =
+    toString (roll) + " vs " + toString (skill) + ": " + rqLevel (skill, roll)
+    + (if rqLevel (skill, roll) == "Critical success" then ", hits the " + location + ": maximum special damage, ignores armor"
+       else if rqLevel (skill, roll) == "Special success" then ", hits the " + location + ": special damage (impale, slash or crush)"
+       else if rqLevel (skill, roll) == "Success" then ", hits the " + location
+       else if rqLevel (skill, roll) == "Fumble" then ", roll on the fumble table"
+       else "")
+
+rqAttackRoll (modifier) = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->{
+        Text = attackLevelText (baseline + modifier, first (first (throws).rolls), hitLocationOf (first (item (1, throws).rolls)))
+        Value = first (first (throws).rolls)
+        Outcome = rqLevel (baseline + modifier, first (first (throws).rolls))
+    }))
+
+rqAskedAttack = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->{
+        Text = attackLevelText (baseline + asked, first (first (throws).rolls), hitLocationOf (first (item (1, throws).rolls)))
+        Value = first (first (throws).rolls)
+        Outcome = rqLevel (baseline + asked, first (first (throws).rolls))
+    }))
+
+rqAttack = ask ("Modifier", 0, rqAskedAttack)
+
+strikeRankRoll = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+characteristicRoll = ([1d100], ((baseline, throws)->rqResult (baseline * 5, first (first (throws).rolls))))
+
+resistanceRoll (active) = ([1d100], ((baseline, throws)->rqResult (50 + (active - asked) * 5, first (first (throws).rolls))))
+
+resistance (active) = ask ("Opposing characteristic", resistanceRoll (active))
+
+damageBonus (total) =
+    if total <= 12 then "-1d4"
+    else if total <= 24 then ""
+    else if total <= 32 then "+1d4"
+    else if total <= 40 then "+1d6"
+    else if total <= 56 then "+2d6"
+    else "+3d6"
+
+healingRate (con) = if con <= 6 then 1 else if con <= 12 then 2 else if con <= 18 then 3 else 3 + (con - 13) / 6
+
+sizStrikeRank (siz) = if siz <= 6 then 3 else if siz <= 14 then 2 else if siz <= 21 then 1 else 0
+
+dexStrikeRank (dex) = if dex <= 5 then 5 else if dex <= 8 then 4 else if dex <= 12 then 3 else if dex <= 15 then 2 else if dex <= 18 then 1 else 0
+
+minorMod (score) = if score <= 4 then -5 else if score >= 17 then 5 else 0
+
+characteristicMod (score) = if score <= 4 then -10 else if score <= 8 then -5 else if score <= 12 then 0 else if score <= 16 then 5 else if score <= 20 then 10 else 15
+
+skill (base, categoryMod) = custom
+{
+    Value = integer { description = "Your skill without the category modifier: the base chance plus training and experience." default = base  minvalue = 0 }
+    Total = integer { description = "Skill plus the category modifier." value = Value + categoryMod  valuedice = rqCheck  editable = none }
+    Check = bool { description = "Ticked after a successful use; roll for improvement in Sacred Time." default = false  editable = live }
+}
+
+rune (base) = custom
+{
+    Value = integer { description = "Rune affinity in percent. Roll it to act as the Rune or to augment." default = base  minvalue = 0  maxvalue = 100  valuedice = rqCheck }
+}
+
+location (armor, hp) = custom
+{
+    Armor = integer { description = "Armor points on this location." default = armor }
+    Max = integer { description = "Hit points of this location." default = hp }
+    Damage = integer { description = "Damage taken here. At its hit points the limb is useless; at twice them it is severed or maimed." default = 0  minvalue = 0  editable = live }
+}
+
+noSkill = { Total = 0 }
+
+skillTotal (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Total", 0)
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "rqWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, chance, damage, strike, kind, rangeMetres) = custom
+{
+    Name = name
+    Chance = integer { value = chance  valuedice = rqAttack  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = damage
+    SR = strike
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, toInt (weaponStat (weapon, "Skill")) + char.Skills.'Manipulation modifier',
+        weaponStat (weapon, "Damage") + (if weaponStat (weapon, "Kind") == "Missile" then "" else " " + char.Attributes.'Damage bonus'),
+        toString (char.Attributes.'DEX SR' + char.Attributes.'SIZ SR' + toInt (weaponStat (weapon, "SR"))),
+        if weaponStat (weapon, "Kind") == "Missile" then "ranged" else "melee",
+        firstNumber (weaponStat (weapon, "Range")))
+
+totalLocationDamage (char) =
+    char.'Hit locations'.Head.Damage + char.'Hit locations'.Chest.Damage + char.'Hit locations'.Abdomen.Damage
+    + char.'Hit locations'.'Right arm'.Damage + char.'Hit locations'.'Left arm'.Damage
+    + char.'Hit locations'.'Right leg'.Damage + char.'Hit locations'.'Left leg'.Damage
+
+hpState (hp, maxHp) =
+    if hp <= 0 then "Dying"
+    else if hp * 3 <= maxHp then "Badly hurt"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, 'Hit locations', Attacks, Magic] }
+    Adventurer = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Homeland = string { keys = ["Sartar", "Esrolia", "Grazelands", "Old Tarsh", "Prax", "Lunar Tarsh", "Lunar Heartlands"] }
+        Occupation = string {}
+        Cult = string {}
+        'Cult rank' = string { keys = ["Lay member", "Initiate", "God-talker", "Rune Lord", "Rune Priest"] }
+        Clan = string {}
+        Tribe = string {}
+        Age = integer { default = 21 }
+        Reputation = integer { description = "How well known you are, in percent." default = 5  valuedice = rqCheck }
+        Ransom = string {}
+        Wealth = string { description = "Lunars, cattle and other wealth." }
+    }
+
+    Characteristics = table
+    {
+        description = "The seven characteristics, usually 3 to 18 for humans. A characteristic roll is d100 against five times it."
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { description = "Strength." default = 11  valuedice = characteristicRoll }
+        CON = integer { description = "Constitution: health and healing." default = 11  valuedice = characteristicRoll }
+        SIZ = integer { description = "Size: height and mass." default = 13  valuedice = characteristicRoll }
+        DEX = integer { description = "Dexterity: speed and coordination." default = 11  valuedice = characteristicRoll }
+        INT = integer { description = "Intelligence." default = 13  valuedice = characteristicRoll }
+        POW = integer { description = "Power: soul, luck and magic points." default = 13  valuedice = characteristicRoll }
+        CHA = integer { description = "Charisma: leadership and charm." default = 11  valuedice = characteristicRoll }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { description = "Total hit points: CON plus SIZ and POW modifiers." default = 13 }
+        HP = integer { description = "Hit points left: total minus the damage on all locations. At 0 you are dying." value = 'Max HP' - totalLocationDamage (characterTable)  editable = none  indicator = "#d64545" }
+        State = string { value = hpState ('Max HP' - totalLocationDamage (characterTable), 'Max HP')  visible = none  indicator = "#d64545" }
+        'Max MP' = integer { description = "Magic points: equal to POW." value = Characteristics.POW  editable = none }
+        MP = integer { description = "Magic points left. They come back over a day." default = Characteristics.POW  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        'Healing rate' = integer { description = "Hit points healed each week, from CON." value = healingRate (Characteristics.CON)  editable = none }
+        'Damage bonus' = string { description = "Added to melee damage, from STR + SIZ." value = damageBonus (Characteristics.STR + Characteristics.SIZ)  editable = none }
+        'DEX SR' = integer { description = "Strike rank from DEX. Lower acts sooner." value = dexStrikeRank (Characteristics.DEX)  editable = none }
+        'SIZ SR' = integer { description = "Strike rank from SIZ." value = sizStrikeRank (Characteristics.SIZ)  editable = none }
+        'Strike rank' = integer { description = "Strike rank for this melee round: DEX SR + SIZ SR + weapon SR, plus 1 per magic point of a spell. Lower goes first." default = 5  editable = live }
+        Initiative = integer { description = "Puts this round's strike rank in the initiative list." value = 'Strike rank'  valuedice = strikeRankRoll  editable = none }
+        'Move rate' = integer { default = 8 }
+        'POW vs POW' = integer { description = "Resistance roll: 50% plus 5% per point your POW exceeds the other's." value = Characteristics.POW  valuedice = resistance (Characteristics.POW)  editable = none }
+        'New day' = button
+        {
+            description = "Magic points come back in full over a day of rest."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.MP) = 'Max MP'
+            }
+        }
+    }
+
+    'Hit locations' = table
+    {
+        description = "Melee and missile hits roll d20 for a location. Armor there stops damage."
+        tableLayout = layout { columns = 4  size = wide }
+        Head = location (0, 5)
+        'Left arm' = location (0, 4)
+        'Right arm' = location (0, 4)
+        Chest = location (0, 6)
+        Abdomen = location (0, 5)
+        'Left leg' = location (0, 5)
+        'Right leg' = location (0, 5)
+        'Week of healing' = button
+        {
+            description = "A week of rest heals each wounded location by your healing rate."
+            editable = live
+            onClick = updates
+            {
+                (root.'Hit locations'.Head.Damage) = max (0, Head.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.'Left arm'.Damage) = max (0, 'Left arm'.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.'Right arm'.Damage) = max (0, 'Right arm'.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.Chest.Damage) = max (0, Chest.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.Abdomen.Damage) = max (0, Abdomen.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.'Left leg'.Damage) = max (0, 'Left leg'.Damage - Attributes.'Healing rate')
+                (root.'Hit locations'.'Right leg'.Damage) = max (0, 'Right leg'.Damage - Attributes.'Healing rate')
+            }
+        }
+    }
+
+    Runes = table
+    {
+        description = "Elemental, power and form Runes in percent. Opposed power Runes add up to 100."
+        tableLayout = layout { columns = 4  size = wide }
+        Darkness = rune (0)
+        Water = rune (0)
+        Earth = rune (0)
+        'Fire Sky' = rune (0)
+        Air = rune (0)
+        Moon = rune (0)
+        Fertility = rune (50)
+        Death = rune (50)
+        Harmony = rune (50)
+        Disorder = rune (50)
+        Truth = rune (50)
+        Illusion = rune (50)
+        Stasis = rune (50)
+        Movement = rune (50)
+        Man = rune (50)
+        Beast = rune (50)
+    }
+
+    Passions = list
+    {
+        description = "Loyalties, loves, hates, honor and devotion, in percent. They augment other rolls."
+        singular = "Passion"
+        editable = character
+        valueType = custom
+        {
+            Passion = string {}
+            Value = integer { default = 60  valuedice = rqCheck }
+        }
+    }
+
+    Skills = table
+    {
+        description = "Skills in percent, with each category's modifier added."
+        tableLayout = layout { columns = 2  size = wide }
+        'Agility modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + minorMod (Characteristics.STR) - minorMod (Characteristics.SIZ) }
+        'Communication modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.CHA) + minorMod (Characteristics.INT) + minorMod (Characteristics.POW) }
+        'Knowledge modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.INT) + minorMod (Characteristics.POW) }
+        'Magic modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.POW) + minorMod (Characteristics.CHA) }
+        'Manipulation modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + characteristicMod (Characteristics.INT) + minorMod (Characteristics.STR) }
+        'Perception modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.INT) + minorMod (Characteristics.POW) }
+        'Stealth modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) - characteristicMod (Characteristics.SIZ) - minorMod (Characteristics.POW) }
+        Boat = skill (5, 'Agility modifier')
+        Climb = skill (40, 'Agility modifier')
+        Dodge = skill (Characteristics.DEX * 2, 'Agility modifier')
+        Jump = skill (Characteristics.DEX * 3, 'Agility modifier')
+        Ride = skill (5, 'Agility modifier')
+        Swim = skill (15, 'Agility modifier')
+        'Act' = skill (5, 'Communication modifier')
+        'Fast Talk' = skill (5, 'Communication modifier')
+        Intimidate = skill (15, 'Communication modifier')
+        Orate = skill (10, 'Communication modifier')
+        Sing = skill (10, 'Communication modifier')
+        'Speak Own Language' = skill (50, 'Communication modifier')
+        'Speak Tradetalk' = skill (0, 'Communication modifier')
+        'Animal Lore' = skill (5, 'Knowledge modifier')
+        'Battle' = skill (10, 'Knowledge modifier')
+        'Customs' = skill (25, 'Knowledge modifier')
+        'Evaluate' = skill (10, 'Knowledge modifier')
+        'Farm' = skill (10, 'Knowledge modifier')
+        'First Aid' = skill (10, 'Knowledge modifier')
+        'Homeland Lore' = skill (30, 'Knowledge modifier')
+        'Mineral Lore' = skill (5, 'Knowledge modifier')
+        'Plant Lore' = skill (5, 'Knowledge modifier')
+        'Read Write' = skill (0, 'Knowledge modifier')
+        'Survival' = skill (15, 'Knowledge modifier')
+        'Cult Lore' = skill (5, 'Knowledge modifier')
+        Meditate = skill (0, 'Magic modifier')
+        Prepare = skill (5, 'Magic modifier')
+        'Spirit Combat' = skill (20, 'Magic modifier')
+        'Spirit Dance' = skill (0, 'Magic modifier')
+        'Spirit Lore' = skill (0, 'Magic modifier')
+        Worship = skill (5, 'Magic modifier')
+        Conceal = skill (5, 'Manipulation modifier')
+        'Devise' = skill (5, 'Manipulation modifier')
+        'Sleight' = skill (10, 'Manipulation modifier')
+        'Insight' = skill (20, 'Perception modifier')
+        Listen = skill (25, 'Perception modifier')
+        Scan = skill (25, 'Perception modifier')
+        Search = skill (25, 'Perception modifier')
+        Track = skill (5, 'Perception modifier')
+        Hide = skill (10, 'Stealth modifier')
+        'Move Quietly' = skill (10, 'Stealth modifier')
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each weapon's chance, damage with the damage bonus, and strike rank."
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Weapon skills' = list
+    {
+        description = "Your percentages with each weapon type; copy them into the weapon's Skill when you take it."
+        singular = "Weapon skill"
+        editable = character
+        valueType = custom
+        {
+            Weapon = string {}
+            Value = integer { default = 25  valuedice = rqCheck }
+        }
+    }
+
+    Magic = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Rune points' = integer { description = "Rune points for Rune spells, regained at the cult's holy day." default = 3  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        'Max Rune points' = integer { default = 3 }
+        'Spirit magic' = string { description = "Spirit spells and their points." multiline = true }
+        'Holy day' = button
+        {
+            description = "Worship at the cult's holy day restores Rune points."
+            editable = live
+            onClick = updates
+            {
+                (root.Magic.'Rune points') = 'Max Rune points'
+            }
+        }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Family = string { multiline = true }
+        History = string { multiline = true }
+        Allies = string { multiline = true }
+        'Spirit allies' = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Locations, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { default = 13 }
+        CON = integer { default = 11 }
+        SIZ = integer { default = 13 }
+        DEX = integer { default = 11 }
+        INT = integer { default = 13 }
+        POW = integer { default = 13 }
+        CHA = integer { default = 11 }
+        'Max HP' = integer { default = 13 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = if HP <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        MP = integer { default = 13  editable = live }
+        Move = integer { default = 8 }
+        'Damage bonus' = string { default = "+1d4" }
+        'Strike rank' = integer { description = "Strike rank this round. Lower goes first." default = 5  editable = live }
+        Initiative = integer { value = 'Strike rank'  valuedice = strikeRankRoll  editable = none }
+        Dodge = integer { default = 30  valuedice = rqCheck }
+        'Spirit Combat' = integer { default = 40  valuedice = rqCheck }
+    }
+    Locations = table
+    {
+        tableLayout = layout { size = wide }
+        'Armor and HP' = string { description = "Armor and hit points per location, such as Head 2/5, Chest 3/6." multiline = true  editable = live }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Chance = integer { default = 50  valuedice = rqAttack  action = melee  reach = 2 }
+            Damage = string { default = "1d8+1" }
+            SR = integer { default = 6 }
+        }
+    }
+    'Missile attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Missile attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Chance = integer { default = 50  valuedice = rqAttack  action = ranged }
+            Damage = string { default = "1d6" }
+            SR = integer { default = 6 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Magic = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+rqWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { default = "Melee"  keys = ["Melee", "Missile", "Shield"] }
+        Skill = string { description = "Your percentage with this weapon." default = "25" }
+        Damage = string { default = "1d8+1" }
+        SR = string { description = "The weapon's strike rank." default = "2" }
+        HP = string { description = "The weapon's hit points." }
+        Range = string { description = "Missile range in metres." }
+        ENC = string {}
+        Price = string {}
+    }
+}
+
+rqSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Spirit magic", "Rune magic", "Sorcery"] }
+        Points = string {}
+        Range = string {}
+        Duration = string {}
+        Rune = string {}
+        Notes = string {}
+    }
+}
+
+rqItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        ENC = string {}
+        Price = string {}
+    }
+}
+
+RuneQuestGlorantha = system
+{
+    hints = [
+        hint
+        {
+            title = "Family history and Runes"
+            topic = "Getting started"
+            text = ["Roll the family history, pick three elemental Runes and the power Runes, then homeland, occupation and cult. Characteristics follow from the Runes; skills start from base chances plus category modifiers."]
+        },
+        hint
+        {
+            title = "d100 rolls"
+            topic = "Play"
+            text = ["Roll d100 at or under the skill. A fifth of it is a special success, a twentieth a critical. 01-05 always succeeds and 96-00 always fails; the top of the range fumbles."]
+        },
+        hint
+        {
+            title = "Melee rounds"
+            topic = "Combat"
+            text = ["Everyone acts by strike rank: DEX SR + SIZ SR + weapon SR, lowest first. Hits roll d20 for a location; armor there absorbs damage, and a location at 0 or less is out of action."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Enter each fighter's strike rank as Initiative each round. The list puts the lowest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = rqWeapon
+    Spells = rqSpell
+    Equipment = rqItem
+    secondaryTypes = ["Weapons", "Spells", "Equipment"]
+    description = "RuneQuest: Roleplaying in Glorantha: d100 skills, Runes and passions, hit locations and strike ranks"
+    initiativeCompare (item1, item2) = compare (item2, item1)
+    quickdice = [1d100, 1d20, 1d6, 1d8, 1d10]
+    cssFiles = ["/systems/runequest/runequest.css"]
+    libraries = ["/systems/names/mythicgreece.json", "/systems/names/barbarian.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
+    nameSettings = [mythicGreeceNameSetting, swordAndSorceryNameSetting, norseNameSetting]
+}

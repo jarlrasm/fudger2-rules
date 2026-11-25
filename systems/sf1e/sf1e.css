@@ -1,0 +1,78 @@
+@import url("/systems/sheet.css");
+
+/* Starfinder 1st edition: a clean white sheet with steel-blue title bars cut
+   at an angle, the six abilities in a strip of boxes, Stamina, Hit Points and
+   Resolve together, EAC and KAC side by side, and the skills in two columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9d3dc;
+    --surface: #f8fafc;
+    --surface-alt: #e9eff4;
+    --surface-sunken: #dce5ec;
+    --surface-muted: #c2cfda;
+    --text: #15202b;
+    --text-muted: #34495c;
+    --text-faint: #6b7f91;
+    --on-accent: #f8fafc;
+    --border: #8fa3b5;
+    --border-strong: #22394f;
+    --accent: #1f5f8b;
+    --accent-hover: #2a77ab;
+    --accent-soft: #d6e6f2;
+    --link: #1f5f8b;
+    --danger: #b03a2e;
+    --danger-hover: #8a2c23;
+    --danger-soft: #f2dcd9;
+    --success: #2f7a4a;
+    --paper: #f8fafc;
+    --card-bg: #e9eff4;
+    --dice-bg: #22394f;
+    --dice-text: #f8fafc;
+}
+
+.entityView {
+    --sheet-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Eurostile", "Bank Gothic", "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: linear-gradient(100deg, var(--border-strong) 0 85%, transparent 85%);
+    color: var(--surface);
+    padding: 2px 10px;
+    font-weight: 700;
+}
+.entityView .table-abilities > table > tbody,
+.entityView .table-statistics > table > tbody {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    border: 2px solid var(--border-strong);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-weight: 700; text-transform: uppercase; }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-health { --block: 50%; clear: left; }
+.entityView .table-health > table > tbody > tr:nth-child(-n+6) { border-left: 4px solid var(--accent); padding-left: 4px; }
+.entityView .table-combat { --block: 50%; }
+.entityView .table-saves,
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-saves { clear: left; }
+.entityView .table-saves .customtype > div:nth-child(1)::before { content: "base "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-saves .customtype > div:nth-child(2)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "class "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(3)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-feats,
+.entityView .table-class-features,
+.entityView .table-ammunition,
+.entityView .table-equipment,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-feats { clear: left; }
+.entityView .table-shields > table > tbody > tr { flex-direction: column; text-align: center; border: 2px solid var(--accent); }

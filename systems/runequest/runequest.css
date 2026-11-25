@@ -1,0 +1,64 @@
+@import url("/systems/sheet.css");
+
+/* RuneQuest: Glorantha. Bronze-age parchment, dark ochre and red-brown, a
+   classical serif; the seven characteristics in a row, the hit locations as
+   a block of armor and hit point boxes, the Runes in a grid of four, and the
+   long skill list in two columns under its category modifiers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #a77d4a;
+    --surface: #f4e9d2;
+    --surface-alt: #eadbb9;
+    --surface-sunken: #dfcca2;
+    --surface-muted: #ccb27e;
+    --text: #2a1a0b;
+    --text-muted: #563a1d;
+    --text-faint: #8a6a42;
+    --on-accent: #f4e9d2;
+    --border: #b18f5d;
+    --border-strong: #5c3a17;
+    --accent: #8a3a12;
+    --accent-hover: #a84a18;
+    --accent-soft: #f0d6bd;
+    --link: #8a3a12;
+    --danger: #8a1e12;
+    --danger-hover: #6a170e;
+    --danger-soft: #f0d0c6;
+    --success: #4d6324;
+    --paper: #f4e9d2;
+    --card-bg: #eadbb9;
+    --dice-bg: #8a3a12;
+    --dice-text: #f4e9d2;
+}
+
+.entityView {
+    --sheet-font: "Book Antiqua", Palatino, Georgia, serif;
+    --title-font: "Trajan Pro", "Cinzel", "Book Antiqua", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    border-bottom: 2px double var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.entityView .table-characteristics > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+}
+.entityView .table-hit-locations .customtype > div:nth-child(1)::before { content: "AP "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-hit-locations .customtype > div:nth-child(2)::before { content: "HP "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-hit-locations .customtype > div:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(1)::before { content: "% "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-runes { --block: 66.666%; clear: left; }
+.entityView .table-passions { --block: 33.333%; }
+.entityView .table-weapon-skills,
+.entityView .table-magic,
+.entityView .table-spells,
+.entityView .table-equipment { --block: 50%; }

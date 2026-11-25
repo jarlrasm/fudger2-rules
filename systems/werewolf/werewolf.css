@@ -1,0 +1,63 @@
+@import url("/systems/sheet.css");
+
+/* Werewolf: the Apocalypse fifth edition. Pale ash paper torn at the edges,
+   forest green and rust, titles in a rough serif; the nine attributes in
+   Physical, Social and Mental columns, health and willpower as box tracks,
+   renown beside them, and skills in three columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2b2f27;
+    --surface: #ecebe4;
+    --surface-alt: #dedcd1;
+    --surface-sunken: #d1cfc2;
+    --surface-muted: #bdb9a8;
+    --text: #1a1c17;
+    --text-muted: #3d4236;
+    --text-faint: #6f7465;
+    --on-accent: #f3f1ea;
+    --border: #8d8f80;
+    --border-strong: #2f3b2a;
+    --accent: #3b5a2e;
+    --accent-hover: #4a7139;
+    --accent-soft: #d6e0cc;
+    --link: #3b5a2e;
+    --danger: #9a3412;
+    --danger-hover: #7a2a0e;
+    --danger-soft: #f0d8cc;
+    --success: #3b5a2e;
+    --paper: #ecebe4;
+    --card-bg: #dedcd1;
+    --dice-bg: #9a3412;
+    --dice-text: #f3f1ea;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --title-font: "Rockwell", "Copperplate", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    background: var(--accent);
+    color: var(--on-accent);
+    clip-path: polygon(0 0, 100% 0, 98% 100%, 60% 85%, 40% 100%, 2% 90%);
+}
+.entityView .table-attributes > table > tbody { column-gap: 32px; padding: 6px 16px; }
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px solid var(--border); }
+.entityView .table-attributes button.dicethrow,
+.entityView .table-skills button.dicethrow { border-radius: 50%; min-width: 1.9em; min-height: 1.9em; }
+.entityView .table-trackers { --block: 66.666%; clear: left; }
+.entityView .table-renown { --block: 33.333%; }
+.entityView .table-trackers .slots input[type="checkbox"] { width: 1.3em; height: 1.3em; accent-color: var(--danger); }
+.entityView .table-gifts,
+.entityView .table-rites,
+.entityView .table-weapons,
+.entityView .table-advantages-and-flaws,
+.entityView .table-touchstones { --block: 50%; }
+.entityView .table-gifts { clear: left; }

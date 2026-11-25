@@ -1,0 +1,67 @@
+@import url("/systems/sheet.css");
+
+/* Dungeon Crawl Classics: a stark black-and-white sheet in the spirit of the
+   old woodcut-style zines. Heavy black rules, bold condensed capitals for
+   titles, the six abilities in a row of boxes and the combat numbers framed
+   beside the saves. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9e6df;
+    --surface: #ffffff;
+    --surface-alt: #f2f0ea;
+    --surface-sunken: #e3e0d8;
+    --surface-muted: #cfcac0;
+    --text: #0d0d0d;
+    --text-muted: #333333;
+    --text-faint: #6d6d6d;
+    --on-accent: #ffffff;
+    --border: #7a7a7a;
+    --border-strong: #0d0d0d;
+    --accent: #0d0d0d;
+    --accent-hover: #404040;
+    --accent-soft: #e7e3da;
+    --link: #0d0d0d;
+    --danger: #8c1c13;
+    --danger-hover: #6a150e;
+    --danger-soft: #f0dcd8;
+    --success: #2e5e2a;
+    --paper: #ffffff;
+    --card-bg: #f2f0ea;
+    --dice-bg: #0d0d0d;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Book Antiqua", Palatino, Georgia, serif;
+    --title-font: Impact, "Haettenschweiler", "Arial Narrow Bold", sans-serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 1.2em;
+    border-bottom: 3px solid var(--border-strong);
+}
+.entityView .table-abilities > table > tbody { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-family: var(--title-font); text-transform: uppercase; }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "max "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-abilities .customtype > div:nth-child(3)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-combat { --block: 66.666%; clear: left; }
+.entityView .table-saves { --block: 33.333%; }
+.entityView .table-saves > table > tbody > tr { flex-direction: column; text-align: center; border: 2px solid var(--border-strong); }
+.entityView .table-saves .customtype > div:nth-child(1)::before { content: "class "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armor,
+.entityView .table-class-features,
+.entityView .table-equipment,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-armor { clear: left; }
