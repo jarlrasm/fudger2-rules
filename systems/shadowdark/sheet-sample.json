@@ -1,17 +1,89 @@
 {
   "values": {
-    "Character": { "Ancestry": "Halfling", "Class": "Thief", "Level": 2, "XP": 14, "Title": "Footpad", "Alignment": "Neutral", "Background": "Urchin", "Deity": "Shune the Vile", "Attack Bonus": 1 },
-    "Stats": { "STR.stat.Score": 8, "DEX.stat.Score": 17, "CON.stat.Score": 12, "INT.stat.Score": 13, "WIS.stat.Score": 10, "CHA.stat.Score": 14 },
-    "Combat": { "AC": 14, "Max HP": 8, "HP": 6, "Luck": true, "Torch.realvalue": 3 },
+    "Character": {
+      "Ancestry": "Halfling",
+      "Class": "Thief",
+      "Level": 2,
+      "XP": 14,
+      "Title": "Footpad",
+      "Alignment": "Neutral",
+      "Background": "Urchin",
+      "Deity": "Shune the Vile",
+      "Attack Bonus": 1
+    },
+    "Stats": {
+      "STR.Score": 8,
+      "DEX.Score": 17,
+      "CON.Score": 12,
+      "INT.Score": 13,
+      "WIS.Score": 10,
+      "CHA.Score": 14
+    },
+    "Combat": {
+      "AC": 14,
+      "Max HP": 8,
+      "HP": 6,
+      "Luck": true,
+      "Torch.realvalue": 3
+    },
     "Talents": [
-      { "Name": "Stealthy", "Description": "Once per day, become invisible for 3 rounds." },
-      { "Name": "Backstab", "Description": "Extra weapon die against an unaware foe." },
-      { "Name": "Thievery", "Description": "Advantage on climbing, sneaking, disguises, locks and traps." }
+      {
+        "Name": "Stealthy",
+        "Description": "Once per day, become invisible for 3 rounds."
+      },
+      {
+        "Name": "Backstab",
+        "Description": "Extra weapon die against an unaware foe."
+      },
+      {
+        "Name": "Thievery",
+        "Description": "Advantage on climbing, sneaking, disguises, locks and traps."
+      }
     ],
-    "Gear": { "GP": 12, "SP": 25, "CP": 40 }
+    "Gear": {
+      "GP": 12,
+      "SP": 25,
+      "CP": 40
+    }
   },
   "secondary": {
-    "Weapons": [ { "name": "Dagger", "values": { "Stats": { "Type": "Melee and Ranged", "Range": "Near", "Damage": "1d4", "Properties": "Finesse, thrown" } } }, { "name": "Shortbow", "values": { "Stats": { "Type": "Ranged", "Range": "Far", "Damage": "1d4", "Properties": "2H" } } } ],
-    "Gear": [ { "name": "Leather armor" }, { "name": "Thieves' tools" }, { "name": "Torch" }, { "name": "Rope, 60'" } ]
+    "Weapons": [
+      {
+        "name": "Dagger",
+        "values": {
+          "Stats": {
+            "Type": "Melee and Ranged",
+            "Range": "Near",
+            "Damage": "1d4",
+            "Properties": "Finesse, thrown"
+          }
+        }
+      },
+      {
+        "name": "Shortbow",
+        "values": {
+          "Stats": {
+            "Type": "Ranged",
+            "Range": "Far",
+            "Damage": "1d4",
+            "Properties": "2H"
+          }
+        }
+      }
+    ],
+    "Gear": [
+      {
+        "name": "Leather armor"
+      },
+      {
+        "name": "Thieves' tools"
+      },
+      {
+        "name": "Torch"
+      },
+      {
+        "name": "Rope, 60'"
+      }
+    ]
   }
 }

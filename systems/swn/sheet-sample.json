@@ -1,14 +1,98 @@
 {
   "values": {
-    "Character": { "Class": "Expert", "Background": "Spacer", "Level": 2, "XP": 4, "Homeworld": "Tarrant's Rest", "Species": "Human", "Goals": "Buy back her family's freighter, the Dauntless Margin." },
-    "Attributes": { "STR.attribute.Score": 9, "DEX.attribute.Score": 14, "CON.attribute.Score": 11, "INT.attribute.Score": 16, "WIS.attribute.Score": 12, "CHA.attribute.Score": 8 },
-    "Combat": { "Max HP": 9, "HP": 6, "AC": 15, "Attack Bonus": 1, "System Strain": 1 },
-    "Skills": { "Fix.Level": 2, "Pilot.Level": 1, "Program.Level": 1, "Notice.Level": 0, "Shoot.Level": 0, "Know.Level": 0, "Trade.Level": 0 },
-    "Foci": [ { "Name": "Hacker", "Level": 1, "Description": "Gain Program; computers are easier to breach." }, { "Name": "Specialist (Fix)", "Level": 1, "Description": "Roll 3d6 keep 2 on Fix checks." } ],
-    "Encumbrance": { "Credits": 1340 }
+    "Character": {
+      "Class": "Expert",
+      "Background": "Spacer",
+      "Level": 2,
+      "XP": 4,
+      "Homeworld": "Tarrant's Rest",
+      "Species": "Human",
+      "Goals": "Buy back her family's freighter, the Dauntless Margin."
+    },
+    "Attributes": {
+      "STR.Score": 9,
+      "DEX.Score": 14,
+      "CON.Score": 11,
+      "INT.Score": 16,
+      "WIS.Score": 12,
+      "CHA.Score": 8
+    },
+    "Combat": {
+      "Max HP": 9,
+      "HP": 6,
+      "AC": 15,
+      "Attack Bonus": 1,
+      "System Strain": 1
+    },
+    "Skills": {
+      "Fix.Level": 2,
+      "Pilot.Level": 1,
+      "Program.Level": 1,
+      "Notice.Level": 0,
+      "Shoot.Level": 0,
+      "Know.Level": 0,
+      "Trade.Level": 0
+    },
+    "Foci": [
+      {
+        "Name": "Hacker",
+        "Level": 1,
+        "Description": "Gain Program; computers are easier to breach."
+      },
+      {
+        "Name": "Specialist (Fix)",
+        "Level": 1,
+        "Description": "Roll 3d6 keep 2 on Fix checks."
+      }
+    ],
+    "Encumbrance": {
+      "Credits": 1340
+    }
   },
   "secondary": {
-    "Weapons": [ { "name": "Laser pistol", "values": { "Stats": { "Skill": "Shoot", "Attribute": "DEX", "Damage": "1d6", "Range": "10/20", "Magazine": "10", "Encumbrance": "1" } } } ],
-    "Gear": [ { "name": "Woven body armor", "values": { "Stats": { "Encumbrance": "1", "TL": "4" } } }, { "name": "Metatool", "values": { "Stats": { "Encumbrance": "1", "TL": "4" } } }, { "name": "Compad", "values": { "Stats": { "Encumbrance": "1", "TL": "4" } } } ]
+    "Weapons": [
+      {
+        "name": "Laser pistol",
+        "values": {
+          "Stats": {
+            "Skill": "Shoot",
+            "Attribute": "DEX",
+            "Damage": "1d6",
+            "Range": "10/20",
+            "Magazine": "10",
+            "Encumbrance": "1"
+          }
+        }
+      }
+    ],
+    "Gear": [
+      {
+        "name": "Woven body armor",
+        "values": {
+          "Stats": {
+            "Encumbrance": "1",
+            "TL": "4"
+          }
+        }
+      },
+      {
+        "name": "Metatool",
+        "values": {
+          "Stats": {
+            "Encumbrance": "1",
+            "TL": "4"
+          }
+        }
+      },
+      {
+        "name": "Compad",
+        "values": {
+          "Stats": {
+            "Encumbrance": "1",
+            "TL": "4"
+          }
+        }
+      }
+    ]
   }
 }

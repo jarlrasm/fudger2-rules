@@ -1,21 +1,94 @@
 {
   "values": {
-    "Character": { "Race": "Changeling", "Occupation": "Treasure hunter", "Archetype": "Rogue", "Shadow": "Dusky green, like moss on old stone", "Personal goal": "Find the elf mother who left her in an Ambrian cradle.", "Quote": "Every ruin pays, one way or another.", "Experience": 30, "Unspent experience": 10 },
-    "Attributes": {
-      "Accurate.attribute.Value": 13, "Cunning.attribute.Value": 11, "Discreet.attribute.Value": 15, "Persuasive.attribute.Value": 10,
-      "Quick.attribute.Value": 13, "Resolute.attribute.Value": 7, "Strong.attribute.Value": 9, "Vigilant.attribute.Value": 10
+    "Character": {
+      "Race": "Changeling",
+      "Occupation": "Treasure hunter",
+      "Archetype": "Rogue",
+      "Shadow": "Dusky green, like moss on old stone",
+      "Personal goal": "Find the elf mother who left her in an Ambrian cradle.",
+      "Quote": "Every ruin pays, one way or another.",
+      "Experience": 30,
+      "Unspent experience": 10
     },
-    "Toughness": { "Current": 8 },
-    "Corruption": { "Permanent": 1, "Temporary": 2 },
+    "Attributes": {
+      "Accurate.Value": 13,
+      "Cunning.Value": 11,
+      "Discreet.Value": 15,
+      "Persuasive.Value": 10,
+      "Quick.Value": 13,
+      "Resolute.Value": 7,
+      "Strong.Value": 9,
+      "Vigilant.Value": 10
+    },
+    "Toughness": {
+      "Current": 8
+    },
+    "Corruption": {
+      "Permanent": 1,
+      "Temporary": 2
+    },
     "Abilities": [
-      { "Name": "Backstab", "Level": "Adept", "Type": "Ability", "Effect": "+1d4 damage against an enemy who is caught off guard." },
-      { "Name": "Acrobatics", "Level": "Novice", "Type": "Ability", "Effect": "Pass Quick to slip free of melee." },
-      { "Name": "Long-lived", "Level": "Novice", "Type": "Trait", "Effect": "Changelings age slowly." }
+      {
+        "Name": "Backstab",
+        "Level": "Adept",
+        "Type": "Ability",
+        "Effect": "+1d4 damage against an enemy who is caught off guard."
+      },
+      {
+        "Name": "Acrobatics",
+        "Level": "Novice",
+        "Type": "Ability",
+        "Effect": "Pass Quick to slip free of melee."
+      },
+      {
+        "Name": "Long-lived",
+        "Level": "Novice",
+        "Type": "Trait",
+        "Effect": "Changelings age slowly."
+      }
     ],
-    "Equipment": { "Thaler": 4, "Shillings": 12, "Orteg": 7, "Gear": "Rope, lockpicks, lantern, field kitchen.", "Artifacts": "A whispering bone flute" }
+    "Equipment": {
+      "Thaler": 4,
+      "Shillings": 12,
+      "Orteg": 7,
+      "Gear": "Rope, lockpicks, lantern, field kitchen.",
+      "Artifacts": "A whispering bone flute"
+    }
   },
   "secondary": {
-    "Weapons": [ { "name": "Sword", "values": { "Stats": { "Type": "Single-handed", "Damage": "1d8", "Attribute": "Accurate" } } }, { "name": "Crossbow", "values": { "Stats": { "Type": "Ranged", "Damage": "1d10", "Attribute": "Accurate" } } } ],
-    "Armor": [ { "name": "Woven silk", "values": { "Stats": { "Type": "Light", "Protection": "1d4", "Impeding": "0" } } } ]
+    "Weapons": [
+      {
+        "name": "Sword",
+        "values": {
+          "Stats": {
+            "Type": "Single-handed",
+            "Damage": "1d8",
+            "Attribute": "Accurate"
+          }
+        }
+      },
+      {
+        "name": "Crossbow",
+        "values": {
+          "Stats": {
+            "Type": "Ranged",
+            "Damage": "1d10",
+            "Attribute": "Accurate"
+          }
+        }
+      }
+    ],
+    "Armor": [
+      {
+        "name": "Woven silk",
+        "values": {
+          "Stats": {
+            "Type": "Light",
+            "Protection": "1d4",
+            "Impeding": "0"
+          }
+        }
+      }
+    ]
   }
 }
