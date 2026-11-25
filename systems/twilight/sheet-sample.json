@@ -1,0 +1,112 @@
+{
+  "values": {
+    "Character": {
+      "Nationality": "American",
+      "Background": "Midwest farm kid, enlisted at 19",
+      "Military branch": "Army",
+      "Rank": "Sergeant",
+      "Moral code": "Never leave a wounded soldier behind.",
+      "Big dream": "Get home to Iowa and plant one more harvest.",
+      "Buddy": "Cpl. Tomasz Nowak",
+      "Appearance": "Sunburnt, patched BDUs, rosary around the wrist",
+      "Ammo dice": 2
+    },
+    "Attributes": {
+      "STR.Rating": "B",
+      "AGL.Rating": "C",
+      "INT.Rating": "C",
+      "EMP.Rating": "B"
+    },
+    "Status": {
+      "Damage": 2,
+      "Stress": 1,
+      "CUF": "C",
+      "Rads": 15
+    },
+    "Skills": {
+      "Ranged Combat.Rating": "B",
+      "Stamina.Rating": "B",
+      "Command.Rating": "C",
+      "Driving.Rating": "C",
+      "Recon.Rating": "C",
+      "Survival.Rating": "D",
+      "Medical Aid.Rating": "D",
+      "Close Combat.Rating": "D"
+    },
+    "Specialties": [
+      {
+        "Name": "Rifleman",
+        "Description": "Modifier +1 when firing aimed shots with rifles."
+      },
+      {
+        "Name": "Farmer",
+        "Description": "+1 to find food when foraging."
+      }
+    ],
+    "Ammunition": [
+      {
+        "Name": "5.56mm NATO",
+        "Rounds": 74
+      },
+      {
+        "Name": "40mm HE",
+        "Rounds": 3
+      }
+    ],
+    "Armor": {
+      "Head": 1,
+      "Torso": 2
+    },
+    "Injuries": {
+      "Critical injuries": "Cracked rib (−1 to Mobility)"
+    },
+    "Supplies": {
+      "Food": 4,
+      "Water": 3,
+      "Fuel": 0,
+      "Money": "12 zł"
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      {
+        "name": "M16A2",
+        "values": {
+          "Stats": {
+            "Kind": "Small arms",
+            "Reliability": "4",
+            "Damage": "2",
+            "Crit": "3",
+            "Range": "4",
+            "Rate of fire": "3",
+            "Ammo": "5.56mm"
+          }
+        }
+      },
+      {
+        "name": "M203 grenade launcher",
+        "values": {
+          "Stats": {
+            "Kind": "Heavy",
+            "Damage": "2",
+            "Range": "4",
+            "Rate of fire": "1",
+            "Ammo": "40mm",
+            "Blast": "B"
+          }
+        }
+      }
+    ],
+    "Gear": [
+      {
+        "name": "Flak vest"
+      },
+      {
+        "name": "Kevlar helmet"
+      },
+      {
+        "name": "Field radio"
+      }
+    ]
+  }
+}
