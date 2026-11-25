@@ -166,7 +166,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Skills, Status, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Skills, Status, Attacks] }
     Skills = table
     {
         description = "Supporting characters roll their skill alone, with no drive."
@@ -242,7 +242,7 @@ duneAsset = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/dune/asset.svg"
         filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
     }
     Stats = table

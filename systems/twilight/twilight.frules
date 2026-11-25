@@ -246,7 +246,7 @@ creatureTable = ruleset
     rulesetConfiguration =
     {
         important = [NPC, Attacks]
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/images/character.svg"
         filters = [filter { name = "Kind" prefix = "" filter = NPC.Kind }]
     }
     NPC = table
@@ -336,7 +336,7 @@ t2kWeapon = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/icons/gun.svg"
         filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
     }
     Stats = table
@@ -357,7 +357,7 @@ t2kWeapon = ruleset
 
 t2kGear = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
     Stats = table
     {
         tableLayout = layout { columns = 2 }
