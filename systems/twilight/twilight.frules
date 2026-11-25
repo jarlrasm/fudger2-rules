@@ -1,0 +1,415 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+ratings = ["A", "B", "C", "D", "F"]
+
+dieOf (rating) =
+    switch rating
+        case "A" then 12
+        case "B" then 10
+        case "C" then 8
+        case "D" then 6
+        else 0
+
+stepped (die, steps) = if die == 0 then 0 else max (6, min (12, die + 2 * steps))
+
+dieName (die) = if die == 0 then "-" else "d" + toString (die)
+
+poolName (attrDie, skillDieSize) = dieName (attrDie) + (if skillDieSize > 0 then " + " + dieName (skillDieSize) else "")
+
+successOf (x, die) = if die >= 10 and x >= 10 then 2 else if x >= 6 then 1 else 0
+
+successesIn (rolls, die) = sum (map ((x)->successOf (x, die), rolls))
+
+onesIn (rolls) = count (filter ((x)->x == 1, rolls))
+
+baseOnes (throws) = onesIn (first (throws).rolls) + onesIn (item (1, throws).rolls)
+
+t2kText (successes, pushed, ones, ammoOnes, ammoSixes, ammoCount) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + (if ammoCount > 0 then ", ammo: " + toString (ammoSixes) + " extra hits, " + toString (ammoCount) + " rounds" else "")
+    + (if pushed and ones > 0 then ", pushed: " + toString (ones) + " damage or stress from the 1s" else "")
+    + (if ammoOnes > 0 then ", " + toString (ammoOnes) + " ammo dice at 1: roll for reliability" else "")
+
+t2kResult (attrRolls, skillRolls, ammoRolls, attrDie, skillDie, kept, pushed) =
+{
+    Text = t2kText (kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) + count (filter ((x)->x == 6, ammoRolls)), pushed, onesIn (attrRolls) + onesIn (skillRolls), onesIn (ammoRolls), count (filter ((x)->x == 6, ammoRolls)), count (ammoRolls))
+    Value = kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie)
+    Outcome = if kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) > 0 then "Success" else "Failure"
+    Push = if not (pushed) then t2kPush (attrDie, skillDie, keepAttr (attrRolls, attrDie), keepSkill (skillRolls, skillDie)) else 0
+    PushLabel = "Push (1s cost damage or stress)"
+}
+
+keepAttr (rolls, die) = if count (rolls) > 0 and successesIn (rolls, die) > 0 then successesIn (rolls, die) else 0
+
+keepSkill (rolls, die) = if count (rolls) > 0 and successesIn (rolls, die) > 0 then successesIn (rolls, die) else 0
+
+t2kPush (attrDie, skillDie, attrKept, skillKept) = ([dice { number = if attrKept > 0 then 0 else 1  sides = max (6, attrDie) }, dice { number = if skillKept > 0 or skillDie == 0 then 0 else 1  sides = max (6, skillDie)  color = "blue"  label = if skillKept > 0 or skillDie == 0 then "" else "Skill" }],
+    ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, [], attrDie, skillDie, attrKept + skillKept, true)))
+
+t2kRoll (attrDie, skillDie, ammo) = ([dice { number = if attrDie > 0 then 1 else 0  sides = max (6, attrDie) }, dice { number = if skillDie > 0 then 1 else 0  sides = max (6, skillDie)  color = "blue"  label = if skillDie > 0 then "Skill" else "" }, dice { number = max (0, ammo)  sides = 6  color = "yellow"  label = if ammo > 0 then "Ammo" else "" }],
+    ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, attrDie, skillDie, 0, false)))
+
+hitLocation (roll) =
+    switch roll
+        case 1 then "legs"
+        case 5 then "arms"
+        case 6 then "head"
+        else "torso"
+
+locationRoll = ([1d6], ((baseline, throws)->{ Text = "Hit location: " + hitLocation (first (first (throws).rolls))  Value = first (first (throws).rolls) }))
+
+modifierOf (char) = char.Character.Modifier
+
+skill (attribute) = custom
+{
+    Rating = string { description = "Skill level A (d12) to D (d6), or F for untrained." default = "F"  keys = ratings }
+    Roll = integer { description = "Attribute die plus skill die. 6+ is a success, 10+ on a d10 or d12 two." value = 0  render = poolName (stepped (attribute, modifierOf (characterTable)), dieOf (Rating))  valuedice = t2kRoll (stepped (attribute, modifierOf (characterTable)), dieOf (Rating), 0)  editable = none }
+}
+
+attribute = custom
+{
+    Rating = string { description = "Attribute level A (d12) to D (d6)." default = "C"  keys = ["A", "B", "C", "D"] }
+    Die = integer { value = dieOf (Rating)  render = dieName (dieOf (Rating))  valuedice = t2kRoll (stepped (dieOf (Rating), modifierOf (characterTable)), 0, 0)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "t2kWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noRating = { Rating = "F" }
+
+skillDie (char, name) = dieOf (valueOr (valueOr (char.Skills, name, noRating), "Rating", "F"))
+
+weaponAttack (name, attrDie, skillDieSize, ammo, damage, kind, rangeMetres) = custom
+{
+    Name = name
+    Attack = integer { value = 0  render = poolName (attrDie, skillDieSize)  valuedice = t2kRoll (attrDie, skillDieSize, ammo)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Melee" then
+        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.STR.Rating), modifierOf (char)), skillDie (char, "Close Combat"), 0, weaponStat (weapon, "Damage"), "melee", 0)
+    else if weaponStat (weapon, "Kind") == "Heavy" then
+        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.STR.Rating), modifierOf (char)), skillDie (char, "Heavy Weapons"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
+    else
+        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.AGL.Rating), modifierOf (char)), skillDie (char, "Ranged Combat"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
+
+capacity (a, b) = (dieOf (a) + dieOf (b) + 3) / 4
+
+hitState (hits, capacityValue) = if hits >= capacityValue then "Broken" else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Status, Attributes, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Nationality = string { keys = ["American", "Polish", "Soviet", "Swedish", "German", "British", "Other"] }
+        Background = string {}
+        'Military branch' = string { keys = ["Army", "Navy", "Air Force", "Marines", "Special Forces", "Intelligence", "Civilian"] }
+        Rank = string {}
+        'Moral code' = string {}
+        'Big dream' = string {}
+        Buddy = string {}
+        Appearance = string {}
+        Modifier = integer { description = "Steps up (+) or down (-) the attribute die for the next roll." default = 0  minvalue = -3  maxvalue = 3  editable = live }
+        'Ammo dice' = integer { description = "Ammo dice to fire with a ranged attack: each 6 is an extra hit, each die a round." default = 0  minvalue = 0  maxvalue = 10  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "Strength, Agility, Intelligence and Empathy, rated A (d12) to D (d6)."
+        tableLayout = layout { columns = 4  size = wide }
+        STR = attribute {}
+        AGL = attribute {}
+        INT = attribute {}
+        EMP = attribute {}
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hit capacity' = integer { description = "STR die plus AGL die, divided by 4." value = capacity (Attributes.STR.Rating, Attributes.AGL.Rating)  editable = none }
+        Damage = integer { description = "Damage taken. At hit capacity you are broken and need a critical injury roll." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Stress capacity' = integer { description = "INT die plus EMP die, divided by 4." value = capacity (Attributes.INT.Rating, Attributes.EMP.Rating)  editable = none }
+        Stress = integer { description = "Stress taken. At stress capacity you break down." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        State = string { value = if hitState (Damage, 'Hit capacity') != "" then "Broken" else if Stress >= 'Stress capacity' then "Broken down" else ""  visible = none  indicator = "#d64545" }
+        CUF = string { description = "Coolness under fire, A to D: rolled alone against suppression." default = "D"  keys = ["A", "B", "C", "D"] }
+        'Suppression roll' = integer { description = "Roll coolness under fire alone when shot at." value = 0  render = dieName (dieOf (CUF))  valuedice = t2kRoll (dieOf (CUF), 0, 0)  editable = none }
+        Rads = integer { description = "Radiation absorbed. Permanent rads stay; at 10 and beyond the sickness grows." default = 0  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        'Permanent rads' = integer { default = 0  minvalue = 0 }
+        'Hit location' = integer { value = 0  valuedice = locationRoll  editable = none }
+        Rest = button
+        {
+            description = "A day of real rest heals 1 damage and 1 stress."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Damage) = max (0, Damage - 1)
+                (root.Status.Stress) = max (0, Stress - 1)
+            }
+        }
+    }
+
+    Skills = table
+    {
+        description = "Twelve skills, three for each attribute, rated A to D or F."
+        tableLayout = layout { columns = 3  size = wide }
+        'Close Combat' = skill (dieOf (Attributes.STR.Rating))
+        'Heavy Weapons' = skill (dieOf (Attributes.STR.Rating))
+        Stamina = skill (dieOf (Attributes.STR.Rating))
+        Driving = skill (dieOf (Attributes.AGL.Rating))
+        Mobility = skill (dieOf (Attributes.AGL.Rating))
+        'Ranged Combat' = skill (dieOf (Attributes.AGL.Rating))
+        Recon = skill (dieOf (Attributes.INT.Rating))
+        Survival = skill (dieOf (Attributes.INT.Rating))
+        Tech = skill (dieOf (Attributes.INT.Rating))
+        Command = skill (dieOf (Attributes.EMP.Rating))
+        Persuasion = skill (dieOf (Attributes.EMP.Rating))
+        'Medical Aid' = skill (dieOf (Attributes.EMP.Rating))
+    }
+
+    Specialties = list
+    {
+        singular = "Specialty"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", stepped (dieOf (Attributes.STR.Rating), Character.Modifier), skillDie (characterTable, "Close Combat"), 0, "1", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Rounds = integer { default = 30  minvalue = 0  editable = live }
+        }
+    }
+
+    Armor = table
+    {
+        description = "Armor rating by hit location: damage over it gets through, and each hit wears it down."
+        tableLayout = layout { columns = 4 }
+        Head = integer { default = 0  editable = live }
+        Torso = integer { default = 0  editable = live }
+        Arms = integer { default = 0  editable = live }
+        Legs = integer { default = 0  editable = live }
+    }
+
+    Injuries = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Critical injuries' = string { multiline = true  editable = live }
+        'Mental trauma' = string { multiline = true  editable = live }
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Supplies = table
+    {
+        tableLayout = layout { columns = 4 }
+        Food = integer { description = "Rations." default = 0  editable = live }
+        Water = integer { description = "Water rations." default = 0  editable = live }
+        Fuel = integer { default = 0  editable = live }
+        Money = string {}
+        Encumbrance = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [NPC, Attacks]
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = NPC.Kind }]
+    }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Soldier", "Civilian", "Marauder", "Animal", "Leader"] }
+        STR = string { default = "C"  keys = ["A", "B", "C", "D"] }
+        AGL = string { default = "C"  keys = ["A", "B", "C", "D"] }
+        INT = string { default = "C"  keys = ["A", "B", "C", "D"] }
+        EMP = string { default = "C"  keys = ["A", "B", "C", "D"] }
+        CUF = string { default = "D"  keys = ["A", "B", "C", "D"] }
+        'Hit capacity' = integer { value = capacity (STR, AGL)  editable = none }
+        Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Damage >= 'Hit capacity' then "Broken" else ""  visible = none  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        Skills = string { description = "Skills with their ratings, such as Ranged Combat B, Recon C." }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attribute = string { default = "C"  keys = ["A", "B", "C", "D"] }
+            Skill = string { default = "C"  keys = ratings }
+            Ammo = integer { default = 0 }
+            Roll = integer { value = 0  render = poolName (dieOf (Attribute), dieOf (Skill))  valuedice = t2kRoll (dieOf (Attribute), dieOf (Skill), Ammo)  action = if Ammo > 0 then "ranged" else "melee"  reach = 2  editable = none }
+            Damage = string { default = "2" }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Gear = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { important = [Vehicle, Armor] }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Car", "Truck", "APC", "IFV", "Tank", "Boat", "Helicopter", "Other"] }
+        Speed = string { description = "Road and off-road speed." }
+        Fuel = integer { description = "Fuel carried, in liters." default = 0  editable = live }
+        'Fuel use' = string {}
+        'Hit capacity' = integer { default = 10 }
+        Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Damage >= 'Hit capacity' then "Knocked out" else ""  visible = none  indicator = "#d64545" }
+        Crew = string {}
+        Passengers = string {}
+        Cargo = string {}
+    }
+    Armor = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Front = integer { default = 0 }
+        Sides = integer { default = 0 }
+        Rear = integer { default = 0 }
+        Top = integer { default = 0 }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Vehicle weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Damage = string {}
+            Range = string {}
+            Ammo = integer { default = 0  editable = live }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Damaged systems' = string { multiline = true  editable = live }
+    }
+}
+
+t2kWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Melee", "Small arms", "Heavy", "Thrown"] }
+        Reliability = string { default = "4" }
+        Damage = string { default = "2" }
+        Crit = string { default = "3" }
+        Range = string { description = "Effective range in metres; up to double that at long range, with a penalty." }
+        'Rate of fire' = string {}
+        Ammo = string {}
+        Blast = string {}
+        Weight = string {}
+        Price = string {}
+    }
+}
+
+t2kGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Weight = string {}
+        Price = string {}
+    }
+}
+
+Twilight2000 = system
+{
+    hints = [
+        hint
+        {
+            title = "Survivors of the war"
+            topic = "Getting started"
+            text = ["Each character goes through a lifepath: nationality, background and years in the war set the four attributes and twelve skills, rated A (d12) to D (d6). Add the initiative card deck to the session."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll the attribute die and the skill die. Each 6 or more is a success; 10 or more on a d10 or d12 counts twice. You may push once: reroll dice without a success, but every 1 then costs damage or stress."]
+        },
+        hint
+        {
+            title = "Firing"
+            topic = "Combat"
+            text = ["Set Ammo dice before firing an automatic weapon: each 6 on them is an extra hit, and each die is a round spent. Roll d6 for the hit location; armor there stops damage."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Deal initiative: each character and enemy gets a card from 1 to 10 and acts in that order."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Vehicles = vehicleTable
+    Weapons = t2kWeapon
+    Gear = t2kGear
+    secondaryTypes = ["Weapons", "Gear"]
+    extraEntityTypes = [entityTypeDescription ("Vehicles", "vehicle", true, "/images/armour.svg", [])]
+    description = "Twilight: 2000 4th edition: survival after World War III, step dice and the Year Zero push"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    initiativeDeck = "Initiative Cards"
+    quickdice = [1d6, 1d8, 1d10, 1d12, 2d6, 3d6]
+    cssFiles = ["/systems/twilight/twilight.css"]
+    libraries = ["/systems/twilight/initiativedeck.json", "/systems/yze/yze.json", "/systems/names/wasteland.json", "/systems/names/spies.json", "/systems/names/norwegian.json"]
+    nameSettings = [wastelandNameSetting, spyThrillerNameSetting, modernNorwayNameSetting]
+}

@@ -1,0 +1,62 @@
+@import url("/systems/sheet.css");
+
+/* Twilight: 2000: a worn military file. Olive drab card, stencil capitals,
+   black typewriter text and rubber-stamp red; the four attributes as die
+   boxes, the twelve skills in three columns under them, hit and stress
+   capacity side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #4b5132;
+    --surface: #e8e4cf;
+    --surface-alt: #dcd7bb;
+    --surface-sunken: #cfc9a8;
+    --surface-muted: #b9b28c;
+    --text: #1b1c14;
+    --text-muted: #3e4130;
+    --text-faint: #6c6f57;
+    --on-accent: #e8e4cf;
+    --border: #8c8a68;
+    --border-strong: #2c2f1e;
+    --accent: #4f5a2a;
+    --accent-hover: #66733a;
+    --accent-soft: #dfe3c7;
+    --link: #4f5a2a;
+    --danger: #a3261b;
+    --danger-hover: #7e1d15;
+    --danger-soft: #efd6d0;
+    --success: #4f5a2a;
+    --paper: #e8e4cf;
+    --card-bg: #dcd7bb;
+    --dice-bg: #2c2f1e;
+    --dice-text: #e8e4cf;
+}
+
+.entityView {
+    --sheet-font: "Courier New", "Courier Prime", monospace;
+    --title-font: "Stencil", "Stencil Std", "Impact", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    background: var(--border-strong);
+    color: var(--surface);
+    padding: 2px 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+    font-size: 1.2em;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child { font-family: var(--title-font); }
+.entityView .table-specialties,
+.entityView .table-ammunition,
+.entityView .table-armor,
+.entityView .table-gear { --block: 50%; }
+.entityView .table-specialties { clear: left; }
