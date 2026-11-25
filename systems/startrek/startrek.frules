@@ -114,6 +114,12 @@ characterTable = ruleset
         Injured = bool { description = "An injury that impairs the character until treated." default = false  editable = live  indicator = "#d64545" }
         Down = string { value = if Stress >= 'Max Stress' then "Out of stress" else ""  visible = none  indicator = "#d64545" }
         Determination = integer { description = "Spend to gain a bonus die at 1, reroll, or perform a heroic act tied to a value." default = 1  minvalue = 0  maxvalue = 3  editable = live }
+        'New mission' = button { description = "Each mission starts with 1 determination and no stress. Injuries stay until treated."  editable = live  onClick = updates
+            {
+                (root.Status.Determination) = 1
+                (root.Status.Stress) = 0
+            }
+        }
         Reputation = integer { description = "Standing in Starfleet, used at the end of missions." default = 10 }
         'Personal Threat' = integer { description = "Threat the character can generate for the GM." default = 0  minvalue = 0  editable = live }
         'Protection' = integer { description = "Reduces stress from each hit." default = 0 }

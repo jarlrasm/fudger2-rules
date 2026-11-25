@@ -94,6 +94,7 @@ characterTable = ruleset
         'Max HP' = integer { description = "Pilot hit points when on foot: 6 plus Grit." value = 6 + Pilot.Grit  editable = none }
         HP = integer { description = "Current pilot hit points. At 0 the pilot is down and out." default = 'Max HP'  minvalue = 0  editable = live }
         Down = string { value = if HP < 1 then "Down and out" else ""  visible = none  indicator = "#d64545" }
+        'Full Repair' = button { description = "A full repair between missions heals the pilot completely."  editable = live  onClick = updates { (root.Status.HP) = 'Max HP' } }
         Armor = integer { description = "Reduces damage from each hit." default = 0 }
         Evasion = integer { description = "What an attack must reach to hit the pilot." default = 10 }
         'E Defense' = integer { description = "What a tech attack must reach to affect the pilot." default = 10 }
@@ -232,6 +233,30 @@ mechTable = ruleset
         tableLayout = layout { columns = 2  size = wide }
         'Core Power' = string { description = "The frame's core power, usable once per mission." multiline = true }
         'Core Used' = bool { default = false  editable = live }
+        'Full Repair' = button
+        {
+            description = "A full repair between missions: HP, structure, stress and repairs back to full, no heat, burn or conditions, and the core power is ready again."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.HP) = Combat.'Max HP'
+                (root.Combat.Structure) = 4
+                (root.Combat.Stress) = 4
+                (root.Combat.Heat) = 0
+                (root.Combat.Repairs) = Combat.'Repair Cap'
+                (root.Combat.Overshield) = 0
+                (root.Combat.Burn) = 0
+                (root.Combat.Exposed) = false
+                (root.Combat.Impaired) = false
+                (root.Combat.Slowed) = false
+                (root.Combat.Immobilized) = false
+                (root.Combat.Jammed) = false
+                (root.Combat.Lock) = false
+                (root.Combat.Shredded) = false
+                (root.Combat.Stunned) = false
+                (root.Core.'Core Used') = false
+            }
+        }
     }
 }
 

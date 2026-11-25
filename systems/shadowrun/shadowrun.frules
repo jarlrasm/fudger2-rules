@@ -120,6 +120,7 @@ characterTable = ruleset
         Charisma = integer { description = "Force of personality and social skill." default = 3  minvalue = 1  maxvalue = 10 }
         Edge = integer { description = "Edge: luck and the knack for coming out on top. Caps how much edge you hold." default = 2  minvalue = 1  maxvalue = 7 }
         'Current Edge' = integer { description = "Edge points held right now, gained in play and spent on edge actions." default = Edge  minvalue = 0  maxvalue = 7  editable = live  indicator = "#8e5cc4"  indicatorLabel = "Edge" }
+        'Refresh Edge' = button { description = "Edge points back to your Edge rating, for when the game refreshes them."  editable = live  onClick = updates { (root.Attributes.'Current Edge') = Edge } }
         Magic = integer { description = "Magical potential. 0 means mundane." default = 0  minvalue = 0  maxvalue = 10 }
         Resonance = integer { description = "Technomancer potential for using the Matrix without a deck." default = 0  minvalue = 0  maxvalue = 10 }
         Essence = string { description = "Essence, worn down by cyberware. Losing it hurts Magic and Resonance." default = "6.0" }
@@ -150,6 +151,13 @@ characterTable = ruleset
         'Wound Modifier' = integer { description = "Every 3 boxes filled gives -1 to all pools." value = Physical.realvalue / 3 + Stun.realvalue / 3  editable = none }
         Overflow = integer { description = "Physical damage past the monitor. Too much and the runner dies." value = max (0, Physical.realvalue - (8 + (Attributes.Body + 1) / 2))  editable = none }
         Down = string { value = if Physical.realvalue >= 8 + (Attributes.Body + 1) / 2 then "Dying" else if Stun.realvalue >= 8 + (Attributes.Willpower + 1) / 2 then "Unconscious" else ""  visible = none  indicator = "#555555" }
+        'Stun healed' = button { description = "Clears the stun track, once rest has healed it. Physical damage needs longer rest or medical care."  editable = live  onClick = updates { (root.'Condition Monitors'.Stun.realvalue) = 0 } }
+        'Fully healed' = button { description = "Clears both tracks, once rest and medical care have healed them. Enter partial healing by hand."  editable = live  onClick = updates
+            {
+                (root.'Condition Monitors'.Physical.realvalue) = 0
+                (root.'Condition Monitors'.Stun.realvalue) = 0
+            }
+        }
     }
 
     Skills = table

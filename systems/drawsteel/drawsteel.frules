@@ -96,9 +96,22 @@ characterTable = ruleset
         Stamina = integer { description = "Current stamina. At half you are winded, at 0 dying." default = 'Max Stamina'  editable = live  indicator = "#d64545" }
         Temporary = integer { description = "Temporary stamina that is lost before your real stamina." default = 0  minvalue = 0  editable = live }
         State = string { value = stateOf (Stamina, 'Max Stamina')  editable = none  indicator = "#d64545" }
-        Recoveries = integer { description = "Spend one to regain a third of your stamina." default = 8  minvalue = 0  editable = live }
+        'Max recoveries' = integer { description = "Recoveries your class gives you, regained in a respite." default = 8  minvalue = 0 }
+        Recoveries = integer { description = "Spend one to regain a third of your stamina." default = 'Max recoveries'  minvalue = 0  editable = live }
         'Recovery value' = integer { description = "Stamina regained per recovery: a third of your maximum." value = 'Max Stamina' / 3  editable = none }
-        Recover = button { description = "Spend a recovery and heal the recovery value." onClick = updates { (Stamina.realvalue) = min ('Max Stamina', Stamina + 'Recovery value')  (Recoveries.realvalue) = max (0, Recoveries - 1) } }
+        Recover = button { description = "Spend a recovery and heal the recovery value."  editable = live  onClick = updates
+            {
+                (root.Health.Stamina) = min ('Max Stamina', Stamina + 'Recovery value')
+                (root.Health.Recoveries) = max (0, Recoveries - 1)
+            }
+        }
+        Respite = button { description = "A day of rest: regain all stamina and recoveries."  editable = live  onClick = updates
+            {
+                (root.Health.Stamina) = 'Max Stamina'
+                (root.Health.Temporary) = 0
+                (root.Health.Recoveries) = 'Max recoveries'
+            }
+        }
     }
 
     Resources = table

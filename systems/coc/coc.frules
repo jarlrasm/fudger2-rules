@@ -154,6 +154,16 @@ characterTable = ruleset
             'Major Wound' = bool { description = "A wound of half your hit points or more from a single hit." default = false  editable = live  indicator = "#d64545" }
             Dying = bool { default = false  editable = live  indicator = "#d64545" }
             Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+            'Night of rest' = button
+            {
+                description = "A day's rest heals 1 hit point unless you have a major wound, which needs a weekly recovery roll. Magic points come back in full."
+                editable = live
+                onClick = updates
+                {
+                    (root.Status.'Hit Points'.Current) = if 'Major Wound' then Current else min (Max, Current + 1)
+                    (root.Status.'Magic Points'.Current) = 'Magic Points'.Max
+                }
+            }
         }
         Sanity = table
         {

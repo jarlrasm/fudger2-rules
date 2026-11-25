@@ -128,6 +128,8 @@ characterTable = ruleset
         Exhausted = bool { default = false  editable = live  indicator = "#d4b106" }
         Freezing = bool { default = false  editable = live  indicator = "#3a7bd5" }
         'Critical Injuries' = string { description = "Lasting injuries from being Broken, with their effects." reference = ["yze", 21] multiline = true  editable = live }
+        'Rest a turn' = button { description = "Each Turn of rest in a safe place lowers stress by one."  editable = live  onClick = updates { (root.Status.Stress) = max (0, Stress - 1) } }
+        'Rest a shift' = button { description = "A shift of rest heals one point of health, unless you are starving or dehydrated."  reference = ["yze", 21]  editable = live  onClick = updates { (root.Status.Health) = if Starving or Dehydrated then Health else min ('Max Health', Health + 1) } }
     }
 
     Skills = table

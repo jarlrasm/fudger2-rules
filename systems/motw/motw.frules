@@ -77,6 +77,7 @@ characterTable = ruleset
         Luck = slots { description = "Spend luck to turn any roll into a 12 or avoid harm. Seven spent and you are doomed." number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
         Harm = slots { description = "Harm taken. At 4 or more you are unstable and get worse; at 8 you die." number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
         Down = string { value = harmState (Harm.realvalue)  visible = none  indicator = "#d64545" }
+        'Day of rest' = button { description = "A day of rest heals one harm, unless you are unstable and need medical help first."  editable = live  onClick = updates { (root.Status.Harm.realvalue) = if Harm.realvalue >= 4 then Harm.realvalue else max (0, Harm.realvalue - 1) } }
         Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
         Armour = integer { description = "Armour reduces harm from each hit." default = 0 }
     }

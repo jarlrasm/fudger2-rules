@@ -149,6 +149,18 @@ characterTable = ruleset
         Fatigued = bool { description = "Fatigued: bane on all checks until you rest." default = false  editable = live  indicator = "#d4b106" }
         Stunned = bool { description = "Stunned: you can only react until the effect wears off." default = false  editable = live  indicator = "#d4b106" }
         Armour = integer { description = "Armour protection, subtracted from each hit." default = 0  editable = live }
+        Rest = button { description = "Rest removes fatigue."  editable = live  onClick = updates { (root.Status.Fatigued) = false } }
+        'Fully healed' = button
+        {
+            description = "STR, DEX and END back to their full values, once rest and medical care have healed them. Enter partial healing by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Characteristics.STR.Current) = Characteristics.STR.Value
+                (root.Characteristics.DEX.Current) = Characteristics.DEX.Value
+                (root.Characteristics.END.Current) = Characteristics.END.Value
+            }
+        }
     }
 
     Skills = table

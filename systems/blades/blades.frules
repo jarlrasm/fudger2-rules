@@ -109,6 +109,27 @@ characterTable = ruleset
         Armor = bool { description = "Armor that can be used once to reduce or avoid harm." default = false  editable = live }
         'Heavy Armor' = bool { default = false  editable = live }
         'Special Armor' = bool { default = false  editable = live }
+        Healed = button
+        {
+            description = "When the healing clock fills, every harm moves one level down and level 1 harm goes away. The clock starts again."
+            editable = live
+            onClick = updates
+            {
+                (root.Harm.'Level 3') = ""
+                (root.Harm.'Level 2 A') = 'Level 3'
+                (root.Harm.'Level 2 B') = ""
+                (root.Harm.'Level 1 A') = 'Level 2 A'
+                (root.Harm.'Level 1 B') = 'Level 2 B'
+                (root.Harm.Healing.realvalue) = 0
+            }
+        }
+        'Next score' = button { description = "Armor used on the last score is ready again."  editable = live  onClick = updates
+            {
+                (root.Harm.Armor) = false
+                (root.Harm.'Heavy Armor') = false
+                (root.Harm.'Special Armor') = false
+            }
+        }
     }
 
     Insight = table

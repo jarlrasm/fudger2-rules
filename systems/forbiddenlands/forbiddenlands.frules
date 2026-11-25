@@ -111,6 +111,19 @@ characterTable = ruleset
         Hungry = bool { description = "Hunger blocks healing and costs Strength over time." reference = ["yze", 25] default = false  editable = live  indicator = "#d4b106" }
         Cold = bool { description = "Cold blocks healing and costs Wits over time." reference = ["yze", 25] default = false  editable = live  indicator = "#3a7bd5" }
         'Critical Injuries' = string { description = "Lasting injuries from being broken, with their effects." reference = ["yze", 21] multiline = true  editable = live }
+        'Rest a shift' = button
+        {
+            description = "A shift of rest heals one point of damage (Strength, then Agility) and one of stress (Wits, then Empathy). Hunger stops damage healing, sleeplessness stops stress healing, and thirst or cold stop both."
+            reference = [["yze", 21], ["yze", 25]]
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.Strength.Current) = if Hungry or Thirsty or Cold then Attributes.Strength.Current else min (Attributes.Strength.Max, Attributes.Strength.Current + 1)
+                (root.Attributes.Agility.Current) = if Hungry or Thirsty or Cold or Attributes.Strength.Current < Attributes.Strength.Max then Attributes.Agility.Current else min (Attributes.Agility.Max, Attributes.Agility.Current + 1)
+                (root.Attributes.Wits.Current) = if Sleepy or Thirsty or Cold then Attributes.Wits.Current else min (Attributes.Wits.Max, Attributes.Wits.Current + 1)
+                (root.Attributes.Empathy.Current) = if Sleepy or Thirsty or Cold or Attributes.Wits.Current < Attributes.Wits.Max then Attributes.Empathy.Current else min (Attributes.Empathy.Max, Attributes.Empathy.Current + 1)
+            }
+        }
         Experience = integer { description = "Experience earned in play, spent on skills and talents." reference = ["yze", 7] default = 0  editable = live }
     }
 

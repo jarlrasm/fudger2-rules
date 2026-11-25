@@ -141,6 +141,8 @@ characterTable = ruleset
         Stains = integer { description = "Stains from breaking your convictions. At the end of the session they may cost humanity." default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#8e5cc4" }
         'Blood Potency' = integer { description = "Strength of the vampire's blood. Raises discipline power and blood surges." default = 1  minvalue = 0  maxvalue = 10 }
         'Remorse' = integer { description = "Roll one die per empty humanity box. No success and humanity drops." value = 10 - Humanity - Stains  valuedice = ([dice { number = max (1, 10 - Humanity - Stains)  sides = 10 }], ((baseline, throws)->if count (filter ((x)->x > 5, first (throws).rolls)) > 0 then { Text = "Humanity holds"  Outcome = "Success" } else { Text = "Lose 1 Humanity"  Outcome = "Failure" }))  editable = none }
+        'New session' = button { description = "Each session, superficial willpower damage heals by the higher of Composure or Resolve."  editable = live  onClick = updates { (root.Trackers.'Willpower Superficial'.realvalue) = max (0, 'Willpower Superficial'.realvalue - max (Attributes.Composure, Attributes.Resolve)) } }
+        'Remorse done' = button { description = "After the remorse roll at the end of the session, stains are cleared. Lower humanity by hand if the roll failed."  editable = live  onClick = updates { (root.Trackers.Stains) = 0 } }
     }
 
     Skills = table

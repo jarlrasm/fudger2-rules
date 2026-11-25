@@ -191,6 +191,12 @@ characterTable = ruleset
         Wounds = integer { description = "Wounds taken. Beyond the threshold you are out and suffer a critical injury." default = 0  minvalue = 0  editable = live }
         'Strain Threshold' = integer { description = "Strain beyond this knocks the character out." default = 10 + Characteristics.Willpower }
         Strain = integer { description = "Strain taken from stress, effort and talents." default = 0  minvalue = 0  editable = live }
+        'Night of rest' = button { description = "A full night's rest heals one wound and all strain. Critical injuries need medical care."  editable = live  onClick = updates
+            {
+                (root.Status.Wounds) = max (0, Wounds - 1)
+                (root.Status.Strain) = 0
+            }
+        }
         'Melee Defense' = integer { description = "Upgrades the difficulty of melee attacks against you." default = 0 }
         'Ranged Defense' = integer { description = "Upgrades the difficulty of ranged attacks against you." default = 0 }
         Incapacitated = string { value = if Wounds > 'Wound Threshold' then "Incapacitated" else if Strain > 'Strain Threshold' then "Incapacitated by strain" else ""  visible = none  indicator = "#d64545" }

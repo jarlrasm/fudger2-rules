@@ -49,6 +49,7 @@ characterTable = ruleset
         Refresh = integer { description = "Fate points you start each session with." reference = ["core", 43] default = 3 }
         'Fate Points' = integer { description = "Spend one to invoke an aspect for +2 or a reroll. Gain one when an aspect is compelled." reference = ["core", 6] default = 3  minvalue = 0  editable = live }
         Description = string { multiline = true }
+        'New session' = button { description = "Fate points reset to your refresh at the start of a session, unless you ended the last one with more."  reference = ["core", 4]  editable = live  onClick = updates { (root.Character.'Fate Points') = max ('Fate Points', Refresh) } }
     }
 
     Aspects = table
@@ -122,6 +123,12 @@ characterTable = ruleset
         tableLayout = layout { columns = 2  size = wide }
         Physical = slots { description = "Physical stress boxes. Physique adds more." reference = ["core", 26] number = if Skills.Physique > 2 then 4 else if Skills.Physique > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#d64545" }
         Mental = slots { description = "Mental stress boxes. Will adds more." reference = ["core", 26] number = if Skills.Will > 2 then 4 else if Skills.Will > 0 then 3 else 2  editable = live  labels = ["1", "2", "3", "4"]  indicator = "#8e5cc4" }
+        'End of conflict' = button { description = "After a conflict, every stress box is free again. Consequences stay."  reference = ["core", 85]  editable = live  onClick = updates
+            {
+                (root.Stress.Physical.realvalue) = 0
+                (root.Stress.Mental.realvalue) = 0
+            }
+        }
     }
 
     Consequences = table
@@ -185,6 +192,7 @@ creatureTable = ruleset
         Boxes = slots { description = "Stress boxes that soak hits for a scene." reference = ["core", 84] number = 2  editable = live  indicator = "#d64545" }
         Consequence = string { description = "A consequence the creature has taken." reference = ["core", 85] editable = live  indicator = "#d64545" }
         'Taken Out' = bool { default = false  editable = live  indicator = "#555555" }
+        'End of conflict' = button { description = "After a conflict, every stress box is free again."  reference = ["core", 85]  editable = live  onClick = updates { (root.Stress.Boxes.realvalue) = 0 } }
         Initiative = modifier { default = 0  valuedice = ([1d1], ((baseline, throws)->baseline)) }
     }
     Stunts = table

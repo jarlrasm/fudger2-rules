@@ -195,6 +195,7 @@ creatureTable = ruleset
     Tough = string { description = "Toughness: the damage needed to hurt the creature, and its armor." }
     Shock = integer { description = "Shock the creature can take before it is knocked out." }
     'Shocks taken' = integer { description = "Shock taken." editable = live  indicator = "#d4b106"  indicatorLabel = "Shock" }
+    'End of scene' = button { description = "Shock goes away when the scene ends."  editable = live  onClick = updates { (root.Basics.'Shocks taken') = 0 } }
     Wounds = integer { description = "Wounds the creature can take before it is defeated." }
     'Wounds taken' = slots
     {
@@ -664,6 +665,12 @@ characterTable = ruleset
           {
             value = 0
             valuedice = 1d6
+          }
+          'End of scene' = button
+          {
+            description = "Shock goes away when the scene ends. Wounds stay until healed."
+            editable = live
+            onClick = updates { (root.Damage.Shock) = 0 }
           }
       }
 

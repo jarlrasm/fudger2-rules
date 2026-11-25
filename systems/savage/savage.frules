@@ -150,6 +150,7 @@ characterTable = ruleset
         'Wild Card' = bool { description = "Wild cards are heroes and major villains: they roll a wild die and take three wounds." default = true }
         Modifier = modifier { description = "Bonus or penalty for the next trait roll." default = 0  editable = live }
         Bennies = integer { description = "Spend a benny to reroll a trait test or soak wounds." default = 3  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'New session' = button { description = "Each player starts a session with three bennies. Unspent ones from the last session are lost."  editable = live  onClick = updates { (root.Character.Bennies) = 3 } }
         Conviction = bool { description = "Conviction adds a d6 to trait and damage rolls for a turn." default = false  editable = live  indicator = "#3a7bd5" }
     }
 
@@ -191,6 +192,19 @@ characterTable = ruleset
         Stunned = bool { description = "Stunned: you are prone, can't act, and become distracted and vulnerable." default = false  editable = live  indicator = "#d4b106" }
         Entangled = bool { description = "Entangled: you can't move and are distracted." default = false  editable = live  indicator = "#e8913a" }
         Penalty = integer { description = "Total penalty to rolls from wounds and fatigue." value = penaltyOf (characterTable)  editable = none }
+        'End of combat' = button
+        {
+            description = "When the fight is over: no longer shaken, distracted, vulnerable, stunned or entangled. Wounds and fatigue stay."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Shaken) = false
+                (root.Status.Distracted) = false
+                (root.Status.Vulnerable) = false
+                (root.Status.Stunned) = false
+                (root.Status.Entangled) = false
+            }
+        }
     }
 
     Skills = table
@@ -272,6 +286,7 @@ characterTable = ruleset
         'Arcane Background' = string { description = "The source of the character's powers, such as magic or weird science." }
         'Power Points' = integer { description = "Power points when rested, spent to activate powers." default = 0 }
         'Current Power Points' = integer { description = "Power points left." default = 'Power Points'  minvalue = 0  editable = live }
+        'Rest an hour' = button { description = "Each hour of rest brings back 5 power points."  editable = live  onClick = updates { (root.Powers.'Current Power Points') = min ('Power Points', 'Current Power Points' + 5) } }
     }
 
     'Known Powers' = list

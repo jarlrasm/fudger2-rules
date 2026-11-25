@@ -116,6 +116,7 @@ characterTable = ruleset
         'Armor Slots' = slots { description = "Mark an armor slot to reduce the damage severity of a hit by one step." reference = ["srd", 55] number = 'Armor Score'  editable = live }
         'Major Threshold' = integer { description = "Damage at or above this marks 2 HP; below it marks 1." reference = ["srd", 39] default = 6 }
         'Severe Threshold' = integer { description = "Damage at or above this marks 3 HP." reference = ["srd", 39] default = 12 }
+        'Repair All Armor' = button { description = "Long rest move: clear every armor slot."  reference = ["srd", 41]  editable = live  onClick = updates { (root.Defense.'Armor Slots'.realvalue) = 0 } }
     }
 
     'Hope and Health' = table
@@ -130,6 +131,9 @@ characterTable = ruleset
         Vulnerable = bool { description = "Vulnerable: all rolls against you have advantage." reference = ["srd", 41] default = false  editable = live  indicator = "#e8913a" }
         Restrained = bool { description = "Restrained: you can't move, but can still act where you stand." reference = ["srd", 41] default = false  editable = live  indicator = "#e8913a" }
         Hidden = bool { description = "Hidden: out of sight, so rolls against you have disadvantage." reference = ["srd", 41] default = false  editable = live  indicator = "#3a7bd5" }
+        'Tend to All Wounds' = button { description = "Long rest move: clear every hit point. Pick two moves per long rest."  reference = ["srd", 41]  editable = live  onClick = updates { (root.'Hope and Health'.'Hit Points'.realvalue) = 0 } }
+        'Clear All Stress' = button { description = "Long rest move: clear every stress."  reference = ["srd", 41]  editable = live  onClick = updates { (root.'Hope and Health'.Stress.realvalue) = 0 } }
+        Prepare = button { description = "Rest move: prepare for what comes next and gain a Hope."  reference = ["srd", 41]  editable = live  onClick = updates { (root.'Hope and Health'.Hope.realvalue) = min (6, Hope.realvalue + 1) } }
     }
 
     Experiences = list

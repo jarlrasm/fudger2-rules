@@ -117,6 +117,22 @@ characterTable = ruleset
         'HP bonus' = integer { default = 0 }
         'Max IP' = integer { description = "Inventory points when fully stocked." default = 6 }
         IP = integer { description = "Inventory points left, spent to use potions and other consumables." default = 6  editable = live }
+        Rest = button
+        {
+            description = "A rest at an inn or a safe camp restores all HP and MP and removes every status."
+            editable = live
+            onClick = updates
+            {
+                (root.Points.HP) = 'Max HP'
+                (root.Points.MP) = 'Max MP'
+                (root.Statuses.Slow) = false
+                (root.Statuses.Dazed) = false
+                (root.Statuses.Weak) = false
+                (root.Statuses.Shaken) = false
+                (root.Statuses.Enraged) = false
+                (root.Statuses.Poisoned) = false
+            }
+        }
         'MP bonus' = integer { default = 0 }
         Defense = integer { description = "What an attack must reach to hit you: Dexterity die plus bonuses." value = Attributes.Dexterity.Current + 'Defense bonus'  editable = none }
         'Magic Defense' = integer { description = "What a spell must reach to affect you: Insight die plus bonuses." value = Attributes.Insight.Current + 'Magic Defense bonus'  editable = none }

@@ -123,6 +123,13 @@ characterTable = ruleset
         Focus = integer { description = "Spent on special actions, reactions and some talents. Recovers on rest." default = 'Max Focus'  editable = live  indicator = "#3a7bd5" }
         'Max Investiture' = integer { default = 0 }
         Investiture = integer { description = "Stormlight or other power spent to fuel surges and Radiant abilities." default = 0  editable = live }
+        'Long rest' = button { description = "A long rest restores all health and focus and lowers exhaustion by one. Injuries heal on their own time."  editable = live  onClick = updates
+            {
+                (root.Resources.Health) = 'Max Health'
+                (root.Resources.Focus) = 'Max Focus'
+                (root.Conditions.Exhausted) = max (0, Conditions.Exhausted - 1)
+            }
+        }
         Movement = integer { description = "How far the character can move with one move action." default = 25  render = distance (Movement) }
         'Recovery die' = string { description = "Die rolled to recover health and focus when resting." default = "d4"  keys = ["d4", "d6", "d8", "d10", "d12", "d20"] }
         'Senses range' = integer { default = 5  render = distance ('Senses range') }

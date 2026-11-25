@@ -165,6 +165,26 @@ characterTable = ruleset
         Dying = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
         'Round Rest' = bool { description = "A round rest recovers d6 WP once per shift." default = false  editable = live }
         'Stretch Rest' = bool { description = "A stretch rest recovers HP and WP and a condition." default = false  editable = live }
+        'Shift Rest' = button
+        {
+            description = "A shift of rest (six hours): all HP, all WP and every condition come back. The round and stretch rests can be taken again."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.HP) = 'Max HP'
+                (root.Status.WP) = 'Max WP'
+                (root.Status.'Death Successes'.realvalue) = 0
+                (root.Status.'Death Failures'.realvalue) = 0
+                (root.Status.'Round Rest') = false
+                (root.Status.'Stretch Rest') = false
+                (root.Conditions.Exhausted) = false
+                (root.Conditions.Sickly) = false
+                (root.Conditions.Dazed) = false
+                (root.Conditions.Angry) = false
+                (root.Conditions.Scared) = false
+                (root.Conditions.Disheartened) = false
+            }
+        }
     }
 
     Skills = table

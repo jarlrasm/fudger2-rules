@@ -134,6 +134,8 @@ characterTable = ruleset
         Miserable = bool { description = "Miserable: an Eye on the Feat die is a failure." default = false  editable = live  indicator = "#8e5cc4" }
         Wounded = bool { description = "Wounded: another wound leaves you dying." default = false  editable = live  indicator = "#d64545" }
         Down = string { value = if Endurance < 1 then "Unconscious" else if Load >= Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
+        'Short rest' = button { description = "An hour of rest restores endurance equal to your Strength, unless you are wounded."  editable = live  onClick = updates { (root.Condition.Endurance) = if Wounded then Endurance else min ('Max Endurance', Endurance + Attributes.Strength) } }
+        'Prolonged rest' = button { description = "A night's rest restores all endurance, or only your Strength in endurance while wounded."  editable = live  onClick = updates { (root.Condition.Endurance) = if Wounded then min ('Max Endurance', Endurance + Attributes.Strength) else 'Max Endurance' } }
         Roll = selector { description = "Favoured rolls two Feat dice and keeps the better, ill-favoured the worse." options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
         Injury = string { description = "The wound the hero is suffering from, and how long it lasts." editable = live }
     }

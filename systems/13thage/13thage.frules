@@ -137,9 +137,16 @@ characterTable = ruleset
         'Max HP' = integer { description = "Hit points when unhurt: class base plus Con, times a multiplier for level." reference = ["srd", 329] value = ('HP base' + Abilities.Con.Modifier) * levelMultiplier (Character.Level)  editable = none }
         HP = integer { description = "Current hit points. At half you are staggered, at 0 you go down." reference = ["srd", 337] default = 'Max HP'  editable = live  indicator = "#d64545" }
         State = string { value = hpState (HP, 'Max HP')  editable = none  indicator = "#d64545" }
-        Recoveries = integer { description = "How many times a day you can heal by rolling recovery dice." reference = ["srd", 13] default = 8  minvalue = 0  editable = live }
+        'Max recoveries' = integer { description = "Recoveries you have after a full heal-up, usually 8." reference = ["srd", 13] default = 8  minvalue = 0 }
+        Recoveries = integer { description = "How many times a day you can heal by rolling recovery dice." reference = ["srd", 13] default = 'Max recoveries'  minvalue = 0  editable = live }
         'Recovery die' = string { default = "d8"  keys = ["d6", "d8", "d10", "d12"] }
         Recovery = string { description = "What one recovery heals: level times the recovery die, plus Con." reference = ["srd", 13] value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier)  editable = none }
+        'Full heal up' = button { description = "After about four battles: hit points back to full and every recovery regained. Untick your used powers too."  reference = ["srd", 338]  editable = live  onClick = updates
+            {
+                (root.Health.HP) = 'Max HP'
+                (root.Health.Recoveries) = 'Max recoveries'
+            }
+        }
     }
 
     Attacks = list

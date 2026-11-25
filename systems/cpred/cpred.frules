@@ -117,11 +117,13 @@ characterTable = ruleset
             'Seriously Wounded' = (Max + 1) / 2
             Wounded = string { value = if Current < 1 then "Mortally Wounded" else if Current < 'Seriously Wounded' then "Seriously Wounded" else ""  visible = none  indicator = "#d64545" }
             'Death Save' = integer { description = "Roll a d10 under BODY each turn while mortally wounded to stay alive." value = Stats.BODY  valuedice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) == 10 or first (first (throws).rolls) > baseline then { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": dies"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": survives"  Outcome = "Success" }))  editable = none }
+            'Day of rest' = button { description = "A full day of rest heals hit points equal to your BODY."  editable = live  onClick = updates { (root.Status.'Hit Points'.Current) = min (Max, Current + Stats.BODY) } }
         }
         Luck = table
         {
             description = "Luck points left this session."
             Current = integer { default = Stats.LUCK  editable = live }
+            'New session' = button { description = "Luck refills to your LUCK at the start of each session."  editable = live  onClick = updates { (root.Status.Luck.Current) = Stats.LUCK } }
         }
         Humanity = table
         {

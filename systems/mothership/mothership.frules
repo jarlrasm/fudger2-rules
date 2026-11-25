@@ -202,6 +202,12 @@ characterTable = ruleset
       {
         default = 0
       }
+      Recover = button
+      {
+        description = "Health back to its maximum once there is time to rest. Wounds stay until treated."
+        editable = live
+        onClick = updates { (root.Health.Health.Current) = Maximum }
+      }
     }
     Wounds = table
     {
@@ -230,6 +236,12 @@ characterTable = ruleset
       {
         description = "Stress never goes below this."
         default = 2
+      }
+      'Shore leave' = button
+      {
+        description = "Shore leave relieves stress down to the minimum. It costs credits."
+        editable = live
+        onClick = updates { (root.Health.Stress.Current) = Minimum }
       }
     }
   }

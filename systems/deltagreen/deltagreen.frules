@@ -116,12 +116,14 @@ characterTable = ruleset
             Maximum = integer { value = (Statistics.Strength.Score + Statistics.Constitution.Score + 1) / 2  editable = none }
             Current = integer { description = "Current hit points." default = Maximum  editable = live }
             Wounded = string { value = if Current < 3 then "Unconscious or dying" else ""  visible = none  indicator = "#d64545" }
+            'Fully healed' = button { description = "Hit points back to the maximum, once rest and medical care have healed them. Enter partial healing by hand."  editable = live  onClick = updates { (root.'Derived Attributes'.'Hit Points'.Current) = Maximum } }
         }
         'Willpower Points' = table
         {
             description = "Willpower, from POW. Spend it to push yourself or project a bond."
             Maximum = integer { value = Statistics.Power.Score  editable = none }
             Current = integer { description = "Current willpower points. At 0 the agent collapses." default = Maximum  editable = live }
+            'Fully rested' = button { description = "Willpower back to the maximum, once rest has restored it. Enter partial recovery by hand."  editable = live  onClick = updates { (root.'Derived Attributes'.'Willpower Points'.Current) = Maximum } }
         }
         Sanity = table
         {

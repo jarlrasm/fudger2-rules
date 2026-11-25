@@ -162,6 +162,8 @@ characterTable = ruleset
         Movement = integer { description = "Movement: yards moved per step." default = 4 }
         Walk = integer { description = "Walking speed: twice Movement." value = Movement * 2  editable = none }
         Run = integer { description = "Running speed: four times Movement." value = Movement * 4  editable = none }
+        'New session' = button { description = "Fortune refills to your Fate at the start of each session."  editable = live  onClick = updates { (root.'Fate and Fortune'.Fortune) = Fate } }
+        'End of combat' = button { description = "Advantage is lost when the fight ends."  editable = live  onClick = updates { (root.'Fate and Fortune'.Advantage) = 0 } }
     }
 
     Experience = table
@@ -335,6 +337,7 @@ creatureTable = ruleset
         Prone = bool { default = false  editable = live  indicator = "#e8913a" }
         Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
         Bleeding = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'End of combat' = button { description = "Advantage is lost when the fight ends."  editable = live  onClick = updates { (root.State.Advantage) = 0 } }
     }
     Attacks = list
     {

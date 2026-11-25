@@ -173,6 +173,8 @@ characterTable = ruleset
         Vigilance = integer { description = "Target number to hit you when unaware, and your initiative when surprised." value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
         'Void points' = slots { description = "Spend a void point to keep an extra die or fuel some techniques." number = Rings.Void  editable = live }
         Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
+        Unmasked = button { description = "When strife exceeds composure the character unmasks, shows their true feelings, and strife resets to 0."  editable = live  onClick = updates { (root.Status.Strife) = 0 } }
+        'Night of rest' = button { description = "A night's rest removes fatigue equal to twice your Water ring."  editable = live  onClick = updates { (root.Status.Fatigue) = max (0, Fatigue - 2 * Rings.Water) } }
         Initiative = integer { description = "Turn order: roll Tactics with Air when ready, or use Vigilance when surprised." value = Focus  valuedice = initiativeRoll (Rings.Air, skillRank (characterTable, "Tactics"))  editable = none }
     }
 

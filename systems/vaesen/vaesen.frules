@@ -124,6 +124,22 @@ characterTable = ruleset
         'Mentally broken' = bool { description = "Mentally broken: roll for a critical mental effect and you can't act sanely." reference = ["yze", 21] default = false  editable = live }
         State = string { value = brokenState (characterTable)  visible = none  indicator = "#d64545" }
         Initiative = integer { description = "Initiative card or roll at the start of a fight." reference = ["yze", 15] default = 0  valuedice = 1d10 }
+        'Rest at the castle' = button
+        {
+            description = "Back at the castle between mysteries, every condition heals. Critical injuries keep their own healing time."
+            editable = live
+            onClick = updates
+            {
+                (root.Conditions.Exhausted) = false
+                (root.Conditions.Battered) = false
+                (root.Conditions.Wounded) = false
+                (root.Conditions.'Physically broken') = false
+                (root.Conditions.Angry) = false
+                (root.Conditions.Frightened) = false
+                (root.Conditions.Hopeless) = false
+                (root.Conditions.'Mentally broken') = false
+            }
+        }
         'Critical injuries' = string { description = "Lasting injuries and mental scars, with their effects." reference = [["yze", 22], ["yze", 23]] multiline = true  editable = live }
     }
 

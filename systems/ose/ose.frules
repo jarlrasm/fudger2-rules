@@ -118,6 +118,17 @@ characterTable = ruleset
         'Attack Bonus' = integer { description = "Attack bonus for ascending AC: 19 minus THAC0." reference = ["bfrpg", 57] value = 19 - THAC0  editable = none }
         'Max HP' = integer { description = "Hit points when unhurt." reference = ["bfrpg", 8] default = 4 }
         HP = integer { description = "Current hit points. At 0 the character dies." reference = ["bfrpg", 62] default = 'Max HP'  editable = live }
+        'Night of rest' = button { description = "A night's sleep heals 1 hit point, or 2 with full bedrest. Spellcasters prepare spells again in the morning."  reference = ["bfrpg", 63]  editable = live  onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + 1)
+                (root.'Spell Slots'.'Level 1'.Used) = 0
+                (root.'Spell Slots'.'Level 2'.Used) = 0
+                (root.'Spell Slots'.'Level 3'.Used) = 0
+                (root.'Spell Slots'.'Level 4'.Used) = 0
+                (root.'Spell Slots'.'Level 5'.Used) = 0
+                (root.'Spell Slots'.'Level 6'.Used) = 0
+            }
+        }
         Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
         Initiative = modifier { description = "Roll d6 plus DEX modifier for individual initiative." reference = ["bfrpg", 55] value = Abilities.DEX.Modifier  valuedice = 1d6  editable = none }
         Movement = string { description = "Movement per turn, with the rate per round in brackets." reference = ["bfrpg", 46] default = "120' (40')" }

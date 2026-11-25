@@ -202,6 +202,24 @@ pf2Defenses = table
     HP = integer { description = "Current hit points. At 0 you are dying." default = 'Max HP'  editable = live }
     'Temp HP' = integer { description = "Temporary hit points, lost before real HP." default = 0  editable = live }
     Down = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
+    Rest = button
+    {
+        description = "Eight hours of rest: regain CON times level in HP (at least level), lose fatigued, lower drained and doomed by 1, and prepare spells and focus again."
+        editable = live
+        onClick = updates
+        {
+            (root.Defenses.HP) = min ('Max HP', HP + max (1, Attributes.CON) * Character.Level)
+            (root.Conditions.Fatigued) = false
+            (root.Conditions.Drained) = max (0, Conditions.Drained - 1)
+            (root.Conditions.Doomed) = max (0, Conditions.Doomed - 1)
+            (root.Spellcasting.'Focus Points'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 1'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 2'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 3'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 4'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 5'.realvalue) = 0
+        }
+    }
     'Armor Rank' = string { description = "Armor proficiency rank for the armor you wear." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Armor Item Bonus' = integer { default = 0 }
     'Dex Cap' = integer { description = "Highest Dex modifier the armor lets you add to AC." default = 5 }
@@ -234,6 +252,7 @@ pf2Spellcasting = table
     'Spell Attack' = modifier { description = "Spell attack roll: casting attribute plus proficiency." value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
     'Spell DC' = integer { description = "DC for targets to resist your spells." value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  editable = none }
     'Focus Points' = slots { description = "Focus points for focus spells. Refocus to regain them." number = 3  editable = live }
+    Refocus = button { description = "Ten minutes of Refocus regains one focus point."  editable = live  onClick = updates { (root.Spellcasting.'Focus Points'.realvalue) = max (0, 'Focus Points'.realvalue - 1) } }
     'Slots Rank 1' = slots { number = 0  editable = live }
     'Slots Rank 2' = slots { number = 0  editable = live }
     'Slots Rank 3' = slots { number = 0  editable = live }

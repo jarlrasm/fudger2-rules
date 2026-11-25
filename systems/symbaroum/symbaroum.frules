@@ -115,6 +115,7 @@ characterTable = ruleset
         Max = integer { description = "Toughness: Strong, at least 10, plus bonuses." value = max (10, Attributes.Strong.Value) + 'Max bonus'  editable = none }
         'Max bonus' = integer { default = 0 }
         Current = integer { description = "Current toughness. At 0 you are dying." default = Max  editable = live  indicator = "#d64545" }
+        'Day of rest' = button { description = "A day of rest heals 1 toughness. Healing skills and elixirs heal more."  editable = live  onClick = updates { (root.Toughness.Current) = min (Max, Current + 1) } }
         'Pain threshold' = integer { description = "Damage from one hit at or above this causes pain: half of Strong." value = (Attributes.Strong.Value + 1) / 2  editable = none }
         Down = string { value = downState (Current)  visible = none  indicator = "#d64545" }
         Defense = integer { description = "Defense test: roll Quick against the attacker to avoid being hit." value = Attributes.Quick.Value - impeding (characterTable)  valuedice = ask ("Attacker Accurate", 10, symRoll (-1, ""))  editable = none }
@@ -131,6 +132,7 @@ characterTable = ruleset
         Total = integer { description = "Total corruption, permanent plus temporary." value = Permanent + Temporary  editable = none }
         Threshold = integer { description = "At or above this corruption threshold, you show a mark of corruption." value = (Attributes.Resolute.Value + 1) / 2  editable = none }
         State = string { value = corruptionState (Total, Threshold, Attributes.Resolute.Value)  editable = none  indicator = "#8e5cc4" }
+        'End of scene' = button { description = "Temporary corruption fades when the scene ends."  editable = live  onClick = updates { (root.Corruption.Temporary) = 0 } }
     }
 
     Abilities = list

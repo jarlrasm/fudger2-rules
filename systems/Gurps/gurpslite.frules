@@ -412,6 +412,18 @@ characterTable = ruleset
                         editable=none
                     }
         }
+        Rest = button
+                    {
+                        description = "Rest restores fatigue points, one per 10 minutes. This fills them up."
+                        editable=live
+                        onClick = updates { (root.'Secondary characteristics'.'Fatigue Points'.Current) = 'Fatigue Points'.Max }
+                    }
+        'Fully healed' = button
+                    {
+                        description = "Hit points back to the maximum, once days of rest or medical care have healed them."
+                        editable=live
+                        onClick = updates { (root.'Secondary characteristics'.HP.Current) = HP.Max }
+                    }
             'HP state'=string
                     {
                         value=hpState (HP.Current, HP.Max)
@@ -634,6 +646,7 @@ creatureTable = ruleset
         'HP state' = string { value = hpState ('Current HP', HP)  visible = none  indicator = "#d64545" }
         FP = integer { description = "Fatigue points when rested." default = 10 }
         'Current FP' = integer { description = "Current fatigue points." default = FP  editable = live }
+        Rest = button { description = "Rest restores fatigue points."  editable = live  onClick = updates { (root.'Secondary characteristics'.'Current FP') = FP } }
         Will = integer { description = "Willpower, rolled to resist fear and mental pressure." default = 10  valuedice = gurpsCheck }
         Per = integer { description = "Perception, rolled to notice things." default = 10  valuedice = gurpsCheck }
         'Basic speed' = integer { description = "Basic speed, which sets turn order." default = 500  step = 25  render = hundredthsText ('Basic speed') }

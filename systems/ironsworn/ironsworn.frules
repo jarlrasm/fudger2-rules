@@ -112,6 +112,7 @@ characterTable = ruleset
         Momentum = modifier { description = "Momentum. Burn it to replace the action die, or suffer it when things go wrong." default = 2  minvalue = -6  maxvalue = 'Max Momentum'  editable = live }
         'Max Momentum' = integer { description = "Highest momentum you can have: 10 minus your debilities." value = 10 - debilityCount (Debilities)  editable = none }
         'Momentum Reset' = integer { description = "Momentum after burning it: 2 minus your debilities, at least 0." value = max (0, 2 - debilityCount (Debilities))  editable = none }
+        'Burn momentum' = button { description = "After burning momentum to replace the action die, it drops to your momentum reset."  editable = live  onClick = updates { (root.Status.Momentum) = 'Momentum Reset' } }
         Adds = modifier { description = "Bonus added to the next action roll." default = 0  editable = live  save = nosave }
         Down = string { value = if Health < 1 then "Face Death" else if Spirit < 1 then "Face Desolation" else ""  visible = none  indicator = "#d64545" }
     }

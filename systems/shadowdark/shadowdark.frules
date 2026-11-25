@@ -116,6 +116,7 @@ characterTable = ruleset
         Initiative = modifier { description = "Initiative: d20 plus DEX modifier." value = Stats.DEX.Modifier  valuedice = 1d20  editable = none }
         Luck = bool { description = "A luck token lets you reroll any roll once." default = false  editable = live  indicator = "#d4b106"  indicatorLabel = "Luck token" }
         Torch = clock { description = "Torch time. A torch burns for an hour of real time." segments = 6  editable = live }
+        Rest = button { description = "Eight hours of rest and a ration: all hit points come back, and lost spells can be cast again. Untick Lost on your spells."  editable = live  onClick = updates { (root.Combat.HP) = 'Max HP' } }
     }
 
     Talents = list

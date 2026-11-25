@@ -204,6 +204,27 @@ characterTable = ruleset
         HP = integer { description = "Current hit points. Below 0 you are dying; at minus Con you die." default = 'Max HP'  editable = live  indicator = "#d64545" }
         'Nonlethal' = integer { description = "Nonlethal damage. When it equals your HP you are staggered, above it unconscious." default = 0  minvalue = 0  editable = live }
         Down = string { value = hpState (HP, 'Max HP', Abilities.Con.Score)  visible = none  indicator = "#d64545" }
+        'Night of rest' = button
+        {
+            description = "Eight hours of rest heal hit points equal to your level and nonlethal damage of your level per hour, end fatigue, and let casters prepare spells again."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + Character.Level)
+                (root.Combat.Nonlethal) = max (0, Nonlethal - 8 * Character.Level)
+                (root.Conditions.Fatigued) = false
+                (root.Spellcasting.'Level 0'.realvalue) = 0
+                (root.Spellcasting.'Level 1'.realvalue) = 0
+                (root.Spellcasting.'Level 2'.realvalue) = 0
+                (root.Spellcasting.'Level 3'.realvalue) = 0
+                (root.Spellcasting.'Level 4'.realvalue) = 0
+                (root.Spellcasting.'Level 5'.realvalue) = 0
+                (root.Spellcasting.'Level 6'.realvalue) = 0
+                (root.Spellcasting.'Level 7'.realvalue) = 0
+                (root.Spellcasting.'Level 8'.realvalue) = 0
+                (root.Spellcasting.'Level 9'.realvalue) = 0
+            }
+        }
         Initiative = modifier { description = "Initiative: Dex modifier plus other bonuses." value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainPf1  editable = none }
         'Initiative misc' = integer { default = 0 }
         BAB = integer { description = "Base attack bonus from your class and level." default = 0 }

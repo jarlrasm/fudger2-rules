@@ -88,6 +88,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 3  size = wide }
         'Recovery Bonus' = integer { description = "Points regained per recovery roll: 1d6 plus your tier." reference = ["csrd", 252] value = Character.Tier  valuedice = 1d6  editable = none }
         Used = slots { description = "Recovery rolls used today. Each takes longer than the last." reference = ["csrd", 253] number = 4  editable = live  labels = ["1 action", "10 min", "1 hour", "10 hours"] }
+        'New day' = button { description = "After the ten-hour rest it is a new day, and every recovery roll is free again."  reference = ["csrd", 253]  editable = live  onClick = updates { (root.'Recovery Rolls'.Used.realvalue) = 0 } }
     }
 
     Tasks = table

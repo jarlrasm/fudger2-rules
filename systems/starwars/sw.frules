@@ -327,12 +327,14 @@ characterTable = ruleset
           {
                   editable=live
                   radiogroup="injury"
+                  default=false
           }
       'Stunned'= bool
           {
                   description = "Stunned: -1D on rolls for the rest of this round and the next."
                   editable=live
                   radiogroup="injury"
+                  default=false
                   indicator="#d4b106"
           }
       'Wounded'= bool
@@ -340,6 +342,7 @@ characterTable = ruleset
                   description = "Wounded: -1D on all rolls until healed."
                   editable=live
                   radiogroup="injury"
+                  default=false
                   indicator="#e8913a"
           }
       'Wounded twice'= bool
@@ -347,6 +350,7 @@ characterTable = ruleset
                   description = "Wounded twice: -2D on all rolls until healed."
                   editable=live
                   radiogroup="injury"
+                  default=false
                   indicator="#e8913a"
           }
       'Incapacitated'= bool
@@ -354,6 +358,7 @@ characterTable = ruleset
                   description = "Incapacitated: unconscious for some time."
                   editable=live
                   radiogroup="injury"
+                  default=false
                   indicator="#555555"
           }
       'Mortally wounded'= bool
@@ -361,7 +366,23 @@ characterTable = ruleset
                   description = "Mortally wounded: dying unless helped quickly."
                   editable=live
                   radiogroup="injury"
+                  default=false
                   indicator="#d64545"
+          }
+      Heal = button
+          {
+                  description = "Moves the injury one level down, as after a successful healing roll or treatment."
+                  editable=live
+                  onClick = updates
+                      {
+                          (root.Injuries.'None') = not ('Wounded twice' or 'Incapacitated' or 'Mortally wounded')
+                          (root.Injuries.'Stunned') = false
+                          (root.Injuries.'Wounded') = 'Wounded twice'
+                          (root.Injuries.'Wounded twice') = 'Incapacitated'
+                          (root.Injuries.'Incapacitated') = 'Mortally wounded'
+                          (root.Injuries.'Mortally wounded') = false
+                          (root.Injuries.injury) = if 'Mortally wounded' then "Incapacitated" else if 'Incapacitated' then "Wounded twice" else if 'Wounded twice' then "Wounded" else "None"
+                      }
           }
     }
        'Injury Levels'= table

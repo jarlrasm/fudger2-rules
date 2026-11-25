@@ -115,6 +115,13 @@ characterTable = ruleset
         'Attack Bonus' = modifier { description = "Base attack bonus from class and level." default = 0 }
         'System Strain' = integer { description = "Strain from drugs, cyberware and healing. It can't exceed CON." default = 0  minvalue = 0  maxvalue = Attributes.CON.Score  editable = live  indicator = "#3fa34d" }
         'Max Strain' = integer { description = "Most system strain you can carry: your CON score." value = Attributes.CON.Score  editable = none }
+        'Night of rest' = button { description = "A night's rest heals hit points equal to your level, lowers system strain by one and frees all committed effort."  editable = live  onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + Character.Level)
+                (root.Combat.'System Strain') = max (0, 'System Strain' - 1)
+                (root.Psychics.'Committed Effort') = 0
+            }
+        }
         Initiative = integer { description = "Initiative: d8 plus DEX modifier." default = 0  valuedice = ([1d8], ((baseline, throws)->{ Text = toString (first (first (throws).rolls) + Attributes.DEX.Modifier)  Value = first (first (throws).rolls) + Attributes.DEX.Modifier })) }
         Physical = integer { description = "Physical save: 16 minus level minus the best of STR and CON modifiers." value = 16 - Character.Level - max (Attributes.STR.Modifier, Attributes.CON.Modifier)  valuedice = saveDice  editable = none }
         Evasion = integer { description = "Evasion save: 16 minus level minus the best of DEX and INT modifiers." value = 16 - Character.Level - max (Attributes.DEX.Modifier, Attributes.INT.Modifier)  valuedice = saveDice  editable = none }

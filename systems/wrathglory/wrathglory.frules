@@ -105,6 +105,7 @@ characterTable = ruleset
         'Max Shock' = integer { description = "Shock you can take: Willpower plus tier." value = Attributes.Willpower + Character.Tier  editable = none }
         Shock = integer { description = "Shock taken. Beyond the maximum you are exhausted." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
         Down = string { value = if Wounds > 'Max Wounds' then "Dying" else if Shock > 'Max Shock' then "Exhausted" else ""  visible = none  indicator = "#d64545" }
+        Respite = button { description = "A respite of an hour or so recovers all shock. Wounds need medical care or a long rest."  editable = live  onClick = updates { (root.Traits.Shock) = 0 } }
         Determination = integer { description = "Roll Toughness to turn wounds into shock." value = Attributes.Toughness  valuedice = wgPool (Attributes.Toughness, 0)  editable = none }
         Conviction = integer { description = "Resistance to corruption and the warp, from Willpower." value = Attributes.Willpower  editable = none }
         Resolve = integer { description = "Resistance to fear and terror: Willpower minus 1." value = Attributes.Willpower - 1  editable = none }
@@ -113,6 +114,7 @@ characterTable = ruleset
         Speed = integer { description = "Metres moved in a turn." default = 6 }
         Wealth = integer { description = "Wealth, set by tier." value = Character.Tier  editable = none }
         Wrath = integer { description = "Wrath points: spend to reroll failures or resist death. Earned from wrath dice." default = 2  minvalue = 0  editable = live }
+        'New session' = button { description = "Each session starts with 2 wrath."  editable = live  onClick = updates { (root.Traits.Wrath) = 2 } }
         Faith = integer { description = "Faith points, spent on faith-based talents." default = 0  minvalue = 0  editable = live }
         Corruption = integer { description = "Corruption from Chaos. Too much and you fall." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
     }

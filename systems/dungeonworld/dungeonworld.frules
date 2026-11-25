@@ -92,6 +92,8 @@ characterTable = ruleset
         'Max HP' = integer { description = "Hit points when unhurt: class base plus CON score." value = 'Base HP' + Stats.CON.Score  editable = none }
         HP = integer { description = "Current hit points. At 0 you take your Last Breath." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 1 then "Last Breath" else ""  visible = none  indicator = "#d64545" }
+        'Make camp' = button { description = "Make Camp: after a few hours of sleep, heal damage equal to half your max HP."  editable = live  onClick = updates { (root.Status.HP) = min ('Max HP', HP + 'Max HP' / 2) } }
+        Recover = button { description = "Recover: a few days of bed rest heals all damage."  editable = live  onClick = updates { (root.Status.HP) = 'Max HP' } }
         Damage = string { description = "Your class damage die, rolled when you deal damage." default = "d8" }
         'Damage Roll' = integer { default = 0  valuedice = 1d8 }
         Armor = integer { description = "Armor reduces the damage of each hit." default = 0 }

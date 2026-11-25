@@ -76,6 +76,7 @@ characterTable = ruleset
         HP = integer { description = "Current hit points. At 0 you are broken, below 0 dead." default = 'Max HP'  editable = live }
         Down = string { value = if HP < 0 then "Dead" else if HP < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
         Omens = integer { description = "Omens: spend one to reroll, deal maximum damage, or lower damage taken." default = 1  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Rest = integer { description = "Roll d6 for the hit points a night's sleep heals, or d4 for a short rest with food and drink."  default = 0  valuedice = 1d6 }
         'Omen Die' = integer { description = "Roll for omens at the start of each day." default = 0  valuedice = 1d2 }
         Powers = integer { description = "Scrolls of power the character can read, if any." default = 0  minvalue = 0  editable = live }
         'Power Uses' = integer { description = "Roll d4 plus Presence each morning: how many times you can use powers today." default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Presence + first (first (throws).rolls))) + " uses of powers today"  Value = max (0, Abilities.Presence + first (first (throws).rolls)) }))  editable = none }

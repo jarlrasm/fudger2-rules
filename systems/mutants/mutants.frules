@@ -124,6 +124,19 @@ characterTable = ruleset
         Hindered = bool { description = "Hindered: half speed." default = false  editable = live  indicator = "#3a7bd5" }
         Vulnerable = bool { description = "Vulnerable: your active defenses are halved." default = false  editable = live  indicator = "#e8913a" }
         Other = string { editable = live  indicator = "#8e5cc4" }
+        'Rest a minute' = button
+        {
+            description = "Each minute of rest removes the worst damage condition: incapacitated, then staggered, then dazed, then one bruise."
+            editable = live
+            onClick = updates
+            {
+                (root.Condition.Incapacitated) = false
+                (root.Condition.Staggered) = Staggered and Incapacitated
+                (root.Condition.Dazed) = Dazed and (Incapacitated or Staggered)
+                (root.Condition.Bruised) = if Incapacitated or Staggered or Dazed then Bruised else max (0, Bruised - 1)
+            }
+        }
+        'New session' = button { description = "Each game session starts with 1 hero point."  editable = live  onClick = updates { (root.Condition.'Hero Points') = 1 } }
     }
 
     Skills = table
