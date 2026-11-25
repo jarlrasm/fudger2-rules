@@ -64,6 +64,8 @@ rqAttack = ask ("Modifier", 0, rqAskedAttack)
 
 strikeRankRoll = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
 
+characteristicRoll = ([1d100], ((baseline, throws)->rqResult (baseline * 5, first (first (throws).rolls))))
+
 resistanceRoll (active) = ([1d100], ((baseline, throws)->rqResult (50 + (active - asked) * 5, first (first (throws).rolls))))
 
 resistance (active) = ask ("Opposing characteristic", resistanceRoll (active))
@@ -158,15 +160,15 @@ characterTable = ruleset
 
     Characteristics = table
     {
-        description = "The seven characteristics, usually 3 to 18 for humans."
+        description = "The seven characteristics, usually 3 to 18 for humans. A characteristic roll is d100 against five times it."
         tableLayout = layout { columns = 4  size = wide }
-        STR = integer { description = "Strength." default = 11  valuedice = rqRoll (0) }
-        CON = integer { description = "Constitution: health and healing." default = 11 }
-        SIZ = integer { description = "Size: height and mass." default = 13 }
-        DEX = integer { description = "Dexterity: speed and coordination." default = 11 }
-        INT = integer { description = "Intelligence." default = 13 }
-        POW = integer { description = "Power: soul, luck and magic points." default = 13  valuedice = rqRoll (0) }
-        CHA = integer { description = "Charisma: leadership and charm." default = 11 }
+        STR = integer { description = "Strength." default = 11  valuedice = characteristicRoll }
+        CON = integer { description = "Constitution: health and healing." default = 11  valuedice = characteristicRoll }
+        SIZ = integer { description = "Size: height and mass." default = 13  valuedice = characteristicRoll }
+        DEX = integer { description = "Dexterity: speed and coordination." default = 11  valuedice = characteristicRoll }
+        INT = integer { description = "Intelligence." default = 13  valuedice = characteristicRoll }
+        POW = integer { description = "Power: soul, luck and magic points." default = 13  valuedice = characteristicRoll }
+        CHA = integer { description = "Charisma: leadership and charm." default = 11  valuedice = characteristicRoll }
     }
 
     Attributes = table
@@ -537,6 +539,6 @@ RuneQuestGlorantha = system
     initiativeCompare (item1, item2) = compare (item2, item1)
     quickdice = [1d100, 1d20, 1d6, 1d8, 1d10]
     cssFiles = ["/systems/runequest/runequest.css"]
-    libraries = ["/systems/names/mythicgreece.json", "/systems/names/barbarian.json", "/systems/names/viking.json"]
+    libraries = ["/systems/names/mythicgreece.json", "/systems/names/barbarian.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
     nameSettings = [mythicGreeceNameSetting, swordAndSorceryNameSetting, norseNameSetting]
 }

@@ -109,7 +109,9 @@ weaponCategory (weapon) = toLower (itemStat (weapon, "sf1Weapon", "Category"))
 
 isMelee (weapon) = contains (weaponCategory (weapon), "melee") or weaponCategory (weapon) == ""
 
-isThrown (weapon) = contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "thrown") or contains (weaponCategory (weapon), "grenade")
+isGrenade (weapon) = contains (weaponCategory (weapon), "grenade")
+
+isThrown (weapon) = contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "thrown") or isGrenade (weapon)
 
 hasReach (weapon) = contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "reach")
 
@@ -137,13 +139,13 @@ targetDefense (weapon) =
 withBonus (text, bonus) = text + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
 
 operativeOrMelee (char, weapon) =
-    if contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "operative") then char.Abilities.Dex.Modifier - char.Abilities.Str.Modifier else 0
+    if contains (toLower (itemStat (weapon, "sf1Weapon", "Special")), "operative") then max (0, char.Abilities.Dex.Modifier - char.Abilities.Str.Modifier) else 0
 
 attackFor (char, weapon) =
     if isMelee (weapon) then
         weaponAttack (weapon.Name, meleeBonus (char) + operativeOrMelee (char, weapon), withBonus (damageType (weapon), char.Abilities.Str.Modifier + char.Combat.'Weapon specialization'), itemStat (weapon, "sf1Weapon", "Critical"), "melee", if hasReach (weapon) then 10 else 5, 0, targetDefense (weapon))
     else if isThrown (weapon) then
-        weaponAttack (weapon.Name, thrownBonus (char), withBonus (damageType (weapon), char.Abilities.Str.Modifier), itemStat (weapon, "sf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "sf1Weapon", "Range")) * 5, targetDefense (weapon))
+        weaponAttack (weapon.Name, thrownBonus (char), withBonus (damageType (weapon), if isGrenade (weapon) then 0 else char.Abilities.Str.Modifier), itemStat (weapon, "sf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "sf1Weapon", "Range")) * 5, if isGrenade (weapon) then "AC 5" else targetDefense (weapon))
     else
         weaponAttack (weapon.Name, rangedBonus (char), withBonus (damageType (weapon), char.Combat.'Weapon specialization'), itemStat (weapon, "sf1Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "sf1Weapon", "Range")) * 10, targetDefense (weapon))
 

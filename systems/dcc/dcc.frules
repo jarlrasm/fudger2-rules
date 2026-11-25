@@ -182,6 +182,7 @@ characterTable = ruleset
         'Crit die' = integer { description = "The die rolled on the crit table." default = 4  render = dieText ('Crit die') }
         'Crit table' = string { description = "The crit table of your class: I for level 0, II, III, IV or V." default = "I"  keys = ["I", "II", "III", "IV", "V"] }
         'Crit range' = integer { description = "The lowest natural roll that is a critical hit: 20 for most, 19 or less for warriors." default = 20 }
+        'Check penalty' = integer { description = "Armor's check penalty, taken on physical checks such as climbing, sneaking, swimming and thief skills." value = 0 - checkPenalty (characterTable)  editable = none }
         'Fumble die' = string { description = "Rolled on a natural 1, set by the heaviest armor." value = fumbleDie (characterTable)  editable = none }
         'Night of rest' = button
         {

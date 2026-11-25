@@ -51,7 +51,9 @@ w5AskedPool (pool, rageDice, spend) = ([dice { number = max (0, pool - rageDice)
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-w5Dice (char, pool) = ask ("Difficulty", w5AskedPool (pool + char.Character.Modifier + formBonus (char), char.Character.Rage, willpowerSpend (char)))
+w5Dice (char, pool, physical) = ask ("Difficulty", w5AskedPool (pool + char.Character.Modifier + (if physical then formBonus (char) else 0), char.Character.Rage, willpowerSpend (char)))
+
+isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
 
 rageCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": Rage holds"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": lose 1 Rage"  Outcome = "Failure" }))
 
@@ -80,7 +82,7 @@ skill (usual) = custom
 {
     Dots = integer { description = "Skill dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
     With = string { description = "The attribute this skill rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
-    Pool = integer { description = "Dice pool: attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = w5Dice (characterTable, Dots + attributeValue (characterTable, With))  editable = none }
+    Pool = integer { description = "Dice pool: attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = w5Dice (characterTable, Dots + attributeValue (characterTable, With), isPhysical (With))  editable = none }
     Specialty = string { description = "A specialty adds a die when it applies." }
 }
 
@@ -88,22 +90,24 @@ noSkill = { Pool = 0 }
 
 skillDots (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Dots", 0)
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
 noStats = { Stats = { Damage = "" } }
 
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "w5Weapon", noStats), "Stats", noStats.Stats), field, "")
 
-weaponAttack (name, pool, damage, kind, distance) = custom
+weaponAttack (name, pool, physical, damage, kind, distance) = custom
 {
     Name = name
-    Pool = integer { value = pool  valuedice = w5Dice (characterTable, pool)  action = kind  reach = 2  range = distance  editable = none }
+    Pool = integer { value = pool  valuedice = w5Dice (characterTable, pool, physical)  action = kind  reach = 2  range = distance  editable = none }
     Damage = damage
 }
 
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, char.Attributes.Composure + skillDots (char, "Firearms"), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Composure + skillDots (char, "Firearms"), false, weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, char.Attributes.Strength + skillDots (char, "Melee"), weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, char.Attributes.Strength + skillDots (char, "Melee"), true, weaponStat (weapon, "Damage"), "melee", 2)
 
 clawDamage (form) = if form == "Crinos" then "+3 aggravated" else if form == "Hispo" or form == "Lupus" then "+1 aggravated (bite)" else "+0 superficial"
 
@@ -131,15 +135,15 @@ characterTable = ruleset
     {
         description = "The nine attributes: physical, social and mental, for power, finesse and resistance."
         tableLayout = layout { columns = 3  size = wide }
-        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Strength) }
-        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Charisma) }
-        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Intelligence) }
-        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Dexterity) }
-        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Manipulation) }
-        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Wits) }
-        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Stamina) }
-        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Composure) }
-        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Resolve) }
+        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Strength, true) }
+        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Charisma, false) }
+        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Intelligence, false) }
+        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Dexterity, true) }
+        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Manipulation, false) }
+        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Wits, false) }
+        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Stamina, true) }
+        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Composure, false) }
+        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = w5Dice (characterTable, Resolve, false) }
     }
 
     Trackers = table
@@ -225,7 +229,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Claws, bite or brawl", Attributes.Strength + skillDots (characterTable, "Brawl"), clawDamage (Character.Form), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Claws, bite or brawl", Attributes.Strength + skillDots (characterTable, "Brawl"), true, clawDamage (Character.Form), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -374,6 +378,6 @@ Werewolf5e = system
     description = "Werewolf: the Apocalypse 5th edition: the Garou fight for a dying world, with Rage dice and forms"
     quickdice = [1d10]
     cssFiles = ["/systems/werewolf/werewolf.css"]
-    libraries = ["/systems/names/nightworld.json", "/systems/names/viking.json", "/systems/names/wasteland.json"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/wasteland.json"]
     nameSettings = [nightWorldNameSetting, norseNameSetting, wastelandNameSetting]
 }

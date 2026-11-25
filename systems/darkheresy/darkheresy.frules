@@ -39,11 +39,14 @@ dhResult (target, roll) =
     Outcome = if dhSuccess (target, roll) then "Success" else "Failure"
 }
 
-dhAttackResult (target, roll) =
+jams (roll, kind) = kind == "ranged" and roll >= 96
+
+dhAttackResult (target, roll, kind) =
 {
-    Text = dhText (target, roll) + (if dhSuccess (target, roll) then ", hits the " + hitLocation (roll) else "") + (if roll >= 94 then ", the weapon jams or the blow goes wild" else "")
+    Text = (if jams (roll, kind) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the shot misses"
+            else dhText (target, roll) + (if dhSuccess (target, roll) then ", hits the " + hitLocation (roll) else ""))
     Value = roll
-    Outcome = if dhSuccess (target, roll) then "Hit" else "Miss"
+    Outcome = if dhSuccess (target, roll) and not (jams (roll, kind)) then "Hit" else if jams (roll, kind) then "Jam" else "Miss"
 }
 
 dhPowerResult (target, roll) =
@@ -59,11 +62,11 @@ dhAskedRoll = ([1d100], ((baseline, throws)->dhResult (baseline + asked * 10, fi
 
 dhTest = ask ("Difficulty", difficulties, -6, dhAskedRoll)
 
-dhAttackRoll (modifier) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + modifier, first (first (throws).rolls))))
+dhAttackRoll (modifier, kind) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + modifier, first (first (throws).rolls), kind)))
 
-dhAskedAttack = ([1d100], ((baseline, throws)->dhAttackResult (baseline + asked * 10, first (first (throws).rolls))))
+dhAskedAttack (kind) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + asked * 10, first (first (throws).rolls), kind)))
 
-dhAttack = ask ("Difficulty", difficulties, -6, dhAskedAttack)
+dhAttack (kind) = ask ("Difficulty", difficulties, -6, dhAskedAttack (kind))
 
 dhAskedPower = ([1d100], ((baseline, throws)->dhPowerResult (baseline + asked * 10, first (first (throws).rolls))))
 
@@ -84,7 +87,7 @@ characteristic = custom
 {
     Value = integer { description = "The characteristic, usually 25 to 45 at the start." default = 30  minvalue = 0  maxvalue = 100 }
     Advances = integer { description = "Characteristic advances bought with experience, each +5." default = 0  minvalue = 0  maxvalue = 5 }
-    Total = integer { description = "Value plus 5 per advance. Roll d100 at or under it." value = Value + Advances * 5  valuedice = dhTest  editable = none }
+    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = dhTest  editable = none }
     Bonus = integer { description = "The tens digit of the total." value = (Value + Advances * 5) / 10  editable = none }
 }
 
@@ -100,7 +103,7 @@ skill (base) = custom
 {
     Rank = string { description = "Untrained is -20, Known +0, Trained +10, Experienced +20, Veteran +30." default = "Untrained"  keys = ["Untrained", "Known", "Trained", "Experienced", "Veteran"] }
     Misc = integer { default = 0 }
-    Target = integer { description = "Characteristic plus the rank's bonus. Roll d100 at or under it." value = base + rankBonus (Rank) + Misc - fatiguePenalty (characterTable)  valuedice = dhTest  editable = none }
+    Target = integer { description = "Characteristic plus the rank's bonus. Roll d100 at or under it." value = base + rankBonus (Rank) + Misc  valuedice = dhTest  editable = none }
 }
 
 fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
@@ -113,12 +116,12 @@ isMelee (weapon) = itemStat (weapon, "dhWeapon", "Class") == "Melee" or itemStat
 
 damageDice (text) = max (1, firstNumber (text))
 
-damageBonus (text) = bonusWithValue ([[text]], "\\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
 
 weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, special) = custom
 {
     Name = name
-    Test = integer { value = target  valuedice = dhAttack  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Test = integer { value = target  valuedice = dhAttack (kind)  action = kind  reach = 2  range = rangeMetres  editable = none }
     Damage = integer { value = damageBase  valuedice = damageRoll (damageDice (damage), 0)  editable = none }
     Pen = pen
     Special = special
@@ -126,9 +129,9 @@ weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, special)
 
 attackFor (char, weapon) =
     if isMelee (weapon) then
-        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total - fatiguePenalty (char), "melee", 0, itemStat (weapon, "dhWeapon", "Damage"), damageBonus (itemStat (weapon, "dhWeapon", "Damage")) + char.Characteristics.Strength.Bonus, itemStat (weapon, "dhWeapon", "Pen"), itemStat (weapon, "dhWeapon", "Special"))
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total, "melee", 0, itemStat (weapon, "dhWeapon", "Damage"), damageBonus (itemStat (weapon, "dhWeapon", "Damage")) + char.Characteristics.Strength.Bonus, itemStat (weapon, "dhWeapon", "Pen"), itemStat (weapon, "dhWeapon", "Special"))
     else
-        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total - fatiguePenalty (char), "ranged", firstNumber (itemStat (weapon, "dhWeapon", "Range")) * 3, itemStat (weapon, "dhWeapon", "Damage"), damageBonus (itemStat (weapon, "dhWeapon", "Damage")) + (if itemStat (weapon, "dhWeapon", "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), itemStat (weapon, "dhWeapon", "Pen"), itemStat (weapon, "dhWeapon", "Special"))
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (itemStat (weapon, "dhWeapon", "Range")) * 3, itemStat (weapon, "dhWeapon", "Damage"), damageBonus (itemStat (weapon, "dhWeapon", "Damage")) + (if itemStat (weapon, "dhWeapon", "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), itemStat (weapon, "dhWeapon", "Pen"), itemStat (weapon, "dhWeapon", "Special"))
 
 woundState (wounds, critical, fatigue, toughness) =
     if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
@@ -376,7 +379,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Test = integer { default = 30  valuedice = dhAttack  action = melee  reach = 2 }
+            Test = integer { default = 30  valuedice = dhAttack ("melee")  action = melee  reach = 2 }
             Damage = string { default = "1d10" }
             Pen = string { default = "0" }
         }
@@ -389,7 +392,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Test = integer { default = 30  valuedice = dhAttack  action = ranged }
+            Test = integer { default = 30  valuedice = dhAttack ("ranged")  action = ranged }
             Damage = string { default = "1d10" }
             Pen = string { default = "0" }
             Range = string {}

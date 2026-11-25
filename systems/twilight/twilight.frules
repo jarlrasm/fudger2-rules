@@ -36,13 +36,10 @@ t2kResult (attrRolls, skillRolls, ammoRolls, attrDie, skillDie, kept, pushed) =
     Text = t2kText (kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) + count (filter ((x)->x == 6, ammoRolls)), pushed, onesIn (attrRolls) + onesIn (skillRolls), onesIn (ammoRolls), count (filter ((x)->x == 6, ammoRolls)), count (ammoRolls))
     Value = kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie)
     Outcome = if kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) > 0 then "Success" else "Failure"
-    Push = if not (pushed) then t2kPush (attrDie, skillDie, keepAttr (attrRolls, attrDie), keepSkill (skillRolls, skillDie)) else 0
+    Push = if not (pushed) and (successesIn (attrRolls, attrDie) == 0 or (skillDie > 0 and successesIn (skillRolls, skillDie) == 0)) then t2kPush (attrDie, skillDie, successesIn (attrRolls, attrDie), successesIn (skillRolls, skillDie)) else 0
     PushLabel = "Push (1s cost damage or stress)"
 }
 
-keepAttr (rolls, die) = if count (rolls) > 0 and successesIn (rolls, die) > 0 then successesIn (rolls, die) else 0
-
-keepSkill (rolls, die) = if count (rolls) > 0 and successesIn (rolls, die) > 0 then successesIn (rolls, die) else 0
 
 t2kPush (attrDie, skillDie, attrKept, skillKept) = ([dice { number = if attrKept > 0 then 0 else 1  sides = max (6, attrDie) }, dice { number = if skillKept > 0 or skillDie == 0 then 0 else 1  sides = max (6, skillDie)  color = "blue"  label = if skillKept > 0 or skillDie == 0 then "" else "Skill" }],
     ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, [], attrDie, skillDie, attrKept + skillKept, true)))
