@@ -5,6 +5,7 @@ creatureTable = ruleset
   {
     important = [Basics, 'Hitpoints', Conditions, Attacks, Actions]
     initative=Basics.'Initiative'
+    encounterStats = { XP = creatureXP (Basics.Challenge) }
     sortedBy = sort
     {
         prefix="Challenge rating "

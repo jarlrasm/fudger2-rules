@@ -9,6 +9,8 @@ A check is **d20 + modifier** against a DC. The modifier is an attribute modifie
 - Typical DCs by level: 15 at level 1, 20 at level 5, 27 at level 10, 34 at level 15, 40 at level 20. Simple DCs: trained 15, expert 20, master 30, legendary 40.
 
 ## Encounters
+A fight's threat comes from an XP budget for four characters: Trivial 40, Low 60, Moderate 80, Severe 120 and Extreme 160, with 10, 20, 20, 30 and 40 more or less for each character above or below four. A creature of the party's level costs 40 XP, from 10 at four levels below to 160 at four levels above. create_encounter and get_entity on an encounter give this rating as difficulty, and the gamemaster sees it on the encounter page.
+
 Roll **Initiative** (usually Perception) to join the tracker. Each turn has **three actions** and one reaction.
 
 1. **Strike** with a weapon from the Strikes list. The second Strike in a turn takes the **multiple attack penalty** (−5, or −4 for agile weapons), the third −10 (−8): pick 2nd or 3rd on the Attack slider before rolling.

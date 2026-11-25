@@ -273,6 +273,7 @@ Fudge = system
 | `initiativeDeck` | Optional. The name of a card deck (ship it in `libraries`). When the gamemaster has added that deck to the session, the encounter's initiative list gets a **Deal initiative** button: the server deals one card to the table for each combatant and posts its name as that combatant's Initiative, replacing any earlier entry so every round can be dealt again. `initiativeCompare` orders the card names. Used by Savage Worlds, Alien and Dragonbane. |
 | `initiativeRolls` | Optional. Makes initiative rolls a per-campaign setting with these names as the default, e.g. `["Dex", "Alertness"]`. Leave it out to use the `Initiative` field only. |
 | `initiativeCompare (a, b)` | Sort order for initiative. Return `-1`, `0` or `1`. |
+| `encounterDifficulty (party, foes)` | Optional. Rates an encounter for the gamemaster, on the encounter page and in the MCP's `create_encounter` and `get_entity`. `party` is the list of the player characters' `encounterStats` records, `foes` that of the other participants whose ruleset has `encounterStats`. Return `{ Label = "High"  Step = 2  Steps = ["Low", "Moderate", "High", "Deadly"]  Detail = "700 / 1,200 XP" }`: `Step` counts from 0 into `Steps`, and `Detail` is optional. Anything else shows no rating. Used by DnD 5e, Pathfinder 2e and Draw Steel. |
 | `quickdice` | Dice buttons shown in sessions |
 | `cssFiles` | Extra stylesheets, loaded for every campaign of the system. See [Styling a sheet](#styling-a-sheet). |
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
@@ -525,6 +526,8 @@ rulesetConfiguration =
     ]
 }
 ```
+
+`encounterStats = { Level = Hero.Level }` in the same block gives the numbers an entity brings to `encounterDifficulty` (see the system block). It is worked out on each entity's own sheet, like a field's `value`, and should be a record such as `{ XP = creatureXP (Basics.Challenge) }`.
 
 `important = [...]` in the same block lists the fields shown in the compact "important only" view (the session sidebar) for entities that have not marked their own. Name tables (`Combat`) or single rows (`Combat.HP`). Pick what matters most in combat, e.g. `rulesetConfiguration = { important = [Combat, Attributes, Conditions] }`. Fields among them that are `editable = live` can be edited in that view.
 

@@ -1,10 +1,11 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 #include "/systems/pf2e/core.frules"
+#include "/systems/pf2e/encounters.frules"
 
 characterTable = ruleset
 {
-    rulesetConfiguration = { important = [Defenses, Saves, Conditions, Strikes] }
+    rulesetConfiguration = { important = [Defenses, Saves, Conditions, Strikes]  encounterStats = { Level = Character.Level } }
     Character = pf2Character {}
 
     Attributes = pf2Attributes {}
@@ -173,6 +174,7 @@ Pathfinder2e = system
     squareSize = 5
     characters = characterTable
     creatures = pf2Creature
+    encounterDifficulty (party, foes) = pf2EncounterDifficulty (party, foes)
     Weapons = pf2Weapon
     Armor = pf2Armor
     Equipment = pf2Item
