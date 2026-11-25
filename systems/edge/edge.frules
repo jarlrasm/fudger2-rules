@@ -6,16 +6,19 @@ edgeDice (rolls, mode) = if mode == "Bonus" then sum (rolls) - min (rolls) else 
 
 edgeDropped (rolls, mode) = if mode == "Bonus" then " (dropped " + toString (min (rolls)) + ")" else if mode == "Penalty" then " (dropped " + toString (max (rolls)) + ")" else ""
 
-edgeResult (rolls, mode) =
+edgeVerdict (total, difficulty) = if total >= difficulty then "Success" else "Failure"
+
+edgeResult (rolls, mode, difficulty) =
 {
-    Text = toString (edgeDice (rolls, mode)) + edgeDropped (rolls, mode)
+    Text = toString (edgeDice (rolls, mode)) + edgeDropped (rolls, mode) + (if difficulty > 0 then " vs " + toString (difficulty) + ": " + edgeVerdict (edgeDice (rolls, mode), difficulty) else "")
     Value = edgeDice (rolls, mode)
+    Outcome = if difficulty > 0 then edgeVerdict (edgeDice (rolls, mode), difficulty) else ""
 }
 
 edgeModeRoll (mode) = ([dice { number = 2  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else if mode == "Penalty" then "Penalty die" else "" }],
-    ((baseline, throws)-> edgeResult (concat (first (throws).rolls, item (1, throws).rolls), mode)))
+    ((baseline, throws)-> edgeResult (concat (first (throws).rolls, item (1, throws).rolls), mode, asked)))
 
-edgeRoll (char) = edgeModeRoll (char.Basics.Roll)
+edgeRoll (char) = ask ("Difficulty", edgeModeRoll (char.Basics.Roll))
 
 characterTable = ruleset
 {
@@ -116,6 +119,12 @@ characterTable = ruleset
       allowedchange = increaseAndClear
       editable = live
       indicator = "#d64545"
+    }
+    Heal = button
+    {
+      description = "Removes one strike, as when a wound heals or is treated."
+      editable = live
+      onClick = updates { (root.Basics.Strikes.realvalue) = max (0, Strikes.realvalue - 1) }
     }
   }
 }

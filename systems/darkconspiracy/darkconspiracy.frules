@@ -20,16 +20,39 @@ dmFor (char, name) =
     case "EMP" then char.Characteristics.'EMP'.DM
     else 0
 
+effectText (effect) = if effect < 0 then toString (effect) else "+" + toString (effect)
+
+checkLevel (effect) =
+    if effect >= 6 then "Great success"
+    else if effect >= 0 then "Success"
+    else if effect <= -6 then "Disaster"
+    else "Failure"
+
+checkResult (total) =
+{
+    Text = toString (total) + ": " + checkLevel (total - 8) + ", Effect " + effectText (total - 8)
+    Value = total
+    Outcome = checkLevel (total - 8)
+}
+
+plainRoll = ([2d6], ((baseline, throws)->
+    checkResult (baseline + first (throws).bonus + sum (first (throws).rolls))))
+
 boonRoll = ([3d6], ((baseline, throws)->
-    baseline + first (throws).bonus + sum (first (throws).rolls) - min (first (throws).rolls)))
+    checkResult (baseline + first (throws).bonus + sum (first (throws).rolls) - min (first (throws).rolls))))
 
 baneRoll = ([3d6], ((baseline, throws)->
-    baseline + first (throws).bonus + sum (first (throws).rolls) - max (first (throws).rolls)))
+    checkResult (baseline + first (throws).bonus + sum (first (throws).rolls) - max (first (throws).rolls))))
+
+initiativeRoll (char) =
+    if char.Checks.Roll == "Boon" then ([3d6], ((baseline, throws)->baseline + first (throws).bonus + sum (first (throws).rolls) - min (first (throws).rolls)))
+    else if char.Checks.Roll == "Bane" then ([3d6], ((baseline, throws)->baseline + first (throws).bonus + sum (first (throws).rolls) - max (first (throws).rolls)))
+    else 2d6
 
 checkRoll (char) =
     if char.Checks.Roll == "Boon" then boonRoll
     else if char.Checks.Roll == "Bane" then baneRoll
-    else 2d6
+    else plainRoll
 
 untrainedDM (char) = -3 + min (3, max (0, char.Checks.'Jack of All Trades'))
 
@@ -122,7 +145,7 @@ attacksFor (char) =
         map ((weapon)->characterAttack (char, weapon), char.Weapons))
 
 minionAttacksFor (minion) =
-    map ((weapon)->weaponAttack (weapon.Name, minion.Stats.'Attack DM', 2d6, weaponDamage (weapon), attackKind (weapon), attackDistance (weapon)), minion.Weapons)
+    map ((weapon)->weaponAttack (weapon.Name, minion.Stats.'Attack DM', plainRoll, weaponDamage (weapon), attackKind (weapon), attackDistance (weapon)), minion.Weapons)
 
 talentUse (name, dm, dice, cost, distance) = custom
 {
@@ -145,7 +168,7 @@ talentUsesFor (char) =
     map ((talent)->talentUse (talent.Name, skillLevelDM (char, "Empathy Use") + dmFor (char, "EMP"), checkRoll (char), talentCost (talent), talentRange (talent)), char.'Empathic Talents')
 
 minionTalentUsesFor (minion) =
-    map ((talent)->talentUse (talent.Name, minion.Stats.Check, 2d6, talentCost (talent), talentRange (talent)), minion.'Empathic Talents')
+    map ((talent)->talentUse (talent.Name, minion.Stats.Check, plainRoll, talentCost (talent), talentRange (talent)), minion.'Empathic Talents')
 
 condition (str, dex, end) =
     if str + dex + end < 1 then "Dead"
@@ -216,7 +239,7 @@ characterTable = ruleset
         {
             description = "Bonus to the initiative roll: the better of the DEX and INT modifiers."
             value = max (Characteristics.'DEX'.DM, Characteristics.'INT'.DM)
-            valuedice = checkRoll (characterTable)
+            valuedice = initiativeRoll (characterTable)
         }
         Unskilled = modifier
         {
@@ -225,6 +248,12 @@ characterTable = ruleset
             valuedice = checkRoll (characterTable)
         }
         'Jack of All Trades' = integer { description = "Reduces the penalty for using skills you are not trained in." default = 0  minvalue = 0  maxvalue = 3 }
+        'Night of rest' = button
+        {
+            description = "A night's rest brings lost END back. STR and DEX need days of rest and a Medic check."
+            editable = live
+            onClick = updates { (root.Characteristics.'END'.Current) = Characteristics.'END'.Max }
+        }
     }
 
     Characteristics = keyvalues
@@ -381,8 +410,8 @@ minionTable = ruleset
         Speed = string { default = "6m" }
         Protection = integer { description = "Armour that reduces damage from each hit." default = 0 }
         Initiative = modifier { description = "Modifier to the minion's initiative roll." default = 0  valuedice = 2d6 }
-        Check = modifier { description = "Modifier for the minion's general checks." default = 0  valuedice = 2d6 }
-        'Attack DM' = modifier { description = "Modifier for the minion's attack roll." default = 0  valuedice = 2d6  action = melee  reach = 2 }
+        Check = modifier { description = "Modifier for the minion's general checks." default = 0  valuedice = plainRoll }
+        'Attack DM' = modifier { description = "Modifier for the minion's attack roll." default = 0  valuedice = plainRoll  action = melee  reach = 2 }
         'Attack damage' = string { default = "1D"  visible = editor }
         Damage = integer
         {
