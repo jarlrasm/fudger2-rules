@@ -1,0 +1,75 @@
+@import url("/systems/sheet.css");
+
+/* Heart: The City Beneath: the character sheet in the book's stark look.
+   Bone-white paper, black ink, heart-red title bars with condensed capitals,
+   skills and domains as two tick lists side by side, the five resistances
+   as a band of stress boxes, and equipment, abilities and resources below. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2b1a1d;
+    --surface: #f4efe8;
+    --surface-alt: #ebe3d9;
+    --surface-sunken: #ded3c6;
+    --surface-muted: #c9b8a7;
+    --text: #140c0d;
+    --text-muted: #3d2d2f;
+    --text-faint: #6e5b5d;
+    --on-accent: #f4efe8;
+    --border: #9b7f80;
+    --border-strong: #140c0d;
+    --accent: #a3101b;
+    --accent-hover: #c01b27;
+    --accent-soft: #f2d0d2;
+    --link: #a3101b;
+    --danger: #a3101b;
+    --danger-hover: #7e0c14;
+    --danger-soft: #f2d0d2;
+    --success: #3d6b33;
+    --paper: #f4efe8;
+    --card-bg: #ebe3d9;
+    --dice-bg: #140c0d;
+    --dice-text: #f4efe8;
+}
+
+.entityView {
+    --sheet-font: "Helvetica Neue", Arial, sans-serif;
+    --title-font: Impact, "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    font-size: 1.05em;
+}
+
+/* ---- Skills beside domains ---- */
+
+.entityView .table-skills { --block: 50%; clear: left; }
+.entityView .table-domains { --block: 50%; }
+
+/* ---- Resistances ---- */
+
+.entityView .table-resistances > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+}
+.entityView .table-resistances > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid var(--border-strong);
+}
+.entityView .table-resistances > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+}
+.entityView .table-resistances .customtype > div:nth-child(1)::before { content: "stress "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-resistances .customtype > div:nth-child(2)::before { content: "prot "; color: var(--text-faint); font-size: 0.8em; }

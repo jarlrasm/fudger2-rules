@@ -1,0 +1,20 @@
+{
+  "values": {
+    "Character": { "Ancestry": "Gnoll", "Class": "Hound", "Calling": "Penitent", "Beats": "Minor: protect someone who cannot protect themselves. Minor: refuse a reward. Major: confront the warden I betrayed in Hallow.", "Advances": "Core: Hound's sense, Pack tactics. Minor: Brutal Efficiency." },
+    "Skills": { "Hunt.Has": true, "Hunt.Knack": "Tracking blood", "Kill.Has": true, "Endure.Has": true, "Discern.Has": true, "Sneak.Has": true },
+    "Domains": { "Warren.Has": true, "Wild.Has": true, "Desolate.Has": true, "Desolate.Knack": "Collapsed tunnels" },
+    "Resistances": { "Blood.Stress": 3, "Blood.Protection": 1, "Mind.Stress": 2, "Echo.Stress": 1, "Fortune.Stress": 0, "Supplies.Stress": 2 },
+    "Fallout": { "Fallout Taken": "Minor (Blood): torn shoulder, -1 die to climbing until mended" },
+    "Resources": [ { "Resource": "Vial of angel-blood", "Domain": "Religion", "Value": "d8" }, { "Resource": "Map of the Gutter delve", "Domain": "Warren", "Value": "d6" } ],
+    "Bonds": { "Bonds": "Old Mother Sciro, who took me in at the Crossroads. The surveyor Ennet, who owes me a life.", "Notes": "Still smells the burning warrens of Hallow when it rains." }
+  },
+  "secondary": {
+    "Equipment": [
+      { "name": "Hooked spear", "values": { "Stats": { "Kind": "Weapon", "Damage": "d8", "Tags": "Brutal, Point-blank", "Domain": "Wild" } } },
+      { "name": "Crossbow", "values": { "Stats": { "Kind": "Weapon", "Damage": "d6", "Tags": "Ranged, Reload", "Domain": "Technology" } } },
+      { "name": "Boiled leather", "values": { "Stats": { "Kind": "Armour", "Protection": "1 Blood" } } },
+      { "name": "Lantern and oil", "values": { "Stats": { "Kind": "Tool", "Tags": "Light" } } }
+    ],
+    "Abilities": [ { "name": "Hound's sense", "values": { "Stats": { "Level": "Core", "Class": "Hound" } } }, { "name": "Brutal Efficiency", "values": { "Stats": { "Level": "Minor", "Class": "Hound" } } } ]
+  }
+}
