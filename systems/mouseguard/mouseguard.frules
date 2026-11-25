@@ -1,0 +1,322 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successesIn (rolls) = count (filter ((x)->x >= 4, rolls))
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+mgOutcome (successes, ob) = if successes >= ob then "Success" else "Failure"
+
+mgText (successes, ob, known) =
+    plural (successes, "success", "successes")
+    + (if known then " vs Ob " + toString (ob) + ": " + (if successes >= ob then "Success" + (if successes > ob then ", " + toString (successes - ob) + " extra" else "") else "Failure, the GM gives a twist or a condition") else "")
+
+mgResult (rolls, ob, known) =
+{
+    Text = mgText (successesIn (rolls), ob, known)
+    Value = successesIn (rolls)
+    Outcome = if known then mgOutcome (successesIn (rolls), ob) else ""
+}
+
+mgRoll (pool, fate) = ([dice { number = max (0, pool)  sides = 6  explode = if fate then 6 else 7  label = if fate then "Fate" else "" }],
+    ((baseline, throws)->mgResult (first (throws).rolls, asked, answered)))
+
+conditionDice (char) = (if char.Conditions.Injured then 1 else 0) + (if char.Conditions.Sick then 1 else 0)
+
+mgTest (char, pool) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - conditionDice (char), char.Rewards.'Spend Fate')))
+
+mgPlain (pool) = ask ("Bonus or penalty dice", 0, (n)->ask ("Obstacle", mgRoll (pool + n, false)))
+
+disposition (char, skillName, abilityValue) = abilityValue + rankOf (char, skillName)
+
+noSkill = { Rating = 0 }
+
+rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", 0)
+
+ability (start, maxRating) = custom
+{
+    Rating = integer { default = start  minvalue = 0  maxvalue = maxRating }
+    Pass = integer { description = "Passed tests toward advancement." default = 0  minvalue = 0  editable = live }
+    Fail = integer { description = "Failed tests toward advancement." default = 0  minvalue = 0  editable = live }
+    Roll = integer { value = Rating  valuedice = mgTest (characterTable, Rating)  render = toString (Rating) + "D"  editable = none }
+}
+
+noStats = { Stats = { Bonus = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, pool, bonusText, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = pool  valuedice = mgTest (characterTable, pool)  render = toString (pool) + "D"  action = kind  reach = 1  range = distance  editable = none }
+    Bonus = bonusText
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, rankOf (char, "Fighter") + firstNumber (weaponStat (weapon, "Attack Dice")), weaponStat (weapon, "Bonus"), if weaponStat (weapon, "Range") == "Missile" then "ranged" else "melee", if weaponStat (weapon, "Range") == "Missile" then 20 else 1)
+
+conditionState (char) =
+    if char.Conditions.Dead then "Dead"
+    else if char.Conditions.Injured then "Injured"
+    else if char.Conditions.Sick then "Sick"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Abilities, Conditions, Rewards] }
+    Mouse = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Age = integer { default = 21  minvalue = 14 }
+        Home = string { keys = ["Lockhaven", "Barkstone", "Copperwood", "Elmoss", "Port Sumac", "Shaleburrow", "Sprucetuck", "Other"] }
+        'Guard Rank' = string { keys = ["Tenderpaw", "Guardmouse", "Patrol Guard", "Patrol Leader", "Guard Captain"]  default = "Guardmouse" }
+        'Fur Color' = string {}
+        'Cloak Color' = string {}
+        Parents = string {}
+        'Senior Artisan' = string {}
+        Mentor = string {}
+        Friend = string {}
+        Enemy = string {}
+    }
+
+    Beliefs = table
+    {
+        description = "Play to these for Fate and Persona at the end of the session."
+        tableLayout = layout { columns = 1  size = wide }
+        Belief = string { multiline = true }
+        Goal = string { description = "This mission's goal, written at its start." multiline = true }
+        Instinct = string { multiline = true }
+    }
+
+    Abilities = table
+    {
+        description = "Roll the rating in d6s: each 4, 5 or 6 is a success. The roll asks for bonus dice and the Obstacle."
+        tableLayout = layout { columns = 1 }
+        Nature = ability (3, 7)
+        'Max Nature' = integer { description = "Nature taxed below this recovers between missions." default = 3  minvalue = 1  maxvalue = 7 }
+        Will = ability (3, 6)
+        Health = ability (3, 6)
+        Resources = ability (1, 10)
+        Circles = ability (1, 10)
+    }
+
+    Skills = keyvalues
+    {
+        description = "Skills from 1 to 6. Without a skill, use Beginner's Luck: half Will or Health."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Fighter", "Healer", "Hunter", "Loremouse", "Pathfinder", "Persuader", "Scout", "Survivalist", "Weather Watcher"]
+        valueType = custom
+        {
+            Rating = integer { default = 0  minvalue = 0  maxvalue = 6 }
+            Pass = integer { default = 0  minvalue = 0  editable = live }
+            Fail = integer { default = 0  minvalue = 0  editable = live }
+            Roll = integer { value = Rating  valuedice = mgTest (characterTable, Rating)  render = toString (Rating) + "D"  editable = none }
+        }
+    }
+
+    Wises = list
+    {
+        description = "Knowledge of a thing, such as Weasel-wise or Lockhaven-wise. Help yourself or others with it."
+        singular = "Wise"
+        editable = character
+        valueType = custom
+        {
+            Wise = string {}
+            Rating = integer { default = 1  minvalue = 1  maxvalue = 6 }
+        }
+    }
+
+    Traits = list
+    {
+        description = "Traits at level 1 to 3: use them for a bonus die, or against yourself to earn checks."
+        singular = "Trait"
+        editable = character
+        valueType = custom
+        {
+            Trait = string {}
+            Level = integer { default = 1  minvalue = 1  maxvalue = 3 }
+            Used = bool { default = false  editable = live }
+        }
+    }
+
+    Conditions = table
+    {
+        description = "Conditions from failed tests and the weather."
+        tableLayout = layout { columns = 3 }
+        'Hungry and Thirsty' = bool { description = "-1 disposition in conflicts until you eat and drink." default = false  editable = live  indicator = "#d4b106" }
+        Angry = bool { description = "Can't use wises or beneficial traits." default = false  editable = live  indicator = "#8e5cc4" }
+        Tired = bool { description = "-1 disposition in conflicts." default = false  editable = live  indicator = "#d4b106" }
+        Injured = bool { description = "-1D to most tests. The sheet takes it off." default = false  editable = live  indicator = "#d64545" }
+        Sick = bool { description = "-1D to most tests. The sheet takes it off." default = false  editable = live  indicator = "#3fa34d" }
+        Dead = bool { default = false  editable = live  indicator = "#555555" }
+        State = string { value = conditionState (characterTable)  visible = none  indicator = "#d64545" }
+        'Eat and drink' = button { description = "A proper meal clears Hungry and Thirsty." editable = live  onClick = updates
+            {
+                (root.Conditions.'Hungry and Thirsty') = false
+            }
+        }
+        'Healthy again' = button { description = "Recovered at the end of a mission: all conditions cleared." editable = live  onClick = updates
+            {
+                (root.Conditions.'Hungry and Thirsty') = false
+                (root.Conditions.Angry) = false
+                (root.Conditions.Tired) = false
+                (root.Conditions.Injured) = false
+                (root.Conditions.Sick) = false
+            }
+        }
+    }
+
+    Rewards = table
+    {
+        tableLayout = layout { columns = 4 }
+        Fate = integer { description = "Spend to make 6s explode on a roll." default = 1  minvalue = 0  editable = live }
+        Persona = integer { description = "Spend for +1D, or to tap Nature." default = 1  minvalue = 0  editable = live }
+        Checks = integer { description = "Earned by using traits against yourself; spend in the players' turn." default = 0  minvalue = 0  editable = live }
+        'Spend Fate' = bool { description = "Tick before a roll you spend Fate on: its 6s explode." default = false  editable = live  save = nosave }
+    }
+
+    Conflict = table
+    {
+        description = "Disposition for a conflict: ability plus skill, plus successes on the disposition test."
+        tableLayout = layout { columns = 3 }
+        'Fight Disposition' = integer { value = Abilities.Health.Rating + rankOf (characterTable, "Fighter")  editable = none }
+        'Argument Disposition' = integer { value = Abilities.Will.Rating + rankOf (characterTable, "Persuader")  editable = none }
+        Disposition = integer { description = "This conflict's disposition; at 0 you are out." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Fighter plus the weapon's extra dice, for Attack actions in a fight."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Paws and teeth", rankOf (characterTable, "Fighter"), "", "melee", 1)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Contacts = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mouseguard/weasel.svg"  important = [Nature, Actions] }
+    Nature = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Animal", "Weasel", "Mouse", "Weather"]  default = "Animal" }
+        Rating = integer { description = "Nature rating, rolled for everything the creature does well." default = 5  minvalue = 1  valuedice = mgPlain (Rating) }
+        Descriptors = string { description = "What its nature covers, such as Burrowing, Striking, Climbing." }
+        Disposition = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Fight Disposition' = integer { default = 7 }
+        Instinct = string {}
+    }
+    Actions = table
+    {
+        description = "Bonus or penalty dice for each conflict action."
+        tableLayout = layout { columns = 4  size = wide }
+        Attack = modifier { default = 0 }
+        Defend = modifier { default = 0 }
+        Feint = modifier { default = 0 }
+        Maneuver = modifier { default = 0 }
+        Strike = integer { value = Nature.Rating + Attack  valuedice = mgPlain (Nature.Rating + Attack)  render = toString (Nature.Rating + Attack) + "D"  action = melee  reach = 1  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Weapons = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/sword.svg" }
+    Stats = table
+    {
+        Range = string { keys = ["Hand", "Long", "Missile"]  default = "Hand" }
+        'Attack Dice' = string { description = "Extra dice for Attack actions." default = "0" }
+        Bonus = string { description = "What it does in a fight, such as +1D Attack, +1s Defend." }
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Use = string {}
+    }
+}
+
+MouseGuard = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll your skill or ability in d6s: each 4, 5 or 6 is a success. Meet the Obstacle to pass. On a failure the GM either gives you what you wanted with a condition, or a twist. The roll asks for bonus dice and the Obstacle."]
+        },
+        hint
+        {
+            title = "Fate and Persona"
+            topic = "Play"
+            text = ["Tick Spend Fate before a roll to make its 6s explode. Persona adds +1D or taps your Nature. Earn both by playing your Belief, Goal and Instinct."]
+        },
+        hint
+        {
+            title = "Conflicts"
+            topic = "Combat"
+            text = ["Fights and arguments use dispositions and scripted actions: Attack, Defend, Feint and Maneuver. Reduce the other side's disposition to 0 to win."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["There is no initiative: in a conflict both sides script three actions a round and reveal them one at a time."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    secondaryTypes = ["Weapons", "Gear"]
+    description = "Mouse Guard 2nd edition: the mice of the Guard patrol the Territories; d6 pools against an Obstacle, conditions, conflicts and the players' turn"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 2d6, 3d6, 4d6]
+    cssFiles = ["/systems/mouseguard/mouseguard.css"]
+    libraries = ["/systems/names/woodland.json", "/systems/names/arthurian.json"]
+    nameSettings = [mouseNameSetting, arthurianNameSetting]
+}
+
+mouseNameSetting = nameSetting
+{
+    name = "The Territories"
+    characters = [generator { library = "Woodland" variant = "Villager" }, generator { library = "Woodland" variant = "Vagabond" }]
+    creatures = generator { library = "Woodland" variant = "Villager" }
+    Location = [generator { library = "Woodland" variant = "Clearing" }, generator { library = "Woodland" variant = "Path" }]
+    Weapons = generator { library = "Woodland" variant = "Item" }
+}
