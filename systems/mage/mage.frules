@@ -1,0 +1,399 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+targetOf (difficulty) = min (10, max (2, difficulty))
+
+hitsIn (rolls, difficulty) = count (filter ((x)->x >= targetOf (difficulty), rolls))
+
+onesIn (rolls) = count (filter ((x)->x == 1, rolls))
+
+netSuccesses (rolls, difficulty, willpower) = max (0, hitsIn (rolls, difficulty) - onesIn (rolls)) + willpower
+
+isBotch (rolls, difficulty, willpower) = willpower == 0 and hitsIn (rolls, difficulty) == 0 and onesIn (rolls) > 0
+
+m20Outcome (rolls, difficulty, willpower) =
+    if isBotch (rolls, difficulty, willpower) then "Botch"
+    else if netSuccesses (rolls, difficulty, willpower) > 0 then "Success"
+    else "Failure"
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+m20Text (rolls, difficulty, willpower) =
+    (if count (rolls) == 0 and willpower == 0 then "No dice to roll"
+     else if isBotch (rolls, difficulty, willpower) then "Botch at difficulty " + toString (targetOf (difficulty))
+     else plural (netSuccesses (rolls, difficulty, willpower), "success", "successes") + " at difficulty " + toString (targetOf (difficulty)) + ": " + m20Outcome (rolls, difficulty, willpower))
+    + (if willpower > 0 then " (1 from Willpower)" else "")
+
+m20Result (rolls, difficulty, willpower) =
+{
+    Text = m20Text (rolls, difficulty, willpower)
+    Value = netSuccesses (rolls, difficulty, willpower)
+    Outcome = m20Outcome (rolls, difficulty, willpower)
+}
+
+m20Roll (pool, difficulty) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, difficulty, 0)))
+
+m20Asked (pool, willpower) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, if answered then asked else 6, willpower)))
+
+willpowerSuccess (char) = if char.Mage.'Spend Willpower' and char.Mage.Willpower > 0 then 1 else 0
+
+m20Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 6, m20Asked (pool + n - woundPenalty (char), willpowerSuccess (char))))
+
+m20Magick (char) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 4, m20Asked (char.Mage.Arete + n, willpowerSuccess (char))))
+
+damageRoll (pool) = ([dice { number = max (0, pool)  sides = 10 }],
+    ((baseline, throws)->{ Text = plural (count (filter ((x)->x >= 6, first (throws).rolls)), "health level", "health levels") + " of damage"  Value = count (filter ((x)->x >= 6, first (throws).rolls)) }))
+
+soakPool (pool) = ([dice { number = max (0, pool)  sides = 10 }],
+    ((baseline, throws)->{ Text = toString (count (filter ((x)->x >= 6, first (throws).rolls))) + " soaked"  Value = count (filter ((x)->x >= 6, first (throws).rolls)) }))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+woundPenalty (char) =
+    if char.Health.Damage.realvalue >= 6 then 5
+    else if char.Health.Damage.realvalue >= 4 then 2
+    else if char.Health.Damage.realvalue >= 2 then 1
+    else 0
+
+healthState (char) =
+    if char.Health.Damage.realvalue >= 7 then "Incapacitated"
+    else if woundPenalty (char) > 0 then "Wounded -" + toString (woundPenalty (char))
+    else ""
+
+attributeNames = ["Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Appearance", "Perception", "Intelligence", "Wits"]
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Charisma" then char.Attributes.Charisma
+        case "Manipulation" then char.Attributes.Manipulation
+        case "Appearance" then char.Attributes.Appearance
+        case "Perception" then char.Attributes.Perception
+        case "Intelligence" then char.Attributes.Intelligence
+        else char.Attributes.Wits
+
+ability (usual) = custom
+{
+    Dots = integer { description = "Ability dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
+    With = string { description = "The attribute it rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
+    Pool = integer { description = "Attribute plus ability, rolled against the difficulty." value = Dots + attributeValue (characterTable, With)  valuedice = m20Dice (characterTable, Dots + attributeValue (characterTable, With))  editable = none }
+}
+
+noDots = { Dots = 0 }
+
+abilityDots (char, group, name) = valueOr (valueOr (group, name, noDots), "Dots", 0)
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "m20Weapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, pool, damagePool, damageKind, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = pool  valuedice = m20Dice (characterTable, pool)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = damagePool  valuedice = damageRoll (damagePool)  editable = none }
+    Kind = damageKind
+}
+
+meleeDamage (char, weapon) = if contains (weaponStat (weapon, "Damage"), "Str") then char.Attributes.Strength + firstNumber (weaponStat (weapon, "Damage")) else firstNumber (weaponStat (weapon, "Damage"))
+
+attackFor (char, weapon) =
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Firearms") - woundPenalty (char), firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Kind"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Melee") - woundPenalty (char), meleeDamage (char, weapon), weaponStat (weapon, "Kind"), "melee", 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Mage, Health, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Nature = string { description = "Who the mage really is; acting on it restores Willpower." }
+        Demeanor = string { description = "The face the mage shows the world." }
+        Essence = string { description = "The nature of the Avatar." keys = ["Dynamic", "Pattern", "Primordial", "Questing"] }
+        Affiliation = string { keys = ["Traditions", "Technocratic Union", "Disparate Alliance", "Independent"] }
+        Sect = string { description = "Tradition, Convention or Craft." keys = ["Akashayana", "Celestial Chorus", "Cult of Ecstasy", "Dreamspeakers", "Euthanatos", "Order of Hermes", "Society of Ether", "Verbena", "Virtual Adepts", "Hollow Ones", "Orphans", "Iteration X", "New World Order", "Progenitors", "Syndicate", "Void Engineers", "Other"] }
+        Concept = string {}
+        Chronicle = string {}
+        Paradigm = string { description = "How the mage believes reality works." multiline = true }
+        Practice = string { description = "What the mage does to work magick." }
+    }
+
+    Attributes = table
+    {
+        description = "Physical, Social and Mental attributes from 1 to 5."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { description = "Raw physical power." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Strength) }
+        Charisma = integer { description = "Personal magnetism." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Charisma) }
+        Perception = integer { description = "Awareness of the surroundings." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Perception) }
+        Dexterity = integer { description = "Agility, speed and coordination." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Dexterity) }
+        Manipulation = integer { description = "Getting people to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Manipulation) }
+        Intelligence = integer { description = "Memory, reasoning and learning." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Intelligence) }
+        Stamina = integer { description = "Health and toughness; soaks damage." default = 1  minvalue = 1  maxvalue = 5  valuedice = soakPool (Stamina) }
+        Appearance = integer { description = "Looks and first impressions." default = 1  minvalue = 0  maxvalue = 5  valuedice = m20Dice (characterTable, Appearance) }
+        Wits = integer { description = "Quick thinking and reactions." default = 1  minvalue = 1  maxvalue = 5  valuedice = m20Dice (characterTable, Wits) }
+    }
+
+    Talents = table
+    {
+        description = "Talents: an untrained Talent rolls the attribute alone."
+        tableLayout = layout { columns = 1 }
+        Alertness = ability ("Perception")
+        Art = ability ("Appearance")
+        Athletics = ability ("Dexterity")
+        Awareness = ability ("Perception")
+        Brawl = ability ("Dexterity")
+        Empathy = ability ("Perception")
+        Expression = ability ("Charisma")
+        Intimidation = ability ("Manipulation")
+        Leadership = ability ("Charisma")
+        Streetwise = ability ("Charisma")
+        Subterfuge = ability ("Manipulation")
+    }
+
+    Skills = table
+    {
+        description = "Skills: an untrained Skill rolls the attribute at +1 difficulty."
+        tableLayout = layout { columns = 1 }
+        Crafts = ability ("Dexterity")
+        Drive = ability ("Dexterity")
+        Etiquette = ability ("Charisma")
+        Firearms = ability ("Dexterity")
+        'Martial Arts' = ability ("Dexterity")
+        Meditation = ability ("Wits")
+        Melee = ability ("Dexterity")
+        Research = ability ("Intelligence")
+        Stealth = ability ("Dexterity")
+        Survival = ability ("Perception")
+        Technology = ability ("Intelligence")
+    }
+
+    Knowledges = table
+    {
+        description = "Knowledges: an untrained Knowledge can't be rolled."
+        tableLayout = layout { columns = 1 }
+        Academics = ability ("Intelligence")
+        Computer = ability ("Intelligence")
+        Cosmology = ability ("Intelligence")
+        Enigmas = ability ("Intelligence")
+        Esoterica = ability ("Intelligence")
+        Investigation = ability ("Perception")
+        Law = ability ("Intelligence")
+        Medicine = ability ("Intelligence")
+        Occult = ability ("Intelligence")
+        Politics = ability ("Intelligence")
+        Science = ability ("Intelligence")
+    }
+
+    Spheres = table
+    {
+        description = "The nine Spheres of magick. The highest Sphere an effect needs sets its difficulty."
+        tableLayout = layout { columns = 3  size = wide }
+        Correspondence = integer { description = "Space, distance and connection." default = 0  minvalue = 0  maxvalue = 5 }
+        Entropy = integer { description = "Chance, decay and fate." default = 0  minvalue = 0  maxvalue = 5 }
+        Forces = integer { description = "Energy: fire, light, motion, electricity." default = 0  minvalue = 0  maxvalue = 5 }
+        Life = integer { description = "Living bodies: healing, shapeshifting." default = 0  minvalue = 0  maxvalue = 5 }
+        Matter = integer { description = "Dead matter: shaping and transmuting." default = 0  minvalue = 0  maxvalue = 5 }
+        Mind = integer { description = "Thoughts, emotions and the self." default = 0  minvalue = 0  maxvalue = 5 }
+        Prime = integer { description = "Quintessence, the raw stuff of magick." default = 0  minvalue = 0  maxvalue = 5 }
+        Spirit = integer { description = "The Umbra and its inhabitants." default = 0  minvalue = 0  maxvalue = 5 }
+        Time = integer { description = "Seeing and bending time." default = 0  minvalue = 0  maxvalue = 5 }
+    }
+
+    Mage = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Arete = integer { description = "Enlightenment: the dice pool for every magickal effect." default = 1  minvalue = 1  maxvalue = 10 }
+        Magick = integer { description = "Roll Arete. Coincidental difficulty is the highest Sphere used + 3, vulgar + 4; Quintessence lowers it." value = Arete  valuedice = m20Magick (characterTable)  editable = none }
+        'Permanent Willpower' = integer { default = 5  minvalue = 1  maxvalue = 10 }
+        Willpower = integer { description = "Spend one for an automatic success." default = 'Permanent Willpower'  minvalue = 0  maxvalue = 10  editable = live }
+        'Spend Willpower' = bool { description = "Tick before a roll to add one automatic success; untick afterwards and lower Willpower." default = false  editable = live }
+        Quintessence = integer { description = "Stored magickal energy; each point spent lowers a magick difficulty by 1, up to 3." default = 1  minvalue = 0  maxvalue = 20  editable = live }
+        Paradox = integer { description = "Reality's backlash from vulgar magick. It shares the wheel with Quintessence." default = 0  minvalue = 0  maxvalue = 20  editable = live  indicator = "#8e5cc4" }
+        Initiative = modifier { description = "Dexterity plus Wits, plus a d10." value = Attributes.Dexterity + Attributes.Wits  valuedice = initiativeRoll  editable = none }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 1 }
+        Damage = slots { description = "Health levels lost: Bruised, Hurt -1, Injured -1, Wounded -2, Mauled -2, Crippled -5, Incapacitated." number = 7  labels = ["Bruised", "Hurt", "Injured", "Wounded", "Mauled", "Crippled", "Incap."]  editable = live  indicator = "#d64545"  indicatorLabel = "Damage" }
+        Aggravated = integer { description = "How many of those levels are aggravated, from fire, claws and Paradox." default = 0  minvalue = 0  maxvalue = 7  editable = live  indicator = "#555555" }
+        'Wound penalty' = integer { value = woundPenalty (characterTable)  editable = none }
+        State = string { value = healthState (characterTable)  visible = none  indicator = "#d64545" }
+        'Night of rest' = button
+        {
+            description = "A night's sleep restores a point of Willpower. Bashing damage heals in hours, lethal over days; mark it off by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Mage.Willpower) = min (Mage.'Permanent Willpower', Mage.Willpower + 1)
+            }
+        }
+    }
+
+    Backgrounds = list
+    {
+        description = "Avatar, Arcane, Chantry, Library, Mentor, Node, Resources and the rest, each rated in dots."
+        singular = "Background"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Dots = integer { default = 1 }
+        }
+    }
+
+    Rotes = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Rotes
+        singular = "Rote"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Punch", characterTable.Attributes.Dexterity + abilityDots (characterTable, characterTable.Talents, "Brawl") - woundPenalty (characterTable), characterTable.Attributes.Strength, "Bashing", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Merits and Flaws' = string { multiline = true }
+        Instruments = string { description = "The tools and rituals the mage's magick needs." multiline = true }
+        Resonance = string { multiline = true }
+        History = string { multiline = true }
+        'Total Experience' = integer { default = 0 }
+        'Spent Experience' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, 'Dice pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Sleeper", "Mage", "Technocrat", "Nephandus", "Marauder", "Spirit", "Vampire", "Shapeshifter", "Other"] }
+        Physical = integer { description = "Strength, Dexterity and Stamina, as Str/Dex/Sta." default = 2 }
+        Willpower = integer { default = 4  editable = live }
+        Arete = integer { default = 0 }
+        Magick = integer { value = Arete  valuedice = m20Roll (Arete, 6)  editable = none }
+        Soak = integer { default = 2  valuedice = soakPool (Soak) }
+        Initiative = modifier { default = 4  valuedice = initiativeRoll }
+        Damage = slots { number = 7  labels = ["Bruised", "Hurt", "Injured", "Wounded", "Mauled", "Crippled", "Incap."]  editable = live  indicator = "#d64545" }
+    }
+    'Dice pools' = keyvalues
+    {
+        description = "Attribute plus ability pools the character rolls, at difficulty 6."
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Brawl", "Firearms", "Alertness"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = m20Roll (Dice, 6)  action = if Key == "Firearms" then "ranged" else if Key == "Brawl" or Key == "Melee" or Key == "Martial Arts" then "melee" else ""  reach = 2 }
+            'Damage dice' = integer { default = 3  valuedice = damageRoll ('Damage dice') }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Spheres = string { multiline = true }
+        Abilities = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+m20Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Difficulty = string { default = "6" }
+        Damage = string { description = "Damage dice, such as Str+2 or 5." default = "Str+1" }
+        Kind = string { keys = ["Bashing", "Lethal", "Aggravated"]  default = "Lethal" }
+        Range = string { description = "Metres; blank for melee." }
+        Rate = string {}
+        Clip = string {}
+        Conceal = string {}
+    }
+}
+
+m20Rote = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Sphere" prefix = "" filter = split (",", Stats.Spheres) }]
+    }
+    Stats = table
+    {
+        Spheres = string { description = "The Spheres and dots it needs, such as Forces 2, Prime 2." }
+        Practice = string {}
+        Vulgar = string { keys = ["Coincidental", "Vulgar", "Either"] }
+    }
+}
+
+MageTheAscension20 = system
+{
+    hints = [
+        hint
+        {
+            title = "Awakened"
+            topic = "Getting started"
+            text = ["Pick an affiliation and sect, a paradigm and practice, Nature and Demeanor, then attributes (7/5/3), abilities (13/9/5), Spheres and Arete."]
+        },
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll attribute + ability d10s against a difficulty, usually 6. Each die at or above it is a success; each 1 takes one away. No successes with a 1 showing is a botch. The prompt asks for dice added or taken off and the difficulty."]
+        },
+        hint
+        {
+            title = "Magick"
+            topic = "Play"
+            text = ["Roll Arete. The difficulty is the highest Sphere used + 3 if the effect is coincidental, + 4 if vulgar. Vulgar magick gathers Paradox, and a botch brings a backlash."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: Dexterity + Wits + a d10, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = m20Weapon
+    Rotes = m20Rote
+    secondaryTypes = ["Weapons", "Rotes"]
+    description = "Mage: the Ascension 20th anniversary edition: the Awakened struggle over the shape of reality, d10 pools against a difficulty, nine Spheres, Arete and Paradox"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10]
+    cssFiles = ["/systems/mage/mage.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/gothic.json", "/systems/names/cosmic.json"]
+    nameSettings = [nightWorldNameSetting, gothicHorrorNameSetting, cosmicHorrorNameSetting]
+}
