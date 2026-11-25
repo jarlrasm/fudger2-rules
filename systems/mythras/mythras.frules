@@ -125,9 +125,11 @@ weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
 
 styleChance (char) = char.Characteristics.STR + char.Characteristics.DEX + (if count (char.'Combat Styles') > 0 then first (char.'Combat Styles').Bonus else 0)
 
+isLauncher (name) = contains (toLower (name), "bow") or contains (toLower (name), "sling") or contains (toLower (name), "blowgun") or contains (toLower (name), "gun")
+
 attackFor (char, weapon) =
     if firstNumber (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), 25, "ranged", firstNumber (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
         weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
 

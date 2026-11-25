@@ -127,9 +127,14 @@ def relics():
         bullets = [clean(re.sub(r"^\s*-\s*", "", l)) for l in lines if l.strip().startswith("-")]
         recharge = [b[len("Recharge:"):].strip() for b in bullets if b.startswith("Recharge:")]
         body = [b for b in bullets if not b.startswith("Recharge:")]
+        petty = "petty" in others
+        others = [o for o in others if o != "petty"]
         if others:
             body.insert(0, ", ".join(others) + ".")
-        found.append(entity("Relics", name, "\n\n".join(body), "cairnRelic", {"Stats": {"Charges": charges, "Recharge": " ".join(recharge)}}))
+        stats = {"Charges": charges, "Recharge": " ".join(recharge)}
+        if petty:
+            stats["Petty"] = True
+        found.append(entity("Relics", name, "\n\n".join(body), "cairnRelic", {"Stats": stats}))
     return found
 
 

@@ -6,7 +6,7 @@ The Awakened know that reality is consensus: what people believe holds the world
 ## Rolls
 Roll **attribute + ability** d10s against a **difficulty** (usually 6, from 3 easy to 9 very hard). Each die at or above the difficulty is a success; each **1** cancels one success. With no successes and any 1s, the roll is a **botch**. The prompt asks for dice added or taken off and the difficulty.
 - One success is enough; more give better results.
-- **Willpower**: spend a point before the roll for one automatic success that 1s can't cancel (tick Spend Willpower, then lower Willpower).
+- **Willpower**: spend a point before the roll for one automatic success that 1s can't cancel (hold Shift while rolling, then lower Willpower).
 - Untrained: a Talent rolls the attribute alone, a Skill at +1 difficulty, a Knowledge not at all.
 - **Wound penalties** come off the pool: Hurt and Injured -1, Wounded and Mauled -2, Crippled -5.
 
@@ -14,6 +14,7 @@ Roll **attribute + ability** d10s against a **difficulty** (usually 6, from 3 ea
 Roll **Arete**. The effect needs dots in the right **Spheres** (Correspondence, Entropy, Forces, Life, Matter, Mind, Prime, Spirit, Time).
 - **Coincidental** magick (could pass as chance): difficulty = highest Sphere used + 3.
 - **Vulgar** magick (obviously impossible): highest Sphere + 4, and it gains **Paradox**; more with Sleepers watching.
+- **Wound penalties** apply to Arete too.
 - Spending **Quintessence** lowers the difficulty by 1 a point (up to 3). Instruments and time help too.
 - The successes decide how strong, how long and how far the effect goes. A botch on vulgar magick brings a Paradox backlash.
 

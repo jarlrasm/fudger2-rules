@@ -171,14 +171,14 @@ characterTable = ruleset
         State = string { value = if Wounds > 0 then woundName (Wounds) else ""  visible = none  indicator = "#d64545" }
         'Next clone' = button
         {
-            description = "The current clone is dead. The next one arrives, unhurt, knowing what the last one knew, and keeping the Treason Stars."
+            description = "The current clone is dead. The next one arrives, unhurt, knowing what the last one knew, and keeping the Treason Stars. After the sixth, buy more clones with XP points and raise Clone by hand."
             editable = live
             onClick = updates
             {
                 (root.Citizen.Clone) = min (6, Citizen.Clone + 1)
-                (root.Health.Wounds) = 0
-                (root.Status.Moxie) = 4
-                (root.Status.'Losing it') = false
+                (root.Health.Wounds) = if Citizen.Clone >= 6 then Wounds else 0
+                (root.Status.Moxie) = if Citizen.Clone >= 6 then Status.Moxie else 4
+                (root.Status.'Losing it') = if Citizen.Clone >= 6 then Status.'Losing it' else false
             }
         }
     }

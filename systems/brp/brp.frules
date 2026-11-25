@@ -92,7 +92,7 @@ weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
     Damage = integer { value = flatBonus (damageText)  valuedice = damageRoll (diceCount (damageText), dieSize (damageText), strsiz, dmShare (damageText))  render = damageText  editable = none }
 }
 
-isRangedWeapon (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0 and not (contains (toLower (weaponStat (weapon, "Range")), "short")) and not (contains (toLower (weaponStat (weapon, "Range")), "medium")) and not (contains (toLower (weaponStat (weapon, "Range")), "long"))
+isRangedWeapon (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0
 
 attackFor (char, weapon) =
     weaponAttack (weapon.Name, weaponChance (char, weapon), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, if isRangedWeapon (weapon) then "ranged" else "melee", firstNumber (weaponStat (weapon, "Range")))

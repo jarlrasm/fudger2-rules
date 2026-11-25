@@ -35,11 +35,11 @@ m20Roll (pool, difficulty) = ([dice { number = max (0, pool)  sides = 10 }], ((b
 
 m20Asked (pool, willpower) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, if answered then asked else 6, willpower)))
 
-willpowerSuccess (char) = if char.Mage.'Spend Willpower' and char.Mage.Willpower > 0 then 1 else 0
+willpowerSuccess (char) = if char.Mage.'Spend Willpower' == "Spend" and char.Mage.Willpower > 0 then 1 else 0
 
 m20Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 6, m20Asked (pool + n - woundPenalty (char), willpowerSuccess (char))))
 
-m20Magick (char) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 4, m20Asked (char.Mage.Arete + n, willpowerSuccess (char))))
+m20Magick (char) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 4, m20Asked (char.Mage.Arete + n - woundPenalty (char), willpowerSuccess (char))))
 
 damageRoll (pool) = ([dice { number = max (0, pool)  sides = 10 }],
     ((baseline, throws)->{ Text = plural (count (filter ((x)->x >= 6, first (throws).rolls)), "health level", "health levels") + " of damage"  Value = count (filter ((x)->x >= 6, first (throws).rolls)) }))
@@ -212,7 +212,7 @@ characterTable = ruleset
         Magick = integer { description = "Roll Arete. Coincidental difficulty is the highest Sphere used + 3, vulgar + 4; Quintessence lowers it." value = Arete  valuedice = m20Magick (characterTable)  editable = none }
         'Permanent Willpower' = integer { default = 5  minvalue = 1  maxvalue = 10 }
         Willpower = integer { description = "Spend one for an automatic success." default = 'Permanent Willpower'  minvalue = 0  maxvalue = 10  editable = live }
-        'Spend Willpower' = bool { description = "Tick before a roll to add one automatic success; untick afterwards and lower Willpower." default = false  editable = live }
+        'Spend Willpower' = selector { description = "Hold Shift while rolling, or switch it on, for one automatic success; then lower Willpower." options = ["No", "Spend"]  labels = ["No", "Spend"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
         Quintessence = integer { description = "Stored magickal energy; each point spent lowers a magick difficulty by 1, up to 3." default = 1  minvalue = 0  maxvalue = 20  editable = live }
         Paradox = integer { description = "Reality's backlash from vulgar magick. It shares the wheel with Quintessence." default = 0  minvalue = 0  maxvalue = 20  editable = live  indicator = "#8e5cc4" }
         Initiative = modifier { description = "Dexterity plus Wits, plus a d10." value = Attributes.Dexterity + Attributes.Wits  valuedice = initiativeRoll  editable = none }

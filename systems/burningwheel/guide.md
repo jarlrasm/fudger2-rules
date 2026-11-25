@@ -12,7 +12,7 @@ Roll **d6s equal to the exponent** of the stat or skill.
 - **Wounds** are applied for you: each superficial wound adds +1 Ob; Light -1D, Midi -2D, Severe -3D, Traumatic -4D.
 
 ## Artha
-- **Fate**: make a roll open-ended (6s roll again and can succeed). Tick Spend Fate before the roll.
+- **Fate**: make a roll open-ended (6s roll again and can succeed). Hold Shift while rolling (or switch Spend Fate on).
 - **Persona**: +1D a point (up to three), or tap Nature.
 - **Deeds**: double the base dice, or reroll every failure.
 Artha is earned at the end of a session for playing Beliefs, Instincts and Traits, even against the character's interest.

@@ -49,7 +49,7 @@ h5AskedPool (pool, desperation, spend) = ([dice { number = max (0, pool)  sides 
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-desperationDice (char) = if char.Hunt.'Add Desperation' and not (char.Hunt.Despair) then char.Hunt.Desperation else 0
+desperationDice (char) = if char.Hunt.'Add Desperation' == "On" and not (char.Hunt.Despair) then char.Hunt.Desperation else 0
 
 h5Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", h5AskedPool (pool + n, desperationDice (char), willpowerSpend (char))))
 
@@ -135,7 +135,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 2  size = wide }
         Danger = integer { description = "How close the quarry is to striking back. Overreach raises it." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
         Desperation = integer { description = "Desperation dice added to a roll that serves the hunter's Drive." default = 1  minvalue = 1  maxvalue = 5  editable = live }
-        'Add Desperation' = bool { description = "Tick before a roll to add the Desperation dice. Not while in Despair." default = false  editable = live }
+        'Add Desperation' = selector { description = "Hold Shift while rolling, or switch it on, to add the Desperation dice. Not while in Despair." options = ["Off", "On"]  labels = ["Off", "On"]  colors = ["", "orange"]  hold = ["", "Shift"]  default = "Off"  editable = live  save = nosave }
         Despair = bool { description = "No Desperation dice and no use of the Drive until the hunter acts on their Redemption." default = false  editable = live  indicator = "#555555" }
     }
 
@@ -322,7 +322,7 @@ HunterTheReckoning5e = system
         {
             title = "Pools and Desperation"
             topic = "Play"
-            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. The prompt asks for dice added or taken off and the Difficulty. Tick Add Desperation to roll the orange Desperation dice too: any 1 on them is overreach, raising Danger or bringing Despair."]
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. The prompt asks for dice added or taken off and the Difficulty. Hold Shift (or switch Add Desperation on) to roll the orange Desperation dice too: any 1 on them is overreach, raising Danger or bringing Despair."]
         },
         hint
         {

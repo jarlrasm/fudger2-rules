@@ -103,7 +103,7 @@ characterTable = ruleset
         Drive = string { description = "What the character wants most, with its quality and its downfall." keys = ["Achiever", "Caregiver", "Explorer", "Guardian", "Judge", "Networker", "Penitent", "Protector", "Rebel", "Survivor", "Visionary"] }
         Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
         Experience = integer { default = 0  editable = live }
-        Income = integer { description = "Roll Income + 3d6 against an item's cost to buy it; a big purchase lowers Income." default = 2  editable = live  valuedice = expanseDice }
+        Income = integer { description = "Roll Income + 3d6 against an item's cost to buy it; a big purchase lowers Income." default = 2  valuedice = expanseDice }
     }
 
     Abilities = table

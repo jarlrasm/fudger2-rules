@@ -10,7 +10,7 @@ Roll **attribute + skill** d10s. Each **6 or more** is a success; every **pair o
 
 ## Desperation and Danger
 The cell shares two numbers, kept on each sheet:
-- **Desperation** (1-5): when a roll serves the hunter's **Drive**, tick **Add Desperation** and that many orange dice are added to the pool. They count successes as usual, but if any shows a **1**, the hunter **overreaches**: either **Danger** goes up by 1, or the hunter falls into **Despair**.
+- **Desperation** (1-5): when a roll serves the hunter's **Drive**, hold **Shift** while rolling (or switch **Add Desperation** on) and that many orange dice are added to the pool. They count successes as usual, but if any shows a **1**, the hunter **overreaches**: either **Danger** goes up by 1, or the hunter falls into **Despair**.
 - **Danger** (0-5): how close the quarry is to hitting back. The GM spends it on complications.
 - **Despair**: no Desperation dice and no use of the Drive until the hunter does what their **Redemption** asks.
 

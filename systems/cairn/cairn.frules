@@ -38,7 +38,9 @@ dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
 
 slotsOf (item) = if itemStat (item, "Petty") == true then 0 else if itemStat (item, "Bulky") == true then 2 else 1
 
-usedSlots (char) = sum (map ((item)->slotsOf (item), char.Inventory)) + count (char.Spellbooks) + count (char.Relics) + char.Status.Fatigue
+relicSlots (relic) = if valueOr (valueOr (valueOr (relic.data, "cairnRelic", noStats), "Stats", noStats.Stats), "Petty", false) == true then 0 else 1
+
+usedSlots (char) = sum (map ((item)->slotsOf (item), char.Inventory)) + count (char.Spellbooks) + sum (map ((relic)->relicSlots (relic), char.Relics)) + char.Status.Fatigue
 
 downState (char) =
     if char.Abilities.STR == 0 then "Dead"
@@ -255,6 +257,7 @@ cairnRelic = ruleset
     {
         Charges = string { description = "Uses before it needs recharging." }
         Recharge = string { multiline = true }
+        Petty = bool { description = "Takes no inventory slot." default = false }
     }
 }
 
