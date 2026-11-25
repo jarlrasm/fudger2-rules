@@ -115,7 +115,7 @@ characterTable = ruleset
         State = string { value = damageState (Damage, Health)  visible = none  indicator = "#d64545" }
         'Healing rate' = integer { description = "A quarter of your Health: what a rest or catching your breath heals." value = Health / 4  editable = none }
         Defense = integer { description = "What attacks against you must reach: your Agility, or your armor's Defense." default = 10 }
-        Perception = modifier { description = "Your Intellect plus bonuses, used to notice things." default = 0  valuedice = sdlChallenge (netBoons (characterTable)) }
+        Perception = modifier { description = "Perception modifier: your Perception score (Intellect plus bonuses) minus 10." default = 0  valuedice = sdlChallenge (netBoons (characterTable)) }
         Speed = integer { description = "Yards you move with a move." default = 10 }
         Size = string { default = "1"  keys = ["1/2", "1", "2", "3"] }
         Power = integer { description = "How much magic you command; it sets how many spells you can cast." default = 0 }

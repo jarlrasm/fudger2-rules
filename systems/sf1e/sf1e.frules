@@ -107,7 +107,7 @@ checkPenalty (char) = abs (sum (map ((x)->armorStat (x, "Check Penalty"), char.A
 
 weaponCategory (weapon) = toLower (itemStat (weapon, "sf1Weapon", "Category"))
 
-isMelee (weapon) = contains (weaponCategory (weapon), "melee") or weaponCategory (weapon) == ""
+isMelee (weapon) = contains (weaponCategory (weapon), "melee") or weaponCategory (weapon) == "" or (weaponCategory (weapon) == "special" and firstNumber (itemStat (weapon, "sf1Weapon", "Range")) == 0)
 
 isGrenade (weapon) = contains (weaponCategory (weapon), "grenade")
 

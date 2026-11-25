@@ -18,7 +18,7 @@ Roll **d100** and get the **target** or less. The target is a characteristic (or
 | Very Hard | -30 |
 | Hellish | -60 |
 
-**Degrees of success**: 1 plus the target's tens digit minus the roll's tens digit. Degrees of failure count the other way. 01 always succeeds and 100 always fails. Skill ranks: untrained -20, Known +0, Trained +10, Experienced +20, Veteran +30. Each level of **fatigue** gives -10 to every test.
+**Degrees of success**: 1 plus the target's tens digit minus the roll's tens digit. Degrees of failure count the other way. 01 always succeeds and 100 always fails. Skill ranks: untrained -20, Known +0, Trained +10, Experienced +20, Veteran +30. While a character has any **fatigue**, every test takes -10; fatigue beyond the Toughness bonus knocks them out.
 
 A characteristic's **bonus** is its tens digit; Strength bonus adds to melee damage and Toughness bonus soaks damage.
 
