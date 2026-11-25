@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* The Expanse: a clean, technical sheet in off-white and charcoal with a
+   burnt-orange accent and a narrow sans-serif; abilities in a three by three
+   grid, focuses beside them, then Fortune, Defense and conditions in one
+   band, and weapons and talents in the lower half. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1b1f24;
+    --surface: #f3f1ec;
+    --surface-alt: #e7e4dd;
+    --surface-sunken: #d9d5cc;
+    --surface-muted: #c3beb3;
+    --text: #1c1f22;
+    --text-muted: #474c52;
+    --text-faint: #7a7f85;
+    --on-accent: #f3f1ec;
+    --border: #a9a59c;
+    --border-strong: #2a2e33;
+    --accent: #c4541b;
+    --accent-hover: #d96a2e;
+    --accent-soft: #f4dccd;
+    --link: #a8461a;
+    --danger: #a32121;
+    --danger-hover: #821a1a;
+    --danger-soft: #f1d4d4;
+    --success: #2f6f5e;
+    --paper: #f3f1ec;
+    --card-bg: #e7e4dd;
+    --dice-bg: #2a2e33;
+    --dice-text: #f3f1ec;
+}
+
+.entityView {
+    --sheet-font: "Barlow Semi Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --title-font: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --block-radius: 2px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    background: var(--border-strong);
+    color: var(--surface);
+    border-left: 6px solid var(--accent);
+}
+.entityView .table-abilities { --block: 60%; }
+.entityView .table-focuses { --block: 40%; }
+.entityView .table-abilities > table > tbody > tr { border-bottom: 1px solid var(--border); }
+.entityView .table-abilities button.dicethrow { min-width: 2.2em; clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%); }
+.entityView .table-combat { clear: left; }
+.entityView .table-armor-worn,
+.entityView .table-talents,
+.entityView .table-equipment { --block: 33.333%; }
+.entityView .table-armor-worn { clear: left; }
+.entityView .table-talents { clear: none; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Attack "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

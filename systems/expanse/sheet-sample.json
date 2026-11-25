@@ -1,0 +1,26 @@
+{
+  "values": {
+    "Character": { "Origin": "Belter", "Social Class": "Lower Class", "Background": "Laborer", "Profession": "Technician", "Drive": "Survivor", "Level": 3, "Experience": 2400, "Income": 2 },
+    "Abilities": { "Accuracy": 1, "Communication": 0, "Constitution": 2, "Dexterity": 2, "Fighting": 1, "Intelligence": 3, "Perception": 1, "Strength": 0, "Willpower": 1 },
+    "Focuses": [
+      { "Ability": "Intelligence", "Focus": "Engineering" },
+      { "Ability": "Dexterity", "Focus": "Free-fall" },
+      { "Ability": "Accuracy", "Focus": "Pistols" },
+      { "Ability": "Constitution", "Focus": "Tolerance" },
+      { "Ability": "Intelligence", "Focus": "Technology" }
+    ],
+    "Combat": { "Max Fortune": 26, "Fortune": 17, "Armor": 2 },
+    "Conditions": { "Fatigued": true },
+    "Ties": { "Relationships": "Mama Tseng, foster mother on Ceres (Loyalty 2). Kaz, old crew partner who owes me air money (Rivalry 1).", "Memberships": "OPA sympathisers, Ceres dock 14 (rank 1)", "Reputations": "Fixes anything with a vacuum seal" },
+    "Notes": { "Goals": "Buy my own share of an ice hauler. Find out who sold Kaz's ship to the Martians.", "Description": "Tall and thin from a childhood in low gravity, tattooed split circle on the left hand, speaks Belter creole to anyone who will listen." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Light pistol", "values": { "Stats": { "Group": "Pistols", "Damage": "1d6+2", "Short range": "10", "Long range": "40", "Reload": "Minor", "Cost": "9" } } },
+      { "name": "Spanner", "values": { "Stats": { "Group": "Makeshift Weapons", "Damage": "1d6", "Cost": "1" } } }
+    ],
+    "Armor": [ { "name": "Padded vac suit", "values": { "Stats": { "Rating": "2", "Penalty": "1", "Cost": "11" } } } ],
+    "Talents": [ { "name": "Maker", "values": { "Stats": { "Degree": "Novice", "Requirement": "Intelligence (Engineering)" } } }, { "name": "Knack (Free-fall)", "values": { "Stats": { "Degree": "Novice" } } } ],
+    "Equipment": [ { "name": "Hand terminal", "values": { "Stats": { "Cost": "8" } } }, { "name": "Toolkit (engineering)", "values": { "Stats": { "Cost": "10" } } }, { "name": "Mag boots", "values": { "Stats": { "Cost": "9" } } } ]
+  }
+}

@@ -1,0 +1,437 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+hasDoubles (rolls, drama) =
+    count (rolls) > 1 and (first (rolls) == item (1, rolls) or first (rolls) == drama or item (1, rolls) == drama)
+
+expanseOutcome (total, tn, answered) =
+    if not (answered) then ""
+    else if total >= tn then "Success"
+    else "Failure"
+
+expanseText (total, tn, answered, stunts) =
+    toString (total)
+    + (if answered then " vs " + toString (tn) + ": " + expanseOutcome (total, tn, answered) else "")
+    + (if stunts > 0 and (not (answered) or total >= tn) then ", " + toString (stunts) + " SP" else "")
+
+expanseResult (rolls, drama, total, tn, answered) =
+{
+    Text = expanseText (total, tn, answered, if hasDoubles (rolls, drama) then drama else 0)
+    Value = total
+    Outcome = expanseOutcome (total, tn, answered)
+}
+
+expanseTest = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
+    ((baseline, throws)->expanseResult (first (throws).rolls, first (item (1, throws).rolls), baseline + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered)))
+
+expanseDice = ask ("Target number", expanseTest)
+
+expanseAttack = ask ("Target's Defense", expanseTest)
+
+initiativeRoll = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
+    ((baseline, throws)->baseline + sum (first (throws).rolls) + first (item (1, throws).rolls)))
+
+damageRoll (n, dieSides) = ([dice { number = n  sides = dieSides }], ((baseline, throws)->{ Text = toString (max (0, baseline + sum (first (throws).rolls))) + " damage"  Value = baseline + sum (first (throws).rolls) }))
+
+conditionPenalty (char) =
+    if char.Conditions.Wounded then 2
+    else if char.Conditions.Injured then 1
+    else 0
+
+downState (char) =
+    if char.Conditions.Dying then "Dying"
+    else if char.Conditions.Unconscious then "Unconscious"
+    else if char.Conditions.Wounded then "Wounded"
+    else if char.Conditions.Injured then "Injured"
+    else ""
+
+abilityNames = ["Accuracy", "Communication", "Constitution", "Dexterity", "Fighting", "Intelligence", "Perception", "Strength", "Willpower"]
+
+abilityValue (char, name) =
+    switch name
+        case "Accuracy" then char.Abilities.Accuracy
+        case "Communication" then char.Abilities.Communication
+        case "Constitution" then char.Abilities.Constitution
+        case "Dexterity" then char.Abilities.Dexterity
+        case "Fighting" then char.Abilities.Fighting
+        case "Intelligence" then char.Abilities.Intelligence
+        case "Perception" then char.Abilities.Perception
+        case "Strength" then char.Abilities.Strength
+        else char.Abilities.Willpower
+
+hasFocus (char, name) = count (filter ((f)->toLower (f.Focus) == toLower (name), char.Focuses)) > 0
+
+noStats = { Stats = { Group = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "expanseWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+isRangedGroup (group) = group == "Pistols" or group == "Rifles" or group == "Grenades" or group == "Heavy Weapons"
+
+diceCount (text) = bonusWithValue ([[text]], "^ *([0-9]+)d")
+
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+damageBonus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)")
+
+damageLabel (n, dieSides, bonus) = toString (n) + "d" + toString (dieSides) + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = expanseAttack  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBonus (damageText) + damageExtra  valuedice = damageRoll (diceCount (damageText), dieSize (damageText))  render = damageLabel (diceCount (damageText), dieSize (damageText), damageBonus (damageText) + damageExtra)  editable = none }
+}
+
+attackFor (char, weapon) =
+    if isRangedGroup (weaponStat (weapon, "Group")) then
+        weaponAttack (weapon.Name, char.Abilities.Accuracy + (if hasFocus (char, weaponStat (weapon, "Group")) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long range")))
+    else
+        weaponAttack (weapon.Name, char.Abilities.Fighting + (if hasFocus (char, weaponStat (weapon, "Group")) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Origin = string { description = "Where the character grew up: Belter, Earther or Martian." keys = ["Belter", "Earther", "Martian"] }
+        'Social Class' = string { keys = ["Outsider", "Lower Class", "Middle Class", "Upper Class"] }
+        Background = string {}
+        Profession = string {}
+        Drive = string { description = "What the character wants most, with its quality and its downfall." keys = ["Achiever", "Caregiver", "Explorer", "Guardian", "Judge", "Networker", "Penitent", "Protector", "Rebel", "Survivor", "Visionary"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        Experience = integer { default = 0  editable = live }
+        Income = integer { description = "Roll Income + 3d6 against an item's cost to buy it; a big purchase lowers Income." default = 2  editable = live  valuedice = expanseDice }
+    }
+
+    Abilities = table
+    {
+        description = "Nine abilities from -2 to 4 or more. A test is 3d6 plus the ability, plus 2 for a matching focus."
+        tableLayout = layout { columns = 3  size = wide }
+        Accuracy = integer { description = "Aiming and shooting."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Communication = integer { description = "Dealing with people."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Constitution = integer { description = "Stamina and toughness."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Dexterity = integer { description = "Agility, reflexes and hand-eye coordination."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Fighting = integer { description = "Close combat."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Intelligence = integer { description = "Reasoning and learning."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Perception = integer { description = "Noticing and sensing."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Strength = integer { description = "Physical power."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Willpower = integer { description = "Mental toughness and morale."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+    }
+
+    Focuses = list
+    {
+        description = "Areas of expertise inside an ability. A focus adds 2 to its tests."
+        singular = "Focus"
+        editable = character
+        valueType = custom
+        {
+            Ability = string { default = "Dexterity"  keys = abilityNames }
+            Focus = string {}
+            Test = modifier { value = abilityValue (characterTable, Ability) + 2 - conditionPenalty (characterTable)  valuedice = expanseDice  editable = none }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Fortune' = integer { description = "Fortune is luck and stamina: spend it to change a die or to take damage." default = 15  minvalue = 0 }
+        Fortune = integer { description = "Lose Fortune to avoid damage; at 0 take conditions instead." default = 'Max Fortune'  minvalue = 0  editable = live }
+        Defense = integer { description = "10 plus Dexterity: the target number to hit you." value = 10 + Abilities.Dexterity  editable = none }
+        Toughness = integer { description = "Constitution, taken off damage." value = max (0, Abilities.Constitution)  editable = none }
+        Armor = integer { description = "Armor rating, taken off damage with Toughness." default = 0  minvalue = 0 }
+        Speed = integer { description = "10 plus Dexterity, in metres a move." value = 10 + Abilities.Dexterity  editable = none }
+        Initiative = modifier { description = "Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity  valuedice = initiativeRoll  editable = none }
+        Interlude = button
+        {
+            description = "An interlude between scenes restores all Fortune and clears fatigue."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.Fortune) = 'Max Fortune'
+                (root.Conditions.Fatigued) = false
+                (root.Conditions.Exhausted) = false
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        description = "Conditions from damage, effort and circumstances."
+        tableLayout = layout { columns = 4  size = wide }
+        Injured = bool { description = "-1 to tests, and fatigued." default = false  editable = live  indicator = "#d64545" }
+        Wounded = bool { description = "-2 to tests, and exhausted." default = false  editable = live  indicator = "#d64545" }
+        Dying = bool { description = "Lose 1 Constitution a round until helped." default = false  editable = live  indicator = "#555555" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        Fatigued = bool { description = "No running or charging." default = false  editable = live  indicator = "#d4b106" }
+        Exhausted = bool { description = "Half Speed, no running or charging." default = false  editable = live  indicator = "#d4b106" }
+        Hindered = bool { description = "Half Speed." default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+        Helpless = bool { default = false  editable = live  indicator = "#555555" }
+        Blinded = bool { default = false  editable = live  indicator = "#555555" }
+        Deafened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#d64545" }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", characterTable.Abilities.Fighting + (if hasFocus (characterTable, "Brawling") then 2 else 0) - conditionPenalty (characterTable), "1d3", characterTable.Abilities.Strength, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Armor worn' = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Ties = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Relationships = string { description = "Bonds to people, each with a type and an intensity." multiline = true }
+        Memberships = string { description = "Organisations the character belongs to, and their rank there." multiline = true }
+        Reputations = string { multiline = true }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Goals = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+npcAttack = custom
+{
+    Attack = modifier { default = 2  valuedice = expanseAttack  action = if Key == "Shoot" or Key == "Pistol" or Key == "Rifle" then "ranged" else "melee"  reach = 2 }
+    Damage = string { default = "1d6+1" }
+    'Roll damage' = integer { value = damageBonus (Damage)  valuedice = damageRoll (diceCount (Damage), dieSize (Damage))  editable = none }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, Attacks] }
+    Abilities = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Accuracy = integer { default = 1  valuedice = expanseDice }
+        Communication = integer { default = 1  valuedice = expanseDice }
+        Constitution = integer { default = 1  valuedice = expanseDice }
+        Dexterity = integer { default = 1  valuedice = expanseDice }
+        Fighting = integer { default = 1  valuedice = expanseDice }
+        Intelligence = integer { default = 1  valuedice = expanseDice }
+        Perception = integer { default = 1  valuedice = expanseDice }
+        Strength = integer { default = 1  valuedice = expanseDice }
+        Willpower = integer { default = 1  valuedice = expanseDice }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Threat = string { keys = ["Minor", "Moderate", "Major", "Dire", "Legendary"] }
+        Fortune = integer { description = "Major NPCs have Fortune; minor ones only take conditions." default = 0  minvalue = 0  editable = live }
+        Defense = integer { default = 11 }
+        Toughness = integer { default = 1 }
+        Armor = integer { default = 0 }
+        Speed = integer { default = 11 }
+        Initiative = modifier { default = 1  valuedice = initiativeRoll }
+        Injured = bool { default = false  editable = live  indicator = "#d64545" }
+        Wounded = bool { default = false  editable = live  indicator = "#d64545" }
+        'Taken Out' = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Attacks = keyvalues
+    {
+        description = "Attack bonus against the target's Defense, and damage."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Pistol", "Unarmed"]
+        valueType = npcAttack
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Focuses = string { multiline = true }
+        Talents = string { multiline = true }
+        Equipment = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+shipWeapon = custom
+{
+    Attack = modifier { default = 2  valuedice = expanseAttack  action = "ranged" }
+    Damage = string { default = "2d6" }
+    'Roll damage' = integer { value = damageBonus (Damage)  valuedice = damageRoll (diceCount (Damage), dieSize (Damage))  editable = none }
+    Range = string { default = "Close" }
+}
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { important = [Ship, Losses, 'Ship weapons'] }
+    Ship = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string {}
+        Size = string { keys = ["Tiny", "Small", "Medium", "Large", "Huge", "Gigantic", "Colossal", "Titanic"] }
+        Hull = string { description = "Dice rolled to soak damage." default = "1d6" }
+        'Hull soak' = integer { value = 0  valuedice = damageRoll (diceCount (Hull), dieSize (Hull))  editable = none }
+        Crew = string { description = "Crew size: minimum and standard." }
+        'Crew Competence' = modifier { description = "Bonus for crew tests made without a named character: Incompetent 0 to Elite 4." default = 2  valuedice = expanseDice }
+        Sensors = modifier { default = 0  valuedice = expanseDice }
+        Length = string {}
+        Drive = string { default = "Epstein" }
+        Qualities = string { multiline = true }
+        Flaws = string { multiline = true }
+    }
+    Losses = table
+    {
+        description = "Losses from hits that get past the hull."
+        tableLayout = layout { columns = 3  size = wide }
+        'Damaged hull' = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Damaged sensors' = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Damaged maneuverability' = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Damaged weapons' = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Crew casualties' = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Disabled = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    'Ship weapons' = keyvalues
+    {
+        singular = "Weapon"
+        editablekeys = character
+        keys = ["Point Defense Cannons", "Torpedoes"]
+        valueType = shipWeapon
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+expanseWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Group" prefix = "" filter = Stats.Group }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Group = string { default = "Pistols"  keys = ["Brawling", "Grenades", "Heavy Weapons", "Light Melee", "Heavy Melee", "Makeshift Weapons", "Pistols", "Rifles"] }
+        Damage = string { description = "Damage dice; melee adds Strength, ranged Perception." default = "2d6" }
+        'Short range' = string { description = "Metres." }
+        'Long range' = string { description = "Metres." }
+        Reload = string {}
+        Cost = string {}
+    }
+}
+
+expanseArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Rating = string { description = "Taken off damage." }
+        Penalty = string { description = "Penalty to Dexterity tests and Speed." }
+        Cost = string {}
+    }
+}
+
+expanseTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Degree" prefix = "" filter = Stats.Degree }]
+    }
+    Stats = table
+    {
+        Degree = string { keys = ["Novice", "Expert", "Master"] }
+        Requirement = string {}
+    }
+}
+
+expanseItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Cost = string { description = "Income test target number." }
+    }
+}
+
+TheExpanse = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a character"
+            topic = "Getting started"
+            text = ["Pick an origin (Belter, Earther, Martian), a social class, a background, a profession and a drive. Abilities run from -2 to 4; focuses add 2 to tests in their field."]
+        },
+        hint
+        {
+            title = "Ability tests"
+            topic = "Play"
+            text = ["Roll 3d6, one of them the red Drama die, and add the ability. Enter the target number, or leave it blank for the GM to judge. Any doubles on a success give stunt points equal to the Drama die."]
+        },
+        hint
+        {
+            title = "Damage and Fortune"
+            topic = "Combat"
+            text = ["An attack against the target's Defense hits on a success. Damage minus Toughness and armor comes off Fortune; with no Fortune left, take Injured, then Wounded, then you are taken out."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: a Dexterity test. Highest goes first and keeps the order for the encounter."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Weapons = expanseWeapon
+    Armor = expanseArmor
+    Talents = expanseTalent
+    Equipment = expanseItem
+    secondaryTypes = ["Weapons", "Armor", "Talents", "Equipment"]
+    extraEntityTypes = [entityTypeDescription ("Spaceships", "spaceship", true, "/systems/expanse/ship-entity.svg", [])]
+    description = "The Expanse: gritty hard science fiction in a colonised solar system, AGE 3d6 tests with a Drama die, stunts and Fortune"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [3d6, 1d6]
+    cssFiles = ["/systems/expanse/expanse.css"]
+    libraries = ["/systems/names/bluecollar.json", "/systems/names/scifi.json"]
+    nameSettings = [blueCollarSpaceNameSetting, spaceNameSetting]
+}
