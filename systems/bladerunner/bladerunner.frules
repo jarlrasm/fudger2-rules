@@ -1,0 +1,336 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieOf (rating) =
+    switch rating
+        case "A" then 12
+        case "B" then 10
+        case "C" then 8
+        case "D" then 6
+        else 0
+
+dieName (die) = if die == 0 then "-" else "d" + toString (die)
+
+successOf (x, die) = if die >= 10 and x >= 10 then 2 else if x >= 6 then 1 else 0
+
+extraDieOf (attrDie, skillDie, mode) =
+    if mode > 0 then max (attrDie, skillDie)
+    else if skillDie > 0 then min (attrDie, skillDie)
+    else attrDie
+
+dieSuccesses (a, s, e, attrDie, skillDie, mode) =
+    concat (concat ([successOf (a, attrDie)], if skillDie > 0 then [successOf (s, skillDie)] else []), if mode != 0 then [successOf (e, extraDieOf (attrDie, skillDie, mode))] else [])
+
+keptSuccesses (counts, mode) =
+    sum (counts) - (if mode > 0 then min (counts) else if mode < 0 then max (counts) else 0)
+
+onesIn (a, s, e, skillDie, mode) =
+    (if a == 1 then 1 else 0) + (if skillDie > 0 and s == 1 then 1 else 0) + (if mode != 0 and e == 1 then 1 else 0)
+
+canReroll (x, die, exists) = exists and x != 1 and successOf (x, die) == 0
+
+modeText (mode) = if mode > 0 then ", advantage" else if mode < 0 then ", disadvantage" else ""
+
+brText (total, mode, pushed, ones) =
+    toString (total) + (if total == 1 then " success" else " successes") + modeText (mode)
+    + (if pushed and ones > 0 then ", pushed: " + toString (ones) + " damage or stress from the 1s" else if pushed then ", pushed" else "")
+
+brResult (a, s, e, attrDie, skillDie, mode, pushesLeft, pushed) =
+{
+    Text = brText (keptSuccesses (dieSuccesses (a, s, e, attrDie, skillDie, mode), mode), mode, pushed, onesIn (a, s, e, skillDie, mode))
+    Value = keptSuccesses (dieSuccesses (a, s, e, attrDie, skillDie, mode), mode)
+    Outcome = if keptSuccesses (dieSuccesses (a, s, e, attrDie, skillDie, mode), mode) > 0 then "Success" else "Failure"
+    Push = if pushesLeft > 0 and (canReroll (a, attrDie, true) or canReroll (s, skillDie, skillDie > 0) or canReroll (e, extraDieOf (attrDie, skillDie, mode), mode != 0)) then brPush (a, s, e, attrDie, skillDie, mode, pushesLeft) else 0
+    PushLabel = "Push (1s cost damage or stress)"
+}
+
+brPush (a, s, e, attrDie, skillDie, mode, pushesLeft) = ([dice { number = if canReroll (a, attrDie, true) then 1 else 0  sides = attrDie }, dice { number = if canReroll (s, skillDie, skillDie > 0) then 1 else 0  sides = max (6, skillDie)  color = "blue"  label = "Skill" }, dice { number = if canReroll (e, extraDieOf (attrDie, skillDie, mode), mode != 0) then 1 else 0  sides = extraDieOf (attrDie, skillDie, mode)  color = if mode > 0 then "green" else "red"  label = if mode > 0 then "Advantage" else "Disadvantage" }],
+    ((baseline, throws)->brResult (
+        if canReroll (a, attrDie, true) then first (first (throws).rolls) else a,
+        if canReroll (s, skillDie, skillDie > 0) then first (item (1, throws).rolls) else s,
+        if canReroll (e, extraDieOf (attrDie, skillDie, mode), mode != 0) then first (item (2, throws).rolls) else e,
+        attrDie, skillDie, mode, pushesLeft - 1, true)))
+
+brRoll (attrDie, skillDie, mode, pushes) = ([dice { number = 1  sides = attrDie }, dice { number = if skillDie > 0 then 1 else 0  sides = max (6, skillDie)  color = "blue"  label = if skillDie > 0 then "Skill" else "" }, dice { number = if mode != 0 then 1 else 0  sides = extraDieOf (attrDie, skillDie, mode)  color = if mode > 0 then "green" else "red"  label = if mode > 0 then "Advantage" else if mode < 0 then "Disadvantage" else "" }],
+    ((baseline, throws)->brResult (first (first (throws).rolls), if skillDie > 0 then first (item (1, throws).rolls) else 0, if mode != 0 then first (item (2, throws).rolls) else 0, attrDie, skillDie, mode, pushes, false)))
+
+brAsked (attrDie, skillDie, pushes) = ask ("Roll with", ["Disadvantage", "Normal", "Advantage"], -1, (mode)->brRoll (attrDie, skillDie, mode, pushes))
+
+pushesFor (char) = if char.Character.Nature == "Replicant" then 2 else 1
+
+attributeDie (char, name) =
+    switch name
+        case "Strength" then dieOf (char.Attributes.Strength)
+        case "Agility" then dieOf (char.Attributes.Agility)
+        case "Intelligence" then dieOf (char.Attributes.Intelligence)
+        else dieOf (char.Attributes.Empathy)
+
+ratingOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", "-")
+
+noSkill = { Rating = "-" }
+
+skill (attributeName) = custom
+{
+    Rating = string { description = "Skill level A (d12) to D (d6)." default = "D"  keys = ["A", "B", "C", "D", "-"] }
+    Roll = integer { description = "Attribute die plus skill die. 6+ is a success, 10+ on a d10 or d12 two." value = 0  render = dieName (attributeDie (characterTable, attributeName)) + " + " + dieName (dieOf (Rating))  valuedice = brAsked (attributeDie (characterTable, attributeName), dieOf (Rating), pushesFor (characterTable))  editable = none }
+}
+
+rangeMetres (text) =
+    switch text
+        case "Engaged" then 2
+        case "Short" then 10
+        case "Medium" then 30
+        case "Long" then 100
+        else 0
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "brWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+attack (name, attrDie, skillDie, pushes, damage, crit, kind, distance) = custom
+{
+    Name = name
+    Roll = integer { value = 0  render = dieName (attrDie) + " + " + dieName (skillDie)  valuedice = brAsked (attrDie, skillDie, pushes)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = damage
+    Crit = crit
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Range") == "Engaged" or weaponStat (weapon, "Range") == "" then
+        attack (weapon.Name, dieOf (char.Attributes.Strength), dieOf (ratingOf (char, "Hand to Hand Combat")), pushesFor (char), weaponStat (weapon, "Damage"), weaponStat (weapon, "Crit"), "melee", 2)
+    else
+        attack (weapon.Name, dieOf (char.Attributes.Agility), dieOf (ratingOf (char, "Firearms")), pushesFor (char), weaponStat (weapon, "Damage"), weaponStat (weapon, "Crit"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+
+brokenState (char) =
+    if char.Status.Health <= 0 and char.Status.Resolve <= 0 then "Broken"
+    else if char.Status.Health <= 0 then "Broken by damage"
+    else if char.Status.Resolve <= 0 then "Broken by stress"
+    else ""
+
+attributeRating = ["A", "B", "C", "D"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Status, Attributes, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Nature = string { description = "Replicants can push a roll twice, humans once." default = "Human"  keys = ["Human", "Replicant"] }
+        Archetype = string { keys = ["Analyst", "City Speaker", "Doxie", "Enforcer", "Fixer", "Inspector"] }
+        'Years on the force' = string { keys = ["Rookie", "Experienced", "Veteran", "Old-timer"] }
+        Rank = string {}
+        'Key memory' = string { description = "A memory that shapes the character. Invoking it can give advantage." multiline = true }
+        'Key relationship' = string { multiline = true }
+        'Signature item' = string {}
+        Appearance = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        description = "Four attributes rated A (d12) to D (d6)."
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = string { description = "Physical power: Force, Hand to Hand Combat and Stamina." default = "C"  keys = attributeRating }
+        Agility = string { description = "Speed and coordination: Firearms, Mobility and Stealth." default = "C"  keys = attributeRating }
+        Intelligence = string { description = "Knowledge and perception: Medical Aid, Observation and Tech." default = "C"  keys = attributeRating }
+        Empathy = string { description = "Understanding people: Connections, Insight and Manipulation." default = "C"  keys = attributeRating }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Health' = integer { description = "Strength plus Agility die sizes, divided by four, rounded up." value = (dieOf (Attributes.Strength) + dieOf (Attributes.Agility) + 3) / 4  editable = none }
+        Health = integer { description = "Damage takes it away. At 0 the character is broken and may take a critical injury." default = 'Max Health'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Resolve' = integer { description = "Intelligence plus Empathy die sizes, divided by four, rounded up." value = (dieOf (Attributes.Intelligence) + dieOf (Attributes.Empathy) + 3) / 4  editable = none }
+        Resolve = integer { description = "Stress takes it away. At 0 the character is broken." default = 'Max Resolve'  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        State = string { value = brokenState (characterTable)  visible = none  indicator = "#555555" }
+        'Promotion points' = integer { description = "Earned for closing cases the department's way." default = 0  editable = live }
+        'Humanity points' = integer { description = "Earned for acting on the character's humanity." default = 0  editable = live }
+        'Chinyen points' = integer { description = "Money for gear and favors." default = 0  editable = live }
+        'Sleep between shifts' = button
+        {
+            description = "Rest between shifts: Health and Resolve back to full, apart from critical injuries."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Health) = 'Max Health'
+                (root.Status.Resolve) = 'Max Resolve'
+            }
+        }
+    }
+
+    Skills = table
+    {
+        description = "Twelve skills, three per attribute. A roll is the attribute die plus the skill die; it asks for advantage or disadvantage."
+        tableLayout = layout { columns = 3  size = wide }
+        Force = skill ("Strength")
+        'Hand to Hand Combat' = skill ("Strength")
+        Stamina = skill ("Strength")
+        Firearms = skill ("Agility")
+        Mobility = skill ("Agility")
+        Stealth = skill ("Agility")
+        'Medical Aid' = skill ("Intelligence")
+        Observation = skill ("Intelligence")
+        Tech = skill ("Intelligence")
+        Connections = skill ("Empathy")
+        Insight = skill ("Empathy")
+        Manipulation = skill ("Empathy")
+    }
+
+    Specialties = list
+    {
+        description = "Specialties give advantage or a special effect in their field."
+        singular = "Specialty"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Unarmed", dieOf (Attributes.Strength), dieOf (ratingOf (characterTable, "Hand to Hand Combat")), pushesFor (characterTable), "1", "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Armor = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Armor rating' = integer { description = "Damage stopped from each hit." default = 0 }
+        Armor = string {}
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Critical injuries' = list
+    {
+        singular = "Injury"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Case notes' = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Rolls] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Nature = string { default = "Human"  keys = ["Human", "Replicant", "Animal"] }
+        Health = integer { default = 4  minvalue = 0  editable = live  indicator = "#d64545" }
+        Resolve = integer { default = 3  minvalue = 0  editable = live }
+        'Armor rating' = integer { default = 0 }
+        Down = string { value = if Health <= 0 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Rolls = keyvalues
+    {
+        description = "The NPC's important rolls: attribute and skill rating for each."
+        singular = "Roll"
+        editablekeys = character
+        keys = ["Hand to Hand Combat", "Firearms", "Observation"]
+        valueType = custom
+        {
+            Attribute = string { default = "C"  keys = attributeRating }
+            Skill = string { default = "C"  keys = ["A", "B", "C", "D", "-"] }
+            Roll = integer { value = 0  render = dieName (dieOf (Attribute)) + " + " + dieName (dieOf (Skill))  valuedice = brAsked (dieOf (Attribute), dieOf (Skill), 0)  action = if Key == "Firearms" then "ranged" else if Key == "Hand to Hand Combat" then "melee" else ""  reach = 2  range = 30  editable = none }
+            Damage = string { default = "" }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Specialties = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+brWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Range" prefix = "" filter = Stats.Range }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Damage = string { default = "1" }
+        Crit = string { description = "Successes needed for a critical injury." default = "2" }
+        Range = string { default = "Engaged"  keys = ["Engaged", "Short", "Medium", "Long", "Extreme"] }
+        Ammo = string {}
+        Cost = string { description = "In chinyen." }
+        Notes = string {}
+    }
+}
+
+brGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        Notes = string {}
+    }
+}
+
+BladeRunner = system
+{
+    hints = [
+        hint
+        {
+            title = "Blade Runners"
+            topic = "Getting started"
+            text = ["Choose human or replicant and an archetype. Rate the four attributes and twelve skills from A (d12) to D (d6). Write a key memory and a key relationship. Add the initiative cards to the session."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll the attribute die and the skill die. 6 or more is a success, 10 or more on a d10 or d12 two. The roll asks first: advantage adds a die and keeps the best two, disadvantage keeps the worst two. Push to reroll failed dice that are not 1s; every 1 is a point of damage or stress. Humans push once, replicants twice."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Hand to hand rolls Strength + Hand to Hand Combat, shooting Agility + Firearms. A hit deals the weapon's damage, less armor; with as many successes as its Crit value, a critical injury too."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Deal initiative: everyone gets a card from 1 to 10 at the start of a fight and acts in that order."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = brWeapon
+    Gear = brGear
+    secondaryTypes = ["Weapons", "Gear"]
+    description = "Blade Runner: the Roleplaying Game: LAPD Rep-Detect agents in 2037 Los Angeles, Year Zero step dice with advantage, disadvantage and pushes"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    initiativeDeck = "Initiative Cards"
+    quickdice = [1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/bladerunner/bladerunner.css"]
+    libraries = ["/systems/bladerunner/initiativedeck.json", "/systems/yze/yze.json", "/systems/names/cyberpunk.json", "/systems/names/spies.json"]
+    nameSettings = [neonStreetsNameSetting, spyThrillerNameSetting]
+}

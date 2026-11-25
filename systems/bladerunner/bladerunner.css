@@ -1,0 +1,66 @@
+@import url("/systems/sheet.css");
+
+/* Blade Runner: a rain-dark case file, near-black panels with cyan neon
+   rules and a typewriter face for the entries, the four attributes across
+   the top and the twelve skills grouped three by three under them. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #07090d;
+    --surface: #151a22;
+    --surface-alt: #1c222c;
+    --surface-sunken: #0e1218;
+    --surface-muted: #2b333f;
+    --text: #d8e3ec;
+    --text-muted: #9fb0bf;
+    --text-faint: #6c7d8c;
+    --on-accent: #07090d;
+    --border: #2f3b48;
+    --border-strong: #3fd0e0;
+    --accent: #3fd0e0;
+    --accent-hover: #6fe2ee;
+    --accent-soft: #103a40;
+    --link: #6fe2ee;
+    --danger: #ff5a6a;
+    --danger-hover: #ff8090;
+    --danger-soft: #3d1a20;
+    --success: #6ee7a0;
+    --paper: #151a22;
+    --card-bg: #1c222c;
+    --dice-bg: #e0566a;
+    --dice-text: #07090d;
+}
+
+.entityView {
+    --sheet-font: "Courier Prime", "Courier New", monospace;
+    --title-font: "Rajdhani", "Eurostile", "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    border-bottom: 1px solid var(--accent);
+    text-shadow: 0 0 6px rgba(63, 208, 224, 0.6);
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border);
+    padding: 4px;
+}
+.entityView .table-skills > table > tbody { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.entityView .table-specialties,
+.entityView .table-weapons { --block: 50%; }
+.entityView .table-specialties { clear: left; }
+.entityView .table-armor,
+.entityView .table-gear,
+.entityView .table-critical-injuries { --block: 33.33%; }
+.entityView .table-armor { clear: left; }
+.entityView button:not(.dicethrow) {
+    background: var(--surface-alt);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
