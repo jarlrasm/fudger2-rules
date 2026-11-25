@@ -1,0 +1,211 @@
+#include "/systems/common.frules"
+
+dieKeys = ["d4", "d6", "d8", "d10", "d12", "d20"]
+
+dieSize (text) = max (4, bonusWithValue ([[text]], "d([0-9]+)"))
+
+kobOutcome (total, difficulty, answered) =
+    if not (answered) then ""
+    else if total >= difficulty then "Success"
+    else "Failure"
+
+kobText (total, rolls, difficulty, answered) =
+    toString (total)
+    + (if count (rolls) > 1 then " (exploded)" else "")
+    + (if answered then " vs " + toString (difficulty) + ": " + kobOutcome (total, difficulty, answered) + (if total < difficulty then ", take an Adversity Token" else "") else "")
+
+kobResult (total, rolls, difficulty, answered) =
+{
+    Text = kobText (total, rolls, difficulty, answered)
+    Value = total
+    Outcome = kobOutcome (total, difficulty, answered)
+}
+
+kobRoll (dieSides, bonus, difficulty) = ([dice { number = 1  sides = dieSides  explode = dieSides }],
+    ((baseline, throws)->kobResult (sum (first (throws).rolls) + bonus, first (throws).rolls, difficulty, difficulty > 0)))
+
+kobAsked (dieSides, bonus) = ([dice { number = 1  sides = dieSides  explode = dieSides }],
+    ((baseline, throws)->kobResult (sum (first (throws).rolls) + bonus, first (throws).rolls, asked, answered)))
+
+kobDice (die) = ask ("Bonus from tokens, age or strengths", 0, (n)->ask ("Difficulty", kobAsked (dieSize (die), n)))
+
+stat = custom
+{
+    Die = string { description = "Each stat gets one of d4, d6, d8, d10, d12 and d20." default = "d6"  keys = dieKeys }
+    Roll = integer { description = "Roll the die; its highest face explodes and rolls again. A planned action can take half the highest face instead." value = dieSize (Die)  valuedice = kobDice (Die)  render = Die  editable = none }
+    Planned = integer { description = "A planned action can take this instead of rolling." value = dieSize (Die) / 2  editable = none }
+}
+
+attackMove (name, die, kind) = custom
+{
+    Name = name
+    Roll = integer { value = dieSize (die)  valuedice = kobDice (die)  action = kind  reach = 2  render = die  editable = none }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Stats, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Trope = string { description = "The character's archetype: Loner, Bully, Brain, Popular Teen, Scout, Paranormal Investigator, Burnout..." }
+        Age = string { description = "Kids, teens and adults get different bonuses and troubles." keys = ["Kid", "Teen", "Adult"]  default = "Kid" }
+        Pronouns = string {}
+        Motivation = string {}
+        Fear = string {}
+        Flaws = string { multiline = true }
+        Description = string { multiline = true }
+        Relationships = string { description = "How they know the other characters, and what they think of them." multiline = true }
+    }
+
+    Stats = table
+    {
+        description = "Six stats, each rated with a die. Roll it against the GM's difficulty."
+        tableLayout = layout { columns = 3  size = wide }
+        Brains = stat {}
+        Brawn = stat {}
+        Fight = stat {}
+        Flight = stat {}
+        Charm = stat {}
+        Grit = stat {}
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Adversity Tokens' = integer { description = "Earned on a failed roll. Spend one for +1 on a roll, or to use some strengths." default = 0  minvalue = 0  editable = live }
+        Hurt = bool { description = "Injured badly enough that the GM makes rolls harder." default = false  editable = live  indicator = "#d64545" }
+        Scared = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        'Out of it' = bool { description = "Knocked out, caught or too terrified to act." default = false  editable = live  indicator = "#555555" }
+        Injuries = string { description = "What happened, and what it makes harder." multiline = true  editable = live }
+    }
+
+    Attacks = list
+    {
+        description = "Fights are rolled with Fight; running away with Flight."
+        tableLayout = layout { size = wide }
+        source = [attackMove ("Fight (up close)", characterTable.Stats.Fight.Die, "melee"), attackMove ("Fight (throw or shoot)", characterTable.Stats.Fight.Die, "ranged")]
+        singular = "Attack"
+        editable = none
+        valueType = attackMove
+    }
+
+    Strengths = list
+    {
+        source = secondary.Strengths
+        singular = "Strength"
+        editable = character
+    }
+
+    'Powers' = list
+    {
+        description = "For a powered character: what the power does and what it costs."
+        singular = "Power"
+        visible = editor
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Stuff = list
+    {
+        description = "Bikes, flashlights, walkie-talkies and whatever is in the backpack."
+        singular = "Item"
+        editable = character
+        valueType = string
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Status] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Townsperson", "Bully", "Authority", "Agent", "Creature", "Other"] }
+        Brains = string { default = "d6"  keys = dieKeys }
+        Brawn = string { default = "d6"  keys = dieKeys }
+        Fight = string { default = "d6"  keys = dieKeys }
+        Flight = string { default = "d6"  keys = dieKeys }
+        Charm = string { default = "d6"  keys = dieKeys }
+        Grit = string { default = "d6"  keys = dieKeys }
+        'Fight roll' = integer { value = dieSize (Fight)  valuedice = kobDice (Fight)  action = "melee"  reach = 2  render = Fight  editable = none }
+        'Flight roll' = integer { value = dieSize (Flight)  valuedice = kobDice (Flight)  render = Flight  editable = none }
+        'Grit roll' = integer { value = dieSize (Grit)  valuedice = kobDice (Grit)  render = Grit  editable = none }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Hurt = bool { default = false  editable = live  indicator = "#d64545" }
+        'Out of it' = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Motivation = string {}
+        Description = string { multiline = true }
+    }
+}
+
+kobStrength = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Cost = string { description = "What using it costs, such as an Adversity Token." }
+    }
+}
+
+smallTownNameSetting = nameSetting
+{
+    name = "Small town"
+    characters = [generator { library = "Small town" variant = "Kid" }, generator { library = "Small town" variant = "Grown-up" }]
+    creatures = [generator { library = "Small town" variant = "Grown-up" }, generator { library = "Small town" variant = "Kid" }]
+    Location = [generator { library = "Small town" variant = "Hangout" }, generator { library = "Small town" variant = "Street" }, generator { library = "Small town" variant = "Business" }]
+}
+
+KidsOnBikes = system
+{
+    hints = [
+        hint
+        {
+            title = "Making the kids"
+            topic = "Getting started"
+            text = ["Build the town together first. Each player picks a trope and an age, puts d20, d12, d10, d8, d6 and d4 on the six stats, and chooses two strengths, a flaw, a fear and a motivation."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll the stat's die against the GM's difficulty. The highest face explodes and rolls again. A failure gives an Adversity Token; spend tokens for +1 each. The prompt asks for the bonus and the difficulty."]
+        },
+        hint
+        {
+            title = "Fights"
+            topic = "Combat"
+            text = ["Fights are contested: Fight to hit and hurt, Flight to dodge and get away. There are no hit points; the GM says how someone is hurt and what it makes harder."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Scenes flow by the story; drag tokens into order if a chase or fight needs it."]
+        }
+    ]
+    distanceUnit = "ft"
+    characters = characterTable
+    creatures = creatureTable
+    Strengths = kobStrength
+    secondaryTypes = ["Strengths"]
+    description = "Kids on Bikes 2nd edition: small-town kids against strange and terrible forces, stats rated by dice, exploding rolls and Adversity Tokens"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d4, 1d6, 1d8, 1d10, 1d12, 1d20]
+    cssFiles = ["/systems/kidsonbikes/kidsonbikes.css"]
+    libraries = ["/systems/names/smalltown.json"]
+    nameSettings = [smallTownNameSetting]
+}
