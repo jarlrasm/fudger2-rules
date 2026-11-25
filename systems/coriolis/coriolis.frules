@@ -1,0 +1,330 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+ones (rolls) = count (filter ((x)->x == 1, rolls))
+
+rerollable (rolls) = count (filter ((x)->x > 1 and x < 6, rolls))
+
+cgdText (successes, pushed, hopeLost, gearLost) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + (if pushed then ", pushed: lose " + toString (hopeLost) + " Hope" + (if gearLost > 0 then ", gear bonus -" + toString (gearLost) else "") else "")
+
+cgdResult (baseRolls, gearRolls, kept, baseOnes, gearOnes, canPush) =
+{
+    Text = cgdText (kept + sixes (baseRolls) + sixes (gearRolls), not (canPush), baseOnes + ones (baseRolls), gearOnes + ones (gearRolls))
+    Value = kept + sixes (baseRolls) + sixes (gearRolls)
+    Outcome = if kept + sixes (baseRolls) + sixes (gearRolls) > 0 then "Success" else "Failure"
+    Push = if canPush and rerollable (baseRolls) + rerollable (gearRolls) > 0 then cgdPush (sixes (baseRolls) + sixes (gearRolls), ones (baseRolls), ones (gearRolls), rerollable (baseRolls), rerollable (gearRolls)) else 0
+    PushLabel = "Push (1s cost Hope)"
+}
+
+cgdPush (kept, baseOnes, gearOnes, baseCount, gearCount) = ([dice { number = baseCount  sides = 6 }, dice { number = gearCount  sides = 6  color = "yellow"  label = if gearCount > 0 then "Gear" else "" }],
+    ((baseline, throws)->cgdResult (first (throws).rolls, item (1, throws).rolls, kept, baseOnes, gearOnes, false)))
+
+cgdRoll (base, gear) = ([dice { number = max (1, base)  sides = 6 }, dice { number = max (0, gear)  sides = 6  color = "yellow"  label = if gear > 0 then "Gear" else "" }],
+    ((baseline, throws)->cgdResult (first (throws).rolls, item (1, throws).rolls, 0, 0, 0, true)))
+
+cgdAsked (base, gear) = ask ("Extra dice", 0, (n)->cgdRoll (base + n, gear))
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Agility" then char.Attributes.Agility
+        case "Logic" then char.Attributes.Logic
+        case "Perception" then char.Attributes.Perception
+        case "Insight" then char.Attributes.Insight
+        else char.Attributes.Empathy
+
+attributeNames = ["Strength", "Agility", "Logic", "Perception", "Insight", "Empathy"]
+
+rangeMetres (text) =
+    switch text
+        case "Close" then 2
+        case "Short" then 10
+        case "Medium" then 25
+        case "Long" then 100
+        else 0
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "cgdWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+attack (name, base, gear, damage, crit, kind, distance) = custom
+{
+    Name = name
+    Dice = integer { value = base  valuedice = cgdAsked (base, gear)  action = kind  reach = 2  range = distance  editable = none }
+    Gear = integer { value = gear  editable = none }
+    Damage = damage
+    Crit = crit
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Range") == "Close" or weaponStat (weapon, "Range") == "" then
+        attack (weapon.Name, char.Attributes.Strength, toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), weaponStat (weapon, "Crit"), "melee", 2)
+    else
+        attack (weapon.Name, char.Attributes.Agility, toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), weaponStat (weapon, "Crit"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+
+brokenState (char) =
+    if char.Trackers.Health <= 0 then "Broken"
+    else if char.Trackers.Hope <= 0 then "Hopeless"
+    else if char.Trackers.Heart <= 0 then "Blighted"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Trackers, Attributes, Attacks] }
+    Explorer = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Profession = string { description = "One of the eight professions, such as Scoundrel, Roughneck, Scholar or Enforcer. It sets the key attribute." }
+        Specialty = string {}
+        Origin = string { description = "Where the explorer comes from; it gives a talent, a faction and a contact." }
+        Faction = string {}
+        Contact = string {}
+        Keepsake = string { description = "Once a session, narrating the keepsake restores 1 Hope." }
+        Quirks = string { description = "Habits that earn experience when they cause trouble." multiline = true }
+        Appearance = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        description = "Six attributes. A roll is one die per point of the attribute, plus talent dice and modifiers, plus gear dice."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { description = "Raw power and close combat." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Strength, 0) }
+        Agility = integer { description = "Speed, balance and ranged combat." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Agility, 0) }
+        Logic = integer { description = "Reasoning, knowledge and technology." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Logic, 0) }
+        Perception = integer { description = "Senses and awareness." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Perception, 0) }
+        Insight = integer { description = "Intuition and the mystical." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Insight, 0) }
+        Empathy = integer { description = "Reading and moving others." default = 3  minvalue = 1  maxvalue = 6  valuedice = cgdAsked (Empathy, 0) }
+    }
+
+    Trackers = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Max Health' = integer { description = "Strength plus Agility." value = Attributes.Strength + Attributes.Agility  editable = none }
+        'Max Hope' = integer { description = "Logic plus Empathy." value = Attributes.Logic + Attributes.Empathy  editable = none }
+        'Max Heart' = integer { description = "Perception plus Insight." value = Attributes.Perception + Attributes.Insight  editable = none }
+        Health = integer { description = "Lost to physical harm. At 0 the explorer is broken and takes a critical injury." default = 'Max Health'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Hope = integer { description = "Lost to despair and to pushing rolls. At 0 the explorer gives up." default = 'Max Hope'  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Heart = integer { description = "Lost to the Blight. At 0 the explorer is lost to it." default = 'Max Heart'  minvalue = 0  editable = live  indicator = "#3fa34d" }
+        State = string { value = brokenState (characterTable)  visible = none  indicator = "#555555" }
+        Experience = integer { default = 0  editable = live }
+        Supply = integer { description = "Abstract food, water and air for a delve: D6 at the start of one." default = 0  minvalue = 0  editable = live }
+        Rukh = integer { description = "Money." default = 1200  editable = live }
+        'Rest in the haven' = button
+        {
+            description = "A safe rest between delves: Health, Hope and Heart back to their maximum."
+            editable = live
+            onClick = updates
+            {
+                (root.Trackers.Health) = 'Max Health'
+                (root.Trackers.Hope) = 'Max Hope'
+                (root.Trackers.Heart) = 'Max Heart'
+            }
+        }
+    }
+
+    Talents = list
+    {
+        description = "Talents rated 1 to 3; each level adds a base die to rolls it covers."
+        tableLayout = layout { size = wide }
+        singular = "Talent"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Level = integer { default = 1  minvalue = 1  maxvalue = 3 }
+            Attribute = string { default = "Logic"  keys = attributeNames }
+            Dice = integer { value = attributeValue (characterTable, Attribute) + Level  valuedice = cgdAsked (attributeValue (characterTable, Attribute) + Level, 0)  editable = none }
+            Notes = string {}
+        }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Unarmed", Attributes.Strength, 0, "1", "-", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Armor = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Armor rating' = integer { description = "Each point has a 1 in 6 chance to stop a point of damage." default = 0 }
+        'Blight protection' = integer { default = 0 }
+        Suit = string { description = "The delving suit and its features." }
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Critical injuries' = list
+    {
+        singular = "Injury"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Crew = string { description = "The other explorers, and what the character thinks of them." multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Human", "Creature", "Blight-touched", "Machine", "Other"] }
+        Strength = integer { default = 3  valuedice = cgdAsked (Strength, 0) }
+        Agility = integer { default = 3  valuedice = cgdAsked (Agility, 0) }
+        Logic = integer { default = 3  valuedice = cgdAsked (Logic, 0) }
+        Perception = integer { default = 3  valuedice = cgdAsked (Perception, 0) }
+        Insight = integer { default = 3  valuedice = cgdAsked (Insight, 0) }
+        Empathy = integer { default = 3  valuedice = cgdAsked (Empathy, 0) }
+        Health = integer { default = 6  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        Down = string { value = if Health <= 0 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = keyvalues
+    {
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Claws"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = cgdAsked (Dice, 0)  action = if Range == "Close" then "melee" else "ranged"  reach = 2  range = rangeMetres (Range) }
+            Damage = string { default = "2" }
+            Crit = string { default = "3" }
+            Range = string { default = "Close"  keys = ["Close", "Short", "Medium", "Long", "Extreme"] }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { description = "Abilities, some fueled by Darkness Points." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+birdTable = ruleset
+{
+    rulesetConfiguration = { important = [Bird, Powers] }
+    Bird = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Ward", "Seeker", "Hunter", "Other"] }
+        Bond = string { description = "The explorer the Bird is bonded to." }
+        Health = integer { default = 5  minvalue = 0  editable = live  indicator = "#d64545" }
+        Energy = integer { description = "Spent on the Bird's powers." default = 2  minvalue = 0  editable = live }
+    }
+    Powers = keyvalues
+    {
+        singular = "Power"
+        editablekeys = character
+        keys = ["Attack", "Defend", "Clear Blight", "Blight Scan", "Glow"]
+        valueType = custom
+        {
+            Effect = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+cgdWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Range" prefix = "" filter = Stats.Range }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Bonus = string { description = "Gear dice added to the roll." default = "1" }
+        Damage = string { default = "1" }
+        Crit = string { description = "Successes needed for a critical injury." default = "3" }
+        Range = string { default = "Close"  keys = ["Close", "Short", "Medium", "Long", "Extreme"] }
+        Weight = string {}
+        Features = string {}
+    }
+}
+
+cgdGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Bonus = string { description = "Gear dice it adds." }
+        Weight = string {}
+        Cost = string { description = "In rukh." }
+    }
+}
+
+CoriolisTheGreatDark = system
+{
+    hints = [
+        hint
+        {
+            title = "Explorers of the Dark"
+            topic = "Getting started"
+            text = ["Pick a profession and specialty, spread 24 points over the six attributes (2 to 5, the key attribute up to 6), and take talents. Health is Strength + Agility, Hope Logic + Empathy, Heart Perception + Insight. Add the initiative cards to the session."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll a d6 per attribute point, plus talent and modifier dice (the roll asks for them) and yellow gear dice. Each six is a success. Push to reroll everything that is not a 1 or 6: every 1 on the base dice costs a point of Hope, and 1s on gear dice wear the gear down."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Close combat rolls Strength, ranged Agility, plus the weapon's gear bonus. Each success deals the weapon's damage; enough successes for its Crit value add a critical injury. Each point of armor has a 1 in 6 chance to stop a point."]
+        },
+        hint
+        {
+            title = "Initiative cards"
+            topic = "Initiative"
+            text = ["Deal initiative: every combatant draws a card from 1 to 10 each round and acts in ascending order."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Birds = birdTable
+    Weapons = cgdWeapon
+    Gear = cgdGear
+    secondaryTypes = ["Weapons", "Gear"]
+    extraEntityTypes = [entityTypeDescription ("Birds", "bird", true, "/systems/coriolis/bird-entity.svg", [])]
+    description = "Coriolis: The Great Dark: explorers delve into the ruins of a vanished civilization on the world of Mira, Year Zero dice and Hope against the Blight"
+    initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
+    initiativeDeck = "Initiative Cards"
+    quickdice = [1d6, 2d6, 3d6, 4d6, 1d10]
+    cssFiles = ["/systems/coriolis/coriolis.css"]
+    libraries = ["/systems/coriolis/initiativedeck.json", "/systems/yze/yze.json", "/systems/names/desert.json", "/systems/names/scifi.json"]
+    nameSettings = [desertRealmsNameSetting, spaceNameSetting]
+}

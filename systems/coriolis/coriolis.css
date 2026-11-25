@@ -1,0 +1,59 @@
+@import url("/systems/sheet.css");
+
+/* Coriolis: The Great Dark: deep indigo night with warm brass lines, as on
+   the official sheet; the six attributes in two rows of round seals, the
+   Health, Hope and Heart trackers side by side, and talents below. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #14122a;
+    --surface: #f1ead9;
+    --surface-alt: #e6dcc4;
+    --surface-sunken: #d6c8a6;
+    --surface-muted: #bba77d;
+    --text: #1d1830;
+    --text-muted: #463d5e;
+    --text-faint: #7a6f8e;
+    --on-accent: #f1ead9;
+    --border: #b59a5e;
+    --border-strong: #2b2450;
+    --accent: #b8862b;
+    --accent-hover: #cc9a3a;
+    --accent-soft: #f2e2bf;
+    --link: #7d5a14;
+    --danger: #a3302a;
+    --danger-hover: #82241f;
+    --danger-soft: #f0d4cf;
+    --success: #3c7a5a;
+    --paper: #f1ead9;
+    --card-bg: #e6dcc4;
+    --dice-bg: #2b2450;
+    --dice-text: #e8c77a;
+}
+
+.entityView {
+    --sheet-font: "Optima", "Candara", "Segoe UI", sans-serif;
+    --title-font: "Cinzel", "Trajan Pro", "Optima", Georgia, serif;
+    --block-radius: 10px;
+    --block-border: 2px solid var(--accent);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: var(--dice-text);
+    text-align: center;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--accent);
+    border-radius: 50px;
+    padding: 6px;
+}
+.entityView .table-weapons,
+.entityView .table-armor { --block: 50%; }
+.entityView .table-gear,
+.entityView .table-critical-injuries { --block: 50%; }
+.entityView .table-gear { clear: left; }
