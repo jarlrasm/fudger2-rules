@@ -1,0 +1,18 @@
+{
+  "values": {
+    "Character": { "Species": "Human", "Culture": "Barbarian", "Career": "Hunter", "Age": 24, "Gender": "Female", "Frame": "Lithe", "Social Class": "Freeman", "Homeland": "The Grey Fells", "Passions": "Love (sister Aud) 65%, Hate (the slavers of Morn) 58%, Loyalty (clan Ravnar) 55%" },
+    "Characteristics": { "STR": 12, "CON": 13, "SIZ": 11, "DEX": 15, "INT": 13, "POW": 10, "CHA": 9 },
+    "Attributes": { "Armor Penalty": 1, "Luck Points": 1, "Magic Points": 8, "Fatigue": "Winded" },
+    "Hit Locations": { "Right Leg.AP": 2, "Left Leg.AP": 2, "Abdomen.AP": 3, "Chest.AP": 3, "Right Arm.AP": 2, "Left Arm.AP": 2, "Head.AP": 1, "Left Arm.Damage": 2 },
+    "Standard Skills": { "Athletics.Bonus": 15, "Endurance.Bonus": 10, "Evade.Bonus": 15, "Perception.Bonus": 20, "Stealth.Bonus": 25, "Locale.Bonus": 15, "Swim.Bonus": 10, "Brawn.Bonus": 5, "Willpower.Bonus": 5, "First Aid.Bonus": 10 },
+    "Professional Skills": [ { "Name": "Survival", "Base": 23, "Bonus": 30 }, { "Name": "Track", "Base": 26, "Bonus": 25 }, { "Name": "Lore (Beasts)", "Base": 26, "Bonus": 15 }, { "Name": "Craft (Fletching)", "Base": 28, "Bonus": 10 } ],
+    "Combat Styles": [ { "Name": "Ravnar Hunter", "Weapons": "Longbow, spear, knife", "Trait": "Skirmishing", "Bonus": 35 } ],
+    "Equipment": [ { "Name": "Furs and a bedroll", "Description": "Warm enough for the high passes." }, { "Name": "Snares", "Description": "Six, waxed cord." }, { "Name": "Arrows", "Description": "18 broadhead, 6 bodkin." } ],
+    "Notes": { "Background": "Sold to the Morn slavers at twelve, escaped at sixteen with nothing but a stolen bow. Has hunted them ever since.", "Money": "14 silver", "Experience Rolls": 3 }
+  },
+  "secondary": {
+    "Weapons": [ { "name": "Longbow", "values": { "Stats": { "Damage": "1d8", "Size": "L", "Range": "15/100/200", "Weapon AP and HP": "4/7", "Effects": "Impale, Sunder", "Encumbrance": "1" } } }, { "name": "Spear", "values": { "Stats": { "Damage": "1d8+1", "Size": "M", "Reach": "L", "Weapon AP and HP": "4/5", "Effects": "Impale", "Encumbrance": "2" } } } ],
+    "Armor": [ { "name": "Leather and furs", "values": { "Stats": { "AP": "2", "Locations": "All but head", "Encumbrance": "4" } } } ],
+    "Magic": [ { "name": "Pathway", "values": { "Stats": { "Kind": "Folk Magic", "Cost": "1", "Traits": "Concentration" } } }, { "name": "Heal", "values": { "Stats": { "Kind": "Folk Magic", "Cost": "1", "Traits": "Instant, Touch" } } } ]
+  }
+}
