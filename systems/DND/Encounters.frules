@@ -1,0 +1,138 @@
+xpBudget (level, low, moderate, high) =
+    {
+        Level = level
+        Low = low
+        Moderate = moderate
+        High = high
+    }
+
+xpBudgetTable =
+    [
+        xpBudget (1, 50, 75, 100)
+        , xpBudget (2, 100, 150, 200)
+        , xpBudget (3, 150, 225, 400)
+        , xpBudget (4, 250, 375, 500)
+        , xpBudget (5, 500, 750, 1100)
+        , xpBudget (6, 600, 1000, 1400)
+        , xpBudget (7, 750, 1300, 1700)
+        , xpBudget (8, 1000, 1700, 2100)
+        , xpBudget (9, 1300, 2000, 2600)
+        , xpBudget (10, 1600, 2300, 3100)
+        , xpBudget (11, 1900, 2900, 4100)
+        , xpBudget (12, 2200, 3700, 4700)
+        , xpBudget (13, 2600, 4200, 5400)
+        , xpBudget (14, 2900, 4900, 6200)
+        , xpBudget (15, 3300, 5400, 7800)
+        , xpBudget (16, 3800, 6100, 9800)
+        , xpBudget (17, 4500, 7200, 11700)
+        , xpBudget (18, 5000, 8700, 14200)
+        , xpBudget (19, 5500, 10700, 17200)
+        , xpBudget (20, 6400, 13200, 22000)
+    ]
+
+challengeXP (cr, xp) =
+    {
+        CR = cr
+        XP = xp
+    }
+
+challengeXPTable =
+    [
+        challengeXP ("0", 0)
+        , challengeXP ("1/8", 25)
+        , challengeXP ("1/4", 50)
+        , challengeXP ("1/2", 100)
+        , challengeXP ("1", 200)
+        , challengeXP ("2", 450)
+        , challengeXP ("3", 700)
+        , challengeXP ("4", 1100)
+        , challengeXP ("5", 1800)
+        , challengeXP ("6", 2300)
+        , challengeXP ("7", 2900)
+        , challengeXP ("8", 3900)
+        , challengeXP ("9", 5000)
+        , challengeXP ("10", 5900)
+        , challengeXP ("11", 7200)
+        , challengeXP ("12", 8400)
+        , challengeXP ("13", 10000)
+        , challengeXP ("14", 11500)
+        , challengeXP ("15", 13000)
+        , challengeXP ("16", 15000)
+        , challengeXP ("17", 18000)
+        , challengeXP ("18", 20000)
+        , challengeXP ("19", 22000)
+        , challengeXP ("20", 25000)
+        , challengeXP ("21", 33000)
+        , challengeXP ("22", 41000)
+        , challengeXP ("23", 50000)
+        , challengeXP ("24", 62000)
+        , challengeXP ("25", 75000)
+        , challengeXP ("26", 90000)
+        , challengeXP ("27", 105000)
+        , challengeXP ("28", 120000)
+        , challengeXP ("29", 135000)
+        , challengeXP ("30", 155000)
+    ]
+
+challengeRating (challenge) = first (concat (filter ((part)->part != "", split (" ", challenge)), ["0"]))
+
+ratingXP (cr) = first (concat (map ((row)->row.XP, filter ((row)->row.CR == cr, challengeXPTable)), [0]))
+
+creatureXP (challenge) =
+    if contains (challenge, "XP") then
+        bonusWithValue ([[replace (",", "", challenge)]], "\(([0-9]+) *XP")
+    else
+        ratingXP (challengeRating (challenge))
+
+budgetRow (level) = first (filter ((row)->row.Level == max (1, min (20, level)), xpBudgetTable))
+
+lowBudget (party) = sum (map ((member)->(budgetRow (member.Level)).Low, party))
+
+moderateBudget (party) = sum (map ((member)->(budgetRow (member.Level)).Moderate, party))
+
+highBudget (party) = sum (map ((member)->(budgetRow (member.Level)).High, party))
+
+spentXP (foes) = sum (map ((foe)->foe.XP, foes))
+
+threeDigits (n) =
+    if n < 10 then
+        "00" + toString (n)
+    else if n < 100 then
+        "0" + toString (n)
+    else
+        toString (n)
+
+thousands (n) =
+    if n < 1000 then
+        toString (n)
+    else
+        thousands (n / 1000) + "," + threeDigits (mod (n, 1000))
+
+difficultySteps = ["Low", "Moderate", "High", "Deadly"]
+
+difficultyStep (spent, low, moderate, high) =
+    if spent <= low then
+        0
+    else if spent <= moderate then
+        1
+    else if spent <= high then
+        2
+    else
+        3
+
+budgetDetail (spent, low, moderate, high, step) =
+    switch step
+        case 0 then thousands (spent) + " / " + thousands (low) + " XP budget for Low"
+        case 1 then thousands (spent) + " / " + thousands (moderate) + " XP budget for Moderate"
+        case 2 then thousands (spent) + " / " + thousands (high) + " XP budget for High"
+        else thousands (spent) + " XP, over the " + thousands (high) + " XP High budget"
+
+xpDifficulty (spent, low, moderate, high) =
+    {
+        Label = item (difficultyStep (spent, low, moderate, high), difficultySteps)
+        Step = difficultyStep (spent, low, moderate, high)
+        Steps = difficultySteps
+        Detail = budgetDetail (spent, low, moderate, high, difficultyStep (spent, low, moderate, high))
+    }
+
+dndDifficulty (party, foes) = xpDifficulty (spentXP (foes), lowBudget (party), moderateBudget (party), highBudget (party))
