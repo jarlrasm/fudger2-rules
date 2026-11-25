@@ -59,4 +59,6 @@
 .entityView .table-ammunition,
 .entityView .table-armor,
 .entityView .table-gear { --block: 50%; }
+.entityView .table-supplies { --block: 50%; }
+.entityView .table-supplies > table > tbody { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .entityView .table-specialties { clear: left; }

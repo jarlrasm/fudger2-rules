@@ -1,0 +1,116 @@
+{
+  "values": {
+    "Character": {
+      "Nationality": "American",
+      "Background": "Combat medic, 5th Infantry Division",
+      "Military branch": "Army",
+      "Rank": "Specialist",
+      "Moral code": "Never leave the wounded behind.",
+      "Big dream": "Get home to Ohio and open a clinic.",
+      "Buddy": "Sgt. Kowalski",
+      "Appearance": "Wiry, shaved head, red cross armband stained brown"
+    },
+    "Attributes": {
+      "STR.Rating": "C",
+      "AGL.Rating": "B",
+      "INT.Rating": "B",
+      "EMP.Rating": "A"
+    },
+    "Status": {
+      "Damage": 1,
+      "Stress": 2,
+      "CUF": "C",
+      "Rads": 14
+    },
+    "Skills": {
+      "Medical Aid.Rating": "B",
+      "Ranged Combat.Rating": "C",
+      "Mobility.Rating": "C",
+      "Recon.Rating": "D",
+      "Persuasion.Rating": "D",
+      "Survival.Rating": "D",
+      "Stamina.Rating": "D"
+    },
+    "Specialties": [
+      {
+        "Name": "Combat medic",
+        "Description": "+1 Medical Aid when treating injuries under fire."
+      },
+      {
+        "Name": "Counselor",
+        "Description": "+1 to help others recover stress."
+      }
+    ],
+    "Ammunition": [
+      {
+        "Name": "5.56mm",
+        "Rounds": 46
+      }
+    ],
+    "Armor": {
+      "Head": 1,
+      "Torso": 2
+    },
+    "Injuries": {
+      "Critical injuries": "",
+      "Mental trauma": "Nightmares about Kalisz"
+    },
+    "Supplies": {
+      "Food": 3,
+      "Water": 4,
+      "Fuel": 0,
+      "Money": "40 zloty, 2 cans of tobacco",
+      "Encumbrance": "Normal",
+      "Notes": "Carries the platoon's last morphine."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      {
+        "name": "M16A2",
+        "values": {
+          "Stats": {
+            "Kind": "Small arms",
+            "Reliability": "4",
+            "Damage": "2",
+            "Crit": "3",
+            "Range": "4",
+            "Rate of fire": "3",
+            "Ammo": "5.56mm",
+            "Weight": "3.5"
+          }
+        }
+      },
+      {
+        "name": "Combat knife",
+        "values": {
+          "Stats": {
+            "Kind": "Melee",
+            "Reliability": "5",
+            "Damage": "1",
+            "Crit": "2",
+            "Weight": "0.5"
+          }
+        }
+      }
+    ],
+    "Gear": [
+      {
+        "name": "Medkit",
+        "values": {
+          "Stats": {
+            "Weight": "1"
+          }
+        }
+      },
+      {
+        "name": "Flak vest",
+        "values": {
+          "Stats": {
+            "Weight": "2"
+          }
+        }
+      }
+    ]
+  }
+}
