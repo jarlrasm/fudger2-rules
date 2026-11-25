@@ -1,40 +1,19 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
-
-hasDoubles (rolls, drama) =
-    count (rolls) > 1 and (first (rolls) == item (1, rolls) or first (rolls) == drama or item (1, rolls) == drama)
-
-expanseOutcome (total, tn, answered) =
-    if not (answered) then ""
-    else if total >= tn then "Success"
-    else "Failure"
-
-expanseText (total, tn, answered, stunts) =
-    toString (total)
-    + (if answered then " vs " + toString (tn) + ": " + expanseOutcome (total, tn, answered) else "")
-    + (if stunts > 0 and (not (answered) or total >= tn) then ", " + toString (stunts) + " SP" else "")
-
-expanseResult (rolls, drama, total, tn, answered) =
-{
-    Text = expanseText (total, tn, answered, if hasDoubles (rolls, drama) then drama else 0)
-    Value = total
-    Outcome = expanseOutcome (total, tn, answered)
-}
+#include "/systems/age/age.frules"
 
 expanseTest = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
-    ((baseline, throws)->expanseResult (first (throws).rolls, first (item (1, throws).rolls), baseline + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered)))
+    ((baseline, throws)->ageResult (first (throws).rolls, first (item (1, throws).rolls), baseline + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered)))
 
 expanseDice = ask ("Target number", expanseTest)
 
 expansePenalized (penalty) = ask ("Target number", ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
-    ((baseline, throws)->expanseResult (first (throws).rolls, first (item (1, throws).rolls), baseline - penalty + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered))))
+    ((baseline, throws)->ageResult (first (throws).rolls, first (item (1, throws).rolls), baseline - penalty + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered))))
 
 expanseAttack = ask ("Target's Defense", expanseTest)
 
 initiativeRoll = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
     ((baseline, throws)->baseline + sum (first (throws).rolls) + first (item (1, throws).rolls)))
-
-damageRoll (n, dieSides) = ([dice { number = n  sides = dieSides }], ((baseline, throws)->{ Text = toString (max (0, baseline + sum (first (throws).rolls))) + " damage"  Value = baseline + sum (first (throws).rolls) }))
 
 conditionPenalty (char) =
     if char.Conditions.Wounded then 2
@@ -69,16 +48,6 @@ noStats = { Stats = { Group = "" } }
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "expanseWeapon", noStats), "Stats", noStats.Stats), field, "")
 
 isRangedGroup (group) = group == "Pistols" or group == "Rifles" or group == "Grenades" or group == "Heavy Weapons"
-
-diceCount (text) = bonusWithValue ([[text]], "^ *([0-9]+)d")
-
-dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
-
-damageBonus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)")
-
-damageLabel (n, dieSides, bonus) = toString (n) + "d" + toString (dieSides) + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
-
-firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
 weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 {

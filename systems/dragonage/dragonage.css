@@ -1,0 +1,76 @@
+@import url("/systems/sheet.css");
+
+/* Dragon Age RPG: the character sheet. Weathered parchment, blood-red title
+   bars with black serif capitals and a thin black rule, the eight abilities
+   in a boxed grid with their focuses beside them, Health, Mana, Defense,
+   armor and Speed in one band, then attacks, weapon groups, talents and
+   spells. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #a79a80;
+    --surface: #f1e8d3;
+    --surface-alt: #e8dcc0;
+    --surface-sunken: #dccdab;
+    --surface-muted: #c5b38c;
+    --text: #1c1410;
+    --text-muted: #42352a;
+    --text-faint: #75644f;
+    --on-accent: #f5ecd6;
+    --border: #8f7a58;
+    --border-strong: #1c1410;
+    --accent: #7d1210;
+    --accent-hover: #9a1a17;
+    --accent-soft: #efd4cb;
+    --link: #7d1210;
+    --danger: #7d1210;
+    --danger-hover: #5c0d0b;
+    --danger-soft: #efd4cb;
+    --success: #3d6b33;
+    --paper: #f1e8d3;
+    --card-bg: #e8dcc0;
+    --dice-bg: #1c1410;
+    --dice-text: #f5ecd6;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+    font-size: 1.1em;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+/* ---- Abilities beside focuses ---- */
+
+.entityView .table-abilities { --block: 60%; }
+.entityView .table-focuses { --block: 40%; }
+.entityView .table-abilities > table > tbody > tr {
+    border: 1px solid var(--border);
+    margin: 2px;
+}
+.entityView .table-abilities button.dicethrow {
+    min-width: 2.2em;
+    font-weight: bold;
+}
+
+/* ---- Lower half ---- */
+
+.entityView .table-health,
+.entityView .table-combat { clear: left; }
+.entityView .table-weapon-groups,
+.entityView .table-armor,
+.entityView .table-talents,
+.entityView .table-equipment,
+.entityView .table-money { --block: 50%; }
+.entityView .table-weapon-groups,
+.entityView .table-talents,
+.entityView .table-money { clear: left; }
