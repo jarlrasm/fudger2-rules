@@ -33,7 +33,11 @@ againOf (char) =
         case "8-again" then 8
         else 10
 
-cofdDice (char, pool) = cofdRoll (pool + char.Character.Modifier - woundPenalty (char), againOf (char), -1)
+cofdAsked (pool, again, weapon) = ask ("Dice bonus or penalty", 0, (n)->cofdRoll (pool + n, again, weapon))
+
+cofdDefended (pool, again, weapon) = ask ("Target's Defense", (defense)->cofdRoll (pool - defense, again, weapon))
+
+cofdDice (char, pool) = cofdAsked (pool - woundPenalty (char), againOf (char), -1)
 
 woundPenalty (char) = max (0, min (3, damageTotal (char) - (char.Advantages.Health - 3)))
 
@@ -85,12 +89,12 @@ firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 weaponAttack (name, pool, again, damage, kind, rangeMetres) = custom
 {
     Name = name
-    Pool = integer { value = pool  valuedice = cofdRoll (pool, again, damage)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Pool = integer { value = pool  valuedice = if kind == "melee" then cofdDefended (pool, again, damage) else cofdAsked (pool, again, damage)  action = kind  reach = 2  range = rangeMetres  editable = none }
     Damage = damage
 }
 
 attackPool (char, attributeName, skillName, unskilled) =
-    attributeValue (char, attributeName) + (if skillDots (char, skillName) == 0 then unskilled else skillDots (char, skillName)) + char.Character.Modifier - woundPenalty (char)
+    attributeValue (char, attributeName) + (if skillDots (char, skillName) == 0 then unskilled else skillDots (char, skillName)) - woundPenalty (char)
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Kind") == "Ranged" then
@@ -111,7 +115,6 @@ characterTable = ruleset
         Virtue = string { description = "Regain all Willpower when you act on it at a cost." }
         Vice = string { description = "Regain one Willpower when you indulge it." }
         Aspirations = string { description = "Short and long term goals; fulfilling one earns a Beat." multiline = true }
-        Modifier = modifier { description = "Dice added to or taken from the next pool: equipment, Willpower (+3), the target's Defense, and other penalties." default = 0  editable = live }
         Again = string { description = "Which dice roll again: 10-again normally, 9 or 8 with special rules." default = "10-again"  keys = ["10-again", "9-again", "8-again"]  editable = live }
     }
 
@@ -265,7 +268,7 @@ creatureTable = ruleset
         keys = ["Attack", "Shooting"]
         valueType = custom
         {
-            Dice = integer { default = 5  valuedice = cofdRoll (Dice, 10, -1)  action = if Key == "Shooting" then "ranged" else "melee"  reach = 2 }
+            Dice = integer { default = 5  valuedice = if Key == "Shooting" then cofdAsked (Dice, 10, -1) else cofdDefended (Dice, 10, -1)  action = if Key == "Shooting" then "ranged" else "melee"  reach = 2 }
         }
     }
     Notes = table
@@ -338,7 +341,7 @@ ChroniclesOfDarkness = system
         {
             title = "Dice pools"
             topic = "Play"
-            text = ["Roll attribute + skill d10s; each 8 or more is a success, 10s roll again, five successes are exceptional. Put equipment, Willpower (+3) and the target's Defense in Modifier before rolling. A pool of 0 or less rolls one chance die: only a 10 succeeds, a 1 is a dramatic failure."]
+            text = ["Roll attribute + skill d10s; each 8 or more is a success, 10s roll again, five successes are exceptional. Before the roll, enter the dice bonus or penalty (equipment, Willpower +3, the GM's modifiers); a melee attack asks for the target's Defense instead. A pool of 0 or less rolls one chance die: only a 10 succeeds, a 1 is a dramatic failure."]
         },
         hint
         {

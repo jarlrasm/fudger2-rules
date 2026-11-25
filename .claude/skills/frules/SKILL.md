@@ -33,7 +33,8 @@ Read [reference.md](reference.md) for the full language before writing anything 
 A system that only parses is a draft. Before calling it done, check each of these, or say why the game has none:
 
 - **Both sheets.** `characters` laid out like the official sheet; `creatures` like the book's stat block, compact, with only what a GM needs at the table. Extra entity types (ships, vehicles, factions) where the game has sheets for them.
-- **Every roll does what the game does**, with outcome words, criticals, margins or successes in the result, `ask` for difficulties only the GM knows, and `Push` where the game lets you reroll (see [Results](reference.md#results-with-an-outcome-and-pushing)).
+- **Every roll does what the game does**, with outcome words, criticals, margins or successes in the result, `ask` for difficulties only the GM knows, and `Push` where the game lets you reroll (see [Results](reference.md#results-with-an-outcome-and-pushing)). A penalty or bonus that adds or removes dice, such as a target's Defense, is asked with the pool form of `ask` (see [An answer that changes the pool](reference.md#an-answer-that-changes-the-pool)), not put in a sheet field.
+- **Every extra entity type has its own icon**: a simple SVG drawn for it (see `starwars/spaceship-entity.svg` and the app's `/images/*.svg`), never a placeholder such as `/images/armour.svg`, an AI-made raster or official art.
 - **Initiative**: a rolled `Initiative` field, `initiativeDeck` for card initiative, or `initiativeRolls`, and `initiativeCompare` in the game's order.
 - **Battlemap actions** for every attack, with `reach` and `range` in the system's `distanceUnit`, and `squareSize` where the game uses a grid.
 - **Indicators** for conditions, wounds and down states, in the shared colours.
