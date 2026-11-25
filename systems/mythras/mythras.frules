@@ -41,6 +41,23 @@ mythrasAsked = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (fi
 
 mythrasCheck = ask ("Difficulty grade", gradeNames, 0, mythrasAsked)
 
+fatigueShift (char) =
+    switch char.Attributes.Fatigue
+        case "Winded" then 1
+        case "Tired" then 1
+        case "Wearied" then 2
+        case "Exhausted" then 3
+        case "Debilitated" then 3
+        case "Incapacitated" then 3
+        case "Semi-Conscious" then 4
+        case "Comatose" then 4
+        case "Dead" then 4
+        else 0
+
+tiredGrade (answered, grade, shift) = min (6, gradeOf (answered, grade) + shift)
+
+mythrasCheckFor (char) = ask ("Difficulty grade", gradeNames, 0, ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char))))))
+
 hitLocationOf (roll) =
     if roll <= 3 then "Right leg"
     else if roll <= 6 then "Left leg"
@@ -68,6 +85,9 @@ mythrasAskedAttack = ([dice { number = 1  sides = 100 }, dice { number = 1  side
     ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), gradeOf (answered, asked), hitLocationOf (first (item (1, throws).rolls)))))
 
 mythrasAttack = ask ("Difficulty grade", gradeNames, 0, mythrasAskedAttack)
+
+mythrasAttackFor (char) = ask ("Difficulty grade", gradeNames, 0, ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char)), hitLocationOf (first (item (1, throws).rolls))))))
 
 initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
 
@@ -100,7 +120,7 @@ skill (base) = custom
 {
     Base = integer { value = base  editable = none }
     Bonus = integer { description = "Points added to the base from culture, career, bonus points and experience." default = 0  minvalue = 0 }
-    Total = integer { description = "Roll d100 at or under it. A tenth (rounded up) is a critical; 99 and 00 fumble." value = Base + Bonus  valuedice = mythrasCheck  editable = none }
+    Total = integer { description = "Roll d100 at or under it. A tenth (rounded up) is a critical; 99 and 00 fumble." value = Base + Bonus  valuedice = mythrasCheckFor (characterTable)  editable = none }
 }
 
 location (armor, base) = custom
@@ -119,7 +139,7 @@ weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "mythrasWea
 weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
 {
     Name = name
-    Chance = integer { value = chance  valuedice = mythrasAttack  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Chance = integer { value = chance  valuedice = mythrasAttackFor (characterTable)  action = kind  reach = 2  range = rangeMetres  editable = none }
     Damage = integer { value = damageBonus (damageText)  valuedice = damageRoll (diceCount (damageText), dieSize (damageText), strsiz)  render = damageText + " " + dmText (strsiz)  editable = none }
 }
 
@@ -179,7 +199,7 @@ characterTable = ruleset
         'Luck Points' = integer { description = "Spend one to reroll, to downgrade a wound or to act first." default = 'Max Luck Points'  minvalue = 0  editable = live }
         'Max Magic Points' = integer { value = Characteristics.POW  editable = none }
         'Magic Points' = integer { default = 'Max Magic Points'  minvalue = 0  editable = live }
-        Fatigue = string { description = "Each level past Fresh makes skills harder." default = "Fresh"  keys = fatigueLevels  editable = live  indicator = "#d4b106" }
+        Fatigue = string { description = "Each level past Fresh makes skills harder: the sheet steps the difficulty grade for you." default = "Fresh"  keys = fatigueLevels  editable = live  indicator = "#d4b106" }
         'New session' = button
         {
             description = "Luck Points come back at the start of each session."
@@ -253,7 +273,7 @@ characterTable = ruleset
             Name = string {}
             Base = integer { default = 0 }
             Bonus = integer { default = 0 }
-            Total = integer { value = Base + Bonus  valuedice = mythrasCheck  editable = none }
+            Total = integer { value = Base + Bonus  valuedice = mythrasCheckFor (characterTable)  editable = none }
         }
     }
 
@@ -269,7 +289,7 @@ characterTable = ruleset
             Trait = string {}
             Base = integer { value = characterTable.Characteristics.STR + characterTable.Characteristics.DEX  editable = none }
             Bonus = integer { default = 0 }
-            Total = integer { value = Base + Bonus  valuedice = mythrasAttack  editable = none }
+            Total = integer { value = Base + Bonus  valuedice = mythrasAttackFor (characterTable)  editable = none }
         }
     }
 

@@ -26,6 +26,9 @@ expanseTest = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  co
 
 expanseDice = ask ("Target number", expanseTest)
 
+expansePenalized (penalty) = ask ("Target number", ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
+    ((baseline, throws)->expanseResult (first (throws).rolls, first (item (1, throws).rolls), baseline - penalty + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered))))
+
 expanseAttack = ask ("Target's Defense", expanseTest)
 
 initiativeRoll = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Drama" }],
@@ -110,15 +113,15 @@ characterTable = ruleset
     {
         description = "Nine abilities from -2 to 4 or more. A test is 3d6 plus the ability, plus 2 for a matching focus."
         tableLayout = layout { columns = 3  size = wide }
-        Accuracy = integer { description = "Aiming and shooting."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Communication = integer { description = "Dealing with people."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Constitution = integer { description = "Stamina and toughness."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Dexterity = integer { description = "Agility, reflexes and hand-eye coordination."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Fighting = integer { description = "Close combat."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Intelligence = integer { description = "Reasoning and learning."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Perception = integer { description = "Noticing and sensing."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Strength = integer { description = "Physical power."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
-        Willpower = integer { description = "Mental toughness and morale."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expanseDice }
+        Accuracy = integer { description = "Aiming and shooting."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Communication = integer { description = "Dealing with people."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Constitution = integer { description = "Stamina and toughness."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Dexterity = integer { description = "Agility, reflexes and hand-eye coordination."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Fighting = integer { description = "Close combat."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Intelligence = integer { description = "Reasoning and learning."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Perception = integer { description = "Noticing and sensing."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Strength = integer { description = "Physical power."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
+        Willpower = integer { description = "Mental toughness and morale."  default = 0  minvalue = -2  maxvalue = 6  valuedice = expansePenalized (conditionPenalty (characterTable)) }
     }
 
     Focuses = list
