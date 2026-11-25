@@ -33,7 +33,8 @@ Read [reference.md](reference.md) for the full language before writing anything 
 A system that only parses is a draft. Before calling it done, check each of these, or say why the game has none:
 
 - **Both sheets.** `characters` laid out like the official sheet; `creatures` like the book's stat block, compact, with only what a GM needs at the table. Extra entity types (ships, vehicles, factions) where the game has sheets for them.
-- **Every roll does what the game does**, with outcome words, criticals, margins or successes in the result, `ask` for difficulties only the GM knows, and `Push` where the game lets you reroll (see [Results](reference.md#results-with-an-outcome-and-pushing)).
+- **Every roll does what the game does**, with outcome words, criticals, margins or successes in the result, `ask` for difficulties only the GM knows, and `Push` where the game lets you reroll (see [Results](reference.md#results-with-an-outcome-and-pushing)). A penalty or bonus that adds or removes dice, such as a target's Defense, is asked with the pool form of `ask` (see [An answer that changes the pool](reference.md#an-answer-that-changes-the-pool)), not put in a sheet field.
+- **Every extra entity type has its own icon**: a simple SVG drawn for it (see `starwars/spaceship-entity.svg` and the app's `/images/*.svg`), never a placeholder such as `/images/armour.svg`, an AI-made raster or official art.
 - **Initiative**: a rolled `Initiative` field, `initiativeDeck` for card initiative, or `initiativeRolls`, and `initiativeCompare` in the game's order.
 - **Battlemap actions** for every attack, with `reach` and `range` in the system's `distanceUnit`, and `squareSize` where the game uses a grid.
 - **Indicators** for conditions, wounds and down states, in the shared colours.
@@ -61,7 +62,7 @@ describe "Vaesen"
 
 - `sheetsDraw` fails on any "not supported" cell, which catches field types and references that parse but don't render.
 - `rollShows location expression baseline throws expected` rolls an expression as if each dice group came up with the given numbers, one list per group, and compares the result's text. `askedShows` adds the asked number, `unsetShows` leaves it unset, and `asks` checks the prompt's label.
-- `offersPush` and `pushSets` check the push button and the sheet changes it makes. `valueIs` checks a computed value on a fresh character.
+- `offersPush` and `pushSets` check the push button and the sheet changes it makes; `pushShows location expression asked throws pushThrows expected` rolls the push and checks its text (for stress-die chains and rerolls). `dieCountsAre location expression answer counts` checks how many dice each group rolls after an answer, for the pool form of `ask`. `valueIs` checks a computed value on a fresh character.
 - Buttons are tested in `Web/tests/RestButtonsTests.elm`: `clicks location entityType before buttonName expected` sets the `before` values, clicks the button in the play view, and checks the updates it sends.
 
 Test the edges the game cares about: a critical, a fumble, exactly the target, zero dice, an empty optional group, and a push after a partial success. The expression is added to the system as `testRoll` or `testValue`, so those names are taken. Add the system's location as a constant next to the others. Run it with `./test.sh tests/NewSystemsTests.elm`, with `RULES_DIR` from a worktree. The tests are app-repo commits, on their own branch.
@@ -133,6 +134,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Every function is called as `f (a, b)`**, including the built-in `max` and `min`.
 - **A call at the top level must have its `(` on the same line as the function name.** Inside parentheses, newlines are fine.
 - **Same-named definitions merge.** Two `characterTable = ruleset {...}` blocks combine their fields, and two lists concatenate. This is how extensions and multi-file systems add to a base system, but it also means an accidental duplicate name silently merges.
+- **An option can't name itself.** `visible = if Character.Kind == "Magus" then visible else none` inside a table reads its own `visible` and the sheet overflows the stack. Put the choice in a top-level function, `magusOnly (kind) = if kind == "Magus" then visible else none`, and write `visible = magusOnly (Character.Kind)`.
 - **Don't name a parameter after a field option it sets.** In `strike (reach) = custom { Hit = modifier { reach = reach } }` or `roll (sides) = ([dice { sides = sides }], ...)` the name on the right means the option itself, and the sheet or the roll loops forever. Use another name, such as `reachFeet` or `dieSize`.
 - **`otherLibararyTypes` is spelled with the typo.** The code reads that exact name.
 - **Don't add to a shared name setting.** Merging into `fantasyNameSetting` from one system would change it for all of them, and its lists would add up. Write your own `nameSetting` instead.
@@ -142,7 +144,7 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **Only `custom` and `table` work as parameterless field types.** `attr = custom { ... }` used as `Str = attr {}` is fine, but `die = string { ... }` or `stat = modifier { ... }` used the same way draws "string not supported". Write those fields out, or make them a field template with a parameter.
 - **A roll's dice list must be literal in the roll pair.** `([dice {...}, dice {...}], lambda)` parses; a function that returns the dice list does not. Put the choices in the dice' `number` and `sides` instead, and use one roll function with flags.
 - **Don't define `testRoll` or `testValue`.** The tests in the app add those names to the system, and a same-named function merges with them.
-- **Quoted names can't hold `-`, `(` or `)`.** `'Flat-footed'` and `'Dmg (M)'` fail to parse, and the error points at the start of the ruleset, not the field.
+- **Quoted names can't hold `-`, `(`, `)` or `.`.** `'Flat-footed'` and `'Dmg (M)'` fail to parse, and the error points at the start of the ruleset, not the field.
 - **An `editable = live` field shows an input, not a roll button.** Keep the stored number editable and put the roll on a separate computed field next to it (`Roll = modifier { value = Current  valuedice = ... }`).
 - **`description` must be a literal string.** The app doesn't evaluate it, so a field template's description can't depend on its parameters; give a shared template generic text, or put per-key text in the section's `descriptions`.
 - **Button targets must match how the field is stored.** Integers, strings and bools are stored at `(root.Table.Field)`, slots and clocks at `(root.Table.Field.realvalue)`, and keyvalues rows at `(root.Table.Key.Field)`. A radio-group bool also stores the picked name under the group: set `(root.Table.group)` too. List rows can't be targets. Use `root.` paths, and add `editable = live` so the button shows in play.

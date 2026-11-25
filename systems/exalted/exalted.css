@@ -1,0 +1,57 @@
+@import url("/systems/sheet.css");
+
+/* Exalted 3rd edition: warm ivory paper with gold leaf lines and a deep
+   jade for titles, attributes in three columns (Physical, Social, Mental),
+   abilities beneath with their dots, and Essence, motes, willpower and the
+   health ladder as the trackers of the right column. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2d2416;
+    --surface: #faf4e3;
+    --surface-alt: #f1e6c8;
+    --surface-sunken: #e4d3a6;
+    --surface-muted: #cdb67c;
+    --text: #20190f;
+    --text-muted: #4d3f27;
+    --text-faint: #85724f;
+    --on-accent: #faf4e3;
+    --border: #c9a54c;
+    --border-strong: #8a6a1c;
+    --accent: #1d5e57;
+    --accent-hover: #267a71;
+    --accent-soft: #d3e8e3;
+    --link: #1d5e57;
+    --danger: #a3352a;
+    --danger-hover: #81291f;
+    --danger-soft: #f1d4cf;
+    --success: #1d5e57;
+    --paper: #faf4e3;
+    --card-bg: #f1e6c8;
+    --dice-bg: #b8891f;
+    --dice-text: #20190f;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    --title-font: "Cinzel Decorative", "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 6px;
+    --block-border: 2px solid var(--border);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    text-align: center;
+    letter-spacing: 0.15em;
+    border-bottom: 2px solid var(--border);
+}
+.entityView .table-essence,
+.entityView .table-health { --block: 50%; }
+.entityView .table-essence { clear: left; }
+.entityView .table-weapons { --block: 50%; clear: left; }
+.entityView .table-essence > table > tbody,
+.entityView .table-health > table > tbody { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.entityView .table-merits,
+.entityView .table-intimacies,
+.entityView .table-armor { --block: 33.33%; }
+.entityView .table-merits { clear: left; }

@@ -1,0 +1,515 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+verdict (score, level) =
+    if level <= 0 then ""
+    else if score >= level then ": success"
+    else if score > level - 11 then ": success, but lose a fatigue level"
+    else ": failure"
+
+verdictOutcome (score, level) =
+    if level <= 0 then ""
+    else if score > level - 11 then "Success"
+    else "Failure"
+
+scoreResult (score, level) =
+{
+    Text = toString (score) + (if level > 0 then " vs level " + toString (level) else "") + verdict (score, level)
+    Value = score
+    Outcome = verdictOutcome (score, level)
+}
+
+stressResult (d, total, botchDice, level, divisor) =
+    if d == 10 and botchDice <= 0 then scoreResult (floorDiv (total, divisor), level)
+    else if d == 10 then {
+        Text = "0 on the die: " + toString (floorDiv (total, divisor)) + ", roll for a botch"
+        Value = floorDiv (total, divisor)
+        Push = botchRoll (botchDice, floorDiv (total, divisor), level)
+        PushLabel = "Roll " + toString (botchDice) + " botch dice"
+    }
+    else if d == 1 then {
+        Text = "1 on the die: roll again and double"
+        Value = floorDiv (total + 2, divisor)
+        Push = doubling (2, total, level, divisor)
+        PushLabel = "Roll again (x2)"
+    }
+    else scoreResult (floorDiv (total + d, divisor), level)
+
+doubling (mult, total, level, divisor) = ([1d10], ((baseline, throws)->
+    if first (first (throws).rolls) == 1 then {
+        Text = "1 again: roll again, x" + toString (mult * 2)
+        Value = floorDiv (total + mult * 2, divisor)
+        Push = doubling (mult * 2, total, level, divisor)
+        PushLabel = "Roll again (x" + toString (mult * 2) + ")"
+    }
+    else scoreResult (floorDiv (total + mult * first (first (throws).rolls), divisor), level)))
+
+botchRoll (botchDice, total, level) = ([dice { number = botchDice  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
+    if count (filter ((x)->x == 10, first (throws).rolls)) > 0 then {
+        Text = "Botch: " + toString (count (filter ((x)->x == 10, first (throws).rolls))) + (if count (filter ((x)->x == 10, first (throws).rolls)) == 1 then " zero" else " zeros")
+        Value = 0
+        Outcome = "Botch"
+    }
+    else scoreResult (total, level)))
+
+floorDiv (x, divisor) = if x < 0 then 0 - (0 - x + divisor - 1) / divisor else x / divisor
+
+stressRoll (total, level) = stressRollBy (total, level, 1)
+
+stressInitiative (total) = ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, 0, 0, 1)))
+
+stressRollBy (total, level, divisor) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level, divisor))))
+
+simpleRoll (total) = ([1d10], ((baseline, throws)->scoreResult (total + first (first (throws).rolls), 0)))
+
+magusOnly (kind) = if kind == "Magus" then visible else none
+
+fatigueName (n) =
+    switch n
+        case 0 then "Fresh"
+        case 1 then "Winded"
+        case 2 then "Weary"
+        case 3 then "Tired"
+        case 4 then "Dazed"
+        else "Unconscious"
+
+fatiguePenalty (n) =
+    switch n
+        case 0 then 0
+        case 1 then 0
+        case 2 then 1
+        case 3 then 3
+        case 4 then 5
+        else 5
+
+penalty (char) = fatiguePenalty (char.Condition.Fatigue) + char.Condition.Light + 3 * char.Condition.Medium + 5 * char.Condition.Heavy
+
+conditionState (char) =
+    if char.Condition.Dead then "Dead"
+    else if char.Condition.Incapacitating > 0 then "Incapacitated"
+    else if char.Condition.Fatigue >= 5 then "Unconscious"
+    else if penalty (char) > 0 then "-" + toString (penalty (char))
+    else ""
+
+characteristicValue (char, name) =
+    switch name
+        case "Intelligence" then char.Characteristics.Intelligence
+        case "Perception" then char.Characteristics.Perception
+        case "Strength" then char.Characteristics.Strength
+        case "Stamina" then char.Characteristics.Stamina
+        case "Presence" then char.Characteristics.Presence
+        case "Communication" then char.Characteristics.Communication
+        case "Dexterity" then char.Characteristics.Dexterity
+        else char.Characteristics.Quickness
+
+usualCharacteristic (abilityName) =
+    switch abilityName
+        case "Athletics" then "Dexterity"
+        case "Awareness" then "Perception"
+        case "Brawl" then "Dexterity"
+        case "Charm" then "Communication"
+        case "Concentration" then "Stamina"
+        case "Finesse" then "Dexterity"
+        case "Folk Ken" then "Perception"
+        case "Guile" then "Communication"
+        case "Leadership" then "Presence"
+        case "Living Language" then "Communication"
+        case "Ride" then "Dexterity"
+        case "Single Weapon" then "Dexterity"
+        case "Stealth" then "Dexterity"
+        case "Survival" then "Perception"
+        case "Teaching" then "Communication"
+        else "Intelligence"
+
+characteristicNames = ["Intelligence", "Perception", "Strength", "Stamina", "Presence", "Communication", "Dexterity", "Quickness"]
+
+artScore (char, code) =
+    switch code
+        case "Cr" then char.Techniques.Creo.Score
+        case "In" then char.Techniques.Intellego.Score
+        case "Mu" then char.Techniques.Muto.Score
+        case "Pe" then char.Techniques.Perdo.Score
+        case "Re" then char.Techniques.Rego.Score
+        case "An" then char.Forms.Animal.Score
+        case "Aq" then char.Forms.Aquam.Score
+        case "Au" then char.Forms.Auram.Score
+        case "Co" then char.Forms.Corpus.Score
+        case "He" then char.Forms.Herbam.Score
+        case "Ig" then char.Forms.Ignem.Score
+        case "Im" then char.Forms.Imaginem.Score
+        case "Me" then char.Forms.Mentem.Score
+        case "Te" then char.Forms.Terram.Score
+        else char.Forms.Vim.Score
+
+techniqueCodes = ["Cr", "In", "Mu", "Pe", "Re"]
+
+formCodes = ["An", "Aq", "Au", "Co", "He", "Ig", "Im", "Me", "Te", "Vi"]
+
+art = custom
+{
+    Score = integer { default = 0  minvalue = 0 }
+    Experience = integer { default = 0  minvalue = 0 }
+}
+
+noAbility = { Score = 0 }
+
+abilityScore (char, name) = valueOr (valueOr (char.Abilities, name, noAbility), "Score", 0)
+
+noStats = { Stats = { Arts = "CrIg"  Level = "0" } }
+
+spellStat (spell, field) = valueOr (valueOr (valueOr (spell.data, "arm5Spell", noStats), "Stats", noStats.Stats), field, "")
+
+techniqueOf (arts) = first (filter ((code)->contains (arts, code), techniqueCodes))
+
+formOf (arts) = first (filter ((code)->contains (replace (techniqueOf (arts), "", arts), code), formCodes))
+
+castRow (name, arts, level, score, rangeText) = custom
+{
+    Name = name
+    Arts = arts
+    Level = level
+    Casting = integer { description = "Technique + Form + Stamina + aura, less penalties, plus a stress die." value = score  valuedice = stressRoll (score, level)  action = "ranged"  range = rangeText  editable = none }
+}
+
+rangeOf (text) =
+    if contains (text, "Touch") then 2
+    else if contains (text, "Eye") then 10
+    else if contains (text, "Voice") then 50
+    else if contains (text, "Sight") then 500
+    else 0
+
+castFor (char, spell) = castRow (spell.Name, spellStat (spell, "Arts"), toInt (spellStat (spell, "Level")), artScore (char, techniqueOf (spellStat (spell, "Arts"))) + artScore (char, formOf (spellStat (spell, "Arts"))) + char.Characteristics.Stamina + char.Magic.Aura - penalty (char), rangeOf (spellStat (spell, "Range")))
+
+isCastable (spell) = spellStat (spell, "Level") != ""
+
+noWeapon = { Stats = { Ability = "Brawl" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "arm5Weapon", noWeapon), "Stats", noWeapon.Stats), field, "")
+
+attack (name, atk, dam, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { description = "Dexterity + ability + weapon Atk, less penalties, plus a stress die." value = atk  valuedice = stressRoll (atk, 0)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { description = "Strength + weapon Dam, plus the attack's margin over the Defense." value = dam  editable = none }
+}
+
+attackFor (char, weapon) =
+    attack (weapon.Name, char.Characteristics.Dexterity + abilityScore (char, weaponStat (weapon, "Ability")) + toInt (weaponStat (weapon, "Atk")) - penalty (char), char.Characteristics.Strength + toInt (weaponStat (weapon, "Dam")), if toInt (weaponStat (weapon, "Range")) > 0 then "ranged" else "melee", if toInt (weaponStat (weapon, "Range")) > 0 then toInt (weaponStat (weapon, "Range")) else 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Condition, Combat, 'Formulaic spells'] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Magus"  keys = ["Magus", "Companion", "Grog"] }
+        House = string { keys = ["Bjornaer", "Bonisagus", "Criamon", "Ex Miscellanea", "Flambeau", "Guernicus", "Jerbiton", "Mercere", "Merinita", "Tremere", "Tytalus", "Verditius", "None"] }
+        Covenant = string {}
+        Saga = string {}
+        Age = integer { default = 25 }
+        'Apparent age' = integer { default = 25 }
+        Size = integer { description = "0 for an adult human. Shifts the wound bands." default = 0 }
+        Confidence = integer { description = "Spend a point for +3 on a roll." default = 1 }
+        'Confidence points' = integer { default = 3  minvalue = 0  editable = live }
+        Warping = integer { description = "Warping score from powerful magic; points accumulate in Warping points." default = 0 }
+        Decrepitude = integer { description = "Ageing; at 5 the character dies." default = 0  minvalue = 0  maxvalue = 5 }
+        'Personality traits' = string { description = "Such as Brave +2, Curious +3." multiline = true }
+    }
+
+    Characteristics = table
+    {
+        description = "Eight characteristics from -3 to +3, most people 0. A roll is the characteristic plus a stress die."
+        tableLayout = layout { columns = 4  size = wide }
+        Intelligence = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Intelligence, 0) }
+        Perception = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Perception, 0) }
+        Strength = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Strength, 0) }
+        Stamina = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Stamina, 0) }
+        Presence = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Presence, 0) }
+        Communication = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Communication, 0) }
+        Dexterity = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Dexterity, 0) }
+        Quickness = integer { default = 0  minvalue = -5  maxvalue = 5  valuedice = stressRoll (Quickness, 0) }
+    }
+
+    Condition = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Fatigue = integer { description = "Fresh, Winded (0), Weary (-1), Tired (-3), Dazed (-5), Unconscious." default = 0  minvalue = 0  maxvalue = 5  render = fatigueName (Fatigue)  editable = live  indicator = "#e8913a" }
+        Light = integer { description = "Light wounds, -1 each." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Medium = integer { description = "Medium wounds, -3 each." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Heavy = integer { description = "Heavy wounds, -5 each." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Incapacitating = integer { description = "Incapacitating wounds: the character can do nothing and may die." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+        Dead = bool { default = false  editable = live }
+        Penalty = integer { description = "Taken off every roll: fatigue plus wounds." value = penalty (characterTable)  editable = none }
+        State = string { value = conditionState (characterTable)  visible = none  indicator = "#d64545" }
+        Rest = button
+        {
+            description = "A rest recovers all short-term fatigue. Wounds need recovery rolls."
+            editable = live
+            onClick = updates
+            {
+                (root.Condition.Fatigue) = 0
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Weapon ability' = string { description = "The ability used for Defense and Initiative." default = "Brawl" }
+        'Weapon init' = integer { default = 0 }
+        'Weapon dfn' = integer { default = 0 }
+        Encumbrance = integer { default = 0 }
+        Initiative = integer { description = "Quickness + weapon Init - Encumbrance, plus a stress die (no botch)." value = Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable)  valuedice = stressInitiative (Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable))  editable = none }
+        Defense = integer { description = "Quickness + ability + weapon Dfn, plus a stress die." value = Characteristics.Quickness + abilityScore (characterTable, 'Weapon ability') + 'Weapon dfn' - penalty (characterTable)  valuedice = stressRoll (Characteristics.Quickness + abilityScore (characterTable, 'Weapon ability') + 'Weapon dfn' - penalty (characterTable), 0)  editable = none }
+        Protection = integer { description = "From armor." default = 0 }
+        Soak = integer { description = "Stamina + armor protection. Damage above soak becomes a wound: 1-5 light, 6-10 medium, 11-15 heavy, 16-20 incapacitating, 21+ dead." value = Characteristics.Stamina + Protection  editable = none }
+    }
+
+    Abilities = keyvalues
+    {
+        description = "Abilities from 0 up. A roll is a characteristic plus the ability plus a stress die."
+        tableLayout = layout { columns = 2  size = wide }
+        singular = "Ability"
+        editablekeys = character
+        keys = ["Area Lore", "Artes Liberales", "Athletics", "Awareness", "Brawl", "Charm", "Code of Hermes", "Concentration", "Finesse", "Folk Ken", "Guile", "Latin", "Leadership", "Living Language", "Magic Theory", "Parma Magica", "Penetration", "Ride", "Single Weapon", "Stealth", "Survival", "Teaching"]
+        valueType = custom
+        {
+            Score = integer { default = 0  minvalue = 0 }
+            Specialty = string {}
+            Experience = integer { default = 0  minvalue = 0 }
+            With = string { default = usualCharacteristic (Key)  keys = characteristicNames  editable = live }
+            Roll = integer { value = Score + characteristicValue (characterTable, With) - penalty (characterTable)  valuedice = stressRoll (Score + characteristicValue (characterTable, With) - penalty (characterTable), 0)  editable = none }
+        }
+    }
+
+    'Virtues and flaws' = list
+    {
+        singular = "Virtue or flaw"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Kind = string { default = "Minor virtue"  keys = ["Major virtue", "Minor virtue", "Free virtue", "Major flaw", "Minor flaw"] }
+            Type = string { default = "General"  keys = ["Hermetic", "Supernatural", "Social Status", "General", "Personality", "Story", "Tainted"] }
+        }
+    }
+
+    Techniques = table
+    {
+        description = "The five Hermetic Techniques: score and experience."
+        tableLayout = layout { columns = 5  size = wide }
+        visible = magusOnly (Character.Kind)
+        Creo = art {}
+        Intellego = art {}
+        Muto = art {}
+        Perdo = art {}
+        Rego = art {}
+    }
+
+    Forms = table
+    {
+        description = "The ten Hermetic Forms: score and experience."
+        tableLayout = layout { columns = 5  size = wide }
+        visible = magusOnly (Character.Kind)
+        Animal = art {}
+        Aquam = art {}
+        Auram = art {}
+        Corpus = art {}
+        Herbam = art {}
+        Ignem = art {}
+        Imaginem = art {}
+        Mentem = art {}
+        Terram = art {}
+        Vim = art {}
+    }
+
+    Magic = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        visible = magusOnly (Character.Kind)
+        Aura = integer { description = "The magic aura where the magus stands; added to casting." default = 0  editable = live }
+        'Magic resistance' = integer { description = "Parma Magica x5, plus the Form the spell uses." value = abilityScore (characterTable, "Parma Magica") * 5  editable = none }
+        Technique = string { description = "For a spontaneous spell." default = "Cr"  keys = techniqueCodes  editable = live }
+        Form = string { default = "Ig"  keys = formCodes  editable = live }
+        Spontaneous = integer { description = "Fatiguing spontaneous casting: Technique + Form + Stamina + aura + stress die, halved. Costs a fatigue level." value = (artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable)) / 2  valuedice = stressRollBy (artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable), 0, 2)  editable = none }
+        Vis = string { description = "Raw vis in stock, by Art." multiline = true  editable = live }
+        Familiar = string {}
+        'Longevity ritual' = string {}
+    }
+
+    Spells = list
+    {
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+        visible = magusOnly (Character.Kind)
+    }
+
+    'Formulaic spells' = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((spell)->castFor (characterTable, spell), filter ((spell)->isCastable (spell), characterTable.Spells))
+        singular = "Spell"
+        editable = none
+        valueType = castRow
+        visible = magusOnly (Character.Kind)
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Fist", Characteristics.Dexterity + abilityScore (characterTable, "Brawl") - penalty (characterTable), Characteristics.Strength, "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Realm = string { keys = ["Mundane", "Magic", "Faerie", "Infernal", "Divine"] }
+        Might = integer { description = "Magic, Faerie, Infernal or Divine Might; also its magic resistance." default = 0  editable = live }
+        Size = integer { default = 0 }
+        Soak = integer { default = 2 }
+        Initiative = integer { default = 0  valuedice = stressInitiative (Initiative) }
+        Defense = integer { default = 5  valuedice = stressRoll (Defense, 0) }
+        Fatigue = integer { default = 0  minvalue = 0  maxvalue = 5  render = fatigueName (Fatigue)  editable = live }
+        Wounds = string { description = "Wounds taken, such as 1 light, 1 medium." default = ""  editable = live  indicator = "#d64545" }
+    }
+    Attacks = keyvalues
+    {
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Bite"]
+        valueType = custom
+        {
+            Attack = integer { default = 6  valuedice = stressRoll (Attack, 0)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 30 }
+            Damage = integer { default = 5 }
+            Ranged = bool { default = false }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Characteristics = string { multiline = true }
+        Powers = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+arm5Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Technique" prefix = "" filter = Stats.Technique }, filter { name = "Form" prefix = "" filter = Stats.Form }, filter { name = "Level" prefix = "Level" filter = Stats.Level }]
+        sortedBy = sort { prefix = "Level" sort = toInt (Stats.Level) }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Arts = string { description = "Technique and Form, such as CrIg." default = "CrIg" }
+        Technique = string { keys = ["Creo", "Intellego", "Muto", "Perdo", "Rego"] }
+        Form = string { keys = ["Animal", "Aquam", "Auram", "Corpus", "Herbam", "Ignem", "Imaginem", "Mentem", "Terram", "Vim"] }
+        Level = string { description = "Spell level. A general (Gen) spell is learned at a level of your choice: write that level here." default = "5" }
+        Range = string {}
+        Duration = string {}
+        Target = string {}
+        Requisites = string {}
+        Ritual = string { default = "No"  keys = ["No", "Yes"] }
+    }
+}
+
+arm5Weapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Ability = string { default = "Single Weapon" }
+        Init = string { default = "0" }
+        Atk = string { default = "0" }
+        Dfn = string { default = "0" }
+        Dam = string { default = "0" }
+        Str = string { description = "Strength needed." }
+        Range = string { description = "Paces, for missile weapons." }
+        Load = string {}
+    }
+}
+
+arm5Item = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Notes = string {}
+    }
+}
+
+ArsMagica = system
+{
+    hints = [
+        hint
+        {
+            title = "Magi of the Order of Hermes"
+            topic = "Getting started"
+            text = ["Each player usually has a magus, a companion and some grogs of the covenant. Pick a House, virtues and flaws, eight characteristics, abilities and, for magi, the fifteen Arts and spells."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["A roll is a characteristic plus an ability plus a die against an ease factor. Under stress the die is a stress die: a 1 rolls again and doubles, a 0 counts as zero and calls for botch dice; the roll asks how many. Any 0 on the botch dice is a botch."]
+        },
+        hint
+        {
+            title = "Casting spells"
+            topic = "Play"
+            text = ["A formulaic spell's casting total is Technique + Form + Stamina + aura + stress die; it must reach the spell's level, or within 10 of it at the cost of a fatigue level. Spontaneous magic is weaker and tiring."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Initiative: Quickness + weapon Init + stress die. The attack total minus the Defense total is the attack advantage, added to damage; damage over soak is a wound, from light to incapacitating."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spells = arm5Spell
+    Weapons = arm5Weapon
+    Equipment = arm5Item
+    secondaryTypes = ["Spells", "Weapons", "Equipment"]
+    description = "Ars Magica 5th edition: magi of the Order of Hermes in 13th century Mythic Europe, stress dice, fifteen Arts and covenants"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10]
+    cssFiles = ["/systems/arm5/arm5.css"]
+    libraries = ["/systems/arm5/arm5.json", "/systems/names/oldworld.json", "/systems/names/arthurian.json", "/systems/names/norwegian.json"]
+    nameSettings = [oldWorldNameSetting, arthurianNameSetting]
+}

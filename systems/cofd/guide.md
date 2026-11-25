@@ -10,7 +10,7 @@ Roll a pool of d10s, usually **attribute + skill**, plus or minus modifiers.
 - An **unskilled** roll takes -1 (Physical and Social skills) or -3 (Mental skills).
 - If penalties bring the pool to 0 or less, roll a single **chance die**: only a 10 succeeds, and a 1 is a **dramatic failure**.
 - **Willpower**: spend a point for +3 dice on a roll (or +2 Defense).
-- Put equipment bonuses, Willpower and the target's Defense in the sheet's **Modifier** before rolling.
+- Every roll first asks for a **dice bonus or penalty**: equipment, Willpower (+3) and the GM's modifiers, added up. A melee or unarmed attack asks for the **target's Defense** instead, which comes off the pool (take any bonus dice, such as Willpower, off the Defense you enter). If the pool drops to 0 or less, it rolls a chance die.
 
 ## Combat
 - **Initiative**: Dexterity + Composure + d10, highest first.

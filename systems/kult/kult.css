@@ -1,0 +1,66 @@
+@import url("/systems/sheet.css");
+
+/* Kult: Divinity Lost: black pages with bone-white blocks and a dried blood
+   red, thin serif capitals, passive and active attributes in one band, the
+   basic moves beside them, and wounds and stability as the two tracks. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #0b0a0a;
+    --surface: #ebe6dc;
+    --surface-alt: #ddd6c8;
+    --surface-sunken: #cbc2b0;
+    --surface-muted: #a99f8b;
+    --text: #141111;
+    --text-muted: #3d3532;
+    --text-faint: #75695f;
+    --on-accent: #ebe6dc;
+    --border: #8a7d6e;
+    --border-strong: #141111;
+    --accent: #6e0f12;
+    --accent-hover: #8c1a1d;
+    --accent-soft: #ead0cd;
+    --link: #6e0f12;
+    --danger: #6e0f12;
+    --danger-hover: #4f0a0c;
+    --danger-soft: #ead0cd;
+    --success: #3b5a3e;
+    --paper: #ebe6dc;
+    --card-bg: #ddd6c8;
+    --dice-bg: #6e0f12;
+    --dice-text: #ebe6dc;
+}
+
+.entityView {
+    --sheet-font: "Garamond", "Baskerville", Georgia, serif;
+    --title-font: "Trajan Pro", "Cinzel", "Times New Roman", serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: var(--surface);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    font-weight: 400;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border);
+    padding: 4px;
+}
+.entityView .table-wounds,
+.entityView .table-stability { --block: 50%; }
+.entityView .table-wounds { clear: left; }
+.entityView .table-advantages,
+.entityView .table-disadvantages { --block: 50%; }
+.entityView .table-advantages { clear: left; }
+.entityView .table-dark-secrets,
+.entityView .table-relations { --block: 50%; }
+.entityView .table-dark-secrets { clear: left; }
+.entityView .table-weapons,
+.entityView .table-gear { --block: 50%; }
+.entityView .table-weapons { clear: left; }

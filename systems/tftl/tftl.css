@@ -1,0 +1,57 @@
+@import url("/systems/sheet.css");
+
+/* Tales from the Loop: the soft painted look of the official kid sheet,
+   pale sky blue paper with rounded boxes, a warm orange for titles, the
+   four attributes as big round counters, and conditions as a row of
+   check boxes under them. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #8fb3c4;
+    --surface: #f7f4ea;
+    --surface-alt: #ece6d4;
+    --surface-sunken: #dfd6bd;
+    --surface-muted: #c6bb9a;
+    --text: #23313a;
+    --text-muted: #4b5c66;
+    --text-faint: #7c8b93;
+    --on-accent: #ffffff;
+    --border: #b9c6cc;
+    --border-strong: #3d5562;
+    --accent: #d9692b;
+    --accent-hover: #e8813f;
+    --accent-soft: #f8dcc8;
+    --link: #b9521b;
+    --danger: #b8362c;
+    --danger-hover: #942b22;
+    --danger-soft: #f3d4cf;
+    --success: #4f8a4a;
+    --paper: #f7f4ea;
+    --card-bg: #ece6d4;
+    --dice-bg: #3d5562;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Futura", "Century Gothic", "Trebuchet MS", sans-serif;
+    --title-font: "Futura", "Century Gothic", "Trebuchet MS", sans-serif;
+    --block-radius: 14px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 800;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 50%;
+    padding: 10px;
+    font-size: 1.2em;
+}
+.entityView .table-items { --block: 50%; clear: left; }
+.entityView .table-hideout { --block: 50%; }

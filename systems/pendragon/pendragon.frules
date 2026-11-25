@@ -1,0 +1,338 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+pdOutcome (target, roll) =
+    if target > 20 then (if roll + target - 20 >= 20 then "Critical" else "Success")
+    else if target == 20 then (if roll == 20 then "Critical" else "Success")
+    else if target < 1 then (if roll >= 20 + target then "Fumble" else "Failure")
+    else if roll == target then "Critical"
+    else if roll == 20 then "Fumble"
+    else if roll < target then "Success"
+    else "Failure"
+
+pdShown (target, roll) = if target > 20 then roll + target - 20 else roll
+
+pdResult (target, roll) =
+{
+    Text = toString (pdShown (target, roll)) + " vs " + toString (target) + ": " + pdOutcome (target, roll)
+    Value = pdShown (target, roll)
+    Outcome = pdOutcome (target, roll)
+}
+
+pdRoll (target) = ([1d20], ((baseline, throws)->pdResult (target, first (first (throws).rolls))))
+
+pdAsked (target) = ask ("Modifier", 0, ([1d20], ((baseline, throws)->pdResult (target + asked, first (first (throws).rolls)))))
+
+damageDice (char) = (char.Characteristics.STR + char.Characteristics.SIZ + 3) / 6
+
+damageRoll (dieCount, flat) = ([dice { number = max (0, dieCount)  sides = 6 }], ((baseline, throws)->{ Text = toString (sum (first (throws).rolls) + flat) + " damage"  Value = sum (first (throws).rolls) + flat }))
+
+damageText (dieCount, flat, notes) = if dieCount > 0 then toString (dieCount) + "d6" + (if notes == "" then "" else ", " + notes) else toString (flat) + " flat"
+
+
+pdWoundState (char) =
+    if char.Health.'Hit points' <= 0 then "Mortally wounded"
+    else if char.Health.'Hit points' <= char.Health.Unconscious then "Unconscious"
+    else if char.Health.Debilitated then "Debilitated"
+    else ""
+
+trait (oppositeName) = custom
+{
+    Value = integer { description = "The trait on the left. The pair always adds up to 20." default = 10  minvalue = 0  maxvalue = 20  valuedice = pdAsked (Value) }
+    Opposite = integer { description = "The opposed trait: 20 minus the trait on the left." value = 20 - Value  render = oppositeName + " " + toString (20 - Value)  valuedice = pdAsked (20 - Value)  editable = none }
+    Check = bool { description = "Ticked when the trait was tested in a way that earns an experience check." default = false  editable = live }
+}
+
+noSkill = { Value = 0 }
+
+combatValue (char, name) = valueOr (valueOr (char.'Combat Skills', name, noSkill), "Value", 0)
+
+noStats = { Stats = { Skill = "Sword"  Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "pdWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, target, dieCount, flat, notes, kind, distance) = custom
+{
+    Name = name
+    Skill = integer { value = target  valuedice = pdAsked (target)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = dieCount  render = damageText (dieCount, flat, notes)  valuedice = damageRoll (dieCount, flat)  editable = none }
+}
+
+isRanged (weapon) = weaponStat (weapon, "Skill") == "Bow" or weaponStat (weapon, "Skill") == "Crossbow" or weaponStat (weapon, "Skill") == "Thrown"
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, combatValue (char, weaponStat (weapon, "Skill")), damageDice (char) + toInt (weaponStat (weapon, "Extra dice")), 0, weaponStat (weapon, "Notes"), if isRanged (weapon) then "ranged" else "melee", if isRanged (weapon) then firstNumber (weaponStat (weapon, "Range")) else 2)
+
+initiativeRoll = ([1d20], ((baseline, throws)->{ Text = toString (first (first (throws).rolls)) + " vs DEX " + toString (baseline) + ": " + pdOutcome (baseline, first (first (throws).rolls))  Value = if pdOutcome (baseline, first (first (throws).rolls)) == "Failure" or pdOutcome (baseline, first (first (throws).rolls)) == "Fumble" then 0 else first (first (throws).rolls) }))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Characteristics, Attacks] }
+    Knight = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Homeland = string { keys = ["Salisbury", "Logres", "Cambria", "Cumbria", "Cornwall", "Brittany", "Ireland", "Saxon lands", "Other"] }
+        Culture = string { keys = ["Cymric", "Roman", "Saxon", "Irish", "Pictish", "Aquitanian", "Other"] }
+        Religion = string { description = "Sets the religious traits; 16 or more in all six gives a bonus." keys = ["British Christian", "Roman Christian", "Pagan", "Wodanic", "Heathen"] }
+        Class = string { default = "Vassal knight"  keys = ["Squire", "Vassal knight", "Household knight", "Bachelor knight", "Banneret", "Lady", "Other"] }
+        Lord = string { description = "The liege the knight owes service." }
+        Father = string {}
+        'Year born' = integer { default = 464 }
+        Age = integer { default = 21 }
+        'Son number' = integer { default = 1  minvalue = 1 }
+        Glory = integer { description = "Lifetime Glory. Every 1,000 points earns a bonus point at Winter Phase." default = 1000  minvalue = 0  editable = live }
+        'Glory roll' = integer { description = "Roll at or under Glory divided by 1,000." value = (Glory + 500) / 1000  valuedice = pdRoll ((Glory + 500) / 1000)  editable = none }
+        Honor = integer { description = "The knight's honor, a passion that every knight has." default = 15  minvalue = 0  maxvalue = 40  valuedice = pdAsked (Honor)  editable = live }
+    }
+
+    Characteristics = table
+    {
+        description = "The five characteristics. A characteristic roll is 1d20 under the value."
+        tableLayout = layout { columns = 5  size = wide }
+        SIZ = integer { description = "Size: bulk and weight. Sets Knockdown and adds to damage and hit points." default = 13  minvalue = 3  maxvalue = 30  valuedice = pdAsked (SIZ) }
+        DEX = integer { description = "Dexterity: agility and nimbleness, and the order in a tangle of actions." default = 12  minvalue = 3  maxvalue = 30  valuedice = pdAsked (DEX) }
+        STR = integer { description = "Strength: adds to damage and movement." default = 12  minvalue = 3  maxvalue = 30  valuedice = pdAsked (STR) }
+        CON = integer { description = "Constitution: health. Sets Major Wound, healing and hit points." default = 13  minvalue = 3  maxvalue = 30  valuedice = pdAsked (CON) }
+        APP = integer { description = "Appearance: looks and bearing. Courtly glory and first impressions." default = 10  minvalue = 3  maxvalue = 30  valuedice = pdAsked (APP) }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Total hit points' = integer { description = "CON plus SIZ." value = Characteristics.CON + Characteristics.SIZ  editable = none }
+        'Hit points' = integer { description = "Current hit points. At or below Unconscious the knight falls; at 0 they are dying." default = 'Total hit points'  editable = live }
+        Unconscious = integer { description = "A quarter of the total hit points." value = ('Total hit points' + 2) / 4  editable = none }
+        'Major wound' = integer { description = "A single wound of this many points or more is a major wound: unconscious, Debilitated and a characteristic lost." value = Characteristics.CON  editable = none }
+        Knockdown = integer { description = "A blow of more damage than this calls for a DEX roll to stay up." value = Characteristics.SIZ  editable = none }
+        'Healing rate' = integer { description = "Hit points regained each week, or by a successful First Aid." value = (Characteristics.CON + 2) / 5  editable = none }
+        Damage = integer { description = "STR plus SIZ divided by six, in d6." value = damageDice (characterTable)  render = toString (damageDice (characterTable)) + "d6"  valuedice = damageRoll (damageDice (characterTable), 0)  editable = none }
+        'Brawling damage' = integer { description = "STR plus SIZ divided by six, a flat number." value = damageDice (characterTable)  editable = none }
+        Movement = integer { description = "STR plus DEX halved, plus 5, in yards a round." value = (Characteristics.STR + Characteristics.DEX + 1) / 2 + 5  editable = none }
+        Debilitated = bool { description = "Ticked by a major wound, falling unconscious or a fumbled First Aid; it stays until Chirurgery succeeds and half the hit points are back." default = false  editable = live  indicator = "#d64545" }
+        State = string { value = pdWoundState (characterTable)  visible = none  indicator = "#d64545" }
+        Initiative = modifier { description = "An opposed DEX roll decides who acts first when actions clash." value = Characteristics.DEX  valuedice = initiativeRoll  editable = none }
+        'Week of healing' = button
+        {
+            description = "A week of rest: regain the healing rate, unless Debilitated, which needs Chirurgery first."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.'Hit points') = if Debilitated then 'Hit points' else min ('Total hit points', 'Hit points' + 'Healing rate')
+            }
+        }
+    }
+
+    Traits = table
+    {
+        description = "Thirteen pairs of personality traits. Each pair adds up to 20; 16 or more is famous."
+        tableLayout = layout { columns = 1 }
+        Chaste = trait ("Lustful")
+        Energetic = trait ("Lazy")
+        Forgiving = trait ("Vengeful")
+        Generous = trait ("Selfish")
+        Honest = trait ("Deceitful")
+        Just = trait ("Arbitrary")
+        Merciful = trait ("Cruel")
+        Modest = trait ("Proud")
+        Prudent = trait ("Reckless")
+        Spiritual = trait ("Worldly")
+        Temperate = trait ("Indulgent")
+        Trusting = trait ("Suspicious")
+        Valorous = trait ("Cowardly")
+    }
+
+    Passions = list
+    {
+        description = "Loves, loyalties and hates. A success inspires (+5), a critical impassions (+10), a failure brings a crisis."
+        singular = "Passion"
+        editable = character
+        valueType = custom
+        {
+            Passion = string {}
+            Value = integer { default = 15  minvalue = 0  maxvalue = 40  valuedice = pdAsked (Value) }
+            Check = bool { default = false  editable = live }
+        }
+    }
+
+    Skills = keyvalues
+    {
+        description = "Knightly, courtly and woodcraft skills. Roll 1d20 under the value."
+        tableLayout = layout { columns = 2 }
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Awareness", "Chirurgery", "Compose", "Courtesy", "Dancing", "Falconry", "Fashion", "First Aid", "Flirting", "Folklore", "Gaming", "Hunting", "Industry", "Intrigue", "Literacy", "Orate", "Play Instrument", "Recognize", "Religion", "Singing", "Stewardship", "Swimming", "Tourney"]
+        valueType = custom
+        {
+            Value = integer { description = "Roll 1d20 under it; equal is a critical." default = 3  minvalue = 0  maxvalue = 40  valuedice = pdAsked (Value) }
+            Check = bool { default = false  editable = live }
+        }
+    }
+
+    'Combat Skills' = keyvalues
+    {
+        description = "Battle, horsemanship and weapon skills. In a fight both sides roll; the higher success wins."
+        singular = "Combat skill"
+        editablekeys = character
+        keys = ["Battle", "Horsemanship", "Sword", "Lance", "Spear", "Dagger", "Great Spear", "Mace", "Hafted", "Bow", "Brawling"]
+        valueType = custom
+        {
+            Value = integer { description = "Roll 1d20 under it; equal is a critical." default = 5  minvalue = 0  maxvalue = 40  valuedice = pdAsked (Value) }
+            Check = bool { default = false  editable = live }
+        }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Brawling", combatValue (characterTable, "Brawling"), 0, damageDice (characterTable), "", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = table
+    {
+        tableLayout = layout { columns = 3 }
+        Armor = string { description = "The armor worn, such as chainmail." default = "Chainmail" }
+        Protection = integer { description = "Points taken off every blow." default = 10  minvalue = 0 }
+        Shield = integer { description = "Extra protection on a partial success when using a shield." default = 6  minvalue = 0 }
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Estate = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Horses = string { description = "Charger, rounceys and sumpters." multiline = true }
+        Squire = string { description = "The squire's name, age and Squire skill." }
+        Manor = string { description = "The knight's holdings, if any." }
+        Family = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        SIZ = integer { default = 13 }
+        DEX = integer { default = 12 }
+        STR = integer { default = 12 }
+        CON = integer { default = 13 }
+        APP = integer { default = 10 }
+        'Total hit points' = integer { default = 26 }
+        'Hit points' = integer { default = 26  editable = live  indicator = "#d64545" }
+        'Major wound' = integer { default = 13 }
+        Knockdown = integer { default = 13 }
+        Protection = integer { description = "Armor points taken off every blow." default = 10 }
+        Movement = integer { default = 16 }
+        Glory = integer { description = "Glory for defeating it." default = 50 }
+        Down = string { value = if 'Hit points' <= 0 then "Down" else ""  visible = none  indicator = "#555555" }
+        Initiative = modifier { value = DEX  valuedice = initiativeRoll  editable = none }
+    }
+    Attacks = keyvalues
+    {
+        description = "Combat skill and damage for each attack."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Sword"]
+        valueType = custom
+        {
+            Skill = integer { default = 15  valuedice = pdAsked (Skill)  action = if Key == "Bow" or Key == "Spear thrown" then "ranged" else "melee"  reach = 2  range = 60 }
+            Damage = integer { description = "Damage in d6." default = 5  valuedice = damageRoll (Damage, 0) }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { description = "Notable traits and passions, such as Valorous 16 or Hate (Saxons) 15." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+pdWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+        sortedBy = sort { prefix = "Skill" sort = Stats.Skill }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { description = "The combat skill it is used with." default = "Sword"  keys = ["Sword", "Lance", "Spear", "Dagger", "Great Spear", "Mace", "Hafted", "Bow", "Crossbow", "Thrown", "Brawling"] }
+        'Extra dice' = string { description = "Dice added to or taken from the knight's damage, such as 1 for a great spear or -2 for a dagger." default = "0" }
+        Range = string { description = "For bows and thrown weapons, in yards." }
+        Notes = string { description = "Special rules, such as breaks on a fumble." }
+        Cost = string {}
+    }
+}
+
+pdItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string { description = "In librum (£), denarii (d) or shillings." }
+        Notes = string {}
+    }
+}
+
+Pendragon = system
+{
+    hints = [
+        hint
+        {
+            title = "A knight of Britain"
+            topic = "Getting started"
+            text = ["Pick a homeland, culture and religion, set the five characteristics, and the thirteen trait pairs: each pair adds to 20. Give the knight passions such as Loyalty (Lord), Love (Family) and Hospitality."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll 1d20 under the value; equal is a critical, a natural 20 a fumble. Above 20, the excess is added to the roll and 20 or more is a critical. Each roll asks for a modifier, such as +5 or -10. In an opposed roll both must succeed and the higher roll wins."]
+        },
+        hint
+        {
+            title = "Traits and passions"
+            topic = "Play"
+            text = ["When temptation calls, roll the trait; a failure means rolling its opposite. A passion roll inspires (+5) or impassions (+10) the next skill; a failure is a crisis."]
+        },
+        hint
+        {
+            title = "Combat and wounds"
+            topic = "Combat"
+            text = ["Both fighters roll their weapon skill; the winner rolls damage, armor subtracts. A critical adds 4d6. A single wound of Major Wound or more knocks the knight out and Debilitates. Healing comes weekly, at the healing rate."]
+        }
+    ]
+    distanceUnit = "yd"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = pdWeapon
+    Equipment = pdItem
+    secondaryTypes = ["Weapons", "Equipment"]
+    description = "King Arthur Pendragon 6th edition: knights of Arthur's Britain, d20 under skills, traits and passions that drive the story"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6]
+    cssFiles = ["/systems/pendragon/pendragon.css"]
+    libraries = ["/systems/names/arthurian.json"]
+    nameSettings = [arthurianNameSetting]
+}

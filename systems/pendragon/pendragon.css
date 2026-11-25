@@ -1,0 +1,62 @@
+@import url("/systems/sheet.css");
+
+/* King Arthur Pendragon: a parchment page with blackletter-like titles in
+   deep red, characteristics in a row along the top, the thirteen trait
+   pairs in one column beside the passions, and skills in two columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #5a3a22;
+    --surface: #f3e7c9;
+    --surface-alt: #ead9b2;
+    --surface-sunken: #dcc795;
+    --surface-muted: #c9b07a;
+    --text: #2a1a0e;
+    --text-muted: #5a3d22;
+    --text-faint: #8a6a45;
+    --on-accent: #f3e7c9;
+    --border: #a88a5a;
+    --border-strong: #5e1414;
+    --accent: #8c1c1c;
+    --accent-hover: #a82626;
+    --accent-soft: #f0d6c8;
+    --link: #8c1c1c;
+    --danger: #8c1c1c;
+    --danger-hover: #6b1414;
+    --danger-soft: #f0d0c8;
+    --success: #3c5a2a;
+    --paper: #f3e7c9;
+    --card-bg: #ead9b2;
+    --dice-bg: #8c1c1c;
+    --dice-text: #f3e7c9;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --title-font: "UnifrakturCook", "Old English Text MT", "Palatino Linotype", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    font-size: 1.25em;
+    text-align: center;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .table-characteristics > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border);
+    padding: 4px;
+}
+.entityView .table-health { --block: 100%; }
+.entityView .table-traits { --block: 50%; clear: left; }
+.entityView .table-traits .customtype { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
+.entityView .table-passions,
+.entityView .table-combat-skills { --block: 50%; }
+.entityView .table-skills { --block: 50%; clear: left; }
+.entityView .table-weapons,
+.entityView .table-armor { --block: 50%; }
+.entityView .table-weapons { clear: left; }
+.entityView .table-equipment { --block: 50%; }

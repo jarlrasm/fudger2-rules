@@ -1,0 +1,59 @@
+@import url("/systems/sheet.css");
+
+/* Ars Magica: a manuscript page, vellum with rubricated red titles and
+   black ink, the eight characteristics in two rows, the fifteen Arts as
+   small boxes (Techniques above Forms), and the fatigue and wound
+   ladders together. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #3a2a1c;
+    --surface: #f6efdc;
+    --surface-alt: #ece1c4;
+    --surface-sunken: #dccba1;
+    --surface-muted: #c2ad7d;
+    --text: #1f1710;
+    --text-muted: #4c3c2a;
+    --text-faint: #857258;
+    --on-accent: #f6efdc;
+    --border: #b89c68;
+    --border-strong: #2a1f14;
+    --accent: #9b1c1c;
+    --accent-hover: #b52a2a;
+    --accent-soft: #f1d6cc;
+    --link: #9b1c1c;
+    --danger: #9b1c1c;
+    --danger-hover: #7a1515;
+    --danger-soft: #f1d6cc;
+    --success: #2f5d3a;
+    --paper: #f6efdc;
+    --card-bg: #ece1c4;
+    --dice-bg: #2a1f14;
+    --dice-text: #f6efdc;
+}
+
+.entityView {
+    --sheet-font: "Garamond", "EB Garamond", Georgia, serif;
+    --title-font: "UnifrakturMaguntia", "Old English Text MT", "Garamond", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    font-size: 1.2em;
+    border-bottom: 1px solid var(--border);
+}
+.entityView .table-techniques > table > tbody > tr,
+.entityView .table-forms > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border);
+    padding: 3px;
+}
+.entityView .table-techniques .customtype > div:nth-child(2)::before,
+.entityView .table-forms .customtype > div:nth-child(2)::before { content: "xp "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-virtues-and-flaws,
+.entityView .table-weapons,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-spells { --block: 50%; clear: left; }

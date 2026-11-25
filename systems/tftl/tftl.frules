@@ -1,0 +1,218 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+notSixes (rolls) = count (filter ((x)->x < 6, rolls))
+
+loopText (successes, pushed) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + (if pushed then ", pushed: mark a condition" else "")
+
+loopResult (rolls, kept, canPush) =
+{
+    Text = loopText (kept + sixes (rolls), not (canPush))
+    Value = kept + sixes (rolls)
+    Outcome = if kept + sixes (rolls) > 0 then "Success" else "Failure"
+    Push = if canPush and notSixes (rolls) > 0 then loopPush (kept + sixes (rolls), notSixes (rolls)) else 0
+    PushLabel = "Push (mark a condition) or spend Luck"
+}
+
+loopPush (kept, rerolled) = ([dice { number = rerolled  sides = 6 }],
+    ((baseline, throws)->loopResult (first (throws).rolls, kept, false)))
+
+loopRoll (pool) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->loopResult (first (throws).rolls, 0, pool > 0)))
+
+loopAsked (pool) = ask ("Extra dice", 0, (n)->loopRoll (pool + n))
+
+conditionPenalty (char) =
+    (if char.Conditions.Upset then 1 else 0) + (if char.Conditions.Scared then 1 else 0) + (if char.Conditions.Exhausted then 1 else 0) + (if char.Conditions.Injured then 1 else 0)
+
+skill (attribute) = custom
+{
+    Level = integer { description = "Skill level from 0 to 5, added to the attribute's dice." default = 0  minvalue = 0  maxvalue = 5 }
+    Dice = integer { description = "Attribute plus skill, less one die per condition. The roll asks for extra dice from items and help." value = max (0, attribute + Level - conditionPenalty (characterTable))  valuedice = loopAsked (attribute + Level - conditionPenalty (characterTable))  editable = none }
+}
+
+kidState (char) = if char.Conditions.Broken then "Broken" else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Conditions, Kid] }
+    Kid = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Bookworm", "Computer Geek", "Hick", "Jock", "Popular Kid", "Rocker", "Troublemaker", "Weirdo"] }
+        Age = integer { description = "10 to 15. The attributes add up to the age." default = 12  minvalue = 10  maxvalue = 15 }
+        Drive = string { description = "Why the kid gets involved in mysteries." }
+        Problem = string { description = "Something hard in the kid's everyday life." }
+        Pride = string { description = "Once a mystery, it turns a failed roll into a success with one six." }
+        'Pride used' = bool { default = false  editable = live }
+        Anchor = string { description = "The person the kid goes to for comfort; meeting them heals conditions." }
+        'Iconic item' = string { description = "Gives two extra dice when it helps." }
+        'Favorite song' = string {}
+        Description = string { multiline = true }
+    }
+
+    Attributes = table
+    {
+        description = "Body, Tech, Heart and Mind, 1 to 5, adding up to the kid's age."
+        tableLayout = layout { columns = 4  size = wide }
+        Body = integer { description = "Physical: Sneak, Force, Move." default = 3  minvalue = 1  maxvalue = 5 }
+        Tech = integer { description = "Gadgets: Tinker, Program, Calculate." default = 3  minvalue = 1  maxvalue = 5 }
+        Heart = integer { description = "Other people: Contact, Charm, Lead." default = 3  minvalue = 1  maxvalue = 5 }
+        Mind = integer { description = "Thinking: Investigate, Comprehend, Empathize." default = 3  minvalue = 1  maxvalue = 5 }
+    }
+
+    Skills = table
+    {
+        description = "Twelve skills, three for each attribute. Roll one die per point of attribute and skill; each six is a success."
+        tableLayout = layout { columns = 3  size = wide }
+        Sneak = skill (Attributes.Body)
+        Force = skill (Attributes.Body)
+        Move = skill (Attributes.Body)
+        Tinker = skill (Attributes.Tech)
+        Program = skill (Attributes.Tech)
+        Calculate = skill (Attributes.Tech)
+        Contact = skill (Attributes.Heart)
+        Charm = skill (Attributes.Heart)
+        Lead = skill (Attributes.Heart)
+        Investigate = skill (Attributes.Mind)
+        Comprehend = skill (Attributes.Mind)
+        Empathize = skill (Attributes.Mind)
+    }
+
+    Conditions = table
+    {
+        description = "Each condition is one die less on every roll. A broken kid can't act until helped."
+        tableLayout = layout { columns = 5  size = wide }
+        Upset = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Scared = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Exhausted = bool { default = false  editable = live  indicator = "#e8913a" }
+        Injured = bool { default = false  editable = live  indicator = "#d64545" }
+        Broken = bool { default = false  editable = live  indicator = "#555555" }
+        'Luck points' = integer { description = "15 minus age. Spend one to reroll a failed roll without marking a condition." default = 15 - Kid.Age  minvalue = 0  editable = live }
+        Experience = integer { default = 0  minvalue = 0  editable = live }
+        'Go home to the anchor' = button
+        {
+            description = "Spending time with the anchor, or a night at home, heals all conditions."
+            editable = live
+            onClick = updates
+            {
+                (root.Conditions.Upset) = false
+                (root.Conditions.Scared) = false
+                (root.Conditions.Exhausted) = false
+                (root.Conditions.Injured) = false
+                (root.Conditions.Broken) = false
+            }
+        }
+        'New mystery' = button
+        {
+            description = "A new mystery starts: Pride can be used again and Luck is back."
+            editable = live
+            onClick = updates
+            {
+                (root.Kid.'Pride used') = false
+                (root.Conditions.'Luck points') = 15 - Kid.Age
+            }
+        }
+    }
+
+    Relationships = list
+    {
+        description = "How the kid feels about the other kids and about grown-ups around them."
+        tableLayout = layout { size = wide }
+        singular = "Relationship"
+        editable = character
+        valueType = custom
+        {
+            Who = string {}
+            Relationship = string {}
+        }
+    }
+
+    Items = list
+    {
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Hideout = table
+    {
+        tableLayout = layout { size = wide }
+        Hideout = string { description = "The kids' secret place." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Grown-up", "Kid", "Robot", "Animal", "Creature", "Machine", "Other"] }
+        Motivation = string {}
+        Difficulty = integer { description = "Successes the kids need against it in Trouble, usually 1 to 3." default = 1  minvalue = 1  maxvalue = 5 }
+        Dice = integer { description = "Dice it rolls when it acts against the kids." default = 3  valuedice = loopAsked (Dice) }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Secret = string { description = "What the kids may find out about it." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+loopItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Bonus" prefix = "+" filter = Stats.Bonus }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Bonus = string { description = "Extra dice when the item helps, +1 to +3. An iconic item gives +2." default = "1" }
+        Notes = string {}
+    }
+}
+
+TalesFromTheLoop = system
+{
+    hints = [
+        hint
+        {
+            title = "Kids in the eighties"
+            topic = "Getting started"
+            text = ["Pick a type and an age from 10 to 15. Spread the age in points over Body, Tech, Heart and Mind, and 10 points over skills. Luck points are 15 minus age. Write a drive, a problem, a pride, an anchor and an iconic item."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll a d6 per point of attribute and skill, plus extra dice from items and friends (the roll asks). Each six is a success, and one is usually enough. Push: reroll every die that was not a six and mark a condition. A Luck point rerolls without the condition."]
+        },
+        hint
+        {
+            title = "Trouble"
+            topic = "Play"
+            text = ["Kids are never killed. Failing against danger marks conditions (Upset, Scared, Exhausted, Injured); each costs a die. With all four, a fifth failure breaks the kid until someone helps. Going home to the anchor heals."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Items = loopItem
+    secondaryTypes = ["Items"]
+    description = "Tales from the Loop: kids in an alternate 1980s full of robots and strange machines, Year Zero dice and conditions instead of hit points"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 2d6, 3d6, 4d6, 5d6]
+    cssFiles = ["/systems/tftl/tftl.css"]
+    libraries = ["/systems/yze/yze.json", "/systems/names/norwegian.json"]
+    nameSettings = [modernNorwayNameSetting]
+}

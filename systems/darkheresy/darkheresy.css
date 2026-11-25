@@ -54,6 +54,7 @@
     padding: 4px;
 }
 .entityView .table-characteristics > table > tbody > tr > td:first-child { font-weight: 700; font-variant: small-caps; }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; }
 .entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
 .entityView .table-characteristics .customtype > div:nth-child(4)::before { content: "bonus "; color: var(--text-faint); font-size: 0.8em; }
 .entityView .table-profile > table > tbody { grid-template-columns: repeat(10, minmax(0, 1fr)); }
