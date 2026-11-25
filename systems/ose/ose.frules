@@ -1,6 +1,8 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
+shownIf (flag) = if flag then visible else none
+
 abilityModifier (score) =
     if score < 4 then -3
     else if score < 6 then -2
@@ -163,7 +165,7 @@ characterTable = ruleset
     {
         description = "Thief skills as percentages, except hear noise out of six." reference = ["bfrpg", 13]
         tableLayout = layout { columns = 4  size = wide }
-        visible = if Character.Class == "Thief" then visible else none
+        visible = shownIf (Character.Class == "Thief")
         'Climb Sheer Surfaces' = integer { description = "Chance to climb sheer walls." reference = ["bfrpg", 13] default = 87  valuedice = percentCheck }
         'Find or Remove Traps' = integer { description = "Chance to find or remove a small trap." reference = ["bfrpg", 13] default = 10  valuedice = percentCheck }
         'Hear Noise' = integer { description = "Chance in six to hear noises." reference = ["bfrpg", 13] default = 2  valuedice = xInSix }
@@ -202,7 +204,7 @@ characterTable = ruleset
     {
         description = "Spell slots per spell level." reference = [["bfrpg", 11], ["bfrpg", 12]]
         tableLayout = layout { columns = 5  size = wide }
-        visible = if Character.Class == "Cleric" or Character.Class == "Elf" or Character.Class == "Magic-User" then visible else none
+        visible = shownIf (Character.Class == "Cleric" or Character.Class == "Elf" or Character.Class == "Magic-User")
         'Level 1' = spellSlots (1)
         'Level 2' = spellSlots (2)
         'Level 3' = spellSlots (3)

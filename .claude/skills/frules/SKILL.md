@@ -25,7 +25,8 @@ Read [reference.md](reference.md) for the full language before writing anything 
 6. Write a play guide, `guide.md` next to the system's files, and point to it with `"guide"` in the system's (or extension's) `rules.json` entry. It tells an AI gamemaster how to play: how rolls are judged, combat, damage and healing, and which sheet fields matter. Use your own words, and keep it short. The MCP's `get_rules` tool serves it.
 7. Validate by parsing (see below). Fix and repeat until it passes.
 8. Test the rolls and sheets in the app's `tests/NewSystemsTests.elm` (see [Test rolls](#test-rolls)), and render both sheets to look at them.
-9. Go through the checklist below.
+9. Write a sample character and make the sheet image shown in the create campaign dialog (see [Sheet image](#sheet-image)).
+10. Go through the checklist below.
 
 ## Checklist for a complete system
 
@@ -42,6 +43,7 @@ A system that only parses is a draft. Before calling it done, check each of thes
 - **`quickdice`** with the game's dice, **`hints`** for the create campaign dialog, and **`guide.md`**, kept in step with each other.
 - **Name settings** that fit the world.
 - **`description`** on main stats, and `reference` only to pages you have checked in a shipped PDF.
+- **A sheet image**: `sheet-sample.json` with a believable character, and the `sheet.webp` and `"sheetImage"` the app's `sheet-image.py` makes from it.
 
 ## Test rolls
 
@@ -66,6 +68,39 @@ Test the edges the game cares about: a critical, a fumble, exactly the target, z
 
 Give the main stats a `description` (hover text). Give them a `reference` only where you have checked the page in a PDF the system ships: `python3 -I tools/sheet_references.py <book>.pdf "Heading@first-last" ...` prints the pages where a heading stands on its own line. Don't write page numbers from memory. If many fields share one page, put the reference on their section only.
 
+## Sheet image
+
+The create campaign dialog shows a picture of each system's character sheet, filled in, next to the system list. It comes from `sheet-sample.json` next to the system's rules, drawn by the app's `Web/sheet-image.py`, which writes `sheet.webp` beside the sample and sets `"sheetImage"` in the system's `rules.json` entry. Commit all three.
+
+```bash
+cd /home/jarl/Development/fudger2/Web
+./sheet-image.py --rules <worktree>/systems --dump <folder>     # the fields to fill in
+./sheet-image.py --rules <worktree>/systems <folder> ...        # draw these systems
+./sheet-image.py --rules <worktree>/systems                     # redraw every system with a sample
+```
+
+A system is named by its folder in `systems/` or its `rules.json` name. The sample sets values the way the MCP's `create_entity` does, with the names `--dump` (and `describe_sheet`) list. Nested objects and dotted names both work, enums by name, rows as lists:
+
+```json
+{
+  "values": {
+    "Investigator": { "Occupation": "Journalist", "Age": 34 },
+    "Characteristics": { "STR.Value": 45, "INT.Value": 80 },
+    "Other Skills": { "Photography": { "Value": 45 } },
+    "Talents": [ { "Name": "Stealthy", "Description": "Once per day, become invisible." } ]
+  },
+  "secondary": {
+    "Weapons": [ { "name": "Longsword" }, { "name": ".32 Revolver", "values": { "Stats": { "Damage": "1d8" } } } ]
+  }
+}
+```
+
+- `secondary` adds library items by type. An item named as in the system's built-in library takes its data from there, and its `values` change that data. Other items are built from their `values` alone.
+- Values are set one at a time, in the sample's order, so set a field before the ones whose choices depend on it (DnD's class before its subclass).
+- A value the sheet doesn't have, or that is out of range, stops that system with the error. So does a sheet that doesn't draw; the page's console errors are printed with it.
+
+Make the character believable for the game: a real class or career at a low-to-middle level, stats that add up, skills that fit, a few wounds or spent resources, gear from the built-in library, and short lines of background in the game's voice. Fill every section a player would fill; leave computed fields alone. Then read the picture, at least the top and anything that looks empty, like any rendered sheet.
+
 ## Validate
 
 The Elm test suite parses every system listed in `rules.json`, resolving `#include`s, and reports the line and column of the first parse error:
@@ -82,7 +117,7 @@ From a nested worktree, the test can't find the rules on its own: set `RULES_DIR
 
 For a built-in library, `python3 tools/check_library.py <system>.frules <library>.json` checks that every item names a type and ruleset the system has, and that every table and field it fills in exists. Libraries made by a script in `tools/` (`srd2024.py`, `cepheus_import.py` and the `*_import.py` files) are fixed in the script and regenerated, not edited by hand.
 
-To see a sheet, `~/claude-sheet-preview/render.py /systems/<system>/<file>.frules [characters|creatures]` renders it headless to a PNG in `~/claude-sheet-preview/shots/`. It reads the main checkout in `/home/jarl/Development/fudger2-rules`, not a worktree, and needs its server on 127.0.0.1:8766. `~/claude-sheet-preview/all.py <system>/<file> ...` renders several at once. The preview predates asked rolls and shows them as plain numbers, so check those in the tests instead. Read the PNG: look for empty blocks, cut-off text, rows that don't line up, and a layout that doesn't match the paper sheet.
+`Web/sheet-image.py` (see [Sheet image](#sheet-image)) also renders a sheet from a worktree. An older preview: `~/claude-sheet-preview/render.py /systems/<system>/<file>.frules [characters|creatures]` renders it headless to a PNG in `~/claude-sheet-preview/shots/`. It reads the main checkout in `/home/jarl/Development/fudger2-rules`, not a worktree, and needs its server on 127.0.0.1:8766. `~/claude-sheet-preview/all.py <system>/<file> ...` renders several at once. The preview predates asked rolls and shows them as plain numbers, so check those in the tests instead. Read the PNG: look for empty blocks, cut-off text, rows that don't line up, and a layout that doesn't match the paper sheet.
 
 Rules that use an engine feature not yet in production need the app deployed first. Say so in the commit message.
 

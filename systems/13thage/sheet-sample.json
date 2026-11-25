@@ -1,0 +1,101 @@
+{
+  "values": {
+    "Character": {
+      "Race": "Gnome",
+      "Class": "Wizard",
+      "Level": 3,
+      "One unique thing": "I was born inside the Archmage's library and have never seen the sun rise.",
+      "Incremental": 2,
+      "Gold": 140
+    },
+    "Abilities": {
+      "Str.Score": 8,
+      "Con.Score": 14,
+      "Dex.Score": 14,
+      "Int.Score": 18,
+      "Wis.Score": 12,
+      "Cha.Score": 10
+    },
+    "Defenses": {
+      "AC base": 10,
+      "PD base": 10,
+      "MD base": 12
+    },
+    "Health": {
+      "HP base": 6,
+      "HP": 24,
+      "Recoveries": 7,
+      "Recovery die": "d6"
+    },
+    "Attacks": [
+      {
+        "Name": "Dagger",
+        "Ability": "Str",
+        "Bonus": 0,
+        "Defense": "AC",
+        "Hit": "1d4 + Str",
+        "Miss": "—"
+      }
+    ],
+    "Backgrounds": {
+      "Library foundling": {
+        "Points": 4,
+        "Ability": "Int"
+      },
+      "Apprentice of the Cathedral": {
+        "Points": 2,
+        "Ability": "Wis"
+      },
+      "Pickpocket in Horizon": {
+        "Points": 2,
+        "Ability": "Dex"
+      }
+    },
+    "Icons": {
+      "The Archmage": {
+        "Relationship": "Positive",
+        "Dice": 2
+      },
+      "The Lich King": {
+        "Relationship": "Negative",
+        "Dice": 1
+      }
+    },
+    "Talents": [
+      {
+        "Name": "Cantrip Mastery",
+        "Description": "Cast cantrips as quick actions."
+      },
+      {
+        "Name": "Evocation",
+        "Description": "Maximise one evoked spell's damage per battle."
+      },
+      {
+        "Name": "Wizard's Familiar",
+        "Description": "A clockwork owl named Pip."
+      }
+    ],
+    "Gear": {
+      "Armor": "Robes",
+      "Weapons": "Dagger, staff",
+      "Magic items": "Ring of the Archmage's Ear",
+      "Notes": "Owes the Gold Wyrm's temple 50 gp."
+    }
+  },
+  "secondary": {
+    "Spells": [
+      {
+        "name": "Magic Missile"
+      },
+      {
+        "name": "Shield"
+      },
+      {
+        "name": "Ray of Frost"
+      },
+      {
+        "name": "Fireball"
+      }
+    ]
+  }
+}
