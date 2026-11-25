@@ -1,0 +1,304 @@
+#include "/systems/common.frules"
+
+rootOutcome (total) =
+    if total >= 10 then "Strong hit"
+    else if total >= 7 then "Weak hit"
+    else "Miss"
+
+rootText (total) =
+    toString (total) + ": "
+    + (if total >= 10 then "strong hit, you do it"
+       else if total >= 7 then "weak hit, you do it with a cost or a complication"
+       else "miss, the GM makes a move")
+
+rootResult (total) =
+{
+    Text = rootText (total)
+    Value = total
+    Outcome = rootOutcome (total)
+}
+
+rootRoll = ([2d6], ((baseline, throws)->rootResult (baseline + sum (first (throws).rolls))))
+
+rootAsked = ([2d6], ((baseline, throws)->rootResult (baseline + asked + sum (first (throws).rolls))))
+
+rootDice = ask ("Forward or ongoing", 0, rootAsked)
+
+statNames = ["Charm", "Cunning", "Finesse", "Luck", "Might"]
+
+move (stat) = custom
+{
+    Stat = stat
+    Roll = modifier { value = statOf (characterTable, stat)  valuedice = rootDice  editable = none }
+}
+
+statOf (char, name) =
+    switch name
+        case "Charm" then char.Stats.Charm
+        case "Cunning" then char.Stats.Cunning
+        case "Finesse" then char.Stats.Finesse
+        case "Luck" then char.Stats.Luck
+        else char.Stats.Might
+
+outState (char) =
+    if char.Harm.Injury.realvalue >= char.Harm.'Injury boxes' then "Out: injured"
+    else if char.Harm.Exhaustion.realvalue >= char.Harm.'Exhaustion boxes' then "Out: exhausted"
+    else ""
+
+attackMove (name, stat, kind) = custom
+{
+    Name = name
+    Roll = modifier { value = stat  valuedice = rootDice  action = kind  reach = 2  editable = none }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Stats, Harm, Attacks] }
+    Vagabond = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Playbook = string { keys = ["Adventurer", "Arbiter", "Harrier", "Ranger", "Ronin", "Scoundrel", "Thief", "Tinker", "Vagrant", "Chronicler", "Envoy", "Exile", "Heretic", "Pirate", "Prince", "Raconteur", "Seeker", "Other"] }
+        Species = string { keys = ["Fox", "Mouse", "Rabbit", "Bird", "Badger", "Otter", "Raccoon", "Cat", "Lizard", "Mole", "Squirrel", "Wolf", "Other"] }
+        Demeanor = string {}
+        Details = string { description = "Name, pronouns and look." }
+        Nature = string { description = "Act against it and you suffer; follow it and you clear exhaustion." }
+        Drives = string { description = "Two drives; advance them to mark experience." multiline = true }
+        Background = string { multiline = true }
+        Connections = string { description = "Bonds to the other vagabonds." multiline = true }
+    }
+
+    Stats = table
+    {
+        description = "Five stats from -1 to +2 (+3 with advances)."
+        tableLayout = layout { columns = 5  size = wide }
+        Charm = modifier { description = "Persuading, impressing and reading people." default = 0  minvalue = -1  maxvalue = 3  valuedice = rootDice }
+        Cunning = modifier { description = "Tricking people and reading a situation." default = 0  minvalue = -1  maxvalue = 3  valuedice = rootDice }
+        Finesse = modifier { description = "Precision: roguish feats and shooting." default = 0  minvalue = -1  maxvalue = 3  valuedice = rootDice }
+        Luck = modifier { description = "Trusting fate when nothing else will do." default = 0  minvalue = -1  maxvalue = 3  valuedice = rootDice }
+        Might = modifier { description = "Strength, fighting up close and wrecking things." default = 0  minvalue = -1  maxvalue = 3  valuedice = rootDice }
+    }
+
+    Harm = table
+    {
+        description = "Mark harm when a move or the GM says so. A full injury or exhaustion track takes you out."
+        tableLayout = layout { columns = 2  size = wide }
+        'Injury boxes' = integer { default = 4  minvalue = 1  maxvalue = 8  visible = editor }
+        Injury = slots { description = "Wounds and pain." number = 'Injury boxes'  editable = live  indicator = "#d64545" }
+        'Exhaustion boxes' = integer { default = 4  minvalue = 1  maxvalue = 8  visible = editor }
+        Exhaustion = slots { description = "Fatigue and strain; mark it to push yourself." number = 'Exhaustion boxes'  editable = live  indicator = "#d4b106" }
+        'Depletion boxes' = integer { default = 4  minvalue = 1  maxvalue = 8  visible = editor }
+        Depletion = slots { description = "Supplies used up: food, ammunition, tools." number = 'Depletion boxes'  editable = live  indicator = "#e8913a" }
+        Out = string { value = outState (characterTable)  visible = none  indicator = "#555555" }
+        'Rest and recover' = button
+        {
+            description = "A good night's rest in safety clears all exhaustion. Injury needs time and care, depletion a resupply."
+            editable = live
+            onClick = updates
+            {
+                (root.Harm.Exhaustion.realvalue) = 0
+            }
+        }
+        Resupply = button
+        {
+            description = "Restocking in a friendly clearing clears depletion."
+            editable = live
+            onClick = updates
+            {
+                (root.Harm.Depletion.realvalue) = 0
+            }
+        }
+    }
+
+    'Basic Moves' = table
+    {
+        description = "Roll 2d6 + stat: 10+ strong hit, 7-9 weak hit, 6- miss."
+        tableLayout = layout { columns = 2  size = wide }
+        'Figure Someone Out' = move ("Charm")
+        'Persuade an NPC' = move ("Charm")
+        'Trick an NPC' = move ("Cunning")
+        'Read a Tense Situation' = move ("Cunning")
+        'Attempt a Roguish Feat' = move ("Finesse")
+        'Trust Fate' = move ("Luck")
+        'Wreck Something' = move ("Might")
+        'Meet Someone New' = move ("Charm")
+    }
+
+    Attacks = list
+    {
+        description = "Weapon moves. Engage and grapple up close; target someone at range."
+        tableLayout = layout { size = wide }
+        source = [attackMove ("Engage in a Melee", characterTable.Stats.Might, "melee"), attackMove ("Grapple an Enemy", characterTable.Stats.Might, "melee"), attackMove ("Target Someone", characterTable.Stats.Finesse, "ranged")]
+        singular = "Attack"
+        editable = none
+        valueType = attackMove
+    }
+
+    'Feats and Skills' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Roguish Feats' = string { description = "Acrobatics, Blindside, Counterfeit, Disable Device, Hide, Pick Lock, Pick Pocket, Sleight of Hand, Sneak." multiline = true }
+        'Weapon Skills' = string { description = "Cleave, Confuse Senses, Disarm, Harry a Group, Improvised Weapon, Parry, Quick Shot, Storm a Group, Trick Shot, Vicious Strike." multiline = true }
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Moves
+        singular = "Move"
+        editable = character
+    }
+
+    Reputation = list
+    {
+        description = "Standing with each faction: prestige for helping it, notoriety for hurting it."
+        tableLayout = layout { size = wide }
+        singular = "Faction"
+        editable = live
+        valueType = custom
+        {
+            Faction = string {}
+            Reputation = integer { description = "From -3 to +3; added when you deal with the faction." default = 0  minvalue = -3  maxvalue = 3 }
+            Prestige = integer { default = 0  minvalue = 0 }
+            Notoriety = integer { default = 0  minvalue = 0 }
+        }
+    }
+
+    Items = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Load = integer { description = "Total load carried." default = 0  minvalue = 0  editable = live }
+        'Max Load' = integer { description = "4 plus Might; more slows you down." value = 4 + Stats.Might  editable = none }
+        Funds = integer { description = "Value you can spend." default = 0  minvalue = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, Harm, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Individual", "Group", "Leader", "Beast"] }
+        Faction = string { keys = ["Marquisate", "Eyrie Dynasties", "Woodland Alliance", "Denizens", "Lizard Cult", "Riverfolk", "Other"] }
+        Drive = string {}
+        Armor = string { description = "Harm it takes off each hit." default = "0" }
+    }
+    Harm = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Injury = slots { number = 3  editable = live  indicator = "#d64545" }
+        Exhaustion = slots { number = 2  editable = live  indicator = "#d4b106" }
+        Morale = slots { description = "When it fills, the NPC or group breaks and flees." number = 2  editable = live  indicator = "#8e5cc4" }
+        Wear = slots { description = "Wear on its gear." number = 2  editable = live }
+    }
+    Attacks = keyvalues
+    {
+        description = "What it does to the vagabonds and the harm it inflicts."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Melee", "Ranged"]
+        valueType = custom
+        {
+            Harm = string { default = "1 injury" }
+            Range = string { default = "Close" }
+            Use = integer { value = 0  valuedice = rootRoll  action = if Key == "Ranged" then "ranged" else "melee"  reach = 2  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+rootItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armor", "Tool", "Supplies", "Treasure"] }
+        Wear = slots { description = "Mark wear to use a weapon move or to absorb harm." number = 2  editable = live }
+        Load = string { default = "1" }
+        Value = string { default = "1" }
+        Range = string { description = "Intimate, Close or Far." }
+        'Weapon moves' = string {}
+    }
+}
+
+rootMove = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Playbook" prefix = "" filter = Stats.Playbook }]
+    }
+    Stats = table
+    {
+        Playbook = string {}
+        Stat = string { keys = ["Charm", "Cunning", "Finesse", "Luck", "Might", "None"] }
+    }
+}
+
+rootNameSetting = nameSetting
+{
+    name = "Woodland"
+    characters = [generator { library = "Woodland" variant = "Vagabond" }, generator { library = "Woodland" variant = "Villager" }]
+    creatures = [generator { library = "Woodland" variant = "Villager" }, generator { library = "Woodland" variant = "Vagabond" }]
+    Location = [generator { library = "Woodland" variant = "Clearing" }, generator { library = "Woodland" variant = "Path" }]
+    Items = generator { library = "Woodland" variant = "Item" }
+}
+
+RootRPG = system
+{
+    hints = [
+        hint
+        {
+            title = "Vagabonds"
+            topic = "Getting started"
+            text = ["Each player picks a playbook, a species, a nature and two drives, then stats, roguish feats, weapon skills and gear. Agree how each vagabond is known to the factions."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["Roll 2d6 + stat: 10+ strong hit, 7-9 weak hit with a cost, 6- miss and the GM makes a move. The prompt asks for any forward or ongoing bonus."]
+        },
+        hint
+        {
+            title = "Harm"
+            topic = "Combat"
+            text = ["Engage in a melee, grapple or target someone. Harm marks injury, exhaustion or depletion, or wear on gear. A full injury or exhaustion track takes the vagabond out."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["The conversation decides who acts. Drag tokens into order in the initiative list if a fight needs it."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Items = rootItem
+    Moves = rootMove
+    secondaryTypes = ["Items", "Moves"]
+    description = "Root: The RPG: woodland vagabonds caught between warring factions, Powered by the Apocalypse 2d6 moves, harm tracks and reputation"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [2d6]
+    cssFiles = ["/systems/root/root.css"]
+    libraries = ["/systems/names/woodland.json"]
+    nameSettings = [rootNameSetting]
+}
