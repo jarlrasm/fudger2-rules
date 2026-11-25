@@ -1,0 +1,29 @@
+{
+  "values": {
+    "Character": { "Race": "Ork", "Discipline": "Warrior", "Circle": 3, "Legend Points": 4100, "Current Legend": 350, "Movement": 14, "Carrying Capacity": 95 },
+    "Attributes": { "Dexterity.Value": 15, "Strength.Value": 16, "Toughness.Value": 15, "Perception.Value": 10, "Willpower.Value": 11, "Charisma.Value": 8 },
+    "Defenses": { "Defense Bonus": 1 },
+    "Health": { "Damage": 14, "Wounds": 1, "Recoveries Used": 1 },
+    "Karma": { "Max Karma": 15, "Karma": 9 },
+    "Talents": [
+      { "Name": "Melee Weapons", "Rank": 4, "Attribute": "Dexterity", "Discipline": true },
+      { "Name": "Unarmed Combat", "Rank": 3, "Attribute": "Dexterity", "Discipline": true },
+      { "Name": "Wood Skin", "Rank": 3, "Attribute": "Toughness", "Strain": 0, "Discipline": true },
+      { "Name": "Tiger Spring", "Rank": 2, "Attribute": "Willpower", "Strain": 1, "Discipline": true },
+      { "Name": "Thread Weaving (War Weaving)", "Rank": 2, "Attribute": "Perception", "Discipline": true },
+      { "Name": "Anticipate Blow", "Rank": 2, "Attribute": "Perception", "Strain": 1, "Discipline": true },
+      { "Name": "Avoid Blow", "Rank": 3, "Attribute": "Dexterity", "Strain": 1, "Discipline": false }
+    ],
+    "Skills": [ { "Name": "Climbing", "Rank": 1, "Attribute": "Dexterity" }, { "Name": "Great Leap", "Rank": 1, "Attribute": "Dexterity" }, { "Name": "Knowledge: Ork Scorcher Tribes", "Rank": 2, "Attribute": "Perception" } ],
+    "Money": { "Gold": 3, "Silver": 47, "Copper": 20 },
+    "Background": { "Description": "Grey-green skin, a tusk capped in bronze, scars from the Theran slave pits on both wrists.", "Notes": "Rode with the Burning Hooves until the cavalry chief sold them out. Hunting a Horror-marked trader along the Serpent River." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Broadsword", "values": { "Stats": { "Kind": "Melee", "Damage Step": "5", "Size": "3", "Strength Minimum": "14", "Cost": "100", "Weight": "6" } } },
+      { "name": "Dagger", "values": { "Stats": { "Kind": "Throwing", "Damage Step": "2", "Size": "1", "Short Range": "10", "Long Range": "20", "Cost": "10", "Weight": "1" } } }
+    ],
+    "Armor": [ { "name": "Ring mail", "values": { "Stats": { "Physical Armor": "6", "Mystic Armor": "0", "Initiative Penalty": "2", "Cost": "100", "Weight": "30" } } }, { "name": "Footman's shield", "values": { "Stats": { "Physical Armor": "0", "Initiative Penalty": "1", "Cost": "15", "Weight": "8" } } } ],
+    "Equipment": [ { "name": "Adventurer's kit" }, { "name": "Healing potion" }, { "name": "Light quartz lantern" } ]
+  }
+}
