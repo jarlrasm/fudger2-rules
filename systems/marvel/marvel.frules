@@ -40,11 +40,11 @@ d616Attack (char, damageBonus) = ask ("Defense", d616 (-1, char.Hero.Rank, damag
 
 plainD616 = d616 (0, 0, 0, "Normal")
 
-ability (attack) = custom
+ability (attack, kind) = custom
 {
     Score = integer { description = "Ability score, added to d616 rolls." default = 0  minvalue = -3  maxvalue = 20 }
     Defense = integer { description = "What attackers must roll to hit you with this ability: score plus 10." value = Score + 10  editable = none }
-    Check = modifier { description = "Roll d616 plus the score. A 6 on the Marvel die is a fantastic success." value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  editable = none }
+    Check = modifier { description = "Roll d616 plus the score. A 6 on the Marvel die is a fantastic success." value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  action = kind  editable = none }
 }
 
 downState (health, focus) =
@@ -71,12 +71,12 @@ characterTable = ruleset
     {
         description = "The six MARVEL abilities. Melee, Agility, Ego and Logic also attack."
         tableLayout = layout { columns = 3  size = wide }
-        Melee = ability (true)
-        Agility = ability (true)
-        Resilience = ability (false)
-        Vigilance = ability (false)
-        Ego = ability (true)
-        Logic = ability (true)
+        Melee = ability (true, "melee")
+        Agility = ability (true, "ranged")
+        Resilience = ability (false, "")
+        Vigilance = ability (false, "")
+        Ego = ability (true, "ranged")
+        Logic = ability (true, "ranged")
     }
 
     Status = table
@@ -88,6 +88,13 @@ characterTable = ruleset
         'Max Focus' = integer { description = "Focus: Vigilance times 30, at least 10." value = max (10, Abilities.Vigilance.Score * 30)  editable = none }
         Focus = integer { description = "Current focus, spent on powers and lost to mental attacks." default = 'Max Focus'  editable = live  indicator = "#8e5cc4" }
         Karma = integer { description = "Karma points, spent to gain an edge on rolls." default = Hero.Rank  minvalue = 0  editable = live }
+        'New session' = button { description = "Karma comes back to your rank at the start of each session."  editable = live  onClick = updates { (root.Status.Karma) = Hero.Rank } }
+        'Fully recovered' = button { description = "Health and focus back to the maximum, once rest has restored them. Enter partial recovery by hand."  editable = live  onClick = updates
+            {
+                (root.Status.Health) = 'Max Health'
+                (root.Status.Focus) = 'Max Focus'
+            }
+        }
         'Health damage reduction' = integer { description = "Reduces health damage from each hit." default = 0 }
         'Focus damage reduction' = integer { description = "Reduces focus damage from each hit." default = 0 }
         Initiative = modifier { description = "Initiative: d616 plus Vigilance." value = Abilities.Vigilance.Score  valuedice = plainD616  editable = none }
@@ -125,6 +132,15 @@ characterTable = ruleset
         }
     }
 
+    'Library powers' = list
+    {
+        description = "Powers from the campaign's libraries."
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
     Traits = list
     {
         description = "Traits that give edges and troubles in certain situations."
@@ -148,6 +164,18 @@ characterTable = ruleset
         History = string { multiline = true }
         Gear = string { multiline = true }
         'Base of operations' = string {}
+    }
+}
+
+powerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg"  filters = [filter { name = "Power set" prefix = "" filter = Power.'Power set' }, filter { name = "Action" prefix = "" filter = Power.Action }] }
+    Power = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Power set' = string {}
+        Action = string { keys = ["Standard", "Movement", "Reaction", "Free", "Permanent"] }
+        Cost = string { description = "Focus spent to use the power." }
     }
 }
 
@@ -182,6 +210,8 @@ MarvelMultiverse = system
     distanceUnit = "m"
     characters = characterTable
     creatures = characterTable
+    Powers = powerStats
+    secondaryTypes = ["Powers"]
     entityTypeNames = [entityTypeName ("Character", "Hero", "Heroes")]
     description = "Marvel Multiverse Role-Playing Game: the d616, six abilities and ranks of power"
     initiativeCompare (item1, item2) = compare (item1, item2)

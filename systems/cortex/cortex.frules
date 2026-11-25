@@ -71,6 +71,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Concept = string { description = "A short phrase that sums up who the character is." }
         'Plot points' = integer { description = "Spend to add an extra die to the total, keep an extra effect die, or use some SFX." default = 1  minvalue = 0  editable = live }
+        'New session' = button { description = "Each session starts with one plot point."  editable = live  onClick = updates { (root.Character.'Plot points') = 1 } }
         Attribute = selector { description = "Which attribute die joins the next skill roll." options = ["Agility", "Alertness", "Intelligence", "Strength", "Vitality", "Willpower"]  labels = ["Agi", "Ale", "Int", "Str", "Vit", "Wil"]  colors = ["", "", "", "", "", ""]  default = "Agility"  editable = live  save = nosave }
         Distinction = selector { description = "Distinction die for the next roll: d8 when it helps, d4 when it hinders, for a plot point." options = ["None", "d4", "d8"]  labels = ["None", "d4", "d8"]  colors = ["", "red", "purple"]  default = "None"  editable = live  save = nosave }
         Asset = selector { description = "An asset die to add to the next roll." options = ["None", "d6", "d8", "d10", "d12"]  labels = ["None", "d6", "d8", "d10", "d12"]  colors = ["", "green", "green", "green", "green"]  default = "None"  editable = live  save = nosave }
@@ -111,7 +112,7 @@ characterTable = ruleset
         valueType = custom
         {
             Die = string { description = "Skill die. d4 means untrained; bigger is better." default = "d6"  keys = dieKeys }
-            Roll = integer { value = sidesOf (Die)  valuedice = cortexRoll (characterTable, sidesOf (Die))  editable = none  render = Die }
+            Roll = integer { value = sidesOf (Die)  valuedice = cortexRoll (characterTable, sidesOf (Die))  editable = none  render = Die  action = if Key == "Fight" then "melee" else if Key == "Shoot" then "ranged" else "" }
         }
     }
 
@@ -123,6 +124,13 @@ characterTable = ruleset
         Mental = string { description = "Mental stress: confusion, distraction and doubt." default = "None"  keys = stressKeys  editable = live }
         Emotional = string { description = "Emotional stress: fear, anger and grief." default = "None"  keys = stressKeys  editable = live }
         Down = string { value = stressState (Physical, Mental, Emotional)  visible = none  indicator = "#d64545" }
+        Recovered = button { description = "Clears all stress, once the character has had time to recover or a recovery roll beat it."  editable = live  onClick = updates
+            {
+                (root.Stress.Physical) = "None"
+                (root.Stress.Mental) = "None"
+                (root.Stress.Emotional) = "None"
+            }
+        }
     }
 
     Complications = list
@@ -159,6 +167,15 @@ characterTable = ruleset
         valueType = nameAndDescription
     }
 
+    'Library SFX' = list
+    {
+        description = "SFX from the campaign's libraries, for SFX shared by several characters."
+        tableLayout = layout { size = wide }
+        source = secondary.SFX
+        singular = "SFX"
+        editable = character
+    }
+
     Milestones = table
     {
         description = "Values and goals that earn experience when the character acts on them."
@@ -189,7 +206,7 @@ gmcTable = ruleset
         {
             First = string { description = "The main die for this kind of action." default = "d8"  keys = dieKeys }
             Second = string { description = "A second die added to the pool." default = "d6"  keys = ["None", "d4", "d6", "d8", "d10", "d12"] }
-            Roll = integer { value = sidesOf (First)  valuedice = ask ("Difficulty", cortexPool (sidesOf (First), optionalSides (Second), optionalSides (Character.Distinction), 0, -1))  editable = none  render = First + " + " + Second }
+            Roll = integer { value = sidesOf (First)  valuedice = ask ("Difficulty", cortexPool (sidesOf (First), optionalSides (Second), optionalSides (Character.Distinction), 0, -1))  action = if Key == "Fight" then "melee" else if Key == "Shoot" then "ranged" else ""  editable = none  render = First + " + " + Second }
         }
     }
     Stress = table
@@ -239,6 +256,7 @@ CortexPrime = system
     distanceUnit = "m"
     characters = characterTable
     creatures = gmcTable
+    secondaryTypes = ["SFX"]
     entityTypeNames = [entityTypeName ("Creature", "GM character", "GM characters")]
     description = "Cortex Prime: dice pools of stepped dice, total plus an effect die, stress and complications"
     quickdice = [1d4, 1d6, 1d8, 1d10, 1d12]
