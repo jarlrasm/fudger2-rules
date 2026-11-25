@@ -17,13 +17,51 @@ Read [reference.md](reference.md) for the full language before writing anything 
 
 ## Workflow
 
-1. Read `rules.json` and a similar existing system.
+1. Read `rules.json` and a similar existing system. Learn the game from its rules (an SRD or quickstart where there is one), not from memory: how a roll is read (sum, pool, roll-under, ladder), what counts as a critical, how damage and healing work, how initiative goes, and what a creature's stat block holds. Note what is open content and under which licence before planning libraries or PDFs (see [Licences](reference.md#licences-and-credits)).
 2. Write the file(s). Start with `#include "/systems/common.frules"` if you need `compare`, `nameAndDescription` or `entityTypeDescription`. Make each sheet look similar to the game's official character sheet: the same sections in the same order and places, the same field names and groupings, and a similar feel (colours, fonts, borders) through custom CSS where the system has it. A player who knows the paper sheet should find things where they expect them. Copy the layout and look, not the official artwork or logos. Build the stylesheet on `systems/sheet.css` (see Styling a sheet in reference.md), and look at the result: a sheet with only colours set looks nothing like the paper one.
 3. Define one `system` at the top level, and point `characters`, `creatures` and every name in `secondaryTypes` at a `ruleset`.
-4. Register a new system (or extension) in `rules.json`. If it has `nameSettings`, list the same setting names there as `"nameSettings"`.
+4. Register a new system (or extension) in `rules.json`, with `tags` and, when it ships open content, `credits` (see [The rules.json entry](reference.md#the-rulesjson-entry)). If it has `nameSettings`, list the same setting names there as `"nameSettings"`.
 5. For names, add the files from `names/` that fit the setting to `libraries`, and pick or write `nameSettings` (see [Name generators](reference.md#name-generators)).
 6. Write a play guide, `guide.md` next to the system's files, and point to it with `"guide"` in the system's (or extension's) `rules.json` entry. It tells an AI gamemaster how to play: how rolls are judged, combat, damage and healing, and which sheet fields matter. Use your own words, and keep it short. The MCP's `get_rules` tool serves it.
 7. Validate by parsing (see below). Fix and repeat until it passes.
+8. Test the rolls and sheets in the app's `tests/NewSystemsTests.elm` (see [Test rolls](#test-rolls)), and render both sheets to look at them.
+9. Go through the checklist below.
+
+## Checklist for a complete system
+
+A system that only parses is a draft. Before calling it done, check each of these, or say why the game has none:
+
+- **Both sheets.** `characters` laid out like the official sheet; `creatures` like the book's stat block, compact, with only what a GM needs at the table. Extra entity types (ships, vehicles, factions) where the game has sheets for them.
+- **Every roll does what the game does**, with outcome words, criticals, margins or successes in the result, `ask` for difficulties only the GM knows, and `Push` where the game lets you reroll (see [Results](reference.md#results-with-an-outcome-and-pushing)).
+- **Initiative**: a rolled `Initiative` field, `initiativeDeck` for card initiative, or `initiativeRolls`, and `initiativeCompare` in the game's order.
+- **Battlemap actions** for every attack, with `reach` and `range` in the system's `distanceUnit`, and `squareSize` where the game uses a grid.
+- **Indicators** for conditions, wounds and down states, in the shared colours.
+- **`important`** in each ruleset's `rulesetConfiguration`: what the GM needs in the session sidebar.
+- **`editable = live`** on everything that changes in play (HP, stress, conditions, ammo, resources), and a heal or reset `button` where the game has rests.
+- **Library types** in `secondaryTypes` for the game's gear, spells, powers or moves, with `filters` and `sortedBy`, and a built-in library of open content where the licence allows (check it with `tools/check_library.py`).
+- **`quickdice`** with the game's dice, **`hints`** for the create campaign dialog, and **`guide.md`**, kept in step with each other.
+- **Name settings** that fit the world.
+- **`description`** on main stats, and `reference` only to pages you have checked in a shipped PDF.
+
+## Test rolls
+
+Parsing doesn't show that a roll gives the right result. The app's `Web/tests/NewSystemsTests.elm` has one `describe` per system, built from helpers that load a system from the corpus:
+
+```elm
+describe "Vaesen"
+    [ sheetsDraw vaesen [ "characters", "creatures" ]
+    , rollShows vaesen "vaesenRoll (3)" 0 [ [ 6, 2, 6 ] ] "2 successes"
+    , offersPush vaesen "vaesenRoll (2)" 0 [ [ 1, 2 ] ] True
+    , askedShows pf1e "pf1Attack (19)" 5 15 [ [ 19 ] ] "24 vs AC 15: Critical threat"
+    , valueIs vaesen "characterTable.Skills.Agility.Pool" (Number 3)
+    ]
+```
+
+- `sheetsDraw` fails on any "not supported" cell, which catches field types and references that parse but don't render.
+- `rollShows location expression baseline throws expected` rolls an expression as if each dice group came up with the given numbers, one list per group, and compares the result's text. `askedShows` adds the asked number, `unsetShows` leaves it unset, and `asks` checks the prompt's label.
+- `offersPush` and `pushSets` check the push button and the sheet changes it makes. `valueIs` checks a computed value on a fresh character.
+
+Test the edges the game cares about: a critical, a fumble, exactly the target, zero dice, an empty optional group, and a push after a partial success. The expression is added to the system as `testRoll` or `testValue`, so those names are taken. Add the system's location as a constant next to the others. Run it with `./test.sh tests/NewSystemsTests.elm`, with `RULES_DIR` from a worktree. The tests are app-repo commits, on their own branch.
 
 Give the main stats a `description` (hover text). Give them a `reference` only where you have checked the page in a PDF the system ships: `python3 -I tools/sheet_references.py <book>.pdf "Heading@first-last" ...` prints the pages where a heading stands on its own line. Don't write page numbers from memory. If many fields share one page, put the reference on their section only.
 
@@ -43,7 +81,7 @@ From a nested worktree, the test can't find the rules on its own: set `RULES_DIR
 
 For a built-in library, `python3 tools/check_library.py <system>.frules <library>.json` checks that every item names a type and ruleset the system has, and that every table and field it fills in exists. Libraries made by a script in `tools/` (`srd2024.py`, `cepheus_import.py` and the `*_import.py` files) are fixed in the script and regenerated, not edited by hand.
 
-To see a sheet, `~/claude-sheet-preview/render.py /systems/<system>/<file>.frules [characters|creatures]` renders it headless to a PNG in `~/claude-sheet-preview/shots/`. It reads the main checkout in `/home/jarl/Development/fudger2-rules`, not a worktree, and needs its server on 127.0.0.1:8766.
+To see a sheet, `~/claude-sheet-preview/render.py /systems/<system>/<file>.frules [characters|creatures]` renders it headless to a PNG in `~/claude-sheet-preview/shots/`. It reads the main checkout in `/home/jarl/Development/fudger2-rules`, not a worktree, and needs its server on 127.0.0.1:8766. `~/claude-sheet-preview/all.py <system>/<file> ...` renders several at once. The preview predates asked rolls and shows them as plain numbers, so check those in the tests instead. Read the PNG: look for empty blocks, cut-off text, rows that don't line up, and a layout that doesn't match the paper sheet.
 
 Rules that use an engine feature not yet in production need the app deployed first. Say so in the commit message.
 
@@ -69,4 +107,6 @@ Parsing only proves the syntax. Names that don't resolve and values of the wrong
 - **A roll's dice list must be literal in the roll pair.** `([dice {...}, dice {...}], lambda)` parses; a function that returns the dice list does not. Put the choices in the dice' `number` and `sides` instead, and use one roll function with flags.
 - **Don't define `testRoll` or `testValue`.** The tests in the app add those names to the system, and a same-named function merges with them.
 - **Quoted names can't hold `-`, `(` or `)`.** `'Flat-footed'` and `'Dmg (M)'` fail to parse, and the error points at the start of the ruleset, not the field.
+- **An `editable = live` field shows an input, not a roll button.** Keep the stored number editable and put the roll on a separate computed field next to it (`Roll = modifier { value = Current  valuedice = ... }`).
+- **`description` must be a literal string.** The app doesn't evaluate it, so a field template's description can't depend on its parameters; give a shared template generic text, or put per-key text in the section's `descriptions`.
 - **Ship types are called `Spaceships`.** Name generators offer ship names to the `Spaceships` kind, so an extra entity type called Starships gets no ship names.

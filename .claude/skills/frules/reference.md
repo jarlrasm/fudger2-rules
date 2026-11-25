@@ -315,7 +315,32 @@ A library can hold PDFs, such as a rulebook, and its items can refer to a page i
 | `references[].page` | Optional: the PDF page to open at, counted from 1 |
 | `references[].label` | Optional: text shown with the reference, such as `Stats` |
 
-`tools/srd_references.py` adds `SRD_CC_v5.2.1.pdf` to `dndsrd2024.json` and finds each item's page in it. Run it again after regenerating the library.
+`tools/pdf_references.py --pdf <file> --key <key> --name <name> --url /systems/... [--pages "Type=first-last"] <library>.json` adds a PDF to any built-in library and gives each item the page where its name stands on a line of its own; `--prefix Type` also accepts a line that starts with the name, and `--document-only` adds just the document. Run it again after regenerating the library. `tools/srd_references.py` does the same for the DnD SRD, whose layout needs more rules.
+
+Several systems can share one PDF through a documents-only library, such as `systems/yze/yze.json` (the Year Zero Engine SRD, for Alien, Forbidden Lands and Vaesen): list it in each system's `libraries`, and their sheets' `reference`s use its key.
+
+### Licences and credits
+
+Ship only content the licence lets us ship: an SRD or rulebook released as open content (OGL 1.0a, ORC, CC BY, CC BY-SA, a publisher's free tabletop or creator licence that covers it). Rules text that isn't open stays out; write the sheet's descriptions, hints and `guide.md` in our own words, and leave out a library rather than guess (the GURPS Lite and Ironsworn rulebook PDFs are not shipped; OSE uses the open Basic Fantasy rules instead of its own SRD). Art is rarely covered: strip images from a PDF whose pictures aren't licensed (`gs -o out.pdf -sDEVICE=pdfwrite -dFILTERIMAGE in.pdf`).
+
+For each system with open content:
+
+- Put a `LICENSE-<system>.md` next to the library: where the data came from (URL, version), what was changed, and the licence's required text. For the OGL that is the full licence with a section 15 that copies the source's section 15 lines exactly; for ORC, the exact attribution notice. Copy those lines from the source, never from memory. Ship the licence text itself where the licence asks (as YZE does with its agreement PDF).
+- Say in the library's `description` what it holds, from where, and under which licence.
+- Add the attribution to `credits` in the `rules.json` entry. It is shown on the About page.
+
+### The rules.json entry
+
+| Field | Meaning |
+|---|---|
+| `name` | The system's name, as in its `system` assignment |
+| `location` | The entry `.frules` file |
+| `description` | One line, shown when picking a system |
+| `tags` | Search and filter words in the create campaign dialog. Reuse existing ones: a genre (`fantasy`, `sci-fi`, `horror`, `modern`, `superhero`, `cyberpunk`...), the dice (`d20`, `d6 pool`, `2d6`, `d100`, `roll under`, `fudge dice`, `cards`...) and a style (`narrative`, `tactical`, `old school`, `light`, `pbta`...) |
+| `guide` | Path to the play guide, `guide.md` |
+| `credits` | A list of attribution texts (markdown, links allowed) for open content the system ships |
+| `nameSettings` | The names of the system's name settings, in order |
+| `extensions` | Each with `name`, `location`, `description` and `guide` |
 
 ### Card decks
 
