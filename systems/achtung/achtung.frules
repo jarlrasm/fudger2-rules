@@ -1,0 +1,366 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successOf (x, target, focusRange) = if x <= focusRange then 2 else if x <= target then 1 else 0
+
+successesIn (rolls, target, focusRange) = sum (map ((x)->successOf (x, target, focusRange), rolls))
+
+complicationsIn (rolls, spread) = count (filter ((x)->x > 20 - spread, rolls))
+
+complicationText (n) = if n > 0 then ", " + toString (n) + (if n == 1 then " complication" else " complications") else ""
+
+testOutcome (successes, difficulty) = if successes >= difficulty then "Success" else "Failure"
+
+testText (successes, difficulty, complications, known) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + (if known then " vs Difficulty " + toString (difficulty) + ": " + testOutcome (successes, difficulty) + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else "")
+    + complicationText (complications)
+
+testResult (rolls, target, focusRange, spread, difficulty, known) =
+{
+    Text = testText (successesIn (rolls, target, focusRange), difficulty, complicationsIn (rolls, spread), known)
+    Value = successesIn (rolls, target, focusRange)
+    Outcome = if known then testOutcome (successesIn (rolls, target, focusRange), difficulty) else if successesIn (rolls, target, focusRange) > 0 then "Success" else "Failure"
+}
+
+acRoll (dieCount, target, focusRange, spread) = ([dice { number = max (1, min (5, dieCount))  sides = 20 }],
+    ((baseline, throws)->testResult (first (throws).rolls, target, focusRange, spread, asked, answered)))
+
+acTest (target, focusRange, spread) = ask ("Extra d20s (Momentum, Threat)", 0, (n)->ask ("Difficulty", 1, acRoll (2 + n, target, focusRange, spread)))
+
+challengeDie (x) = if x == 1 then 1 else if x == 2 then 2 else if x >= 5 then 1 else 0
+
+effectsIn (rolls) = count (filter ((x)->x >= 5, rolls))
+
+damageRoll (dieCount) = ([dice { number = max (0, dieCount)  sides = 6  faces = ["1", "2", "", "", "1E", "1E"]  label = "Challenge dice" }],
+    ((baseline, throws)->{
+        Text = toString (sum (map ((x)->challengeDie (x), first (throws).rolls))) + " damage" + (if effectsIn (first (throws).rolls) > 0 then ", " + toString (effectsIn (first (throws).rolls)) + (if effectsIn (first (throws).rolls) == 1 then " Effect" else " Effects") else "")
+        Value = sum (map ((x)->challengeDie (x), first (throws).rolls))
+    }))
+
+attributeNames = ["Agility", "Brawn", "Coordination", "Insight", "Reason", "Will"]
+
+attributeValue (char, name) =
+    switch name
+        case "Agility" then char.Attributes.Agility
+        case "Brawn" then char.Attributes.Brawn
+        case "Coordination" then char.Attributes.Coordination
+        case "Insight" then char.Attributes.Insight
+        case "Reason" then char.Attributes.Reason
+        else char.Attributes.Will
+
+focusRangeFor (rating, focused) = if focused then max (1, rating) else 1
+
+skill (usual) = custom
+{
+    Rating = integer { description = "Skill rating 0 to 5, added to the attribute for the target number." default = 0  minvalue = 0  maxvalue = 5 }
+    Attribute = string { description = "Any attribute can pair with any skill; pick the one that fits what you do." default = usual  keys = attributeNames  editable = live }
+    Focus = bool { description = "Tick when one of your focuses applies: each d20 at or under the rating is two successes." default = false  editable = live  save = nosave }
+    TN = integer { description = "Attribute plus rating. Roll 2d20 at or under it; the roll asks for extra dice and the Difficulty." value = attributeValue (characterTable, Attribute) + Rating  valuedice = acTest (attributeValue (characterTable, Attribute) + Rating, focusRangeFor (Rating, Focus), if Rating == 0 then 2 else 1)  editable = none }
+}
+
+noSkill = { Rating = 0 }
+
+ratingOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", 0)
+
+noStats = { Stats = { Damage = "1" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+rangeMetres (text) =
+    switch text
+        case "Reach" then 2
+        case "Close" then 10
+        case "Medium" then 50
+        case "Long" then 150
+        case "Extreme" then 500
+        else 2
+
+isRanged (weapon) = weaponStat (weapon, "Range") != "" and weaponStat (weapon, "Range") != "Reach"
+
+attack (name, target, focusRange, spread, dieCount, qualities, kind, distance) = custom
+{
+    Name = name
+    TN = integer { value = target  valuedice = acTest (target, focusRange, spread)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = dieCount  render = toString (dieCount) + " CD"  valuedice = damageRoll (dieCount)  editable = none }
+    Qualities = qualities
+}
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        attack (weapon.Name, char.Attributes.Coordination + ratingOf (char, "Fighting"), 1, if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+    else
+        attack (weapon.Name, char.Attributes.Agility + ratingOf (char, "Fighting"), 1, if ratingOf (char, "Fighting") == 0 then 2 else 1, firstNumber (weaponStat (weapon, "Damage")) + bonusDamage (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2)
+
+bonusDamage (brawn) = if brawn >= 16 then 3 else if brawn >= 14 then 2 else if brawn >= 12 then 1 else 0
+
+harmState (char) =
+    if char.Harm.Injuries >= 2 then "Defeated"
+    else if char.Harm.Injuries > 0 then "Injured"
+    else if char.Harm.Stress < 1 then "Out of Stress"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Harm, Attributes, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Nationality = string {}
+        Archetype = string { description = "The kind of hero: Commando, Occultist, Resistance Fighter, Scholar, Spy and so on." }
+        Background = string {}
+        Rank = string {}
+        Service = string { keys = ["Army", "Navy", "Air Force", "Intelligence", "Resistance", "Civilian"] }
+        Characteristic = string { description = "A short phrase for the character's defining trait, which can be called on like a truth." }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "Six attributes, 7 to 12 at the start. Any attribute can go with any skill."
+        tableLayout = layout { columns = 6  size = wide }
+        Agility = integer { description = "Quickness, balance and melee." default = 8  minvalue = 6  maxvalue = 16 }
+        Brawn = integer { description = "Strength and toughness." default = 8  minvalue = 6  maxvalue = 16 }
+        Coordination = integer { description = "Hand and eye: shooting, driving, fine work." default = 8  minvalue = 6  maxvalue = 16 }
+        Insight = integer { description = "Instinct, empathy and noticing." default = 8  minvalue = 6  maxvalue = 16 }
+        Reason = integer { description = "Logic, knowledge and planning." default = 8  minvalue = 6  maxvalue = 16 }
+        Will = integer { description = "Resolve against fear and the Mythos." default = 8  minvalue = 6  maxvalue = 16 }
+    }
+
+    Skills = table
+    {
+        description = "Twelve skills. Pick the attribute for the task, tick Focus when a focus fits, and roll the TN."
+        tableLayout = layout { columns = 2  size = wide }
+        Academia = skill ("Reason")
+        Athletics = skill ("Brawn")
+        Engineering = skill ("Reason")
+        Fighting = skill ("Agility")
+        Medicine = skill ("Reason")
+        Observation = skill ("Insight")
+        Persuasion = skill ("Insight")
+        Resilience = skill ("Brawn")
+        Stealth = skill ("Agility")
+        Survival = skill ("Insight")
+        Tactics = skill ("Reason")
+        Vehicles = skill ("Coordination")
+    }
+
+    Focuses = list
+    {
+        description = "Narrow areas of expertise, such as Firearms, Occult or First Aid, each under a skill."
+        singular = "Focus"
+        editable = character
+        valueType = custom
+        {
+            Skill = string { keys = ["Academia", "Athletics", "Engineering", "Fighting", "Medicine", "Observation", "Persuasion", "Resilience", "Stealth", "Survival", "Tactics", "Vehicles"] }
+            Focus = string {}
+        }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Harm = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Stress' = integer { description = "Physical and mental strain you can soak before harm sticks." default = Attributes.Brawn + Attributes.Will + ratingOf (characterTable, "Resilience") }
+        Stress = integer { description = "Damage and horror come off Stress. A hit of 5 or more, or one that empties it, also causes an Injury." default = 'Max Stress'  minvalue = 0  editable = live }
+        Protection = integer { description = "Armour or cover taken off each hit." default = 0  minvalue = 0 }
+        Courage = integer { description = "Taken off mental damage from fear and the Mythos." default = 0  minvalue = 0 }
+        Injuries = integer { description = "Lasting wounds or traumas; a second untreated Injury takes you out." default = 0  minvalue = 0  maxvalue = 3  editable = live  indicator = "#d64545" }
+        'Injury Notes' = string { multiline = true  editable = live }
+        State = string { value = harmState (characterTable)  visible = none  indicator = "#d64545" }
+        'Catch your breath' = button { description = "A pause after a scene restores all Stress; Injuries need treatment." editable = live  onClick = updates
+            {
+                (root.Harm.Stress) = 'Max Stress'
+            }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Melee rolls Agility plus Fighting, ranged Coordination plus Fighting. Damage is Challenge dice: 1, 2, blank, blank, and 1 with an Effect."
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Unarmed", characterTable.Attributes.Agility + ratingOf (characterTable, "Fighting"), 1, if ratingOf (characterTable, "Fighting") == 0 then 2 else 1, 1 + bonusDamage (characterTable.Attributes.Brawn), "Stun", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Mythos and Magic' = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Mythos Knowledge' = string { multiline = true }
+        Spells = string { multiline = true }
+    }
+
+    Personal = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Truths = string { description = "Facts about the character the story can use." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+npcKinds = ["Minion", "Elite", "Notable", "Nemesis"]
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/achtung/enemy.svg"
+        important = [Profile, Attacks]
+        filters = [filter { name = "Kind" prefix = "" filter = Profile.Kind }]
+    }
+    Profile = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { description = "Minions go down to one Injury, elites to two, notables and nemeses fight like heroes." default = "Elite"  keys = npcKinds }
+        Faction = string {}
+        Agility = integer { default = 8 }
+        Brawn = integer { default = 8 }
+        Coordination = integer { default = 8 }
+        Insight = integer { default = 8 }
+        Reason = integer { default = 8 }
+        Will = integer { default = 8 }
+        'Max Stress' = integer { default = 10 }
+        Stress = integer { default = 'Max Stress'  minvalue = 0  editable = live }
+        Protection = integer { default = 0 }
+        Injuries = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+    }
+    Skills = keyvalues
+    {
+        description = "Each skill's TN for a typical test and its focus range."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Fighting", "Observation", "Resilience"]
+        valueType = custom
+        {
+            TN = integer { default = 10  valuedice = acTest (TN, 'Focus Range', 1) }
+            'Focus Range' = integer { default = 1  minvalue = 1 }
+        }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            TN = integer { default = 10  valuedice = acTest (TN, 1, 1)  action = if 'Range m' > 2 then "ranged" else "melee"  reach = 2  range = 'Range m' }
+            Damage = integer { default = 3  render = toString (Damage) + " CD"  valuedice = damageRoll (Damage) }
+            'Range m' = integer { default = 2 }
+            Qualities = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        'Threat Spends' = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Range" prefix = "" filter = Stats.Range }]
+    }
+    Stats = table
+    {
+        Damage = string { description = "Challenge dice rolled for damage." default = "3" }
+        Range = string { keys = ["Reach", "Close", "Medium", "Long", "Extreme"] }
+        Salvo = string { description = "What spending ammunition adds." }
+        Size = string { keys = ["One-handed", "Two-handed", "Unwieldy"] }
+        Qualities = string { description = "Such as Vicious, Piercing, Stun, Spread or Area." }
+        Restriction = string {}
+        Cost = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Protection = string {}
+        Restriction = string {}
+        Cost = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirement = string {}
+    }
+}
+
+AchtungCthulhu = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Pick the attribute and skill that fit, then roll 2d20 at or under their sum. Each die at or under is a success; a 1 is two, and with a fitting focus every die at or under the skill rating is two. The roll asks for extra d20s bought with Momentum or Threat and for the Difficulty. A 20 is a complication (19 too without the skill)."]
+        },
+        hint
+        {
+            title = "Momentum and Threat"
+            topic = "Play"
+            text = ["Successes beyond the Difficulty become Momentum for the group. The GM spends Threat for enemies and complications. Track both in the campaign's notes."]
+        },
+        hint
+        {
+            title = "Harm"
+            topic = "Combat"
+            text = ["Damage is rolled on Challenge dice and comes off Stress, less Protection. A hit of 5 or more, or one that empties Stress, also causes an Injury."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["The heroes act first; after each turn the action passes to the other side. Spend Momentum or Threat to keep the initiative and act twice in a row."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Gear = gearStats
+    Talents = talentStats
+    secondaryTypes = ["Weapons", "Gear", "Talents"]
+    description = "Achtung! Cthulhu 2d20: Allied heroes against the Mythos and the Nazi occult in the Second World War, 2d20 tests, Momentum and Threat, Challenge dice"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [2d20, 1d20, 1d6]
+    cssFiles = ["/systems/achtung/achtung.css"]
+    libraries = ["/systems/names/spies.json", "/systems/names/cosmic.json"]
+    nameSettings = [spyThrillerNameSetting, cosmicHorrorNameSetting]
+}

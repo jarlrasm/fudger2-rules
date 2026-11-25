@@ -1,0 +1,23 @@
+{
+  "values": {
+    "Character": { "Nationality": "British", "Archetype": "Commando", "Background": "Highland gamekeeper", "Rank": "Sergeant", "Service": "Army", "Characteristic": "Never leaves a man behind", "Experience": 3 },
+    "Attributes": { "Agility": 10, "Brawn": 11, "Coordination": 10, "Insight": 9, "Reason": 7, "Will": 9 },
+    "Skills": {
+      "Fighting.Rating": 3, "Athletics.Rating": 2, "Stealth.Rating": 2, "Survival.Rating": 2, "Observation.Rating": 1,
+      "Resilience.Rating": 2, "Tactics.Rating": 1, "Medicine.Rating": 1, "Vehicles.Rating": 1
+    },
+    "Focuses": [ { "Skill": "Fighting", "Focus": "Rifles" }, { "Skill": "Stealth", "Focus": "Night operations" }, { "Skill": "Survival", "Focus": "Mountains" } ],
+    "Harm": { "Stress": 14, "Protection": 1, "Courage": 1, "Injuries": 1, "Injury Notes": "Grazed by a Luger round at Vemork: one more Difficulty on Athletics until treated" },
+    "Mythos and Magic": { "Mythos Knowledge": "Saw the thing under the Norwegian ice. Doesn't talk about it.", "Spells": "None, thank God" },
+    "Personal": { "Truths": "Knows every sheep path in the Cairngorms. Owes his life to a Norwegian resistance radio operator.", "Notes": "Carries his late brother's dirk. Writes to his mother every Sunday, never posts the letters." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Lee-Enfield No. 4 rifle", "values": { "Stats": { "Damage": "4", "Range": "Long", "Salvo": "Piercing", "Size": "Two-handed", "Qualities": "Accurate", "Restriction": "1" } } },
+      { "name": "Fairbairn-Sykes knife", "values": { "Stats": { "Damage": "2", "Range": "Reach", "Size": "One-handed", "Qualities": "Hidden, Vicious 1", "Restriction": "2" } } },
+      { "name": "Mills bomb", "values": { "Stats": { "Damage": "4", "Range": "Medium", "Size": "One-handed", "Qualities": "Area, Drain, Grenade", "Restriction": "1" } } }
+    ],
+    "Talents": [ { "name": "Quick Draw", "values": { "Stats": { "Requirement": "Fighting 2" } } }, { "name": "Silent Killer", "values": { "Stats": { "Requirement": "Stealth 2" } } } ],
+    "Gear": [ { "name": "Battledress and webbing", "values": { "Stats": { "Protection": "1" } } }, { "name": "Field dressing kit" }, { "name": "Compass and silk map" } ]
+  }
+}
