@@ -1,0 +1,398 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+gradeNames = ["Easy", "Average", "Difficult"]
+
+graded (skill, grade, modifier) =
+    (if grade < 0 then skill * 2 else if grade > 0 then (skill + 1) / 2 else skill) + modifier
+
+criticalChance (target) = max (1, (target + 19) / 20)
+
+specialChance (target) = max (1, (target + 4) / 5)
+
+fumbleFrom (target) = if target > 80 then 100 else 96 + (max (1, target) - 1) / 20
+
+brpLevel (target, roll) =
+    if roll >= fumbleFrom (target) then "Fumble"
+    else if roll <= criticalChance (target) then "Critical success"
+    else if roll <= specialChance (target) then "Special success"
+    else if roll <= target and roll < 96 then "Success"
+    else "Failure"
+
+gradeText (grade) = if grade < 0 then " (Easy)" else if grade > 0 then " (Difficult)" else ""
+
+brpResult (target, roll, grade) =
+{
+    Text = toString (roll) + " vs " + toString (target) + gradeText (grade) + ": " + brpLevel (target, roll)
+    Value = roll
+    Outcome = brpLevel (target, roll)
+}
+
+brpRoll (grade, modifier) = ([1d100], ((baseline, throws)->brpResult (graded (baseline, grade, modifier), first (first (throws).rolls), grade)))
+
+brpGraded (grade) = ([1d100], ((baseline, throws)->brpResult (graded (baseline, grade, asked), first (first (throws).rolls), grade)))
+
+brpCheck = ask ("Difficulty", gradeNames, -1, (grade)->ask ("Modifier", 0, brpGraded (grade)))
+
+characteristicRoll = ([1d100], ((baseline, throws)->brpResult (baseline * 5, first (first (throws).rolls), 0)))
+
+dexRank = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+dmStep (strsiz) = if strsiz <= 12 then 0 else if strsiz <= 16 then 1 else if strsiz <= 24 then 2 else if strsiz <= 32 then 3 else if strsiz <= 40 then 4 else 5 + (strsiz - 41) / 16
+
+dmCount (strsiz) = if dmStep (strsiz) == 2 then 0 else if dmStep (strsiz) < 5 then 1 else dmStep (strsiz) - 3
+
+dmSides (strsiz) = if dmStep (strsiz) == 1 or dmStep (strsiz) == 3 then 4 else 6
+
+dmSign (strsiz) = if dmStep (strsiz) < 2 then -1 else 1
+
+dmText (strsiz) = if dmCount (strsiz) == 0 then "None" else (if dmSign (strsiz) < 0 then "-" else "+") + toString (dmCount (strsiz)) + "D" + toString (dmSides (strsiz))
+
+diceCount (text) = bonusWithValue ([[toLower (text)]], "^ *([0-9]+)d")
+
+dieSize (text) = bonusWithValue ([[toLower (text)]], "d([0-9]+)")
+
+flatBonus (text) = bonusWithValue ([[toLower (text)]], "^ *[0-9]+d[0-9]+ *\+ *([0-9]+)( |\+|$)")
+
+dmShare (text) = if contains (text, "½dm") or contains (text, "1/2dm") then 1 else if contains (text, "dm") then 2 else 0
+
+damageDice (n, dieSides, dmN, dmS, dmSg, share) = ([dice { number = n  sides = dieSides }, dice { number = if share > 0 then dmN else 0  sides = max (2, dmS)  label = if share > 0 and dmN > 0 then "Damage modifier" else "" }],
+    ((baseline, throws)->{ Text = toString (max (0, baseline + sum (first (throws).rolls) + dmSg * sum (item (1, throws).rolls) * share / 2)) + " damage"  Value = max (0, baseline + sum (first (throws).rolls) + dmSg * sum (item (1, throws).rolls) * share / 2) }))
+
+damageRoll (n, dieSides, strsiz, share) = damageDice (n, dieSides, dmCount (strsiz), dmSides (strsiz), dmSign (strsiz), share)
+
+textSign (text) = if contains (text, "-") or contains (text, "–") then -1 else 1
+
+creatureDamage (damageText, dm) = damageDice (diceCount (damageText), dieSize (damageText), diceCount (dm), dieSize (dm), textSign (dm), dmShare (damageText))
+
+skill (base) = custom
+{
+    Base = integer { value = base  editable = none }
+    Points = integer { description = "Points added to the base chance." default = 0 }
+    Total = integer { description = "Roll d100 at or under it: a fifth is a special success, a twentieth a critical." value = Base + Points  valuedice = brpCheck  editable = none }
+    Check = bool { description = "Ticked after a successful use; roll to improve it later." default = false  editable = live }
+}
+
+noStats = { Stats = { Skill = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "brpWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+skillMatch (char, name) = filter ((s)->toLower (s.Name) == toLower (name), char.'Weapon Skills')
+
+weaponChance (char, weapon) =
+    if count (skillMatch (char, weaponStat (weapon, "Skill"))) > 0 then first (skillMatch (char, weaponStat (weapon, "Skill"))).Base + first (skillMatch (char, weaponStat (weapon, "Skill"))).Points
+    else firstNumber (weaponStat (weapon, "Base"))
+
+weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
+{
+    Name = name
+    Chance = integer { value = chance  valuedice = brpCheck  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = flatBonus (damageText)  valuedice = damageRoll (diceCount (damageText), dieSize (damageText), strsiz, dmShare (damageText))  render = damageText  editable = none }
+}
+
+isRangedWeapon (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0 and not (contains (toLower (weaponStat (weapon, "Range")), "short")) and not (contains (toLower (weaponStat (weapon, "Range")), "medium")) and not (contains (toLower (weaponStat (weapon, "Range")), "long"))
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, weaponChance (char, weapon), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, if isRangedWeapon (weapon) then "ranged" else "melee", firstNumber (weaponStat (weapon, "Range")))
+
+downState (char) =
+    if char.Attributes.'Hit Points' <= 0 then "Dying"
+    else if char.Attributes.'Hit Points' <= 2 then "Unconscious"
+    else if char.Attributes.'Major Wound' then "Major wound"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Profession = string {}
+        Culture = string {}
+        Age = integer { default = 25 }
+        Gender = string {}
+        Handedness = string { keys = ["Right", "Left", "Ambidextrous"] }
+        Height = string {}
+        Weight = string {}
+        Distinctive = string { description = "Distinctive features." }
+    }
+
+    Characteristics = table
+    {
+        description = "Seven characteristics, usually 3d6 (SIZ and INT 2d6+6). Roll one times five for a characteristic roll."
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { description = "Strength. Effort roll: STR x5." default = 10  minvalue = 1  valuedice = characteristicRoll }
+        CON = integer { description = "Constitution. Stamina roll: CON x5." default = 10  minvalue = 1  valuedice = characteristicRoll }
+        SIZ = integer { description = "Size." default = 13  minvalue = 1 }
+        INT = integer { description = "Intelligence. Idea roll: INT x5." default = 13  minvalue = 1  valuedice = characteristicRoll }
+        POW = integer { description = "Power. Luck roll: POW x5." default = 10  minvalue = 1  valuedice = characteristicRoll }
+        DEX = integer { description = "Dexterity. Agility roll: DEX x5. Higher DEX acts first." default = 10  minvalue = 1  valuedice = characteristicRoll }
+        CHA = integer { description = "Charisma. Charm roll: CHA x5." default = 10  minvalue = 1  valuedice = characteristicRoll }
+        EDU = integer { description = "Education, an optional eighth characteristic." default = 0  minvalue = 0 }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Hit Points' = integer { description = "The average of CON and SIZ, rounded up." value = (Characteristics.CON + Characteristics.SIZ + 1) / 2  editable = none }
+        'Hit Points' = integer { description = "At 2 or less you are unconscious; at 0 you die at the end of the next round." default = 'Max Hit Points'  editable = live  indicator = "#d64545" }
+        'Major Wound Level' = integer { description = "A single wound of this much or more is a major wound." value = ('Max Hit Points' + 1) / 2  editable = none }
+        'Major Wound' = bool { default = false  editable = live  indicator = "#d64545" }
+        'Max Power Points' = integer { value = Characteristics.POW  editable = none }
+        'Power Points' = integer { description = "Spent on powers; regained over a day of rest." default = 'Max Power Points'  minvalue = 0  editable = live }
+        'Damage Modifier' = string { description = "From STR + SIZ, added to melee damage." value = dmText (Characteristics.STR + Characteristics.SIZ)  editable = none }
+        'Experience Bonus' = integer { description = "Half INT, rounded up: added to improvement rolls." value = (Characteristics.INT + 1) / 2  editable = none }
+        MOV = integer { default = 10 }
+        Armor = string { description = "Armor points and type." default = "0" }
+        'DEX Rank' = integer { description = "Characters act in DEX order, highest first." value = Characteristics.DEX  valuedice = dexRank  editable = none }
+        Sanity = integer { description = "Optional: starts at POW x5." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Optional: STR + CON points of endurance." default = 0  editable = live }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#555555" }
+        'Day of rest' = button
+        {
+            description = "A day of rest restores all power points. Hit points heal 1D3 a week; add them by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.'Power Points') = 'Max Power Points'
+            }
+        }
+    }
+
+    Skills = table
+    {
+        description = "Base chances from the Basic Roleplaying skill list."
+        tableLayout = layout { columns = 2  size = wide }
+        Appraise = skill (15)
+        Art = skill (5)
+        Bargain = skill (5)
+        Brawl = skill (25)
+        Climb = skill (40)
+        Command = skill (5)
+        Craft = skill (5)
+        Demolition = skill (1)
+        Disguise = skill (1)
+        Dodge = skill (Characteristics.DEX * 2)
+        Drive = skill (20)
+        Etiquette = skill (5)
+        'Fast Talk' = skill (5)
+        'Fine Manipulation' = skill (5)
+        'First Aid' = skill (30)
+        Gaming = skill (Characteristics.INT + Characteristics.POW)
+        Grapple = skill (25)
+        'Heavy Machine' = skill (1)
+        Hide = skill (10)
+        Insight = skill (5)
+        Jump = skill (25)
+        Knowledge = skill (5)
+        'Own Language' = skill (Characteristics.INT * 5)
+        Listen = skill (25)
+        'Martial Arts' = skill (1)
+        Medicine = skill (5)
+        Navigate = skill (10)
+        Perform = skill (5)
+        Persuade = skill (15)
+        Pilot = skill (1)
+        Projection = skill (Characteristics.DEX * 2)
+        Psychotherapy = skill (1)
+        Repair = skill (15)
+        Research = skill (25)
+        Ride = skill (5)
+        Science = skill (1)
+        Sense = skill (10)
+        'Sleight of Hand' = skill (5)
+        Spot = skill (25)
+        Status = skill (15)
+        Stealth = skill (10)
+        Strategy = skill (1)
+        Swim = skill (25)
+        Teach = skill (10)
+        'Technical Skill' = skill (5)
+        Throw = skill (25)
+        Track = skill (10)
+    }
+
+    'Weapon Skills' = list
+    {
+        description = "Melee, missile, firearm and other weapon skills, named as the weapon's Skill."
+        singular = "Weapon skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Base = integer { default = 25 }
+            Points = integer { default = 0 }
+            Total = integer { value = Base + Points  valuedice = brpCheck  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each weapon at its skill. Melee damage adds the damage modifier, thrown weapons half of it."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fist", characterTable.Skills.Brawl.Total, "1D3+dm", characterTable.Characteristics.STR + characterTable.Characteristics.SIZ, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Powers = list
+    {
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        singular = "Item"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Background = string { multiline = true }
+        Money = string {}
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { default = 10 }
+        CON = integer { default = 10 }
+        SIZ = integer { default = 13 }
+        INT = integer { default = 10 }
+        POW = integer { default = 10 }
+        DEX = integer { default = 10  valuedice = dexRank }
+        CHA = integer { default = 0 }
+        'Hit Points' = integer { default = 12  editable = live  indicator = "#d64545" }
+        Move = string { default = "10" }
+        'Damage Modifier' = string { default = "None" }
+        Armor = string { default = "0" }
+        'Power Points' = integer { default = 10  editable = live }
+    }
+    Attacks = list
+    {
+        description = "Attack chance and damage; dm means the damage modifier."
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Chance = integer { default = 50  valuedice = brpCheck  action = if contains (toLower (Name), "thrown") or contains (toLower (Name), "bow") or contains (toLower (Name), "gun") or contains (toLower (Name), "rifle") or contains (toLower (Name), "pistol") or contains (toLower (Name), "spit") or contains (toLower (Name), "blast") then "ranged" else "melee"  reach = 2 }
+            Damage = string { default = "1D6" }
+            Roll = integer { value = flatBonus (Damage)  valuedice = creatureDamage (Damage, creatureTable.Stats.'Damage Modifier')  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Powers = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+brpWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }, filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string {}
+        Skill = string {}
+        Base = string { description = "Base chance of the weapon skill." }
+        Damage = string { description = "Damage dice; +dm adds the damage modifier, +½dm half of it." }
+        Attacks = string { description = "Attacks per round." }
+        Special = string { description = "Bleeding, crushing, impaling, entangling..." }
+        Range = string { description = "Short, Medium or Long reach for melee; metres for missiles." }
+        Hands = string {}
+        'Weapon HP' = string {}
+        Parry = string {}
+        'STR and DEX' = string { description = "Minimum STR and DEX." }
+        Malfunction = string {}
+        Value = string {}
+        'SIZ or ENC' = string {}
+        'Rate of Fire' = string {}
+    }
+}
+
+brpPower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Magic", "Mutation", "Psychic", "Sorcery", "Super Power", "Other"] }
+        Level = string {}
+        Cost = string { description = "Power points to use it." }
+        Range = string {}
+        Duration = string {}
+    }
+}
+
+BasicRoleplaying = system
+{
+    hints = [
+        hint
+        {
+            title = "Any setting"
+            topic = "Getting started"
+            text = ["Pick a setting and its power level first. Roll characteristics (3d6; SIZ and INT 2d6+6), choose a profession, and spread skill points over its skills."]
+        },
+        hint
+        {
+            title = "Percentile rolls"
+            topic = "Play"
+            text = ["Roll d100 at or under the skill. A fifth of it is a special success, a twentieth a critical; 96 and above always fails, and the top of the range fumbles. The roll asks for Easy, Average or Difficult and any modifier."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Characters act in DEX order. Attack with the weapon skill; the defender may parry or dodge. Damage is the weapon dice plus the damage modifier, minus armor, off hit points. A wound of half the hit points or more is a major wound."]
+        },
+        hint
+        {
+            title = "DEX order"
+            topic = "Initiative"
+            text = ["Roll DEX Rank to put each character in the initiative list at their DEX; the highest acts first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = brpWeapon
+    Powers = brpPower
+    secondaryTypes = ["Weapons", "Powers"]
+    description = "Basic Roleplaying: Universal Game Engine: Chaosium's classic d100 percentile system for any setting, with skills, damage modifiers and powers"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d20, 1d6]
+    cssFiles = ["/systems/brp/brp.css"]
+    libraries = ["/systems/brp/brp.json", "/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/spies.json", "/systems/names/oldworld.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, spyThrillerNameSetting, oldWorldNameSetting]
+}
