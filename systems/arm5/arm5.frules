@@ -20,29 +20,29 @@ scoreResult (score, level) =
 }
 
 stressResult (d, total, botchDice, level, divisor) =
-    if d == 10 and botchDice <= 0 then scoreResult (total / divisor, level)
+    if d == 10 and botchDice <= 0 then scoreResult (floorDiv (total, divisor), level)
     else if d == 10 then {
-        Text = "0 on the die: " + toString (total / divisor) + ", roll for a botch"
-        Value = total / divisor
-        Push = botchRoll (botchDice, total / divisor, level)
+        Text = "0 on the die: " + toString (floorDiv (total, divisor)) + ", roll for a botch"
+        Value = floorDiv (total, divisor)
+        Push = botchRoll (botchDice, floorDiv (total, divisor), level)
         PushLabel = "Roll " + toString (botchDice) + " botch dice"
     }
     else if d == 1 then {
         Text = "1 on the die: roll again and double"
-        Value = (total + 2) / divisor
+        Value = floorDiv (total + 2, divisor)
         Push = doubling (2, total, level, divisor)
         PushLabel = "Roll again (x2)"
     }
-    else scoreResult ((total + d) / divisor, level)
+    else scoreResult (floorDiv (total + d, divisor), level)
 
 doubling (mult, total, level, divisor) = ([1d10], ((baseline, throws)->
     if first (first (throws).rolls) == 1 then {
         Text = "1 again: roll again, x" + toString (mult * 2)
-        Value = (total + mult * 2) / divisor
+        Value = floorDiv (total + mult * 2, divisor)
         Push = doubling (mult * 2, total, level, divisor)
         PushLabel = "Roll again (x" + toString (mult * 2) + ")"
     }
-    else scoreResult ((total + mult * first (first (throws).rolls)) / divisor, level)))
+    else scoreResult (floorDiv (total + mult * first (first (throws).rolls), divisor), level)))
 
 botchRoll (botchDice, total, level) = ([dice { number = botchDice  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
     if count (filter ((x)->x == 10, first (throws).rolls)) > 0 then {
@@ -52,7 +52,11 @@ botchRoll (botchDice, total, level) = ([dice { number = botchDice  sides = 10  c
     }
     else scoreResult (total, level)))
 
+floorDiv (x, divisor) = if x < 0 then 0 - (0 - x + divisor - 1) / divisor else x / divisor
+
 stressRoll (total, level) = stressRollBy (total, level, 1)
+
+stressInitiative (total) = ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, 0, 0, 1)))
 
 stressRollBy (total, level, divisor) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level, divisor))))
 
@@ -255,7 +259,7 @@ characterTable = ruleset
         'Weapon init' = integer { default = 0 }
         'Weapon dfn' = integer { default = 0 }
         Encumbrance = integer { default = 0 }
-        Initiative = integer { description = "Quickness + weapon Init - Encumbrance, plus a stress die." value = Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable)  valuedice = simpleRoll (Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable))  editable = none }
+        Initiative = integer { description = "Quickness + weapon Init - Encumbrance, plus a stress die (no botch)." value = Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable)  valuedice = stressInitiative (Characteristics.Quickness + 'Weapon init' - Encumbrance - penalty (characterTable))  editable = none }
         Defense = integer { description = "Quickness + ability + weapon Dfn, plus a stress die." value = Characteristics.Quickness + abilityScore (characterTable, 'Weapon ability') + 'Weapon dfn' - penalty (characterTable)  valuedice = stressRoll (Characteristics.Quickness + abilityScore (characterTable, 'Weapon ability') + 'Weapon dfn' - penalty (characterTable), 0)  editable = none }
         Protection = integer { description = "From armor." default = 0 }
         Soak = integer { description = "Stamina + armor protection. Damage above soak becomes a wound: 1-5 light, 6-10 medium, 11-15 heavy, 16-20 incapacitating, 21+ dead." value = Characteristics.Stamina + Protection  editable = none }
@@ -392,7 +396,7 @@ creatureTable = ruleset
         Might = integer { description = "Magic, Faerie, Infernal or Divine Might; also its magic resistance." default = 0  editable = live }
         Size = integer { default = 0 }
         Soak = integer { default = 2 }
-        Initiative = integer { default = 0  valuedice = simpleRoll (Initiative) }
+        Initiative = integer { default = 0  valuedice = stressInitiative (Initiative) }
         Defense = integer { default = 5  valuedice = stressRoll (Defense, 0) }
         Fatigue = integer { default = 0  minvalue = 0  maxvalue = 5  render = fatigueName (Fatigue)  editable = live }
         Wounds = string { description = "Wounds taken, such as 1 light, 1 medium." default = ""  editable = live  indicator = "#d64545" }
@@ -492,7 +496,7 @@ ArsMagica = system
         {
             title = "Combat"
             topic = "Combat"
-            text = ["Initiative: Quickness + weapon Init + die. The attack total minus the Defense total is the attack advantage, added to damage; damage over soak is a wound, from light to incapacitating."]
+            text = ["Initiative: Quickness + weapon Init + stress die. The attack total minus the Defense total is the attack advantage, added to damage; damage over soak is a wound, from light to incapacitating."]
         }
     ]
     distanceUnit = "m"

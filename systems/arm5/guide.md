@@ -17,7 +17,7 @@ A roll is **characteristic + ability + die** against an **ease factor** (6 is ea
 - **Parma Magica** x5 is the magus's magic resistance, plus the Form of the attacking spell.
 
 ## Combat
-- **Initiative**: Quickness + weapon Init - Encumbrance + simple die.
+- **Initiative**: Quickness + weapon Init - Encumbrance + stress die (a 1 still doubles; there is no botch).
 - **Attack** (Dexterity + weapon ability + Atk) and **Defense** (Quickness + ability + Dfn) both roll stress dice. If the attack is higher, the difference is the attack advantage, added to **damage** (Strength + Dam).
 - Damage minus **soak** (Stamina + armor) becomes a wound, by size: 1-5 light (-1), 6-10 medium (-3), 11-15 heavy (-5), 16-20 incapacitating, 21+ dead (for size 0).
 - Fatigue goes from Fresh through Winded, Weary (-1), Tired (-3) and Dazed (-5) to Unconscious; a rest restores it (the *Rest* button). Wounds heal through recovery rolls over days and weeks.

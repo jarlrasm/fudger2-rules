@@ -4,7 +4,7 @@
 On the world of Mira, the city of Coriolis sits above the ruins of a vanished civilization. The players are **explorers**: they delve into the Great Dark beneath for relics and knowledge, and fight hunger, monsters and the **Blight**, a corruption that eats the mind. Hope keeps them going; Heart keeps them themselves.
 
 ## Rolling
-Roll one **base die** (d6) per point of the attribute, plus dice from talents and the situation, plus **gear dice** (yellow) from a tool or weapon. The roll asks how many extra dice to add (negative for penalties). Every **six is a success**; one is usually enough, and extra sixes improve the result.
+Roll one **base die** (d6) per point of the attribute, plus dice from talents and the situation, plus **gear dice** (yellow) from a tool or weapon. The roll asks how many extra dice to add (negative for penalties); rolling from a talent's row already adds its level. Every **six is a success**; one is usually enough, and extra sixes improve the result.
 
 **Pushing**: once, reroll every die that is not a 1 or a 6. Then lose **1 Hope per 1** on the base dice, counting both rolls. 1s on gear dice lower the gear's bonus.
 
