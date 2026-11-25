@@ -1,0 +1,62 @@
+@import url("/systems/sheet.css");
+
+/* Burning Wheel Gold: a stark black-and-white page with heavy rules, a
+   blood-red accent and a woodcut-style serif; Beliefs and Instincts boxed
+   across the top as on the paper sheet, stats and attributes with
+   exponent and shade, artha and the wound track, then skills and traits. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1a1a1a;
+    --surface: #fbfaf6;
+    --surface-alt: #efede6;
+    --surface-sunken: #e2dfd5;
+    --surface-muted: #c8c4b8;
+    --text: #0d0d0d;
+    --text-muted: #3a3a3a;
+    --text-faint: #6d6d6d;
+    --on-accent: #fbfaf6;
+    --border: #8e8a80;
+    --border-strong: #0d0d0d;
+    --accent: #8b1414;
+    --accent-hover: #a61c1c;
+    --accent-soft: #f1d5d5;
+    --link: #8b1414;
+    --danger: #8b1414;
+    --danger-hover: #6c0f0f;
+    --danger-soft: #f1d5d5;
+    --success: #2b4a2b;
+    --paper: #fbfaf6;
+    --card-bg: #efede6;
+    --dice-bg: #0d0d0d;
+    --dice-text: #fbfaf6;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", "Garamond", Georgia, serif;
+    --title-font: "IM Fell English SC", "Garamond", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: var(--border-strong);
+    color: var(--surface);
+}
+.entityView .table-beliefs { --block: 60%; }
+.entityView .table-instincts { --block: 40%; }
+.entityView .table-stats,
+.entityView .table-attributes { --block: 50%; }
+.entityView .table-stats { clear: left; }
+.entityView .table-traits,
+.entityView .table-weapons,
+.entityView .table-relationships { --block: 33.333%; }
+.entityView .table-traits { clear: left; }
+.entityView .table-stats td > div > div:nth-child(4),
+.entityView .table-attributes td > div > div:nth-child(4) { font-size: 0.8em; color: var(--text-faint); }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Dice "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "I M S "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills > table > tbody > tr > td:nth-child(2)::before { content: "Exponent "; color: var(--text-faint); font-size: 0.8em; }

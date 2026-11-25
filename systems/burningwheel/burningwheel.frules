@@ -1,0 +1,329 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+shadeTarget (shade) =
+    switch shade
+        case "W" then 2
+        case "G" then 3
+        else 4
+
+successesIn (rolls, shade) = count (filter ((x)->x >= shadeTarget (shade), rolls))
+
+bwOutcome (successes, ob, answered) =
+    if not (answered) then ""
+    else if successes >= ob then "Success"
+    else "Failure"
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+bwText (successes, ob, answered) =
+    plural (successes, "success", "successes")
+    + (if answered then " vs Ob " + toString (ob) + ": " + bwOutcome (successes, ob, answered) + (if successes >= ob then ", margin " + toString (successes - ob) else ", short by " + toString (ob - successes)) else "")
+
+bwResult (rolls, shade, ob, answered) =
+{
+    Text = bwText (successesIn (rolls, shade), ob, answered)
+    Value = successesIn (rolls, shade)
+    Outcome = bwOutcome (successesIn (rolls, shade), ob, answered)
+}
+
+bwRoll (pool, shade, ob, openEnded) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
+    ((baseline, throws)->bwResult (first (throws).rolls, shade, ob, ob > 0)))
+
+bwAsked (pool, shade, superficial, openEnded) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
+    ((baseline, throws)->bwResult (first (throws).rolls, shade, asked + superficial, answered)))
+
+reflexesRoll = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+woundDice (char) = char.Wounds.Light + 2 * char.Wounds.Midi + 3 * char.Wounds.Severe + 4 * char.Wounds.Traumatic
+
+bwDice (char, pool, shade) = ask ("Advantage dice or penalty", 0, (n)->ask ("Obstacle", bwAsked (pool + n - woundDice (char), shade, char.Wounds.Superficial, char.Artha.'Spend Fate')))
+
+shadeKeys = ["B", "G", "W"]
+
+stat = custom
+{
+    Exponent = integer { default = 4  minvalue = 0  maxvalue = 10 }
+    Shade = string { default = "B"  keys = shadeKeys }
+    Roll = integer { value = Exponent  valuedice = bwDice (characterTable, Exponent, Shade)  editable = none }
+    Tests = string { description = "Routine, difficult and challenging tests logged toward advancement." }
+}
+
+woundState (char) =
+    if char.Wounds.Mortal then "Mortal wound"
+    else if char.Wounds.Traumatic > 0 then "Traumatic"
+    else if char.Wounds.Severe > 0 then "Severe"
+    else if char.Wounds.Midi > 0 then "Midi"
+    else if char.Wounds.Light > 0 then "Light"
+    else if char.Wounds.Superficial > 0 then "Superficial"
+    else ""
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Skill = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "bwWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+skillMatch (char, name) = filter ((s)->toLower (s.Skill) == toLower (name), char.Skills)
+
+skillExponent (char, name) = if count (skillMatch (char, name)) > 0 then first (skillMatch (char, name)).Exponent else char.Stats.Agility.Exponent / 2
+
+skillShade (char, name) = if count (skillMatch (char, name)) > 0 then first (skillMatch (char, name)).Shade else "B"
+
+weaponAttack (name, pool, shade, damage, kind, distance) = custom
+{
+    Name = name
+    Dice = integer { value = pool  valuedice = bwDice (characterTable, pool, shade)  action = kind  reach = 2  range = distance  editable = none }
+    'I M S' = damage
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, skillExponent (char, weaponStat (weapon, "Skill")), skillShade (char, weaponStat (weapon, "Skill")), weaponStat (weapon, "I M S"), if firstNumber (weaponStat (weapon, "Range")) > 0 then "ranged" else "melee", firstNumber (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Artha, Wounds, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Stock = string { keys = ["Man", "Dwarf", "Elf", "Orc", "Roden", "Great Wolf", "Other"] }
+        Age = integer { default = 20 }
+        Lifepaths = string { description = "The lifepaths that made the character, in order." multiline = true }
+        Concept = string {}
+    }
+
+    Beliefs = table
+    {
+        description = "What the character believes and means to do about it. Playing them earns Fate and Persona."
+        tableLayout = layout { columns = 1  rowTitle = hidden  size = wide }
+        'Belief 1' = string { multiline = true }
+        'Belief 2' = string { multiline = true }
+        'Belief 3' = string { multiline = true }
+    }
+
+    Instincts = table
+    {
+        description = "If, when or always: what the character does without thinking."
+        tableLayout = layout { columns = 1  rowTitle = hidden  size = wide }
+        'Instinct 1' = string {}
+        'Instinct 2' = string {}
+        'Instinct 3' = string {}
+    }
+
+    Stats = table
+    {
+        description = "Mental stats Will and Perception, physical Agility, Speed, Power and Forte. Black shade succeeds on 4-6, grey on 3-6, white on 2-6."
+        tableLayout = layout { columns = 2  size = wide }
+        Will = stat {}
+        Perception = stat {}
+        Agility = stat {}
+        Speed = stat {}
+        Power = stat {}
+        Forte = stat {}
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Health = stat {}
+        Steel = stat {}
+        Reflexes = integer { description = "Actions per exchange in Fight!: the average of Perception, Agility and Speed." value = (Stats.Perception.Exponent + Stats.Agility.Exponent + Stats.Speed.Exponent) / 3  editable = none }
+        Hesitation = integer { description = "Actions lost when Steel fails: 10 minus Will." value = 10 - Stats.Will.Exponent  editable = none }
+        'Mortal Wound' = string { description = "The wound tolerance where death comes, such as B10." default = "B10" }
+        Resources = stat {}
+        Circles = stat {}
+        'Emotional Attribute' = string { description = "Faith, Grief, Greed, Hatred or Spite, with exponent and shade." }
+        Initiative = integer { description = "There is no initiative: exchanges are scripted. Reflexes set the order inside a volley." value = (Stats.Perception.Exponent + Stats.Agility.Exponent + Stats.Speed.Exponent) / 3  valuedice = reflexesRoll  editable = none }
+    }
+
+    Artha = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Fate = integer { description = "Spend one to make a roll open-ended: 6s roll again." default = 0  minvalue = 0  editable = live }
+        'Spend Fate' = bool { description = "Tick before a roll to make it open-ended; untick afterwards and lower Fate." default = false  editable = live }
+        Persona = integer { description = "Spend for +1D a point, up to three." default = 0  minvalue = 0  editable = live }
+        Deeds = integer { description = "Spend to double the base dice, or reroll every failed die." default = 0  minvalue = 0  editable = live }
+    }
+
+    Wounds = table
+    {
+        description = "Superficial wounds add +1 Ob each; Light -1D, Midi -2D, Severe -3D, Traumatic -4D. The sheet applies them."
+        tableLayout = layout { columns = 3  size = wide }
+        Superficial = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        Light = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Midi = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Severe = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Traumatic = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Mortal = bool { default = false  editable = live  indicator = "#555555" }
+        State = string { value = woundState (characterTable)  visible = none  indicator = "#d64545" }
+        'Wound dice' = integer { value = woundDice (characterTable)  editable = none }
+    }
+
+    Skills = list
+    {
+        description = "Skills with exponent and shade. Untrained, Beginner's Luck rolls the root stat at double Ob."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Skill = string {}
+            Exponent = integer { default = 2  minvalue = 0  maxvalue = 10 }
+            Shade = string { default = "B"  keys = shadeKeys }
+            Roll = integer { value = Exponent  valuedice = bwDice (characterTable, Exponent, Shade)  editable = none }
+            Tests = string {}
+        }
+    }
+
+    Traits = list
+    {
+        source = secondary.Traits
+        singular = "Trait"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Relationships = list
+    {
+        singular = "Relationship"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Attacks = list
+    {
+        description = "Each weapon with the skill named in it; without that skill the dice are half Agility."
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Gear = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Armor = string { description = "Armor dice by location." }
+        Property = string { multiline = true }
+        Reputations = string { multiline = true }
+        Affiliations = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, 'Skills and Attacks'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Stock = string {}
+        Will = string { default = "B4" }
+        Perception = string { default = "B4" }
+        Agility = string { default = "B4" }
+        Speed = string { default = "B4" }
+        Power = string { default = "B4" }
+        Forte = string { default = "B4" }
+        Health = string { default = "B4" }
+        Steel = string { default = "B4" }
+        Reflexes = integer { default = 4 }
+        'Mortal Wound' = string { default = "B10" }
+        Wounds = string { editable = live  indicator = "#d64545" }
+    }
+    'Skills and Attacks' = keyvalues
+    {
+        description = "Skills with dice and shade. A weapon skill is an attack."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Sword", "Bow", "Brawling"]
+        valueType = custom
+        {
+            Exponent = integer { default = 4  valuedice = ask ("Obstacle", bwAsked (Exponent, Shade, 0, false))  action = if Key == "Bow" or Key == "Crossbow" or Key == "Throwing" then "ranged" else if Key == "Sword" or Key == "Spear" or Key == "Axe" or Key == "Brawling" or Key == "Knives" or Key == "Hammer" then "melee" else ""  reach = 2 }
+            Shade = string { default = "B"  keys = shadeKeys }
+            'I M S' = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Beliefs = string { multiline = true }
+        Traits = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+bwWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/sword.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { default = "Sword" }
+        'I M S' = string { description = "Incidental, mark and superb damage, such as B4 B7 B11." }
+        Add = string { default = "2" }
+        VA = string { description = "Versus armor." }
+        Length = string {}
+        Range = string { description = "Metres; blank for melee." }
+    }
+}
+
+bwTrait = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { description = "Character traits shape roleplay, call-ons help once a session, die traits change the rules." keys = ["Character", "Call-on", "Die"] }
+        Cost = string { default = "1" }
+    }
+}
+
+BurningWheel = system
+{
+    hints = [
+        hint
+        {
+            title = "Lifepaths"
+            topic = "Getting started"
+            text = ["Build the character through lifepaths, then write three Beliefs and three Instincts. The Beliefs drive play: the GM challenges them, and acting on them earns artha."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll exponent d6: black shade succeeds on 4-6, grey 3-6, white 2-6. Meet the Obstacle (Ob) to succeed. The prompt asks for advantage dice or penalties and the Ob; wounds are applied for you."]
+        },
+        hint
+        {
+            title = "Fight!"
+            topic = "Combat"
+            text = ["Exchanges are scripted three actions at a time, Reflexes deciding how many each fighter gets. A hit deals the weapon's I, M or S wound by margin."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Fight! is scripted; there is no initiative roll. Order fighters by Reflexes in the initiative list."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = bwWeapon
+    Traits = bwTrait
+    secondaryTypes = ["Weapons", "Traits"]
+    description = "Burning Wheel Gold: hard-hitting fantasy driven by Beliefs, shaded d6 pools against an obstacle, artha and lifepaths"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6]
+    cssFiles = ["/systems/burningwheel/burningwheel.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
+    nameSettings = [oldWorldNameSetting, fantasyNameSetting, norseNameSetting]
+}
