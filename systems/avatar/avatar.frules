@@ -1,0 +1,289 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+moveOutcome (total) =
+    if total > 9 then "Strong hit"
+    else if total > 6 then "Weak hit"
+    else "Miss"
+
+moveText (total) =
+    if total > 9 then "10+: you do it"
+    else if total > 6 then "7-9: you do it, with a cost or a choice"
+    else "6-: miss, mark growth if it fits, and the GM makes a move"
+
+moveResult (total) =
+{
+    Text = toString (total) + ", " + moveText (total)
+    Value = total
+    Outcome = moveOutcome (total)
+}
+
+avatarRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + sum (first (throws).rolls))))
+
+avatarDice (char) = avatarRoll (char.Character.Forward)
+
+approachText (total) =
+    if total > 9 then "10+: use two techniques"
+    else if total > 6 then "7-9: use one technique"
+    else "6-: use one technique, then mark 1 fatigue or take a condition"
+
+approachResult (total) =
+{
+    Text = toString (total) + ", " + approachText (total)
+    Value = total
+    Outcome = moveOutcome (total)
+}
+
+approachRoll (extra) = ([2d6], ((baseline, throws)->approachResult (baseline + extra + sum (first (throws).rolls))))
+
+approachDice (char) = approachRoll (char.Character.Forward)
+
+penalty (flag) = if flag then 2 else 0
+
+conditionsMarked (char) =
+    (if char.Conditions.Afraid then 1 else 0) + (if char.Conditions.Angry then 1 else 0) + (if char.Conditions.Guilty then 1 else 0)
+    + (if char.Conditions.Insecure then 1 else 0) + (if char.Conditions.Troubled then 1 else 0)
+
+outState (char) =
+    if conditionsMarked (char) == 5 and char.Status.Fatigue.realvalue == 5 then "Taken out"
+    else if char.Status.Fatigue.realvalue == 5 then "Exhausted"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Stats, Balance, Status, Conditions, 'Combat approaches'] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Playbook = string { keys = ["The Bold", "The Guardian", "The Hammer", "The Icon", "The Idealist", "The Pillar", "The Prodigy", "The Rogue", "The Successor", "The Elder", "The Razor", "The Satellite"] }
+        Training = string { description = "Bending, weapons or technology." keys = ["Airbending", "Earthbending", "Firebending", "Waterbending", "Weapons", "Technology"] }
+        Background = string { keys = ["Military", "Monastic", "Outlaw", "Privileged", "Urban", "Wilderness"] }
+        Hometown = string {}
+        Era = string { keys = ["Kyoshi", "Roku", "Hundred Year War", "Aang", "Korra"] }
+        Demeanor = string {}
+        Look = string { multiline = true }
+        Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+    }
+
+    Stats = table
+    {
+        description = "The four stats, from -1 to +2. Roll 2d6 plus a stat: 10+ strong hit, 7-9 weak hit."
+        tableLayout = layout { columns = 4  size = wide }
+        Creativity = modifier { description = "Thinking quickly and out of the box." default = 0  minvalue = -1  maxvalue = 3  valuedice = avatarDice (characterTable) }
+        Focus = modifier { description = "Patience, attention and discipline." default = 0  minvalue = -1  maxvalue = 3  valuedice = avatarDice (characterTable) }
+        Harmony = modifier { description = "Getting along with people and the world." default = 0  minvalue = -1  maxvalue = 3  valuedice = avatarDice (characterTable) }
+        Passion = modifier { description = "Drive, energy and force of will." default = 0  minvalue = -1  maxvalue = 3  valuedice = avatarDice (characterTable) }
+    }
+
+    Balance = table
+    {
+        description = "Your two principles pull against each other. Balance moves toward one or the other; past the end you lose your balance."
+        tableLayout = layout { columns = 3  size = wide }
+        'First principle' = string { description = "The principle on the left of the track, such as Loyalty." }
+        'Second principle' = string { description = "The principle on the right of the track, such as Confidence." }
+        Center = integer { description = "Where balance returns to after a fight or a moment of balance." default = 0  minvalue = -3  maxvalue = 3 }
+        Balance = integer { description = "Negative toward the first principle, positive toward the second, -3 to +3." default = 0  minvalue = -3  maxvalue = 3  editable = live }
+        'Live up to first' = modifier { description = "Roll with your first principle when you act for it: the further toward it, the higher." value = max (0, 0 - Balance)  valuedice = avatarDice (characterTable)  editable = none }
+        'Live up to second' = modifier { description = "Roll with your second principle when you act for it." value = max (0, Balance)  valuedice = avatarDice (characterTable)  editable = none }
+        'Return to center' = button { description = "After a fight or a scene that resolves it, balance shifts back to the center."  editable = live  onClick = updates { (root.Balance.Balance) = Center } }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Fatigue = slots { description = "Fatigue, marked to push through and by techniques. When it is full, mark conditions instead." number = 5  editable = live  indicator = "#d4b106" }
+        Growth = slots { description = "Growth, marked at the end of a session for answering your growth question. Full means an advancement." number = 4  editable = live  allowedchange = increaseAndClear }
+        'Growth question' = string { description = "The playbook's question, asked at the end of each session." }
+        Out = string { value = outState (characterTable)  visible = none  indicator = "#d64545" }
+        'Rest and recover' = button
+        {
+            description = "Time to rest clears fatigue, and a calm scene with friends can clear conditions."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue.realvalue) = 0
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        description = "Emotional conditions. Each gives -2 to some moves. Clear one by doing what it calls for."
+        tableLayout = layout { columns = 5  size = wide }
+        Afraid = bool { description = "Afraid: -2 to intimidate and to call someone out. Clear it by running from danger." default = false  editable = live  indicator = "#8e5cc4" }
+        Angry = bool { description = "Angry: -2 to guide and comfort and to assess a situation. Clear it by breaking something important." default = false  editable = live  indicator = "#d64545" }
+        Guilty = bool { description = "Guilty: -2 to push your luck, +2 to deny a callout. Clear it by making a sacrifice." default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { description = "Insecure: -2 to trick and to resist shifting your balance. Clear it by acting rashly." default = false  editable = live  indicator = "#d4b106" }
+        Troubled = bool { description = "Troubled: -2 to plead and to rely on your skills and training. Clear it by seeking guidance." default = false  editable = live  indicator = "#3a7bd5" }
+    }
+
+    'Basic moves' = table
+    {
+        description = "The moves every character has, with the stat they roll."
+        tableLayout = layout { columns = 2  size = wide }
+        'Assess a Situation' = modifier { value = Stats.Creativity - penalty (Conditions.Angry)  valuedice = avatarDice (characterTable)  editable = none }
+        'Guide and Comfort' = modifier { value = Stats.Harmony - penalty (Conditions.Angry)  valuedice = avatarDice (characterTable)  editable = none }
+        'Intimidate an NPC' = modifier { value = Stats.Passion - penalty (Conditions.Afraid)  valuedice = avatarDice (characterTable)  editable = none }
+        'Plead with an NPC' = modifier { value = Stats.Harmony - penalty (Conditions.Troubled)  valuedice = avatarDice (characterTable)  editable = none }
+        'Push Your Luck' = modifier { value = Stats.Passion - penalty (Conditions.Guilty)  valuedice = avatarDice (characterTable)  editable = none }
+        'Rely on Your Skills and Training' = modifier { value = Stats.Focus - penalty (Conditions.Troubled)  valuedice = avatarDice (characterTable)  editable = none }
+        'Trick an NPC' = modifier { value = Stats.Creativity - penalty (Conditions.Insecure)  valuedice = avatarDice (characterTable)  editable = none }
+        'Resist Shifting Your Balance' = modifier { description = "Roll with your balance toward the principle being pushed, or plain 2d6." value = 0 - penalty (Conditions.Insecure)  valuedice = avatarDice (characterTable)  editable = none }
+    }
+
+    'Combat approaches' = table
+    {
+        description = "In a fight, pick an approach each exchange and roll it: 10+ two techniques, 7-9 one, 6- one and a cost."
+        tableLayout = layout { columns = 3  size = wide }
+        'Advance and Attack' = modifier { value = Stats.Passion  valuedice = approachDice (characterTable)  editable = none  action = melee  reach = 3 }
+        'Defend and Maneuver' = modifier { value = Stats.Focus  valuedice = approachDice (characterTable)  editable = none }
+        'Evade and Observe' = modifier { value = Stats.Creativity  valuedice = approachDice (characterTable)  editable = none }
+    }
+
+    Techniques = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Techniques
+        singular = "Technique"
+        editable = character
+    }
+
+    Moves = list
+    {
+        description = "Playbook moves and the moment of balance."
+        tableLayout = layout { size = wide }
+        source = secondary.Moves
+        singular = "Move"
+        editable = character
+    }
+
+    Connections = list
+    {
+        description = "Ties to other characters from your playbook."
+        singular = "Connection"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Connection = string {}
+        }
+    }
+
+    Playbook = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Playbook feature' = string { description = "The feature that makes your playbook different." multiline = true }
+        History = string { multiline = true }
+        'Moment of balance' = string { description = "What happens when you reach true balance once." multiline = true }
+        Advancements = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [NPC, Conditions] }
+    NPC = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "Minor NPCs have a few fatigue and conditions; major ones have a principle and balance too." default = "Minor"  keys = ["Minor", "Major", "Legendary", "Group"] }
+        Drive = string { description = "What the NPC wants." }
+        Principle = string {}
+        Balance = integer { default = 0  editable = live }
+        Fatigue = slots { number = 3  editable = live  indicator = "#d4b106" }
+        Out = string { value = if Fatigue.realvalue >= 3 and Conditions.Marked >= 3 then "Taken out" else ""  visible = none  indicator = "#d64545" }
+        Training = string {}
+    }
+    Conditions = table
+    {
+        description = "How many conditions the NPC can take, and which are marked."
+        tableLayout = layout { columns = 2  size = wide }
+        Conditions = string { description = "Which conditions this NPC has, such as Angry and Afraid." }
+        Marked = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+    }
+    Techniques = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Technique"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+avatarTechnique = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Approach" prefix = "" filter = Stats.Approach },
+            filter { name = "Training" prefix = "" filter = Stats.Training }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Approach = string { keys = ["Advance and Attack", "Defend and Maneuver", "Evade and Observe"] }
+        Training = string { keys = ["Universal", "Group", "Airbending", "Earthbending", "Firebending", "Waterbending", "Weapons", "Technology"] }
+        Mastery = string { keys = ["Learned", "Practiced", "Mastered"] }
+    }
+}
+
+avatarMove = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Playbook" prefix = "" filter = Stats.Playbook }]
+    }
+    Stats = table
+    {
+        Playbook = string {}
+        Stat = string { keys = ["", "Creativity", "Focus", "Harmony", "Passion", "Principle"] }
+    }
+}
+
+AvatarLegends = system
+{
+    hints = [
+        hint
+        {
+            title = "Eras and playbooks"
+            topic = "Getting started"
+            text = ["Pick an era together. Each player takes a playbook, which sets the two principles on the balance track, a feature and moves, and picks a training: one bending art, weapons or technology."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["Roll 2d6 plus a stat when a move says so: 10+ you do it, 7-9 with a cost, 6- the GM makes a move. Conditions take 2 off some moves. Fatigue marks pay for pushing through."]
+        },
+        hint
+        {
+            title = "Fights"
+            topic = "Combat"
+            text = ["Each exchange, everyone picks an approach (Advance and Attack, Defend and Maneuver, Evade and Observe), rolls it, then uses techniques in order: defend first, then advance, then evade."]
+        },
+        hint
+        {
+            title = "Balance"
+            topic = "Play"
+            text = ["NPCs and friends can call you out and shift your balance toward one principle. Past the end of the track you lose your balance and the GM tells you what you do."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Techniques = avatarTechnique
+    Moves = avatarMove
+    secondaryTypes = ["Techniques", "Moves"]
+    description = "Avatar Legends: Powered by the Apocalypse bending, balance between principles and exchange-based fights"
+    quickdice = [2d6]
+    cssFiles = ["/systems/avatar/avatar.css"]
+    libraries = ["/systems/names/chinese.json", "/systems/names/samurai.json", "/systems/names/fantasy.json"]
+    nameSettings = [easternNameSetting, feudalJapanNameSetting, fantasyNameSetting]
+}

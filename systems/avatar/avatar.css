@@ -1,0 +1,65 @@
+@import url("/systems/sheet.css");
+
+/* Avatar Legends: a light rice-paper sheet with four element colours, round
+   stat boxes, a balance track between two principles, conditions in a row
+   and the three combat approaches side by side. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e8dcc3;
+    --surface: #fbf7ee;
+    --surface-alt: #f2ead9;
+    --surface-sunken: #e8dcc3;
+    --surface-muted: #d7c7a5;
+    --text: #2a2320;
+    --text-muted: #574a40;
+    --text-faint: #8a7b6c;
+    --on-accent: #fbf7ee;
+    --border: #c2ae8c;
+    --border-strong: #4a3b2f;
+    --accent: #2f6f8f;
+    --accent-hover: #3b88ad;
+    --accent-soft: #d9e9f0;
+    --link: #2f6f8f;
+    --danger: #b23a1e;
+    --danger-hover: #8c2d17;
+    --danger-soft: #f4dbd3;
+    --success: #4f7a2e;
+    --paper: #fbf7ee;
+    --card-bg: #f2ead9;
+    --dice-bg: #2f6f8f;
+    --dice-text: #fbf7ee;
+}
+
+.entityView {
+    --sheet-font: "Gill Sans", "Trebuchet MS", sans-serif;
+    --title-font: "Papyrus", "Herculanum", "Gill Sans", sans-serif;
+    --block-radius: 10px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+}
+.entityView .table-stats > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 50%;
+    padding: 10px;
+}
+.entityView .table-stats > table > tbody > tr:nth-child(1) { border-color: #2f6f8f; }
+.entityView .table-stats > table > tbody > tr:nth-child(2) { border-color: #4f7a2e; }
+.entityView .table-stats > table > tbody > tr:nth-child(3) { border-color: #c79a1e; }
+.entityView .table-stats > table > tbody > tr:nth-child(4) { border-color: #b23a1e; }
+.entityView .table-status,
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-status { clear: left; }
+.entityView .table-conditions > table > tbody { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.entityView .table-combat-approaches > table > tbody > tr { border: 2px solid var(--accent); border-radius: 8px; padding: 4px; }
+.entityView .table-techniques,
+.entityView .table-moves { --block: 50%; }
+.entityView .table-techniques { clear: left; }
