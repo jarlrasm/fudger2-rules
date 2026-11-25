@@ -1,0 +1,31 @@
+{
+  "values": {
+    "Character": { "Line": "Edge of the Empire", "Species": "Human", "Career": "Smuggler", "Specializations": "Pilot, Scoundrel" },
+    "Characteristics": { "Brawn": 2, "Agility": 4, "Intellect": 2, "Cunning": 3, "Willpower": 2, "Presence": 3 },
+    "Status": { "Wound Threshold": 12, "Wounds": 4, "Strain Threshold": 13, "Strain": 2, "Ranged Defense": 0 },
+    "General Skills": {
+      "Astrogation.Rank": 1, "Charm.Rank": 1, "Coordination.Rank": 1, "Coordination.Career": true, "Cool.Rank": 1, "Deception.Rank": 2, "Deception.Career": true,
+      "Perception.Rank": 1, "Perception.Career": true, "Piloting Planetary.Rank": 1, "Piloting Planetary.Career": true, "Piloting Space.Rank": 2, "Piloting Space.Career": true,
+      "Skulduggery.Rank": 1, "Skulduggery.Career": true, "Streetwise.Rank": 1, "Streetwise.Career": true, "Vigilance.Rank": 1, "Vigilance.Career": true
+    },
+    "Combat Skills": { "Gunnery.Rank": 1, "Gunnery.Career": true, "Ranged Light.Rank": 2, "Ranged Light.Career": true, "Brawl.Rank": 0 },
+    "Knowledge Skills": { "Underworld.Rank": 1, "Underworld.Career": true, "Outer Rim.Rank": 1 },
+    "Critical Injuries": [ { "Severity": "Easy", "Injury": "Grazed ribs from a stun bolt: one setback die on Athletics until treated" } ],
+    "Experience": { "Total XP": 165, "Available XP": 10, "Credits": 1240 },
+    "Motivation": { "Obligation Type": "Debt", "Obligation": 15, "Motivations": "Desire: freedom. Owes the Ruuk syndicate for the ship, and would rather fly into a sun than fly for them again." },
+    "Description": { "Appearance": "Weathered flight jacket with the patches picked off, a datapad of fake transponder codes, a grin that costs extra.", "Notes": "Ship: the Lucky Spanner, an old light freighter held together with bonding tape. Contact on Nar Kesh: Old Tibbs, fence." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Heavy blaster pistol", "values": { "Stats": { "Skill": "Ranged Light", "Damage": "7", "Critical": "3", "Range": "Medium", "Encumbrance": "2", "Hard Points": "3", "Price": "700", "Rarity": "6", "Special": "Stun setting" } } },
+      { "name": "Vibroknife", "values": { "Stats": { "Skill": "Melee", "Damage": "+1", "Critical": "2", "Range": "Engaged", "Encumbrance": "1", "Price": "250", "Special": "Pierce 2, Vicious 1" } } }
+    ],
+    "Armor": [ { "name": "Heavy clothing", "values": { "Stats": { "Defense": "0", "Soak": "1", "Encumbrance": "1", "Price": "50" } } } ],
+    "Talents": [
+      { "name": "Full Throttle", "values": { "Stats": { "Activation": "Active (Action)", "Specialization": "Pilot" } } },
+      { "name": "Skilled Jockey", "values": { "Stats": { "Activation": "Passive", "Ranked": true, "Ranks": 1, "Specialization": "Pilot" } } },
+      { "name": "Quick Draw", "values": { "Stats": { "Activation": "Active (Incidental)", "Specialization": "Scoundrel" } } }
+    ],
+    "Gear": [ { "name": "Comlink" }, { "name": "Stimpack", "values": { "Stats": { "Encumbrance": "0", "Price": "25" } } }, { "name": "Slicing tools", "values": { "Stats": { "Encumbrance": "1", "Price": "500" } } } ]
+  }
+}

@@ -1,0 +1,413 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+#include "/systems/age/age.frules"
+
+daTest = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Dragon" }],
+    ((baseline, throws)->ageResult (first (throws).rolls, first (item (1, throws).rolls), baseline + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered)))
+
+daDice = ask ("Target number", daTest)
+
+daAttack = ask ("Target's Defense", daTest)
+
+daSpell = ask ("Target number", daTest)
+
+initiativeRoll = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Dragon" }],
+    ((baseline, throws)->baseline + sum (first (throws).rolls) + first (item (1, throws).rolls)))
+
+abilityNames = ["Communication", "Constitution", "Cunning", "Dexterity", "Magic", "Perception", "Strength", "Willpower"]
+
+abilityValue (char, name) =
+    switch name
+        case "Communication" then char.Abilities.Communication
+        case "Constitution" then char.Abilities.Constitution
+        case "Cunning" then char.Abilities.Cunning
+        case "Dexterity" then char.Abilities.Dexterity
+        case "Magic" then char.Abilities.Magic
+        case "Perception" then char.Abilities.Perception
+        case "Strength" then char.Abilities.Strength
+        else char.Abilities.Willpower
+
+hasFocus (char, name) = count (filter ((f)->toLower (f.Focus) == toLower (name), char.Focuses)) > 0
+
+focusBonus (char, name) = if hasFocus (char, name) then 2 else 0
+
+noStats = { Stats = { Group = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+armorStat (item, field) = valueOr (valueOr (valueOr (item.data, "armorStats", { Stats = { Rating = "0" } }), "Stats", { Rating = "0" }), field, "")
+
+armorRating (char) = sum (map ((a)->firstNumber (armorStat (a, "Rating")), char.Armor))
+
+armorPenalty (char) = sum (map ((a)->firstNumber (armorStat (a, "Penalty")), char.Armor))
+
+shieldBonus (char) = sum (map ((a)->firstNumber (armorStat (a, "Defense")), char.Armor))
+
+groupAbility (group) =
+    switch group
+        case "Axes" then "Strength"
+        case "Bludgeons" then "Strength"
+        case "Heavy Blades" then "Strength"
+        case "Polearms" then "Strength"
+        case "Spears" then "Strength"
+        case "Bows" then "Dexterity"
+        case "Brawling" then "Dexterity"
+        case "Light Blades" then "Dexterity"
+        case "Staves" then "Dexterity"
+        else "Dexterity"
+
+trainedIn (char, group) = group == "" or count (filter ((g)->toLower (g) == toLower (group), char.'Weapon Groups')) > 0
+
+untrained (char, group) = if trainedIn (char, group) then 0 else -2
+
+isRangedGroup (group) = group == "Bows" or group == "Thrown"
+
+weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = daAttack  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBonus (damageText) + damageExtra  valuedice = damageRoll (diceCount (damageText), dieSize (damageText))  render = damageLabel (diceCount (damageText), dieSize (damageText), damageBonus (damageText) + damageExtra)  editable = none }
+}
+
+attackFor (char, weapon) =
+    if isRangedGroup (weaponStat (weapon, "Group")) then
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), char.Abilities.Dexterity + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long Range")))
+    else
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), abilityValue (char, groupAbility (weaponStat (weapon, "Group"))) + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
+
+spellpower (char) = 10 + char.Abilities.Magic + (if hasFocus (char, "Spirit Lore") or hasFocus (char, "Entropy Lore") or hasFocus (char, "Primal Lore") or hasFocus (char, "Creation Lore") then 2 else 0)
+
+mageOnly (className) = if className == "Mage" then visible else editor
+
+downState (char) =
+    if char.Health.Health < 1 then "Dying"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Combat, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Background = string { description = "Where the character comes from, such as Avvar, Ferelden Freeman, Dalish Elf or Surface Dwarf." }
+        Class = string { keys = ["Mage", "Rogue", "Warrior"] }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        Specialization = string {}
+        Experience = integer { default = 0  editable = live }
+        Goals = string { multiline = true }
+        Ties = string { description = "People and groups the character is bound to." multiline = true }
+        Languages = string {}
+    }
+
+    Abilities = table
+    {
+        description = "Eight abilities from -2 to 4 or more. A test is 3d6 (one of them the Dragon die) plus the ability, plus 2 for a focus."
+        tableLayout = layout { columns = 4  size = wide }
+        Communication = integer { description = "Dealing with people." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Constitution = integer { description = "Stamina and toughness." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Cunning = integer { description = "Intelligence, learning and knowledge." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Dexterity = integer { description = "Agility, reflexes and light weapons." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Magic = integer { description = "Arcane power; sets spellpower." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Perception = integer { description = "The senses; adds to ranged damage." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Strength = integer { description = "Muscle; heavy weapons and melee damage." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Willpower = integer { description = "Mental fortitude and resolve." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+    }
+
+    Focuses = list
+    {
+        description = "Areas of training inside an ability. A focus adds 2 to its tests."
+        singular = "Focus"
+        editable = character
+        valueType = custom
+        {
+            Ability = string { default = "Dexterity"  keys = abilityNames }
+            Focus = string {}
+            Test = modifier { value = abilityValue (characterTable, Ability) + 2  valuedice = daDice  editable = none }
+        }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Health' = integer { description = "Health by class and level, plus Constitution." default = 20 }
+        Health = integer { description = "At 0 you are dying: Constitution rounds to be saved." default = 'Max Health'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Mana' = integer { description = "Mages only: mana for spells." default = 0  visible = mageOnly (Character.Class) }
+        Mana = integer { default = 'Max Mana'  minvalue = 0  editable = live  visible = mageOnly (Character.Class) }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#d64545" }
+        Breather = button
+        {
+            description = "A breather after a fight heals 5 + Constitution + level Health."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.Health) = min ('Max Health', Health + 5 + Abilities.Constitution + Character.Level)
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A full night's rest restores all Health and Mana."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.Health) = 'Max Health'
+                (root.Health.Mana) = 'Max Mana'
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Defense = integer { description = "10 plus Dexterity plus a shield: the target number to hit you." value = 10 + Abilities.Dexterity + shieldBonus (characterTable)  editable = none }
+        'Armor Rating' = integer { description = "Taken off damage from each hit." value = armorRating (characterTable)  editable = none }
+        'Armor Penalty' = integer { description = "Taken off Speed and Dexterity tests." value = armorPenalty (characterTable)  editable = none }
+        Speed = integer { description = "10 plus Dexterity minus the armor penalty, in yards a move. Dwarves have 8." value = 10 + Abilities.Dexterity - armorPenalty (characterTable)  editable = none }
+        Initiative = modifier { description = "A Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity  valuedice = initiativeRoll  editable = none }
+        'Casting Test' = modifier { description = "Magic plus 2 for a lore focus: roll against the spell's target number." value = spellpower (characterTable) - 10  valuedice = daSpell  editable = none  visible = mageOnly (Character.Class) }
+        Spellpower = integer { description = "10 plus Magic plus 2 for a lore focus: the target number to resist your spells." value = spellpower (characterTable)  editable = none  visible = mageOnly (Character.Class) }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each attack asks for the target's Defense. Doubles on a hit give stunt points equal to the Dragon die."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fist", characterTable.Abilities.Dexterity + focusBonus (characterTable, "Brawling"), "1d3", characterTable.Abilities.Strength, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        visible = mageOnly (Character.Class)
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    'Weapon Groups' = list
+    {
+        description = "Weapon groups the character is trained in. Untrained, attacks take -2 and damage is halved."
+        singular = "Weapon group"
+        editable = character
+        valueType = string
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Money = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Gold Pieces' = integer { default = 0  editable = live }
+        'Silver Pieces' = integer { default = 0  editable = live }
+        'Copper Pieces' = integer { default = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+npcAttack = custom
+{
+    Attack = modifier { default = 3  valuedice = daAttack  action = if Key == "Bow" or Key == "Crossbow" or Key == "Throw" then "ranged" else "melee"  reach = 2 }
+    Damage = string { default = "2d6+3" }
+    'Roll damage' = integer { value = damageBonus (Damage)  valuedice = damageRoll (diceCount (Damage), dieSize (Damage))  editable = none }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/dragonage/darkspawn.svg"  important = [Stats, Attacks] }
+    Abilities = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Communication = integer { default = 0  valuedice = daDice }
+        Constitution = integer { default = 1  valuedice = daDice }
+        Cunning = integer { default = 0  valuedice = daDice }
+        Dexterity = integer { default = 1  valuedice = daDice }
+        Magic = integer { default = 0  valuedice = daDice }
+        Perception = integer { default = 1  valuedice = daDice }
+        Strength = integer { default = 2  valuedice = daDice }
+        Willpower = integer { default = 1  valuedice = daDice }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Threat = string { keys = ["Minor", "Moderate", "Major", "Dire", "Legendary"] }
+        'Max Health' = integer { default = 25 }
+        Health = integer { default = 'Max Health'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Defense = integer { default = 11 }
+        'Armor Rating' = integer { default = 3 }
+        Speed = integer { default = 11 }
+        Initiative = modifier { default = 1  valuedice = initiativeRoll }
+        Down = string { value = if Health < 1 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = keyvalues
+    {
+        description = "Attack bonus against the target's Defense, and damage."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Longsword", "Bow"]
+        valueType = npcAttack
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Focuses = string { multiline = true }
+        Powers = string { multiline = true }
+        Equipment = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Group" prefix = "" filter = Stats.Group }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Group = string { default = "Heavy Blades"  keys = ["Axes", "Bludgeons", "Bows", "Brawling", "Heavy Blades", "Light Blades", "Polearms", "Spears", "Staves", "Thrown"] }
+        Damage = string { description = "Damage dice; melee adds Strength, ranged Perception." default = "2d6" }
+        'Min Strength' = string {}
+        'Short Range' = string { description = "Yards." }
+        'Long Range' = string { description = "Yards." }
+        Reload = string {}
+        Cost = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Rating = string { description = "Armor rating, taken off damage." default = "0" }
+        Penalty = string { description = "Penalty to Speed and Dexterity tests." default = "0" }
+        Defense = string { description = "A shield's bonus to Defense." default = "0" }
+        Cost = string {}
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Degree" prefix = "" filter = Stats.Degree }]
+    }
+    Stats = table
+    {
+        Degree = string { keys = ["Novice", "Journeyman", "Master"] }
+        Classes = string {}
+        Requirement = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/dragonage/spell.svg"
+        filters = [filter { name = "School" prefix = "" filter = Stats.School }]
+    }
+    Stats = table
+    {
+        School = string { keys = ["Creation", "Entropy", "Primal", "Spirit"] }
+        Type = string { keys = ["Attack", "Defense", "Enhancement", "Utility"] }
+        'Mana Cost' = string {}
+        'Casting Time' = string {}
+        'Target Number' = string {}
+        Test = string { description = "What the target rolls to resist, against your spellpower." }
+        Requirement = string {}
+    }
+}
+
+itemStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Cost = string {}
+    }
+}
+
+DragonAge = system
+{
+    hints = [
+        hint
+        {
+            title = "Ability tests"
+            topic = "Play"
+            text = ["Roll 3d6, one of them the red Dragon die, plus the ability and 2 for a focus. Enter the target number, or leave it blank for the GM to judge. Any doubles on a success give stunt points equal to the Dragon die."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask for the target's Defense. Damage is the weapon's dice plus Strength (melee) or Perception (ranged), less the target's armor rating. Spend stunt points on stunts such as Lightning Attack or Pierce Armor."]
+        },
+        hint
+        {
+            title = "Magic"
+            topic = "Play"
+            text = ["Mages spend mana on spells and roll a casting test against the spell's target number. Targets resist with a test against your spellpower."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative, a Dexterity test. Highest goes first and keeps the order."]
+        }
+    ]
+    distanceUnit = "yd"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Talents = talentStats
+    Spells = spellStats
+    Equipment = itemStats
+    secondaryTypes = ["Weapons", "Armor", "Talents", "Spells", "Equipment"]
+    description = "Dragon Age RPG: dark fantasy in Thedas with the AGE system, 3d6 tests with a Dragon die, stunts, mana and spellpower"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [3d6, 1d6]
+    cssFiles = ["/systems/dragonage/dragonage.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/oldworld.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
+    nameSettings = [fantasyNameSetting, oldWorldNameSetting, norseNameSetting]
+}

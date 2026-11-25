@@ -1,0 +1,327 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+bestAfter (rolls, difficulty) = if count (rolls) > difficulty then item (difficulty, reverse (sort (rolls))) else 1
+
+heartOutcome (best) =
+    if best == 10 then "Critical success"
+    else if best >= 8 then "Success"
+    else if best >= 6 then "Success at a cost"
+    else if best >= 2 then "Failure"
+    else "Critical failure"
+
+heartEffect (best) =
+    if best == 10 then ": increased effect"
+    else if best >= 8 then ""
+    else if best >= 6 then ": take stress"
+    else if best >= 2 then ": take stress"
+    else ": take double stress, things go badly"
+
+difficultyName (d) = if d == 2 then "Dangerous" else if d == 1 then "Risky" else "Standard"
+
+heartResult (rolls, difficulty) =
+{
+    Text = toString (bestAfter (rolls, difficulty)) + (if difficulty > 0 then " (" + difficultyName (difficulty) + ")" else "") + ": " + heartOutcome (bestAfter (rolls, difficulty)) + heartEffect (bestAfter (rolls, difficulty))
+    Value = bestAfter (rolls, difficulty)
+    Outcome = heartOutcome (bestAfter (rolls, difficulty))
+}
+
+heartRoll (pool) = ([dice { number = max (1, min (5, pool))  sides = 10 }], ((baseline, throws)->heartResult (first (throws).rolls, if answered then asked else 0)))
+
+heartTest (pool) = ask ("Extra dice (domain, knack, help)", 0, (n)->ask ("Difficulty", ["Standard", "Risky", "Dangerous"], 0, heartRoll (pool + n)))
+
+dieSides (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+stressRoll (dieSize) = ([dice { number = 1  sides = max (2, dieSize) }], ((baseline, throws)->{ Text = toString (max (0, first (first (throws).rolls) - asked)) + " stress" + (if answered and asked > 0 then " after " + toString (asked) + " protection" else "")  Value = max (0, first (first (throws).rolls) - asked) }))
+
+stressDie (dieSize) = ask ("Target's protection", 0, stressRoll (dieSize))
+
+falloutResult (roll, total) =
+{
+    Text = toString (roll) + " vs " + toString (total) + " stress: " + (if roll < total then (if total > 6 then "Major fallout" else "Minor fallout") else "No fallout")
+    Value = roll
+    Outcome = if roll < total then "Failure" else "Success"
+}
+
+falloutRoll = ([1d12], ((baseline, throws)->falloutResult (first (first (throws).rolls), baseline)))
+
+skill = custom
+{
+    Has = bool { description = "Ticked if you have the skill: +1 die." default = false }
+    Knack = string { description = "A knack makes the skill's tests one step better within its focus." }
+    Roll = integer { value = 1 + (if Has then 1 else 0)  valuedice = heartTest (1 + (if Has then 1 else 0))  render = toString (1 + (if Has then 1 else 0)) + "d10"  editable = none }
+}
+
+domain = custom
+{
+    Has = bool { description = "Ticked if you have the domain: +1 die to any test in that kind of place or subject." default = false }
+    Knack = string {}
+}
+
+resistance = custom
+{
+    Stress = integer { description = "Stress taken on this resistance." default = 0  minvalue = 0  maxvalue = 12  editable = live }
+    Protection = integer { description = "Taken off stress of this kind." default = 0  minvalue = 0 }
+}
+
+totalStress (char) = char.Resistances.Blood.Stress + char.Resistances.Mind.Stress + char.Resistances.Echo.Stress + char.Resistances.Fortune.Stress + char.Resistances.Supplies.Stress
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, field) = valueOr (valueOr (valueOr (item.data, "equipmentStats", noStats), "Stats", noStats.Stats), field, "")
+
+hasTag (item, tag) = contains (toLower (itemStat (item, "Tags")), tag)
+
+skillDice (char, name) = 1 + (if valueOr (valueOr (char.Skills, name, { Has = false }), "Has", false) then 1 else 0)
+
+weaponAttack (name, pool, dieSize, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = pool  valuedice = heartTest (pool)  render = toString (pool) + "d10"  action = kind  reach = 2  range = distance  editable = none }
+    Stress = integer { value = dieSize  valuedice = stressDie (dieSize)  render = "d" + toString (dieSize)  editable = none }
+}
+
+attackFor (char, item) =
+    if hasTag (item, "ranged") then weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "ranged", 30)
+    else weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "melee", 2)
+
+weapons (char) = filter ((x)->dieSides (itemStat (x, "Damage")) > 0, char.Equipment)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Resistances, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Ancestry = string { keys = ["Aelfir", "Drow", "Gnoll", "Human"] }
+        Class = string { keys = ["Cleaver", "Deadwalker", "Deep Apiarist", "Heretic", "Hound", "Incarnadine", "Junk Mage", "Vermissian Knight", "Witch"] }
+        Calling = string { keys = ["Adventure", "Enlightenment", "Forced", "Heartsblood", "Penitent"] }
+        Beats = string { description = "The calling's beats: hit them to earn advances." multiline = true }
+        Advances = string { description = "Minor, major and zenith abilities taken." multiline = true }
+    }
+
+    Skills = table
+    {
+        description = "Roll 1d10, plus one for the skill and one for the domain, and keep the highest. 8 or more succeeds; 6 or 7 succeeds at a cost."
+        tableLayout = layout { columns = 1 }
+        Compel = skill {}
+        Delve = skill {}
+        Discern = skill {}
+        Endure = skill {}
+        Evade = skill {}
+        Hunt = skill {}
+        Kill = skill {}
+        Mend = skill {}
+        Sneak = skill {}
+    }
+
+    Domains = table
+    {
+        tableLayout = layout { columns = 1 }
+        Cursed = domain {}
+        Desolate = domain {}
+        Haven = domain {}
+        Occult = domain {}
+        Religion = domain {}
+        Technology = domain {}
+        Warren = domain {}
+        Wild = domain {}
+    }
+
+    Resistances = table
+    {
+        description = "Stress on five resistances. When it counts, the GM rolls a d12 for fallout against your total stress."
+        tableLayout = layout { columns = 5  size = wide }
+        Blood = resistance {}
+        Mind = resistance {}
+        Echo = resistance {}
+        Fortune = resistance {}
+        Supplies = resistance {}
+    }
+
+    Fallout = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Total Stress' = integer { value = totalStress (characterTable)  editable = none }
+        'Fallout Check' = integer { description = "Roll d12: under your total stress you suffer fallout, major above 6." value = totalStress (characterTable)  valuedice = falloutRoll  render = "d12"  editable = none }
+        'Fallout Taken' = string { multiline = true  editable = live  indicator = "#d64545" }
+        'Rest in a haven' = button { description = "Resting in a haven clears all stress." editable = live  onClick = updates
+            {
+                (root.Resistances.Blood.Stress) = 0
+                (root.Resistances.Mind.Stress) = 0
+                (root.Resistances.Echo.Stress) = 0
+                (root.Resistances.Fortune.Stress) = 0
+                (root.Resistances.Supplies.Stress) = 0
+            }
+        }
+    }
+
+    Abilities = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Kill tests with your weapons; the stress die goes to the target's resistance, less its protection."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fists and teeth", skillDice (characterTable, "Kill"), 4, "melee", 2)], map ((item)->attackFor (characterTable, item), weapons (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Resources = list
+    {
+        description = "Valuables with a domain and a value die, traded or burned for effects."
+        tableLayout = layout { size = wide }
+        singular = "Resource"
+        editable = live
+        valueType = custom
+        {
+            Resource = string {}
+            Domain = string {}
+            Value = string { keys = ["d4", "d6", "d8", "d10", "d12"] }
+        }
+    }
+
+    Bonds = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Bonds = string { description = "People and places you are tied to." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+adversaryTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/heart/horror.svg"  important = [Stats] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Resistance = integer { description = "Stress it takes before it is defeated." default = 6 }
+        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Protection = integer { default = 0 }
+        Domains = string {}
+        Attack = integer { description = "The stress die it deals." default = 6  valuedice = stressDie (Attack)  render = "d" + toString (Attack)  action = melee  reach = 2 }
+        Down = string { value = if Stress >= Resistance then "Defeated" else ""  visible = none  indicator = "#555555" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+        Abilities = string { multiline = true }
+        Resources = string { description = "What can be taken from it." multiline = true }
+    }
+}
+
+landmarkTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/heart/landmark.svg"
+        important = [Landmark]
+        filters = [filter { name = "Tier" prefix = "Tier" filter = Landmark.Tier }]
+    }
+    Landmark = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Tier = integer { description = "How deep: 0 near the surface to 4 near the Heart." default = 1  minvalue = 0  maxvalue = 4 }
+        Domains = string { description = "Cursed, Desolate, Haven, Occult, Religion, Technology, Warren or Wild." }
+        Stability = integer { description = "Haunted or failing landmarks lose stability; at 0 they fall to the Heart." default = 8  minvalue = 0  editable = live }
+        Haunts = string { multiline = true }
+        Resources = string { multiline = true }
+        Connections = string { description = "Delves to other landmarks, with their resistance." multiline = true }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Weapon", "Armour", "Tool", "Consumable"] }
+        Damage = string { description = "Stress die for weapons, such as d6." }
+        Protection = string {}
+        Tags = string { description = "Such as Ranged, Brutal, Piercing, One-shot, Spread." }
+        Domain = string {}
+    }
+}
+
+abilityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Level" prefix = "" filter = Stats.Level }]
+    }
+    Stats = table
+    {
+        Level = string { keys = ["Core", "Minor", "Major", "Zenith"] }
+        Class = string {}
+    }
+}
+
+Heart = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll 1d10, plus one for a fitting skill and one for a fitting domain (and help), and keep the highest. Risky and Dangerous tasks discard the highest one or two dice first. 8 or 9 succeeds, 10 is a critical, 6 or 7 succeeds at a cost of stress, and lower fails with stress."]
+        },
+        hint
+        {
+            title = "Stress and fallout"
+            topic = "Combat"
+            text = ["Stress goes to Blood, Mind, Echo, Fortune or Supplies, less protection. After stress the GM rolls d12 against the total: under it, the character suffers fallout. Rest in a haven to clear stress."]
+        },
+        hint
+        {
+            title = "Landmarks"
+            topic = "Getting started"
+            text = ["Landmarks are their own entity type: the havens and horrors of the City Beneath, with tier, domains and haunts. Delves link them."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["There is no initiative: the GM moves the spotlight between the players, and adversaries act as consequences of their rolls."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = adversaryTable
+    Landmarks = landmarkTable
+    Equipment = equipmentStats
+    Abilities = abilityStats
+    secondaryTypes = ["Equipment", "Abilities"]
+    extraEntityTypes = [entityTypeDescription ("Landmarks", "landmark", false, "/systems/heart/landmark.svg", [])]
+    description = "Heart: The City Beneath: delvers in the bleeding undercity, rolling d10s and keeping the highest, with stress, fallout and landmarks"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10, 2d10, 3d10, 1d4, 1d6, 1d8, 1d12]
+    cssFiles = ["/systems/heart/heart.css"]
+    libraries = ["/systems/names/gothic.json", "/systems/names/nightworld.json", "/systems/names/fantasy.json"]
+    nameSettings = [gothicHorrorNameSetting, nightWorldNameSetting, fantasyNameSetting]
+}

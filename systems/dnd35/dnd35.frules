@@ -1,0 +1,666 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) = score / 2 - 5
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+d35Text (total, natural, dc, automatic) =
+    toString (total)
+    + (if dc > 0 then " vs " + toString (dc) + ": " + d35Outcome (total, natural, dc, automatic) else "")
+    + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+
+d35Outcome (total, natural, dc, automatic) =
+    if automatic and natural == 20 then "Success"
+    else if automatic and natural == 1 then "Failure"
+    else if total >= dc then "Success"
+    else "Failure"
+
+d35Result (total, natural, dc, automatic) =
+{
+    Text = d35Text (total, natural, dc, automatic)
+    Value = total
+    Outcome = if dc > 0 then d35Outcome (total, natural, dc, automatic) else if natural == 20 and automatic then "Critical threat" else ""
+}
+
+attackOutcome (total, natural, ac, threat) =
+    if natural == 1 then "Miss"
+    else if natural >= threat and (total >= ac or ac == 0) then "Critical threat"
+    else if natural == 20 then "Hit"
+    else if ac == 0 then ""
+    else if total >= ac then "Hit"
+    else "Miss"
+
+attackResult (total, natural, ac, threat) =
+{
+    Text = toString (total) + (if ac > 0 then " vs AC " + toString (ac) else "") + (if attackOutcome (total, natural, ac, threat) == "" then "" else ": " + attackOutcome (total, natural, ac, threat)) + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = attackOutcome (total, natural, ac, threat)
+}
+
+d35Roll (dc, automatic) = ([1d20], ((baseline, throws)->d35Result (baseline + first (first (throws).rolls), first (first (throws).rolls), dc, automatic)))
+
+d35AskedRoll (automatic) = ([1d20], ((baseline, throws)->d35Result (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, automatic)))
+
+d35Check = ask ("DC", d35AskedRoll (false))
+
+d35Save = ask ("DC", d35AskedRoll (true))
+
+d35AttackRoll (threat) = ([1d20], ((baseline, throws)->attackResult (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, threat)))
+
+d35Attack (threat) = ask ("Target AC", d35AttackRoll (threat))
+
+plainD35 = d35Roll (0, false)
+
+threatRange (critical) =
+    if contains (critical, "15") then 15
+    else if contains (critical, "17") then 17
+    else if contains (critical, "18") then 18
+    else if contains (critical, "19") then 19
+    else 20
+
+conditionPenalty (char) =
+    (if char.Conditions.Shaken or char.Conditions.Frightened then 2 else 0) + (if char.Conditions.Sickened then 2 else 0)
+
+sizeModifier (size) =
+    switch size
+        case "Fine" then 8
+        case "Diminutive" then 4
+        case "Tiny" then 2
+        case "Small" then 1
+        case "Large" then -1
+        case "Huge" then -2
+        case "Gargantuan" then -4
+        case "Colossal" then -8
+        else 0
+
+grappleSize (size) =
+    switch size
+        case "Fine" then -16
+        case "Diminutive" then -12
+        case "Tiny" then -8
+        case "Small" then -4
+        case "Large" then 4
+        case "Huge" then 8
+        case "Gargantuan" then 12
+        case "Colossal" then 16
+        else 0
+
+opposedResult (total, natural, other, known) =
+{
+    Text = toString (total) + (if known then " vs " + toString (other) + ": " + (if total >= other then "Win" else "Lose") else "")
+    Value = total
+    Outcome = if known then (if total >= other then "Success" else "Failure") else ""
+}
+
+d35Opposed = ask ("Opponent's check", ([1d20], ((baseline, throws)->opposedResult (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, answered))))
+
+iterativePenalty (char) =
+    switch char.Combat.Attack
+        case "Second" then -5
+        case "Third" then -10
+        case "Fourth" then -15
+        else 0
+
+ability = custom
+{
+    Score = integer { description = "Ability score, usually 3 to 18 before bonuses." default = 10  minvalue = 1  maxvalue = 40 }
+    Modifier = modifier { description = "Modifier from the score: (score - 10) / 2, rounded down." value = abilityModifier (Score)  valuedice = d35Check  editable = none }
+}
+
+save (abilityMod) = custom
+{
+    Base = integer { description = "Base save bonus from your class and level." default = 0 }
+    Magic = integer { description = "Bonus from magic items such as a cloak of resistance." default = 0 }
+    Misc = integer { description = "Other bonuses and penalties." default = 0 }
+    Total = modifier { description = "Total save: base plus ability, magic and misc, minus condition penalties." value = Base + abilityMod + Magic + Misc - conditionPenalty (characterTable)  valuedice = d35Save  editable = none }
+}
+
+skill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { description = "Skill ranks: up to level + 3 in a class skill, half that in a cross-class skill." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "Class skills cost one skill point a rank; cross-class skills two." default = false }
+    Misc = integer { description = "Other bonuses, such as racial, synergy or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill." value = Ranks + abilityMod + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = d35Check  editable = none }
+}
+
+trainedSkill (abilityMod, armorPenalty) = custom
+{
+    Ranks = integer { description = "Skill ranks. This skill can only be used with at least one rank." default = 0  minvalue = 0 }
+    'Class skill' = bool { description = "Class skills cost one skill point a rank; cross-class skills two." default = false }
+    Misc = integer { description = "Other bonuses, such as racial, synergy or item bonuses." default = 0 }
+    Total = modifier { description = "Total bonus for d20 checks with this skill. Untrained, it can't be used." value = if Ranks == 0 then 0 else Ranks + abilityMod + Misc - armorPenalty - conditionPenalty (characterTable)  valuedice = d35Check  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, ruleset, field) = valueOr (valueOr (valueOr (item.data, ruleset, noStats), "Stats", noStats.Stats), field, "")
+
+armorStat (item, field) = toInt (itemStat (item, "dnd35Armor", field))
+
+armorPieces (char) = filter ((x)->itemStat (x, "dnd35Armor", "Type") != "Shield", char.Armor)
+
+shields (char) = filter ((x)->itemStat (x, "dnd35Armor", "Type") == "Shield", char.Armor)
+
+armorBonus (char) = sum (map ((x)->armorStat (x, "Armor Bonus"), armorPieces (char)))
+
+shieldBonus (char) = sum (map ((x)->armorStat (x, "Armor Bonus"), shields (char)))
+
+maxDex (char, dex) =
+    if count (armorPieces (char)) == 0 then dex
+    else min (dex, min (map ((x)->if itemStat (x, "dnd35Armor", "Max Dex") == "" then 99 else armorStat (x, "Max Dex"), armorPieces (char))))
+
+checkPenalty (char) = abs (sum (map ((x)->armorStat (x, "Check Penalty"), char.Armor)))
+
+isRanged (weapon) =
+    contains (toLower (itemStat (weapon, "dnd35Weapon", "Proficiency")), "ranged") or (firstNumber (itemStat (weapon, "dnd35Weapon", "Range")) > 0 and not (contains (toLower (itemStat (weapon, "dnd35Weapon", "Special")), "thrown")) and not (contains (toLower (itemStat (weapon, "dnd35Weapon", "Proficiency")), "melee")))
+
+reachOf (weapon) = if contains (toLower (itemStat (weapon, "dnd35Weapon", "Special")), "reach") then 10 else 5
+
+weaponAttack (name, bonus, damage, critical, kind, reachFeet, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = d35Attack (threatRange (critical))  action = kind  reach = reachFeet  range = rangeFeet }
+    Damage = damage
+    Critical = critical
+}
+
+meleeBonus (char) = char.Combat.BAB + char.Abilities.Str.Modifier + sizeModifier (char.Character.Size) + iterativePenalty (char) - conditionPenalty (char)
+
+rangedBonus (char) = char.Combat.BAB + char.Abilities.Dex.Modifier + sizeModifier (char.Character.Size) + iterativePenalty (char) - conditionPenalty (char)
+
+damageText (weapon, char, strength) =
+    (if char.Character.Size == "Small" then itemStat (weapon, "dnd35Weapon", "Dmg S") else itemStat (weapon, "dnd35Weapon", "Dmg M"))
+    + (if strength > 0 then "+" + toString (strength) else if strength < 0 then toString (strength) else "")
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, rangedBonus (char), damageText (weapon, char, 0), itemStat (weapon, "dnd35Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "dnd35Weapon", "Range")) * 10)
+    else
+        weaponAttack (weapon.Name, meleeBonus (char), damageText (weapon, char, char.Abilities.Str.Modifier), itemStat (weapon, "dnd35Weapon", "Critical"), "melee", reachOf (weapon), 0)
+
+thrownFor (char, weapon) =
+    weaponAttack (weapon.Name + " (thrown)", rangedBonus (char), damageText (weapon, char, char.Abilities.Str.Modifier), itemStat (weapon, "dnd35Weapon", "Critical"), "ranged", 5, firstNumber (itemStat (weapon, "dnd35Weapon", "Range")) * 5)
+
+thrownWeapons (char) = filter ((x)->contains (toLower (itemStat (x, "dnd35Weapon", "Special")), "thrown") or (firstNumber (itemStat (x, "dnd35Weapon", "Range")) > 0 and not (isRanged (x))), char.Weapons)
+
+spellLevel (perDay) = custom
+{
+    'Per Day' = integer { description = "Spells of this level per day, with bonus spells." default = perDay  minvalue = 0 }
+    Used = integer { description = "Cast since the last rest." default = 0  minvalue = 0  editable = live }
+}
+
+hpState (current, maxHp) =
+    if current <= -10 then "Dead"
+    else if current < 0 then "Dying"
+    else if current == 0 then "Disabled"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Saves, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { keys = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Wizard"] }
+        Classes = string { description = "All classes and levels for a multiclass character, such as Fighter 3 / Wizard 2." }
+        Level = integer { description = "Character level, from 1 to 20." default = 1  minvalue = 1  maxvalue = 20 }
+        Race = string { keys = ["Dwarf", "Elf", "Gnome", "Half-elf", "Half-orc", "Halfling", "Human"] }
+        Alignment = string { keys = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] }
+        Deity = string {}
+        Size = string { description = "Size changes attack, AC and combat maneuvers." default = "Medium"  keys = ["Small", "Medium", "Large"] }
+        Speed = integer { description = "Base land speed per move action." default = 30  render = distance (Speed) }
+        Experience = integer { description = "Experience points." default = 0  editable = live }
+    }
+
+    Abilities = table
+    {
+        description = "The six ability scores and their modifiers."
+        tableLayout = layout { columns = 3  size = wide }
+        Str = ability {}
+        Dex = ability {}
+        Con = ability {}
+        Int = ability {}
+        Wis = ability {}
+        Cha = ability {}
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 10 }
+        HP = integer { description = "Current hit points. At 0 you are disabled, below 0 dying, and at -10 dead." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Nonlethal' = integer { description = "Nonlethal damage. When it equals your HP you are staggered, above it unconscious." default = 0  minvalue = 0  editable = live }
+        Down = string { value = hpState (HP, 'Max HP')  visible = none  indicator = "#d64545" }
+        'Night of rest' = button
+        {
+            description = "Eight hours of rest heal hit points equal to your level and nonlethal damage of your level per hour, end fatigue, and let casters prepare spells again."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + Character.Level)
+                (root.Combat.Nonlethal) = max (0, Nonlethal - 8 * Character.Level)
+                (root.Conditions.Fatigued) = false
+                (root.Spellcasting.'Level 0'.Used) = 0
+                (root.Spellcasting.'Level 1'.Used) = 0
+                (root.Spellcasting.'Level 2'.Used) = 0
+                (root.Spellcasting.'Level 3'.Used) = 0
+                (root.Spellcasting.'Level 4'.Used) = 0
+                (root.Spellcasting.'Level 5'.Used) = 0
+                (root.Spellcasting.'Level 6'.Used) = 0
+                (root.Spellcasting.'Level 7'.Used) = 0
+                (root.Spellcasting.'Level 8'.Used) = 0
+                (root.Spellcasting.'Level 9'.Used) = 0
+            }
+        }
+        Initiative = modifier { description = "Initiative: Dex modifier plus other bonuses." value = Abilities.Dex.Modifier + 'Initiative misc'  valuedice = plainD35  editable = none }
+        'Initiative misc' = integer { default = 0 }
+        BAB = integer { description = "Base attack bonus from your class and level." default = 0 }
+        Attack = selector { description = "Which iterative attack of a full attack: each later one is 5 lower." options = ["First", "Second", "Third", "Fourth"]  labels = ["1st", "2nd", "3rd", "4th"]  colors = ["", "red", "red", "red"]  default = "First"  editable = live  save = nosave }
+        AC = integer { description = "Armor Class: 10 plus armor, shield, Dex, size, natural armor and other bonuses." value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + Dodge + 'AC misc'  editable = none }
+        Touch = integer { description = "AC against touch attacks: no armor, shield or natural armor." value = 10 + maxDex (characterTable, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + Deflection + Dodge + 'AC misc'  editable = none }
+        'Flat footed' = integer { description = "AC when caught off guard: no Dex or dodge bonus." value = 10 + armorBonus (characterTable) + shieldBonus (characterTable) + min (0, Abilities.Dex.Modifier) + sizeModifier (Character.Size) + 'Natural armor' + Deflection + 'AC misc'  editable = none }
+        'Natural armor' = integer { description = "Natural armor bonus to AC from tough hide or spells." default = 0 }
+        Deflection = integer { description = "Deflection bonus to AC, often from a ring of protection." default = 0 }
+        Dodge = integer { description = "Dodge bonus to AC. Lost when flat-footed." default = 0 }
+        'AC misc' = integer { default = 0 }
+        Grapple = modifier { description = "Grapple check: BAB plus Str plus the grapple size modifier. Opposed by the target's grapple check." value = BAB + Abilities.Str.Modifier + grappleSize (Character.Size) - conditionPenalty (characterTable)  valuedice = d35Opposed  editable = none }
+        'Damage reduction' = string { description = "Damage reduction: damage ignored from each hit, and what bypasses it." }
+        'Spell resistance' = integer { description = "Spell resistance: a caster must beat this with a caster level check." default = 0 }
+    }
+
+    Saves = table
+    {
+        description = "Saving throws against spells, poison and traps."
+        tableLayout = layout { columns = 1 }
+        Fortitude = save (Abilities.Con.Modifier)
+        Reflex = save (Abilities.Dex.Modifier)
+        Will = save (Abilities.Wis.Modifier)
+    }
+
+    Conditions = table
+    {
+        description = "Common conditions. Some give penalties to rolls."
+        tableLayout = layout { columns = 4 }
+        Shaken = bool { description = "Shaken: -2 on attacks, saves, skills and ability checks." default = false  editable = live  indicator = "#8e5cc4" }
+        Frightened = bool { description = "Frightened: shaken, and must flee from the source of fear." default = false  editable = live  indicator = "#8e5cc4" }
+        Sickened = bool { description = "Sickened: -2 on attacks, damage, saves, skills and ability checks." default = false  editable = live  indicator = "#3fa34d" }
+        Fatigued = bool { description = "Fatigued: -2 Str and Dex, and you can't run or charge." default = false  editable = live  indicator = "#d4b106" }
+        Entangled = bool { description = "Entangled: -2 on attacks, -4 Dex, half speed." default = false  editable = live  indicator = "#e8913a" }
+        Grappled = bool { description = "Grappling: no Dex bonus to AC against others, attack only with light weapons, and you can't move." default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { description = "Prone: -4 on melee attacks, harder to hit in melee, easier at range." default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { description = "Stunned: drop what you hold, no actions, -2 AC and no Dex bonus." default = false  editable = live  indicator = "#d4b106" }
+        'Negative levels' = integer { description = "Each negative level gives -1 on most rolls and -5 HP." default = 0  minvalue = 0  editable = live  indicator = "#555555" }
+    }
+
+    Skills = table
+    {
+        description = "Skills. Roll d20 plus the total. Class skills can have up to level + 3 ranks, cross-class skills half that. Some need training to use."
+        tableLayout = layout { columns = 2  size = wide }
+        Appraise = skill (Abilities.Int.Modifier, 0)
+        Balance = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Bluff = skill (Abilities.Cha.Modifier, 0)
+        Climb = skill (Abilities.Str.Modifier, checkPenalty (characterTable))
+        Concentration = skill (Abilities.Con.Modifier, 0)
+        Craft = skill (Abilities.Int.Modifier, 0)
+        'Decipher Script' = trainedSkill (Abilities.Int.Modifier, 0)
+        Diplomacy = skill (Abilities.Cha.Modifier, 0)
+        'Disable Device' = trainedSkill (Abilities.Int.Modifier, 0)
+        Disguise = skill (Abilities.Cha.Modifier, 0)
+        'Escape Artist' = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Forgery = skill (Abilities.Int.Modifier, 0)
+        'Gather Information' = skill (Abilities.Cha.Modifier, 0)
+        'Handle Animal' = trainedSkill (Abilities.Cha.Modifier, 0)
+        Heal = skill (Abilities.Wis.Modifier, 0)
+        Hide = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Intimidate = skill (Abilities.Cha.Modifier, 0)
+        Jump = skill (Abilities.Str.Modifier, checkPenalty (characterTable))
+        'Knowledge arcana' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge architecture' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge dungeoneering' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge geography' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge history' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge local' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge nature' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge nobility' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge religion' = trainedSkill (Abilities.Int.Modifier, 0)
+        'Knowledge the planes' = trainedSkill (Abilities.Int.Modifier, 0)
+        Listen = skill (Abilities.Wis.Modifier, 0)
+        'Move Silently' = skill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        'Open Lock' = trainedSkill (Abilities.Dex.Modifier, 0)
+        Perform = skill (Abilities.Cha.Modifier, 0)
+        Profession = trainedSkill (Abilities.Wis.Modifier, 0)
+        Ride = skill (Abilities.Dex.Modifier, 0)
+        Search = skill (Abilities.Int.Modifier, 0)
+        'Sense Motive' = skill (Abilities.Wis.Modifier, 0)
+        'Sleight of Hand' = trainedSkill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        Spellcraft = trainedSkill (Abilities.Int.Modifier, 0)
+        Spot = skill (Abilities.Wis.Modifier, 0)
+        Survival = skill (Abilities.Wis.Modifier, 0)
+        Swim = skill (Abilities.Str.Modifier, 2 * checkPenalty (characterTable))
+        Tumble = trainedSkill (Abilities.Dex.Modifier, checkPenalty (characterTable))
+        'Use Magic Device' = trainedSkill (Abilities.Cha.Modifier, 0)
+        'Use Rope' = skill (Abilities.Dex.Modifier, 0)
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat (map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons), map ((weapon)->thrownFor (characterTable, weapon), thrownWeapons (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Feats = list
+    {
+        description = "Feats the character has taken."
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    'Class features' = list
+    {
+        description = "Abilities from the character's class."
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Spellcasting = table
+    {
+        description = "Caster level, spell slots and concentration."
+        tableLayout = layout { columns = 5  size = wide }
+        'Caster level' = integer { description = "Caster level, which sets spell range, duration and power." default = 0 }
+        'Casting ability' = string { description = "The ability that powers your spells." default = "Int"  keys = ["Int", "Wis", "Cha"] }
+        'Concentration' = modifier { description = "Concentration check: caster level plus casting ability modifier." value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = d35Check  editable = none }
+        'Level 0' = spellLevel (4)
+        'Level 1' = spellLevel (0)
+        'Level 2' = spellLevel (0)
+        'Level 3' = spellLevel (0)
+        'Level 4' = spellLevel (0)
+        'Level 5' = spellLevel (0)
+        'Level 6' = spellLevel (0)
+        'Level 7' = spellLevel (0)
+        'Level 8' = spellLevel (0)
+        'Level 9' = spellLevel (0)
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 2 }
+        PP = integer { description = "Platinum pieces, worth 10 gold each." default = 0 }
+        GP = integer { description = "Gold pieces." default = 0 }
+        SP = integer { description = "Silver pieces, ten to a gold." default = 0 }
+        CP = integer { description = "Copper pieces, a hundred to a gold." default = 0 }
+        Languages = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Defense, Attacks]
+        defaultImage = "/systems/dnd35/monster.svg"
+        sortedBy = sort { prefix = "CR" sort = Stats.CR }
+        filters = [
+            filter { name = "CR" prefix = "CR" filter = Stats.CR },
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Size = string { default = "Medium"  keys = ["Fine", "Diminutive", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"] }
+        Type = string { description = "Creature type and subtypes, such as Giant or Outsider (Evil, Extraplanar)." }
+        'Hit Dice' = string { default = "1d8" }
+        CR = string { description = "Challenge Rating: the level of party it is a fair fight for." default = "1" }
+        Initiative = modifier { default = 0  valuedice = plainD35 }
+        Speed = string { default = "30 ft. (6 squares)" }
+        Space = string { default = "5 ft." }
+        Reach = string { default = "5 ft." }
+        Alignment = string { default = "Always neutral" }
+    }
+    Defense = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        AC = integer { description = "Armor Class." default = 12 }
+        Touch = integer { description = "AC against touch attacks." default = 10 }
+        'Flat footed' = integer { description = "AC when caught off guard." default = 12 }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 10 }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = hpState (HP, 'Max HP')  visible = none  indicator = "#d64545" }
+        Fortitude = modifier { default = 0  valuedice = d35Save }
+        Reflex = modifier { default = 0  valuedice = d35Save }
+        Will = modifier { default = 0  valuedice = d35Save }
+        'Damage reduction' = string {}
+        'Spell resistance' = integer { default = 0 }
+    }
+    Offense = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Base Attack' = modifier { default = 0 }
+        Grapple = modifier { description = "Grapple check, opposed by the target's." default = 0  valuedice = d35Opposed }
+        'Special Attacks' = string { multiline = true }
+    }
+    Attacks = list
+    {
+        description = "Each attack of a full attack, with its bonus and damage. A ranged attack has a range in feet."
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = d35Attack (20)  action = if 'Range ft' > 0 then "ranged" else "melee"  reach = max (5, firstNumber (Stats.Reach))  range = 'Range ft' }
+            Damage = string {}
+            'Range ft' = integer { default = 0 }
+        }
+    }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Str = integer { default = 10 }
+        Dex = integer { default = 10 }
+        Con = integer { default = 10 }
+        Int = integer { default = 10 }
+        Wis = integer { default = 10 }
+        Cha = integer { default = 10 }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Special Qualities' = string { multiline = true }
+        Skills = string { multiline = true }
+        Feats = string { multiline = true }
+        Environment = string {}
+        Organization = string {}
+        Treasure = string {}
+        Advancement = string {}
+        'Level Adjustment' = string {}
+        'Special abilities' = string { multiline = true }
+    }
+}
+
+dnd35Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [
+            filter { name = "Proficiency" prefix = "" filter = Stats.Proficiency },
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Proficiency = string { keys = ["Simple light melee", "Simple one-handed melee", "Simple two-handed melee", "Simple ranged", "Martial light melee", "Martial one-handed melee", "Martial two-handed melee", "Martial ranged", "Exotic light melee", "Exotic one-handed melee", "Exotic two-handed melee", "Exotic ranged", "Unarmed"] }
+        'Dmg S' = string {}
+        'Dmg M' = string {}
+        Critical = string { default = "x2" }
+        Range = string {}
+        Type = string {}
+        Special = string {}
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+dnd35Armor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { keys = ["Light", "Medium", "Heavy", "Shield"] }
+        'Armor Bonus' = string { default = "0" }
+        'Max Dex' = string {}
+        'Check Penalty' = string { default = "0" }
+        'Spell Failure' = string {}
+        Speed = string {}
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+dnd35Item = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Slot" prefix = "" filter = Stats.Slot }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Slot = string {}
+        Aura = string {}
+        CL = string {}
+        Price = string {}
+        Weight = string {}
+    }
+}
+
+dnd35Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "School" prefix = "" filter = Stats.School },
+            filter { name = "Class" prefix = "" filter = map ((x)->first (split (" ", x)), split (", ", Stats.Level)) }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        School = string {}
+        Level = string {}
+        'Casting Time' = string {}
+        Components = string {}
+        Range = string {}
+        Duration = string {}
+        'Saving Throw' = string {}
+        'Spell Resistance' = string {}
+    }
+}
+
+dnd35Feat = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Type = string { default = "General" }
+        Prerequisites = string {}
+    }
+}
+
+DnD35 = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a character"
+            topic = "Getting started"
+            text = ["Set ability scores, class and level, then ranks in skills; tick Class skill on your class skills. Add weapons, armor, feats and spells from the built-in SRD library."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 + modifier against a DC. Leave the DC blank when only the GM knows it. Saves succeed on a natural 20 and fail on a natural 1."]
+        },
+        hint
+        {
+            title = "Full attacks"
+            topic = "Combat"
+            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits is a critical threat: roll again to confirm."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative (d20 + Dex + misc) to join the list. Highest goes first."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["ft", "m"]
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = dnd35Weapon
+    Armor = dnd35Armor
+    Equipment = dnd35Item
+    Spells = dnd35Spell
+    Feats = dnd35Feat
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Spells", "Feats"]
+    description = "Dungeons & Dragons 3.5: d20, BAB and iterative attacks, skill ranks, from the v3.5 System Reference Document"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8]
+    cssFiles = ["/systems/dnd35/dnd35.css"]
+    libraries = ["/systems/dnd35/dnd35.json", "/systems/names/fantasy.json", "/systems/names/viking.json", "/systems/names/norwegian.json", "/systems/names/desert.json", "/systems/names/pirates.json", "/systems/names/chinese.json"]
+    nameSettings = [fantasyNameSetting, norseNameSetting, desertRealmsNameSetting, highSeasNameSetting, easternNameSetting]
+}

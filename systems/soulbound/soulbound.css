@@ -1,0 +1,97 @@
+@import url("/systems/sheet.css");
+
+/* Warhammer Age of Sigmar: Soulbound: the character sheet. Pale vellum with
+   gilded borders, title bars in deep sigmarite blue with gold capitals in a
+   serif, Body, Mind and Soul as three large shields across the top, combat
+   ratings and Toughness, Wounds and Mettle side by side, then the skill grid
+   with Training and Focus, and weapons, talents and spells below. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #cbbf9f;
+    --surface: #f8f2e1;
+    --surface-alt: #efe5cc;
+    --surface-sunken: #e4d7b6;
+    --surface-muted: #cdbd94;
+    --text: #1b1a24;
+    --text-muted: #3d3a4a;
+    --text-faint: #6f6a7a;
+    --on-accent: #f4d77c;
+    --border: #a48a4e;
+    --border-strong: #1d2a4a;
+    --accent: #1d2a4a;
+    --accent-hover: #2b3d68;
+    --accent-soft: #dfe3ee;
+    --link: #1d2a4a;
+    --danger: #9b2a1c;
+    --danger-hover: #6e2413;
+    --danger-soft: #eed9c9;
+    --success: #3d6b33;
+    --paper: #f8f2e1;
+    --card-bg: #efe5cc;
+    --dice-bg: #1d2a4a;
+    --dice-text: #f4d77c;
+    --gold: #b8913a;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Trajan Pro", "Palatino Linotype", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--gold);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #f4d77c;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    border-bottom: 2px solid var(--gold);
+}
+
+/* ---- Body, Mind and Soul as shields ---- */
+
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td {
+    border: none;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: bold;
+}
+.entityView .table-attributes button.dicethrow {
+    width: 2.6em;
+    height: 2.9em;
+    font-size: 1.5em;
+    border-radius: 6px 6px 50% 50%;
+    background: var(--accent);
+    color: #f4d77c;
+    border: 3px solid var(--gold);
+}
+
+/* ---- Skills: training and focus labels ---- */
+
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "T "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(3)::before { content: "F "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px solid var(--surface-muted); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-armour,
+.entityView .table-talents,
+.entityView .table-equipment,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-armour,
+.entityView .table-equipment { clear: left; }

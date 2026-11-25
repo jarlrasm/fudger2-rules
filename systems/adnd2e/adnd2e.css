@@ -1,0 +1,79 @@
+@import url("/systems/sheet.css");
+
+/* AD&D 2nd edition: the character record sheet. White paper with black
+   ruled boxes, bold serif headings in small capitals on a deep maroon band,
+   the abilities in three columns with their adjustments, Armor Class,
+   hit points and THAC0 side by side, the five saving throws in a row, and
+   weapons, proficiencies, thief abilities and spells below. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9e6df;
+    --surface: #ffffff;
+    --surface-alt: #f5f3ee;
+    --surface-sunken: #ebe7de;
+    --surface-muted: #d6d0c3;
+    --text: #111111;
+    --text-muted: #383838;
+    --text-faint: #6c6c6c;
+    --on-accent: #ffffff;
+    --border: #8a8a8a;
+    --border-strong: #111111;
+    --accent: #6d1a1a;
+    --accent-hover: #8a2626;
+    --accent-soft: #f1dede;
+    --link: #6d1a1a;
+    --danger: #a3301f;
+    --danger-hover: #822617;
+    --danger-soft: #f2d6d1;
+    --success: #2f6a3a;
+    --paper: #ffffff;
+    --card-bg: #f7f5f0;
+    --dice-bg: #111111;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: Georgia, "Times New Roman", serif;
+    --title-font: Georgia, "Times New Roman", serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #ffffff;
+    font-variant: small-caps;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    font-size: 1.05em;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .entityTable > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+
+/* ---- Combat and saves ---- */
+
+.entityView .table-saving-throws > table > tbody {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.entityView .table-saving-throws button.dicethrow,
+.entityView .table-combat button.dicethrow {
+    min-width: 2.4em;
+    border-radius: 0;
+    border: 2px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: bold;
+}
+
+/* ---- Lower half ---- */
+
+.entityView .table-weapon-proficiencies,
+.entityView .table-nonweapon-proficiencies { --block: 50%; }
+.entityView .table-weapon-proficiencies { clear: left; }
+.entityView .table-armor,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-armor { clear: left; }
+.entityView .table-money { --block: 100%; }

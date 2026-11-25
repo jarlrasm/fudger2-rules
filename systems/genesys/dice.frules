@@ -1,0 +1,79 @@
+abilitySuccess (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 7 then 1 else 0
+abilityAdvantage (n) = switch n case 5 then 1 case 6 then 1 case 7 then 1 case 8 then 2 else 0
+
+proficiencySuccess (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 5 then 2 case 7 then 1 case 8 then 1 case 9 then 1 else 0
+proficiencyAdvantage (n) = switch n case 6 then 1 case 7 then 1 case 8 then 1 case 9 then 1 case 10 then 2 case 11 then 2 else 0
+
+boostSuccess (n) = switch n case 3 then 1 case 4 then 1 else 0
+boostAdvantage (n) = switch n case 4 then 1 case 5 then 2 case 6 then 1 else 0
+
+difficultyFailure (n) = switch n case 2 then 1 case 3 then 2 case 8 then 1 else 0
+difficultyThreat (n) = switch n case 4 then 1 case 5 then 1 case 6 then 1 case 7 then 2 case 8 then 1 else 0
+
+challengeFailure (n) = switch n case 2 then 1 case 3 then 1 case 4 then 2 case 5 then 2 case 8 then 1 case 9 then 1 else 0
+challengeThreat (n) = switch n case 6 then 1 case 7 then 1 case 8 then 1 case 9 then 1 case 10 then 2 case 11 then 2 else 0
+
+setbackFailure (n) = switch n case 3 then 1 case 4 then 1 else 0
+setbackThreat (n) = switch n case 5 then 1 case 6 then 1 else 0
+
+triumphs (proficiency) = count (filter ((x)->x == 12, proficiency))
+
+despairs (challenge) = count (filter ((x)->x == 12, challenge))
+
+netSuccesses (ability, proficiency, boost, difficulty, challenge, setback) =
+    sum (map ((n)->abilitySuccess (n), ability)) + sum (map ((n)->proficiencySuccess (n), proficiency)) + sum (map ((n)->boostSuccess (n), boost)) + triumphs (proficiency)
+    - sum (map ((n)->difficultyFailure (n), difficulty)) - sum (map ((n)->challengeFailure (n), challenge)) - sum (map ((n)->setbackFailure (n), setback)) - despairs (challenge)
+
+netAdvantages (ability, proficiency, boost, difficulty, challenge, setback) =
+    sum (map ((n)->abilityAdvantage (n), ability)) + sum (map ((n)->proficiencyAdvantage (n), proficiency)) + sum (map ((n)->boostAdvantage (n), boost))
+    - sum (map ((n)->difficultyThreat (n), difficulty)) - sum (map ((n)->challengeThreat (n), challenge)) - sum (map ((n)->setbackThreat (n), setback))
+
+countText (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
+
+advantageText (a) =
+    if a > 0 then ", " + countText (a, "advantage", "advantages")
+    else if a < 0 then ", " + countText (0 - a, "threat", "threats")
+    else ""
+
+symbolsText (t, d) =
+    (if t > 0 then ", " + countText (t, "Triumph", "Triumphs") else "")
+    + (if d > 0 then ", " + countText (d, "Despair", "Despairs") else "")
+
+genesysText (s, a, t, d) =
+    (if s > 0 then "Success, " + countText (s, "net success", "net successes") else "Failure")
+    + advantageText (a)
+    + symbolsText (t, d)
+
+genesysResult (s, a, t, d) =
+{
+    Text = genesysText (s, a, t, d)
+    Value = s
+    Outcome = if t > 0 and s > 0 then "Triumph" else if d > 0 and s < 1 then "Failure" else if s > 0 then "Success" else "Failure"
+}
+
+genesysPool (proficiency, ability, boost, challenge, difficulty, setback) = ([
+        dice { number = ability  sides = 8  color = "green"  label = "Ability"  faces = ["", "S", "S", "SS", "A", "A", "SA", "AA"] },
+        dice { number = proficiency  sides = 12  color = "yellow"  label = "Proficiency"  faces = ["", "S", "S", "SS", "SS", "A", "SA", "SA", "SA", "AA", "AA", "Triumph"] },
+        dice { number = boost  sides = 6  color = "blue"  label = "Boost"  faces = ["", "", "S", "SA", "AA", "A"] },
+        dice { number = difficulty  sides = 8  color = "purple"  label = "Difficulty"  faces = ["", "F", "FF", "T", "T", "T", "TT", "FT"] },
+        dice { number = challenge  sides = 12  color = "red"  label = "Challenge"  faces = ["", "F", "F", "FF", "FF", "T", "T", "FT", "FT", "TT", "TT", "Despair"] },
+        dice { number = setback  sides = 6  color = "black"  label = "Setback"  faces = ["", "", "F", "F", "T", "T"] }
+    ],
+    ((baseline, throws)->genesysResult (
+        netSuccesses (item (0, throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, item (4, throws).rolls, item (5, throws).rolls),
+        netAdvantages (item (0, throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, item (4, throws).rolls, item (5, throws).rolls),
+        triumphs (item (1, throws).rolls),
+        despairs (item (4, throws).rolls))))
+
+upgradedPool (yellow, green, upgrades) =
+    { Yellow = yellow + min (upgrades, green) + max (0, upgrades - green) / 2  Green = green - min (upgrades, green) + mod (max (0, upgrades - green), 2) }
+
+initiativeText (s, a) = toString (s) + " successes " + toString (a) + " advantages"
+
+initiativeOrder (text) = toInt (first (split (" ", text))) * 100 + toInt (item (2, split (" ", text)))
+
+initiativePool (characteristic, ranks) = ([
+        dice { number = max (characteristic, ranks) - min (characteristic, ranks)  sides = 8  color = "green"  label = "Ability"  faces = ["", "S", "S", "SS", "A", "A", "SA", "AA"] },
+        dice { number = min (characteristic, ranks)  sides = 12  color = "yellow"  label = "Proficiency"  faces = ["", "S", "S", "SS", "SS", "A", "SA", "SA", "SA", "AA", "AA", "Triumph"] }
+    ],
+    ((baseline, throws)->{ Text = initiativeText (netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []), netAdvantages (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []))  Value = netSuccesses (item (0, throws).rolls, item (1, throws).rolls, [], [], [], []) }))

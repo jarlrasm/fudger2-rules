@@ -1,0 +1,92 @@
+@import url("/systems/sheet.css");
+
+/* Achtung! Cthulhu 2d20: the character sheet as a wartime dossier. Manila
+   card with typewritten values, olive-drab title bars with stencilled
+   capitals and a red "classified" rule, the six attributes in a row of
+   boxes, skills in two columns with their target numbers, and Stress and
+   Injuries beside the weapons. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #b7a77f;
+    --surface: #efe3c2;
+    --surface-alt: #e6d7b0;
+    --surface-sunken: #dccba0;
+    --surface-muted: #c7b583;
+    --text: #1f1d16;
+    --text-muted: #45412f;
+    --text-faint: #6f6a50;
+    --on-accent: #f3ead0;
+    --border: #8e7f57;
+    --border-strong: #3d4326;
+    --accent: #4b5229;
+    --accent-hover: #5f6834;
+    --accent-soft: #dfe0c6;
+    --link: #8b1c13;
+    --danger: #8b1c13;
+    --danger-hover: #6c140e;
+    --danger-soft: #efcfc8;
+    --success: #3d6b33;
+    --paper: #efe3c2;
+    --card-bg: #e6d7b0;
+    --dice-bg: #3d4326;
+    --dice-text: #f3ead0;
+    --stamp: #a3241a;
+}
+
+.entityView {
+    --sheet-font: "Courier New", Courier, monospace;
+    --title-font: Impact, "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    border-bottom: 3px solid var(--stamp);
+}
+
+/* ---- Attributes ---- */
+
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid var(--border-strong);
+    padding: 4px;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody > tr > td {
+    border: none;
+    text-align: center;
+    font-size: 1.1em;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+}
+
+/* ---- Skills ---- */
+
+.entityView .table-skills .customtype > div:nth-child(1)::before { content: "rating "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(3)::before { content: "focus "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px dashed var(--border); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-focuses,
+.entityView .table-talents,
+.entityView .table-gear,
+.entityView .table-mythos-and-magic { --block: 50%; }
+.entityView .table-focuses,
+.entityView .table-gear { clear: left; }

@@ -1,0 +1,445 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+extraD12s (step) = if step >= 13 then (step - 13) / 7 + 1 else 0
+baseStep (step) = step - 7 * extraD12s (step)
+
+stepD4 (step) = if baseStep (step) < 4 and step > 0 then 1 else 0
+stepD6 (step) = switch baseStep (step) case 4 then 1 case 8 then 2 case 9 then 1 else 0
+stepD8 (step) = switch baseStep (step) case 5 then 1 case 9 then 1 case 10 then 2 case 11 then 1 else 0
+stepD10 (step) = switch baseStep (step) case 6 then 1 case 11 then 1 case 12 then 2 else 0
+stepD12 (step) = extraD12s (step) + (if baseStep (step) == 7 then 1 else 0)
+stepBonus (step) = if step == 1 then -2 else if step == 2 then -1 else 0
+
+diceText (n, sides) = if n == 0 then "" else (if n == 1 then "" else toString (n)) + "d" + toString (sides)
+
+joinPlus (parts) = fold ("", (acc, x)->if x == "" then acc else if acc == "" then x else acc + "+" + x, parts)
+
+stepDice (step) = if step < 1 then "-" else joinPlus ([diceText (stepD12 (step), 12), diceText (stepD10 (step), 10), diceText (stepD8 (step), 8), diceText (stepD6 (step), 6), diceText (stepD4 (step), 4)]) + (if stepBonus (step) < 0 then toString (stepBonus (step)) else "")
+
+allRolls (throws) = concat (concat (concat (item (0, throws).rolls, item (1, throws).rolls), concat (item (2, throws).rolls, item (3, throws).rolls)), item (4, throws).rolls)
+
+allOnes (rolls) = count (rolls) > 0 and count (filter ((x)->x != 1, rolls)) == 0
+
+extraSuccesses (total, tn) = if total >= tn then (total - tn) / 5 else 0
+
+edOutcome (total, tn, ones) = if ones then "Failure" else if total >= tn then "Success" else "Failure"
+
+edText (total, tn, ones, known) =
+    toString (total)
+    + (if ones then ": Rule of One, automatic failure"
+       else if known then " vs " + toString (tn) + ": " + edOutcome (total, tn, ones) + (if extraSuccesses (total, tn) > 0 then ", " + toString (extraSuccesses (total, tn)) + (if extraSuccesses (total, tn) == 1 then " extra success" else " extra successes") else "")
+       else "")
+
+edResult (total, tn, ones, known) =
+{
+    Text = edText (total, tn, ones, known)
+    Value = total
+    Outcome = if ones then "Failure" else if known then edOutcome (total, tn, ones) else ""
+}
+
+stepRoll (step) = ([
+        dice { number = stepD12 (step)  sides = 12  explode = 12 },
+        dice { number = stepD10 (step)  sides = 10  explode = 10 },
+        dice { number = stepD8 (step)  sides = 8  explode = 8 },
+        dice { number = stepD6 (step)  sides = 6  explode = 6 },
+        dice { number = stepD4 (step)  sides = 4  explode = 4  bonus = stepBonus (step) }
+    ],
+    ((baseline, throws)->edResult (max (1, sum (allRolls (throws)) + stepBonus (step)), asked, allOnes (allRolls (throws)), answered)))
+
+edTest (step) = ask ("Step bonus or penalty", 0, (n)->ask ("Target Number", stepRoll (max (1, step + n))))
+
+edAttack (step) = ask ("Step bonus or penalty", 0, (n)->ask ("Target's Physical Defense", stepRoll (max (1, step + n))))
+
+damageRoll (step) = ([
+        dice { number = stepD12 (step)  sides = 12  explode = 12 },
+        dice { number = stepD10 (step)  sides = 10  explode = 10 },
+        dice { number = stepD8 (step)  sides = 8  explode = 8 },
+        dice { number = stepD6 (step)  sides = 6  explode = 6 },
+        dice { number = stepD4 (step)  sides = 4  explode = 4  bonus = stepBonus (step) }
+    ],
+    ((baseline, throws)->{ Text = toString (max (1, sum (allRolls (throws)) + stepBonus (step))) + " damage"  Value = max (1, sum (allRolls (throws)) + stepBonus (step)) }))
+
+plainStep (step) = ([
+        dice { number = stepD12 (step)  sides = 12  explode = 12 },
+        dice { number = stepD10 (step)  sides = 10  explode = 10 },
+        dice { number = stepD8 (step)  sides = 8  explode = 8 },
+        dice { number = stepD6 (step)  sides = 6  explode = 6 },
+        dice { number = stepD4 (step)  sides = 4  explode = 4  bonus = stepBonus (step) }
+    ],
+    ((baseline, throws)->max (1, sum (allRolls (throws)) + stepBonus (step))))
+
+attributeStep (value) = (value - 1) / 3 + 2
+
+defenseFor (value) = (value + 3) / 2
+
+attributeNames = ["Dexterity", "Strength", "Toughness", "Perception", "Willpower", "Charisma"]
+
+attributeStepOf (char, name) =
+    switch name
+        case "Dexterity" then attributeStep (char.Attributes.Dexterity.Value)
+        case "Strength" then attributeStep (char.Attributes.Strength.Value)
+        case "Toughness" then attributeStep (char.Attributes.Toughness.Value)
+        case "Perception" then attributeStep (char.Attributes.Perception.Value)
+        case "Willpower" then attributeStep (char.Attributes.Willpower.Value)
+        else attributeStep (char.Attributes.Charisma.Value)
+
+attribute = custom
+{
+    Value = integer { description = "Attribute value, usually 5 to 18." default = 10  minvalue = 1  maxvalue = 30 }
+    Step = integer { description = "The step this value gives: value 10 to 12 is step 5." value = attributeStep (Value)  valuedice = edTest (attributeStep (Value) - woundPenalty (characterTable))  render = toString (attributeStep (Value)) + " (" + stepDice (attributeStep (Value)) + ")"  editable = none }
+}
+
+woundPenalty (char) = char.Health.Wounds
+
+noStats = { Stats = { 'Damage Step' = "0" } }
+
+itemStat (item, ruleset, field) = valueOr (valueOr (valueOr (item.data, ruleset, noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+rankOf (char, name) =
+    if count (filter ((t)->toLower (t.Name) == toLower (name), char.Talents)) > 0 then first (filter ((t)->toLower (t.Name) == toLower (name), char.Talents)).Rank
+    else if count (filter ((t)->toLower (t.Name) == toLower (name), char.Skills)) > 0 then first (filter ((t)->toLower (t.Name) == toLower (name), char.Skills)).Rank
+    else 0
+
+isRanged (weapon) = firstNumber (itemStat (weapon, "weaponStats", "Long Range")) > 0
+
+weaponAttack (name, attackStep, damageStep, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = attackStep  valuedice = edAttack (attackStep)  render = toString (attackStep) + " (" + stepDice (attackStep) + ")"  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = damageStep  valuedice = damageRoll (damageStep)  render = toString (damageStep) + " (" + stepDice (damageStep) + ")"  editable = none }
+}
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, attributeStep (char.Attributes.Dexterity.Value) + max (rankOf (char, "Missile Weapons"), rankOf (char, "Throwing Weapons")) - woundPenalty (char), attributeStep (char.Attributes.Strength.Value) + firstNumber (itemStat (weapon, "weaponStats", "Damage Step")), "ranged", firstNumber (itemStat (weapon, "weaponStats", "Long Range")))
+    else
+        weaponAttack (weapon.Name, attributeStep (char.Attributes.Dexterity.Value) + rankOf (char, "Melee Weapons") - woundPenalty (char), attributeStep (char.Attributes.Strength.Value) + firstNumber (itemStat (weapon, "weaponStats", "Damage Step")), "melee", 2)
+
+armorValue (char, field) = sum (map ((a)->firstNumber (itemStat (a, "armorStats", field)), char.Armor))
+
+magicianOnly (discipline) = if discipline == "Elementalist" or discipline == "Illusionist" or discipline == "Nethermancer" or discipline == "Wizard" then visible else editor
+
+healthState (char) =
+    if char.Health.Damage >= char.Health.'Death Rating' then "Dead"
+    else if char.Health.Damage >= char.Health.'Unconsciousness Rating' then "Unconscious"
+    else if char.Health.Wounds > 0 then "Wounded"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Defenses, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string { keys = ["Dwarf", "Elf", "Human", "Obsidiman", "Ork", "Troll", "T'skrang", "Windling"] }
+        Discipline = string { keys = ["Air Sailor", "Archer", "Beastmaster", "Cavalryman", "Elementalist", "Illusionist", "Nethermancer", "Scout", "Sky Raider", "Swordmaster", "Thief", "Troubadour", "Warrior", "Weaponsmith", "Wizard"] }
+        Circle = integer { default = 1  minvalue = 1  maxvalue = 15 }
+        'Legend Points' = integer { description = "Legend Points earned, spent on talents and circles." default = 0  editable = live }
+        'Current Legend' = integer { default = 0  editable = live }
+        Movement = integer { description = "Combat movement in yards." default = 12 }
+        'Carrying Capacity' = integer { default = 80 }
+    }
+
+    Attributes = table
+    {
+        description = "Six attributes. Each value gives a step, and a step is the dice you roll: step 5 is d8, step 8 is 2d6."
+        tableLayout = layout { columns = 3  size = wide }
+        Dexterity = attribute {}
+        Strength = attribute {}
+        Toughness = attribute {}
+        Perception = attribute {}
+        Willpower = attribute {}
+        Charisma = attribute {}
+    }
+
+    Defenses = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Physical Defense' = integer { description = "The target number for attacks against you, from Dexterity." value = defenseFor (Attributes.Dexterity.Value) + 'Defense Bonus'  editable = none }
+        'Mystic Defense' = integer { description = "The target number for spells against you, from Perception." value = defenseFor (Attributes.Perception.Value)  editable = none }
+        'Social Defense' = integer { description = "The target number for interaction against you, from Charisma." value = defenseFor (Attributes.Charisma.Value)  editable = none }
+        'Defense Bonus' = integer { description = "From a shield or talents." default = 0 }
+        'Physical Armor' = integer { description = "Taken off physical damage." value = armorValue (characterTable, "Physical Armor")  editable = none }
+        'Mystic Armor' = integer { description = "Willpower value / 5, plus armor; taken off magical damage." value = Attributes.Willpower.Value / 5 + armorValue (characterTable, "Mystic Armor")  editable = none }
+        'Initiative Penalty' = integer { value = armorValue (characterTable, "Initiative Penalty")  editable = none }
+        Initiative = integer { description = "Dexterity step less the armor's initiative penalty, rolled each round. Highest acts first." value = attributeStep (Attributes.Dexterity.Value) - 'Initiative Penalty'  valuedice = plainStep (attributeStep (Attributes.Dexterity.Value) - 'Initiative Penalty')  render = toString (attributeStep (Attributes.Dexterity.Value) - 'Initiative Penalty') + " (" + stepDice (attributeStep (Attributes.Dexterity.Value) - 'Initiative Penalty') + ")"  editable = none }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Damage = integer { description = "Damage taken. At the Unconsciousness Rating you fall; at the Death Rating you die." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Wounds = integer { description = "Each wound gives -1 to every test. A hit above the Wound Threshold, after armor, causes one." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Unconsciousness Rating' = integer { default = 2 * Attributes.Toughness.Value }
+        'Death Rating' = integer { default = 2 * Attributes.Toughness.Value + attributeStep (Attributes.Toughness.Value) }
+        'Wound Threshold' = integer { default = (Attributes.Toughness.Value + 1) / 2 + 4 }
+        'Recovery Tests' = integer { description = "Recovery tests a day: roll the Toughness step and remove that much damage." default = (Attributes.Toughness.Value + 5) / 6 }
+        'Recoveries Used' = integer { default = 0  minvalue = 0  editable = live }
+        Recovery = integer { description = "Roll your Toughness step to heal that much damage." value = attributeStep (Attributes.Toughness.Value)  valuedice = plainStep (attributeStep (Attributes.Toughness.Value))  render = toString (attributeStep (Attributes.Toughness.Value)) + " (" + stepDice (attributeStep (Attributes.Toughness.Value)) + ")"  editable = none }
+        Knockdown = bool { default = false  editable = live  indicator = "#e8913a" }
+        Harried = bool { default = false  editable = live  indicator = "#d4b106" }
+        State = string { value = healthState (characterTable)  visible = none  indicator = "#d64545" }
+        'Night of rest' = button { description = "A night's sleep refreshes the day's Recovery tests and restores Karma." editable = live  onClick = updates
+            {
+                (root.Health.'Recoveries Used') = 0
+                (root.Karma.Karma) = Karma.'Max Karma'
+            }
+        }
+    }
+
+    Karma = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Max Karma' = integer { default = 15 }
+        Karma = integer { description = "Spend a point to add a Karma die (step 4, d6) to a test your Discipline allows." default = 'Max Karma'  minvalue = 0  editable = live }
+        'Karma Die' = integer { value = 4  valuedice = plainStep (4)  render = "4 (d6)"  editable = none }
+    }
+
+    Talents = list
+    {
+        description = "Discipline talents: rank plus the attribute's step. Strain costs damage each use."
+        tableLayout = layout { size = wide }
+        singular = "Talent"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Rank = integer { default = 1  minvalue = 0  maxvalue = 15 }
+            Attribute = string { default = "Dexterity"  keys = attributeNames }
+            Strain = integer { default = 0  minvalue = 0 }
+            Discipline = bool { description = "A Discipline talent rather than an optional one." default = true }
+            Step = integer { value = Rank + attributeStepOf (characterTable, Attribute)  valuedice = edTest (Rank + attributeStepOf (characterTable, Attribute) - woundPenalty (characterTable))  render = toString (Rank + attributeStepOf (characterTable, Attribute)) + " (" + stepDice (Rank + attributeStepOf (characterTable, Attribute)) + ")"  editable = none }
+        }
+    }
+
+    Skills = list
+    {
+        description = "Skills learned outside the Discipline: rank plus the attribute's step."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Rank = integer { default = 1  minvalue = 0  maxvalue = 10 }
+            Attribute = string { default = "Perception"  keys = attributeNames }
+            Step = integer { value = Rank + attributeStepOf (characterTable, Attribute)  valuedice = edTest (Rank + attributeStepOf (characterTable, Attribute) - woundPenalty (characterTable))  render = toString (Rank + attributeStepOf (characterTable, Attribute)) + " (" + stepDice (Rank + attributeStepOf (characterTable, Attribute)) + ")"  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack step is Dexterity plus Melee, Missile or Throwing Weapons rank, against the target's Physical Defense. Damage step is Strength plus the weapon."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", attributeStep (characterTable.Attributes.Dexterity.Value) + rankOf (characterTable, "Unarmed Combat") - woundPenalty (characterTable), attributeStep (characterTable.Attributes.Strength.Value), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        visible = magicianOnly (Character.Discipline)
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Money = table
+    {
+        tableLayout = layout { columns = 3 }
+        Gold = integer { default = 0  editable = live }
+        Silver = integer { default = 0  editable = live }
+        Copper = integer { default = 0  editable = live }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/earthdawn/horror.svg"  important = [Statistics, Attacks] }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Challenge = string { description = "Novice, Journeyman, Warden or Master, with a circle." default = "Novice (Circle 2)" }
+        DEX = integer { default = 6 }
+        STR = integer { default = 6 }
+        TOU = integer { default = 6 }
+        PER = integer { default = 5 }
+        WIL = integer { default = 5 }
+        CHA = integer { default = 4 }
+        Initiative = integer { default = 6  valuedice = plainStep (Initiative) }
+        'Physical Defense' = integer { default = 8 }
+        'Mystic Defense' = integer { default = 7 }
+        'Social Defense' = integer { default = 6 }
+        'Physical Armor' = integer { default = 3 }
+        'Mystic Armor' = integer { default = 1 }
+        'Unconsciousness Rating' = integer { default = 40 }
+        'Death Rating' = integer { default = 48 }
+        'Wound Threshold' = integer { default = 9 }
+        Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Wounds = integer { default = 0  minvalue = 0  editable = live }
+        Knockdown = integer { default = 6  valuedice = edTest (Knockdown) }
+        Movement = integer { default = 12 }
+        Down = string { value = if Damage >= 'Death Rating' then "Dead" else if Damage >= 'Unconsciousness Rating' then "Unconscious" else ""  visible = none  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = integer { default = 10  valuedice = edAttack (Attack)  action = if 'Range yd' > 2 then "ranged" else "melee"  reach = 2  range = 'Range yd' }
+            Damage = integer { default = 12  valuedice = damageRoll (Damage) }
+            'Range yd' = integer { default = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true }
+        Special = string { multiline = true }
+        Loot = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Missile", "Throwing"] }
+        'Damage Step' = string { description = "Added to the wielder's Strength step." default = "4" }
+        Size = string {}
+        'Strength Minimum' = string {}
+        'Short Range' = string { description = "Yards." }
+        'Long Range' = string { description = "Yards." }
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        'Physical Armor' = string { default = "0" }
+        'Mystic Armor' = string { default = "0" }
+        'Initiative Penalty' = string { default = "0" }
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/earthdawn/thread.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }, filter { name = "Circle" prefix = "Circle" filter = Stats.Circle }]
+    }
+    Stats = table
+    {
+        Discipline = string { keys = ["Elementalist", "Illusionist", "Nethermancer", "Wizard"] }
+        Circle = integer { default = 1  minvalue = 1  maxvalue = 15 }
+        Threads = integer { description = "Threads to weave before casting." default = 0  minvalue = 0 }
+        'Weaving Difficulty' = string {}
+        'Casting Difficulty' = string { default = "Target's Mystic Defense" }
+        Range = string {}
+        Duration = string {}
+        Effect = string {}
+    }
+}
+
+itemStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        Weight = string {}
+    }
+}
+
+Earthdawn = system
+{
+    hints = [
+        hint
+        {
+            title = "Steps"
+            topic = "Play"
+            text = ["Every test rolls a step: a set of exploding dice, from step 4 (d6) and step 5 (d8) up to step 8 (2d6) and beyond. Talents and skills add their rank to an attribute's step. The roll asks for a step bonus or penalty and the Target Number; each 5 over the TN is an extra success. All ones is the Rule of One: an automatic failure."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Roll Initiative (Dexterity step) every round; highest goes first. Attacks ask for the target's Physical Defense; damage is Strength step plus the weapon, less Physical Armor. A hit that beats the Wound Threshold after armor also causes a wound (-1 to all tests)."]
+        },
+        hint
+        {
+            title = "Karma and recovery"
+            topic = "Play"
+            text = ["Spend Karma to add a d6 to tests your Discipline allows. Recovery tests (Toughness step) heal damage, a few times a day; a night's sleep refreshes them and Karma."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Everyone rolls Initiative each round, and the order can change."]
+        }
+    ]
+    distanceUnit = "yd"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Spells = spellStats
+    Equipment = itemStats
+    secondaryTypes = ["Weapons", "Armor", "Spells", "Equipment"]
+    description = "Earthdawn 4th edition: adepts of Barsaive with exploding step dice, Disciplines, talents, Karma and Horrors"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 1d8, 1d10, 1d12, 2d6]
+    cssFiles = ["/systems/earthdawn/earthdawn.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/barbarian.json", "/systems/names/mythicgreece.json"]
+    nameSettings = [fantasyNameSetting, swordAndSorceryNameSetting, mythicGreeceNameSetting]
+}

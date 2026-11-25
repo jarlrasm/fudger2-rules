@@ -1,0 +1,67 @@
+@import url("/systems/sheet.css");
+
+/* Index Card RPG: the hero as a stack of index cards. White card stock with
+   faint blue ruled lines and a red margin rule, chunky black marker headings,
+   the six stats and five effort dice in tidy boxes with base and loot, then
+   hearts, Defense and the hero coin, and loot and abilities as long cards. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #3e4a59;
+    --surface: #ffffff;
+    --surface-alt: #f5f8fb;
+    --surface-sunken: #eaf0f6;
+    --surface-muted: #c9d6e4;
+    --text: #111111;
+    --text-muted: #36404a;
+    --text-faint: #6b7784;
+    --on-accent: #ffffff;
+    --border: #9fb6cc;
+    --border-strong: #111111;
+    --accent: #111111;
+    --accent-hover: #333333;
+    --accent-soft: #eaf0f6;
+    --link: #c8261c;
+    --danger: #c8261c;
+    --danger-hover: #9c1d15;
+    --danger-soft: #f6d3d0;
+    --success: #2f6a3a;
+    --paper: #ffffff;
+    --card-bg: #f5f8fb;
+    --dice-bg: #c8261c;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
+    --title-font: Impact, "Arial Black", sans-serif;
+    --block-radius: 3px;
+    --block-border: 1px solid var(--border);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--surface);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 1.2em;
+    border-bottom: 2px solid #c8261c;
+}
+.entityView .entityTable > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+
+/* ---- Stats and effort boxes ---- */
+
+.entityView .table-stats .customtype > div:nth-child(1)::before,
+.entityView .table-effort .customtype > div:nth-child(1)::before { content: "base "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-stats .customtype > div:nth-child(2)::before,
+.entityView .table-effort .customtype > div:nth-child(2)::before { content: "loot "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-stats > table > tbody > tr > td:first-child,
+.entityView .table-effort > table > tbody > tr > td:first-child {
+    font-family: Impact, "Arial Black", sans-serif;
+    letter-spacing: 0.05em;
+}

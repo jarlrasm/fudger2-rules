@@ -1,0 +1,291 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+icrpgOutcome (natural, total, target) =
+    if natural == 20 then "Critical success"
+    else if natural == 1 then "Fumble"
+    else if total >= target then "Success"
+    else "Failure"
+
+icrpgText (natural, total, target, known) =
+    toString (total)
+    + (if known then " vs Target " + toString (target) + ": " + icrpgOutcome (natural, total, target) else if natural == 20 then ": Critical success" else if natural == 1 then ": Fumble" else "")
+    + (if natural == 20 then ", roll Ultimate effort" else "")
+
+icrpgResult (natural, total, target, known) =
+{
+    Text = icrpgText (natural, total, target, known)
+    Value = total
+    Outcome = if known or natural == 20 or natural == 1 then icrpgOutcome (natural, total, target) else ""
+}
+
+icrpgRoll (easeBonus) = ([dice { number = 1  sides = 20  bonus = easeBonus }], ((baseline, throws)->icrpgResult (first (first (throws).rolls), baseline + easeBonus + first (first (throws).rolls), asked, answered)))
+
+icrpgTest = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target", icrpgRoll (n)))
+
+icrpgAttack = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target's Defense", icrpgRoll (n)))
+
+effortRoll (dieSides) = ([dice { number = 1  sides = dieSides }], ((baseline, throws)->{
+    Text = toString (max (0, baseline + first (first (throws).rolls))) + " effort"
+    Value = max (0, baseline + first (first (throws).rolls))
+}))
+
+stat = custom
+{
+    Base = modifier { description = "Points put into the stat at creation and from milestones." default = 0  minvalue = -2  maxvalue = 10 }
+    Loot = modifier { description = "Bonus from equipped loot." default = 0  minvalue = 0  maxvalue = 10 }
+    Total = modifier { description = "Roll d20 plus this against the Target." value = Base + Loot  valuedice = icrpgTest  editable = none }
+}
+
+effort (dieSides) = custom
+{
+    Base = modifier { default = 0  minvalue = 0  maxvalue = 10 }
+    Loot = modifier { default = 0  minvalue = 0  maxvalue = 10 }
+    Roll = integer { description = "The effort die plus bonuses: progress against an obstacle or damage to a foe." value = Base + Loot  valuedice = effortRoll (dieSides)  render = "d" + toString (dieSides) + (if Base + Loot > 0 then "+" + toString (Base + Loot) else "")  editable = none }
+}
+
+noStats = { Stats = { Effort = "Weapons" } }
+
+lootStat (item, field) = valueOr (valueOr (valueOr (item.data, "lootStats", noStats), "Stats", noStats.Stats), field, "")
+
+statTotal (char, name) =
+    switch name
+        case "STR" then char.Stats.STR.Total
+        case "DEX" then char.Stats.DEX.Total
+        case "CON" then char.Stats.CON.Total
+        case "INT" then char.Stats.INT.Total
+        case "WIS" then char.Stats.WIS.Total
+        else char.Stats.CHA.Total
+
+effortSides (name) =
+    switch name
+        case "Basic" then 4
+        case "Guns" then 8
+        case "Magic" then 10
+        case "Ultimate" then 12
+        else 6
+
+effortBonus (char, name) =
+    switch name
+        case "Basic" then char.Effort.Basic.Roll
+        case "Guns" then char.Effort.Guns.Roll
+        case "Magic" then char.Effort.Magic.Roll
+        case "Ultimate" then char.Effort.Ultimate.Roll
+        else char.Effort.'Weapons and Tools'.Roll
+
+weaponAttack (name, attackBonus, dieSides, damageBonus, kind, distance) = custom
+{
+    Name = name
+    Attack = modifier { value = attackBonus  valuedice = icrpgAttack  action = kind  reach = 1  range = distance  editable = none }
+    Effort = integer { value = damageBonus  valuedice = effortRoll (dieSides)  render = "d" + toString (dieSides) + (if damageBonus > 0 then "+" + toString (damageBonus) else "")  editable = none }
+}
+
+isWeapon (item) = lootStat (item, "Attack Stat") != ""
+
+attackFor (char, item) =
+    weaponAttack (item.Name, statTotal (char, lootStat (item, "Attack Stat")), effortSides (lootStat (item, "Effort")), effortBonus (char, lootStat (item, "Effort")),
+        if lootStat (item, "Attack Stat") == "DEX" then "ranged" else if lootStat (item, "Attack Stat") == "WIS" or lootStat (item, "Attack Stat") == "INT" then "ranged" else "melee",
+        if lootStat (item, "Attack Stat") == "STR" then 1 else 12)
+
+hpState (char) =
+    if char.Health.Dying then "Dying"
+    else if char.Health.HP < 1 then "Down"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, Stats, Attacks] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Life Form' = string { description = "Human, Elf, Dwarf, Orc... or whatever the world offers." }
+        Type = string { description = "The hero's type: Warrior, Hunter, Bard, Mage, Priest and so on." keys = ["Warrior", "Hunter", "Bard", "Mage", "Priest", "Thief", "Gunslinger", "Tank", "Other"] }
+        World = string { keys = ["Alfheim", "Warp Shell", "Ghost Mountain", "Vigilante City", "Blood and Snow", "Other"] }
+        Story = string { description = "A sentence about who the hero is and what they want." multiline = true }
+        Milestones = integer { description = "Earned at the end of an adventure; each buys a stat point, ability or loot." default = 0  minvalue = 0  editable = live }
+        'Hero Coin' = bool { description = "Spend it to reroll any one roll, then it's gone until the GM gives another." default = true  editable = live }
+    }
+
+    Stats = table
+    {
+        description = "Roll d20 plus the stat. Meet the room's Target to succeed; Easy is +3, Hard is -3."
+        tableLayout = layout { columns = 3  size = wide }
+        STR = stat {}
+        DEX = stat {}
+        CON = stat {}
+        INT = stat {}
+        WIS = stat {}
+        CHA = stat {}
+    }
+
+    Effort = table
+    {
+        description = "Effort dice measure progress and damage: d4 basic, d6 weapons and tools, d8 guns, d10 magic, d12 ultimate (after a natural 20)."
+        tableLayout = layout { columns = 5  size = wide }
+        Basic = effort (4)
+        'Weapons and Tools' = effort (6)
+        Guns = effort (8)
+        Magic = effort (10)
+        Ultimate = effort (12)
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Hearts = integer { description = "Each heart is 10 hit points." default = 1  minvalue = 1  maxvalue = 10 }
+        'Max HP' = integer { value = 10 * Hearts  editable = none }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Defense = integer { description = "10 plus CON plus armor loot: the Target for attacks against you." value = 10 + Stats.CON.Total + 'Armor Loot'  editable = none }
+        'Armor Loot' = integer { default = 0  minvalue = 0 }
+        Dying = bool { description = "At 0 HP you are dying: roll a d4 for the rounds you have left unless someone stabilizes you." default = false  editable = live  indicator = "#555555" }
+        State = string { value = hpState (characterTable)  visible = none  indicator = "#d64545" }
+        Recover = button { description = "A real rest between scenes restores all hit points and ends dying." editable = live  onClick = updates
+            {
+                (root.Health.HP) = 'Max HP'
+                (root.Health.Dying) = false
+            }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks roll the stat against the target's Defense; on a hit roll the effort die."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fists", characterTable.Stats.STR.Total, 4, characterTable.Effort.Basic.Roll, "melee", 1)], map ((item)->attackFor (characterTable, item), filter ((item)->isWeapon (item), characterTable.Loot)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Abilities = list
+    {
+        description = "Starting abilities from the type, plus milestone abilities and powers."
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Loot = list
+    {
+        description = "Ten slots equipped, ten carried."
+        tableLayout = layout { size = wide }
+        source = secondary.Loot
+        singular = "Loot"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Coin = integer { default = 0  editable = live }
+        Notes = string { multiline = true }
+    }
+}
+
+monsterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icrpg/monster.svg"  important = [Monster, Actions] }
+    Monster = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Hearts = integer { default = 1  minvalue = 1 }
+        HP = integer { default = 10 * Hearts  minvalue = 0  editable = live  indicator = "#d64545" }
+        Defense = integer { default = 12 }
+        Bonus = modifier { description = "Added to its d20 rolls." default = 2  valuedice = icrpgTest }
+        Down = string { value = if HP < 1 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Actions = list
+    {
+        description = "What it does on its turn: an attack bonus and its effort."
+        tableLayout = layout { size = wide }
+        singular = "Action"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 2  valuedice = icrpgAttack  action = if 'Range sq' > 1 then "ranged" else "melee"  reach = 1  range = 'Range sq' }
+            Effort = integer { description = "Effort die size." default = 6  valuedice = effortRoll (Effort)  render = "d" + toString (Effort) }
+            'Range sq' = integer { default = 1 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+        Loot = string { multiline = true }
+    }
+}
+
+lootStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Slot" prefix = "" filter = Stats.Slot }]
+    }
+    Stats = table
+    {
+        Slot = string { keys = ["Equipped", "Carried"]  default = "Equipped" }
+        'Attack Stat' = string { description = "For weapons: STR for melee, DEX for ranged, INT or WIS for spells." keys = ["", "STR", "DEX", "INT", "WIS", "CHA"] }
+        Effort = string { keys = ["Basic", "Weapons", "Guns", "Magic", "Ultimate"]  default = "Weapons" }
+        Bonus = string { description = "Stat or effort bonuses it gives, such as +1 DEX or +2 Defense." }
+    }
+}
+
+abilityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Starting", "Milestone", "Mastery", "Power", "Spell"] }
+        Type = string {}
+    }
+}
+
+ICRPG = system
+{
+    hints = [
+        hint
+        {
+            title = "Targets"
+            topic = "Play"
+            text = ["The GM sets one Target for the room, usually 10 to 14. Roll d20 plus a stat to beat it; Easy is +3, Hard -3. The roll asks for both. A natural 20 is a critical and gives Ultimate effort."]
+        },
+        hint
+        {
+            title = "Effort"
+            topic = "Play"
+            text = ["Effort dice measure progress: d4 for basic work, d6 for weapons and tools, d8 for guns, d10 for magic, d12 for ultimate effort. Obstacles and foes have hearts of 10 points each."]
+        },
+        hint
+        {
+            title = "Timers"
+            topic = "Combat"
+            text = ["Put a timer on danger: a d4 or d6 that counts down each round. When it hits zero, the bad thing happens."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["No initiative roll: turns go around the table from the player the GM picks, and the monsters act when the GM says."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 1
+    characters = characterTable
+    creatures = monsterTable
+    Loot = lootStats
+    Abilities = abilityStats
+    secondaryTypes = ["Loot", "Abilities"]
+    description = "Index Card RPG Master Edition: fast d20 play against one Target per room, effort dice, hearts, loot and timers, in any world"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/icrpg/icrpg.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/weirdwest.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, superheroesNameSetting, weirdWestNameSetting]
+}

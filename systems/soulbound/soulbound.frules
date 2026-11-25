@@ -1,0 +1,472 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dnLevels = ["2:1", "2:2", "2:3", "2:4", "3:1", "3:2", "3:3", "3:4", "4:1", "4:2", "4:3", "4:4", "5:1", "5:2", "5:3", "5:4", "6:1", "6:2", "6:3", "6:4"]
+
+dnTarget (level) = 2 + level / 4
+dnComplexity (level) = 1 + mod (level, 4)
+
+runningTotals (needs) = fold ([], (acc, x)->concat (acc, [x + (if count (acc) > 0 then item (count (acc) - 1, acc) else 0)]), needs)
+
+focusGain (rolls, target, focus) = count (filter ((c)->c <= focus, runningTotals (sort (map ((x)->target - x, filter ((x)->x < target, rolls))))))
+
+successesOf (rolls, target, focus) = count (filter ((x)->x >= target, rolls)) + focusGain (rolls, target, focus)
+
+successWord (n) = if n == 1 then " success" else " successes"
+
+focusText (gain) = if gain > 0 then " (" + toString (gain) + " from Focus)" else ""
+
+sbOutcome (successes, complexity) = if successes >= complexity then "Success" else "Failure"
+
+sbText (successes, target, complexity, gain, known) =
+    toString (successes) + successWord (successes) + focusText (gain)
+    + (if known then " vs DN " + toString (target) + ":" + toString (complexity) + ": " + sbOutcome (successes, complexity) + (if successes > complexity then ", " + toString (successes - complexity) + " extra" else "") else " at " + toString (target) + "+")
+
+sbResult (rolls, target, complexity, focus, known) =
+{
+    Text = sbText (successesOf (rolls, target, focus), target, complexity, focusGain (rolls, target, focus), known)
+    Value = successesOf (rolls, target, focus)
+    Outcome = if known then sbOutcome (successesOf (rolls, target, focus), complexity) else ""
+}
+
+sbRoll (pool, focus) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->sbResult (first (throws).rolls, if answered then dnTarget (asked) else 4, if answered then dnComplexity (asked) else 1, focus, answered)))
+
+sbTest (pool, focus) = ask ("Bonus or penalty dice", 0, (n)->ask ("Difficulty", dnLevels, 0, sbRoll (pool + n, focus)))
+
+ratingNames = ["Poor", "Average", "Good", "Great", "Superb", "Extraordinary"]
+
+ratingOf (score) = if score < 3 then 1 else if score < 5 then 2 else if score < 7 then 3 else if score < 9 then 4 else if score < 11 then 5 else 6
+
+ratingName (rating) = item (max (0, min (5, rating - 1)), ratingNames)
+
+attackTarget (attack, defence) =
+    if attack - defence > 1 then 2
+    else if attack - defence == 1 then 3
+    else if attack == defence then 4
+    else if defence - attack == 1 then 5
+    else 6
+
+attackRoll (pool, focus, rating, damage) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->attackResult (first (throws).rolls, attackTarget (rating, if answered then asked else rating), focus, damage, answered)))
+
+attackResult (rolls, target, focus, damage, known) =
+{
+    Text = toString (successesOf (rolls, target, focus)) + successWord (successesOf (rolls, target, focus)) + focusText (focusGain (rolls, target, focus)) + " vs DN " + toString (target) + ":1" + (if successesOf (rolls, target, focus) > 0 then ": Hit for " + toString (damage + successesOf (rolls, target, focus) - 1) + " damage" else ": Miss")
+    Value = successesOf (rolls, target, focus)
+    Outcome = if successesOf (rolls, target, focus) > 0 then "Hit" else "Miss"
+}
+
+sbAttack (pool, focus, rating, damage) = ask ("Bonus or penalty dice", 0, (n)->ask ("Target's Defence", ratingNames, 1, attackRoll (pool + n, focus, rating, damage)))
+
+attributeNames = ["Body", "Mind", "Soul"]
+
+attributeValue (char, name) =
+    switch name
+        case "Body" then char.Attributes.Body
+        case "Mind" then char.Attributes.Mind
+        else char.Attributes.Soul
+
+skill (usual) = custom
+{
+    Attribute = string { description = "The attribute the test uses, normally the one printed with the skill." default = usual  keys = attributeNames  editable = live }
+    Training = integer { description = "Training from 0 to 3: each adds a die to the pool." default = 0  minvalue = 0  maxvalue = 3 }
+    Focus = integer { description = "Focus from 0 to 3: after rolling, each point adds 1 to a die to make it a success." default = 0  minvalue = 0  maxvalue = 3 }
+    Pool = integer { description = "Attribute plus Training in d6s." value = attributeValue (characterTable, Attribute) + Training  valuedice = sbTest (attributeValue (characterTable, Attribute) + Training, Focus)  render = toString (attributeValue (characterTable, Attribute) + Training) + "d6"  editable = none }
+}
+
+noSkill = { Training = 0  Focus = 0 }
+
+trainingOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Training", 0)
+focusOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Focus", 0)
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+rangeMetres (band) =
+    switch band
+        case "Close" then 3
+        case "Short" then 10
+        case "Medium" then 30
+        case "Long" then 100
+        else 3
+
+isRanged (weapon) = weaponStat (weapon, "Range") != "" and weaponStat (weapon, "Range") != "Close"
+
+weaponAttack (name, pool, focus, rating, damage, traits, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = pool  valuedice = sbAttack (pool, focus, rating, damage)  render = toString (pool) + "d6"  action = kind  reach = 3  range = distance  editable = none }
+    Damage = "Damage " + toString (damage)
+    Traits = traits
+}
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, char.Attributes.Body + trainingOf (char, "Ballistic Skill"), focusOf (char, "Ballistic Skill"), char.Combat.Accuracy, firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Traits"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Body + trainingOf (char, "Weapon Skill"), focusOf (char, "Weapon Skill"), char.Combat.Melee, firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Traits"), "melee", 3)
+
+armourValue (char) = sum (map ((a)->firstNumber (valueOr (valueOr (valueOr (a.data, "armourStats", { Stats = { Armour = "0" } }), "Stats", { Armour = "0" }), "Armour", "0")), char.Armour))
+
+woundState (char) =
+    if char.Health.Deadly > 0 then "Deadly wound"
+    else if char.Health.Serious > 0 then "Seriously wounded"
+    else if char.Health.Toughness < 1 then "No Toughness"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Health, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Species = string { keys = ["Human", "Aelf", "Duardin", "Stormcast Eternal", "Sylvaneth", "Kharadron", "Lumineth", "Idoneth", "Fyreslayer", "Seraphon", "Orruk", "Ogor"] }
+        Archetype = string { description = "The role the character was built from, such as Knight-Questor or Hunter." }
+        Faction = string {}
+        'Short Term Goal' = string {}
+        'Long Term Goal' = string {}
+        Connections = string { multiline = true }
+        XP = integer { default = 0  editable = live }
+        'Spent XP' = integer { default = 0 }
+    }
+
+    Attributes = table
+    {
+        description = "Body, Mind and Soul. A test rolls the attribute plus the skill's Training in d6s."
+        tableLayout = layout { columns = 3  size = wide }
+        Body = integer { description = "Strength, toughness and speed." default = 2  minvalue = 1  maxvalue = 8  valuedice = sbTest (Body, 0) }
+        Mind = integer { description = "Wits, learning and perception." default = 2  minvalue = 1  maxvalue = 8  valuedice = sbTest (Mind, 0) }
+        Soul = integer { description = "Willpower, faith and magic." default = 2  minvalue = 1  maxvalue = 8  valuedice = sbTest (Soul, 0) }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Melee = integer { description = "Melee rating from Body, Weapon Skill Training and Focus: Poor to Extraordinary." value = ratingOf (Attributes.Body + trainingOf (characterTable, "Weapon Skill") + focusOf (characterTable, "Weapon Skill"))  render = ratingName (ratingOf (Attributes.Body + trainingOf (characterTable, "Weapon Skill") + focusOf (characterTable, "Weapon Skill")))  editable = none }
+        Accuracy = integer { description = "Accuracy rating from Mind, Ballistic Skill Training and Focus." value = ratingOf (Attributes.Mind + trainingOf (characterTable, "Ballistic Skill") + focusOf (characterTable, "Ballistic Skill"))  render = ratingName (ratingOf (Attributes.Mind + trainingOf (characterTable, "Ballistic Skill") + focusOf (characterTable, "Ballistic Skill")))  editable = none }
+        Defence = integer { description = "Defence rating from Body, Reflexes Training and Focus, plus a shield." value = min (6, ratingOf (Attributes.Body + trainingOf (characterTable, "Reflexes") + focusOf (characterTable, "Reflexes")) + 'Shield Bonus')  render = ratingName (min (6, ratingOf (Attributes.Body + trainingOf (characterTable, "Reflexes") + focusOf (characterTable, "Reflexes")) + 'Shield Bonus'))  editable = none }
+        'Shield Bonus' = integer { description = "Steps of Defence a shield gives." default = 0  minvalue = 0  maxvalue = 2 }
+        Armour = integer { description = "Taken off each hit's damage." value = armourValue (characterTable) + 'Extra Armour'  editable = none }
+        'Extra Armour' = integer { default = 0 }
+        Initiative = integer { description = "Mind plus Awareness and Reflexes Training. Highest acts first." value = Attributes.Mind + trainingOf (characterTable, "Awareness") + trainingOf (characterTable, "Reflexes")  editable = none }
+        'Natural Awareness' = integer { description = "Half of Mind plus Awareness Training, rounded up: what you notice without a test." value = (Attributes.Mind + trainingOf (characterTable, "Awareness") + 1) / 2  editable = none }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Toughness' = integer { description = "Body plus Mind plus Soul, plus talents." default = Attributes.Body + Attributes.Mind + Attributes.Soul }
+        Toughness = integer { description = "Damage comes off Toughness first; at 0 each hit also wounds." default = 'Max Toughness'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Wounds' = integer { description = "How many wounds of any kind you can carry before you fall." default = 3 }
+        Minor = integer { description = "Minor wounds." default = 0  minvalue = 0  editable = live }
+        Serious = integer { description = "Serious wounds: 2 damage each against the wound total." default = 0  minvalue = 0  editable = live }
+        Deadly = integer { description = "Deadly wounds: 3 each. Too many and you die." default = 0  minvalue = 0  editable = live }
+        'Max Mettle' = integer { description = "Half Soul, rounded up." value = (Attributes.Soul + 1) / 2  editable = none }
+        Mettle = integer { description = "Spend for extra actions, tenacity and heroic deeds; it refills each round." default = 'Max Mettle'  minvalue = 0  editable = live }
+        State = string { value = woundState (characterTable)  visible = none  indicator = "#d64545" }
+        'Catch your breath' = button { description = "A short rest after a fight restores all Toughness and Mettle." editable = live  onClick = updates
+            {
+                (root.Health.Toughness) = 'Max Toughness'
+                (root.Health.Mettle) = 'Max Mettle'
+            }
+        }
+        'Long rest' = button { description = "A day of rest heals minor wounds; serious and deadly wounds need treatment." editable = live  onClick = updates
+            {
+                (root.Health.Toughness) = 'Max Toughness'
+                (root.Health.Mettle) = 'Max Mettle'
+                (root.Health.Minor) = 0
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Blinded = bool { default = false  editable = live  indicator = "#555555" }
+        Charmed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Restrained = bool { default = false  editable = live  indicator = "#e8913a" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Burning = bool { default = false  editable = live  indicator = "#d64545" }
+        Exhausted = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+    }
+
+    Skills = table
+    {
+        description = "Each skill with its Training and Focus. Click the pool to roll against a DN such as 4:2 (each die of 4 or more is a success; you need 2)."
+        tableLayout = layout { columns = 2  size = wide }
+        Arcana = skill ("Mind")
+        Athletics = skill ("Body")
+        Awareness = skill ("Mind")
+        'Ballistic Skill' = skill ("Body")
+        'Beast Handling' = skill ("Soul")
+        Channelling = skill ("Soul")
+        Crafting = skill ("Mind")
+        Determination = skill ("Soul")
+        Devotion = skill ("Soul")
+        Dexterity = skill ("Body")
+        Entertain = skill ("Soul")
+        Fortitude = skill ("Body")
+        Guile = skill ("Mind")
+        Intimidation = skill ("Soul")
+        Intuition = skill ("Mind")
+        Lore = skill ("Mind")
+        Medicine = skill ("Mind")
+        Might = skill ("Body")
+        Nature = skill ("Mind")
+        Reflexes = skill ("Body")
+        Stealth = skill ("Body")
+        Survival = skill ("Mind")
+        Theology = skill ("Mind")
+        'Weapon Skill' = skill ("Body")
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each attack asks for the target's Defence: your Melee or Accuracy against it sets the DN, from 2:1 when you are far better to 6:1 when far worse. Extra successes add damage."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", characterTable.Attributes.Body + trainingOf (characterTable, "Weapon Skill"), focusOf (characterTable, "Weapon Skill"), characterTable.Combat.Melee, 0, "Close", "melee", 3)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    'Spells and Miracles' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Spells and Miracles'
+        singular = "Spell or miracle"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 2 }
+        Aqua = integer { description = "Aqua Ghyranis, the life-water of Ghyran used as coin." default = 0  editable = live }
+        Notes = string { multiline = true }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+roles = ["Minion", "Warrior", "Champion", "Chosen"]
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/soulbound/foe.svg"
+        important = [Profile, Health, Attacks]
+        filters = [filter { name = "Role" prefix = "" filter = Profile.Role }]
+    }
+    Profile = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Role = string { description = "Minions die to one hit, Warriors stand a few, Champions and Chosen lead." default = "Warrior"  keys = roles }
+        Keywords = string { description = "Faction and kind keywords, such as Chaos, Mortal, Slaves to Darkness." }
+        Body = integer { default = 3 }
+        Mind = integer { default = 2 }
+        Soul = integer { default = 2 }
+        Melee = integer { default = 3  render = ratingName (Melee)  minvalue = 1  maxvalue = 6 }
+        Accuracy = integer { default = 2  render = ratingName (Accuracy)  minvalue = 1  maxvalue = 6 }
+        Defence = integer { default = 3  render = ratingName (Defence)  minvalue = 1  maxvalue = 6 }
+        Armour = integer { default = 1 }
+        Initiative = integer { default = 4 }
+        'Natural Awareness' = integer { default = 2 }
+    }
+    Health = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Toughness' = integer { default = 6 }
+        Toughness = integer { default = 'Max Toughness'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Wounds = integer { description = "Wounds taken, for Champions and Chosen." default = 0  minvalue = 0  editable = live }
+        Mettle = integer { default = 0  minvalue = 0  editable = live }
+        Down = string { value = if Toughness < 1 then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    Skills = keyvalues
+    {
+        description = "Skills as a pool and Focus, such as Weapon Skill 5d6 with Focus 1."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Awareness", "Reflexes", "Weapon Skill"]
+        valueType = custom
+        {
+            Pool = integer { default = 3  minvalue = 0  valuedice = sbTest (Pool, Focus)  render = toString (Pool) + "d6" }
+            Focus = integer { default = 0  minvalue = 0 }
+        }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Pool = integer { default = 4  minvalue = 0  valuedice = sbAttack (Pool, Focus, if 'Range m' > 3 then Profile.Accuracy else Profile.Melee, Damage)  render = toString (Pool) + "d6"  action = if 'Range m' > 3 then "ranged" else "melee"  reach = 3  range = 'Range m' }
+            Focus = integer { default = 0  minvalue = 0 }
+            Damage = integer { default = 1  minvalue = 0 }
+            'Range m' = integer { default = 3 }
+            Traits = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Tactics = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Range" prefix = "" filter = Stats.Range }]
+    }
+    Stats = table
+    {
+        Damage = string { description = "Damage on a hit, plus 1 for each extra success." default = "1" }
+        Range = string { keys = ["Close", "Short", "Medium", "Long"]  default = "Close" }
+        Traits = string { description = "Such as Cleave, Penetrating, Rend, Two-handed or Reload." }
+        Cost = string {}
+        Availability = string { keys = ["Common", "Rare", "Exotic"] }
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Armour = string { default = "1" }
+        Traits = string {}
+        Cost = string {}
+        Availability = string { keys = ["Common", "Rare", "Exotic"] }
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirements = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/soulbound/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Spell", "Miracle"] }
+        Lore = string { description = "The lore or god it belongs to." }
+        DN = string { description = "Difficulty to cast or invoke, such as 4:2." }
+        Range = string {}
+        Target = string {}
+        Duration = string {}
+        Overcast = string { description = "What each extra success can buy." }
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Cost = string {}
+        Availability = string { keys = ["Common", "Rare", "Exotic"] }
+    }
+}
+
+Soulbound = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests and DN"
+            topic = "Play"
+            text = ["Roll Attribute plus Training in d6s. The GM sets a Difficulty Number such as 4:2: every die showing 4 or more is a success, and you need 2. The roll asks for bonus dice and the DN, then spends your Focus to lift near misses into successes."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask for the target's Defence. Your Melee or Accuracy against it sets the DN, from 2:1 down to 6:1. Damage is the weapon's damage plus one per extra success, less Armour, taken from Toughness first."]
+        },
+        hint
+        {
+            title = "Mettle, Doom and Soulfire"
+            topic = "Play"
+            text = ["Mettle refills each round and buys extra actions. The party shares Soulfire for heroic deeds, and the GM tracks Doom: keep both on the campaign's notes."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Initiative is a fixed number: Mind plus Awareness and Reflexes Training. Enter it in the initiative list; highest acts first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = weaponStats
+    Armour = armourStats
+    Talents = talentStats
+    'Spells and Miracles' = spellStats
+    Equipment = equipmentStats
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Spells and Miracles", "Equipment"]
+    description = "Warhammer Age of Sigmar: Soulbound: d6 pools against a Difficulty Number, Focus to turn near misses, and Melee, Accuracy and Defence ratings"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 2d6, 3d6]
+    cssFiles = ["/systems/soulbound/soulbound.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/oldworld.json", "/systems/names/grimdark.json"]
+    nameSettings = [fantasyNameSetting, oldWorldNameSetting, grimdarkNameSetting]
+}

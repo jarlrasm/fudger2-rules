@@ -1,0 +1,71 @@
+@import url("/systems/sheet.css");
+
+/* Earthdawn 4th edition: the character sheet. Warm stone-grey page with a
+   teal and bronze palette, title bars in deep teal with bronze capitals,
+   attributes as six boxes with their value and step, the three defenses and
+   armor in one band, health ratings beside Karma, and talents and skills as
+   long tables with rank, attribute and step. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #a9a396;
+    --surface: #f2efe6;
+    --surface-alt: #e8e3d6;
+    --surface-sunken: #dcd5c4;
+    --surface-muted: #c4baa2;
+    --text: #18201f;
+    --text-muted: #39433f;
+    --text-faint: #6a716b;
+    --on-accent: #f3e2b8;
+    --border: #8b7d5c;
+    --border-strong: #1c3c3a;
+    --accent: #1c3c3a;
+    --accent-hover: #285653;
+    --accent-soft: #d8e6e3;
+    --link: #1c3c3a;
+    --danger: #8d2a1d;
+    --danger-hover: #6c2016;
+    --danger-soft: #eed4cc;
+    --success: #3d6b33;
+    --paper: #f2efe6;
+    --card-bg: #e8e3d6;
+    --dice-bg: #1c3c3a;
+    --dice-text: #f3e2b8;
+    --bronze: #a6783a;
+}
+
+.entityView {
+    --sheet-font: "Gill Sans", "Trebuchet MS", sans-serif;
+    --title-font: "Palatino Linotype", Palatino, Georgia, serif;
+    --block-radius: 8px 0 8px 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    border-bottom: 3px solid var(--bronze);
+}
+
+/* ---- Attributes ---- */
+
+.entityView .table-attributes > table > tbody > tr {
+    border: 1px solid var(--bronze);
+    margin: 2px;
+}
+.entityView .table-attributes .customtype > div:nth-child(1)::before { content: "value "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attributes .customtype > div:nth-child(2)::before { content: "step "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Health beside Karma ---- */
+
+.entityView .table-health { --block: 70%; clear: left; }
+.entityView .table-karma { --block: 30%; }
+
+/* ---- Lower half ---- */
+
+.entityView .table-armor,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-armor { clear: left; }
+.entityView .table-money { --block: 50%; clear: left; }

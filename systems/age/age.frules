@@ -1,0 +1,31 @@
+hasDoubles (rolls, drama) =
+    count (rolls) > 1 and (first (rolls) == item (1, rolls) or first (rolls) == drama or item (1, rolls) == drama)
+
+ageOutcome (total, tn, answered) =
+    if not (answered) then ""
+    else if total >= tn then "Success"
+    else "Failure"
+
+ageText (total, tn, answered, stunts) =
+    toString (total)
+    + (if answered then " vs " + toString (tn) + ": " + ageOutcome (total, tn, answered) else "")
+    + (if stunts > 0 and (not (answered) or total >= tn) then ", " + toString (stunts) + " SP" else "")
+
+ageResult (rolls, drama, total, tn, answered) =
+{
+    Text = ageText (total, tn, answered, if hasDoubles (rolls, drama) then drama else 0)
+    Value = total
+    Outcome = ageOutcome (total, tn, answered)
+}
+
+damageRoll (n, dieSides) = ([dice { number = n  sides = dieSides }], ((baseline, throws)->{ Text = toString (max (0, baseline + sum (first (throws).rolls))) + " damage"  Value = baseline + sum (first (throws).rolls) }))
+
+diceCount (text) = bonusWithValue ([[text]], "^ *([0-9]+)d")
+
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+damageBonus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)")
+
+damageLabel (n, dieSides, bonus) = toString (n) + "d" + toString (dieSides) + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")

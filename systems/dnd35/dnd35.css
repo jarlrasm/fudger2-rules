@@ -1,0 +1,80 @@
+@import url("/systems/sheet.css");
+
+/* D&D 3.5: the character record sheet. White paper, labels in black boxes
+   with white capitals, grey fills for totals, the six ability scores in a
+   strip of boxes, hit points, Armor Class and saves under them, then attacks
+   and the long skill list in two columns, in a plain bold sans-serif. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9d9d6;
+    --surface: #ffffff;
+    --surface-alt: #f2f2f0;
+    --surface-sunken: #e4e4e1;
+    --surface-muted: #c8c8c4;
+    --text: #111111;
+    --text-muted: #3a3a3a;
+    --text-faint: #6e6e6e;
+    --on-accent: #ffffff;
+    --border: #8c8c88;
+    --border-strong: #111111;
+    --accent: #111111;
+    --accent-hover: #3a3a3a;
+    --accent-soft: #e4e4e1;
+    --link: #7a1f12;
+    --danger: #9b2a1c;
+    --danger-hover: #6e2413;
+    --danger-soft: #eed9c9;
+    --success: #3d6b33;
+    --paper: #ffffff;
+    --card-bg: #f2f2f0;
+    --dice-bg: #111111;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--text);
+    color: var(--surface);
+    padding: 2px 8px;
+    font-weight: 900;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child,
+.entityView .table-saves > table > tbody > tr > td:first-child {
+    background: var(--text);
+    color: var(--surface);
+    padding: 0 6px;
+}
+.entityView .table-abilities > table > tbody,
+.entityView .table-statistics > table > tbody {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.entityView .table-abilities > table > tbody > tr {
+    flex-direction: column;
+    border: 2px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { font-weight: 700; text-transform: uppercase; }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "class "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-combat { --block: 50%; clear: left; }
+.entityView .table-saves,
+.entityView .table-conditions { --block: 50%; }
+.entityView .table-saves .customtype > div:nth-child(1)::before { content: "base "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-saves .customtype > div:nth-child(2)::before { content: "magic "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-saves .customtype > div:nth-child(3)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-feats,
+.entityView .table-class-features,
+.entityView .table-equipment,
+.entityView .table-wealth { --block: 50%; }
+.entityView .table-feats { clear: left; }
+.entityView .table-skills .customtype > div:nth-child(3)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }

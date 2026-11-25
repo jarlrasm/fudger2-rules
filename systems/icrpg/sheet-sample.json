@@ -1,0 +1,19 @@
+{
+  "values": {
+    "Hero": { "Life Form": "Dwarf", "Type": "Warrior", "World": "Alfheim", "Story": "Last shield of the Ironhollow clan, out to win back the forge-hall from the goblin king.", "Milestones": 2, "Hero Coin": true },
+    "Stats": { "STR.Base": 3, "STR.Loot": 1, "DEX.Base": 0, "CON.Base": 2, "CON.Loot": 1, "INT.Base": -1, "WIS.Base": 1, "CHA.Base": 0 },
+    "Effort": { "Weapons and Tools.Base": 1, "Weapons and Tools.Loot": 1, "Basic.Base": 1 },
+    "Health": { "Hearts": 2, "HP": 14, "Armor Loot": 2 },
+    "Notes": { "Coin": 37, "Notes": "Owes the river witch a favour. Goblin king's banner seen at the Gloom Steps." }
+  },
+  "secondary": {
+    "Loot": [
+      { "name": "Clan warhammer", "values": { "Stats": { "Slot": "Equipped", "Attack Stat": "STR", "Effort": "Weapons", "Bonus": "+1 STR, +1 weapon effort" } } },
+      { "name": "Throwing axes", "values": { "Stats": { "Slot": "Equipped", "Attack Stat": "DEX", "Effort": "Weapons" } } },
+      { "name": "Chain hauberk", "values": { "Stats": { "Slot": "Equipped", "Bonus": "+2 Defense, +1 CON" } } },
+      { "name": "Torch bundle", "values": { "Stats": { "Slot": "Carried", "Bonus": "Light for 3 rooms" } } },
+      { "name": "Healing draught", "values": { "Stats": { "Slot": "Carried", "Bonus": "Heal d8" } } }
+    ],
+    "Abilities": [ { "name": "Shield Wall", "values": { "Stats": { "Kind": "Starting", "Type": "Warrior" } } }, { "name": "Cleave", "values": { "Stats": { "Kind": "Milestone", "Type": "Warrior" } } } ]
+  }
+}
