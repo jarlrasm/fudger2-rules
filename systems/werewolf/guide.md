@@ -4,7 +4,7 @@
 The players are **Garou**, werewolves who fight for a world that is already dying: against the corporations and corruption of the Wyrm, against their own Rage, and against despair. Each Garou belongs to a **tribe** and was born under an **auspice** (moon phase) that gives them a role. Play is about the pack, the spirits and the cost of violence.
 
 ## Rolling
-Build a pool of d10s from **attribute + skill**. Each 6 or more is a success; each **pair of 10s** adds two more (a critical). The GM sets a difficulty (successes needed); leave it blank when only the GM knows it.
+Build a pool of d10s from **attribute + skill**. Each 6 or more is a success; each **pair of 10s** adds two more (a critical). The GM sets a difficulty (successes needed); leave it blank when only the GM knows it. The same prompt asks for dice added or taken off for circumstances, wounds or a Gift, and the Rage dice are counted from the new pool.
 
 - **Rage dice**: as many dice of the pool as the character's Rage are red Rage dice. If **two or more Rage dice show 1 or 2**, the result is **brutal**: a violent action succeeds with four extra successes, but anything else fails.
 - **Willpower**: after a roll, reroll up to three normal (not Rage) dice for 1 superficial Willpower damage. The sheet marks it.

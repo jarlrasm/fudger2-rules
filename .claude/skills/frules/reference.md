@@ -186,6 +186,16 @@ cofdAsked (pool, again, weapon) = ask ("Dice bonus or penalty", 0, (n)->cofdRoll
 
 All three forms of `ask` take it. An empty answer builds the dice from 0 (or the default), with `answered` false; the lambda can take just `(n)`. The roll's own lambda still reads `asked` and `answered`. Where the pool is split between kinds of dice (Rage, Hunger, Stress), build both groups inside the lambda, so the split follows the new size. This needs the app from branch `claude/batch-2-systems` or later. Test it with `dieCountsAre location expression (Just n) [counts]` in NewSystemsTests.elm, next to an `askedShows`.
 
+#### Two numbers in one prompt
+
+Where a roll needs a number that changes the pool and another the result is judged against, such as V5's dice penalty and Difficulty, put an `ask` with dice inside the pool lambda. The prompt then asks for both: the outer number goes to the lambda, and the roll's lambda reads the inner one as `asked` and `answered`:
+
+```
+w5Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", w5AskedPool (pool + n, char.Character.Rage)))
+```
+
+Give the outer ask a default (0 for a bonus or penalty), so an empty field means none. The inner ask can have a default or levels, but not a lambda of its own. Only two numbers are asked; an `ask` around plain dice that already ask is not a second question. This needs the app from branch `claude/batch-3-systems` or later. Test it with `asksSecond location expression label`, `dieCountsAre` for the first number and `twiceAskedShows location expression baseline (Just first) (Just second) throws expected` in NewSystemsTests.elm.
+
 When the number gives the roll its meaning but some uses must not ask, such as initiative, keep a version without `ask` for those: `asked` is 0 there and `answered` is false. Keep a version of the roll that takes the number as a parameter for creatures and tests.
 
 Make a roll do what the game does with it. A roll-under game (GURPS, d100 systems, Mothership) compares the dice with the skill and returns the outcome and margin; adding the skill to the dice gives a meaningless number. Criticals and automatic results belong in the result too.
