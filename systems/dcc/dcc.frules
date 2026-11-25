@@ -1,0 +1,465 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dccModifier (score) =
+    if score <= 3 then -3
+    else if score <= 5 then -2
+    else if score <= 8 then -1
+    else if score <= 12 then 0
+    else if score <= 15 then 1
+    else if score <= 17 then 2
+    else 3
+
+lastNumber (text) = bonusWithValue ([[text]], "([0-9]+)[^0-9]*$")
+
+dieText (sides) = if sides > 0 then "d" + toString (sides) else "none"
+
+deedOf (throws) = if count (item (1, throws).rolls) == 0 then 0 else first (item (1, throws).rolls)
+
+dccAttackOutcome (total, natural, deed, critRange, ac) =
+    if natural == 1 then "Fumble"
+    else if natural >= critRange then "Critical hit"
+    else if ac == 0 then ""
+    else if total >= ac then "Hit"
+    else "Miss"
+
+dccAttackResult (total, natural, deed, critRange, ac, crit) =
+{
+    Text = toString (total)
+        + (if ac > 0 then " vs AC " + toString (ac) else "")
+        + (if dccAttackOutcome (total, natural, deed, critRange, ac) == "" then "" else ": " + dccAttackOutcome (total, natural, deed, critRange, ac))
+        + (if deed >= 3 and (natural >= critRange or (ac > 0 and total >= ac) or ac == 0) and natural != 1 then ", Mighty Deed (deed " + toString (deed) + ")" else if deed > 0 then " (deed " + toString (deed) + ")" else "")
+        + (if natural >= critRange and natural != 1 then ", roll " + crit else if natural == 1 then ", roll the fumble die" else "")
+    Value = total
+    Outcome = dccAttackOutcome (total, natural, deed, critRange, ac)
+}
+
+dccAttackRoll (die, deedDie, critRange, crit, ac) = ([dice { number = 1  sides = die }, dice { number = if deedDie > 0 then 1 else 0  sides = max (deedDie, 3)  color = "red"  label = if deedDie > 0 then "Deed" else "" }],
+    ((baseline, throws)->dccAttackResult (baseline + first (first (throws).rolls) + deedOf (throws), first (first (throws).rolls), deedOf (throws), critRange, if ac > 0 then ac else asked, crit)))
+
+dccAttack (die, deedDie, critRange, crit) = ask ("Target AC", dccAttackRoll (die, deedDie, critRange, crit, 0))
+
+dccCheckResult (total, natural, dc) =
+{
+    Text = toString (total)
+        + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if total >= dc then "Success" else "Failure") else "")
+        + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = if dc > 0 then (if total >= dc then "Success" else "Failure") else ""
+}
+
+dccCheckRoll (die, dc) = ([dice { number = 1  sides = die }], ((baseline, throws)->dccCheckResult (baseline + first (first (throws).rolls), first (first (throws).rolls), if dc > 0 then dc else asked)))
+
+dccCheck (die) = ask ("DC", dccCheckRoll (die, 0))
+
+dccSpellOutcome (total, natural, disapproval, dc, cleric) =
+    if natural == 1 and not (cleric) then "Misfire"
+    else if cleric and natural <= disapproval then "Disapproval"
+    else if natural == 20 then "Critical success"
+    else if dc == 0 then ""
+    else if total >= dc then "Success"
+    else "Failure"
+
+dccSpellResult (total, natural, disapproval, dc, cleric) =
+{
+    Text = toString (total)
+        + (if dc > 0 then " vs " + toString (dc) else "")
+        + (if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "" then "" else ": " + dccSpellOutcome (total, natural, disapproval, dc, cleric))
+        + (if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "Misfire" then ", roll for misfire and corruption, and the spell is lost"
+           else if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "Disapproval" then ", roll on the disapproval table and raise the range by 1"
+           else if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "Failure" and cleric then ", raise the disapproval range by 1"
+           else if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "Failure" then ", the spell is lost for the day"
+           else if dccSpellOutcome (total, natural, disapproval, dc, cleric) == "Critical success" then ", add your caster level and read the result"
+           else "")
+    Value = total
+    Outcome = dccSpellOutcome (total, natural, disapproval, dc, cleric)
+}
+
+dccSpellRoll (die, disapproval, cleric, dc) = ([dice { number = 1  sides = die }], ((baseline, throws)->dccSpellResult (baseline + first (first (throws).rolls), first (first (throws).rolls), disapproval, if dc > 0 then dc else asked, cleric)))
+
+dccSpell (die, disapproval, cleric) = ask ("Spell check DC", dccSpellRoll (die, disapproval, cleric, 0))
+
+luckResult (natural, luck) =
+{
+    Text = "Rolled " + toString (natural) + " vs Luck " + toString (luck) + ": " + (if natural <= luck then "Success" else "Failure")
+    Value = natural
+    Outcome = if natural <= luck then "Success" else "Failure"
+}
+
+luckRoll (luck) = ([1d20], ((baseline, throws)->luckResult (first (first (throws).rolls), luck)))
+
+initiativeRoll (die) = ([dice { number = 1  sides = die }], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+hitState (hp, level) =
+    if hp <= 0 and level == 0 then "Dead"
+    else if hp <= 0 then "Bleeding out"
+    else ""
+
+ability = custom
+{
+    Score = integer { description = "Current score, rolled on 3d6 in order. Lower it for damage or burned Luck." default = 10  minvalue = 0  maxvalue = 24  editable = live }
+    Max = integer { description = "The score before damage or burn." default = 10 }
+    Modifier = modifier { description = "Modifier: 3 is -3, 4-5 -2, 6-8 -1, 9-12 0, 13-15 +1, 16-17 +2, 18 +3." value = dccModifier (Score)  valuedice = dccCheck (20)  editable = none }
+}
+
+save (abilityMod) = custom
+{
+    Class = integer { description = "Save bonus from class and level." default = 0 }
+    Total = modifier { value = Class + abilityMod  valuedice = dccCheck (20)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+armorBonus (char) = sum (map ((x)->toInt (itemStat (x, "dccArmor", "AC Bonus")), char.Armor))
+
+checkPenalty (char) = sum (map ((x)->abs (toInt (itemStat (x, "dccArmor", "Check Penalty"))), char.Armor))
+
+fumbleDie (char) = "d" + toString (max (4, max (map ((x)->toInt (replace ("d", "", itemStat (x, "dccArmor", "Fumble Die"))), char.Armor))))
+
+isMissile (weapon) = itemStat (weapon, "dccWeapon", "Kind") == "Missile"
+
+weaponAttack (name, bonus, die, deedDie, critRange, crit, damage, kind, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = dccAttack (die, deedDie, critRange, crit)  action = kind  reach = 5  range = rangeFeet  editable = none }
+    Damage = damage
+}
+
+critText (char) = "crit table " + char.Combat.'Crit table' + " with " + dieText (char.Combat.'Crit die') + " + Luck"
+
+attackFor (char, weapon) =
+    if isMissile (weapon) then
+        weaponAttack (weapon.Name, char.Combat.'Attack bonus' + char.Abilities.Agility.Modifier, char.Combat.'Action die', char.Combat.'Deed die', char.Combat.'Crit range', critText (char), itemStat (weapon, "dccWeapon", "Damage"), "ranged", lastNumber (itemStat (weapon, "dccWeapon", "Range")))
+    else
+        weaponAttack (weapon.Name, char.Combat.'Attack bonus' + char.Abilities.Strength.Modifier, char.Combat.'Action die', char.Combat.'Deed die', char.Combat.'Crit range', critText (char), itemStat (weapon, "dccWeapon", "Damage") + (if char.Abilities.Strength.Modifier > 0 then "+" + toString (char.Abilities.Strength.Modifier) else if char.Abilities.Strength.Modifier < 0 then toString (char.Abilities.Strength.Modifier) else ""), "melee", 0)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Combat, Saves, Attacks, Abilities] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { default = "Level 0"  keys = ["Level 0", "Cleric", "Thief", "Warrior", "Wizard", "Dwarf", "Elf", "Halfling"] }
+        Level = integer { description = "Level 0 in the funnel, then 1 to 10." default = 0  minvalue = 0  maxvalue = 10 }
+        Occupation = string { description = "The trade the character had before adventuring, with its weapon and goods." }
+        Alignment = string { default = "Neutral"  keys = ["Lawful", "Neutral", "Chaotic"] }
+        Title = string {}
+        'Lucky roll' = string { description = "The roll the Luck modifier applies to, from the birth augur." }
+        Speed = integer { default = 30  render = distance (Speed) }
+        XP = integer { description = "Experience points." default = 0  editable = live }
+        Languages = string {}
+    }
+
+    Abilities = table
+    {
+        description = "The six abilities, rolled 3d6 in order."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = ability {}
+        Agility = ability {}
+        Stamina = ability {}
+        Personality = ability {}
+        Intelligence = ability {}
+        Luck = ability {}
+        'Luck check' = integer { description = "Roll d20 under your current Luck." value = Luck.Score  valuedice = luckRoll (Luck.Score)  editable = none }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max HP' = integer { default = 4 }
+        HP = integer { description = "Current hit points. At 0 a level-0 character dies; others bleed out in rounds equal to their level." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = hitState (HP, Character.Level)  visible = none  indicator = "#d64545" }
+        AC = integer { description = "Armor Class: 10 plus armor and shield plus Agility modifier." value = 10 + armorBonus (characterTable) + Abilities.Agility.Modifier + 'AC misc'  editable = none }
+        'AC misc' = integer { default = 0 }
+        Initiative = modifier { description = "d20 + Agility modifier, plus level for warriors." value = Abilities.Agility.Modifier + 'Initiative misc'  valuedice = initiativeRoll ('Initiative die')  editable = none }
+        'Initiative misc' = integer { default = 0 }
+        'Initiative die' = integer { description = "Usually d20; a two-handed weapon gives d16." default = 20  render = dieText ('Initiative die') }
+        'Action die' = integer { description = "The die you roll for attacks and checks, d20 for most, more dice at higher levels." default = 20  render = dieText ('Action die') }
+        'Attack bonus' = integer { description = "Attack bonus from class and level." default = 0 }
+        'Deed die' = integer { description = "Warriors and dwarves roll this for their attack bonus; 3 or more is a Mighty Deed." default = 0  render = dieText ('Deed die') }
+        'Crit die' = integer { description = "The die rolled on the crit table." default = 4  render = dieText ('Crit die') }
+        'Crit table' = string { description = "The crit table of your class: I for level 0, II, III, IV or V." default = "I"  keys = ["I", "II", "III", "IV", "V"] }
+        'Crit range' = integer { description = "The lowest natural roll that is a critical hit: 20 for most, 19 or less for warriors." default = 20 }
+        'Fumble die' = string { description = "Rolled on a natural 1, set by the heaviest armor." value = fumbleDie (characterTable)  editable = none }
+        'Night of rest' = button
+        {
+            description = "A night's rest heals 1 hit point, the cleric's disapproval range resets to 1, and wizards get back spells lost that day."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.HP) = if HP > 0 then min ('Max HP', HP + 1) else HP
+                (root.Spellcasting.Disapproval) = 1
+                (root.Spellcasting.'Spells lost') = ""
+            }
+        }
+    }
+
+    Saves = table
+    {
+        tableLayout = layout { columns = 3 }
+        Reflex = save (Abilities.Agility.Modifier)
+        Fortitude = save (Abilities.Stamina.Modifier)
+        Will = save (Abilities.Personality.Modifier)
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Spellcasting = table
+    {
+        description = "Spell checks for wizards, elves and clerics."
+        tableLayout = layout { columns = 3  size = wide }
+        'Caster level' = integer { default = 0 }
+        'Casting ability' = string { description = "Intelligence for wizards and elves, Personality for clerics." default = "Intelligence"  keys = ["Intelligence", "Personality"] }
+        Disapproval = integer { description = "Clerics: a natural roll this low or lower angers the deity." default = 1  minvalue = 1  maxvalue = 20  editable = live  indicator = "#8e5cc4" }
+        'Wizard spell check' = modifier { description = "Spell check: d20 + caster level + Intelligence. A natural 1 misfires and may corrupt." value = 'Caster level' + Abilities.Intelligence.Modifier  valuedice = dccSpell (Combat.'Action die', 1, false)  editable = none }
+        'Cleric spell check' = modifier { description = "Spell check: d20 + caster level + Personality. A natural roll within the disapproval range brings disapproval." value = 'Caster level' + Abilities.Personality.Modifier  valuedice = dccSpell (Combat.'Action die', Disapproval, true)  editable = none }
+        'Spells lost' = string { description = "Spells lost for the day after a failed check." editable = live }
+        Corruption = string { description = "Corruptions and misfire effects that last." multiline = true  editable = live }
+        Patron = string {}
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Thief = table
+    {
+        description = "Thief skills, rolled d20 + bonus against a DC."
+        tableLayout = layout { columns = 3  size = wide }
+        'Backstab' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Sneak silently' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Hide in shadows' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Pick pocket' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Climb sheer surfaces' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Pick lock' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Find trap' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Disable trap' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Forge document' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Disguise self' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Read languages' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Handle poison' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Cast spell from scroll' = modifier { default = 0  valuedice = dccCheck (20) }
+    }
+
+    'Class features' = list
+    {
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Wealth = table
+    {
+        tableLayout = layout { columns = 4 }
+        PP = integer { default = 0 }
+        GP = integer { default = 0 }
+        SP = integer { default = 0 }
+        CP = integer { default = 0 }
+        'Trade goods' = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Stats, Attacks]
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "HD" prefix = "HD" filter = Stats.HD }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Init = modifier { default = 0  valuedice = initiativeRoll (20) }
+        AC = integer { default = 12 }
+        HD = string { default = "1d8" }
+        'Max HP' = integer { default = 4 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Down = string { value = if HP <= 0 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        MV = string { default = "30'" }
+        Act = string { description = "Action dice, such as 1d20 or 2d20." default = "1d20" }
+        Fort = modifier { default = 0  valuedice = dccCheck (20) }
+        Ref = modifier { default = 0  valuedice = dccCheck (20) }
+        Will = modifier { default = 0  valuedice = dccCheck (20) }
+        AL = string { default = "N"  keys = ["L", "N", "C"] }
+        'Crit' = string { description = "Crit table and die, such as M/d6." default = "M/d6" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Atk = modifier { default = 0  valuedice = dccAttack (20, 0, 20, "the monster crit table")  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Atk = modifier { default = 0  valuedice = dccAttack (20, 0, 20, "the monster crit table")  action = ranged }
+            Damage = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        SP = string { description = "Special abilities." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+dccWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { default = "Melee"  keys = ["Melee", "Missile"] }
+        Damage = string { default = "1d6" }
+        Range = string { description = "Short, medium and long range in feet, such as 50/100/150." }
+        Cost = string {}
+        Notes = string {}
+    }
+}
+
+dccArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        'AC Bonus' = string { default = "1" }
+        'Check Penalty' = string { default = "0" }
+        Speed = string {}
+        'Fumble Die' = string { default = "d4" }
+        Cost = string {}
+    }
+}
+
+dccSpellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = toInt (Stats.Level) }
+        filters = [
+            filter { name = "Class" prefix = "" filter = Stats.Class },
+            filter { name = "Level" prefix = "Level" filter = Stats.Level }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Wizard", "Cleric"] }
+        Level = string { default = "1" }
+        Range = string {}
+        Duration = string {}
+        'Casting time' = string {}
+        Save = string {}
+        Manifestation = string { multiline = true }
+        Results = string { description = "What each spell check result does, in your own words or from your book." multiline = true }
+    }
+}
+
+dccItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string {}
+    }
+}
+
+DungeonCrawlClassics = system
+{
+    hints = [
+        hint
+        {
+            title = "The funnel"
+            topic = "Getting started"
+            text = ["Each player rolls three or four level-0 peasants: 3d6 in order for each ability, an occupation, a weapon and some trade goods. Survivors of the first adventure become level 1 in a class."]
+        },
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll the action die (usually d20) plus modifiers against a DC or AC. A natural 20 on an attack is a critical hit; a natural 1 is a fumble. Burn Luck to add to any roll, but it rarely comes back."]
+        },
+        hint
+        {
+            title = "Mighty Deeds and spells"
+            topic = "Combat"
+            text = ["Warriors and dwarves roll a deed die with each attack: 3 or more lets their declared Mighty Deed happen. Wizards and clerics roll spell checks; a wizard's natural 1 misfires, and a cleric's low rolls bring disapproval."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: d20 plus Agility, plus level for warriors. Highest goes first."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["ft", "m"]
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = dccWeapon
+    Armor = dccArmor
+    Spells = dccSpellStats
+    Equipment = dccItem
+    secondaryTypes = ["Weapons", "Armor", "Spells", "Equipment"]
+    description = "Dungeon Crawl Classics: old-school sword and sorcery, the funnel, Mighty Deeds and spell checks"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d3, 1d4, 1d5, 1d6, 1d7, 1d8, 1d10, 1d12, 1d14, 1d16, 1d24, 1d30]
+    cssFiles = ["/systems/dcc/dcc.css"]
+    libraries = ["/systems/names/barbarian.json", "/systems/names/fantasy.json", "/systems/names/gothic.json"]
+    nameSettings = [swordAndSorceryNameSetting, fantasyNameSetting, gothicHorrorNameSetting]
+}
