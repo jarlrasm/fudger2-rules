@@ -98,11 +98,16 @@ def price(value):
     return "" if not value else str(value)
 
 
+def formula(text):
+    """A damage formula without Foundry's Strength term, which the sheet adds to melee attacks itself."""
+    return re.sub(r"\s*\+\s*@abilities\.str\.mod", "", text or "")
+
+
 def damage(system):
     parts = []
     for part in system.get("damage", {}).get("parts", []):
         kinds = [code for name, code in DAMAGE_TYPES if (part.get("types") or {}).get(name)]
-        parts.append((part.get("formula") or "") + (" " + " & ".join(kinds) if kinds else ""))
+        parts.append(formula(part.get("formula")) + (" " + " & ".join(kinds) if kinds else ""))
     return "; ".join(p.strip() for p in parts if p.strip())
 
 
@@ -191,13 +196,27 @@ def spell_range(system):
             "touch": "Touch", "personal": "Personal", "planetary": "Planetary", "system": "System-wide", "plane": "Plane", "unlimited": "Unlimited", "none": ""}.get(units, units)
 
 
+def per_level(value, units):
+    """A duration that Foundry writes as a formula of the caster level, as the book writes it."""
+    plural = units + "s"
+    if value == "@details.cl.value":
+        return f"1 {units}/level"
+    times = re.fullmatch(r"@details\.cl\.value\*(\d+)", value)
+    if times:
+        return f"{times.group(1)} {plural}/level"
+    every = re.fullmatch(r"(\d+) \+ 1\*floor\(@details\.cl\.value/(\d+)\)", value)
+    if every:
+        return f"{every.group(1)} {units} + 1 {units} per {every.group(2)} levels"
+    return None
+
+
 def duration(system):
     d = system.get("duration") or {}
     units = d.get("units") or ""
-    value = d.get("value") or ""
+    value = str(d.get("value") or "")
     if units in ("", "instantaneous"):
         return "Instantaneous" if units else ""
-    return (str(value) + " " if value else "") + units
+    return per_level(value, units) or (value + " " if value else "") + units
 
 
 def save_text(system):
@@ -285,13 +304,19 @@ def creature_attack(weapon):
     return {"Name": weapon["name"], "Attack": int(s.get("attackBonus") or 0), "Damage": damage(s) + (f"; critical {critical}" if critical else "")}
 
 
+def without_copies(weapons):
+    """A creature's weapons without the gear copies Foundry keeps of an attack, which have no attack bonus."""
+    attacking = {w["name"] for w in weapons if w["system"].get("attackBonus")}
+    return [w for w in weapons if w["system"].get("attackBonus") or w["name"] not in attacking]
+
+
 def creature(actor):
     s = actor["system"]
     d = s["details"]
     a = s["attributes"]
     t = s["traits"]
     cr = challenge(d.get("cr"))
-    weapons = [i for i in actor.get("items", []) if i["type"] == "weapon"]
+    weapons = without_copies([i for i in actor.get("items", []) if i["type"] == "weapon"])
     abilities = [i for i in actor.get("items", []) if i["type"] == "feat"]
     skills = ", ".join(f"{SKILLS.get(k, k)} {signed(v.get('ranks', 0) + v.get('misc', 0))}" for k, v in s.get("skills", {}).items() if v.get("enabled"))
     gear = ", ".join(i["name"] for i in actor.get("items", []) if i["type"] not in ("weapon", "feat", "spell"))
