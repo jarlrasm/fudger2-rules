@@ -1,0 +1,57 @@
+@import url("/systems/sheet.css");
+
+/* Conan: rough parchment burned at the edges, heavy black capitals with a
+   blood-red rule, attributes in a row of stone tablets, skills listed with
+   Expertise and Focus, and Vigor, Resolve, wounds and trauma together. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #241a12;
+    --surface: #efe2c3;
+    --surface-alt: #e3d1a8;
+    --surface-sunken: #d2bb87;
+    --surface-muted: #b89c62;
+    --text: #1a120b;
+    --text-muted: #46331f;
+    --text-faint: #7e6544;
+    --on-accent: #efe2c3;
+    --border: #9b7b48;
+    --border-strong: #1a120b;
+    --accent: #8f1d14;
+    --accent-hover: #ad281d;
+    --accent-soft: #f0d0c4;
+    --link: #8f1d14;
+    --danger: #8f1d14;
+    --danger-hover: #6f160f;
+    --danger-soft: #f0d0c4;
+    --success: #4a5d23;
+    --paper: #efe2c3;
+    --card-bg: #e3d1a8;
+    --dice-bg: #1a120b;
+    --dice-text: #e9c46a;
+}
+
+.entityView {
+    --sheet-font: "Book Antiqua", "Palatino Linotype", Georgia, serif;
+    --title-font: "Copperplate", "Copperplate Gothic Bold", "Trajan Pro", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    border-bottom: 3px solid var(--accent);
+}
+.entityView .table-attributes > table > tbody { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border);
+    padding: 4px;
+}
+.entityView .table-skills .customtype > div:nth-child(1)::before { content: "exp "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "foc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-talents,
+.entityView .table-weapons { --block: 50%; }
+.entityView .table-talents { clear: left; }

@@ -1,0 +1,352 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successOf (x, target, focus) = if x <= focus then 2 else if x <= target then 1 else 0
+
+successesIn (rolls, target, focus) = sum (map ((x)->successOf (x, target, focus), rolls))
+
+complicationsIn (rolls, spread) = count (filter ((x)->x > 20 - spread, rolls))
+
+testResult (rolls, target, focus, spread) =
+{
+    Text = toString (successesIn (rolls, target, focus)) + (if successesIn (rolls, target, focus) == 1 then " success" else " successes") + " (TN " + toString (target) + ", focus " + toString (focus) + ")" + (if complicationsIn (rolls, spread) > 0 then ", " + toString (complicationsIn (rolls, spread)) + (if complicationsIn (rolls, spread) == 1 then " complication" else " complications") else "")
+    Value = successesIn (rolls, target, focus)
+    Outcome = if complicationsIn (rolls, spread) > 0 and successesIn (rolls, target, focus) == 0 then "Failure" else if successesIn (rolls, target, focus) > 0 then "Success" else "Failure"
+}
+
+conanRoll (dieCount, target, focus, spread) = ([dice { number = max (1, min (5, dieCount))  sides = 20 }], ((baseline, throws)->testResult (first (throws).rolls, target, focus, spread)))
+
+conanTest (target, focus, spread) = ask ("Extra d20s (Momentum, Doom, Fortune)", 0, (n)->conanRoll (2 + n, target, focus, spread))
+
+combatDie (x) = if x == 1 then 1 else if x == 2 then 2 else if x >= 5 then 1 else 0
+
+damageRoll (dieCount) = ([dice { number = max (0, dieCount)  sides = 6  faces = ["1", "2", "", "", "1E", "1E"]  label = "Combat dice" }],
+    ((baseline, throws)->{ Text = toString (sum (map ((x)->combatDie (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x >= 5, first (throws).rolls)) > 0 then ", " + toString (count (filter ((x)->x >= 5, first (throws).rolls))) + " Effects" else "")  Value = sum (map ((x)->combatDie (x), first (throws).rolls)) }))
+
+attributeBonus (value) =
+    if value >= 16 then 5
+    else if value >= 14 then 4
+    else if value >= 12 then 3
+    else if value >= 10 then 2
+    else if value >= 9 then 1
+    else 0
+
+attributeValue (char, name) =
+    switch name
+        case "Agility" then char.Attributes.Agility
+        case "Awareness" then char.Attributes.Awareness
+        case "Brawn" then char.Attributes.Brawn
+        case "Coordination" then char.Attributes.Coordination
+        case "Intelligence" then char.Attributes.Intelligence
+        case "Personality" then char.Attributes.Personality
+        else char.Attributes.Willpower
+
+skill (attributeName) = custom
+{
+    Expertise = integer { description = "Added to the attribute for the target number." default = 0  minvalue = 0  maxvalue = 5 }
+    Focus = integer { description = "Each d20 at or under it is two successes." default = 0  minvalue = 0  maxvalue = 5 }
+    TN = integer { description = "Attribute plus Expertise. Roll 2d20 under it; the roll asks for extra d20s." value = attributeValue (characterTable, attributeName) + Expertise  valuedice = conanTest (attributeValue (characterTable, attributeName) + Expertise, Focus, if Expertise == 0 then 2 else 1)  editable = none }
+}
+
+noSkill = { Expertise = 0  Focus = 0 }
+
+skillStat (char, name, field) = valueOr (valueOr (char.Skills, name, noSkill), field, 0)
+
+noStats = { Stats = { Damage = "1" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "conanWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+rangeMetres (text) =
+    switch text
+        case "Close" then 10
+        case "Medium" then 50
+        case "Long" then 150
+        else 0
+
+attack (name, target, focus, dieCount, qualities, kind, distance) = custom
+{
+    Name = name
+    TN = integer { value = target  valuedice = conanTest (target, focus, 1)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = dieCount  render = toString (dieCount) + " CD"  valuedice = damageRoll (dieCount)  editable = none }
+    Qualities = qualities
+}
+
+isRanged (weapon) = rangeMetres (weaponStat (weapon, "Range")) > 0
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        attack (weapon.Name, char.Attributes.Coordination + skillStat (char, "Ranged Weapons", "Expertise"), skillStat (char, "Ranged Weapons", "Focus"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Awareness), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+    else
+        attack (weapon.Name, char.Attributes.Agility + skillStat (char, "Melee", "Expertise"), skillStat (char, "Melee", "Focus"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2 * max (1, toInt (weaponStat (weapon, "Reach"))))
+
+harmState (char) =
+    if char.Stress.Wounds.realvalue >= 4 then "Dying"
+    else if char.Stress.Trauma.realvalue >= 4 then "Broken"
+    else if char.Stress.Wounds.realvalue > 0 then "Wounded"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Stress, Attributes, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Homeland = string { keys = ["Aquilonia", "Argos", "Asgard", "Brythunia", "Cimmeria", "Corinthia", "Hyperborea", "Hyrkania", "Iranistan", "Khitai", "Kush", "Nemedia", "Ophir", "Shem", "Stygia", "Turan", "Vanaheim", "Vendhya", "Zamora", "Zingara", "Other"] }
+        Caste = string {}
+        Story = string { description = "The caste story that shaped the character." }
+        Archetype = string { keys = ["Army", "Barbarian", "Hunter", "Mercenary", "Noble", "Nomad", "Pirate", "Priest", "Scholar", "Sorcerer", "Thief", "Other"] }
+        Nature = string {}
+        Education = string {}
+        'War story' = string {}
+        Renown = integer { default = 0  editable = live }
+        Gold = integer { default = 0  editable = live }
+        Experience = integer { default = 0  editable = live }
+    }
+
+    Attributes = table
+    {
+        description = "Seven attributes, 6 to 14 at the start. A test's target number is attribute plus Expertise."
+        tableLayout = layout { columns = 4  size = wide }
+        Agility = integer { description = "Speed and grace; melee attacks." default = 8  minvalue = 4  maxvalue = 16 }
+        Awareness = integer { description = "Senses; adds damage to ranged attacks." default = 8  minvalue = 4  maxvalue = 16 }
+        Brawn = integer { description = "Strength; adds damage to melee attacks." default = 8  minvalue = 4  maxvalue = 16 }
+        Coordination = integer { description = "Hand and eye; ranged attacks and parrying." default = 8  minvalue = 4  maxvalue = 16 }
+        Intelligence = integer { description = "Learning and reasoning." default = 8  minvalue = 4  maxvalue = 16 }
+        Personality = integer { description = "Presence and charm; adds to threaten damage." default = 8  minvalue = 4  maxvalue = 16 }
+        Willpower = integer { description = "Grit and resolve; sorcery." default = 8  minvalue = 4  maxvalue = 16 }
+    }
+
+    Skills = table
+    {
+        description = "Each skill has Expertise (added to the target number) and Focus (dice at or under it count twice)."
+        tableLayout = layout { columns = 3  size = wide }
+        Acrobatics = skill ("Agility")
+        Melee = skill ("Agility")
+        Stealth = skill ("Agility")
+        Insight = skill ("Awareness")
+        Observation = skill ("Awareness")
+        Survival = skill ("Awareness")
+        Thievery = skill ("Awareness")
+        Athletics = skill ("Brawn")
+        Resistance = skill ("Brawn")
+        Parry = skill ("Coordination")
+        'Ranged Weapons' = skill ("Coordination")
+        Sailing = skill ("Coordination")
+        Alchemy = skill ("Intelligence")
+        Craft = skill ("Intelligence")
+        Healing = skill ("Intelligence")
+        Linguistics = skill ("Intelligence")
+        Lore = skill ("Intelligence")
+        Warfare = skill ("Intelligence")
+        'Animal Handling' = skill ("Personality")
+        Command = skill ("Personality")
+        Counsel = skill ("Personality")
+        Persuade = skill ("Personality")
+        Society = skill ("Personality")
+        Discipline = skill ("Willpower")
+        Sorcery = skill ("Willpower")
+    }
+
+    Stress = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Vigor' = integer { description = "Brawn plus Resistance Expertise." value = Attributes.Brawn + skillStat (characterTable, "Resistance", "Expertise")  editable = none }
+        Vigor = integer { description = "Physical stress. Taking 5 or more in one hit, or going to 0, inflicts a wound." default = 'Max Vigor'  minvalue = 0  editable = live }
+        'Max Resolve' = integer { description = "Willpower plus Discipline Expertise." value = Attributes.Willpower + skillStat (characterTable, "Discipline", "Expertise")  editable = none }
+        Resolve = integer { description = "Mental stress. Taking 5 or more at once, or going to 0, inflicts trauma." default = 'Max Resolve'  minvalue = 0  editable = live }
+        Wounds = slots { description = "Each wound raises the difficulty of physical tests. The fifth kills." number = 5  editable = live  indicator = "#d64545" }
+        Trauma = slots { description = "Each trauma raises the difficulty of mental tests. The fifth breaks the mind." number = 5  editable = live  indicator = "#8e5cc4" }
+        State = string { value = harmState (characterTable)  visible = none  indicator = "#555555" }
+        Armor = integer { description = "Soak against physical damage." default = 0 }
+        Courage = integer { description = "Soak against mental damage." default = 0 }
+        Fortune = integer { description = "Spend one for an extra d20 that counts as a 1." default = 3  minvalue = 0  editable = live }
+        'Catch your breath' = button
+        {
+            description = "After the fight, a rest: Vigor and Resolve back to full. Wounds and trauma need treatment."
+            editable = live
+            onClick = updates
+            {
+                (root.Stress.Vigor) = 'Max Vigor'
+                (root.Stress.Resolve) = 'Max Resolve'
+            }
+        }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([attack ("Unarmed", Attributes.Agility + skillStat (characterTable, "Melee", "Expertise"), skillStat (characterTable, "Melee", "Focus"), 1 + attributeBonus (Attributes.Brawn), "Stun, Knockdown", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = attack
+    }
+
+    Belongings = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Personality = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Minion"  keys = ["Minion", "Toughened", "Nemesis"] }
+        Agility = integer { default = 8 }
+        Awareness = integer { default = 8 }
+        Brawn = integer { default = 8 }
+        Coordination = integer { default = 8 }
+        Intelligence = integer { default = 8 }
+        Personality = integer { default = 8 }
+        Willpower = integer { default = 8 }
+        Vigor = integer { default = 5  editable = live }
+        Resolve = integer { default = 5  editable = live }
+        Wounds = integer { description = "Minions fall to one wound, toughened foes to two, nemeses to five." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        Courage = integer { default = 0 }
+    }
+    'Fields of expertise' = keyvalues
+    {
+        description = "NPC tests use a field's Expertise and Focus with the matching attribute."
+        singular = "Field"
+        keys = ["Combat", "Fortitude", "Knowledge", "Movement", "Senses", "Social"]
+        valueType = custom
+        {
+            Expertise = integer { default = 1  minvalue = 0  maxvalue = 5 }
+            Focus = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        }
+    }
+    Attacks = keyvalues
+    {
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Sword"]
+        valueType = custom
+        {
+            TN = integer { description = "Attribute plus Combat Expertise." default = 10  valuedice = conanTest (TN, Focus, 1)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 50 }
+            Focus = integer { default = 1 }
+            Damage = integer { description = "Combat dice." default = 4  valuedice = damageRoll (Damage) }
+            Qualities = string {}
+            Ranged = bool { default = false }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Special abilities' = string { multiline = true }
+        'Doom spends' = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+conanWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Size" prefix = "" filter = Stats.Size }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Reach = string { description = "Melee reach, 1 to 4." default = "2" }
+        Range = string { description = "For ranged weapons: Close, Medium or Long." keys = ["Close", "Medium", "Long"] }
+        Damage = string { description = "Combat dice, plus Brawn (melee) or Awareness (ranged) bonus." default = "3" }
+        Size = string { default = "1H"  keys = ["1H", "Unbalanced", "2H", "Fixed", "Mounted"] }
+        Qualities = string { description = "Such as Vicious 1, Piercing 1, Parrying." }
+        Encumbrance = string {}
+    }
+}
+
+conanTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        Skill = string {}
+        Ranks = string { default = "1" }
+        Prerequisites = string {}
+    }
+}
+
+conanGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Cost = string { description = "In gold." }
+        Encumbrance = string {}
+    }
+}
+
+Conan = system
+{
+    hints = [
+        hint
+        {
+            title = "The Hyborian Age"
+            topic = "Getting started"
+            text = ["Pick a homeland, caste, story, archetype, nature and education. Seven attributes and 25 skills, each with Expertise and Focus. Vigor is Brawn + Resistance, Resolve Willpower + Discipline."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll 2d20 against attribute + Expertise: each die at or under is a success, at or under Focus two. The GM sets the difficulty (successes needed); extra successes become Momentum. Buy up to three more d20s with Momentum, Doom or Fortune: the roll asks. A 20 is a complication (19 too without training)."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Melee is Agility + Melee, ranged Coordination + Ranged Weapons. Damage is combat dice (1, 2, blank, blank, Effect, Effect) plus the Brawn or Awareness bonus. Armor soaks. Five or more damage at once, or 0 Vigor, is a wound."]
+        },
+        hint
+        {
+            title = "Turn order"
+            topic = "Initiative"
+            text = ["The player characters act first, in any order they like; the GM can spend Doom to let an enemy act before them."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = conanWeapon
+    Talents = conanTalent
+    Gear = conanGear
+    secondaryTypes = ["Weapons", "Talents", "Gear"]
+    description = "Conan: Adventures in an Age Undreamed Of: sword and sorcery in the Hyborian Age, 2d20 tests, Momentum and Doom, combat dice"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [2d20, 1d20, 4d6]
+    cssFiles = ["/systems/conan/conan.css"]
+    libraries = ["/systems/names/barbarian.json", "/systems/names/desert.json", "/systems/names/viking.json"]
+    nameSettings = [swordAndSorceryNameSetting, desertRealmsNameSetting, norseNameSetting]
+}
