@@ -1,0 +1,64 @@
+@import url("/systems/sheet.css");
+
+/* Dune: Adventures in the Imperium. Sand and spice: warm parchment, burnt
+   orange rules and deep brown ink, wide spaced capitals for titles; the five
+   skills and five drives as two rows of boxes, statements under the drives,
+   and the test builder beneath. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9a46a;
+    --surface: #f6ecd9;
+    --surface-alt: #ecdcbc;
+    --surface-sunken: #e2cea6;
+    --surface-muted: #d4b98a;
+    --text: #2b1a0e;
+    --text-muted: #5a3c22;
+    --text-faint: #8a6a45;
+    --on-accent: #f6ecd9;
+    --border: #b78f5c;
+    --border-strong: #5a3416;
+    --accent: #b5521b;
+    --accent-hover: #d0631f;
+    --accent-soft: #f1d5bd;
+    --link: #b5521b;
+    --danger: #9b2c12;
+    --danger-hover: #7a220e;
+    --danger-soft: #f1d5bd;
+    --success: #5c6b2a;
+    --paper: #f6ecd9;
+    --card-bg: #ecdcbc;
+    --dice-bg: #b5521b;
+    --dice-text: #f6ecd9;
+}
+
+.entityView {
+    --sheet-font: "Optima", "Candara", "Segoe UI", sans-serif;
+    --title-font: "Optima", "Copperplate", "Candara", sans-serif;
+    --block-radius: 2px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+}
+.entityView .table-skills > table > tbody > tr,
+.entityView .table-drives > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 50% / 18%;
+    padding: 6px;
+    font-size: 1.15em;
+}
+.entityView .table-skills > table > tbody > tr > td:first-child,
+.entityView .table-drives > table > tbody > tr > td:first-child { text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
+.entityView .table-statements { --block: 50%; }
+.entityView .table-test { --block: 50%; }
+.entityView .table-focuses,
+.entityView .table-talents { --block: 50%; }
+.entityView .table-focuses { clear: left; }

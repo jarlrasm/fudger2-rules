@@ -1,0 +1,313 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successesOf (rolls, target, crit) = sum (map ((x)->if x <= crit then 2 else if x <= target then 1 else 0, rolls))
+
+complicationsOf (rolls, range) = count (filter ((x)->x > 20 - range, rolls))
+
+plural (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
+
+duneText (successes, complications, difficulty) =
+    plural (successes, "success", "successes")
+    + (if difficulty > 0 then " vs " + toString (difficulty) + (if successes >= difficulty then ": success" + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else ": failure") else "")
+    + (if complications > 0 then ", " + plural (complications, "complication", "complications") else "")
+
+duneResult (rolls, target, crit, range, difficulty) =
+{
+    Text = duneText (successesOf (rolls, target, crit), complicationsOf (rolls, range), difficulty)
+    Value = successesOf (rolls, target, crit)
+    Outcome = if difficulty < 1 then (if complicationsOf (rolls, range) > 0 then "Complication" else "") else if successesOf (rolls, target, crit) >= difficulty then "Success" else "Failure"
+}
+
+duneRoll (target, skillRating, focus, diceCount, range, difficulty) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
+    ((baseline, throws)->duneResult (first (throws).rolls, target, if focus then skillRating else 1, range, if difficulty > 0 then difficulty else asked)))
+
+duneDice (target, skillRating, focus, diceCount, range) = ask ("Difficulty", duneRoll (target, skillRating, focus, diceCount, range, 0))
+
+skillNames = ["Battle", "Communicate", "Discipline", "Move", "Understand"]
+
+driveNames = ["Duty", "Faith", "Justice", "Power", "Truth"]
+
+testTable = table
+{
+    tableLayout = layout { columns = 3  size = wide }
+    Skill = string { description = "The skill the test uses." default = "Battle"  keys = skillNames  editable = live }
+    Drive = string { description = "The drive that motivates the action; its statement must fit, or be challenged." default = "Duty"  keys = driveNames  editable = live }
+    Focus = bool { description = "A matching focus makes each die at or under the skill a critical: two successes." default = false  editable = live }
+    Dice = integer { description = "How many d20s to roll: 2, plus up to 3 bought with Momentum, Threat or Determination." default = 2  minvalue = 1  maxvalue = 5  editable = live }
+    'Complication range' = integer { description = "Rolls at or above 21 minus this number cause a complication." default = 1  minvalue = 1  maxvalue = 5  editable = live }
+    Target = integer { description = "Target number: skill plus drive. Each d20 at or under it is a success." value = valueOr (Skills, Skill, 0) + valueOr (Drives, Drive, 0)  valuedice = duneDice (Target, valueOr (Skills, Skill, 0), Focus, Dice, 'Complication range')  editable = none }
+}
+
+assetStat (asset, field) = valueOr (valueOr (valueOr (asset.data, "duneAsset", noStats), "Stats", noStats.Stats), field, "")
+
+noStats = { Stats = { Kind = "" } }
+
+assetAttack (name, target, skillRating, diceCount, kind, quality) = custom
+{
+    Name = name
+    Attack = integer { value = target  valuedice = duneDice (target, skillRating, false, diceCount, 1)  action = kind  reach = 2  editable = none }
+    Quality = quality
+}
+
+attackFor (char, asset) =
+    weaponAttackOf (char, asset, if assetStat (asset, "Kind") == "Ranged weapon" then "ranged" else "melee")
+
+weaponAttackOf (char, asset, kind) =
+    assetAttack (asset.Name, char.Skills.Battle + valueOr (char.Drives, char.Test.Drive, 0), char.Skills.Battle, char.Test.Dice, kind, assetStat (asset, "Quality"))
+
+weapons (char) = filter ((x)->assetStat (x, "Kind") == "Melee weapon" or assetStat (x, "Kind") == "Ranged weapon", char.Assets)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Skills, Drives, Status, Test] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        House = string {}
+        Archetype = string { keys = ["Bene Gesserit", "Envoy", "Mentat", "Noble", "Planetologist", "Smuggler", "Spy", "Suk Doctor", "Swordmaster", "Trooper", "Fremen", "Courtier"] }
+        Role = string { description = "The character's role in the House." keys = ["Leader", "Consort", "Advisor", "Chief Physician", "Councilor", "Envoy", "Heir", "Marshal", "Scholar", "Spymaster", "Swordmaster", "Treasurer", "Warmaster"] }
+        Faction = string {}
+        Traits = string { description = "Short truths about the character, such as Noble or Wounded, that make things possible or harder." multiline = true }
+        Ambition = string { description = "What the character most wants to achieve." }
+        Experience = integer { default = 0  editable = live }
+        Pronouns = string {}
+    }
+
+    Skills = table
+    {
+        description = "The five skills, from 4 to 8: what the character can do."
+        tableLayout = layout { columns = 5  size = wide }
+        Battle = integer { description = "Fighting, tactics and survival in danger." default = 5  minvalue = 4  maxvalue = 8 }
+        Communicate = integer { description = "Persuasion, deception, reading and leading people." default = 5  minvalue = 4  maxvalue = 8 }
+        Discipline = integer { description = "Willpower, composure and resisting pain or influence." default = 5  minvalue = 4  maxvalue = 8 }
+        Move = integer { description = "Agility, stealth, piloting and speed." default = 5  minvalue = 4  maxvalue = 8 }
+        Understand = integer { description = "Knowledge, analysis and insight." default = 5  minvalue = 4  maxvalue = 8 }
+    }
+
+    Drives = table
+    {
+        description = "The five drives, from 4 to 8: why the character acts. Drives at 6 or more need a statement."
+        tableLayout = layout { columns = 5  size = wide }
+        Duty = integer { default = 5  minvalue = 4  maxvalue = 8 }
+        Faith = integer { default = 5  minvalue = 4  maxvalue = 8 }
+        Justice = integer { default = 5  minvalue = 4  maxvalue = 8 }
+        Power = integer { default = 5  minvalue = 4  maxvalue = 8 }
+        Truth = integer { default = 5  minvalue = 4  maxvalue = 8 }
+    }
+
+    Statements = table
+    {
+        description = "Each drive of 6 or more has a statement; challenge it to roll anyway when it doesn't fit."
+        tableLayout = layout { columns = 1  size = wide }
+        'Duty statement' = string {}
+        'Faith statement' = string {}
+        'Justice statement' = string {}
+        'Power statement' = string {}
+        'Truth statement' = string {}
+    }
+
+    Test = testTable { description = "Build a test: pick a skill and a drive." }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Determination = integer { description = "Spend for a critical die, to reroll, or to act against your drive's statement." default = 1  minvalue = 0  maxvalue = 3  editable = live }
+        Defeated = bool { description = "Beaten in this conflict: taken out, captured or forced to yield." default = false  editable = live  indicator = "#d64545" }
+        Wounded = bool { description = "A lasting injury, taken as a complication or trait." default = false  editable = live  indicator = "#e8913a" }
+        Complications = string { description = "Complications and temporary traits on the character." editable = live }
+        'New adventure' = button { description = "Each adventure starts with 1 Determination; defeats from the last one are over."  editable = live  onClick = updates
+            {
+                (root.Status.Determination) = 1
+                (root.Status.Defeated) = false
+            }
+        }
+    }
+
+    Focuses = list
+    {
+        description = "Specialities within a skill, such as Battle: Dueling or Understand: Ecology."
+        singular = "Focus"
+        editable = character
+        valueType = string
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Assets = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Assets
+        singular = "Asset"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((asset)->attackFor (characterTable, asset), weapons (characterTable))
+        singular = "Attack"
+        editable = none
+        valueType = assetAttack
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Relationships = string { multiline = true }
+        History = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Skills, Status, Attacks] }
+    Skills = table
+    {
+        description = "Supporting characters roll their skill alone, with no drive."
+        tableLayout = layout { columns = 5  size = wide }
+        Battle = integer { default = 5  valuedice = duneDice (Battle, Battle, false, 2, 1) }
+        Communicate = integer { default = 5  valuedice = duneDice (Communicate, Communicate, false, 2, 1) }
+        Discipline = integer { default = 5  valuedice = duneDice (Discipline, Discipline, false, 2, 1) }
+        Move = integer { default = 5  valuedice = duneDice (Move, Move, false, 2, 1) }
+        Understand = integer { default = 5  valuedice = duneDice (Understand, Understand, false, 2, 1) }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "Minor characters are defeated by one success; notable and major ones can spend Threat to stay in." default = "Minor"  keys = ["Minor", "Notable", "Major"] }
+        Defeated = bool { default = false  editable = live  indicator = "#d64545" }
+        Focuses = string {}
+        Traits = string { multiline = true }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Battle = integer { default = 5  valuedice = duneDice (Battle, Battle, Focus, 2, 1)  action = melee  reach = 2 }
+            Focus = bool { default = false }
+            Quality = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Battle = integer { default = 5  valuedice = duneDice (Battle, Battle, Focus, 2, 1)  action = ranged }
+            Focus = bool { default = false }
+            Quality = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Assets = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+houseTable = ruleset
+{
+    rulesetConfiguration = { important = [House] }
+    House = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Type = string { description = "Nascent, minor, major or great House." default = "Minor"  keys = ["Nascent", "Minor", "Major", "Great"] }
+        Homeworld = string {}
+        Banner = string { description = "Colours and crest." }
+        'Primary domain' = string { description = "What the House is best known for producing." }
+        'Secondary domains' = string {}
+        Threat = integer { description = "Threat the GM starts each adventure with." default = 1  editable = live }
+        Reputation = string { multiline = true }
+        Enemies = string { multiline = true }
+        Allies = string { multiline = true }
+        Members = string { multiline = true }
+    }
+}
+
+duneAsset = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Melee weapon", "Ranged weapon", "Armor", "Shield", "Tool", "Vehicle", "Contact", "Intangible"] }
+        Quality = string { description = "Quality adds to what the asset can do or resist." default = "0" }
+        Keywords = string {}
+        Cost = string {}
+    }
+}
+
+duneTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        Skill = string { keys = ["General", "Battle", "Communicate", "Discipline", "Move", "Understand"] }
+        Requirement = string {}
+    }
+}
+
+Dune = system
+{
+    hints = [
+        hint
+        {
+            title = "The House"
+            topic = "Getting started"
+            text = ["Make the House first: its type, homeworld and domains. Then each character picks an archetype and a role in the House, five skills and five drives from 4 to 8, focuses, talents and assets."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Pick a skill and a drive in the Test block. Roll 2d20 (buy up to 3 more): each die at or under skill + drive is a success, a 1 or a die at or under the skill with a focus is two. Extra successes become Momentum; a 20 is a complication."]
+        },
+        hint
+        {
+            title = "Conflict"
+            topic = "Combat"
+            text = ["Duels, skirmishes, espionage and intrigue all use assets as tools of conflict. A successful attack defeats a minor opponent; notable ones spend Threat to stay in. There are no hit points."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Players and NPCs take turns: a player acts first, then the side passes. Spend Momentum or Threat to keep the initiative."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Houses = houseTable
+    Assets = duneAsset
+    Talents = duneTalent
+    secondaryTypes = ["Assets", "Talents"]
+    extraEntityTypes = [entityTypeDescription ("Houses", "house", false, "/images/armour.svg", [])]
+    description = "Dune: Adventures in the Imperium: the 2d20 system for Houses, intrigue and the spice"
+    quickdice = [2d20, 1d20]
+    cssFiles = ["/systems/dune/dune.css"]
+    libraries = ["/systems/names/desert.json", "/systems/names/scifi.json"]
+    nameSettings = [desertRealmsNameSetting, spaceNameSetting]
+}
