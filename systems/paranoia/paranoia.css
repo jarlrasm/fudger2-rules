@@ -1,0 +1,57 @@
+@import url("/systems/sheet.css");
+
+/* Paranoia: a government form in triplicate: white paper, black rules,
+   a red clearance stripe on every heading and a typewriter face; the
+   citizen's particulars across the top, the four stats with their skills
+   in four columns beneath, then Moxie, Treason Stars and wounds. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9ccc6;
+    --surface: #ffffff;
+    --surface-alt: #f1f2ef;
+    --surface-sunken: #e3e5e0;
+    --surface-muted: #c7cac3;
+    --text: #111111;
+    --text-muted: #3d3d3d;
+    --text-faint: #6f6f6f;
+    --on-accent: #ffffff;
+    --border: #8d8d8d;
+    --border-strong: #111111;
+    --accent: #c8102e;
+    --accent-hover: #e0203f;
+    --accent-soft: #f8d7dc;
+    --link: #c8102e;
+    --danger: #c8102e;
+    --danger-hover: #9d0c24;
+    --danger-soft: #f8d7dc;
+    --success: #1f6b3a;
+    --paper: #ffffff;
+    --card-bg: #f1f2ef;
+    --dice-bg: #c8102e;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "IBM Plex Mono", "Courier New", monospace;
+    --title-font: "IBM Plex Mono", "Courier New", monospace;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-left: 10px solid var(--accent);
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .entityTable > table > thead th::before { content: "FORM \2116  "; color: var(--text-faint); font-size: 0.75em; }
+.entityView .table-violence,
+.entityView .table-brains,
+.entityView .table-chutzpah,
+.entityView .table-mechanics { --block: 25%; }
+.entityView .table-violence { clear: left; }
+.entityView .table-status { --block: 60%; clear: left; }
+.entityView .table-health { --block: 40%; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "NODE "; color: var(--text-faint); font-size: 0.8em; }

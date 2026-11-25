@@ -1,0 +1,54 @@
+@import url("/systems/sheet.css");
+
+/* Kids on Bikes: a school notebook page, lined paper with a red margin
+   line, ballpoint blue ink and a bold marker title, stickers for the six
+   stat dice; who they are across the top, the dice in two rows of three,
+   then adversity tokens, strengths and the stuff in their backpack. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2a4a6b;
+    --surface: #fdfdf7;
+    --surface-alt: #f1f3ea;
+    --surface-sunken: #e3e7da;
+    --surface-muted: #c9cfbd;
+    --text: #1b2a4a;
+    --text-muted: #3d4f73;
+    --text-faint: #7083a6;
+    --on-accent: #fdfdf7;
+    --border: #b9c6dd;
+    --border-strong: #1b2a4a;
+    --accent: #d93a3a;
+    --accent-hover: #e85252;
+    --accent-soft: #f9dada;
+    --link: #2557a7;
+    --danger: #c42a2a;
+    --danger-hover: #9e2121;
+    --danger-soft: #f7d5d5;
+    --success: #2f7d3e;
+    --paper: #fdfdf7;
+    --card-bg: #f1f3ea;
+    --dice-bg: #f2b630;
+    --dice-text: #1b2a4a;
+}
+
+.entityView {
+    --sheet-font: "Patrick Hand", "Comic Neue", "Segoe Print", sans-serif;
+    --title-font: "Permanent Marker", "Arial Black", sans-serif;
+    --block-radius: 2px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable { border-left: 4px double var(--accent); }
+.entityView .entityTable > table > tbody > tr { border-bottom: 1px solid var(--border); }
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    color: var(--accent);
+    font-size: 1.3em;
+}
+.entityView .table-stats button.dicethrow { border-radius: 8px; min-width: 2.6em; font-weight: bold; }
+.entityView .table-stats td > div > div:nth-child(3)::before { content: "Planned "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-strengths,
+.entityView .table-powers,
+.entityView .table-stuff { --block: 50%; }
+.entityView .table-strengths { clear: left; }

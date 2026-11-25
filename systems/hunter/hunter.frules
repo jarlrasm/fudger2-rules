@@ -1,0 +1,360 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+tensIn (rolls) = count (filter ((x)->x == 10, rolls))
+
+successesIn (normal, desperate) =
+    count (filter ((x)->x > 5, concat (normal, desperate))) + 2 * ((tensIn (normal) + tensIn (desperate)) / 2)
+
+isCritical (normal, desperate) = tensIn (normal) + tensIn (desperate) > 1
+
+overreach (desperate) = count (filter ((x)->x == 1, desperate)) > 0
+
+h5Outcome (normal, desperate, difficulty) =
+    if difficulty == 0 then (if successesIn (normal, desperate) > 0 and isCritical (normal, desperate) then "Critical" else "")
+    else if successesIn (normal, desperate) < difficulty then (if successesIn (normal, desperate) == 0 then "Total failure" else "Failure")
+    else if isCritical (normal, desperate) then "Critical win"
+    else "Win"
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "es")
+
+h5Text (normal, desperate, difficulty) =
+    plural (successesIn (normal, desperate), "success")
+    + (if difficulty > 0 then " vs " + toString (difficulty) else "")
+    + (if h5Outcome (normal, desperate, difficulty) == "" then "" else ": " + h5Outcome (normal, desperate, difficulty))
+    + (if successesIn (normal, desperate) >= difficulty and difficulty > 0 then ", margin " + toString (successesIn (normal, desperate) - difficulty) else "")
+    + (if overreach (desperate) then ". A Desperation die shows 1: raise Danger by 1 or fall into Despair" else "")
+
+failedNormal (normal) = count (filter ((x)->x < 6, normal))
+
+h5Result (normal, desperate, difficulty, canReroll, spend) =
+{
+    Text = h5Text (normal, desperate, difficulty)
+    Value = successesIn (normal, desperate)
+    Outcome = h5Outcome (normal, desperate, difficulty)
+    Color = if overreach (desperate) then "orange" else ""
+    Push = if canReroll and failedNormal (normal) > 0 then h5Reroll (filter ((x)->x > 5, normal), desperate, min (3, failedNormal (normal)), difficulty) else 0
+    PushLabel = "Reroll with Willpower"
+    PushSets = spend
+}
+
+h5Reroll (kept, desperate, rerolls, difficulty) = ([dice { number = rerolls  sides = 10  label = "Reroll" }],
+    ((baseline, throws)->h5Result (concat (kept, first (throws).rolls), desperate, difficulty, false, [])))
+
+h5Pool (pool, desperation, difficulty) = ([dice { number = max (0, pool)  sides = 10 }, dice { number = desperation  sides = 10  color = "orange"  label = if desperation > 0 then "Desperation" else "" }],
+    ((baseline, throws)->h5Result (first (throws).rolls, item (1, throws).rolls, difficulty, true, [])))
+
+h5AskedPool (pool, desperation, spend) = ([dice { number = max (0, pool)  sides = 10 }, dice { number = desperation  sides = 10  color = "orange"  label = if desperation > 0 then "Desperation" else "" }],
+    ((baseline, throws)->h5Result (first (throws).rolls, item (1, throws).rolls, asked, true, spend)))
+
+willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
+
+desperationDice (char) = if char.Hunt.'Add Desperation' == "On" and not (char.Hunt.Despair) then char.Hunt.Desperation else 0
+
+healthFull (char) = char.Trackers.'Health Superficial'.realvalue + char.Trackers.'Health Aggravated'.realvalue >= char.Attributes.Stamina + 3
+
+willpowerFull (char) = char.Trackers.'Willpower Superficial'.realvalue + char.Trackers.'Willpower Aggravated'.realvalue >= char.Attributes.Composure + char.Attributes.Resolve
+
+impairment (char, physical) = if (physical and healthFull (char)) or (not (physical) and willpowerFull (char)) then 2 else 0
+
+isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
+
+h5Dice (char, pool, physical) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", h5AskedPool (pool + n - impairment (char, physical), desperationDice (char), willpowerSpend (char))))
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Charisma" then char.Attributes.Charisma
+        case "Manipulation" then char.Attributes.Manipulation
+        case "Composure" then char.Attributes.Composure
+        case "Intelligence" then char.Attributes.Intelligence
+        case "Wits" then char.Attributes.Wits
+        else char.Attributes.Resolve
+
+attributeNames = ["Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Composure", "Intelligence", "Wits", "Resolve"]
+
+skill (usual) = custom
+{
+    Dots = integer { description = "Skill dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
+    With = string { description = "The attribute this skill rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
+    Pool = integer { description = "Attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = h5Dice (characterTable, Dots + attributeValue (characterTable, With), isPhysical (With))  editable = none }
+    Specialty = string { description = "A specialty adds a die when it applies." }
+}
+
+noSkill = { Dots = 0 }
+
+skillDots (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Dots", 0)
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "h5Weapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, pool, damage, kind, distance) = custom
+{
+    Name = name
+    Pool = integer { value = pool  valuedice = h5Dice (characterTable, pool, true)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Composure + skillDots (char, "Firearms"), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Strength + skillDots (char, "Melee"), weaponStat (weapon, "Damage"), "melee", 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Hunt, Trackers, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Concept = string {}
+        Chronicle = string {}
+        Cell = string { description = "The hunter's group." }
+        Ambition = string {}
+        Creed = string { description = "How the hunter fights: Entrepreneurial, Faithful, Inquisitive, Martial or Underground." keys = ["Entrepreneurial", "Faithful", "Inquisitive", "Martial", "Underground"] }
+        Drive = string { description = "Why the hunter hunts." keys = ["Curiosity", "Vengeance", "Oath", "Greed", "Pride", "Envy", "Atonement"] }
+        Redemption = string { description = "What the hunter must do to climb out of Despair." }
+        Desire = string {}
+    }
+
+    Attributes = table
+    {
+        description = "The nine attributes: physical, social and mental, for power, finesse and resistance."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Strength, true) }
+        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Charisma, false) }
+        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Intelligence, false) }
+        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Dexterity, true) }
+        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Manipulation, false) }
+        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Wits, false) }
+        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Stamina, true) }
+        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Composure, false) }
+        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = h5Dice (characterTable, Resolve, false) }
+    }
+
+    Hunt = table
+    {
+        description = "The cell's Danger and Desperation, kept the same on every hunter's sheet."
+        tableLayout = layout { columns = 2  size = wide }
+        Danger = integer { description = "How close the quarry is to striking back. Overreach raises it." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
+        Desperation = integer { description = "Desperation dice added to a roll that serves the hunter's Drive." default = 1  minvalue = 1  maxvalue = 5  editable = live }
+        'Add Desperation' = selector { description = "Hold Shift while rolling, or switch it on, to add the Desperation dice. Not while in Despair." options = ["Off", "On"]  labels = ["Off", "On"]  colors = ["", "orange"]  hold = ["", "Shift"]  default = "Off"  editable = live  save = nosave }
+        Despair = bool { description = "No Desperation dice and no use of the Drive until the hunter acts on their Redemption." default = false  editable = live  indicator = "#555555" }
+    }
+
+    Trackers = table
+    {
+        description = "Health and willpower. A full track leaves the hunter impaired: -2 dice to physical pools for health, to social and mental pools for willpower."
+        tableLayout = layout { columns = 2  size = wide }
+        'Health Superficial' = slots { description = "Superficial damage, from fists and falls." number = Attributes.Stamina + 3  editable = live  indicator = "#e8913a"  indicatorLabel = "Superficial" }
+        'Health Aggravated' = slots { description = "Aggravated damage, from claws, fangs and fire." number = Attributes.Stamina + 3  editable = live  indicator = "#d64545"  indicatorLabel = "Aggravated" }
+        'Willpower Superficial' = slots { description = "Superficial willpower damage, from stress and rerolls." number = Attributes.Composure + Attributes.Resolve  editable = live }
+        'Willpower Aggravated' = slots { description = "Aggravated willpower damage." number = Attributes.Composure + Attributes.Resolve  editable = live }
+        Impaired = string { value = if healthFull (characterTable) or willpowerFull (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        'New session' = button { description = "Each session, superficial willpower damage heals by the higher of Composure or Resolve."  editable = live  onClick = updates { (root.Trackers.'Willpower Superficial'.realvalue) = max (0, 'Willpower Superficial'.realvalue - max (Attributes.Composure, Attributes.Resolve)) } }
+        'Day of rest' = button { description = "A day of rest heals one superficial health damage. Aggravated damage needs medical care and weeks."  editable = live  onClick = updates { (root.Trackers.'Health Superficial'.realvalue) = max (0, 'Health Superficial'.realvalue - 1) } }
+    }
+
+    Skills = table
+    {
+        description = "Skills, each rolled with a fitting attribute."
+        tableLayout = layout { columns = 3  size = wide }
+        Athletics = skill ("Dexterity")
+        'Animal Ken' = skill ("Charisma")
+        Academics = skill ("Intelligence")
+        Brawl = skill ("Strength")
+        Etiquette = skill ("Charisma")
+        Awareness = skill ("Wits")
+        Craft = skill ("Dexterity")
+        Insight = skill ("Wits")
+        Finance = skill ("Intelligence")
+        Driving = skill ("Dexterity")
+        Intimidation = skill ("Charisma")
+        Investigation = skill ("Intelligence")
+        Firearms = skill ("Composure")
+        Leadership = skill ("Charisma")
+        Medicine = skill ("Intelligence")
+        Larceny = skill ("Dexterity")
+        Performance = skill ("Charisma")
+        Occult = skill ("Resolve")
+        Melee = skill ("Strength")
+        Persuasion = skill ("Charisma")
+        Politics = skill ("Intelligence")
+        Stealth = skill ("Dexterity")
+        Streetwise = skill ("Charisma")
+        Science = skill ("Intelligence")
+        Survival = skill ("Wits")
+        Subterfuge = skill ("Manipulation")
+        Technology = skill ("Intelligence")
+    }
+
+    Edges = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Edges
+        singular = "Edge"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Attributes.Strength + skillDots (characterTable, "Brawl"), "+0 superficial", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Advantages and Flaws' = list
+    {
+        description = "Merits, backgrounds and flaws, each rated in dots."
+        tableLayout = layout { size = wide }
+        singular = "Advantage"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Dots = integer { default = 1 }
+            Flaw = bool { default = false }
+        }
+    }
+
+    Touchstones = list
+    {
+        description = "The people who keep the hunter human, and the conviction each stands for."
+        tableLayout = layout { size = wide }
+        singular = "Touchstone"
+        editable = character
+        valueType = custom
+        {
+            Touchstone = string {}
+            Conviction = string {}
+        }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Chronicle Tenets' = string { multiline = true }
+        'The Quarry' = string { description = "What the cell is hunting, and what it knows about it." multiline = true }
+        History = string { multiline = true }
+        'Total Experience' = integer { default = 0 }
+        'Spent Experience' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, 'Exceptional Pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Mortal", "Cultist", "Vampire", "Werewolf", "Ghost", "Fae", "Demon", "Revenant", "Other"] }
+        Physical = integer { description = "Pool for physical actions." default = 3  valuedice = h5Pool (Physical, 0, 0) }
+        Social = integer { description = "Pool for social actions." default = 3  valuedice = h5Pool (Social, 0, 0) }
+        Mental = integer { description = "Pool for mental actions." default = 3  valuedice = h5Pool (Mental, 0, 0) }
+        Health = slots { description = "Health boxes." number = 5  editable = live  indicator = "#d64545" }
+        Willpower = slots { description = "Willpower boxes." number = 3  editable = live }
+        Initiative = integer { description = "Order in the fight, as the GM sets it." default = 0 }
+        Banes = string { description = "What hurts it more, or what it can't stand." }
+    }
+    'Exceptional Pools' = keyvalues
+    {
+        description = "Dice pools the creature is especially good at."
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Brawl", "Firearms"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = h5Pool (Dice, 0, 0)  action = if Key == "Firearms" then "ranged" else "melee"  reach = 2 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+h5Weapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/gun.svg" }
+    Stats = table
+    {
+        Damage = string { description = "Damage added to the margin, such as +2 superficial." }
+        Range = string { description = "Range in metres; blank for melee." }
+        Clips = string {}
+        Concealability = string {}
+    }
+}
+
+h5Edge = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { description = "Assets are things, Aptitudes are skills, Endowments are uncanny." keys = ["Assets", "Aptitudes", "Endowments"] }
+        Perks = string { description = "The perks taken for this edge." multiline = true }
+        'Dice Pool' = string {}
+    }
+}
+
+HunterTheReckoning5e = system
+{
+    hints = [
+        hint
+        {
+            title = "Forming a cell"
+            topic = "Getting started"
+            text = ["The players make a cell of hunters who saw something they can't unsee. Each picks a Creed, a Drive and its Redemption, Edges with Perks, and Touchstones."]
+        },
+        hint
+        {
+            title = "Pools and Desperation"
+            topic = "Play"
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. The prompt asks for dice added or taken off and the Difficulty. Hold Shift (or switch Add Desperation on) to roll the orange Desperation dice too: any 1 on them is overreach, raising Danger or bringing Despair."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["The margin plus the weapon's damage is the damage. Monsters often deal aggravated damage. A full health track leaves the hunter impaired."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Conflicts go by who is ready; drag tokens into order in the initiative list."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = h5Weapon
+    Edges = h5Edge
+    secondaryTypes = ["Weapons", "Edges"]
+    description = "Hunter: the Reckoning 5th edition: ordinary people hunting the monsters of the World of Darkness, d10 pools with Desperation dice and Danger"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10]
+    cssFiles = ["/systems/hunter/hunter.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/spies.json"]
+    nameSettings = [nightWorldNameSetting, spyThrillerNameSetting]
+}

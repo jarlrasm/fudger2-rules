@@ -1,0 +1,55 @@
+@import url("/systems/sheet.css");
+
+/* Hunter: the Reckoning 5th edition: a photocopied case file, dirty white
+   paper with black type and a hazard-orange accent; the creed and drive
+   up top, the nine attributes, Danger and Desperation boxed beside the
+   health and willpower tracks, the 27 skills in three columns. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2b2a28;
+    --surface: #f1eee6;
+    --surface-alt: #e5e1d6;
+    --surface-sunken: #d8d3c5;
+    --surface-muted: #bdb7a8;
+    --text: #151413;
+    --text-muted: #45423d;
+    --text-faint: #77736b;
+    --on-accent: #151413;
+    --border: #9c968a;
+    --border-strong: #151413;
+    --accent: #e8771e;
+    --accent-hover: #f08c3a;
+    --accent-soft: #f7dcc4;
+    --link: #b85a10;
+    --danger: #a4221a;
+    --danger-hover: #831b15;
+    --danger-soft: #f0d2cf;
+    --success: #4a6b2f;
+    --paper: #f1eee6;
+    --card-bg: #e5e1d6;
+    --dice-bg: #151413;
+    --dice-text: #f1eee6;
+}
+
+.entityView {
+    --sheet-font: "Courier Prime", "Courier New", monospace;
+    --title-font: "Special Elite", "Courier New", monospace;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px dashed var(--border); }
+.entityView .table-hunt { --block: 48%; clear: left; }
+.entityView .table-trackers { --block: 52%; }
+.entityView .table-edges,
+.entityView .table-weapons { --block: 50%; }
+.entityView .table-edges { clear: left; }

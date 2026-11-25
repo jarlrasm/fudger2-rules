@@ -1,0 +1,496 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+gradeNames = ["Very Easy", "Easy", "Standard", "Hard", "Formidable", "Herculean", "Hopeless"]
+
+graded (skill, grade) =
+    switch grade
+        case 0 then skill * 2
+        case 1 then (skill * 3 + 1) / 2
+        case 3 then (skill * 2 + 2) / 3
+        case 4 then (skill + 1) / 2
+        case 5 then (skill + 9) / 10
+        case 6 then 0
+        else skill
+
+gradeOf (answered, grade) = if answered then grade else 2
+
+mythrasLevel (target, roll, grade) =
+    if grade == 6 then "Failure"
+    else if roll == 100 or (roll == 99 and target <= 100) then "Fumble"
+    else if roll <= max (1, (target + 9) / 10) then "Critical success"
+    else if roll <= 5 or (roll <= target and roll <= 95) then "Success"
+    else "Failure"
+
+gradeText (grade) = if grade == 2 then "" else " (" + item (grade, gradeNames) + ")"
+
+mythrasText (target, roll, grade) = toString (roll) + " vs " + toString (target) + gradeText (grade) + ": " + mythrasLevel (target, roll, grade)
+
+mythrasResult (skill, roll, grade) =
+{
+    Text = mythrasText (graded (skill, grade), roll, grade)
+    Value = roll
+    Outcome = mythrasLevel (graded (skill, grade), roll, grade)
+}
+
+mythrasRoll (grade) = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), grade)))
+
+mythrasAsked = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), gradeOf (answered, asked))))
+
+mythrasCheck = ask ("Difficulty grade", gradeNames, 0, mythrasAsked)
+
+fatigueShift (char) =
+    switch char.Attributes.Fatigue
+        case "Winded" then 1
+        case "Tired" then 1
+        case "Wearied" then 2
+        case "Exhausted" then 3
+        case "Debilitated" then 3
+        case "Incapacitated" then 3
+        case "Semi-Conscious" then 4
+        case "Comatose" then 4
+        case "Dead" then 4
+        else 0
+
+tiredGrade (answered, grade, shift) = min (6, gradeOf (answered, grade) + shift)
+
+mythrasCheckFor (char) = ask ("Difficulty grade", gradeNames, 0, ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char))))))
+
+hitLocationOf (roll) =
+    if roll <= 3 then "Right leg"
+    else if roll <= 6 then "Left leg"
+    else if roll <= 9 then "Abdomen"
+    else if roll <= 12 then "Chest"
+    else if roll <= 15 then "Right arm"
+    else if roll <= 18 then "Left arm"
+    else "Head"
+
+attackText (target, roll, grade, location) =
+    mythrasText (target, roll, grade)
+    + (if mythrasLevel (target, roll, grade) == "Critical success" or mythrasLevel (target, roll, grade) == "Success" then ", hits the " + location else "")
+
+attackResult (skill, roll, grade, location) =
+{
+    Text = attackText (graded (skill, grade), roll, grade, location)
+    Value = roll
+    Outcome = mythrasLevel (graded (skill, grade), roll, grade)
+}
+
+mythrasAttackRoll (grade) = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), grade, hitLocationOf (first (item (1, throws).rolls)))))
+
+mythrasAskedAttack = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), gradeOf (answered, asked), hitLocationOf (first (item (1, throws).rolls)))))
+
+mythrasAttack = ask ("Difficulty grade", gradeNames, 0, mythrasAskedAttack)
+
+mythrasAttackFor (char) = ask ("Difficulty grade", gradeNames, 0, ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char)), hitLocationOf (first (item (1, throws).rolls))))))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+actionPoints (intdex) = if intdex <= 12 then 1 else if intdex <= 24 then 2 else if intdex <= 36 then 3 else 4
+
+bandOf (value) = if value <= 6 then 1 else if value <= 12 then 2 else if value <= 18 then 3 else 3 + (value - 13) / 6
+
+dmStep (strsiz) = if strsiz <= 50 then (strsiz - 1) / 5 else 10 + (strsiz - 51) / 10
+
+dmSides (strsiz) = item (min (13, dmStep (strsiz)), [8, 6, 4, 2, 0, 2, 4, 6, 8, 10, 12, 6, 8, 10])
+
+dmCount (strsiz) = if dmStep (strsiz) == 4 then 0 else if dmStep (strsiz) >= 11 then 2 else 1
+
+dmSign (strsiz) = if dmStep (strsiz) < 4 then -1 else 1
+
+dmText (strsiz) = if dmCount (strsiz) == 0 then "+0" else (if dmSign (strsiz) < 0 then "-" else "+") + toString (dmCount (strsiz)) + "d" + toString (dmSides (strsiz))
+
+locationHp (consiz, base) = max (1, base + (max (1, consiz) - 1) / 5)
+
+diceCount (text) = bonusWithValue ([[text]], "^ *([0-9]+)d")
+
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+damageBonus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)")
+
+damageRoll (n, dieSides, strsiz) = ([dice { number = n  sides = dieSides }, dice { number = dmCount (strsiz)  sides = max (2, dmSides (strsiz))  label = if dmCount (strsiz) > 0 then "Damage modifier" else "" }],
+    ((baseline, throws)->{ Text = toString (max (0, baseline + sum (first (throws).rolls) + dmSign (strsiz) * sum (item (1, throws).rolls))) + " damage"  Value = max (0, baseline + sum (first (throws).rolls) + dmSign (strsiz) * sum (item (1, throws).rolls)) }))
+
+skill (base) = custom
+{
+    Base = integer { value = base  editable = none }
+    Bonus = integer { description = "Points added to the base from culture, career, bonus points and experience." default = 0  minvalue = 0 }
+    Total = integer { description = "Roll d100 at or under it. A tenth (rounded up) is a critical; 99 and 00 fumble." value = Base + Bonus  valuedice = mythrasCheckFor (characterTable)  editable = none }
+}
+
+location (armor, base) = custom
+{
+    AP = integer { description = "Armor points on this location." default = armor }
+    HP = integer { value = locationHp (characterTable.Characteristics.CON + characterTable.Characteristics.SIZ, base)  editable = none }
+    Damage = integer { description = "Damage taken here. At 0 HP a Serious Wound; at minus its HP a Major Wound." default = 0  minvalue = 0  editable = live }
+}
+
+noSkill = { Total = 0 }
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "mythrasWeapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
+{
+    Name = name
+    Chance = integer { value = chance  valuedice = mythrasAttackFor (characterTable)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBonus (damageText)  valuedice = damageRoll (diceCount (damageText), dieSize (damageText), strsiz)  render = damageText + " " + dmText (strsiz)  editable = none }
+}
+
+styleChance (char) = char.Characteristics.STR + char.Characteristics.DEX + (if count (char.'Combat Styles') > 0 then first (char.'Combat Styles').Bonus else 0)
+
+isLauncher (name) = contains (toLower (name), "bow") or contains (toLower (name), "sling") or contains (toLower (name), "blowgun") or contains (toLower (name), "gun")
+
+attackFor (char, weapon) =
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
+
+fatigueLevels = ["Fresh", "Winded", "Tired", "Wearied", "Exhausted", "Debilitated", "Incapacitated", "Semi-Conscious", "Comatose", "Dead"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Attributes, 'Hit Locations', Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Species = string { default = "Human" }
+        Culture = string { keys = ["Barbarian", "Civilised", "Nomadic", "Primitive"] }
+        Career = string {}
+        Age = integer { default = 22 }
+        Gender = string {}
+        Frame = string {}
+        'Social Class' = string {}
+        Homeland = string {}
+        Passions = string { description = "Loves, hates and loyalties, each a percentage that can augment a skill." multiline = true }
+    }
+
+    Characteristics = table
+    {
+        description = "Seven characteristics. STR, CON, DEX, POW and CHA are 3d6; SIZ and INT 2d6+6."
+        tableLayout = layout { columns = 5  size = wide }
+        STR = integer { description = "Strength." default = 11  minvalue = 1 }
+        CON = integer { description = "Constitution." default = 11  minvalue = 1 }
+        SIZ = integer { description = "Size." default = 13  minvalue = 1 }
+        DEX = integer { description = "Dexterity." default = 11  minvalue = 1 }
+        INT = integer { description = "Intelligence." default = 13  minvalue = 1 }
+        POW = integer { description = "Power." default = 11  minvalue = 1 }
+        CHA = integer { description = "Charisma." default = 11  minvalue = 1 }
+    }
+
+    Attributes = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Action Points' = integer { description = "Actions in a combat round, from INT + DEX." value = actionPoints (Characteristics.INT + Characteristics.DEX)  editable = none }
+        'Damage Modifier' = string { description = "Dice added to or taken from melee damage, from STR + SIZ." value = dmText (Characteristics.STR + Characteristics.SIZ)  editable = none }
+        'Experience Modifier' = integer { value = bandOf (Characteristics.CHA) - 2  editable = none }
+        'Healing Rate' = integer { description = "Hit points a wounded location heals per period of rest." value = bandOf (Characteristics.CON)  editable = none }
+        Initiative = modifier { description = "Half of INT + DEX, rounded up, plus a d10, minus armor penalty." value = (Characteristics.INT + Characteristics.DEX + 1) / 2 - 'Armor Penalty'  valuedice = initiativeRoll  editable = none }
+        'Armor Penalty' = integer { description = "A fifth of the armor's total encumbrance." default = 0  minvalue = 0 }
+        Movement = string { default = "6 m" }
+        'Max Luck Points' = integer { value = bandOf (Characteristics.POW)  editable = none }
+        'Luck Points' = integer { description = "Spend one to reroll, to downgrade a wound or to act first." default = 'Max Luck Points'  minvalue = 0  editable = live }
+        'Max Magic Points' = integer { value = Characteristics.POW  editable = none }
+        'Magic Points' = integer { default = 'Max Magic Points'  minvalue = 0  editable = live }
+        Fatigue = string { description = "Each level past Fresh makes skills harder: the sheet steps the difficulty grade for you." default = "Fresh"  keys = fatigueLevels  editable = live  indicator = "#d4b106" }
+        'New session' = button
+        {
+            description = "Luck Points come back at the start of each session."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.'Luck Points') = 'Max Luck Points'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A full night's rest restores Magic Points and clears fatigue. Wounds heal by the Healing Rate over time; mark them off by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.'Magic Points') = 'Max Magic Points'
+                (root.Attributes.Fatigue) = "Fresh"
+            }
+        }
+    }
+
+    'Hit Locations' = table
+    {
+        description = "Hits roll d20 for the location: legs 1-6, abdomen 7-9, chest 10-12, arms 13-18, head 19-20."
+        tableLayout = layout { columns = 4  size = wide }
+        'Right Leg' = location (0, 1)
+        'Left Leg' = location (0, 1)
+        Abdomen = location (0, 2)
+        Chest = location (0, 3)
+        'Right Arm' = location (0, 0)
+        'Left Arm' = location (0, 0)
+        Head = location (0, 1)
+        Wounded = string { value = if 'Right Leg'.Damage + 'Left Leg'.Damage + Abdomen.Damage + Chest.Damage + 'Right Arm'.Damage + 'Left Arm'.Damage + Head.Damage > 0 then "Wounded" else ""  visible = none  indicator = "#d64545" }
+    }
+
+    'Standard Skills' = table
+    {
+        description = "Every character has these; the base comes from characteristics."
+        tableLayout = layout { columns = 2  size = wide }
+        Athletics = skill (Characteristics.STR + Characteristics.DEX)
+        Boating = skill (Characteristics.STR + Characteristics.CON)
+        Brawn = skill (Characteristics.STR + Characteristics.SIZ)
+        Conceal = skill (Characteristics.DEX + Characteristics.POW)
+        Customs = skill (Characteristics.INT * 2 + 40)
+        Dance = skill (Characteristics.DEX + Characteristics.CHA)
+        Deceit = skill (Characteristics.INT + Characteristics.CHA)
+        Drive = skill (Characteristics.DEX + Characteristics.POW)
+        Endurance = skill (Characteristics.CON * 2)
+        Evade = skill (Characteristics.DEX * 2)
+        'First Aid' = skill (Characteristics.DEX + Characteristics.INT)
+        Influence = skill (Characteristics.CHA * 2)
+        Insight = skill (Characteristics.INT + Characteristics.POW)
+        Locale = skill (Characteristics.INT * 2)
+        'Native Tongue' = skill (Characteristics.INT + Characteristics.CHA + 40)
+        Perception = skill (Characteristics.INT + Characteristics.POW)
+        Ride = skill (Characteristics.DEX + Characteristics.POW)
+        Sing = skill (Characteristics.POW + Characteristics.CHA)
+        Stealth = skill (Characteristics.DEX + Characteristics.INT)
+        Swim = skill (Characteristics.STR + Characteristics.CON)
+        Unarmed = skill (Characteristics.STR + Characteristics.DEX)
+        Willpower = skill (Characteristics.POW * 2)
+    }
+
+    'Professional Skills' = list
+    {
+        description = "Skills learned through career and training, with their own base."
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Base = integer { default = 0 }
+            Bonus = integer { default = 0 }
+            Total = integer { value = Base + Bonus  valuedice = mythrasCheckFor (characterTable)  editable = none }
+        }
+    }
+
+    'Combat Styles' = list
+    {
+        description = "STR + DEX, plus points. Each style lists its weapons and its trait."
+        singular = "Combat style"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Weapons = string {}
+            Trait = string {}
+            Base = integer { value = characterTable.Characteristics.STR + characterTable.Characteristics.DEX  editable = none }
+            Bonus = integer { default = 0 }
+            Total = integer { value = Base + Bonus  valuedice = mythrasAttackFor (characterTable)  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", characterTable.'Standard Skills'.Unarmed.Total, "1d3", characterTable.Characteristics.STR + characterTable.Characteristics.SIZ, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Magic = list
+    {
+        source = secondary.Magic
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        singular = "Item"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Background = string { multiline = true }
+        Money = string {}
+        'Experience Rolls' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, 'Hit Locations', Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { default = 11 }
+        CON = integer { default = 11 }
+        SIZ = integer { default = 13 }
+        DEX = integer { default = 11 }
+        INT = integer { default = 13 }
+        POW = integer { default = 11 }
+        CHA = integer { default = 11 }
+        'Action Points' = integer { default = 2 }
+        'Damage Modifier' = string { default = "+0" }
+        Initiative = modifier { default = 12  valuedice = initiativeRoll }
+        'Magic Points' = integer { default = 11  editable = live }
+        Movement = string { default = "6 m" }
+    }
+    'Hit Locations' = keyvalues
+    {
+        description = "d20 range, armor and hit points per location."
+        singular = "Location"
+        editablekeys = character
+        keys = ["Right Leg", "Left Leg", "Abdomen", "Chest", "Right Arm", "Left Arm", "Head"]
+        valueType = custom
+        {
+            Range = string {}
+            AP = integer { default = 0 }
+            HP = integer { default = 5 }
+            Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        }
+    }
+    Attacks = keyvalues
+    {
+        description = "Combat style or natural weapons, with damage."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Combat Style"]
+        valueType = custom
+        {
+            Chance = integer { default = 60  valuedice = mythrasAttack  action = if contains (toLower (Key), "bow") or contains (toLower (Key), "sling") or contains (toLower (Key), "javelin") then "ranged" else "melee"  reach = 2 }
+            Damage = string { default = "1d8" }
+        }
+    }
+    Skills = keyvalues
+    {
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Athletics", "Endurance", "Evade", "Perception", "Stealth", "Willpower"]
+        valueType = custom
+        {
+            Chance = integer { default = 40  valuedice = mythrasCheck }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Abilities = string { multiline = true }
+        Magic = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+mythrasWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Size" prefix = "" filter = Stats.Size }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Damage = string { default = "1d8" }
+        Size = string { description = "Small, Medium, Large, Huge or Enormous; how much it can parry." keys = ["S", "M", "L", "H", "E"] }
+        Reach = string { keys = ["T", "S", "M", "L", "VL"] }
+        Range = string { description = "Close, effective and long range in metres, such as 10/80/150." }
+        'Weapon AP and HP' = string {}
+        Effects = string { description = "Special effects the weapon favours: Bleed, Impale, Stun Location..." }
+        Encumbrance = string {}
+        Cost = string {}
+    }
+}
+
+mythrasArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        AP = string { description = "Armor points on the locations it covers." }
+        Locations = string {}
+        Encumbrance = string {}
+        Cost = string {}
+    }
+}
+
+mythrasMagic = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Folk Magic", "Animism", "Mysticism", "Sorcery", "Theism"] }
+        Cost = string { description = "Magic Points to cast." }
+        Traits = string { description = "Instant, Concentration, Ranged, Touch, Resist (Willpower)..." }
+    }
+}
+
+Mythras = system
+{
+    hints = [
+        hint
+        {
+            title = "Building an adventurer"
+            topic = "Getting started"
+            text = ["Roll characteristics (3d6, SIZ and INT 2d6+6), pick a culture and career, and spread skill points over standard and professional skills and a combat style. Note two or three Passions."]
+        },
+        hint
+        {
+            title = "Skill rolls"
+            topic = "Play"
+            text = ["Roll d100 at or under the skill. The GM picks a difficulty grade, from Very Easy (double) to Herculean (a tenth). A tenth of the target is a critical, 99-00 a fumble."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attack with a combat style and roll d20 for the location. The defender parries or evades; the better result earns special effects. Damage minus armor comes off that location's hit points."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: d10 plus the initiative bonus. Highest acts first; each character has a few Action Points a round."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = mythrasWeapon
+    Armor = mythrasArmor
+    Magic = mythrasMagic
+    secondaryTypes = ["Weapons", "Armor", "Magic"]
+    description = "Mythras: gritty d100 fantasy adventure with hit locations, combat styles, special effects and five kinds of magic"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d20, 1d10]
+    cssFiles = ["/systems/mythras/mythras.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/fantasy.json", "/systems/names/barbarian.json"]
+    nameSettings = [oldWorldNameSetting, fantasyNameSetting, swordAndSorceryNameSetting]
+}

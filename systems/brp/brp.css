@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* Basic Roleplaying: a classic percentile character sheet in cream and
+   black with an ochre accent and a sturdy slab serif; characteristics in
+   a row of boxes, hit points, power points and the damage modifier beside
+   them, the long skill list in two columns with base and points, then
+   weapons and powers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #3a2f24;
+    --surface: #fbf6ea;
+    --surface-alt: #f1e9d6;
+    --surface-sunken: #e4d9bf;
+    --surface-muted: #cbbd9a;
+    --text: #1b1712;
+    --text-muted: #4a4136;
+    --text-faint: #7d7263;
+    --on-accent: #1b1712;
+    --border: #b2a37f;
+    --border-strong: #1b1712;
+    --accent: #d39a2c;
+    --accent-hover: #e2ad44;
+    --accent-soft: #f6e5c3;
+    --link: #8a5a10;
+    --danger: #9b2a1f;
+    --danger-hover: #7b2118;
+    --danger-soft: #f1d6d2;
+    --success: #3f6b2e;
+    --paper: #fbf6ea;
+    --card-bg: #f1e9d6;
+    --dice-bg: #1b1712;
+    --dice-text: #fbf6ea;
+}
+
+.entityView {
+    --sheet-font: "Roboto Slab", "Rockwell", Georgia, serif;
+    --title-font: "Roboto Slab", "Rockwell", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.entityView .table-characteristics > table > tbody { grid-template-columns: repeat(8, 1fr); }
+.entityView .table-characteristics > table > tbody > tr { border: 1px solid var(--border); text-align: center; }
+.entityView .table-skills > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+.entityView .table-skills td > div > div:nth-child(1)::before { content: "base "; color: var(--text-faint); font-size: 0.75em; }
+.entityView .table-weapon-skills,
+.entityView .table-weapons,
+.entityView .table-powers,
+.entityView .table-equipment { --block: 50%; }
+.entityView .table-weapon-skills,
+.entityView .table-powers { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Chance "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

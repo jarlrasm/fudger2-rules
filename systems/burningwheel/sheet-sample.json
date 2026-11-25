@@ -1,0 +1,26 @@
+{
+  "values": {
+    "Character": { "Stock": "Man", "Age": 27, "Lifepaths": "Born Peasant, Farmer, Conscript, Sergeant", "Concept": "A sergeant who deserted to bring his men home" },
+    "Beliefs": { "Belief 1": "Lord Aldric spent my company like copper. I will see him answer for it before the harvest council.", "Belief 2": "Tam is the last of my squad still breathing; I'll get him home to Fenmarch alive.", "Belief 3": "A soldier keeps his word, even to an enemy. I'll repay the Hessic scout who spared me." },
+    "Instincts": { "Instinct 1": "Always check the treeline before crossing open ground.", "Instinct 2": "When a fight starts, put myself between Tam and it.", "Instinct 3": "Never sleep without a blade in reach." },
+    "Stats": { "Will.Exponent": 4, "Perception.Exponent": 4, "Agility.Exponent": 4, "Speed.Exponent": 4, "Power.Exponent": 5, "Forte.Exponent": 5, "Power.Tests": "R: 1, D: 0, C: 1" },
+    "Attributes": { "Health.Exponent": 5, "Steel.Exponent": 6, "Steel.Tests": "R: 2, D: 1", "Resources.Exponent": 1, "Circles.Exponent": 3, "Mortal Wound": "B10" },
+    "Artha": { "Fate": 2, "Persona": 1, "Deeds": 0 },
+    "Wounds": { "Superficial": 1, "Light": 1 },
+    "Skills": [
+      { "Skill": "Spear", "Exponent": 4, "Shade": "B", "Tests": "R: 2" },
+      { "Skill": "Sword", "Exponent": 3, "Shade": "B" },
+      { "Skill": "Command", "Exponent": 3, "Shade": "B", "Tests": "D: 1" },
+      { "Skill": "Field Dressing", "Exponent": 2, "Shade": "B" },
+      { "Skill": "Foraging", "Exponent": 3, "Shade": "B" },
+      { "Skill": "Intimidation", "Exponent": 3, "Shade": "B" },
+      { "Skill": "Soldiering", "Exponent": 4, "Shade": "B", "Tests": "C: 1" }
+    ],
+    "Relationships": [ { "Name": "Tam, last of the squad", "Description": "Minor relationship, loyal follower" }, { "Name": "Lord Aldric", "Description": "Hateful, powerful enemy" } ],
+    "Gear": { "Armor": "Gambeson: torso and arms, 2 dice", "Property": "Nothing but what he carries", "Reputations": "Deserter (1D), with the Aldric garrison", "Affiliations": "None any more" }
+  },
+  "secondary": {
+    "Weapons": [ { "name": "Spear", "values": { "Stats": { "Skill": "Spear", "I M S": "B3 B6 B9", "Add": "2", "VA": "1", "Length": "Longest" } } }, { "name": "Arming sword", "values": { "Stats": { "Skill": "Sword", "I M S": "B3 B6 B9", "Add": "2", "Length": "Long" } } } ],
+    "Traits": [ { "name": "Stubborn", "values": { "Stats": { "Kind": "Character" } } }, { "name": "Tough", "values": { "Stats": { "Kind": "Die", "Cost": "3" } } }, { "name": "Born to Lead", "values": { "Stats": { "Kind": "Call-on" } } } ]
+  }
+}

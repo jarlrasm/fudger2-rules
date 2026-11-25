@@ -51,7 +51,7 @@ w5AskedPool (pool, rageDice, spend) = ([dice { number = max (0, pool - rageDice)
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-w5Dice (char, pool, physical) = ask ("Difficulty", w5AskedPool (pool + char.Character.Modifier + (if physical then formBonus (char) else 0), char.Character.Rage, willpowerSpend (char)))
+w5Dice (char, pool, physical) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", w5AskedPool (pool + n + (if physical then formBonus (char) else 0), char.Character.Rage, willpowerSpend (char))))
 
 isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
 
@@ -127,7 +127,6 @@ characterTable = ruleset
         Pack = string {}
         Rage = integer { description = "Rage dice replace normal dice in pools. Two Rage dice at 1 or 2 is a brutal result. At 0 Rage you lose the wolf." default = 1  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
         Form = string { description = "Homid and Lupus are natural forms. Glabro and Hispo add 2 physical dice, Crinos 4." default = "Homid"  keys = ["Homid", "Glabro", "Crinos", "Hispo", "Lupus"]  editable = live  indicator = "#e8913a" }
-        Modifier = modifier { description = "Extra dice added to or taken from the next pool." default = 0  editable = live }
         'Rage check' = integer { description = "Roll a d10 when you shift or use a gift: below 6 and you lose 1 Rage." default = 0  valuedice = rageCheck  editable = none }
     }
 
@@ -354,7 +353,7 @@ Werewolf5e = system
         {
             title = "Pools and Rage"
             topic = "Play"
-            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. Rage dice are red: two of them at 1 or 2 is a brutal result. Reroll up to three normal dice with Willpower."]
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds and two 10s are a critical. Rage dice are red: two of them at 1 or 2 is a brutal result. The prompt asks for the Difficulty and for dice added or taken off. Reroll up to three normal dice with Willpower."]
         },
         hint
         {

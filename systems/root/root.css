@@ -1,0 +1,56 @@
+@import url("/systems/sheet.css");
+
+/* Root: The RPG: a storybook playbook in warm parchment and forest green
+   with a russet accent and a rounded hand-lettered serif; the vagabond's
+   details across the top, five stat circles, the three harm tracks beside
+   the basic moves, then reputation and gear. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #3b4a33;
+    --surface: #f8f0dc;
+    --surface-alt: #efe3c6;
+    --surface-sunken: #e2d3ae;
+    --surface-muted: #cdb98a;
+    --text: #2a2118;
+    --text-muted: #5a4a37;
+    --text-faint: #8a7a63;
+    --on-accent: #f8f0dc;
+    --border: #b79f73;
+    --border-strong: #4a3a26;
+    --accent: #b5532a;
+    --accent-hover: #c96838;
+    --accent-soft: #f3d9c8;
+    --link: #8e3f1f;
+    --danger: #a3322a;
+    --danger-hover: #822821;
+    --danger-soft: #f2d3cf;
+    --success: #4f7a37;
+    --paper: #f8f0dc;
+    --card-bg: #efe3c6;
+    --dice-bg: #4f7a37;
+    --dice-text: #f8f0dc;
+}
+
+.entityView {
+    --sheet-font: "Alegreya", "Georgia", serif;
+    --title-font: "Luckiest Guy", "Cooper Black", "Georgia", serif;
+    --block-radius: 14px;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    color: var(--accent);
+    font-size: 1.15em;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .table-stats > table > tbody > tr { text-align: center; }
+.entityView .table-stats button.dicethrow { border-radius: 50%; min-width: 2.4em; min-height: 2.4em; }
+.entityView .table-harm { --block: 45%; clear: left; }
+.entityView .table-basic-moves { --block: 55%; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "2d6 + "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-reputation > table > tbody > tr > td:nth-child(2)::before { content: "Reputation "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-reputation > table > tbody > tr > td:nth-child(3)::before { content: "Prestige "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-reputation > table > tbody > tr > td:nth-child(4)::before { content: "Notoriety "; color: var(--text-faint); font-size: 0.8em; }

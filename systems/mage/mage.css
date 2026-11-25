@@ -1,0 +1,61 @@
+@import url("/systems/sheet.css");
+
+/* Mage: the Ascension 20th: parchment with a deep violet border and gold
+   accents, an engraved serif; the three attribute columns, Talents,
+   Skills and Knowledges side by side as on the paper sheet, the nine
+   Spheres in a band, then Arete, Willpower and the Quintessence and
+   Paradox wheel beside the health track. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #241a33;
+    --surface: #f5efe0;
+    --surface-alt: #ebe2cc;
+    --surface-sunken: #ded2b6;
+    --surface-muted: #c9b994;
+    --text: #1d1726;
+    --text-muted: #4a3f57;
+    --text-faint: #7b7085;
+    --on-accent: #f5efe0;
+    --border: #b3a27c;
+    --border-strong: #3b2a52;
+    --accent: #5a3d82;
+    --accent-hover: #6e4c9c;
+    --accent-soft: #e4daf0;
+    --link: #5a3d82;
+    --danger: #8e1f2a;
+    --danger-hover: #6f1821;
+    --danger-soft: #f1d6d9;
+    --success: #6b5a1d;
+    --paper: #f5efe0;
+    --card-bg: #ebe2cc;
+    --dice-bg: #3b2a52;
+    --dice-text: #f5efe0;
+}
+
+.entityView {
+    --sheet-font: "Cormorant Garamond", "Palatino Linotype", Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 4px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border-bottom: 2px solid #b08d2f;
+}
+.entityView .table-talents,
+.entityView .table-skills,
+.entityView .table-knowledges { --block: 33.333%; }
+.entityView .table-talents { clear: left; }
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-talents > table > tbody > tr,
+.entityView .table-skills > table > tbody > tr,
+.entityView .table-knowledges > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+.entityView .table-spheres { clear: left; }
+.entityView .table-health { --block: 40%; clear: left; }
+.entityView .table-backgrounds { --block: 60%; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Attack "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

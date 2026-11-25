@@ -1,0 +1,60 @@
+@import url("/systems/sheet.css");
+
+/* Mythras: a clean ledger in warm cream and dark green with a brick-red
+   accent and a bookish serif; characteristics in one row of seven boxes,
+   attributes under them, the hit location figure as a grid of seven
+   boxes, standard skills in two columns, then combat styles and weapons. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #23302a;
+    --surface: #f7f2e6;
+    --surface-alt: #ece5d3;
+    --surface-sunken: #ded5bf;
+    --surface-muted: #c7bc9f;
+    --text: #1a1f1b;
+    --text-muted: #424a44;
+    --text-faint: #76807a;
+    --on-accent: #f7f2e6;
+    --border: #a79e86;
+    --border-strong: #2d4236;
+    --accent: #9b3426;
+    --accent-hover: #b4402f;
+    --accent-soft: #f0d9d3;
+    --link: #9b3426;
+    --danger: #9b3426;
+    --danger-hover: #7c291e;
+    --danger-soft: #f0d9d3;
+    --success: #2d6040;
+    --paper: #f7f2e6;
+    --card-bg: #ece5d3;
+    --dice-bg: #2d4236;
+    --dice-text: #f7f2e6;
+}
+
+.entityView {
+    --sheet-font: "Alegreya", "Book Antiqua", Georgia, serif;
+    --title-font: "Alegreya SC", "Book Antiqua", Georgia, serif;
+    --block-radius: 3px;
+    --block-border: 1px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    letter-spacing: 0.08em;
+    background: var(--border-strong);
+    color: var(--surface);
+}
+.entityView .table-characteristics > table > tbody { grid-template-columns: repeat(7, 1fr); }
+.entityView .table-characteristics > table > tbody > tr { text-align: center; border: 1px solid var(--border); }
+.entityView .table-hit-locations td > div > div:nth-child(1)::before { content: "AP "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-hit-locations td > div > div:nth-child(2)::before { content: "HP "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-hit-locations td > div > div:nth-child(3)::before { content: "Dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-professional-skills,
+.entityView .table-combat-styles { --block: 50%; }
+.entityView .table-standard-skills > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+.entityView .table-armor,
+.entityView .table-magic { --block: 50%; }
+.entityView .table-armor { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Chance "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

@@ -1,0 +1,305 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+saveOutcome (roll, score) =
+    if roll == 1 then "Success"
+    else if roll == 20 then "Failure"
+    else if roll <= score then "Success"
+    else "Failure"
+
+saveResult (roll, score) =
+{
+    Text = toString (roll) + " vs " + toString (score) + ": " + saveOutcome (roll, score)
+    Value = roll
+    Outcome = saveOutcome (roll, score)
+}
+
+cairnSave = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline)))
+
+attackSides (mode, die) = if mode < 0 then 4 else if mode > 0 then 12 else die
+
+modeText (mode) = if mode < 0 then " (impaired)" else if mode > 0 then " (enhanced)" else ""
+
+damageText (roll, armor, answered, mode) =
+    toString (max (0, roll - armor)) + " damage" + modeText (mode)
+    + (if answered and armor > 0 then " after " + toString (armor) + " Armor" else "")
+
+damageResult (roll, armor, answered, mode) =
+{
+    Text = damageText (roll, armor, answered, mode)
+    Value = max (0, roll - armor)
+}
+
+cairnDamage (dieSides, mode) = ([dice { number = 1  sides = dieSides }], ((baseline, throws)->damageResult (first (first (throws).rolls) + baseline, asked, answered, mode)))
+
+cairnAttack (die) = ask ("Attack", ["Impaired d4", "Normal", "Enhanced d12"], -1, (mode)->ask ("Target's Armor", 0, cairnDamage (attackSides (mode, die), mode)))
+
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+slotsOf (item) = if itemStat (item, "Petty") == true then 0 else if itemStat (item, "Bulky") == true then 2 else 1
+
+relicSlots (relic) = if valueOr (valueOr (valueOr (relic.data, "cairnRelic", noStats), "Stats", noStats.Stats), "Petty", false) == true then 0 else 1
+
+usedSlots (char) = sum (map ((item)->slotsOf (item), char.Inventory)) + count (char.Spellbooks) + sum (map ((relic)->relicSlots (relic), char.Relics)) + char.Status.Fatigue
+
+downState (char) =
+    if char.Abilities.STR == 0 then "Dead"
+    else if char.Status.'Critical Damage' then "Critical damage"
+    else if char.Status.HP == 0 then "0 HP"
+    else ""
+
+noStats = { Stats = { Kind = "" } }
+
+itemStat (item, field) = valueOr (valueOr (valueOr (item.data, "cairnItem", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, die, kind) = custom
+{
+    Name = name
+    Damage = integer { value = 0  valuedice = cairnAttack (die)  action = kind  reach = 2  render = "d" + toString (die)  editable = none }
+}
+
+isRanged (item) = contains (toLower (item.Name), "bow") or contains (toLower (item.Name), "sling")
+
+weaponsOf (char) = filter ((item)->itemStat (item, "Kind") == "Weapon", char.Inventory)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Abilities, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Background = string { keys = ["Aurifex", "Barber-Surgeon", "Beast Handler", "Bonekeeper", "Cutpurse", "Fieldwarden", "Fletchwind", "Foundling", "Fungal Forager", "Greenwise", "Half-Witch", "Hexenbane", "Jongleur", "Kettlewright", "Marchguard", "Mountebank", "Outrider", "Prowler", "Rill Runner", "Scrivener"] }
+        Age = integer { default = 20 }
+        Traits = string { description = "Physique, skin, hair, face, speech, clothing, virtue and vice." multiline = true }
+        Bonds = string { description = "A tie to the world or the other characters." multiline = true }
+        Omens = string { description = "A sign of what is coming." multiline = true }
+    }
+
+    Abilities = table
+    {
+        description = "Saves: roll d20 equal to or under the score. 1 always succeeds, 20 always fails."
+        tableLayout = layout { columns = 3  size = wide }
+        STR = integer { description = "Strength: physical power, resisting poison. At 0 you die." default = 10  minvalue = 0  maxvalue = 18  editable = live }
+        DEX = integer { description = "Dexterity: speed, reflexes, sneaking. At 0 you are paralysed." default = 10  minvalue = 0  maxvalue = 18  editable = live }
+        WIL = integer { description = "Willpower: persuading, deceiving, resisting magic. At 0 you are delirious." default = 10  minvalue = 0  maxvalue = 18  editable = live }
+        'Max STR' = integer { default = 10  minvalue = 1  maxvalue = 18 }
+        'Max DEX' = integer { default = 10  minvalue = 1  maxvalue = 18 }
+        'Max WIL' = integer { default = 10  minvalue = 1  maxvalue = 18 }
+        'STR save' = integer { value = Abilities.STR  valuedice = cairnSave  editable = none }
+        'DEX save' = integer { value = Abilities.DEX  valuedice = cairnSave  editable = none }
+        'WIL save' = integer { value = Abilities.WIL  valuedice = cairnSave  editable = none }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { description = "Hit Protection: how well you avoid harm, not your health." default = 3  minvalue = 1  maxvalue = 12 }
+        HP = integer { description = "Damage past 0 comes off STR and calls for a STR save against critical damage." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = integer { description = "Taken off every hit. Never more than 3." default = 0  minvalue = 0  maxvalue = 3 }
+        Gold = integer { default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Each Fatigue fills an inventory slot until a full rest." default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#d4b106" }
+        Deprived = bool { description = "Lacking food, water or rest: no recovery of HP, attributes or Fatigue." default = false  editable = live  indicator = "#e8913a" }
+        'Critical Damage' = bool { description = "Failed a critical damage save: can only crawl, dies within the hour without aid." default = false  editable = live  indicator = "#555555" }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#d64545" }
+        'Slots used' = integer { description = "Out of 10. Bulky items take two, petty ones none. A full inventory leaves you at 0 HP." value = usedSlots (characterTable)  editable = none }
+        'Short rest' = button
+        {
+            description = "A few moments' rest and a drink of water restore all HP, unless you are deprived."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.HP) = if Deprived then HP else 'Max HP'
+            }
+        }
+        'Full rest' = button
+        {
+            description = "A full night's rest somewhere safe clears Fatigue and restores HP."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = if Deprived then Fatigue else 0
+                (root.Status.HP) = if Deprived then HP else 'Max HP'
+            }
+        }
+        'Week of rest' = button
+        {
+            description = "A week's rest with a healer restores lost attributes."
+            editable = live
+            onClick = updates
+            {
+                (root.Abilities.STR) = Abilities.'Max STR'
+                (root.Abilities.DEX) = Abilities.'Max DEX'
+                (root.Abilities.WIL) = Abilities.'Max WIL'
+                (root.Status.'Critical Damage') = false
+            }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks always hit: roll the weapon die, minus the target's Armor. Unarmed is d4."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", 4, "melee")], map ((item)->weaponAttack (item.Name, max (4, dieSize (itemStat (item, "Damage"))), if isRanged (item) then "ranged" else "melee"), weaponsOf (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Inventory = list
+    {
+        description = "Ten slots: four in hands and on the body, six in the backpack."
+        tableLayout = layout { size = wide }
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Spellbooks = list
+    {
+        description = "One spell each. Read it aloud with both hands and add a Fatigue."
+        source = secondary.Spellbooks
+        singular = "Spellbook"
+        editable = character
+    }
+
+    Relics = list
+    {
+        description = "Magic items with charges and a recharge condition."
+        source = secondary.Relics
+        singular = "Relic"
+        editable = character
+    }
+
+    Scars = list
+    {
+        description = "Damage that leaves you at exactly 0 HP gives a scar, by the HP lost."
+        singular = "Scar"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Stats, Attack]
+        filters = [filter { name = "Group" prefix = "" filter = Stats.Group }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        HP = integer { default = 4  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        Group = string {}
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        WIL = integer { default = 10  minvalue = 0  editable = live }
+        'STR save' = integer { value = STR  valuedice = cairnSave  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = cairnSave  editable = none }
+        'WIL save' = integer { value = WIL  valuedice = cairnSave  editable = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Attacks = string { description = "What it attacks with, as in the bestiary." default = "claws (d6)" }
+        Damage = string { description = "The die of its main attack." default = "d6" }
+        Strike = integer { value = 0  valuedice = cairnAttack (max (4, dieSize (Damage)))  action = "melee"  reach = 2  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+    }
+}
+
+cairnItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armor", "Gear", "Transport", "Service", "Hireling"] }
+        Damage = string { description = "Weapon die, such as d8." }
+        Armor = string { description = "Armor it gives, such as +1." }
+        Bulky = bool { description = "Takes two slots." default = false }
+        Petty = bool { description = "Takes no slot." default = false }
+        Uses = string {}
+        Cost = string { description = "In gold pieces." }
+    }
+}
+
+cairnSpell = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        'Book quirk' = string { description = "How this particular spellbook looks or behaves." multiline = true }
+    }
+}
+
+cairnRelic = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/cairn/relic.svg" }
+    Stats = table
+    {
+        Charges = string { description = "Uses before it needs recharging." }
+        Recharge = string { multiline = true }
+        Petty = bool { description = "Takes no inventory slot." default = false }
+    }
+}
+
+Cairn = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a character"
+            topic = "Getting started"
+            text = ["Roll or pick a background and follow its tables. Roll 3d6 for STR, DEX and WIL, a d6 for HP, and note the starting gear in the ten inventory slots."]
+        },
+        hint
+        {
+            title = "Saves"
+            topic = "Play"
+            text = ["There are no skill checks: the Warden asks for a save only when the choice is risky. Roll d20 equal to or under STR, DEX or WIL. 1 always succeeds, 20 always fails."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks always hit: roll the weapon die minus Armor. Impaired attacks roll d4, enhanced d12; the roll asks which and the target's Armor. Damage past 0 HP comes off STR and forces a STR save against critical damage."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["Player characters act first; in the first round each must pass a DEX save to act. Then the enemies, then the players again."]
+        }
+    ]
+    distanceUnit = "ft"
+    characters = characterTable
+    creatures = creatureTable
+    Items = cairnItem
+    Spellbooks = cairnSpell
+    Relics = cairnRelic
+    secondaryTypes = ["Items", "Spellbooks", "Relics"]
+    description = "Cairn 2nd edition: adventure in a dark fairy-tale wood, d20 roll-under saves, attacks that always hit, and inventory slots"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/cairn/cairn.css"]
+    libraries = ["/systems/cairn/cairn.json", "/systems/names/oldworld.json", "/systems/names/faerie.json", "/systems/names/fantasy.json"]
+    nameSettings = [oldWorldNameSetting, faerieCourtsNameSetting, fantasyNameSetting]
+}
