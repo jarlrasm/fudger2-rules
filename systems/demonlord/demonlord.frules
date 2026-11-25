@@ -1,0 +1,421 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+boonValue (throws, net) =
+    if count (item (1, throws).rolls) == 0 then 0
+    else if net > 0 then max (item (1, throws).rolls)
+    else 0 - max (item (1, throws).rolls)
+
+boonText (bonus) =
+    if bonus > 0 then " (boon +" + toString (bonus) + ")"
+    else if bonus < 0 then " (bane " + toString (bonus) + ")"
+    else ""
+
+sdlOutcome (total, target, attack) =
+    if target == 0 then ""
+    else if total < target then (if attack then "Miss" else "Failure")
+    else if attack and total >= 20 and total >= target + 5 then "Hit, roll 1d6 extra damage"
+    else if attack then "Hit"
+    else "Success"
+
+sdlResult (total, bonus, target, attack) =
+{
+    Text = toString (total) + boonText (bonus)
+        + (if target > 0 then " vs " + toString (target) + ": " + sdlOutcome (total, target, attack) else "")
+    Value = total
+    Outcome = sdlOutcome (total, target, attack)
+}
+
+sdlRoll (net, target, attack) = ([dice { number = 1  sides = 20 }, dice { number = abs (net)  sides = 6  color = if net > 0 then "green" else "red"  label = if net > 0 then "Boons" else if net < 0 then "Banes" else "" }],
+    ((baseline, throws)->sdlResult (baseline + first (first (throws).rolls) + boonValue (throws, net), boonValue (throws, net), if target > 0 then target else asked, attack)))
+
+sdlChallenge (net) = sdlRoll (net, 10, false)
+
+sdlAttack (net) = ask ("Target Defense or attribute", sdlRoll (net, 0, true))
+
+fateResult (roll) =
+{
+    Text = "Fate " + toString (roll) + ": " + (if roll == 1 then "you die" else if roll == 6 then "heal 1 damage and wake up" else "you hold on")
+    Value = roll
+    Outcome = if roll == 1 then "Failure" else if roll == 6 then "Success" else ""
+}
+
+fateRoll = ([1d6], ((baseline, throws)->fateResult (first (first (throws).rolls))))
+
+damageState (damage, health) =
+    if damage >= health then "Incapacitated"
+    else if damage * 2 >= health then "Injured"
+    else ""
+
+netBoons (char) = char.Status.Boons - (if char.Afflictions.Frightened then 1 else 0) - (if char.Afflictions.Impaired then 1 else 0) - (if char.Afflictions.Fatigued then 1 else 0)
+
+attribute = custom
+{
+    Score = integer { description = "The attribute, 10 for an average person." default = 10  minvalue = 1  maxvalue = 20 }
+    Modifier = modifier { description = "Score minus 10. A challenge roll is d20 + modifier + boons, 10 or more succeeds." value = Score - 10  valuedice = sdlChallenge (netBoons (characterTable))  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+isRanged (weapon) = contains (toLower (itemStat (weapon, "sdlWeapon", "Properties")), "range")
+
+usesAgility (weapon) = isRanged (weapon) or contains (toLower (itemStat (weapon, "sdlWeapon", "Properties")), "finesse")
+
+weaponAttack (name, bonus, net, damage, kind, reachYards, rangeYards) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = sdlAttack (net)  action = kind  reach = reachYards  range = rangeYards  editable = none }
+    Damage = damage
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        if usesAgility (weapon) then char.Attributes.Agility.Modifier else char.Attributes.Strength.Modifier,
+        netBoons (char) + toInt (itemStat (weapon, "sdlWeapon", "Boons")),
+        itemStat (weapon, "sdlWeapon", "Damage"),
+        if isRanged (weapon) then "ranged" else "melee",
+        if contains (toLower (itemStat (weapon, "sdlWeapon", "Properties")), "reach") then 2 else 1,
+        firstNumber (itemStat (weapon, "sdlWeapon", "Properties")) * 2)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Status, Attributes, Afflictions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Ancestry = string { keys = ["Human", "Changeling", "Clockwork", "Dwarf", "Goblin", "Orc"] }
+        Level = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        'Novice path' = string { keys = ["Magician", "Priest", "Rogue", "Warrior"] }
+        'Expert path' = string {}
+        'Master path' = string {}
+        Professions = string {}
+        Languages = string {}
+        Wealth = string { default = "Getting by"  keys = ["Destitute", "Poor", "Getting by", "Comfortable", "Wealthy", "Rich"] }
+    }
+
+    Attributes = table
+    {
+        description = "The four attributes and their modifiers."
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = attribute {}
+        Agility = attribute {}
+        Intellect = attribute {}
+        Will = attribute {}
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Health = integer { description = "How much damage you can take: your Strength plus bonuses from ancestry and paths." default = 10 }
+        Damage = integer { description = "Damage taken. Half your Health is injured; all of it is incapacitated." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        State = string { value = damageState (Damage, Health)  visible = none  indicator = "#d64545" }
+        'Healing rate' = integer { description = "A quarter of your Health: what a rest or catching your breath heals." value = Health / 4  editable = none }
+        Defense = integer { description = "What attacks against you must reach: your Agility, or your armor's Defense." default = 10 }
+        Perception = modifier { description = "Your Intellect plus bonuses, used to notice things." default = 0  valuedice = sdlChallenge (netBoons (characterTable)) }
+        Speed = integer { description = "Yards you move with a move." default = 10 }
+        Size = string { default = "1"  keys = ["1/2", "1", "2", "3"] }
+        Power = integer { description = "How much magic you command; it sets how many spells you can cast." default = 0 }
+        Insanity = integer { description = "Insanity. When it reaches your Will you go mad." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Corruption = integer { description = "Corruption from dark deeds and dark magic." default = 0  minvalue = 0  editable = live }
+        Boons = integer { description = "Boons (plus) or banes (minus) on your next roll. Each adds a d6 and the highest counts." default = 0  minvalue = -6  maxvalue = 6  editable = live }
+        Turn = string { description = "No initiative roll: fast turns take one action before the enemies, slow turns two after." default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
+        'Fate roll' = integer { description = "Incapacitated? Roll a d6 at the end of each round: 1 you die, 6 you heal 1 damage." default = 0  valuedice = fateRoll  editable = none }
+        'Catch your breath' = button
+        {
+            description = "Once a day, catch your breath to heal damage equal to your healing rate."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Damage) = max (0, Damage - 'Healing rate')
+            }
+        }
+        Rest = button
+        {
+            description = "Eight hours of rest heal damage equal to your healing rate, end fatigue and restore your spell castings."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Damage) = max (0, Damage - 'Healing rate')
+                (root.Afflictions.Fatigued) = false
+                (root.Magic.'Castings used') = 0
+            }
+        }
+    }
+
+    Afflictions = table
+    {
+        description = "Afflictions. Frightened, impaired and fatigued each give 1 bane; the sheet counts them."
+        tableLayout = layout { columns = 5  size = wide }
+        Blinded = bool { default = false  editable = live  indicator = "#555555" }
+        Charmed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Compelled = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Dazed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Deafened = bool { default = false  editable = live  indicator = "#555555" }
+        Defenseless = bool { default = false  editable = live  indicator = "#d4b106" }
+        Diseased = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Grabbed = bool { default = false  editable = live  indicator = "#e8913a" }
+        Immobilized = bool { default = false  editable = live  indicator = "#e8913a" }
+        Impaired = bool { default = false  editable = live  indicator = "#d4b106" }
+        Poisoned = bool { default = false  editable = live  indicator = "#3fa34d" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Slowed = bool { default = false  editable = live  indicator = "#d4b106" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Surprised = bool { default = false  editable = live  indicator = "#d4b106" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Magic = table
+    {
+        description = "Traditions, spell castings and the attack roll for spells."
+        tableLayout = layout { columns = 3 }
+        Traditions = string {}
+        'Castings used' = integer { description = "Spell castings used since your last rest." default = 0  minvalue = 0  editable = live }
+        'Spell attack' = modifier { description = "Spell attack roll, usually Intellect or Will against a defense or attribute." default = 0  valuedice = sdlAttack (netBoons (characterTable)) }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Money = string { description = "Gold crowns, silver shillings, copper pennies and bits." }
+        Background = string { multiline = true }
+        'Marks of darkness' = string { description = "What Corruption has done to you." multiline = true  editable = live }
+        Madness = string { multiline = true  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Stats, Attacks]
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Difficulty" sort = Stats.Difficulty }
+        filters = [filter { name = "Difficulty" prefix = "Difficulty" filter = Stats.Difficulty }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Difficulty = integer { description = "How dangerous it is: 1, 5, 10, 25, 50, 100, 250 or 500." default = 1 }
+        Descriptor = string { description = "Size and kind, such as Size 1 frightening fey." }
+        Perception = modifier { default = 0  valuedice = sdlChallenge (Boons) }
+        Defense = integer { default = 10 }
+        Health = integer { default = 10 }
+        Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        State = string { value = if Damage >= Health then "Destroyed" else ""  visible = none  indicator = "#d64545" }
+        Speed = integer { default = 10 }
+        Strength = modifier { default = 0  valuedice = sdlChallenge (Boons) }
+        Agility = modifier { default = 0  valuedice = sdlChallenge (Boons) }
+        Intellect = modifier { default = 0  valuedice = sdlChallenge (Boons) }
+        Will = modifier { default = 0  valuedice = sdlChallenge (Boons) }
+        Boons = integer { default = 0  editable = live }
+        Turn = string { default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Bonus = modifier { default = 0  valuedice = sdlAttack (Boons)  action = melee  reach = 1 }
+            Boons = integer { default = 0 }
+            Damage = string { default = "1d6" }
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Bonus = modifier { default = 0  valuedice = sdlAttack (Boons)  action = ranged }
+            Boons = integer { default = 0 }
+            Damage = string { default = "1d6" }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { description = "Immunities, senses and other traits." multiline = true }
+        'Special attacks' = string { multiline = true }
+        'Special actions' = string { multiline = true }
+        'End of round' = string { multiline = true }
+        Magic = string { multiline = true }
+    }
+}
+
+sdlWeapon = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Damage = string { default = "1d6" }
+        Hands = string { default = "Off"  keys = ["Off", "Main", "Two"] }
+        Properties = string { description = "Such as Finesse, Reach, Range 20 or Brutal." }
+        Boons = string { default = "0" }
+        Price = string {}
+        Availability = string {}
+    }
+}
+
+sdlArmor = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Defense = string { description = "The Defense it gives, or a bonus such as Agility + 1." }
+        Strength = string { description = "The Strength needed to wear it without banes." }
+        Type = string { keys = ["Light", "Medium", "Heavy", "Shield"] }
+        Price = string {}
+    }
+}
+
+sdlTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Source" prefix = "" filter = Stats.Source }]
+    }
+    Stats = table
+    {
+        Source = string { description = "The ancestry or path it comes from." }
+        Level = string {}
+    }
+}
+
+sdlSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Rank" sort = toInt (Stats.Rank) }
+        filters = [
+            filter { name = "Tradition" prefix = "" filter = Stats.Tradition },
+            filter { name = "Rank" prefix = "Rank" filter = Stats.Rank }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Tradition = string {}
+        Rank = string { default = "0" }
+        Type = string { keys = ["Attack", "Utility"] }
+        Target = string {}
+        Area = string {}
+        Duration = string {}
+    }
+}
+
+sdlItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        Price = string {}
+        Availability = string {}
+    }
+}
+
+ShadowOfTheDemonLord = system
+{
+    hints = [
+        hint
+        {
+            title = "Starting at level 0"
+            topic = "Getting started"
+            text = ["Pick an ancestry, which sets the four attributes, Health and Speed. At level 1 the character takes a novice path (magician, priest, rogue or warrior), an expert path at 3 and a master path at 7."]
+        },
+        hint
+        {
+            title = "Boons and banes"
+            topic = "Play"
+            text = ["Roll d20 + attribute modifier; 10 or more succeeds. Set Boons before rolling: each boon or bane adds a d6, boons and banes cancel, and only the highest die counts, added or taken away."]
+        },
+        hint
+        {
+            title = "Attacks and damage"
+            topic = "Combat"
+            text = ["An attack roll must reach the target's Defense or attribute. A total of 20 or more that beats it by 5 deals an extra 1d6. Damage adds up; at half your Health you are injured, at full Health you are incapacitated and roll fate."]
+        },
+        hint
+        {
+            title = "Fast and slow turns"
+            topic = "Initiative"
+            text = ["There is no initiative roll. Each round characters pick a fast turn (one action, before the enemies) or a slow turn (an action and a move, after them). Set Turn on the sheet."]
+        }
+    ]
+    distanceUnit = "yd"
+    squareSize = 1
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = sdlWeapon
+    Armor = sdlArmor
+    Talents = sdlTalent
+    Spells = sdlSpell
+    Equipment = sdlItem
+    secondaryTypes = ["Weapons", "Armor", "Talents", "Spells", "Equipment"]
+    description = "Shadow of the Demon Lord: apocalyptic dark fantasy, d20 with boons and banes"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 2d6, 3d6]
+    cssFiles = ["/systems/demonlord/demonlord.css"]
+    libraries = ["/systems/names/gothic.json", "/systems/names/fantasy.json", "/systems/names/barbarian.json"]
+    nameSettings = [gothicHorrorNameSetting, fantasyNameSetting, swordAndSorceryNameSetting]
+}
