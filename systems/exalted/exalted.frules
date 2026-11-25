@@ -33,14 +33,14 @@ joinBattle (pool) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, 
 damageRoll (pool) = ([dice { number = max (1, pool)  sides = 10 }], ((baseline, throws)->{ Text = toString (successesIn (first (throws).rolls)) + " damage"  Value = successesIn (first (throws).rolls) }))
 
 woundPenalty (char) =
-    switch char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated
-        case 0 then 0
+    switch char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated - (char.Health.'Health levels' - 7)
         case 1 then 0
         case 2 then 1
         case 3 then 1
         case 4 then 2
         case 5 then 2
-        else 4
+        case 6 then 4
+        else if char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated - (char.Health.'Health levels' - 7) <= 1 then 0 else 4
 
 healthState (char) =
     if char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated >= char.Health.'Health levels' then "Incapacitated"
@@ -171,7 +171,7 @@ characterTable = ruleset
     Health = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Health levels' = integer { description = "-0, -1, -1, -2, -2, -4 and Incapacitated; Ox-Body adds more." default = 7 }
+        'Health levels' = integer { description = "-0, -1, -1, -2, -2, -4 and Incapacitated; Ox-Body adds more, which the sheet counts as extra -0 levels." default = 7 }
         Bashing = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
         Lethal = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Aggravated = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
@@ -185,7 +185,7 @@ characterTable = ruleset
             {
                 (root.Health.Bashing) = 0
                 (root.Essence.Willpower) = min (Essence.'Permanent willpower', Essence.Willpower + 1)
-                (root.Essence.Personal) = Essence.'Max personal'
+                (root.Essence.Personal) = max (0, Essence.'Max personal' - Essence.'Committed motes')
                 (root.Essence.Peripheral) = Essence.'Max peripheral'
                 (root.Character.Anima) = "Dim"
             }

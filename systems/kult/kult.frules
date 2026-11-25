@@ -43,6 +43,16 @@ attributeValue (char, name) =
         case "Soul" then char.Attributes.Soul
         else 0
 
+noMove = { Stats = { Attribute = "None" } }
+
+moveStat (item, field) = valueOr (valueOr (valueOr (item.data, "kultMove", noMove), "Stats", noMove.Stats), field, "None")
+
+moveRow (name, plus) = custom
+{
+    Name = name
+    Roll = integer { value = plus  valuedice = kultRoll (plus)  editable = none }
+}
+
 attributeNames = ["Fortitude", "Reflexes", "Willpower", "Reason", "Intuition", "Perception", "Coolness", "Violence", "Charisma", "Soul", "None"]
 
 stabilityLevel (n) =
@@ -161,6 +171,16 @@ characterTable = ruleset
         source = secondary.Disadvantages
         singular = "Disadvantage"
         editable = character
+    }
+
+    'Move rolls' = list
+    {
+        description = "Advantages and disadvantages that are rolled: 2d10 plus their attribute, or 2d10 alone."
+        tableLayout = layout { size = wide }
+        source = map ((item)->moveRow (item.Name, attributeValue (characterTable, moveStat (item, "Attribute"))), concat (characterTable.Advantages, characterTable.Disadvantages))
+        singular = "Move"
+        editable = none
+        valueType = moveRow
     }
 
     'Dark secrets' = list

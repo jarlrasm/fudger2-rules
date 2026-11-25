@@ -19,31 +19,32 @@ scoreResult (score, level) =
     Outcome = verdictOutcome (score, level)
 }
 
-stressResult (d, total, botchDice, level) =
-    if d == 10 then {
-        Text = "0 on the die: " + toString (total) + ", roll for a botch"
-        Value = total
-        Push = botchRoll (botchDice, total, level)
-        PushLabel = "Roll " + toString (max (1, botchDice)) + " botch dice"
+stressResult (d, total, botchDice, level, divisor) =
+    if d == 10 and botchDice <= 0 then scoreResult (total / divisor, level)
+    else if d == 10 then {
+        Text = "0 on the die: " + toString (total / divisor) + ", roll for a botch"
+        Value = total / divisor
+        Push = botchRoll (botchDice, total / divisor, level)
+        PushLabel = "Roll " + toString (botchDice) + " botch dice"
     }
     else if d == 1 then {
         Text = "1 on the die: roll again and double"
-        Value = total + 2
-        Push = doubling (2, total, level)
+        Value = (total + 2) / divisor
+        Push = doubling (2, total, level, divisor)
         PushLabel = "Roll again (x2)"
     }
-    else scoreResult (total + d, level)
+    else scoreResult ((total + d) / divisor, level)
 
-doubling (mult, total, level) = ([1d10], ((baseline, throws)->
+doubling (mult, total, level, divisor) = ([1d10], ((baseline, throws)->
     if first (first (throws).rolls) == 1 then {
         Text = "1 again: roll again, x" + toString (mult * 2)
-        Value = total + mult * 2
-        Push = doubling (mult * 2, total, level)
+        Value = (total + mult * 2) / divisor
+        Push = doubling (mult * 2, total, level, divisor)
         PushLabel = "Roll again (x" + toString (mult * 2) + ")"
     }
-    else scoreResult (total + mult * first (first (throws).rolls), level)))
+    else scoreResult ((total + mult * first (first (throws).rolls)) / divisor, level)))
 
-botchRoll (botchDice, total, level) = ([dice { number = max (1, botchDice)  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
+botchRoll (botchDice, total, level) = ([dice { number = botchDice  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
     if count (filter ((x)->x == 10, first (throws).rolls)) > 0 then {
         Text = "Botch: " + toString (count (filter ((x)->x == 10, first (throws).rolls))) + (if count (filter ((x)->x == 10, first (throws).rolls)) == 1 then " zero" else " zeros")
         Value = 0
@@ -51,7 +52,9 @@ botchRoll (botchDice, total, level) = ([dice { number = max (1, botchDice)  side
     }
     else scoreResult (total, level)))
 
-stressRoll (total, level) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level))))
+stressRoll (total, level) = stressRollBy (total, level, 1)
+
+stressRollBy (total, level, divisor) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level, divisor))))
 
 simpleRoll (total) = ([1d10], ((baseline, throws)->scoreResult (total + first (first (throws).rolls), 0)))
 
@@ -173,7 +176,7 @@ rangeOf (text) =
 
 castFor (char, spell) = castRow (spell.Name, spellStat (spell, "Arts"), toInt (spellStat (spell, "Level")), artScore (char, techniqueOf (spellStat (spell, "Arts"))) + artScore (char, formOf (spellStat (spell, "Arts"))) + char.Characteristics.Stamina + char.Magic.Aura - penalty (char), rangeOf (spellStat (spell, "Range")))
 
-isCastable (spell) = toInt (spellStat (spell, "Level")) > 0
+isCastable (spell) = spellStat (spell, "Level") != ""
 
 noWeapon = { Stats = { Ability = "Brawl" } }
 
@@ -324,7 +327,7 @@ characterTable = ruleset
         'Magic resistance' = integer { description = "Parma Magica x5, plus the Form the spell uses." value = abilityScore (characterTable, "Parma Magica") * 5  editable = none }
         Technique = string { description = "For a spontaneous spell." default = "Cr"  keys = techniqueCodes  editable = live }
         Form = string { default = "Ig"  keys = formCodes  editable = live }
-        Spontaneous = integer { description = "Fatiguing spontaneous casting: Technique + Form + Stamina + aura + stress die, halved. Costs a fatigue level." value = (artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable)) / 2  valuedice = stressRoll ((artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable)) / 2, 0)  editable = none }
+        Spontaneous = integer { description = "Fatiguing spontaneous casting: Technique + Form + Stamina + aura + stress die, halved. Costs a fatigue level." value = (artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable)) / 2  valuedice = stressRollBy (artScore (characterTable, Technique) + artScore (characterTable, Form) + Characteristics.Stamina + Aura - penalty (characterTable), 0, 2)  editable = none }
         Vis = string { description = "Raw vis in stock, by Art." multiline = true  editable = live }
         Familiar = string {}
         'Longevity ritual' = string {}
@@ -429,7 +432,7 @@ arm5Spell = ruleset
         Arts = string { description = "Technique and Form, such as CrIg." default = "CrIg" }
         Technique = string { keys = ["Creo", "Intellego", "Muto", "Perdo", "Rego"] }
         Form = string { keys = ["Animal", "Aquam", "Auram", "Corpus", "Herbam", "Ignem", "Imaginem", "Mentem", "Terram", "Vim"] }
-        Level = string { description = "Spell level, or Gen for a general spell cast at any level." default = "5" }
+        Level = string { description = "Spell level. A general (Gen) spell is learned at a level of your choice: write that level here." default = "5" }
         Range = string {}
         Duration = string {}
         Target = string {}

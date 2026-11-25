@@ -23,12 +23,12 @@ combatDie (x) = if x == 1 then 1 else if x == 2 then 2 else if x >= 5 then 1 els
 damageRoll (dieCount) = ([dice { number = max (0, dieCount)  sides = 6  faces = ["1", "2", "", "", "1E", "1E"]  label = "Combat dice" }],
     ((baseline, throws)->{ Text = toString (sum (map ((x)->combatDie (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x >= 5, first (throws).rolls)) > 0 then ", " + toString (count (filter ((x)->x >= 5, first (throws).rolls))) + (if count (filter ((x)->x >= 5, first (throws).rolls)) == 1 then " Effect" else " Effects") else "")  Value = sum (map ((x)->combatDie (x), first (throws).rolls)) }))
 
-attributeBonus (value) =
-    if value >= 16 then 5
-    else if value >= 14 then 4
-    else if value >= 12 then 3
-    else if value >= 10 then 2
-    else if value >= 9 then 1
+attributeBonus (score) =
+    if score >= 16 then 5
+    else if score >= 14 then 4
+    else if score >= 12 then 3
+    else if score >= 10 then 2
+    else if score >= 9 then 1
     else 0
 
 attributeValue (char, name) =
@@ -63,21 +63,23 @@ rangeMetres (text) =
         case "Long" then 150
         else 0
 
-attack (name, target, focus, dieCount, qualities, kind, distance) = custom
+attack (name, target, focus, spread, dieCount, qualities, kind, distance) = custom
 {
     Name = name
-    TN = integer { value = target  valuedice = conanTest (target, focus, 1)  action = kind  reach = 2  range = distance  editable = none }
+    TN = integer { value = target  valuedice = conanTest (target, focus, spread)  action = kind  reach = 2  range = distance  editable = none }
     Damage = integer { value = dieCount  render = toString (dieCount) + " CD"  valuedice = damageRoll (dieCount)  editable = none }
     Qualities = qualities
 }
+
+spreadFor (char, name) = if skillStat (char, name, "Expertise") == 0 then 2 else 1
 
 isRanged (weapon) = rangeMetres (weaponStat (weapon, "Range")) > 0
 
 attackFor (char, weapon) =
     if isRanged (weapon) then
-        attack (weapon.Name, char.Attributes.Coordination + skillStat (char, "Ranged Weapons", "Expertise"), skillStat (char, "Ranged Weapons", "Focus"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Awareness), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+        attack (weapon.Name, char.Attributes.Coordination + skillStat (char, "Ranged Weapons", "Expertise"), skillStat (char, "Ranged Weapons", "Focus"), spreadFor (char, "Ranged Weapons"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Awareness), weaponStat (weapon, "Qualities"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
     else
-        attack (weapon.Name, char.Attributes.Agility + skillStat (char, "Melee", "Expertise"), skillStat (char, "Melee", "Focus"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2 * max (1, toInt (weaponStat (weapon, "Reach"))))
+        attack (weapon.Name, char.Attributes.Agility + skillStat (char, "Melee", "Expertise"), skillStat (char, "Melee", "Focus"), spreadFor (char, "Melee"), toInt (weaponStat (weapon, "Damage")) + attributeBonus (char.Attributes.Brawn), weaponStat (weapon, "Qualities"), "melee", 2 * max (1, toInt (weaponStat (weapon, "Reach"))))
 
 harmState (char) =
     if char.Stress.Wounds.realvalue >= 4 then "Dying"
@@ -189,7 +191,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([attack ("Unarmed", Attributes.Agility + skillStat (characterTable, "Melee", "Expertise"), skillStat (characterTable, "Melee", "Focus"), 1 + attributeBonus (Attributes.Brawn), "Stun, Knockdown", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([attack ("Unarmed", Attributes.Agility + skillStat (characterTable, "Melee", "Expertise"), skillStat (characterTable, "Melee", "Focus"), spreadFor (characterTable, "Melee"), 1 + attributeBonus (Attributes.Brawn), "Stun, Knockdown", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = attack

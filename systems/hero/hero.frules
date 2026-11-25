@@ -16,7 +16,7 @@ heroResult (target, total) =
     Outcome = heroOutcome (target, total)
 }
 
-charRoll (value) = 9 + (value + 2) / 5
+charRoll (score) = 9 + (score + 2) / 5
 
 attackResult (ocv, total) =
 {
@@ -55,7 +55,7 @@ dieCountOf (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
 hasHalf (text) = contains (text, "1/2") or contains (text, "½")
 
-isKilling (text) = contains (toLower (text), "k")
+isKilling (text) = bonusFrom ([[text]], "[0-9]\s*[Kk]\b|HKA|RKA", 1) > 0
 
 damageFor (text) = if isKilling (text) then killingDamage (dieCountOf (text), hasHalf (text)) else normalDamage (dieCountOf (text), hasHalf (text))
 
@@ -122,6 +122,8 @@ isAttackPower (power) = dieCountOf (powerStat (power, "Damage")) > 0
 attackFor (char, power) =
     if powerStat (power, "Range") == "No range" then
         attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "melee", 2)
+    else if powerStat (power, "Range") == "Line of sight" or powerStat (power, "Range") == "Self" then
+        attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 0)
     else
         attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 10 * max (1, toInt (powerStat (power, "Active points"))))
 
