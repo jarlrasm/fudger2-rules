@@ -26,18 +26,22 @@ checkDice (bonus, net) = ([1d20, dice { number = abs (net)  sides = 6  color = i
     ((baseline, throws)->lancerResult (first (first (throws).rolls), max (0, max (item (1, throws).rolls)), net, bonus, 10, false)))
 
 structureText (lowest, ones, left) =
-    if left < 1 or ones > 1 then "Destroyed"
+    if left < 1 then "Destroyed"
+    else if ones > 1 then "Crushing hit: the mech is destroyed"
     else if lowest > 4 then "Glancing blow: impaired until the end of your next turn"
-    else if lowest > 1 then "System trauma: destroy a weapon or system, or roll Hull to keep it"
-    else if left > 1 then "Direct hit: roll a Hull check, on a failure the mech is destroyed"
+    else if lowest > 1 then "System trauma: roll d6, on 1-3 all weapons on one mount are destroyed, on 4-6 one system is destroyed"
+    else if left >= 3 then "Direct hit: stunned until the end of your next turn"
+    else if left == 2 then "Direct hit: roll a Hull check, on a failure the mech is destroyed, on a success stunned until the end of your next turn"
     else "Direct hit: the mech is destroyed"
 
 stressText (lowest, ones, left) =
-    if left < 1 or ones > 1 then "Reactor meltdown"
+    if left < 1 then "Reactor meltdown"
+    else if ones > 1 then "Irreversible meltdown: the reactor melts down at the end of your next turn"
     else if lowest > 4 then "Emergency shunt: impaired until the end of your next turn"
     else if lowest > 1 then "Destabilized power plant: exposed until you clear it"
-    else if left > 1 then "Meltdown risk: roll an Engineering check, on a failure the reactor goes critical"
-    else "Irreversible meltdown: the reactor explodes in 1d6 turns"
+    else if left >= 3 then "Meltdown: the mech becomes exposed"
+    else if left == 2 then "Meltdown: roll an Engineering check, on a failure the reactor melts down in 1d6 turns, on a success exposed"
+    else "Meltdown: the reactor melts down at the end of your next turn"
 
 damageRoll (left, isStress) = ([dice { number = max (1, 4 - left)  sides = 6 }],
     ((baseline, throws)->{
@@ -50,6 +54,12 @@ weaponStat (weapon, field) = valueOr (weapon.data.mechWeaponStats.Stats, field, 
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
+threatOf (text) = max (1, bonusWithValue ([[text]], "Threat ([0-9]+)"))
+
+rangeOf (text) = max (1, bonusWithValue ([[text]], "^(?:Threat [0-9]+, )?[A-Za-z]+ ([0-9]+)"))
+
+threatOnly (text) = bonusFrom ([[text]], "^ *Threat [0-9]+ *$", 1) == 1
+
 mechAttack (name, bonus, net, damage, kind, distance) = custom
 {
     Name = name
@@ -60,8 +70,8 @@ mechAttack (name, bonus, net, damage, kind, distance) = custom
 attackFor (mech, weapon) =
     mechAttack (weapon.Name, mech.Mech.Grit, mech.Combat.Accuracy,
         weaponStat (weapon, "Damage"),
-        (if contains (weaponStat (weapon, "Range"), "Threat") then "melee" else "ranged"),
-        max (1, firstNumber (weaponStat (weapon, "Range"))))
+        (if weaponStat (weapon, "Type") == "Melee" then "melee" else "ranged"),
+        (if weaponStat (weapon, "Type") == "Melee" then threatOf (weaponStat (weapon, "Range")) else rangeOf (weaponStat (weapon, "Range"))))
 
 characterTable = ruleset
 {
@@ -113,7 +123,7 @@ characterTable = ruleset
         keys = ["Act Unseen or Unheard", "Apply Fists to Faces", "Assault", "Blow Something Up", "Charm", "Get a Hold of Something", "Get Somewhere Quickly", "Hack or Fix", "Investigate", "Lead or Inspire", "Patch", "Read a Situation", "Spot", "Survive", "Take Control"]
         valueType = custom
         {
-            Bonus = integer { description = "Skill trigger bonus, added to the d20 roll." default = 0  minvalue = 0  maxvalue = 6  step = 2  valuedice = checkDice (Bonus, 0) }
+            Bonus = integer { description = "Skill trigger bonus, added to the d20 roll." default = 0  minvalue = 0  maxvalue = 6  step = 2  valuedice = checkDice (Bonus, Status.Accuracy) }
         }
     }
 
@@ -304,7 +314,7 @@ creatureTable = ruleset
             Bonus = modifier { default = 1 }
             Accuracy = integer { default = 0 }
             Range = string { default = "Range 10" }
-            Attack = integer { value = Bonus  valuedice = attackDice (Bonus, Accuracy)  action = if contains (Range, "Threat") then "melee" else "ranged"  reach = max (1, firstNumber (Range))  range = max (1, firstNumber (Range)) }
+            Attack = integer { value = Bonus  valuedice = attackDice (Bonus, Accuracy)  action = if threatOnly (Range) then "melee" else "ranged"  reach = threatOf (Range)  range = rangeOf (Range) }
             Damage = string {}
         }
     }
