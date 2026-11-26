@@ -47,7 +47,7 @@ damageState (damage, health) =
     else if damage * 2 >= health then "Injured"
     else ""
 
-netBoons (char) = char.Status.Boons - (if char.Afflictions.Frightened then 1 else 0) - (if char.Afflictions.Impaired then 1 else 0) - (if char.Afflictions.Fatigued then 1 else 0)
+netBoons (char) = char.Status.Boons - (if char.Afflictions.Frightened then 1 else 0) - (if char.Afflictions.Impaired then 1 else 0) - (if char.Afflictions.Fatigued then 1 else 0) - (if char.Afflictions.Poisoned then 1 else 0) - (if char.Afflictions.Diseased then 1 else 0)
 
 attribute = custom
 {
@@ -148,7 +148,7 @@ characterTable = ruleset
 
     Afflictions = table
     {
-        description = "Afflictions. Frightened, impaired and fatigued each give 1 bane; the sheet counts them."
+        description = "Afflictions. Diseased, fatigued, frightened, impaired and poisoned each give 1 bane; the sheet counts them."
         tableLayout = layout { columns = 5  size = wide }
         Blinded = bool { default = false  editable = live  indicator = "#555555" }
         Charmed = bool { default = false  editable = live  indicator = "#8e5cc4" }
