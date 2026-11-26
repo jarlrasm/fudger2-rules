@@ -186,15 +186,17 @@ weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
 
 styleMatch (char, weapon) = filter ((s)->contains (toLower (valueOr (s, "Weapons", "")), toLower (weapon.Name)), char.'Combat Styles')
 
-styleChance (char, weapon) = char.Characteristics.STR + char.Characteristics.DEX + (if count (styleMatch (char, weapon)) > 0 then first (styleMatch (char, weapon)).Bonus else if count (char.'Combat Styles') > 0 then first (char.'Combat Styles').Bonus else 0)
+styleChance (char) = char.Characteristics.STR + char.Characteristics.DEX + (if count (char.'Combat Styles') > 0 then first (char.'Combat Styles').Bonus else 0)
+
+weaponStyleChance (char, weapon) = if count (styleMatch (char, weapon)) > 0 then char.Characteristics.STR + char.Characteristics.DEX + first (styleMatch (char, weapon)).Bonus else styleChance (char)
 
 isLauncher (name) = contains (toLower (name), "bow") or contains (toLower (name), "sling") or contains (toLower (name), "blowgun") or contains (toLower (name), "gun")
 
 attackFor (char, weapon) =
     if firstNumber (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, styleChance (char, weapon), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, weaponStyleChance (char, weapon), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, styleChance (char, weapon), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
+        weaponAttack (weapon.Name, weaponStyleChance (char, weapon), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
 
 fatigueLevels = ["Fresh", "Winded", "Tired", "Wearied", "Exhausted", "Debilitated", "Incapacitated", "Semi-Conscious", "Comatose", "Dead"]
 
