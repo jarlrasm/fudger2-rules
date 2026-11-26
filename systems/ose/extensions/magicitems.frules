@@ -1,0 +1,306 @@
+miText (magicItem, field) = valueOr (magicItem.data.magicItemStats.Stats, field, "")
+
+miNumber (magicItem, field) = valueOr (magicItem.data.magicItemStats.Stats, field, 0)
+
+miInUse (magicItem) = valueOr (magicItem.data.magicItemStats.Stats, "In Use", true)
+
+miOfKind (char, kind) = filter ((x)->miText (x, "Kind") == kind and miInUse (x), char.'Magic Items')
+
+miBest (char, kind) =
+    if count (miOfKind (char, kind)) > 0 then max (map ((x)->miNumber (x, "Bonus"), miOfKind (char, kind)))
+    else 0
+
+miSigned (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n) else ""
+
+miDamage (damage, total) = (if damage == "" then "Weapon" else damage) + miSigned (total)
+
+miIsWeapon (magicItem) = miText (magicItem, "Kind") == "Weapon" or miText (magicItem, "Damage") != ""
+
+miAttack (char, magicItem, magicBonus, label) =
+    if firstNumber (miText (magicItem, "Long Range")) > 0 then
+        weaponAttack (label, char.Combat.THAC0, char.Abilities.DEX.Modifier + magicBonus, miDamage (miText (magicItem, "Damage"), magicBonus), "ranged", firstNumber (miText (magicItem, "Long Range")))
+    else
+        weaponAttack (label, char.Combat.THAC0, char.Abilities.STR.Modifier + magicBonus, miDamage (miText (magicItem, "Damage"), char.Abilities.STR.Modifier + magicBonus), "melee", 5)
+
+miHasEnemy (magicItem) = miText (magicItem, "Special Enemy") != "" and miNumber (magicItem, "Enemy Bonus") != 0
+
+miAttacksOf (char, magicItem) =
+    if miHasEnemy (magicItem) then
+        [miAttack (char, magicItem, miNumber (magicItem, "Bonus"), magicItem.Name), miAttack (char, magicItem, miNumber (magicItem, "Enemy Bonus"), magicItem.Name + " vs " + miText (magicItem, "Special Enemy"))]
+    else
+        [miAttack (char, magicItem, miNumber (magicItem, "Bonus"), magicItem.Name)]
+
+miAttacksFor (char) = fold ([], (acc, x)->concat (acc, miAttacksOf (char, x)), filter ((x)->miIsWeapon (x) and miInUse (x), char.'Magic Items'))
+
+miDiceCount (text) = bonusWithValue ([[text]], "^\s*([0-9]+)d")
+
+miDiceSides (text) = bonusWithValue ([[text]], "^[^d]*d([0-9]+)")
+
+miDiceAdd (text) = bonusWithValue ([[text]], "\+\s*([0-9]+)(?![0-9d])")
+
+miEffectResult (label, total) =
+{
+    Text = label + ": " + toString (total)
+    Value = total
+}
+
+miEffectRoll (label, text) = ([dice { number = max (1, miDiceCount (text))  sides = max (2, miDiceSides (text)) }], ((baseline, throws)->miEffectResult (label, sum (first (throws).rolls) + miDiceAdd (text))))
+
+miRollRow (label, text) = custom
+{
+    Name = label
+    Roll = integer { value = 0  render = text  editable = none  valuedice = miEffectRoll (label, text) }
+}
+
+miRollsFor (char) = map ((x)->miRollRow (x.Name, miText (x, "Roll")), filter ((x)->miText (x, "Roll") != "", char.'Magic Items'))
+
+miSave (protection) = ([1d20], ((baseline, throws)->saveResult (baseline, first (first (throws).rolls) + protection)))
+
+miPick (roll, bounds, names) = item (count (filter ((b)->b < roll, bounds)), names)
+
+miSimpleResult (roll, label) =
+{
+    Text = toString (roll) + ": " + label
+    Value = roll
+}
+
+miTypeRoll = ([1d100], ((baseline, throws)->miSimpleResult (first (first (throws).rolls), miPick (first (first (throws).rolls), [25, 35, 55, 85, 90, 97, 100], ["Weapon", "Armor", "Potion", "Scroll", "Wand, Staff, or Rod", "Miscellaneous Item", "Rare Item"]))))
+
+miWeaponTypes = ["Great Axe", "Battle Axe", "Hand Axe", "Shortbow", "Shortbow Arrow", "Longbow", "Longbow Arrow", "Light Quarrel", "Heavy Quarrel", "Dagger", "Shortsword", "Longsword", "Scimitar", "Two-Handed Sword", "Warhammer", "Mace", "Maul", "Pole Arm", "Sling Bullet", "Spear"]
+
+miWeaponType (roll) = miPick (roll, [2, 9, 11, 19, 27, 31, 35, 43, 47, 59, 65, 79, 81, 83, 86, 94, 95, 96, 97, 100], miWeaponTypes)
+
+miIsMissile (weaponType) = contains (weaponType, "bow") or contains (weaponType, "Quarrel") or contains (weaponType, "Sling")
+
+miMeleeBonus (roll) = miPick (roll, [40, 50, 55, 57, 58, 75, 85, 95, 98, 100], ["+1", "+2", "+3", "+4", "+5", "+1, +2 vs. ENEMY", "+1, +3 vs. ENEMY", "AGAIN", "-1 (cursed)", "-2 (cursed)"])
+
+miMissileBonus (roll) = miPick (roll, [46, 58, 64, 82, 94, 98, 100], ["+1", "+2", "+3", "+1, +2 vs. ENEMY", "+1, +3 vs. ENEMY", "-1 (cursed)", "-2 (cursed)"])
+
+miWeaponBonus (weaponType, roll) = if miIsMissile (weaponType) then miMissileBonus (roll) else miMeleeBonus (roll)
+
+miEnemy (roll) = item (roll - 1, ["Dragons", "Enchanted", "Lycanthropes", "Regenerators", "Spell Users", "Undead"])
+
+miAbility (roll) = miPick (roll, [9, 11, 12, 16, 19, 20], ["Casts Light on Command", "Charm Person", "Drains Energy", "Flames on Command", "Locate Objects", "Wishes"])
+
+miRerolled (weaponType, roll, ability) =
+    if miMeleeBonus (roll) == "AGAIN" then "+1, " + ability
+    else if contains (miMeleeBonus (roll), "cursed") then miMeleeBonus (roll)
+    else miMeleeBonus (roll) + ", " + ability
+
+miWeaponText (weaponType, bonusRoll, again, enemy, ability) =
+    weaponType + " " + replace ("ENEMY", miEnemy (enemy), if miWeaponBonus (weaponType, bonusRoll) == "AGAIN" then miRerolled (weaponType, again, miAbility (ability)) else miWeaponBonus (weaponType, bonusRoll))
+
+miWeaponRoll = ([1d100, 1d100, 1d100, 1d6, 1d20], ((baseline, throws)->
+    { Text = miWeaponText (miWeaponType (first (first (throws).rolls)), first (item (1, throws).rolls), first (item (2, throws).rolls), first (item (3, throws).rolls), first (item (4, throws).rolls)) }))
+
+miArmourType (roll) = miPick (roll, [9, 28, 43, 100], ["Leather Armor", "Chain Mail", "Plate Mail", "Shield"])
+
+miArmourBonus (roll, again) =
+    if roll <= 50 then "+1"
+    else if roll <= 80 then "+2"
+    else if roll <= 90 then "+3"
+    else if roll <= 95 then (if again <= 50 then "-1" else if again <= 80 then "-2" else "-3") + " (cursed)"
+    else "+1, but really AC 11 (cursed)"
+
+miArmourRoll = ([1d100, 1d100, 1d100], ((baseline, throws)->
+    { Text = miArmourType (first (first (throws).rolls)) + " " + miArmourBonus (first (item (1, throws).rolls), first (item (2, throws).rolls)) }))
+
+miPotionRoll = ([1d100], ((baseline, throws)->miSimpleResult (first (first (throws).rolls), "Potion of " + miPick (first (first (throws).rolls),
+    [3, 6, 8, 11, 13, 16, 19, 22, 25, 32, 35, 39, 43, 47, 51, 55, 59, 63, 68, 72, 76, 80, 84, 86, 89, 97, 100],
+    ["Clairaudience", "Clairvoyance", "Cold Resistance", "Control Animal", "Control Dragon", "Control Giant", "Control Human", "Control Plant", "Control Undead", "Delusion", "Diminution", "Fire Resistance", "Flying", "Gaseous Form", "Giant Strength", "Growth", "Healing", "Heroism", "Invisibility", "Invulnerability", "Levitation", "Longevity", "Mind Reading", "Poison", "Polymorph Self", "Speed", "Treasure Finding"]))))
+
+miScrollType (roll) = miPick (roll, [3, 6, 8, 9, 15, 20, 25, 29, 32, 34, 35, 40, 46, 56, 61, 75, 85, 89, 92, 100],
+    ["Cleric Spell Scroll (1 Spell)", "Cleric Spell Scroll (2 Spells)", "Cleric Spell Scroll (3 Spells)", "Cleric Spell Scroll (4 Spells)", "Magic-User Spell Scroll (1 Spell)", "Magic-User Spell Scroll (2 Spells)", "Magic-User Spell Scroll (3 Spells)", "Magic-User Spell Scroll (4 Spells)", "Magic-User Spell Scroll (5 Spells)", "Magic-User Spell Scroll (6 Spells)", "Magic-User Spell Scroll (7 Spells)", "Cursed Scroll", "Protection from Elementals", "Protection from Lycanthropes", "Protection from Magic", "Protection from Undead", "Map to Treasure Type A", "Map to Treasure Type E", "Map to Treasure Type G", "Map to 1d4 Magic Items"])
+
+miScrollSpells (roll) =
+    if roll <= 9 then item (count (filter ((b)->b < roll, [3, 6, 8])), [1, 2, 3, 4])
+    else if roll <= 35 then item (count (filter ((b)->b < roll, [15, 20, 25, 29, 32, 34, 35])), [1, 2, 3, 4, 5, 6, 7])
+    else 0
+
+miSpellLevel (roll) = miPick (roll, [30, 55, 75, 88, 97, 100], ["1", "2", "3", "4", "5", "6"])
+
+miScrollText (roll, levels) =
+    if miScrollSpells (roll) > 0 then miScrollType (roll) + ", spell levels " + fold ("", (acc, x)->if acc == "" then miSpellLevel (x) else acc + ", " + miSpellLevel (x), filter ((x)->x > 0, map ((n)->if n < miScrollSpells (roll) then item (n, levels) else 0, [0, 1, 2, 3, 4, 5, 6])))
+    else miScrollType (roll)
+
+miScrollRoll = ([1d100, 7d100], ((baseline, throws)->miSimpleResult (first (first (throws).rolls), miScrollText (first (first (throws).rolls), item (1, throws).rolls))))
+
+miWandType (roll) = miPick (roll, [8, 13, 17, 28, 30, 34, 35, 40, 45, 50, 55, 60, 65, 73, 79, 84, 92, 100],
+    ["Rod of Cancellation", "Snake Staff", "Staff of Commanding", "Staff of Healing", "Staff of Power", "Staff of Striking", "Staff of Wizardry", "Wand of Cold", "Wand of Enemy Detection", "Wand of Fear", "Wand of Fireballs", "Wand of Illusion", "Wand of Lightning Bolts", "Wand of Magic Detection", "Wand of Paralysis", "Wand of Polymorph", "Wand of Secret Door Detection", "Wand of Trap Detection"])
+
+miWandCharges (roll, wandCharges, staffCharges) =
+    if roll <= 13 then ""
+    else if roll <= 35 then ", " + toString (staffCharges) + " charges"
+    else ", " + toString (wandCharges) + " charges"
+
+miWandRoll = ([1d100, 2d10, 3d10], ((baseline, throws)->miSimpleResult (first (first (throws).rolls), miWandType (first (first (throws).rolls)) + miWandCharges (first (first (throws).rolls), sum (item (1, throws).rolls), sum (item (2, throws).rolls)))))
+
+miEffectsOne = ["Blasting", "Blending", "Cold Resistance", "Comprehension", "Control Animal", "Control Human", "Control Plant", "Courage", "Deception", "Delusion", "Djinni Summoning", "Doom", "Fire Resistance", "Invisibility", "Levitation", "Mind Reading", "Panic", "Penetrating Vision"]
+
+miFormsOne = ["G", "F", "F", "E", "C", "C", "C", "G", "F", "A", "C", "G", "F", "F", "B", "C", "G", "D"]
+
+miBoundsOne = [1, 5, 13, 17, 22, 29, 35, 37, 40, 52, 55, 56, 67, 80, 85, 95, 97, 100]
+
+miEffectsTwo = ["Protection +1", "Protection +2", "Protection +3", "Protection from Energy Drain", "Protection from Scrying", "Regeneration", "Scrying", "Superior Scrying", "Speed", "Spell Storing", "Spell Turning", "Stealth", "Telekinesis", "Telepathy", "Teleportation", "True Seeing", "Water Walking", "Weakness", "Wishes"]
+
+miFormsTwo = ["F", "F", "F", "F", "F", "C", "H", "H", "B", "C", "F", "B", "C", "C", "C", "D", "B", "C", "C"]
+
+miBoundsTwo = [7, 10, 11, 14, 20, 23, 29, 32, 39, 42, 50, 69, 72, 74, 76, 78, 88, 99, 100]
+
+miMiscEffect (subtable, roll) = if subtable <= 57 then miPick (roll, miBoundsOne, miEffectsOne) else miPick (roll, miBoundsTwo, miEffectsTwo)
+
+miMiscColumn (subtable, roll) = if subtable <= 57 then miPick (roll, miBoundsOne, miFormsOne) else miPick (roll, miBoundsTwo, miFormsTwo)
+
+miForm (column, roll) = switch column
+    case "A" then miPick (roll, [2, 5, 13, 15, 28, 31, 33, 38, 43, 46, 49, 67, 100], ["Bell", "Belt", "Boots", "Bowl", "Cloak", "Crystal Ball", "Drums", "Helm", "Horn", "Lens", "Mirror", "Pendant", "Ring"])
+    case "B" then miPick (roll, [25, 50, 100], ["Boots", "Pendant", "Ring"])
+    case "C" then miPick (roll, [40, 100], ["Pendant", "Ring"])
+    case "D" then miPick (roll, [17, 21, 50, 100], ["Lens", "Mirror", "Pendant", "Ring"])
+    case "E" then miPick (roll, [40, 80, 100], ["Helm", "Pendant", "Ring"])
+    case "F" then miPick (roll, [7, 38, 50, 100], ["Belt", "Cloak", "Pendant", "Ring"])
+    case "G" then miPick (roll, [17, 50, 100], ["Bell", "Drums", "Horn"])
+    else miPick (roll, [17, 67, 100], ["Bowl", "Crystal Ball", "Mirror"])
+
+miMiscText (subtable, roll, formRoll) = miForm (miMiscColumn (subtable, roll), formRoll) + " of " + miMiscEffect (subtable, roll)
+
+miMiscRoll = ([1d100, 1d100, 1d100], ((baseline, throws)->{ Text = miMiscText (first (first (throws).rolls), first (item (1, throws).rolls), first (item (2, throws).rolls)) }))
+
+miRareType (roll, device) =
+    if roll > 47 and roll <= 57 then item (device - 1, ["Bowl of Summoning Water Elementals", "Brazier of Summoning Fire Elementals", "Censer of Summoning Air Elementals", "Crucible of Summoning Metal Elementals", "Mallet of Summoning Wood Elementals", "Marble Plate of Summoning Cold Elementals", "Rod of Summoning Lightning Elementals", "Stone of Summoning Earth Elementals"])
+    else miPick (roll, [5, 20, 32, 47, 57, 59, 64, 81, 86, 88, 100], ["Bag of Devouring", "Bag of Holding", "Boots of Traveling and Leaping", "Broom of Flying", "Device of Summoning Elementals", "Efreeti Bottle", "Flying Carpet", "Gauntlets of Ogre Power", "Girdle of Giant Strength", "Mirror of Imprisonment", "Rope of Climbing"])
+
+miRareRoll = ([1d100, 1d8], ((baseline, throws)->miSimpleResult (first (first (throws).rolls), miRareType (first (first (throws).rolls), first (item (1, throws).rolls)))))
+
+magicTreasure = table
+{
+    description = "Rolls on the magic item tables, for placing treasure. Roll the type first, then on its own table." reference = ["bfrpg", 170]
+    tableLayout = layout { columns = 3  size = wide }
+    'Type of Item' = integer { description = "Which kind of magic item is found, from the Any column." reference = ["bfrpg", 170] value = 0  render = "d%"  editable = none  valuedice = miTypeRoll }
+    Weapon = integer { description = "Weapon type, bonus, and any special enemy or ability." reference = ["bfrpg", 170] value = 0  render = "d%"  editable = none  valuedice = miWeaponRoll }
+    Armour = integer { description = "Armour type and bonus, or a curse." reference = ["bfrpg", 170] value = 0  render = "d%"  editable = none  valuedice = miArmourRoll }
+    Potion = integer { description = "Which potion is found." reference = ["bfrpg", 171] value = 0  render = "d%"  editable = none  valuedice = miPotionRoll }
+    Scroll = integer { description = "Which scroll is found, with the level of each spell on a spell scroll." reference = ["bfrpg", 171] value = 0  render = "d%"  editable = none  valuedice = miScrollRoll }
+    'Wand Staff or Rod' = integer { description = "Which wand, staff or rod is found, with the charges left in it." reference = ["bfrpg", 171] value = 0  render = "d%"  editable = none  valuedice = miWandRoll }
+    Miscellaneous = integer { description = "Effect subtable, effect and form of a miscellaneous item." reference = ["bfrpg", 172] value = 0  render = "d%"  editable = none  valuedice = miMiscRoll }
+    Rare = integer { description = "Which rare item is found, and the kind of a device of summoning elementals." reference = ["bfrpg", 173] value = 0  render = "d%"  editable = none  valuedice = miRareRoll }
+}
+
+magicItemStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/ose/extensions/magicitem.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { description = "What sort of magic item this is." reference = ["bfrpg", 173] keys = ["Weapon", "Armour", "Shield", "Potion", "Scroll", "Wand", "Staff", "Rod", "Miscellaneous", "Rare"] }
+        Bonus = modifier { description = "Magic bonus. Weapons add it to attack and damage; armour, shields and protection take it off descending Armour Class. Cursed items have a penalty." reference = ["bfrpg", 174] default = 0 }
+        'Special Enemy' = string { description = "The kind of creature the weapon's higher bonus works against." reference = ["bfrpg", 174] keys = ["Dragons", "Enchanted", "Lycanthropes", "Regenerators", "Spell Users", "Undead"] }
+        'Enemy Bonus' = modifier { description = "The bonus used instead against the special enemy." reference = ["bfrpg", 174] default = 0 }
+        'Special Ability' = string { description = "A weapon's extra power." reference = ["bfrpg", 174] keys = ["Casts Light on Command", "Charm Person", "Drains Energy", "Flames on Command", "Locate Objects", "Wishes"] }
+        Damage = string { description = "The weapon's own damage die, such as 1d8 for a longsword. Leave it empty for items that are not weapons." }
+        'Long Range' = string { description = "Long range in feet for a missile or thrown weapon; leave empty for melee." }
+        'Charges When Found' = string { description = "Charges in an item found as treasure. Track what is left in Item Charges on the character." reference = ["bfrpg", 177] }
+        Uses = string { description = "How often the item can be used, such as once per day." }
+        Roll = string { description = "Dice for the item's main effect, such as 6d6 or 1d6+1. The character sheet shows a roll for it." }
+        Duration = string { description = "How long the effect lasts." }
+        'Usable By' = string { description = "The classes that can use the item." }
+        Form = string { description = "The forms a miscellaneous item can take, from the Form of Item table." reference = ["bfrpg", 172] }
+        Cursed = bool { description = "A cursed item. It can't be got rid of without remove curse." default = false }
+        'In Use' = bool { description = "Untick for an item carried but not worn or wielded, so its bonus does not count." default = true }
+    }
+}
+
+characterTable = ruleset
+{
+    'Magic Items' = list
+    {
+        description = "Magic items the character carries, from the Magic Items library." reference = ["bfrpg", 173]
+        tableLayout = layout { size = wide }
+        source = secondary.'Magic Items'
+        singular = "Magic item"
+        editable = character
+    }
+
+    'Magic Attacks' = list
+    {
+        description = "Attacks with magic weapons, with the magic bonus added to the attack and damage."
+        tableLayout = layout { size = wide }
+        visible = shownIf (count (miAttacksFor (characterTable)) > 0)
+        source = miAttacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Magic Protection' = table
+    {
+        description = "Armour Class and saving throws with the magic armour, shield and protection items in use." reference = ["bfrpg", 175]
+        tableLayout = layout { columns = 5  size = wide }
+        visible = shownIf (miBest (characterTable, "Armour") != 0 or miBest (characterTable, "Shield") != 0 or miBest (characterTable, "Miscellaneous") != 0)
+        'Armour Bonus' = modifier { description = "Bonus of the best magic armour in use." reference = ["bfrpg", 175] value = miBest (characterTable, "Armour")  editable = none }
+        'Shield Bonus' = modifier { description = "Bonus of the best magic shield in use." reference = ["bfrpg", 175] value = miBest (characterTable, "Shield")  editable = none }
+        Protection = modifier { description = "Bonus of the strongest protection item in use. Only the strongest one works. It also helps saving throws." reference = ["bfrpg", 180] value = miBest (characterTable, "Miscellaneous")  editable = none }
+        'AC with Magic' = integer { description = "Armour Class from the Combat block, with the magic bonuses taken off. Enter the mundane Armour Class there." value = Combat.'Armour Class' - 'Armour Bonus' - 'Shield Bonus' - Protection  editable = none }
+        'Ascending AC with Magic' = integer { description = "The same in ascending Armour Class: 19 minus descending AC." value = 19 - 'AC with Magic'  editable = none }
+        'Death or Poison' = integer { description = "Save against death rays and poison, with the protection bonus added to the die." visible = shownIf (Protection != 0) value = 'Saving Throws'.'Death or Poison'  editable = none  valuedice = miSave (Protection) }
+        Wands = integer { description = "Save against wands, with the protection bonus added to the die." visible = shownIf (Protection != 0) value = 'Saving Throws'.Wands  editable = none  valuedice = miSave (Protection) }
+        'Paralysis or Petrify' = integer { description = "Save against paralysis and turning to stone, with the protection bonus added to the die." visible = shownIf (Protection != 0) value = 'Saving Throws'.'Paralysis or Petrify'  editable = none  valuedice = miSave (Protection) }
+        Breath = integer { description = "Save against breath attacks, with the protection bonus added to the die." visible = shownIf (Protection != 0) value = 'Saving Throws'.Breath  editable = none  valuedice = miSave (Protection) }
+        'Spells or Rods or Staves' = integer { description = "Save against spells, rods and staves, with the protection bonus added to the die." visible = shownIf (Protection != 0) value = 'Saving Throws'.'Spells or Rods or Staves'  editable = none  valuedice = miSave (Protection) }
+    }
+
+    'Magic Item Rolls' = list
+    {
+        description = "Rolls for the main effect of magic items, such as a wand's damage or a potion's healing."
+        tableLayout = layout { size = wide }
+        visible = shownIf (count (miRollsFor (characterTable)) > 0)
+        source = miRollsFor (characterTable)
+        singular = "Roll"
+        editable = none
+        valueType = miRollRow
+    }
+
+    'Item Charges' = list
+    {
+        description = "Charges and uses left in wands, staves and other items. Count them down as they are used." reference = ["bfrpg", 177]
+        tableLayout = layout { size = wide }
+        singular = "Charged item"
+        editable = live
+        valueType = custom
+        {
+            Item = string {}
+            Charges = integer { description = "Charges left. A wand is found with 2d10, a staff with 3d10." default = 0  minvalue = 0  editable = live }
+            Notes = string {}
+        }
+    }
+}
+
+creatureTable = ruleset
+{
+    'Magic Items' = list
+    {
+        description = "Magic items the monster carries or guards."
+        tableLayout = layout { size = wide }
+        source = secondary.'Magic Items'
+        singular = "Magic item"
+        editable = character
+    }
+    'Magic Treasure' = magicTreasure {}
+}
+
+OldSchoolEssentials = system
+{
+    'Magic Items' = magicItemStats
+    secondaryTypes = ["Magic Items"]
+    libraries = ["/systems/ose/extensions/magicitems.json"]
+    hints = [
+        hint
+        {
+            title = "Magic items"
+            topic = "Treasure"
+            text = ["Add magic items to characters and monsters from the Magic Items library. Magic weapons get their own attack rows with the bonus on attack and damage, and magic armour, shields and protection items show the Armour Class and saves with their bonus.", "Monster sheets have Magic Treasure rolls for the random tables: roll the type of item, then on that type's table. Track wand and staff charges in Item Charges on the character."]
+        }
+    ]
+}

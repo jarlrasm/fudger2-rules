@@ -1,0 +1,366 @@
+toolboxCount (text) = bonusWithValue ([[toLower (text)]], "^[^0-9]*([0-9]+)d[0-9]")
+
+toolboxSides (text) = bonusWithValue ([[toLower (text)]], "^[^0-9]*[0-9]+d([0-9]+)")
+
+toolboxExtraCount (text) = bonusWithValue ([[toLower (text)]], "^[^+]*\+\s*([0-9]+)d[0-9]")
+
+toolboxExtraSides (text) = bonusWithValue ([[toLower (text)]], "^[^+]*\+\s*[0-9]+d([0-9]+)")
+
+toolboxFlat (text) = bonusWithValue ([[toLower (text)]], "\+\s*([0-9]+)(?![0-9d])") - bonusWithValue ([[toLower (text)]], "-\s*([0-9]+)(?![0-9d])")
+
+toolboxSaveNote (total, ability, dc, half) =
+    if dc > 0 then
+        (if half then ", " + toString (total / 2) + " on a successful DC " + toString (dc) + " " + ability + " save" else ", none on a successful DC " + toString (dc) + " " + ability + " save")
+    else
+        ""
+
+toolboxDamageResult (total, ability, dc, half) =
+{
+    Text = toString (total) + " damage" + toolboxSaveNote (total, ability, dc, half)
+    Value = total
+}
+
+toolboxDamage (damageText, ability, dc, half) = ([dice { number = toolboxCount (damageText)  sides = max (2, toolboxSides (damageText)) }, dice { number = toolboxExtraCount (damageText)  sides = max (2, toolboxExtraSides (damageText))  label = "" }],
+    ((baseline, throws)->toolboxDamageResult (sum (first (throws).rolls) + sum (item (1, throws).rolls) + toolboxFlat (damageText), ability, dc, half)))
+
+toolboxHasDice (damageText) = if toolboxCount (damageText) > 0 then visible else none
+
+toolboxAdvantageDie (mode) = mode == "Advantage" or mode == "Disadvantage"
+
+toolboxSaveDice (mode, penalty, dc) = ([dice { number = 1  sides = 20 }, dice { number = if toolboxAdvantageDie (mode) then 1 else 0  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
+    ((baseline, throws)->checkResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), dc)))
+
+toolboxSaveModifier (char, ability) =
+    switch ability
+        case "Str" then char.'Saving throws'.Str.Modifier
+        case "Dex" then char.'Saving throws'.Dex.Modifier
+        case "Con" then char.'Saving throws'.Con.Modifier
+        case "Int" then char.'Saving throws'.Int.Modifier
+        case "Wis" then char.'Saving throws'.Wis.Modifier
+        case "Cha" then char.'Saving throws'.Cha.Modifier
+        else 0
+
+toolboxSaveRow (name, ability, dc, saveMod, mode, penalty) = custom
+{
+    Name = name
+    Ability = ability
+    DC = dc
+    Save = modifier
+    {
+        value = saveMod
+        valuedice = toolboxSaveDice (mode, penalty, dc)
+    }
+}
+
+toolboxAfflictionSaves (char) =
+    map ((x)->toolboxSaveRow (x.Name, x.data.afflictionStats.Stats.Save, x.data.afflictionStats.Stats.'Save DC', toolboxSaveModifier (char, x.data.afflictionStats.Stats.Save), char.Basics.Roll, rollPenalty (char)),
+        filter ((x)->x.data.afflictionStats.Stats.'Save DC' > 0, char.Afflictions))
+
+toolboxPoisonSaves (char) =
+    map ((x)->toolboxSaveRow (x.Name, x.data.poisonStats.Stats.Save, x.data.poisonStats.Stats.'Save DC', toolboxSaveModifier (char, x.data.poisonStats.Stats.Save), char.Basics.Roll, rollPenalty (char)),
+        filter ((x)->x.data.poisonStats.Stats.'Save DC' > 0, char.Poisons))
+
+toolboxSavesFor (char) = concat (toolboxAfflictionSaves (char), toolboxPoisonSaves (char))
+
+toolboxFearResult (total, natural, dc) =
+    if dc > 0 then
+        (if total >= dc then { Text = toString (total) + " vs DC " + toString (dc) + ": Success"  Value = total  Outcome = "Success" }
+        else { Text = toString (total) + " vs DC " + toString (dc) + ": Failure, Frightened, repeat the save at the end of each turn"  Value = total  Outcome = "Failure" })
+    else
+        checkResult (total, natural, 0)
+
+toolboxFearDice (mode, penalty) = ([dice { number = 1  sides = 20 }, dice { number = if toolboxAdvantageDie (mode) then 1 else 0  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
+    ((baseline, throws)->toolboxFearResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), asked)))
+
+toolboxStressDC (level) = if level >= 3 then 20 else if level == 2 then 15 else if level == 1 then 10 else 0
+
+toolboxStressDamageDice (level) = if level >= 3 then 9 else if level == 2 then 3 else if level == 1 then 1 else 0
+
+toolboxStressResult (total, natural, dc, damage) =
+    if dc > 0 then
+        (if total >= dc then { Text = toString (total) + " vs DC " + toString (dc) + ": Success, no psychic damage, or " + toString (damage / 2) + " if the GM allows half"  Value = total  Outcome = "Success" }
+        else { Text = toString (total) + " vs DC " + toString (dc) + ": Failure, " + toString (damage) + " psychic damage"  Value = total  Outcome = "Failure" })
+    else
+        checkResult (total, natural, 0)
+
+toolboxStressDice (mode, penalty, level) = ([dice { number = 1  sides = 20 }, dice { number = if toolboxAdvantageDie (mode) then 1 else 0  sides = 20  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }, dice { number = toolboxStressDamageDice (level)  sides = 6  color = "purple"  label = if level > 0 then "Psychic damage" else "" }],
+    ((baseline, throws)->toolboxStressResult (baseline - penalty + keptD20 (mode, throws), keptD20 (mode, throws), toolboxStressDC (level), sum (item (2, throws).rolls))))
+
+toolboxStressLevels = ["DC 10, 1d6 psychic", "DC 15, 3d6 psychic", "DC 20, 9d6 psychic"]
+
+toolboxStressRoll (mode, penalty) = ask ("Mental stress", toolboxStressLevels, 1, (n)->toolboxStressDice (mode, penalty, n))
+
+toolboxDurationText (kind, rolled) =
+    if kind == "Short-term" then { Text = toString (rolled) + " minutes"  Value = rolled }
+    else if kind == "Long-term" then { Text = toString (rolled * 10) + " hours"  Value = rolled * 10 }
+    else if kind == "Indefinite" then "Until removed by Greater Restoration"
+    else "No prolonged effect"
+
+toolboxDuration (kind) = ([dice { number = if kind == "Short-term" or kind == "Long-term" then 1 else 0  sides = 10 }],
+    ((baseline, throws)->toolboxDurationText (kind, sum (first (throws).rolls))))
+
+toolboxShown (n) = if n > 0 then visible else none
+
+toolboxHasEffect (kind) = if toolboxStressState (kind) == "" then none else visible
+
+toolboxTimed (kind) = if kind == "Short-term" or kind == "Long-term" then visible else none
+
+toolboxStressState (kind) = if kind == "Short-term" or kind == "Long-term" or kind == "Indefinite" then "Stress: " + kind else ""
+
+toolboxEffectText (kind) =
+    if kind == "Short-term" then "Frightened, Incapacitated or Stunned for 1d10 minutes. Calm Emotions suppresses it, Lesser Restoration ends it."
+    else if kind == "Long-term" then "Disadvantage on some or all ability checks for 1d10 x 10 hours. Calm Emotions suppresses it, Lesser Restoration ends it."
+    else if kind == "Indefinite" then "Like a long-term effect, but it lasts until Greater Restoration. Calm Emotions suppresses it."
+    else ""
+
+DND5e = system
+{
+    Traps = trapStats
+    Poisons = poisonStats
+    Afflictions = afflictionStats
+    secondaryTypes = ["Traps", "Poisons", "Afflictions"]
+    libraries = ["/systems/DND/extensions/toolbox.json"]
+    hints = [
+        hint
+        {
+            title = "Traps"
+            topic = "Gameplay Toolbox"
+            text = ["The library has the SRD traps. Each one lists its trigger, the save and DC, how to find and disarm it, and the damage, which rolls from the trap's sheet. Raise the damage and DCs for higher levels as its table shows.", "Use traps sparingly: a quick surprise or a puzzle the party can solve is more fun than one nobody can see or escape."]
+        },
+        hint
+        {
+            title = "Poisons, curses and contagions"
+            topic = "Gameplay Toolbox"
+            text = ["Add a poison, curse or magical contagion from the library to a character or creature. Its save shows under Affliction saves, rolled against the DC with the sheet's advantage and exhaustion.", "Contagions are fought off with saves after rests or at dawn; keep count of the successes in the notes."]
+        },
+        hint
+        {
+            title = "Fear and mental stress"
+            topic = "Gameplay Toolbox"
+            text = ["Talk with the players before using these rules. A fear effect is a Wisdom save against a DC from 10 to 20, and a failure means Frightened.", "Mental stress is a Wisdom save that deals psychic damage on a failure. Lasting effects, from minutes to until Greater Restoration, are tracked under Fear and stress."]
+        }
+    ]
+}
+
+trapStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/DND/extensions/trap.svg"
+        filters = [
+            filter { name = "Severity" prefix = "" filter = Stats.Severity }
+        ]
+    }
+    Stats = table
+    {
+        description = "The parts of a trap: severity, trigger, duration, save and damage."  reference = ["srd", 199]
+        tableLayout = layout { columns = 2 }
+        Severity = string { description = "A nuisance trap is unlikely to seriously hurt characters of its levels; a deadly one can."  keys = ["Nuisance", "Deadly"]  default = "Nuisance" }
+        Levels = string { description = "The character levels the severity is for. The trap is more dangerous to lower levels." }
+        Trigger = string { description = "What sets the trap off, such as a pressure plate, a trip wire or a lock." }
+        Duration = string { description = "How long the effect lasts, and whether the trap resets." }
+        Save = string { description = "The saving throw a creature in the trap makes."  keys = ["None", "Str", "Dex", "Con", "Int", "Wis", "Cha"]  default = "None" }
+        'Save DC' = integer { description = "The DC of the trap's saving throw, 0 if it has none."  default = 0  minvalue = 0 }
+        'Half on save' = bool { description = "Whether a successful save halves the damage instead of avoiding it."  default = false }
+        Damage = string { description = "The damage dice, such as 2d10, or 1d6 + 2d8 for two kinds of damage." }
+        'Damage type' = string { description = "The kind of damage the trap deals." }
+        'Damage roll' = integer
+        {
+            description = "Rolls the trap's damage, and says what a save does to it."
+            value = 0
+            valuedice = toolboxDamage (Damage, Save, 'Save DC', 'Half on save')
+            visible = toolboxHasDice (Damage)
+            editable = none
+        }
+        'Detect DC' = integer { description = "The DC of the check that finds the trap."  default = 0  minvalue = 0 }
+        'Detect check' = string { description = "The check that finds the trap, such as Wisdom (Perception) as a Search action." }
+    }
+    'Higher levels' = list
+    {
+        description = "Stronger versions of the trap for higher-level characters."
+        singular = "Level range"
+        editable = character
+        valueType = custom
+        {
+            Levels = string {}
+            Damage = string {}
+            'Save DC' = integer { default = 0 }
+            Other = string {}
+            Roll = integer { value = 0  valuedice = toolboxDamage (Damage, Stats.Save, 'Save DC', Stats.'Half on save')  editable = none }
+        }
+    }
+}
+
+poisonStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/DND/extensions/poison.svg"
+        filters = [
+            filter { name = "Type" prefix = "" filter = Stats.Type }
+        ]
+    }
+    Stats = table
+    {
+        description = "How the poison is delivered, what a dose costs, and its save and damage."  reference = ["srd", 197]
+        tableLayout = layout { columns = 2 }
+        Type = string { description = "Contact: touched with bare skin. Ingested: a whole dose swallowed. Inhaled: a 5-foot cube of powder or gas. Injury: put on a weapon or ammunition as a Bonus Action."  keys = ["Contact", "Ingested", "Inhaled", "Injury"]  default = "Injury" }
+        Cost = string { description = "The suggested price of one dose." }
+        Save = string { description = "The saving throw against the poison."  keys = ["None", "Str", "Dex", "Con", "Int", "Wis", "Cha"]  default = "Con" }
+        'Save DC' = integer { description = "The DC of the poison's saving throw."  default = 0  minvalue = 0 }
+        'Half on save' = bool { description = "Whether a successful save halves the damage instead of avoiding it."  default = false }
+        Damage = string { description = "The Poison damage dice on a failed save, if any." }
+        'Damage roll' = integer
+        {
+            description = "Rolls the poison's damage, and says what a save does to it."
+            value = 0
+            valuedice = toolboxDamage (Damage, Save, 'Save DC', 'Half on save')
+            visible = toolboxHasDice (Damage)
+            editable = none
+        }
+        Conditions = string { description = "The conditions a failed save gives, and for how long." }
+    }
+}
+
+afflictionStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/DND/extensions/affliction.svg"
+        filters = [
+            filter { name = "Kind" prefix = "" filter = Stats.Kind }
+        ]
+    }
+    Stats = table
+    {
+        description = "A curse or magical contagion: who it affects, how it is caught, and how it ends."  reference = ["srd", 193]
+        tableLayout = layout { columns = 2 }
+        Kind = string { description = "A curse is a magical burden that lasts until it is ended. A magical contagion is a magical effect that spreads."  keys = ["Curse", "Magical Contagion"]  default = "Curse" }
+        Affects = string { description = "The kinds of creatures it can affect." }
+        Save = string { description = "The saving throw to resist it and to fight it off."  keys = ["None", "Str", "Dex", "Con", "Int", "Wis", "Cha"]  default = "Con" }
+        'Save DC' = integer { description = "The DC of the saving throw to resist it."  default = 0  minvalue = 0 }
+        Onset = string { description = "When the effects start after infection." }
+        Damage = string { description = "Damage dice the affliction deals, if any." }
+        'Damage roll' = integer
+        {
+            description = "Rolls the affliction's damage."
+            value = 0
+            valuedice = toolboxDamage (Damage, Save, 'Save DC', false)
+            visible = toolboxHasDice (Damage)
+            editable = none
+        }
+        'Fighting it' = string { description = "How a creature fights it off or is cured."  multiline = true }
+        Spreading = string { description = "How it passes to others."  multiline = true }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Affliction saves'] }
+    'Fear and stress' = table
+    {
+        description = "Optional rules for fear and mental stress. Agree on them with the players first."  reference = ["srd", 196]
+        'Fear save' = modifier
+        {
+            description = "A Wisdom save against something supernaturally frightful, DC 10 to 20. A failure gives the Frightened condition."
+            reference = ["srd", 196]
+            value = 'Saving throws'.Wis.Modifier
+            valuedice = ask ("Fear DC", toolboxFearDice (Basics.Roll, rollPenalty (characterTable)))
+            editable = none
+        }
+        'Mental stress save' = modifier
+        {
+            description = "A Wisdom save against mental stress. A failure deals the psychic damage of the chosen DC."
+            reference = ["srd", 196]
+            value = 'Saving throws'.Wis.Modifier
+            valuedice = toolboxStressRoll (Basics.Roll, rollPenalty (characterTable))
+            editable = none
+        }
+        'Prolonged effect' = string
+        {
+            description = "A lasting effect of mental stress: short-term, long-term or indefinite."
+            reference = ["srd", 196]
+            keys = ["None", "Short-term", "Long-term", "Indefinite"]
+            default = "None"
+            editable = live
+        }
+        'Effect duration' = integer
+        {
+            description = "Rolls how long the prolonged effect lasts."
+            value = 0
+            valuedice = toolboxDuration ('Prolonged effect')
+            visible = toolboxTimed ('Prolonged effect')
+            editable = none
+        }
+        'Effect rules' = string
+        {
+            value = toolboxEffectText ('Prolonged effect')
+            multiline = true
+            editable = none
+            visible = toolboxHasEffect ('Prolonged effect')
+        }
+        'Stress notes' = string
+        {
+            description = "What the effect does to this character, and when it started."
+            editable = live
+        }
+        State = string
+        {
+            value = toolboxStressState ('Prolonged effect')
+            visible = none
+            indicator = "#8e5cc4"
+        }
+    }
+    Afflictions = list
+    {
+        description = "Curses and magical contagions on the character."
+        reference = ["srd", 193]
+        source = secondary.Afflictions
+        singular = "Affliction"
+        editable = character
+    }
+    Poisons = list
+    {
+        description = "Poisons the character carries or suffers from."
+        reference = ["srd", 197]
+        source = secondary.Poisons
+        singular = "Poison"
+        editable = character
+    }
+    'Affliction saves' = list
+    {
+        description = "Saving throws against the curses, contagions and poisons above, rolled against their DC."
+        visible = toolboxShown (count (toolboxSavesFor (characterTable)))
+        source = toolboxSavesFor (characterTable)
+        singular = "Save"
+        editable = none
+        valueType = toolboxSaveRow
+    }
+}
+
+creatureTable = ruleset
+{
+    Afflictions = list
+    {
+        description = "Curses and magical contagions on the creature."
+        source = secondary.Afflictions
+        singular = "Affliction"
+        editable = character
+    }
+    Poisons = list
+    {
+        description = "Poisons the creature carries or suffers from."
+        source = secondary.Poisons
+        singular = "Poison"
+        editable = character
+    }
+    'Affliction saves' = list
+    {
+        description = "Saving throws against the curses, contagions and poisons above, rolled against their DC."
+        visible = toolboxShown (count (toolboxSavesFor (creatureTable)))
+        source = toolboxSavesFor (creatureTable)
+        singular = "Save"
+        editable = none
+        valueType = toolboxSaveRow
+    }
+}

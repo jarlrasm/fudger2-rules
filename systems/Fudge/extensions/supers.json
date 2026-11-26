@@ -1,0 +1,762 @@
+{
+ "name": "Fudge Supers and Cybernetics",
+ "description": "Sample superpowers and cybernetic implants for Fudge (Fudge SRD sections 2.8 and 2.9), written for Fudger. Each starts at Fair; raise or lower the level and bonus to fit the campaign. Fudge is a trademark of Grey Ghost Press.",
+ "url": "/systems/Fudge/extensions/supers.json",
+ "gamemaster": "",
+ "documents": [
+  {
+   "key": "srd",
+   "name": "Fudge System Reference Document",
+   "url": "/systems/Fudge/Fudge-SRD.pdf",
+   "public": true
+  }
+ ],
+ "entities": [
+  {
+   "type": "Powers",
+   "name": "Flight",
+   "description": "Flies at about twice running speed. Higher levels fly faster and carry more.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Movement",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Super Speed",
+   "description": "Moves and acts far faster than a human. Each level above Fair adds about a Speed Scale step.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Movement",
+        "Level": 3,
+        "Trait": "Dex",
+        "Bonus": 1,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Teleport",
+   "description": "Vanishes and reappears somewhere in sight. Higher levels reach places out of sight.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Movement",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": "Must know or see where they go"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Wall Crawling",
+   "description": "Clings to walls and ceilings like an insect.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Movement",
+        "Level": 3,
+        "Trait": "Climbing",
+        "Bonus": 2,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Energy Blast",
+   "description": "Throws a bolt of force, fire or lightning. Roll it to hit; the offensive factor is the power's level above Fair, plus 2.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Attack",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Super Strength",
+   "description": "Lifts cars and punches through walls. Usually bought as Strength Scale instead: one power for a few steps of Scale.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Body",
+        "Level": 3,
+        "Trait": "Str",
+        "Bonus": 2,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Claws",
+   "description": "Sharp claws that slide out: +2 offensive factor in unarmed combat.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Attack",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Invulnerability",
+   "description": "Bullets and blades bounce off. +3 defensive factor against physical harm.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Defence",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": "Weak against one thing, such as fire or magic"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Force Field",
+   "description": "A glowing shield the hero can raise around themselves or others, +2 defensive factor.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Defence",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Regeneration",
+   "description": "Heals a wound level every few minutes, even grave wounds.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Body",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Intangibility",
+   "description": "Becomes like mist and walks through walls. Can't touch or be touched.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Defence",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Invisibility",
+   "description": "Can't be seen. Others hear and smell the hero as usual.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Other",
+        "Level": 3,
+        "Trait": "Stealth",
+        "Bonus": 2,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Shapechanging",
+   "description": "Takes on the shape of an animal or another person.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Body",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Super Senses",
+   "description": "Sees in the dark, hears whispers through walls, smells fear.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Senses",
+        "Level": 3,
+        "Trait": "Perception",
+        "Bonus": 2,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Danger Sense",
+   "description": "Feels trouble a moment before it comes: hard to surprise.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Senses",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Mind Reading",
+   "description": "Hears the thoughts of people nearby.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Mental",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Elemental Control",
+   "description": "Commands one element, such as fire, water, air or earth. The level sets how much.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Other",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Powers",
+   "name": "Growth",
+   "description": "Grows to giant size, gaining Strength and Mass Scale while it lasts.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "superStats": {
+       "Stats": {
+        "Kind": "Body",
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Limits": "Easy to see, hard to hide"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Cybernetic Arm",
+   "description": "A strong metal arm: +1 Str for anything done with it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Str",
+        "Bonus": 1,
+        "Failure": "Locks up when it takes an electric shock."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Cybereyes",
+   "description": "Eyes with zoom, low-light and thermal vision.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Perception",
+        "Bonus": 1,
+        "Failure": "Go dark for a moment in sudden bright light."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Reflex Booster",
+   "description": "Wired nerves that react before the user thinks.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Dex",
+        "Bonus": 1,
+        "Failure": "Twitchy and jumpy for an hour after heavy use."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Neural Jack",
+   "description": "A socket behind the ear that links the mind straight to computers.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Computers",
+        "Bonus": 2,
+        "Failure": "Feedback from hostile systems hurts like a blow to the head."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Subdermal Armour",
+   "description": "Plates under the skin: +1 defensive factor.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Failure": "Sets off metal detectors."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Smart Link",
+   "description": "Links a gun's sights to the eye: +1 to shooting with a linked gun.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Guns",
+        "Bonus": 1,
+        "Failure": "Useless with an unlinked weapon."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Skill Chip",
+   "description": "A plug-in chip that knows a skill at Fair. Swap chips to change the skill.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "",
+        "Bonus": 0,
+        "Failure": "Only one chip at a time; no learning beyond Fair."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Toxin Filter",
+   "description": "Cleans poisons and drugs from the blood.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Con",
+        "Bonus": 1,
+        "Failure": "Also stops healing drugs from working."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Cyberlegs",
+   "description": "Powerful legs for running and jumping.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Running",
+        "Bonus": 2,
+        "Failure": "Heavy: the user sinks in water."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Implants",
+   "name": "Voice Modulator",
+   "description": "Copies any voice the user has heard.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "implantStats": {
+       "Stats": {
+        "Level": 3,
+        "Trait": "Disguise",
+        "Bonus": 1,
+        "Failure": "Crackles when damaged."
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

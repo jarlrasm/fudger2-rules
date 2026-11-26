@@ -1,0 +1,122 @@
+spellPotencies = ["Poor: very trivial", "Mediocre: trivial", "Fair: average", "Good: potent", "Great: very potent", "Superb: extraordinary"]
+
+castOutcome (level, rolled, target, known) =
+    if rolled == -4 then { Text = ladderWord (level) + ": rolled -4, the spell fails, a level of Magic Potential drains and the magician faints"  Value = level  Outcome = "Mishap" }
+    else if level <= 0 then { Text = ladderWord (level) + ": a Terrible result always fails, stunned for a round and -1 Fatigue"  Value = level  Outcome = "Failure" }
+    else if not (known) then { Text = ladderWord (level)  Value = level }
+    else if level > target then { Text = ladderWord (level) + " vs " + ladderWord (target) + ": the spell works, by " + toString (level - target)  Value = level  Outcome = "Success" }
+    else if level == target then { Text = ladderWord (level) + " vs " + ladderWord (target) + ": a watered-down spell, shorter, weaker or late"  Value = level  Outcome = "Partial" }
+    else { Text = ladderWord (level) + " vs " + ladderWord (target) + ": the spell fails, stunned for a round and -1 Fatigue"  Value = level  Outcome = "Failure" }
+
+castResult (skill, mods, rolled, difficulty, known) = castOutcome (min (5, skill + mods) + rolled, rolled, difficulty + 3, known)
+
+castDice (mods) = ([4df], ((baseline, throws)->castResult (baseline, mods, sum (first (throws).rolls), asked, answered)))
+
+castRollWith (penalty) = ask ("Casting modifiers", 0, (n)->ask ("Spell potency", spellPotencies, -2, castDice (n - penalty)))
+
+castRoll = castRollWith (0)
+
+magicState (fatigue) = if fatigue < 0 then "Passed out" else ""
+
+Fudge = system
+{
+    'Spells' = spellStats
+    secondaryTypes = ["Spells"]
+    libraries = ["/systems/Fudge/extensions/magic.json"]
+    hints = [
+        hint
+        {
+            title = "Fudge Magic"
+            topic = "Magic"
+            text = ["Only characters with Magic Potential can cast. Give each level a specialization, such as Healing Magic or Illusion, and agree how broad they may be.", "To cast, the player describes the effect and you name its potency. The roll asks for casting modifiers (time, effort, formulae, mana) and the potency, and tells you whether the spell works, comes out watered down or fails."]
+        }
+    ]
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Specialization" prefix = "" filter = split (", ", Stats.Specialization) },
+            filter { name = "Potency" prefix = "" filter = Stats.Potency }
+        ]
+    }
+    Stats = table
+    {
+        Specialization = string { description = "The kinds of Magic Potential that govern the spell." }
+        Potency = string { keys = ["Very trivial", "Trivial", "Average", "Potent", "Very potent"]  description = "How hard the spell is for a magician with three levels of fitting Potential." reference = ["srd", 116] }
+        'Casting time' = string {}
+        Duration = string {}
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Magic] }
+    Magic = table
+    {
+        description = "Spell casting by the Fudge Magic rules." reference = ["srd", 114]
+        'Spell casting' = modifier
+        {
+            description = "The skill to cast spells. It starts at Terrible when learned and can't go above Fair, or Good for a gift if the GM allows; modifiers can raise a casting to Great." reference = ["srd", 118]
+            default = 0
+            minvalue = 0
+            maxvalue = 4
+            render = ladderWord ('Spell casting')
+            valuedice = castRollWith (woundPenalty (characterTable))
+        }
+        Fatigue = modifier
+        {
+            description = "Drops as spells are cast. Below Terrible the magician passes out." reference = ["srd", 116]
+            default = 'Rested fatigue'
+            minvalue = -1
+            maxvalue = 6
+            render = ladderWord (Fatigue)
+            editable = live
+        }
+        'Rested fatigue' = modifier
+        {
+            description = "Fatigue after a good rest, usually the same as Con."
+            default = 3
+            minvalue = 0
+            maxvalue = 6
+            render = ladderWord ('Rested fatigue')
+        }
+        State = string
+        {
+            value = magicState (Fatigue)
+            visible = none
+            indicator = "#555555"
+        }
+        Rest = button
+        {
+            editable = live
+            description = "Brings Fatigue back to its rested level."
+            onClick = updates
+            {
+                (root.Magic.Fatigue) = 'Rested fatigue'
+            }
+        }
+    }
+    'Magic Potential' = keyvalues
+    {
+        description = "Levels of magical power, each bought for one specialization. A failed spell with a rolled -4 drains a level; at -1 that magic can't be used." reference = ["srd", 115]
+        singular = "Specialization"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            Levels = integer { default = 1  minvalue = 0  maxvalue = 6 }
+            Current = integer { default = Levels  minvalue = -1  maxvalue = 6  editable = live }
+        }
+    }
+    Spells = list
+    {
+        description = "Spells the magician knows well. Any effect can be tried; these are the usual ones."
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+}

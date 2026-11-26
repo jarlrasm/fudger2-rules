@@ -1,0 +1,114 @@
+petitionWords (level) =
+    if level >= 6 then "the petition is granted in full"
+    else if level == 5 then "the petition is granted generously"
+    else if level == 4 then "the petition is granted"
+    else if level >= 2 then "no answer, but the deity isn't annoyed"
+    else "the deity is angry, -1 on the next petition"
+
+petitionOutcome (level) =
+    if level >= 4 then "Success"
+    else if level >= 2 then ""
+    else "Failure"
+
+triesLeft (steps) =
+    if steps == 1 then ", 1 more try"
+    else if steps > 1 then ", " + toString (steps) + " more tries"
+    else ""
+
+petitionResult (skill, rolled, steps) = {
+    Text = ladderWord (skill + rolled) + ": " + petitionWords (skill + rolled) + triesLeft (steps)
+    Value = skill + rolled
+    Outcome = petitionOutcome (skill + rolled)
+    Push = if steps > 0 then petitionAgain (skill, steps - 1) else 0
+    PushLabel = "Pray again"
+}
+
+petitionAgain (skill, steps) = ([4df], ((baseline, throws)->petitionResult (skill, sum (first (throws).rolls), steps)))
+
+petitionAnger (angry) = if angry then 1 else 0
+
+petitionDice (mods, steps, angry) = ([4df], ((baseline, throws)->petitionResult (baseline + mods - petitionAnger (angry), sum (first (throws).rolls), steps)))
+
+petitionRollWith (steps, angry, penalty) = ask ("Petition modifiers", 0, (n)->petitionDice (n - penalty, steps, angry))
+
+petitionRoll (steps, angry) = petitionRollWith (steps, angry, 0)
+
+petitionSkill (steps) = if steps > 0 then 3 else 1
+
+Fudge = system
+{
+    'Miracles' = miracleStats
+    secondaryTypes = ["Miracles"]
+    libraries = ["/systems/Fudge/extensions/miracles.json"]
+    hints = [
+        hint
+        {
+            title = "Fudge Miracles"
+            topic = "Miracles"
+            text = ["Divine Favor is bought one step at a time from a single deity. A character with favor petitions at Fair, anyone else at Poor.", "Petitions are precise prayers, not a list of spells. Good or better is granted, and each step of favor lets the petitioner pray again; the last roll counts."]
+        }
+    ]
+}
+
+miracleStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/Fudge/extensions/miracle.svg"
+    }
+    Stats = table
+    {
+        Good = string { description = "What a Good result grants." }
+        Great = string { description = "What a Great result grants." }
+        Superb = string { description = "What a Superb result grants." }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Divine Favor'] }
+    'Divine Favor' = keyvalues
+    {
+        description = "Steps of favor from each deity. Each step lets the character pray again in a petition. Favor is lost as a whole when the character goes against the deity, until they atone." reference = ["srd", 122]
+        singular = "Deity"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            Steps = integer { default = 1  minvalue = 0  maxvalue = 6 }
+            Petition = modifier
+            {
+                description = "Petitioning skill: Fair with favor, Poor without. It can't be raised."
+                value = petitionSkill (Steps)
+                render = ladderWord (petitionSkill (Steps))
+                valuedice = petitionRollWith (Steps, Petitioning.'Deity angry', woundPenalty (characterTable))
+            }
+        }
+    }
+    Petitioning = table
+    {
+        description = "Praying for a miracle." reference = ["srd", 122]
+        'Without favor' = modifier
+        {
+            description = "Anyone can petition a deity at Poor, with a single roll."
+            value = 1
+            render = ladderWord (1)
+            valuedice = petitionRollWith (0, 'Deity angry', woundPenalty (characterTable))
+        }
+        'Deity angry' = bool
+        {
+            description = "A petition came out Poor or worse. The next petition is at -1; untick it after."
+            default = false
+            editable = live
+            indicator = "#d4b106"
+            indicatorLabel = "Deity angry"
+        }
+    }
+    Miracles = list
+    {
+        description = "Common kinds of miracles and what each result grants."
+        source = secondary.Miracles
+        singular = "Miracle"
+        editable = character
+    }
+}

@@ -1,6 +1,9 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
+shadowdarkShownIf (flag) = if flag then visible else none
+
+
 statModifier (score) =
     if score < 4 then -4
     else if score < 6 then -3
@@ -174,7 +177,7 @@ characterTable = ruleset
     'Spellcasting Check' = table
     {
         description = "Spellcasting checks: d20 plus the stat against 10 plus the spell tier."
-        visible = if Character.Class == "Priest" or Character.Class == "Wizard" then visible else none
+        visible = shadowdarkShownIf (Character.Class == "Priest" or Character.Class == "Wizard")
         'Priest uses WIS' = modifier { value = Stats.WIS.Modifier  valuedice = sdDice (characterTable)  editable = none }
         'Wizard uses INT' = modifier { value = Stats.INT.Modifier  valuedice = sdDice (characterTable)  editable = none }
     }

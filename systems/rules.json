@@ -11,10 +11,34 @@
       ],
       "extensions": [
         {
-          "name": "Spells",
-          "location": "/systems/Fudge/extensions/spells.frules",
-          "description": "Simple rule-less spells",
-          "guide": "/systems/Fudge/extensions/spells-guide.md"
+          "name": "Magic",
+          "location": "/systems/Fudge/extensions/magic.frules",
+          "description": "Fudge Magic: Magic Potential, spell casting and Fatigue, with sample spells",
+          "guide": "/systems/Fudge/extensions/magic-guide.md"
+        },
+        {
+          "name": "Psi",
+          "location": "/systems/Fudge/extensions/psi.frules",
+          "description": "Fudge Psi: psi powers with Power and skill, Psychic Reservoir and augmenting",
+          "guide": "/systems/Fudge/extensions/psi-guide.md"
+        },
+        {
+          "name": "Miracles",
+          "location": "/systems/Fudge/extensions/miracles.frules",
+          "description": "Fudge Miracles: Divine Favor and petitions to the gods",
+          "guide": "/systems/Fudge/extensions/miracles-guide.md"
+        },
+        {
+          "name": "Supers and Cybernetics",
+          "location": "/systems/Fudge/extensions/supers.frules",
+          "description": "Superpowers, cybernetic implants and Strength, Mass and Speed Scale",
+          "guide": "/systems/Fudge/extensions/supers-guide.md"
+        },
+        {
+          "name": "Combat options",
+          "location": "/systems/Fudge/extensions/combat.frules",
+          "description": "Damage rolls, stun and knockout, and hit locations",
+          "guide": "/systems/Fudge/extensions/combat-guide.md"
         }
       ],
       "nameSettings": [
@@ -76,7 +100,15 @@
       "credits": [
         "This work includes material from the System Reference Document 5.2 (SRD 5.2) by Wizards of the Coast LLC, available at [dndbeyond.com/srd](https://www.dndbeyond.com/srd). The SRD 5.2 is licensed under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/legalcode). The SRD data was converted from the [Open5e](https://open5e.com) API."
       ],
-      "sheetImage": "/systems/DND/sheet.webp"
+      "sheetImage": "/systems/DND/sheet.webp",
+      "extensions": [
+        {
+          "name": "Gameplay Toolbox",
+          "location": "/systems/DND/extensions/toolbox.frules",
+          "description": "Traps, poisons, curses, magical contagions, and fear and mental stress from the SRD 5.2.1 Gameplay Toolbox",
+          "guide": "/systems/DND/extensions/toolbox-guide.md"
+        }
+      ]
     },
     {
       "name": "Torg",
@@ -315,9 +347,18 @@
       ],
       "guide": "/systems/ose/guide.md",
       "credits": [
-        "The B/X compatible library is from the [Basic Fantasy Role-Playing Game](https://www.basicfantasy.org) Core Rules, 4th edition, Copyright © 2006-2023 Chris Gonnerman, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), converted from [jmhimara/bfrpg](https://github.com/jmhimara/bfrpg) with Armour Class made descending. See LICENSE-bfrpg.md next to the library. The Basic Fantasy PDF (release 142) is shipped with its artwork removed, as its licence requires."
+        "The B/X compatible library is from the [Basic Fantasy Role-Playing Game](https://www.basicfantasy.org) Core Rules, 4th edition, Copyright © 2006-2023 Chris Gonnerman, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), converted from [jmhimara/bfrpg](https://github.com/jmhimara/bfrpg) with Armour Class made descending. See LICENSE-bfrpg.md next to the library. The Basic Fantasy PDF (release 142) is shipped with its artwork removed, as its licence requires.",
+        "The Magic Items extension's library is from the [Basic Fantasy Role-Playing Game](https://www.basicfantasy.org) Core Rules, 4th edition, release 142, Copyright © 2006-2025 Chris Gonnerman, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), with the descriptions shortened and rewritten. See LICENSE-bfrpg.md."
       ],
-      "sheetImage": "/systems/ose/sheet.webp"
+      "sheetImage": "/systems/ose/sheet.webp",
+      "extensions": [
+        {
+          "name": "Magic Items",
+          "location": "/systems/ose/extensions/magicitems.frules",
+          "description": "Basic Fantasy magic weapons, armour, potions, scrolls, wands and other treasure, with magic attacks, protection, charges and the random magic item tables",
+          "guide": "/systems/ose/extensions/magicitems-guide.md"
+        }
+      ]
     },
     {
       "name": "Shadowdark",
@@ -360,7 +401,15 @@
       "credits": [
         "The Fate SRD PDFs (Fate Core, Condensed, Accelerated, the Adversary and System Toolkits, and the Venture City, Sails Full of Stars, Three Rocketeers, Atomic Robo, Frontier Spirit, Gods and Monsters and War of Ashes SRDs) are Evil Hat Productions' OGL versions, Open Game Content under the Open Game License v1.0a; each PDF ends with the licence and its copyright notice. Fate™ is a trademark of Evil Hat Productions, LLC. See LICENSE-fate.md next to the library."
       ],
-      "sheetImage": "/systems/fate/sheet.webp"
+      "sheetImage": "/systems/fate/sheet.webp",
+      "extensions": [
+        {
+          "name": "Venture City superpowers",
+          "location": "/systems/fate/extensions/venturecity.frules",
+          "description": "Venture City power suites: powers, enhancements, synergies, themes, drawbacks, collateral damage and the power budget",
+          "guide": "/systems/fate/extensions/venturecity-guide.md"
+        }
+      ]
     },
     {
       "name": "Dungeon World",
@@ -398,7 +447,18 @@
         "Wasteland"
       ],
       "guide": "/systems/cypher/guide.md",
-      "sheetImage": "/systems/cypher/sheet.webp"
+      "sheetImage": "/systems/cypher/sheet.webp",
+      "extensions": [
+        {
+          "name": "Artifacts",
+          "location": "/systems/cypher/extensions/artifacts.frules",
+          "description": "Artifacts from the Cypher System Reference Document, with depletion rolls",
+          "guide": "/systems/cypher/extensions/artifacts-guide.md"
+        }
+      ],
+      "credits": [
+        "The Cypher System library and its Artifacts extension use the [Cypher System Reference Document](/systems/cypher/Cypher-System-Reference-Document.pdf). This product is an independent production and is not affiliated with Monte Cook Games, LLC. It is published under the Cypher System Open License, found at http://csol.montecookgames.com. CYPHER SYSTEM and its logo are trademarks of Monte Cook Games, LLC in the U.S.A. and other countries. See LICENSE-cypher.md."
+      ]
     },
     {
       "name": "Pathfinder 2e",
@@ -657,7 +717,15 @@
       "credits": [
         "This game is not affiliated with, sponsored, or endorsed by Fria Ligan AB. The [Year Zero Engine System Reference Document](/systems/yze/YZE-Standard-Reference-Document.pdf) is used under Fria Ligan AB's [Free Tabletop License](/systems/yze/Year-Zero-Engine-License-Agreement.pdf)."
       ],
-      "sheetImage": "/systems/forbiddenlands/sheet.webp"
+      "sheetImage": "/systems/forbiddenlands/sheet.webp",
+      "extensions": [
+        {
+          "name": "Magic",
+          "location": "/systems/forbiddenlands/extensions/magic.frules",
+          "description": "Year Zero Engine SRD magic: seven disciplines, spells by rank, Willpower power levels, overcharging and magic mishaps",
+          "guide": "/systems/forbiddenlands/extensions/magic-guide.md"
+        }
+      ]
     },
     {
       "name": "Wrath & Glory",

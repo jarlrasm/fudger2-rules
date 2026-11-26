@@ -1,0 +1,176 @@
+woundFromPoints (points) =
+    if points >= 9 then "Near death"
+    else if points >= 7 then "Incapacitated"
+    else if points >= 5 then "Very hurt"
+    else if points >= 3 then "Hurt"
+    else if points >= 1 then "Scratch"
+    else "No damage"
+
+minMidMaxWound (points) =
+    if points >= 9 then "Near death"
+    else if points >= 7 then "Incapacitated"
+    else if points >= 5 then "Very hurt"
+    else if points >= 3 then "Hurt"
+    else if points >= 1 then "Scratch"
+    else "No damage"
+
+stunFromWound (wound) =
+    switch wound
+    case "Hurt" then "Stun: no attack or all-out defence, -1 to defend for a turn"
+    case "Very hurt" then "Very stunned: no attacks and -2 to all actions for two rounds"
+    case "Incapacitated" then "Knocked out"
+    case "Near death" then "Knocked out"
+    case "Scratch" then "Scratch"
+    else "No effect"
+
+grazeWound (factor) =
+    if factor >= 5 then "Hurt"
+    else if factor >= 0 then "Scratch"
+    else "No damage"
+
+limitedDamage (calculated, rolled) =
+    if calculated > 0 then max (1, calculated + min (rolled, calculated))
+    else if calculated + rolled >= 1 then 1
+    else 0
+
+pointsWord (n) = if n == 1 then "1 point" else toString (n) + " points"
+
+stunOrWound (wound, stun) = if stun then stunFromWound (wound) else wound
+
+hitText (points, stun) = if points <= 0 then "No damage" else pointsWord (points) + ": " + stunOrWound (woundFromPoints (points), stun)
+
+damageText (degree, factor, rolled, stun) =
+    if degree <= 0 then "No hit"
+    else if degree == 1 then "Graze, factor " + toString (factor) + ": " + stunOrWound (grazeWound (factor), stun)
+    else hitText (limitedDamage (degree + factor, rolled), stun)
+
+damagePoints (degree, factor, rolled) = if degree >= 2 then limitedDamage (degree + factor, rolled) else 0
+
+damageDice (degree, stun) = ([4df], ((baseline, throws)->{ Text = damageText (degree, asked, sum (first (throws).rolls), stun)  Value = damagePoints (degree, asked, sum (first (throws).rolls)) }))
+
+damageRoll (stun) = ask ("Relative degree", 2, (n)->ask ("Damage factor", 0, damageDice (n, stun)))
+
+factorBonus (factor) =
+    if factor <= -5 then -2
+    else if factor < 0 then -1
+    else if factor <= 2 then 0
+    else if factor <= 5 then 1
+    else 2
+
+degreeBonus (degree) =
+    if degree >= 6 then 2
+    else if degree >= 4 then 1
+    else 0
+
+minMidMaxPoints (bonus, sorted) =
+    if bonus <= 2 then item (max (0, bonus), sorted)
+    else if bonus == 3 then item (0, sorted) + item (2, sorted)
+    else sum (sorted)
+
+minMidMaxHit (points) = pointsWord (points) + ": " + minMidMaxWound (points)
+
+minMidMaxText (degree, factor, dice) =
+    if degree <= 0 then "No hit"
+    else if degree == 1 then "Graze, factor " + toString (factor) + ": " + grazeWound (factor)
+    else if factorBonus (factor) + degreeBonus (degree) < 0 then "No damage possible"
+    else minMidMaxHit (minMidMaxPoints (factorBonus (factor) + degreeBonus (degree), sort (dice)))
+
+minMidMaxDice (degree) = ([3d6], ((baseline, throws)->minMidMaxText (degree, asked, first (throws).rolls)))
+
+minMidMaxRoll = ask ("Relative degree", 2, (n)->ask ("Damage factor", 0, minMidMaxDice (n)))
+
+stunState (stun, veryStunned, out) =
+    if out then "Knocked out"
+    else if veryStunned > 0 then "Very stunned"
+    else if stun > 0 then "Stunned"
+    else ""
+
+Fudge = system
+{
+    hints = [
+        hint
+        {
+            title = "Combat options"
+            topic = "Combat"
+            text = ["The Damage rolls work out a hit from the relative degree and the damage factor: offensive factors (Strength, weapon, Scale) minus defensive factors (armour, Damage Capacity, Scale).", "Choose one damage roll for the campaign: the situational roll, which varies a hit by up to the damage itself, or Min-Mid-Max on 3d6. Stun is for blows meant to knock out, not kill."]
+        }
+    ]
+}
+
+characterTable = ruleset
+{
+    'Damage rolls' = table
+    {
+        description = "Optional damage rolls for a hit. Each asks for the relative degree and the damage factor." reference = ["srd", 62]
+        Situational = modifier
+        {
+            description = "The relative degree plus the damage factor, plus 4dF that never more than doubles it; a hit that does damage does at least 1." reference = ["srd", 62]
+            value = 0
+            valuedice = damageRoll (false)
+        }
+        Stunning = modifier
+        {
+            description = "The same roll for a blow meant to stun: Hurt stuns, Very hurt is Very stunned, worse knocks out." reference = ["srd", 63]
+            value = 0
+            valuedice = damageRoll (true)
+        }
+        'Min Mid Max' = modifier
+        {
+            description = "Roll 3d6 and read the lowest, middle or highest die, or more, by the damage factor and relative degree." reference = ["srd", 64]
+            value = 0
+            valuedice = minMidMaxRoll
+        }
+    }
+    Stun = table
+    {
+        description = "Stun results from blows meant to knock out. They go away after the fight." reference = ["srd", 63]
+        Stunned = slots
+        {
+            description = "No attack or all-out defence, and -1 to defend for one turn. A second stun makes the character Very stunned."
+            number = 1
+            allowedchange = increase
+            editable = live
+        }
+        'Very stunned' = slots
+        {
+            description = "No attacks and -2 to all actions for two rounds."
+            number = 1
+            allowedchange = increase
+            editable = live
+        }
+        'Knocked out' = bool
+        {
+            description = "Out cold. Recovers with time, no healing needed."
+            default = false
+            editable = live
+        }
+        State = string
+        {
+            value = stunState (Stunned.realvalue, 'Very stunned'.realvalue, 'Knocked out')
+            visible = none
+            indicator = "#d4b106"
+        }
+        Recover = button
+        {
+            editable = live
+            description = "Clears all stun results after the fight."
+            onClick = updates
+            {
+                (root.Stun.Stunned.realvalue) = 0
+                (root.Stun.'Very stunned'.realvalue) = 0
+                (root.Stun.'Knocked out') = false
+            }
+        }
+    }
+    'Location wounds' = list
+    {
+        description = "Wounds to a body part from an aimed blow: Scratched, Hurt (-1 to use it) or Incapacitated." reference = ["srd", 48]
+        singular = "Location wound"
+        editable = live
+        valueType = custom
+        {
+            Location = string {}
+            Wound = string { keys = ["Scratched", "Hurt", "Incapacitated"] }
+        }
+    }
+}

@@ -1,6 +1,9 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
+fateShownIf (flag) = if flag then visible else none
+
+
 ladder (n) =
     if n > 8 then "Beyond Legendary +" + toString (n)
     else if n < -2 then "Terrible " + toString (n)
@@ -158,7 +161,7 @@ characterTable = ruleset
         'Mild 2' = string { description = "Soaks 2 shifts. Clears after a scene of rest." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Mild consequence" }
         'Moderate 4' = string { description = "Soaks 4 shifts. Clears after a session." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Moderate consequence" }
         'Severe 6' = string { description = "Soaks 6 shifts. Clears after a scenario." reference = ["core", 87] editable = live  indicator = "#d64545"  indicatorLabel = "Severe consequence" }
-        'Extra Mild 2' = string { description = "An extra mild consequence for Superb Physique or Will." editable = live  visible = if Skills.Physique > 4 or Skills.Will > 4 then visible else none }
+        'Extra Mild 2' = string { description = "An extra mild consequence for Superb Physique or Will." editable = live  visible = fateShownIf (Skills.Physique > 4 or Skills.Will > 4) }
         Taken = bool { description = "The character has been taken out of the conflict." reference = ["core", 89] default = false  editable = live  indicator = "#555555"  indicatorLabel = "Taken out" }
     }
 
