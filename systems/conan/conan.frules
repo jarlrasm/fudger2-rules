@@ -1,27 +1,48 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
-successOf (x, target, focus) = if x <= focus then 2 else if x <= target then 1 else 0
+successOf (x, target, focus) = if x <= max (1, focus) then 2 else if x <= target then 1 else 0
 
 successesIn (rolls, target, focus) = sum (map ((x)->successOf (x, target, focus), rolls))
 
 complicationsIn (rolls, spread) = count (filter ((x)->x > 20 - spread, rolls))
 
-testResult (rolls, target, focus, spread) =
+complicationText (n) = if n > 0 then ", " + toString (n) + (if n == 1 then " complication" else " complications") else ""
+
+testOutcome (successes, difficulty) = if successes >= difficulty then "Success" else "Failure"
+
+testText (successes, target, focus, fortune, difficulty, complications, known) =
+    toString (successes) + (if successes == 1 then " success" else " successes")
+    + " (TN " + toString (target) + ", focus " + toString (focus) + (if fortune > 0 then ", " + toString (fortune) + " Fortune" else "") + ")"
+    + (if known then " vs Difficulty " + toString (difficulty) + ": " + testOutcome (successes, difficulty) + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else "")
+    + complicationText (complications)
+
+testResult (rolls, target, focus, spread, fortune, difficulty, known) =
 {
-    Text = toString (successesIn (rolls, target, focus)) + (if successesIn (rolls, target, focus) == 1 then " success" else " successes") + " (TN " + toString (target) + ", focus " + toString (focus) + ")" + (if complicationsIn (rolls, spread) > 0 then ", " + toString (complicationsIn (rolls, spread)) + (if complicationsIn (rolls, spread) == 1 then " complication" else " complications") else "")
-    Value = successesIn (rolls, target, focus)
-    Outcome = if complicationsIn (rolls, spread) > 0 and successesIn (rolls, target, focus) == 0 then "Failure" else if successesIn (rolls, target, focus) > 0 then "Success" else "Failure"
+    Text = testText (successesIn (rolls, target, focus) + 2 * fortune, target, focus, fortune, difficulty, complicationsIn (rolls, spread), known)
+    Value = successesIn (rolls, target, focus) + 2 * fortune
+    Outcome = if known then testOutcome (successesIn (rolls, target, focus) + 2 * fortune, difficulty) else if successesIn (rolls, target, focus) + 2 * fortune > 0 then "Success" else "Failure"
 }
 
-conanRoll (dieCount, target, focus, spread) = ([dice { number = max (1, min (5, dieCount))  sides = 20 }], ((baseline, throws)->testResult (first (throws).rolls, target, focus, spread)))
+fortuneUsed (fortune) = min (3, max (0, fortune))
 
-conanTest (target, focus, spread) = ask ("Extra d20s (Momentum, Doom, Fortune)", 0, (n)->conanRoll (2 + n, target, focus, spread))
+conanRoll (extra, target, focus, spread, fortune) = ([dice { number = 2 + max (0, min (extra, 3 - fortuneUsed (fortune)))  sides = 20 }],
+    ((baseline, throws)->testResult (first (throws).rolls, target, focus, spread, fortuneUsed (fortune), asked, answered)))
+
+conanTest (target, focus, spread, fortune) = ask ("Extra d20s (Momentum, Doom)", 0, (n)->ask ("Difficulty", 1, conanRoll (n, target, focus, spread, fortune)))
+
+hitLocation (x) =
+    if x <= 2 then "Head"
+    else if x <= 5 then "Right Arm"
+    else if x <= 8 then "Left Arm"
+    else if x <= 14 then "Torso"
+    else if x <= 17 then "Right Leg"
+    else "Left Leg"
 
 combatDie (x) = if x == 1 then 1 else if x == 2 then 2 else if x >= 5 then 1 else 0
 
-damageRoll (dieCount) = ([dice { number = max (0, dieCount)  sides = 6  faces = ["1", "2", "", "", "1E", "1E"]  label = "Combat dice" }],
-    ((baseline, throws)->{ Text = toString (sum (map ((x)->combatDie (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x >= 5, first (throws).rolls)) > 0 then ", " + toString (count (filter ((x)->x >= 5, first (throws).rolls))) + (if count (filter ((x)->x >= 5, first (throws).rolls)) == 1 then " Effect" else " Effects") else "")  Value = sum (map ((x)->combatDie (x), first (throws).rolls)) }))
+damageRoll (dieCount) = ([dice { number = max (0, dieCount)  sides = 6  faces = ["1", "2", "", "", "1E", "1E"]  label = "Combat dice" }, dice { number = 1  sides = 20  label = "Hit location" }],
+    ((baseline, throws)->{ Text = toString (sum (map ((x)->combatDie (x), first (throws).rolls))) + " damage" + (if count (filter ((x)->x >= 5, first (throws).rolls)) > 0 then ", " + toString (count (filter ((x)->x >= 5, first (throws).rolls))) + (if count (filter ((x)->x >= 5, first (throws).rolls)) == 1 then " Effect" else " Effects") else "") + " to the " + hitLocation (first (item (1, throws).rolls))  Value = sum (map ((x)->combatDie (x), first (throws).rolls)) }))
 
 attributeBonus (score) =
     if score >= 16 then 5
@@ -45,7 +66,7 @@ skill (attributeName) = custom
 {
     Expertise = integer { description = "Added to the attribute for the target number." default = 0  minvalue = 0  maxvalue = 5 }
     Focus = integer { description = "Each d20 at or under it is two successes." default = 0  minvalue = 0  maxvalue = 5 }
-    TN = integer { description = "Attribute plus Expertise. Roll 2d20 under it; the roll asks for extra d20s." value = attributeValue (characterTable, attributeName) + Expertise  valuedice = conanTest (attributeValue (characterTable, attributeName) + Expertise, Focus, if Expertise == 0 then 2 else 1)  editable = none }
+    TN = integer { description = "Attribute plus Expertise. Roll 2d20 under it; the roll asks for extra d20s and the Difficulty." value = attributeValue (characterTable, attributeName) + Expertise  valuedice = conanTest (attributeValue (characterTable, attributeName) + Expertise, Focus, if Expertise == 0 then 2 else 1, characterTable.Stress.'Fortune dice')  editable = none }
 }
 
 noSkill = { Expertise = 0  Focus = 0 }
@@ -66,7 +87,7 @@ rangeMetres (text) =
 attack (name, target, focus, spread, dieCount, qualities, kind, distance) = custom
 {
     Name = name
-    TN = integer { value = target  valuedice = conanTest (target, focus, spread)  action = kind  reach = 2  range = distance  editable = none }
+    TN = integer { value = target  valuedice = conanTest (target, focus, spread, characterTable.Stress.'Fortune dice')  action = kind  reach = 2  range = distance  editable = none }
     Damage = integer { value = dieCount  render = toString (dieCount) + " CD"  valuedice = damageRoll (dieCount)  editable = none }
     Qualities = qualities
 }
@@ -159,9 +180,9 @@ characterTable = ruleset
         Wounds = slots { description = "Each wound raises the difficulty of physical tests. The fifth kills." number = 5  editable = live  indicator = "#d64545" }
         Trauma = slots { description = "Each trauma raises the difficulty of mental tests. The fifth breaks the mind." number = 5  editable = live  indicator = "#8e5cc4" }
         State = string { value = harmState (characterTable)  visible = none  indicator = "#555555" }
-        Armor = integer { description = "Soak against physical damage." default = 0 }
         Courage = integer { description = "Soak against mental damage." default = 0 }
         Fortune = integer { description = "Spend one for an extra d20 that counts as a 1." default = 3  minvalue = 0  editable = live }
+        'Fortune dice' = integer { description = "Fortune points spent on the next test: each adds a d20 already showing 1, within the five-dice limit. Take them off Fortune." default = 0  minvalue = 0  maxvalue = 3  editable = live  save = nosave }
         'Catch your breath' = button
         {
             description = "After the fight, a rest: Vigor and Resolve back to full. Wounds and trauma need treatment."
@@ -172,6 +193,18 @@ characterTable = ruleset
                 (root.Stress.Resolve) = 'Max Resolve'
             }
         }
+    }
+
+    Armor = table
+    {
+        description = "Armor soak at each hit location. The damage roll gives the location hit."
+        tableLayout = layout { columns = 3  size = wide }
+        Head = integer { default = 0  minvalue = 0 }
+        Torso = integer { default = 0  minvalue = 0 }
+        'Right Arm' = integer { default = 0  minvalue = 0 }
+        'Left Arm' = integer { default = 0  minvalue = 0 }
+        'Right Leg' = integer { default = 0  minvalue = 0 }
+        'Left Leg' = integer { default = 0  minvalue = 0 }
     }
 
     Talents = list
@@ -214,7 +247,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    rulesetConfiguration = { defaultImage = "/systems/conan/foe.svg"  important = [Stats, Attacks] }
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -250,7 +283,7 @@ creatureTable = ruleset
         keys = ["Sword"]
         valueType = custom
         {
-            TN = integer { description = "Attribute plus Combat Expertise." default = 10  valuedice = conanTest (TN, Focus, 1)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 50 }
+            TN = integer { description = "Attribute plus Combat Expertise." default = 10  valuedice = conanTest (TN, Focus, 1, 0)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 50 }
             Focus = integer { default = 1 }
             Damage = integer { description = "Combat dice." default = 4  valuedice = damageRoll (Damage) }
             Qualities = string {}
@@ -324,13 +357,13 @@ Conan = system
         {
             title = "Rolling"
             topic = "Play"
-            text = ["Roll 2d20 against attribute + Expertise: each die at or under is a success, at or under Focus two. The GM sets the difficulty (successes needed); extra successes become Momentum. Buy up to three more d20s with Momentum, Doom or Fortune: the roll asks. A 20 is a complication (19 too without training)."]
+            text = ["Roll 2d20 against attribute + Expertise: each die at or under is a success, at or under Focus two. A 1 is always two successes. The roll asks for extra d20s bought with Momentum or Doom (up to three) and the Difficulty (successes needed); extra successes become Momentum. Set Fortune dice before the test for d20s that already show 1. A 20 is a complication (19 too without training)."]
         },
         hint
         {
             title = "Combat"
             topic = "Combat"
-            text = ["Melee is Agility + Melee, ranged Coordination + Ranged Weapons. Damage is combat dice (1, 2, blank, blank, Effect, Effect) plus the Brawn or Awareness bonus. Armor soaks. Five or more damage at once, or 0 Vigor, is a wound."]
+            text = ["Melee is Agility + Melee, ranged Coordination + Ranged Weapons. Damage is combat dice (1, 2, blank, blank, Effect, Effect) plus the Brawn or Awareness bonus. The damage roll also gives the hit location, whose armor soaks. Five or more damage at once, or 0 Vigor, is a wound."]
         },
         hint
         {
