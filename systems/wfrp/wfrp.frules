@@ -21,29 +21,37 @@ wfrpLevel (target, roll) =
     else if isDouble (roll) or roll == 100 then "Fumble"
     else "Failure"
 
-wfrpResult (target, roll) =
+wfrpResult (target, roll, reroll, spend) =
 {
     Text = toString (roll) + " vs " + toString (target) + ": " + wfrpLevel (target, roll) + ", SL " + slText (successLevel (target, roll))
     Value = successLevel (target, roll)
     Outcome = wfrpLevel (target, roll)
+    Push = if count (spend) > 0 and not (passes (target, roll)) then reroll else 0
+    PushLabel = "Spend Fortune: reroll"
+    PushSets = spend
 }
 
 wfrpRoll (modifier) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
-    ((baseline, throws)->wfrpResult (max (0, baseline + modifier), d100Value (first (first (throws).rolls), first (item (1, throws).rolls)))))
+    ((baseline, throws)->wfrpResult (max (0, baseline + modifier), d100Value (first (first (throws).rolls), first (item (1, throws).rolls)), 0, [])))
 
 autoText (roll) = if roll < 6 then ", automatic success" else if roll > 95 then ", automatic failure" else ""
 
-wfrpUnset (base, roll) =
+wfrpUnset (base, roll, reroll, spend) =
 {
     Text = toString (roll) + " vs " + toString (base) + " before difficulty, SL " + slText (base / 10 - roll / 10) + autoText (roll)
     Value = base / 10 - roll / 10
     Outcome = if roll < 6 then "Success" else if roll > 95 then (if isDouble (roll) or roll == 100 then "Fumble" else "Failure") else ""
+    Push = if count (spend) > 0 and roll > 5 then reroll else 0
+    PushLabel = "Spend Fortune: reroll"
+    PushSets = spend
 }
 
-wfrpAskedRoll = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
-    ((baseline, throws)->if answered then wfrpResult (max (0, baseline + asked), d100Value (first (first (throws).rolls), first (item (1, throws).rolls))) else wfrpUnset (baseline, d100Value (first (first (throws).rolls), first (item (1, throws).rolls)))))
+wfrpAskedRoll (spend) = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
+    ((baseline, throws)->if answered then wfrpResult (max (0, baseline + asked), d100Value (first (first (throws).rolls), first (item (1, throws).rolls)), wfrpAskedRoll ([]), spend) else wfrpUnset (baseline, d100Value (first (first (throws).rolls), first (item (1, throws).rolls)), wfrpAskedRoll ([]), spend)))
 
-wfrpDice (char) = ask ("Difficulty modifier", wfrpAskedRoll)
+fortuneSpend (char) = if char.'Fate and Fortune'.Fortune > 0 then [{ Field = "characterTable.Fate and Fortune.Fortune"  Value = char.'Fate and Fortune'.Fortune - 1 }] else []
+
+wfrpDice (char) = ask ("Difficulty modifier", wfrpAskedRoll (fortuneSpend (char)))
 
 plainD100 = wfrpRoll (0)
 
@@ -76,13 +84,13 @@ skill (base) = custom
     Skill = integer { description = "Skill value. Roll d100 at or under it; each 10 under is a success level." value = base + Advances  valuedice = wfrpDice (characterTable)  editable = none }
 }
 
-advancedValue (entry, fallback) =
+advancedValue (char, entry, fallback, combat) =
     if entry == 0 then fallback
-    else if valueOr (entry, "Characteristic", "") == "" then fallback + valueOr (entry, "Advances", 0)
-    else valueOr (entry, "Skill", fallback)
+    else if combat then fallback + valueOr (entry, "Advances", 0)
+    else characteristicValue (char, valueOr (entry, "Characteristic", "Int")) + valueOr (entry, "Advances", 0)
 
 skillValue (char, name, fallback) =
-    if valueOr (char.'Basic Skills', name, 0) == 0 then advancedValue (valueOr (char.'Advanced Skills', name, 0), fallback)
+    if valueOr (char.'Basic Skills', name, 0) == 0 then advancedValue (char, valueOr (char.'Advanced Skills', name, 0), fallback, contains (name, "Melee ") or contains (name, "Ranged "))
     else valueOr (valueOr (char.'Basic Skills', name, 0), "Skill", fallback)
 
 weaponAttack (name, target, damage, kind, distance) = custom
@@ -152,9 +160,9 @@ characterTable = ruleset
     'Fate and Fortune' = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Fate = integer { description = "Fate points: spend one to avoid death for good." default = 2 }
-        Fortune = integer { description = "Fortune points: spend for a reroll or extra success level. Refills each session." default = 2  editable = live }
-        Resilience = integer { description = "Resilience points: spend one to avoid a mutation or shrug off a critical." default = 1 }
+        Fate = integer { description = "Fate points: spend one to avoid death for good." default = 2  minvalue = 0  editable = live }
+        Fortune = integer { description = "Fortune points: spend for a reroll or extra success level. Refills each session." default = 2  minvalue = 0  editable = live }
+        Resilience = integer { description = "Resilience points: spend one to avoid a mutation or shrug off a critical." default = 1  minvalue = 0  editable = live }
         Resolve = integer { description = "Resolve points: spend to ignore conditions or fear for a while." default = 1  editable = live }
         Motivation = string { description = "What drives the character. Acting on it restores resolve." }
         Advantage = integer { description = "Advantage gained in combat. Each point gives +10 to combat tests." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
@@ -179,7 +187,7 @@ characterTable = ruleset
         description = "Wounds: how much damage you can take before critical wounds."
         tableLayout = layout { columns = 3 }
         'Hardy Talent' = integer { description = "Ranks in the Hardy talent, each adding your Toughness Bonus to wounds." default = 0 }
-        Maximum = integer { description = "Wounds: Strength Bonus, twice Toughness Bonus and Willpower Bonus." value = Characteristics.S.Bonus + 2 * Characteristics.T.Bonus + Characteristics.WP.Bonus + 'Hardy Talent' * Characteristics.T.Bonus  editable = none }
+        Maximum = integer { description = "Wounds: Strength Bonus (not for Halflings), twice Toughness Bonus and Willpower Bonus." value = (if Character.Species == "Halfling" then 0 else Characteristics.S.Bonus) + 2 * Characteristics.T.Bonus + Characteristics.WP.Bonus + 'Hardy Talent' * Characteristics.T.Bonus  editable = none }
         Current = integer { description = "Current wounds. At 0 every hit gives a critical wound." default = Maximum  editable = live }
         Down = string { value = if Current < 1 then "Wounds 0" else ""  visible = none  indicator = "#d64545" }
         'Critical Wounds' = string { description = "Critical wounds taken, with their effects." multiline = true  editable = live }
@@ -452,7 +460,7 @@ WarhammerFantasy = system
         {
             title = "Success Levels"
             topic = "Play"
-            text = ["Roll d100 at or under the skill. Success Levels (tens of the target minus tens of the roll) decide how well it went.", "Each test asks for the difficulty modifier, such as 20 for Average or -10 for Difficult. Leave it blank when only the GM knows it."]
+            text = ["Roll d100 at or under the skill. Success Levels (tens of the target minus tens of the roll) decide how well it went.", "Each test asks for the difficulty modifier, such as 20 for Average or -10 for Difficult. Leave it blank when only the GM knows it.", "After a failed test the roll window offers to spend a Fortune point for a reroll, and lowers Fortune."]
         },
         hint
         {

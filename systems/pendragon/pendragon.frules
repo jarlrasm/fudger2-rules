@@ -175,7 +175,7 @@ characterTable = ruleset
         description = "Battle, horsemanship and weapon skills. In a fight both sides roll; the higher success wins."
         singular = "Combat skill"
         editablekeys = character
-        keys = ["Battle", "Horsemanship", "Sword", "Lance", "Spear", "Dagger", "Great Spear", "Mace", "Hafted", "Bow", "Brawling"]
+        keys = ["Battle", "Horsemanship", "Sword", "Lance", "Spear", "Dagger", "Great Spear", "Mace", "Hafted", "Bow", "Crossbow", "Thrown", "Brawling"]
         valueType = custom
         {
             Value = integer { description = "Roll 1d20 under it; equal is a critical." default = 5  minvalue = 0  maxvalue = 40  valuedice = pdAsked (Value) }

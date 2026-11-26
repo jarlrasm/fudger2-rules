@@ -28,16 +28,19 @@ gradeText (grade) = if grade == 2 then "" else " (" + item (grade, gradeNames) +
 
 mythrasText (target, roll, grade) = toString (roll) + " vs " + toString (target) + gradeText (grade) + ": " + mythrasLevel (target, roll, grade)
 
-mythrasResult (skill, roll, grade) =
+mythrasResult (skill, roll, grade, reroll, spend) =
 {
     Text = mythrasText (graded (skill, grade), roll, grade)
     Value = roll
     Outcome = mythrasLevel (graded (skill, grade), roll, grade)
+    Push = if count (spend) > 0 then reroll else 0
+    PushLabel = "Spend Luck: reroll"
+    PushSets = spend
 }
 
-mythrasRoll (grade) = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), grade)))
+mythrasRoll (grade) = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), grade, 0, [])))
 
-mythrasAsked = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), gradeOf (answered, asked))))
+mythrasAsked = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), gradeOf (answered, asked), 0, [])))
 
 mythrasCheck = ask ("Difficulty grade", gradeNames, 0, mythrasAsked)
 
@@ -56,7 +59,11 @@ fatigueShift (char) =
 
 tiredGrade (answered, grade, shift) = min (6, gradeOf (answered, grade) + shift)
 
-mythrasCheckFor (char) = ask ("Difficulty grade", gradeNames, 0, ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char))))))
+luckSpend (char) = if char.Attributes.'Luck Points' > 0 then [{ Field = "characterTable.Attributes.Luck Points"  Value = char.Attributes.'Luck Points' - 1 }] else []
+
+mythrasTired (shift, spend) = ([1d100], ((baseline, throws)->mythrasResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, shift), mythrasTired (shift, []), spend)))
+
+mythrasCheckFor (char) = ask ("Difficulty grade", gradeNames, 0, mythrasTired (fatigueShift (char), luckSpend (char)))
 
 hitLocationOf (roll) =
     if roll <= 3 then "Right leg"
@@ -71,23 +78,57 @@ attackText (target, roll, grade, location) =
     mythrasText (target, roll, grade)
     + (if mythrasLevel (target, roll, grade) == "Critical success" or mythrasLevel (target, roll, grade) == "Success" then ", hits the " + location else "")
 
-attackResult (skill, roll, grade, location) =
+attackResult (skill, roll, grade, location, reroll, spend) =
 {
     Text = attackText (graded (skill, grade), roll, grade, location)
     Value = roll
     Outcome = mythrasLevel (graded (skill, grade), roll, grade)
+    Push = if count (spend) > 0 then reroll else 0
+    PushLabel = "Spend Luck: reroll"
+    PushSets = spend
 }
 
 mythrasAttackRoll (grade) = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
-    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), grade, hitLocationOf (first (item (1, throws).rolls)))))
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), grade, hitLocationOf (first (item (1, throws).rolls)), 0, [])))
 
 mythrasAskedAttack = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
-    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), gradeOf (answered, asked), hitLocationOf (first (item (1, throws).rolls)))))
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), gradeOf (answered, asked), hitLocationOf (first (item (1, throws).rolls)), 0, [])))
 
 mythrasAttack = ask ("Difficulty grade", gradeNames, 0, mythrasAskedAttack)
 
-mythrasAttackFor (char) = ask ("Difficulty grade", gradeNames, 0, ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
-    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, fatigueShift (char)), hitLocationOf (first (item (1, throws).rolls))))))
+mythrasTiredAttack (shift, spend) = ([dice { number = 1  sides = 100 }, dice { number = 1  sides = 20  label = "Location" }],
+    ((baseline, throws)->attackResult (baseline, first (first (throws).rolls), tiredGrade (answered, asked, shift), hitLocationOf (first (item (1, throws).rolls)), mythrasTiredAttack (shift, []), spend)))
+
+mythrasAttackFor (char) = ask ("Difficulty grade", gradeNames, 0, mythrasTiredAttack (fatigueShift (char), luckSpend (char)))
+
+fatigueInitiative (level) =
+    switch level
+        case "Wearied" then 2
+        case "Exhausted" then 4
+        case "Debilitated" then 6
+        case "Incapacitated" then 8
+        case "Semi-Conscious" then 8
+        case "Comatose" then 8
+        case "Dead" then 8
+        else 0
+
+fatigueActions (level) =
+    switch level
+        case "Wearied" then 1
+        case "Exhausted" then 2
+        case "Debilitated" then 3
+        case "Incapacitated" then 4
+        case "Semi-Conscious" then 4
+        case "Comatose" then 4
+        case "Dead" then 4
+        else 0
+
+restedFatigue (level) =
+    switch level
+        case "Winded" then "Fresh"
+        case "Tired" then "Fresh"
+        case "Wearied" then "Tired"
+        else level
 
 initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
 
@@ -97,9 +138,9 @@ bandOf (value) = if value <= 6 then 1 else if value <= 12 then 2 else if value <
 
 dmStep (strsiz) = if strsiz <= 50 then (strsiz - 1) / 5 else 10 + (strsiz - 51) / 10
 
-dmSides (strsiz) = item (min (13, dmStep (strsiz)), [8, 6, 4, 2, 0, 2, 4, 6, 8, 10, 12, 6, 8, 10])
+dmSides (strsiz) = if dmStep (strsiz) <= 14 then item (dmStep (strsiz), [8, 6, 4, 2, 0, 2, 4, 6, 8, 10, 12, 6, 8, 10, 12]) else if mod (dmStep (strsiz) - 15, 2) == 0 then 10 else 12
 
-dmCount (strsiz) = if dmStep (strsiz) == 4 then 0 else if dmStep (strsiz) >= 11 then 2 else 1
+dmCount (strsiz) = if dmStep (strsiz) == 4 then 0 else if dmStep (strsiz) >= 15 then 3 + (dmStep (strsiz) - 15) / 2 else if dmStep (strsiz) >= 11 then 2 else 1
 
 dmSign (strsiz) = if dmStep (strsiz) < 4 then -1 else 1
 
@@ -143,15 +184,19 @@ weaponAttack (name, chance, damageText, strsiz, kind, rangeMetres) = custom
     Damage = integer { value = damageBonus (damageText)  valuedice = damageRoll (diceCount (damageText), dieSize (damageText), strsiz)  render = damageText + " " + dmText (strsiz)  editable = none }
 }
 
+styleMatch (char, weapon) = filter ((s)->contains (toLower (valueOr (s, "Weapons", "")), toLower (weapon.Name)), char.'Combat Styles')
+
 styleChance (char) = char.Characteristics.STR + char.Characteristics.DEX + (if count (char.'Combat Styles') > 0 then first (char.'Combat Styles').Bonus else 0)
+
+weaponStyleChance (char, weapon) = if count (styleMatch (char, weapon)) > 0 then char.Characteristics.STR + char.Characteristics.DEX + first (styleMatch (char, weapon)).Bonus else styleChance (char)
 
 isLauncher (name) = contains (toLower (name), "bow") or contains (toLower (name), "sling") or contains (toLower (name), "blowgun") or contains (toLower (name), "gun")
 
 attackFor (char, weapon) =
     if firstNumber (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, weaponStyleChance (char, weapon), weaponStat (weapon, "Damage"), if isLauncher (weapon.Name) then 25 else char.Characteristics.STR + char.Characteristics.SIZ, "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, styleChance (char), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
+        weaponAttack (weapon.Name, weaponStyleChance (char, weapon), weaponStat (weapon, "Damage"), char.Characteristics.STR + char.Characteristics.SIZ, "melee", 2)
 
 fatigueLevels = ["Fresh", "Winded", "Tired", "Wearied", "Exhausted", "Debilitated", "Incapacitated", "Semi-Conscious", "Comatose", "Dead"]
 
@@ -188,18 +233,18 @@ characterTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Action Points' = integer { description = "Actions in a combat round, from INT + DEX." value = actionPoints (Characteristics.INT + Characteristics.DEX)  editable = none }
+        'Action Points' = integer { description = "Actions in a combat round, from INT + DEX." value = max (0, actionPoints (Characteristics.INT + Characteristics.DEX) - fatigueActions (Fatigue))  editable = none }
         'Damage Modifier' = string { description = "Dice added to or taken from melee damage, from STR + SIZ." value = dmText (Characteristics.STR + Characteristics.SIZ)  editable = none }
         'Experience Modifier' = integer { value = bandOf (Characteristics.CHA) - 2  editable = none }
         'Healing Rate' = integer { description = "Hit points a wounded location heals per period of rest." value = bandOf (Characteristics.CON)  editable = none }
-        Initiative = modifier { description = "Half of INT + DEX, rounded up, plus a d10, minus armor penalty." value = (Characteristics.INT + Characteristics.DEX + 1) / 2 - 'Armor Penalty'  valuedice = initiativeRoll  editable = none }
+        Initiative = modifier { description = "Half of INT + DEX, rounded up, plus a d10, minus armor penalty and fatigue." value = (Characteristics.INT + Characteristics.DEX + 1) / 2 - 'Armor Penalty' - fatigueInitiative (Fatigue)  valuedice = initiativeRoll  editable = none }
         'Armor Penalty' = integer { description = "A fifth of the armor's total encumbrance." default = 0  minvalue = 0 }
         Movement = string { default = "6 m" }
         'Max Luck Points' = integer { value = bandOf (Characteristics.POW)  editable = none }
         'Luck Points' = integer { description = "Spend one to reroll, to downgrade a wound or to act first." default = 'Max Luck Points'  minvalue = 0  editable = live }
         'Max Magic Points' = integer { value = Characteristics.POW  editable = none }
         'Magic Points' = integer { default = 'Max Magic Points'  minvalue = 0  editable = live }
-        Fatigue = string { description = "Each level past Fresh makes skills harder: the sheet steps the difficulty grade for you." default = "Fresh"  keys = fatigueLevels  editable = live  indicator = "#d4b106" }
+        Fatigue = string { description = "Each level past Fresh makes skills harder, and from Wearied on lowers Initiative and Action Points: the sheet does both for you. Movement drops too; adjust it by hand." default = "Fresh"  keys = fatigueLevels  editable = live  indicator = "#d4b106" }
         'New session' = button
         {
             description = "Luck Points come back at the start of each session."
@@ -211,12 +256,12 @@ characterTable = ruleset
         }
         'Night of rest' = button
         {
-            description = "A full night's rest restores Magic Points and clears fatigue. Wounds heal by the Healing Rate over time; mark them off by hand."
+            description = "A full night's rest restores Magic Points and takes fatigue down as far as eight hours allow: Winded and Tired to Fresh, Wearied to Tired. Worse levels need longer rest. Wounds heal by the Healing Rate over time; mark them off by hand."
             editable = live
             onClick = updates
             {
                 (root.Attributes.'Magic Points') = 'Max Magic Points'
-                (root.Attributes.Fatigue) = "Fresh"
+                (root.Attributes.Fatigue) = restedFatigue (Fatigue)
             }
         }
     }
@@ -465,7 +510,7 @@ Mythras = system
         {
             title = "Skill rolls"
             topic = "Play"
-            text = ["Roll d100 at or under the skill. The GM picks a difficulty grade, from Very Easy (double) to Herculean (a tenth). A tenth of the target is a critical, 99-00 a fumble."]
+            text = ["Roll d100 at or under the skill. The GM picks a difficulty grade, from Very Easy (double) to Herculean (a tenth). A tenth of the target is a critical, 99-00 a fumble.", "The roll window offers to spend a Luck Point for a reroll, and lowers Luck Points."]
         },
         hint
         {

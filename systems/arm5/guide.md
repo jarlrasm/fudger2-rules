@@ -11,9 +11,9 @@ A roll is **characteristic + ability + die** against an **ease factor** (6 is ea
 
 ## Magic
 - Fifteen Arts: five **Techniques** (Creo, Intellego, Muto, Perdo, Rego) and ten **Forms** (Animal, Aquam, Auram, Corpus, Herbam, Ignem, Imaginem, Mentem, Terram, Vim). A spell names one of each, such as CrIg for creating fire.
-- **Formulaic spells**: casting total = Technique + Form + Stamina + aura + stress die. Reaching the spell's level casts it; falling short by 10 or less still casts it, at the cost of a fatigue level. The *Formulaic spells* rows roll this and say which.
+- **Formulaic spells**: casting total = Technique + Form + Stamina + aura + the spell's **Mastery** score (the *Spell mastery* table) + stress die. Reaching the spell's level casts it; falling short by 10 or less still casts it, at the cost of a fatigue level. The *Formulaic spells* rows roll this and say which.
 - **Spontaneous spells**: Technique + Form + Stamina + aura, halved with a stress die (costs a fatigue level), or divided by five without one.
-- **Ritual spells** take time and vis. **Requisites** use the lower of two Arts.
+- **Ritual spells** take time and vis, and add **Artes Liberales + Philosophiae** to the casting total. A ritual that falls short of its level fails; the *Formulaic spells* rows judge it that way. **Requisites** use the lower of two Arts.
 - **Parma Magica** x5 is the magus's magic resistance, plus the Form of the attacking spell.
 
 ## Combat

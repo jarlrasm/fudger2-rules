@@ -1,66 +1,68 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
-verdict (score, level) =
+verdict (score, level, grace) =
     if level <= 0 then ""
     else if score >= level then ": success"
-    else if score > level - 11 then ": success, but lose a fatigue level"
+    else if score > level - grace then ": success, but lose a fatigue level"
     else ": failure"
 
-verdictOutcome (score, level) =
+verdictOutcome (score, level, grace) =
     if level <= 0 then ""
-    else if score > level - 11 then "Success"
+    else if score >= level or score > level - grace then "Success"
     else "Failure"
 
-scoreResult (score, level) =
+scoreResult (score, level, grace) =
 {
-    Text = toString (score) + (if level > 0 then " vs level " + toString (level) else "") + verdict (score, level)
+    Text = toString (score) + (if level > 0 then " vs level " + toString (level) else "") + verdict (score, level, grace)
     Value = score
-    Outcome = verdictOutcome (score, level)
+    Outcome = verdictOutcome (score, level, grace)
 }
 
-stressResult (d, total, botchDice, level, divisor) =
-    if d == 10 and botchDice <= 0 then scoreResult (floorDiv (total, divisor), level)
+stressResult (d, total, botchDice, level, divisor, grace) =
+    if d == 10 and botchDice <= 0 then scoreResult (floorDiv (total, divisor), level, grace)
     else if d == 10 then {
         Text = "0 on the die: " + toString (floorDiv (total, divisor)) + ", roll for a botch"
         Value = floorDiv (total, divisor)
-        Push = botchRoll (botchDice, floorDiv (total, divisor), level)
+        Push = botchRoll (botchDice, floorDiv (total, divisor), level, grace)
         PushLabel = "Roll " + toString (botchDice) + " botch dice"
     }
     else if d == 1 then {
         Text = "1 on the die: roll again and double"
         Value = floorDiv (total + 2, divisor)
-        Push = doubling (2, total, level, divisor)
+        Push = doubling (2, total, level, divisor, grace)
         PushLabel = "Roll again (x2)"
     }
-    else scoreResult (floorDiv (total + d, divisor), level)
+    else scoreResult (floorDiv (total + d, divisor), level, grace)
 
-doubling (mult, total, level, divisor) = ([1d10], ((baseline, throws)->
+doubling (mult, total, level, divisor, grace) = ([1d10], ((baseline, throws)->
     if first (first (throws).rolls) == 1 then {
         Text = "1 again: roll again, x" + toString (mult * 2)
         Value = floorDiv (total + mult * 2, divisor)
-        Push = doubling (mult * 2, total, level, divisor)
+        Push = doubling (mult * 2, total, level, divisor, grace)
         PushLabel = "Roll again (x" + toString (mult * 2) + ")"
     }
-    else scoreResult (floorDiv (total + mult * first (first (throws).rolls), divisor), level)))
+    else scoreResult (floorDiv (total + mult * first (first (throws).rolls), divisor), level, grace)))
 
-botchRoll (botchDice, total, level) = ([dice { number = botchDice  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
+botchRoll (botchDice, total, level, grace) = ([dice { number = botchDice  sides = 10  color = "red"  label = "Botch" }], ((baseline, throws)->
     if count (filter ((x)->x == 10, first (throws).rolls)) > 0 then {
         Text = "Botch: " + toString (count (filter ((x)->x == 10, first (throws).rolls))) + (if count (filter ((x)->x == 10, first (throws).rolls)) == 1 then " zero" else " zeros")
         Value = 0
         Outcome = "Botch"
     }
-    else scoreResult (total, level)))
+    else scoreResult (total, level, grace)))
 
 floorDiv (x, divisor) = if x < 0 then 0 - (0 - x + divisor - 1) / divisor else x / divisor
 
 stressRoll (total, level) = stressRollBy (total, level, 1)
 
-stressInitiative (total) = ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, 0, 0, 1)))
+stressInitiative (total) = ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, 0, 0, 1, 11)))
 
-stressRollBy (total, level, divisor) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level, divisor))))
+stressRollBy (total, level, divisor) = stressRollGrace (total, level, divisor, 11)
 
-simpleRoll (total) = ([1d10], ((baseline, throws)->scoreResult (total + first (first (throws).rolls), 0)))
+stressRollGrace (total, level, divisor, grace) = ask ("Botch dice", 1, ([1d10], ((baseline, throws)->stressResult (first (first (throws).rolls), total, asked, level, divisor, grace))))
+
+simpleRoll (total) = ([1d10], ((baseline, throws)->scoreResult (total + first (first (throws).rolls), 0, 11)))
 
 magusOnly (kind) = if kind == "Magus" then visible else none
 
@@ -163,12 +165,12 @@ techniqueOf (arts) = first (filter ((code)->contains (arts, code), techniqueCode
 
 formOf (arts) = first (filter ((code)->contains (replace (techniqueOf (arts), "", arts), code), formCodes))
 
-castRow (name, arts, level, score, rangeText) = custom
+castRow (name, arts, level, score, rangeText, grace) = custom
 {
     Name = name
     Arts = arts
     Level = level
-    Casting = integer { description = "Technique + Form + Stamina + aura, less penalties, plus a stress die." value = score  valuedice = stressRoll (score, level)  action = "ranged"  range = rangeText  editable = none }
+    Casting = integer { description = "Technique + Form + Stamina + aura + Mastery (rituals also Artes Liberales + Philosophiae), less penalties, plus a stress die." value = score  valuedice = stressRollGrace (score, level, 1, grace)  action = "ranged"  range = rangeText  editable = none }
 }
 
 rangeOf (text) =
@@ -178,7 +180,13 @@ rangeOf (text) =
     else if contains (text, "Sight") then 500
     else 0
 
-castFor (char, spell) = castRow (spell.Name, spellStat (spell, "Arts"), toInt (spellStat (spell, "Level")), artScore (char, techniqueOf (spellStat (spell, "Arts"))) + artScore (char, formOf (spellStat (spell, "Arts"))) + char.Characteristics.Stamina + char.Magic.Aura - penalty (char), rangeOf (spellStat (spell, "Range")))
+isRitual (spell) = spellStat (spell, "Ritual") == "Yes"
+
+masteryOf (char, name) = valueOr (valueOr (char.'Spell mastery', name, noAbility), "Score", 0)
+
+ritualBonus (char, spell) = if isRitual (spell) then abilityScore (char, "Artes Liberales") + abilityScore (char, "Philosophiae") else 0
+
+castFor (char, spell) = castRow (spell.Name, spellStat (spell, "Arts"), toInt (spellStat (spell, "Level")), artScore (char, techniqueOf (spellStat (spell, "Arts"))) + artScore (char, formOf (spellStat (spell, "Arts"))) + char.Characteristics.Stamina + char.Magic.Aura + masteryOf (char, spell.Name) + ritualBonus (char, spell) - penalty (char), rangeOf (spellStat (spell, "Range")), if isRitual (spell) then 1 else 11)
 
 isCastable (spell) = spellStat (spell, "Level") != ""
 
@@ -271,7 +279,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 2  size = wide }
         singular = "Ability"
         editablekeys = character
-        keys = ["Area Lore", "Artes Liberales", "Athletics", "Awareness", "Brawl", "Charm", "Code of Hermes", "Concentration", "Finesse", "Folk Ken", "Guile", "Latin", "Leadership", "Living Language", "Magic Theory", "Parma Magica", "Penetration", "Ride", "Single Weapon", "Stealth", "Survival", "Teaching"]
+        keys = ["Area Lore", "Artes Liberales", "Athletics", "Awareness", "Brawl", "Charm", "Code of Hermes", "Concentration", "Finesse", "Folk Ken", "Guile", "Latin", "Leadership", "Living Language", "Magic Theory", "Parma Magica", "Penetration", "Philosophiae", "Ride", "Single Weapon", "Stealth", "Survival", "Teaching"]
         valueType = custom
         {
             Score = integer { default = 0  minvalue = 0 }
@@ -343,6 +351,20 @@ characterTable = ruleset
         singular = "Spell"
         editable = character
         visible = magusOnly (Character.Kind)
+    }
+
+    'Spell mastery' = keyvalues
+    {
+        description = "Mastery scores, by the spell's name as in Spells. Mastery adds to the casting total."
+        singular = "Spell"
+        editablekeys = character
+        keys = []
+        visible = magusOnly (Character.Kind)
+        valueType = custom
+        {
+            Score = integer { default = 1  minvalue = 0 }
+            Talents = string { description = "Mastery abilities, such as Fast Casting or Penetration." }
+        }
     }
 
     'Formulaic spells' = list
@@ -490,7 +512,7 @@ ArsMagica = system
         {
             title = "Casting spells"
             topic = "Play"
-            text = ["A formulaic spell's casting total is Technique + Form + Stamina + aura + stress die; it must reach the spell's level, or within 10 of it at the cost of a fatigue level. Spontaneous magic is weaker and tiring."]
+            text = ["A formulaic spell's casting total is Technique + Form + Stamina + aura + stress die; Mastery adds to it. It must reach the spell's level, or within 10 of it at the cost of a fatigue level. A ritual adds Artes Liberales + Philosophiae and fails if it falls short. Spontaneous magic is weaker and tiring."]
         },
         hint
         {

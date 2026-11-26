@@ -7,7 +7,7 @@ Tests are d100 **at or under** a skill (characteristic plus advances) or a chara
 - 01–05 always succeed and 96–00 always fail.
 - **Opposed tests:** both roll, and the higher SL wins.
 - **Doubles** (11, 22 …): a critical on a hit in combat, a fumble on a miss.
-- **Fortune** points reroll a test or add +1 SL. **Resolve** points shrug off a condition or ignore a Critical Wound. **Fate** and **Resilience** are burnt to survive death or remove a mutation.
+- **Fortune** points reroll a test or add +1 SL. After a failed test the roll window offers *Spend Fortune: reroll*, which takes the point off the sheet; add +1 SL by hand. **Resolve** points shrug off a condition or ignore a Critical Wound. **Fate** and **Resilience** are burnt to survive death or remove a mutation.
 
 ## Combat
 Act in Initiative order (roll the Initiative field to join the tracker; it uses the I characteristic).

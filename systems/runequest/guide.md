@@ -16,7 +16,7 @@ Skills get a **category modifier** (Agility, Communication, Knowledge, Magic, Ma
 **Resistance rolls** (such as POW against POW): 50% plus 5% for each point the active characteristic beats the passive one.
 
 ## Combat
-- Melee rounds are split into **strike ranks** 1 to 12. Each fighter's SR is DEX SR + SIZ SR + weapon SR; lowest acts first. Spells add a strike rank per magic point.
+- Melee rounds are split into **strike ranks** 1 to 12. Each fighter's SR is DEX SR + SIZ SR + weapon SR (missile weapons use DEX SR alone); lowest acts first. Spells add a strike rank per magic point.
 - An attack rolls the weapon skill; the defender may parry or dodge. A **special** success impales, slashes or crushes for extra damage; a **critical** does maximum special damage and ignores armor.
 - Roll **d20 for hit location**: 1-4 right leg, 5-8 left leg, 9-11 abdomen, 12 chest, 13-15 right arm, 16-18 left arm, 19-20 head. Armor on the location absorbs damage; the rest comes off the location and the total hit points.
 - A limb at 0 hit points is useless; at twice its points it is severed or maimed. Head, chest or abdomen at 0 and the adventurer is down. Total hit points at 0 or less means death without healing magic.

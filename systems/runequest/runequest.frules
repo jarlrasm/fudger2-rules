@@ -84,6 +84,12 @@ sizStrikeRank (siz) = if siz <= 6 then 3 else if siz <= 14 then 2 else if siz <=
 
 dexStrikeRank (dex) = if dex <= 5 then 5 else if dex <= 8 then 4 else if dex <= 12 then 3 else if dex <= 15 then 2 else if dex <= 18 then 1 else 0
 
+sizHp (siz) = if siz <= 4 then -2 else if siz <= 8 then -1 else if siz <= 12 then 0 else (siz - 9) / 4
+
+powHp (pow) = if pow <= 4 then -1 else if pow <= 16 then 0 else (pow - 13) / 4
+
+locationHp (total, offset) = max (1, max (2, 2 + (total - 4) / 3) + offset)
+
 minorMod (score) = if score <= 4 then -5 else if score >= 17 then 5 else 0
 
 characteristicMod (score) = if score <= 4 then -10 else if score <= 8 then -5 else if score <= 12 then 0 else if score <= 16 then 5 else if score <= 20 then 10 else 15
@@ -103,7 +109,7 @@ rune (base) = custom
 location (armor, hp) = custom
 {
     Armor = integer { description = "Armor points on this location." default = armor }
-    Max = integer { description = "Hit points of this location." default = hp }
+    Max = integer { description = "Hit points of this location, from total hit points. Correct it if your book says otherwise." default = hp }
     Damage = integer { description = "Damage taken here. At its hit points the limb is useless; at twice them it is severed or maimed." default = 0  minvalue = 0  editable = live }
 }
 
@@ -126,7 +132,7 @@ weaponAttack (name, chance, damage, strike, kind, rangeMetres) = custom
 attackFor (char, weapon) =
     weaponAttack (weapon.Name, toInt (weaponStat (weapon, "Skill")) + char.Skills.'Manipulation modifier',
         weaponStat (weapon, "Damage") + (if weaponStat (weapon, "Kind") == "Missile" then "" else " " + char.Attributes.'Damage bonus'),
-        toString (char.Attributes.'DEX SR' + char.Attributes.'SIZ SR' + toInt (weaponStat (weapon, "SR"))),
+        if weaponStat (weapon, "Kind") == "Missile" then toString (char.Attributes.'DEX SR') else toString (char.Attributes.'DEX SR' + char.Attributes.'SIZ SR' + toInt (weaponStat (weapon, "SR"))),
         if weaponStat (weapon, "Kind") == "Missile" then "ranged" else "melee",
         firstNumber (weaponStat (weapon, "Range")))
 
@@ -174,7 +180,7 @@ characterTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max HP' = integer { description = "Total hit points: CON plus SIZ and POW modifiers." default = 13 }
+        'Max HP' = integer { description = "Total hit points: CON plus SIZ and POW modifiers. Worked out from the characteristics; correct it if your book says otherwise." default = Characteristics.CON + sizHp (Characteristics.SIZ) + powHp (Characteristics.POW) }
         HP = integer { description = "Hit points left: total minus the damage on all locations. At 0 you are dying." value = 'Max HP' - totalLocationDamage (characterTable)  editable = none  indicator = "#d64545" }
         State = string { value = hpState ('Max HP' - totalLocationDamage (characterTable), 'Max HP')  visible = none  indicator = "#d64545" }
         'Max MP' = integer { description = "Magic points: equal to POW." value = Characteristics.POW  editable = none }
@@ -202,13 +208,13 @@ characterTable = ruleset
     {
         description = "Melee and missile hits roll d20 for a location. Armor there stops damage."
         tableLayout = layout { columns = 4  size = wide }
-        Head = location (0, 5)
-        'Left arm' = location (0, 4)
-        'Right arm' = location (0, 4)
-        Chest = location (0, 6)
-        Abdomen = location (0, 5)
-        'Left leg' = location (0, 5)
-        'Right leg' = location (0, 5)
+        Head = location (0, locationHp (Attributes.'Max HP', 0))
+        'Left arm' = location (0, locationHp (Attributes.'Max HP', -1))
+        'Right arm' = location (0, locationHp (Attributes.'Max HP', -1))
+        Chest = location (0, locationHp (Attributes.'Max HP', 1))
+        Abdomen = location (0, locationHp (Attributes.'Max HP', 0))
+        'Left leg' = location (0, locationHp (Attributes.'Max HP', 0))
+        'Right leg' = location (0, locationHp (Attributes.'Max HP', 0))
         'Week of healing' = button
         {
             description = "A week of rest heals each wounded location by your healing rate."
@@ -264,46 +270,67 @@ characterTable = ruleset
     {
         description = "Skills in percent, with each category's modifier added."
         tableLayout = layout { columns = 2  size = wide }
-        'Agility modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + minorMod (Characteristics.STR) - minorMod (Characteristics.SIZ) }
+        'Agility modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + minorMod (Characteristics.STR) - minorMod (Characteristics.SIZ) + minorMod (Characteristics.POW) }
         'Communication modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.CHA) + minorMod (Characteristics.INT) + minorMod (Characteristics.POW) }
         'Knowledge modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.INT) + minorMod (Characteristics.POW) }
         'Magic modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.POW) + minorMod (Characteristics.CHA) }
-        'Manipulation modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + characteristicMod (Characteristics.INT) + minorMod (Characteristics.STR) }
+        'Manipulation modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) + characteristicMod (Characteristics.INT) + minorMod (Characteristics.STR) + minorMod (Characteristics.POW) }
         'Perception modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.INT) + minorMod (Characteristics.POW) }
         'Stealth modifier' = integer { description = "Worked out from the characteristics; correct it if your book says otherwise." default = characteristicMod (Characteristics.DEX) - characteristicMod (Characteristics.SIZ) - minorMod (Characteristics.POW) }
         Boat = skill (5, 'Agility modifier')
         Climb = skill (40, 'Agility modifier')
         Dodge = skill (Characteristics.DEX * 2, 'Agility modifier')
+        Drive = skill (5, 'Agility modifier')
         Jump = skill (Characteristics.DEX * 3, 'Agility modifier')
         Ride = skill (5, 'Agility modifier')
         Swim = skill (15, 'Agility modifier')
         'Act' = skill (5, 'Communication modifier')
+        Art = skill (5, 'Communication modifier')
+        Bargain = skill (5, 'Communication modifier')
+        Charm = skill (15, 'Communication modifier')
+        Dance = skill (10, 'Communication modifier')
+        Disguise = skill (5, 'Communication modifier')
         'Fast Talk' = skill (5, 'Communication modifier')
         Intimidate = skill (15, 'Communication modifier')
+        Intrigue = skill (5, 'Communication modifier')
         Orate = skill (10, 'Communication modifier')
         Sing = skill (10, 'Communication modifier')
         'Speak Own Language' = skill (50, 'Communication modifier')
         'Speak Tradetalk' = skill (0, 'Communication modifier')
         'Animal Lore' = skill (5, 'Knowledge modifier')
         'Battle' = skill (10, 'Knowledge modifier')
+        Bureaucracy = skill (0, 'Knowledge modifier')
+        'Celestial Lore' = skill (5, 'Knowledge modifier')
         'Customs' = skill (25, 'Knowledge modifier')
+        'Elder Race Lore' = skill (5, 'Knowledge modifier')
         'Evaluate' = skill (10, 'Knowledge modifier')
         'Farm' = skill (10, 'Knowledge modifier')
         'First Aid' = skill (10, 'Knowledge modifier')
+        Game = skill (15, 'Knowledge modifier')
+        Herd = skill (5, 'Knowledge modifier')
         'Homeland Lore' = skill (30, 'Knowledge modifier')
+        'Manage Household' = skill (10, 'Knowledge modifier')
         'Mineral Lore' = skill (5, 'Knowledge modifier')
+        'Peaceful Cut' = skill (10, 'Knowledge modifier')
         'Plant Lore' = skill (5, 'Knowledge modifier')
         'Read Write' = skill (0, 'Knowledge modifier')
+        Shiphandling = skill (0, 'Knowledge modifier')
         'Survival' = skill (15, 'Knowledge modifier')
+        'Treat Disease' = skill (5, 'Knowledge modifier')
+        'Treat Poison' = skill (5, 'Knowledge modifier')
         'Cult Lore' = skill (5, 'Knowledge modifier')
         Meditate = skill (0, 'Magic modifier')
-        Prepare = skill (5, 'Magic modifier')
+        'Prepare Corpse' = skill (10, 'Magic modifier')
+        'Sense Assassin' = skill (0, 'Magic modifier')
+        'Sense Chaos' = skill (0, 'Magic modifier')
         'Spirit Combat' = skill (20, 'Magic modifier')
         'Spirit Dance' = skill (0, 'Magic modifier')
         'Spirit Lore' = skill (0, 'Magic modifier')
+        'Spirit Travel' = skill (10, 'Magic modifier')
         Worship = skill (5, 'Magic modifier')
         Conceal = skill (5, 'Manipulation modifier')
         'Devise' = skill (5, 'Manipulation modifier')
+        'Play Instrument' = skill (0, 'Manipulation modifier')
         'Sleight' = skill (10, 'Manipulation modifier')
         'Insight' = skill (20, 'Perception modifier')
         Listen = skill (25, 'Perception modifier')
