@@ -7,22 +7,22 @@ complicationsOf (rolls, range) = count (filter ((x)->x > 20 - range, rolls))
 
 plural (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
 
-duneText (successes, complications, difficulty) =
+duneText (successes, complications, difficulty, known) =
     plural (successes, "success", "successes")
-    + (if difficulty > 0 then " vs " + toString (difficulty) + (if successes >= difficulty then ": success" + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else ": failure") else "")
+    + (if known then " vs " + toString (difficulty) + (if successes >= difficulty then ": success" + (if successes > difficulty then ", " + toString (successes - difficulty) + " Momentum" else "") else ": failure") else "")
     + (if complications > 0 then ", " + plural (complications, "complication", "complications") else "")
 
-duneResult (rolls, target, crit, range, difficulty) =
+duneResult (rolls, target, crit, range, difficulty, known) =
 {
-    Text = duneText (successesOf (rolls, target, crit), complicationsOf (rolls, range), difficulty)
+    Text = duneText (successesOf (rolls, target, crit), complicationsOf (rolls, range), difficulty, known)
     Value = successesOf (rolls, target, crit)
-    Outcome = if difficulty < 1 then (if complicationsOf (rolls, range) > 0 then "Complication" else "") else if successesOf (rolls, target, crit) >= difficulty then "Success" else "Failure"
+    Outcome = if not (known) then (if complicationsOf (rolls, range) > 0 then "Complication" else "") else if successesOf (rolls, target, crit) >= difficulty then "Success" else "Failure"
 }
 
-duneRoll (target, skillRating, focus, diceCount, range, difficulty) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
-    ((baseline, throws)->duneResult (first (throws).rolls, target, if focus then skillRating else 1, range, if difficulty > 0 then difficulty else asked)))
+duneRoll (target, skillRating, focus, diceCount, range) = ([dice { number = max (1, min (5, diceCount))  sides = 20 }],
+    ((baseline, throws)->duneResult (first (throws).rolls, target, if focus then skillRating else 1, range, asked, answered)))
 
-duneDice (target, skillRating, focus, diceCount, range) = ask ("Difficulty", duneRoll (target, skillRating, focus, diceCount, range, 0))
+duneDice (target, skillRating, focus, diceCount, range) = ask ("Difficulty", duneRoll (target, skillRating, focus, diceCount, range))
 
 skillNames = ["Battle", "Communicate", "Discipline", "Move", "Understand"]
 
