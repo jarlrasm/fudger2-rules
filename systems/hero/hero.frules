@@ -9,9 +9,14 @@ heroOutcome (target, total) =
     else if total <= target then "Success"
     else "Failure"
 
+heroMargin (target, total) =
+    if heroOutcome (target, total) != "Failure" and total <= target then ", made by " + toString (target - total)
+    else if heroOutcome (target, total) == "Failure" and total > target then ", missed by " + toString (total - target)
+    else ""
+
 heroResult (target, total) =
 {
-    Text = toString (total) + " vs " + toString (target) + "-: " + heroOutcome (target, total) + (if total <= target and total != 18 then ", made by " + toString (target - total) else ", missed by " + toString (total - target))
+    Text = toString (total) + " vs " + toString (target) + "-: " + heroOutcome (target, total) + heroMargin (target, total)
     Value = target - total
     Outcome = heroOutcome (target, total)
 }
@@ -77,7 +82,8 @@ speedPhases (spd) =
 staticInitiative = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
 
 heroState (char) =
-    if char.Health.BODY < 0 then "Dying"
+    if char.Health.BODY <= 0 - char.Health.'Max BODY' then "Dead"
+    else if char.Health.BODY < 0 then "Dying"
     else if char.Health.STUN <= 0 then "Knocked out"
     else if char.Health.Stunned then "Stunned"
     else ""
@@ -117,13 +123,13 @@ attack (name, ocv, damageText, kind, distance) = custom
     Damage = integer { value = dieCountOf (damageText)  render = damageText  valuedice = damageFor (damageText)  editable = none }
 }
 
-isAttackPower (power) = dieCountOf (powerStat (power, "Damage")) > 0
+isAttackPower (power) = dieCountOf (powerStat (power, "Damage")) > 0 and powerStat (power, "Range") != "Self"
 
 attackFor (char, power) =
     if powerStat (power, "Range") == "No range" then
         attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "melee", 2)
-    else if powerStat (power, "Range") == "Line of sight" or powerStat (power, "Range") == "Self" then
-        attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 0)
+    else if powerStat (power, "Range") == "Line of sight" then
+        attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 10000)
     else
         attack (power.Name, char.Combat.OCV + toInt (powerStat (power, "OCV")), powerStat (power, "Damage"), "ranged", 10 * max (1, toInt (powerStat (power, "Active points"))))
 
@@ -305,12 +311,13 @@ creatureTable = ruleset
         PD = string { description = "PD, and resistant PD after a slash." default = "4/0" }
         ED = string { default = "4/0" }
         REC = integer { default = 4 }
-        BODY = integer { default = 10  editable = live  indicator = "#d64545" }
+        'Max BODY' = integer { default = 10 }
+        BODY = integer { default = 'Max BODY'  editable = live  indicator = "#d64545" }
         STUN = integer { default = 20  editable = live }
         END = integer { default = 20  editable = live }
         Phases = string { value = speedPhases (SPD)  editable = none }
         Initiative = modifier { value = DEX  valuedice = staticInitiative  editable = none }
-        Down = string { value = if BODY < 0 then "Dying" else if STUN <= 0 then "Knocked out" else ""  visible = none  indicator = "#555555" }
+        Down = string { value = if BODY <= 0 - 'Max BODY' then "Dead" else if BODY < 0 then "Dying" else if STUN <= 0 then "Knocked out" else ""  visible = none  indicator = "#555555" }
     }
     Attacks = keyvalues
     {

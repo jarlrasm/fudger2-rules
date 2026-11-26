@@ -14,7 +14,7 @@ A turn has 12 segments. SPD decides in which segments a character acts (the *Pha
 - **Normal damage** (most punches and blasts): the dice total is STUN. Each die is also 0 BODY on a 1, 1 on 2 to 5, and 2 on a 6.
 - **Killing damage** (blades, bullets, claws, marked *K*): the total is BODY; STUN is BODY times 1d3.
 - Subtract the matching defense from each: PD for physical, ED for energy. Against killing damage only **resistant** defenses (rPD, rED) stop BODY.
-- Losing more STUN than CON in one hit **stuns**: the character loses their next phase. At 0 STUN they are knocked out; below 0 BODY they are dying.
+- Losing more STUN than CON in one hit **stuns**: the character loses their next phase. At 0 STUN they are knocked out; below 0 BODY they are dying, and at negative BODY equal to their starting BODY they are dead.
 - A **Recovery** (spending a phase, or after segment 12) regains REC in STUN and END. The sheet's *Recovery* and *Full rest* buttons do that.
 
 ## Endurance
