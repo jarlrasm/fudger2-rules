@@ -1,0 +1,72 @@
+@import url("/systems/sheet.css");
+
+/* PIRATE BORG: weathered parchment, black ink and blood red, ragged
+   headings tilted like a torn chart, five abilities in a row of slabs. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9dfc6;
+    --surface: #f3ead4;
+    --surface-alt: #e4d7b8;
+    --surface-sunken: #d8c9a4;
+    --surface-muted: #cdbd96;
+    --text: #141210;
+    --text-muted: #3a332a;
+    --text-faint: #6d6252;
+    --on-accent: #f3ead4;
+    --border: #8a7a5c;
+    --border-strong: #141210;
+    --accent: #9b1c1c;
+    --accent-hover: #b82424;
+    --accent-soft: #e6c9b8;
+    --link: #9b1c1c;
+    --danger: #9b1c1c;
+    --danger-hover: #b82424;
+    --danger-soft: #e6c9b8;
+    --success: #2f5d50;
+    --paper: #f3ead4;
+    --card-bg: #efe4ca;
+    --dice-bg: #141210;
+    --dice-text: #f3ead4;
+}
+
+.entityView {
+    --sheet-font: "Archivo Narrow", "Arial Narrow", Impact, sans-serif;
+    --title-font: "Pirata One", "UnifrakturCook", "Old English Text MT", serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    font-size: 1.6em;
+    color: var(--accent);
+    border-bottom: 3px double var(--border-strong);
+    letter-spacing: 0.05em;
+    padding-bottom: 2px;
+}
+.entityView .entityTable > table > thead th > * {
+    display: inline-block;
+    transform: rotate(-2deg);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 800;
+}
+.entityView .table-abilities > table > tbody > tr {
+    background: var(--text);
+    color: var(--on-accent);
+    padding: 6px;
+    text-align: center;
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child { color: var(--on-accent); font-size: 1.05em; }
+.entityView .table-abilities button.dicethrow { font-size: 1.5em; background: var(--accent); color: var(--on-accent); }
+.entityView .table-status { --block: 66.666%; }
+.entityView .table-armour { --block: 33.333%; }
+.entityView .table-weapons,
+.entityView .table-attacks { --block: 50%; clear: left; }
+.entityView .table-attacks { clear: none; }
+.entityView .table-arcane-rituals,
+.entityView .table-relics { --block: 50%; }
+.entityView .table-arcane-rituals { clear: left; }
+.entityView .table-ship .table-crew { --block: 100%; }
