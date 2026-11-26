@@ -1,0 +1,87 @@
+{
+  "values": {
+    "Character": {
+      "Role": "Gearhead",
+      "Experience": 3,
+      "Face": "Burn scar over one eye, squints",
+      "Body": "Bony, long oily fingers",
+      "Clothing": "Patched overalls, a belt of rusty tools",
+      "My Den": "A boiler room under the old pump hall"
+    },
+    "Attributes": {
+      "Strength.Max": 3,
+      "Strength.Current": 2,
+      "Agility.Max": 3,
+      "Agility.Current": 3,
+      "Wits.Max": 5,
+      "Wits.Current": 4,
+      "Empathy.Max": 3,
+      "Empathy.Current": 3
+    },
+    "Conditions": {
+      "Sleepless": true
+    },
+    "Skills": {
+      "Specialist.Level": 3,
+      "Comprehend.Level": 2,
+      "Know the Zone.Level": 1,
+      "Shoot.Level": 2,
+      "Force.Level": 1,
+      "Scout.Level": 1
+    },
+    "Mutation Points": {
+      "Points": 3
+    },
+    "Relationships": {
+      "I Hate": "Boss Hask, who took my workshop",
+      "I Need to Protect": "Little Wibb, the boy who sorts my screws",
+      "My Big Dream": "Make the old radio mast talk again"
+    },
+    "The Others": [
+      { "Name": "Orla", "Relationship": "Steals my stuff, but has my back", "Buddy": true },
+      { "Name": "Krem", "Relationship": "Too eager to shoot things", "Buddy": false }
+    ],
+    "Combat": {
+      "Armour Rating": 1
+    },
+    "Critical Injuries": [
+      { "Injury": "Sprained wrist", "Lethal": false, "Time Limit": "-", "Effect": "Slower with tools", "Healing Time": "3 days" }
+    ],
+    "Rot": {
+      "Rot Points": 2,
+      "Permanent Rot": 1
+    },
+    "Consumables": {
+      "Grub": 2,
+      "Water": 1,
+      "Bullets": 7,
+      "Booze": 1,
+      "Tiny Items": "A bent spoon, three batteries, a picture of a car"
+    },
+    "Notes": {
+      "Notes": "Found a sealed hatch in sector C4. Needs a crowbar and two people."
+    }
+  },
+  "secondary": {
+    "Mutations": [
+      { "name": "Magnetism", "values": { "Stats": { "Use": "Action", "Cost": "1 MP per use", "Misfire": "Pulls the wrong thing, or everything, to you." } } }
+    ],
+    "Talents": [
+      { "name": "Tinkerer", "values": { "Stats": { "Role": "Gearhead" } } }
+    ],
+    "Weapons": [
+      { "name": "Scrap rifle", "values": { "Stats": { "Kind": "Ranged", "Bonus": 1, "Damage": 2, "Range": "Long", "Bullets": true, "Weight": "1" } } },
+      { "name": "Wrench", "values": { "Stats": { "Kind": "Melee", "Bonus": 1, "Damage": 1, "Range": "Arm's Length", "Weight": "1" } } }
+    ],
+    "Armour": [
+      { "name": "Tyre armour", "values": { "Stats": { "Rating": 1, "Weight": "1" } } }
+    ],
+    "Gear": [
+      { "name": "Toolbox", "values": { "Stats": { "Bonus": "+2 Jury-Rig", "Weight": "1" } } },
+      { "name": "Flashlight", "values": { "Stats": { "Bonus": "+1 Scout in the dark", "Weight": "1/2" } } }
+    ],
+    "Artifacts": [
+      { "name": "The Humming Box", "values": { "Stats": { "DEV Bonus": "Technology", "Bonus Points": 2, "Effect": "A radio. It hums. Sometimes it talks." } } }
+    ]
+  }
+}
