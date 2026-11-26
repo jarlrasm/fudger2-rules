@@ -5,9 +5,9 @@ D20Roll  = torgDice (0, 0)
 
 torgDice (penalty, poss) = ask ("DN", torgRollImpl (0, penalty, poss))
 
-torgPenalty (char) = min (3, char.Damage.Wounds.realvalue) + 2 * char.Damage.Stymied.realvalue + 2 * char.Damage.Weakened.realvalue
+torgPenalty (char) = min (3, max (0, char.Damage.Wounds.realvalue)) + 2 * max (0, char.Damage.Stymied.realvalue) + 2 * max (0, char.Damage.Weakened.realvalue)
 
-creaturePenalty (creature) = min (3, creature.Basics.'Wounds taken'.realvalue) + 2 * creature.Basics.Stymied.realvalue + 2 * creature.Basics.Weakened.realvalue
+creaturePenalty (creature) = min (3, max (0, creature.Basics.'Wounds taken'.realvalue)) + 2 * max (0, creature.Basics.Stymied.realvalue) + 2 * max (0, creature.Basics.Weakened.realvalue)
 
 charRoll (char) = torgDice (torgPenalty (char), char.Possibilities.Possibilities)
 
