@@ -613,7 +613,7 @@ shipFire (weaponType, strength, crit) = ask ("Difficulty", difficulties, -6, shi
 shipDamageText (total, armourValue, hits, lance) =
     if hits <= 0 then "No hits got past the void shields"
     else toString (total) + " damage from " + toString (hits) + (if hits == 1 then " hit" else " hits")
-        + (if lance then ", Lance: ignores armour" else if armourValue > 0 then ", " + toString (max (0, total - armourValue)) + " after Armour " + toString (armourValue) else "")
+        + (if lance then ", Lance: ignores armour" else if armourValue > 0 then ", " + toString (max (0, total - armourValue * hits)) + " after Armour " + toString (armourValue) + (if hits == 1 then "" else " on each hit") else "")
 
 shipDamageDice (hits, diceCount, dieSize, lance) = ([dice { number = max (0, hits) * diceCount  sides = dieSize }],
     ((baseline, throws)->shipDamageText (sum (first (throws).rolls) + baseline * max (0, hits), asked, hits, lance)))
