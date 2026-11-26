@@ -399,7 +399,7 @@ creatureTable = ruleset
         {
             Yellow = integer { default = 1  minvalue = 0 }
             Green = integer { default = 1  minvalue = 0 }
-            Roll = integer { value = Yellow + Green + groupRanks (Profile.Kind, Profile.'Group Size', Green)  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (groupYellow (Yellow, Green, minionRanks (Profile.Kind, Profile.'Group Size')), groupGreen (Green, minionRanks (Profile.Kind, Profile.'Group Size')), max (0, 0 - s), 0, max (0, d), max (0, s))))  render = toString (groupYellow (Yellow, Green, minionRanks (Profile.Kind, Profile.'Group Size'))) + "Y " + toString (groupGreen (Green, minionRanks (Profile.Kind, Profile.'Group Size'))) + "G"  editable = none  action = if Key == "Melee" or Key == "Brawl" or Key == "Lightsaber" then "melee" else if contains (Key, "Ranged") or Key == "Gunnery" then "ranged" else ""  reach = 2 }
+            Roll = integer { value = Yellow + Green + groupRanks (Stats.Kind, Stats.'Group Size', Green)  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (groupYellow (Yellow, Green, minionRanks (Stats.Kind, Stats.'Group Size')), groupGreen (Green, minionRanks (Stats.Kind, Stats.'Group Size')), max (0, 0 - s), 0, max (0, d), max (0, s))))  render = toString (groupYellow (Yellow, Green, minionRanks (Stats.Kind, Stats.'Group Size'))) + "Y " + toString (groupGreen (Green, minionRanks (Stats.Kind, Stats.'Group Size'))) + "G"  editable = none  action = if Key == "Melee" or Key == "Brawl" or Key == "Lightsaber" then "melee" else if contains (Key, "Ranged") or Key == "Gunnery" then "ranged" else ""  reach = 2 }
         }
     }
     Notes = table
