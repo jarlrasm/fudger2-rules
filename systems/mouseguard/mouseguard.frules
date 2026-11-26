@@ -11,21 +11,48 @@ mgText (successes, ob, known) =
     plural (successes, "success", "successes")
     + (if known then " vs Ob " + toString (ob) + ": " + (if successes >= ob then "Success" + (if successes > ob then ", " + toString (successes - ob) + " extra" else "") else "Failure, the GM gives a twist or a condition") else "")
 
-mgResult (rolls, ob, known) =
+failsIn (rolls) = count (filter ((x)->x < 4, rolls))
+
+sixesIn (rolls) = count (filter ((x)->x == 6, rolls))
+
+mgSpend (fateUsable, courseUsable, fate, persona) =
+    if fateUsable then [{ Field = "characterTable.Rewards.Fate"  Value = fate - 1 }]
+    else if courseUsable then [{ Field = "characterTable.Rewards.Persona"  Value = persona - 1 }]
+    else []
+
+mgKept (kept, rolls, failedBefore, ob, known, fate, persona) =
 {
-    Text = mgText (successesIn (rolls), ob, known)
-    Value = successesIn (rolls)
-    Outcome = if known then mgOutcome (successesIn (rolls), ob) else ""
+    Text = mgText (kept + successesIn (rolls), ob, known)
+    Value = kept + successesIn (rolls)
+    Outcome = if known then mgOutcome (kept + successesIn (rolls), ob) else ""
+    Push = if fate > 0 and sixesIn (rolls) > 0 then mgFatePush (kept + successesIn (rolls), sixesIn (rolls), failedBefore + failsIn (rolls), ob, known, persona)
+        else if persona > 0 and failedBefore + failsIn (rolls) > 0 then mgCoursePush (kept + successesIn (rolls), failedBefore + failsIn (rolls), ob, known)
+        else 0
+    PushLabel = if fate > 0 and sixesIn (rolls) > 0 then "Fate: reroll the 6s" else "Of Course! (Persona): reroll the failed dice"
+    PushSets = mgSpend (fate > 0 and sixesIn (rolls) > 0, persona > 0 and failedBefore + failsIn (rolls) > 0, fate, persona)
 }
 
-mgRoll (pool, fate) = ([dice { number = max (0, pool)  sides = 6  explode = if fate then 6 else 7  label = if fate then "Fate" else "" }],
-    ((baseline, throws)->mgResult (first (throws).rolls, asked, answered)))
+mgFatePush (kept, rerolled, failed, ob, known, persona) = ([dice { number = rerolled  sides = 6  explode = 6  label = "Fate" }],
+    ((baseline, throws)->mgKept (kept, first (throws).rolls, failed, ob, known, 0, persona)))
+
+mgCoursePush (kept, rerolled, ob, known) = ([dice { number = rerolled  sides = 6  label = "Of Course!" }],
+    ((baseline, throws)->mgKept (kept, first (throws).rolls, 0, ob, known, 0, 0)))
+
+mgResult (rolls, ob, known, fate, persona) = mgKept (0, rolls, 0, ob, known, fate, persona)
+
+mgRoll (pool, fate, persona) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->mgResult (first (throws).rolls, asked, answered, fate, persona)))
+
+mgFixed (pool, ob, fate, persona) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->mgResult (first (throws).rolls, ob, true, fate, persona)))
 
 conditionDice (char) = (if char.Conditions.Injured then 1 else 0) + (if char.Conditions.Sick then 1 else 0)
 
-mgTest (char, pool) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - conditionDice (char), char.Rewards.'Spend Fate')))
+mgTest (char, pool) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - conditionDice (char), char.Rewards.Fate, char.Rewards.Persona)))
 
-mgPlain (pool) = ask ("Bonus or penalty dice", 0, (n)->ask ("Obstacle", mgRoll (pool + n, false)))
+mgPlain (pool) = ask ("Bonus or penalty dice", 0, (n)->ask ("Obstacle", mgRoll (pool + n, 0, 0)))
+
+mgRecovery (char, pool, ob) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->mgFixed (pool + n - conditionDice (char), ob, char.Rewards.Fate, char.Rewards.Persona))
 
 disposition (char, skillName, abilityValue) = abilityValue + rankOf (char, skillName)
 
@@ -33,7 +60,7 @@ noSkill = { Rating = 0 }
 
 rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", 0)
 
-mgTestWith (char, pool, penalty) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - penalty, char.Rewards.'Spend Fate')))
+mgTestWith (char, pool, penalty) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", mgRoll (pool + n - penalty, char.Rewards.Fate, char.Rewards.Persona)))
 
 ability (start, maxRating, conditioned) = custom
 {
@@ -165,7 +192,11 @@ characterTable = ruleset
                 (root.Conditions.'Hungry and Thirsty') = false
             }
         }
-        'Healthy again' = button { description = "Recovered at the end of a mission: all conditions cleared." editable = live  onClick = updates
+        'Recover from Angry' = integer { description = "Will test against Ob 2, in the players' turn." value = Abilities.Will.Rating  valuedice = mgRecovery (characterTable, Abilities.Will.Rating, 2)  render = "Will Ob 2"  editable = none }
+        'Recover from Tired' = integer { description = "Health test against Ob 2, in the players' turn." value = Abilities.Health.Rating  valuedice = mgRecovery (characterTable, Abilities.Health.Rating, 2)  render = "Health Ob 2"  editable = none }
+        'Recover from Injured' = integer { description = "Health test against Ob 4, in the players' turn; a Healer can treat it against Ob 3 instead." value = Abilities.Health.Rating  valuedice = mgRecovery (characterTable, Abilities.Health.Rating, 4)  render = "Health Ob 4"  editable = none }
+        'Recover from Sick' = integer { description = "Will test against Ob 3, in the players' turn; a Healer can treat it against Ob 2 instead." value = Abilities.Will.Rating  valuedice = mgRecovery (characterTable, Abilities.Will.Rating, 3)  render = "Will Ob 3"  editable = none }
+        'Healthy again' = button { description = "Clears every condition at once, for the winter session or when the GM rules a long rest. Otherwise recover each condition with its own test." editable = live  onClick = updates
             {
                 (root.Conditions.'Hungry and Thirsty') = false
                 (root.Conditions.Angry) = false
@@ -179,10 +210,9 @@ characterTable = ruleset
     Rewards = table
     {
         tableLayout = layout { columns = 4 }
-        Fate = integer { description = "Spend to make 6s explode on a roll." default = 1  minvalue = 0  editable = live }
-        Persona = integer { description = "Spend for +1D, or to tap Nature." default = 1  minvalue = 0  editable = live }
+        Fate = integer { description = "Spend after a roll to reroll its 6s, open-ended: the roll offers it." default = 1  minvalue = 0  editable = live }
+        Persona = integer { description = "Spend for +1D, to tap Nature, or after a roll with a wise for Of Course!: reroll the failed dice." default = 1  minvalue = 0  editable = live }
         Checks = integer { description = "Earned by using traits against yourself; spend in the players' turn." default = 0  minvalue = 0  editable = live }
-        'Spend Fate' = bool { description = "Tick before a roll you spend Fate on: its 6s explode." default = false  editable = live  save = nosave }
     }
 
     Conflict = table
@@ -290,7 +320,7 @@ MouseGuard = system
         {
             title = "Fate and Persona"
             topic = "Play"
-            text = ["Tick Spend Fate before a roll to make its 6s explode. Persona adds +1D or taps your Nature. Earn both by playing your Belief, Goal and Instinct."]
+            text = ["After a roll with 6s, spend Fate to reroll them, open-ended: the roll offers it. After a failed roll with a wise, spend Persona for Of Course! and reroll the failed dice. Persona also adds +1D or taps your Nature. Earn both by playing your Belief, Goal and Instinct."]
         },
         hint
         {
