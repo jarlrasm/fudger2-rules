@@ -7,15 +7,15 @@ Roll a pool of d6s equal to **attribute + skill**; one of them is the red **Wrat
 - **Wrath die:** a 6 is a **Wrath Critical**: add a point of Glory, and on an attack roll on the critical hit table. A 1 is a **complication**, even on a success.
 
 ## Glory, Wrath and Ruin
-Glory is shared by the party and buys extra dice or damage. Each hero has Wrath points to reroll failures or add dice to defence. The GM spends Ruin for enemies and complications.
+Glory is shared by the party and buys extra dice or damage. Each hero has Wrath points to reroll failures or add dice to defence. After a hero's roll, the result offers to spend a Wrath point and reroll every die that scored no icon. The GM spends Ruin for enemies and complications.
 
 ## Combat
 Heroes and enemies alternate turns: a hero acts, then the GM picks an enemy. The GM can spend Ruin to seize the initiative.
 
 1. Weapon Skill (Initiative) for melee, Ballistic Skill (Agility) for ranged. The DN is the target's **Defence**.
-2. Damage is the weapon's value (Strength adds to melee) plus its **ED** extra damage dice: 4–5 add 1, 6 adds 2.
+2. Damage is the weapon's value (Strength adds to melee) plus its **ED** extra damage dice: 4–5 add 1, 6 adds 2. Click an attack's Damage to roll it.
 3. Damage at or below the target's **Resilience** does nothing; each point over is a **wound**. A hero can roll **Determination** to turn wounds into Shock: each icon converts one.
-4. More wounds than Max Wounds means dying; more Shock than Max Shock means exhausted.
+4. Wounds equal to Max Wounds means dying; Shock equal to Max Shock means exhausted.
 
 ## Corruption and faith
 Track Corruption for exposure to the warp, and Faith for heroes with the faith keyword.
