@@ -112,8 +112,11 @@ attackFor (char, weapon) =
 
 armourValue (char) = sum (map ((a)->firstNumber (valueOr (valueOr (valueOr (a.data, "armourStats", { Stats = { Armour = "0" } }), "Stats", { Armour = "0" }), "Armour", "0")), char.Armour))
 
+woundTotal (char) = char.Health.Minor + 2 * char.Health.Serious + 3 * char.Health.Deadly
+
 woundState (char) =
-    if char.Health.Deadly > 0 then "Deadly wound"
+    if woundTotal (char) >= char.Health.'Max Wounds' then "Down"
+    else if char.Health.Deadly > 0 then "Deadly wound"
     else if char.Health.Serious > 0 then "Seriously wounded"
     else if char.Health.Toughness < 1 then "No Toughness"
     else ""
@@ -159,9 +162,11 @@ characterTable = ruleset
     Health = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max Toughness' = integer { description = "Body plus Mind plus Soul, plus talents." default = Attributes.Body + Attributes.Mind + Attributes.Soul }
+        'Max Toughness' = integer { description = "Body plus Mind plus Soul, plus talents." value = Attributes.Body + Attributes.Mind + Attributes.Soul + 'Toughness bonus'  editable = none }
+        'Toughness bonus' = integer { description = "Extra Toughness from species and talents." default = 0 }
         Toughness = integer { description = "Damage comes off Toughness first; at 0 each hit also wounds." default = 'Max Toughness'  minvalue = 0  editable = live  indicator = "#d64545" }
-        'Max Wounds' = integer { description = "How many wounds of any kind you can carry before you fall." default = 3 }
+        'Max Wounds' = integer { description = "Half of Body plus Mind plus Soul, rounded up, plus talents: when minor, serious and deadly wounds (1, 2 and 3 each) reach it, you fall." value = (Attributes.Body + Attributes.Mind + Attributes.Soul + 1) / 2 + 'Wounds bonus'  editable = none }
+        'Wounds bonus' = integer { description = "Extra wound capacity from species and talents." default = 0 }
         Minor = integer { description = "Minor wounds." default = 0  minvalue = 0  editable = live }
         Serious = integer { description = "Serious wounds: 2 damage each against the wound total." default = 0  minvalue = 0  editable = live }
         Deadly = integer { description = "Deadly wounds: 3 each. Too many and you die." default = 0  minvalue = 0  editable = live }
