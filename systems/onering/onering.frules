@@ -24,60 +24,96 @@ torSucceeds (feat, total, tn, miserable) =
     else if feat == 12 then true
     else total >= tn
 
-torText (feat, total, tn, successDice, miserable) =
-    (if feat == 12 then "Rune" else if feat == 11 then "Eye" else toString (total))
+featName (feat, adversary) =
+    if feat == 12 then (if adversary then "Eye" else "Rune")
+    else if adversary then "Rune"
+    else "Eye"
+
+torText (feat, total, tn, successDice, miserable, adversary) =
+    (if feat > 10 then featName (feat, adversary) else toString (total))
     + (if tn > 0 then " vs TN " + toString (tn) else "")
     + (if feat == 11 and miserable then ": the Eye, automatic failure while Miserable"
         else if tn < 1 then (if feat == 12 then ": automatic success" else "")
         else if torSucceeds (feat, total, tn, miserable) then ": success" + degree (tengwar (successDice))
         else ": failure")
 
-torResult (feats, successDice, tn, weary, miserable, favour) =
+sideFeats (feats, adversary) = if adversary then map ((x)->if x == 11 then 12 else if x == 12 then 11 else x, feats) else feats
+
+torResult (feats, successDice, tn, weary, miserable, favour, adversary) =
 {
-    Text = torText (pickFeat (feats, favour), featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice)), tn, successDice, miserable)
+    Text = torText (pickFeat (feats, favour), featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice)), tn, successDice, miserable, adversary)
     Value = featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice))
     Outcome = if tn < 1 and pickFeat (feats, favour) != 12 then "" else if torSucceeds (pickFeat (feats, favour), featNumber (pickFeat (feats, favour)) + sum (map ((x)->successValue (x, weary), successDice)), tn, miserable) then "Success" else "Failure"
 }
 
-torRoll (rating, tn, weary, miserable, favour) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
-    ((baseline, throws)->torResult (first (throws).rolls, item (1, throws).rolls, if tn > 0 then tn else asked, weary, miserable, favour)))
+featRoll (rating, tn, weary, miserable, favour, adversary) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
+    ((baseline, throws)->torResult (sideFeats (first (throws).rolls, adversary), item (1, throws).rolls, if tn > 0 then tn else asked, weary, miserable, favour, adversary)))
 
-torAttack (rating, tn, weary, miserable, favour) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
-    ((baseline, throws)->torAttackResult (first (throws).rolls, item (1, throws).rolls, tn + asked, weary, miserable, favour)))
+featAttack (rating, tn, weary, miserable, favour, adversary) = ([dice { number = if favour == "Normal" then 1 else 2  sides = 12  faces = featFaces  label = if favour == "Normal" then "" else favour }, dice { number = max (0, rating)  sides = 6  color = "white" }],
+    ((baseline, throws)->torAttackResult (sideFeats (first (throws).rolls, adversary), item (1, throws).rolls, tn + asked, weary, miserable, favour, adversary)))
 
-piercing (feats, successDice, tn, weary, miserable, favour) =
-    torResult (feats, successDice, tn, weary, miserable, favour).Outcome == "Success" and (pickFeat (feats, favour) == 10 or pickFeat (feats, favour) == 12)
+torRoll (rating, tn, weary, miserable, favour) = featRoll (rating, tn, weary, miserable, favour, false)
 
-torAttackResult (feats, successDice, tn, weary, miserable, favour) =
+torAttack (rating, tn, weary, miserable, favour) = featAttack (rating, tn, weary, miserable, favour, false)
+
+advRoll (rating, tn) = featRoll (rating, tn, false, false, "Normal", true)
+
+advAttack (rating, tn) = featAttack (rating, tn, false, false, "Normal", true)
+
+piercing (feats, successDice, tn, weary, miserable, favour, adversary) =
+    torResult (feats, successDice, tn, weary, miserable, favour, adversary).Outcome == "Success" and (pickFeat (feats, favour) == 10 or pickFeat (feats, favour) == 12)
+
+torAttackResult (feats, successDice, tn, weary, miserable, favour, adversary) =
 {
-    Text = torResult (feats, successDice, tn, weary, miserable, favour).Text + (if piercing (feats, successDice, tn, weary, miserable, favour) then ", Piercing Blow" else "")
-    Value = torResult (feats, successDice, tn, weary, miserable, favour).Value
-    Outcome = torResult (feats, successDice, tn, weary, miserable, favour).Outcome
+    Text = torResult (feats, successDice, tn, weary, miserable, favour, adversary).Text + (if piercing (feats, successDice, tn, weary, miserable, favour, adversary) then ", Piercing Blow" else "")
+    Value = torResult (feats, successDice, tn, weary, miserable, favour, adversary).Value
+    Outcome = torResult (feats, successDice, tn, weary, miserable, favour, adversary).Outcome
 }
 
-isWeary (char) = char.Condition.Weary or char.Condition.Load >= char.Condition.Endurance
+totalLoad (char) = char.Condition.Load + char.Condition.Fatigue + char.Standing.Treasure
 
-heroRoll (char, rating, tn, favoured) = torRoll (rating, tn, isWeary (char), char.Condition.Miserable, rollFavour (char, favoured))
+isWeary (char) = char.Condition.Weary or totalLoad (char) >= char.Condition.Endurance
+
+isMiserable (char) = char.Condition.Miserable or char.Condition.Shadow + char.Condition.'Shadow Scars' >= char.Condition.Hope
+
+heroRoll (char, rating, tn, favoured) = torRoll (rating, tn, isWeary (char), isMiserable (char), rollFavour (char, favoured))
 
 rollFavour (char, favoured) =
     if char.Condition.Roll != "Normal" then char.Condition.Roll
     else if favoured then "Favoured"
     else "Normal"
 
+attackFavour (char) =
+    if char.Condition.Roll != "Normal" then char.Condition.Roll
+    else if char.Condition.Stance == "Forward" then "Favoured"
+    else if char.Condition.Stance == "Defensive" then "Ill-favoured"
+    else "Normal"
+
+stanceOrder (stance) = switch stance
+    case "Forward" then 4
+    case "Open" then 3
+    case "Defensive" then 2
+    case "Rearward" then 1
+    else 3
+
+staticInitiative = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
 skill (tn) = custom
 {
     Favoured = bool { description = "A favoured skill rolls two Feat dice and keeps the better." default = false }
-    Rating = integer { description = "Skill rating: how many Success dice to add to the Feat die." default = 0  minvalue = 0  maxvalue = 6  valuedice = heroRoll (characterTable, Rating, tn, Favoured) }
+    Rating = integer { description = "Skill rating: how many Success dice to add to the Feat die." default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Hope dice", 0, (n)->heroRoll (characterTable, Rating + n, tn, Favoured)) }
 }
 
-proficiencyOf (char, name) = valueOr (char.Proficiencies, name, 0)
+proficiencyOf (char, name) =
+    if name == "Brawling" then max (0, max (char.Proficiencies.Axes, char.Proficiencies.Bows, char.Proficiencies.Spears, char.Proficiencies.Swords) - 1)
+    else valueOr (char.Proficiencies, name, 0)
 
 weaponStat (weapon, field) = valueOr (weapon.data.warGearStats.Stats, field, "")
 
 weaponAttack (name, rating, damage, injury, kind) = custom
 {
     Name = name
-    Attack = integer { value = rating  valuedice = ask ("Enemy Parry", torAttack (rating, characterTable.Attributes.'Strength TN', isWeary (characterTable), characterTable.Condition.Miserable, characterTable.Condition.Roll))  action = kind  reach = 2  range = if kind == "ranged" then 100 else 0 }
+    Attack = integer { value = rating  valuedice = ask ("Hope dice", 0, (n)->ask ("Enemy Parry", torAttack (rating + n, characterTable.Attributes.'Strength TN', isWeary (characterTable), isMiserable (characterTable), attackFavour (characterTable))))  action = kind  reach = 2  range = if kind == "ranged" then 100 else 0 }
     Damage = damage
     Injury = injury
 }
@@ -122,7 +158,7 @@ characterTable = ruleset
         description = "Endurance, hope, shadow and the hero's state."
         tableLayout = layout { columns = 4  size = wide }
         'Max Endurance' = integer { description = "Endurance when rested: Strength plus the culture's base." value = Attributes.Strength + Attributes.'Endurance Base'  editable = none }
-        Endurance = integer { description = "Current endurance. At or below load you are weary; at 0 unconscious." default = 'Max Endurance'  editable = live }
+        Endurance = integer { description = "Current endurance. At or below load plus fatigue and treasure you are weary; at 0 unconscious." default = 'Max Endurance'  editable = live }
         Load = integer { description = "Weight of gear carried, which counts against endurance." default = 0  minvalue = 0  editable = live }
         Fatigue = integer { description = "Fatigue from travel, added to load." default = 0  minvalue = 0  editable = live }
         'Max Hope' = integer { description = "Hope when rested: Heart plus the culture's base." value = Attributes.Heart + Attributes.'Hope Base'  editable = none }
@@ -131,9 +167,12 @@ characterTable = ruleset
         'Shadow Scars' = integer { description = "Lasting shadow that never goes away." default = 0  minvalue = 0 }
         Parry = integer { description = "What attackers must beat: Wits plus base parry plus shield." value = Attributes.Wits + Attributes.'Parry Base' + Armour.Shield  editable = none }
         Weary = bool { description = "Weary: Success dice showing 1 to 3 count as 0." default = false  editable = live  indicator = "#d4b106" }
-        Miserable = bool { description = "Miserable: an Eye on the Feat die is a failure." default = false  editable = live  indicator = "#8e5cc4" }
+        Miserable = bool { description = "Miserable: an Eye on the Feat die is a failure. Shadow and scars at or above Hope make you miserable without the tick." default = false  editable = live  indicator = "#8e5cc4" }
         Wounded = bool { description = "Wounded: another wound leaves you dying." default = false  editable = live  indicator = "#d64545" }
-        Down = string { value = if Endurance < 1 then "Unconscious" else if Load >= Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
+        Down = string { value = if Endurance < 1 then "Unconscious" else if Load + Fatigue + Standing.Treasure >= Endurance then "Weary" else ""  visible = none  indicator = "#d64545" }
+        Despair = string { value = if not (Miserable) and Shadow + 'Shadow Scars' >= Hope then "Miserable" else ""  visible = none  indicator = "#8e5cc4" }
+        Stance = string { description = "Combat stance this round. Forward attacks are favoured, defensive ones ill-favoured; forward acts first, rearward last." keys = ["Forward", "Open", "Defensive", "Rearward"]  default = "Open"  editable = live }
+        Initiative = integer { description = "Order in the round from the stance: forward 4, open 3, defensive 2, rearward 1. Heroes act before adversaries." value = stanceOrder (Stance)  valuedice = staticInitiative  editable = none }
         'Short rest' = button { description = "An hour of rest restores endurance equal to your Strength, unless you are wounded."  editable = live  onClick = updates { (root.Condition.Endurance) = if Wounded then Endurance else min ('Max Endurance', Endurance + Attributes.Strength) } }
         'Prolonged rest' = button { description = "A night's rest restores all endurance, or only your Strength in endurance while wounded."  editable = live  onClick = updates { (root.Condition.Endurance) = if Wounded then min ('Max Endurance', Endurance + Attributes.Strength) else 'Max Endurance' } }
         Roll = selector { description = "Favoured rolls two Feat dice and keeps the better, ill-favoured the worse." options = ["Ill-favoured", "Normal", "Favoured"]  labels = ["Ill", "Normal", "Favoured"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
@@ -188,7 +227,7 @@ characterTable = ruleset
     Armour = table
     {
         tableLayout = layout { columns = 3 }
-        Armour = integer { description = "Armour dice rolled to avoid a wound when the Feat die shows a Gandalf rune or Eye." default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
+        Armour = integer { description = "Armour dice rolled against the weapon's Injury after a Piercing Blow; a helm adds its die." default = 0  minvalue = 0  maxvalue = 6  valuedice = ask ("Injury", torRoll (Armour + Helm, 0, isWeary (characterTable), isMiserable (characterTable), "Normal")) }
         Helm = integer { description = "A helm adds a die to the armour roll." default = 0  minvalue = 0  maxvalue = 1 }
         Shield = integer { description = "Shield bonus added to Parry." default = 0  minvalue = 0  maxvalue = 3 }
     }
@@ -233,7 +272,7 @@ creatureTable = ruleset
     Adversary = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Attribute Level' = integer { description = "The adversary's rating for all rolls." default = 4  valuedice = ask ("TN", torRoll ('Attribute Level', 0, false, false, "Normal")) }
+        'Attribute Level' = integer { description = "The adversary's rating for all rolls." default = 4  valuedice = ask ("TN", advRoll ('Attribute Level', 0)) }
         'Max Endurance' = integer { description = "Endurance when unhurt." default = 12 }
         Endurance = integer { description = "Current endurance. At 0 the adversary is out of the fight." default = 'Max Endurance'  editable = live }
         Down = string { value = if Endurance < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
@@ -241,7 +280,8 @@ creatureTable = ruleset
         Wounds = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         'Hate or Resolve' = integer { description = "Spent to power fell abilities." default = 3  editable = live }
         Parry = modifier { description = "Bonus added to the Parry target." default = 0 }
-        Armour = integer { description = "Armour dice rolled against wounds." default = 2  valuedice = ask ("Injury", torRoll (Armour, 0, false, false, "Normal")) }
+        Armour = integer { description = "Armour dice rolled against the Injury of a Piercing Blow." default = 2  valuedice = ask ("Injury", advRoll (Armour, 0)) }
+        Initiative = integer { description = "Adversaries act after every hero." value = 0  valuedice = staticInitiative  editable = none }
         'Fell Abilities' = string { multiline = true }
     }
     'Combat Proficiencies' = list
@@ -252,7 +292,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Rating = integer { default = 2  valuedice = ask ("Hero's Parry", torAttack (Rating, 0, false, false, "Normal"))  action = melee  reach = 2 }
+            Rating = integer { default = 2  valuedice = ask ("Hero's Parry", advAttack (Rating, 0))  action = melee  reach = 2 }
             Damage = integer { default = 3 }
             Injury = integer { default = 12 }
             'Special Damage' = string {}
@@ -294,28 +334,29 @@ TheOneRing = system
         {
             title = "Rolls"
             topic = "Play"
-            text = ["Roll the Feat die and one Success die per skill rank, and beat the TN: 20 minus the attribute. The Rune always succeeds, the Eye counts 0. Each 6 on a Success die improves the result."]
+            text = ["Roll the Feat die and one Success die per skill rank, and beat the TN: 20 minus the attribute. The Rune always succeeds, the Eye counts 0; for adversaries the Eye succeeds and the Rune counts 0. Each 6 on a Success die improves the result."]
         },
         hint
         {
             title = "Weary and Miserable"
             topic = "Play"
-            text = ["Weary heroes count Success dice of 1 to 3 as 0. Miserable heroes fail whenever the Eye comes up."]
+            text = ["Weary heroes, whose Endurance is at or below Load plus Fatigue and Treasure, count Success dice of 1 to 3 as 0. Miserable heroes, whose Shadow reaches Hope, fail whenever the Eye comes up. Rolls ask for Hope dice: spend Hope to add Success dice."]
         },
         hint
         {
             title = "Stances"
             topic = "Initiative"
-            text = ["Each round heroes choose a stance: forward, open, defensive or rearward. Forward acts first, rearward last; adversaries act after the heroes."]
+            text = ["Each round heroes choose a stance: forward, open, defensive or rearward. Forward acts first, rearward last; adversaries act after the heroes. Forward attacks are favoured, defensive ones ill-favoured."]
         },
         hint
         {
             title = "Combat"
             topic = "Combat"
-            text = ["A hero's attack TN is their Strength TN plus the enemy's Parry. An adversary's TN is the hero's Parry. A hit takes Endurance; a 10 or Rune on the Feat die is a Piercing Blow that tests armour against Injury."]
+            text = ["A hero's attack TN is their Strength TN plus the enemy's Parry. An adversary's TN is the hero's Parry. A hit takes Endurance; a 10 or Rune on the Feat die (10 or Eye for adversaries) is a Piercing Blow that tests armour against Injury."]
         }
     ]
     distanceUnit = "m"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
     characters = characterTable
     creatures = creatureTable
     entityTypeNames = [entityTypeName ("Creature", "Adversary", "Adversaries")]
