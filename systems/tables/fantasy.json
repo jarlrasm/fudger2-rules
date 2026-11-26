@@ -1,0 +1,533 @@
+{
+ "name": "Fantasy tables",
+ "description": "Random tables for fantasy adventures: weather, travel, taverns, rumours, people and trinkets. Written for Fudger.",
+ "url": "/systems/tables/fantasy.json",
+ "gamemaster": "",
+ "entities": [
+  {
+   "type": "Tables",
+   "name": "Fantasy weather",
+   "description": "Today's weather in a temperate land.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "2d6",
+    "entries": [
+     {
+      "text": "A storm with thunder; travel is slow and dangerous",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "Cold rain all day",
+      "from": 3,
+      "to": 4
+     },
+     {
+      "text": "Grey skies and a steady wind",
+      "from": 5,
+      "to": 6
+     },
+     {
+      "text": "Clear and mild",
+      "from": 7,
+      "to": 8
+     },
+     {
+      "text": "Warm sun, a light breeze",
+      "from": 9,
+      "to": 10
+     },
+     {
+      "text": "Thick fog until noon",
+      "from": 11,
+      "to": 11
+     },
+     {
+      "text": "Strange weather: a red sky, warm snow or a sudden hush",
+      "from": 12,
+      "to": 12
+     }
+    ]
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Travel encounters",
+   "description": "Who or what the travellers meet on the road.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d8",
+    "entries": [
+     {
+      "text": "A merchant with a broken cart wheel, offering a discount for help",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "text": "Pilgrims singing on their way to a shrine",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "A toll gate run by [[1d4+1]] bored guards",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "text": "A messenger on a tired horse, in a great hurry",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "text": "Tracks leaving the road, fresh and heavy",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "text": "A wandering tinker who knows the local gossip",
+      "from": 6,
+      "to": 6
+     },
+     {
+      "table": {
+       "name": "Fantasy weather"
+      },
+      "text": "The weather turns:",
+      "from": 7,
+      "to": 7
+     },
+     {
+      "table": {
+       "name": "Fantasy people"
+      },
+      "text": "A traveller going the same way:",
+      "from": 8,
+      "to": 8
+     }
+    ],
+    "secret": true
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Tavern events",
+   "description": "Something happening in the tavern tonight.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d12",
+    "entries": [
+     {
+      "text": "A card game turns into an argument about cheating",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "text": "A bard plays a song about one of the characters, with the facts wrong",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "The cook runs out of everything except stew",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "text": "A stranger pays for everyone's drinks and leaves at once",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "text": "Two old friends meet again and drink far too much",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "text": "A notice goes up offering a reward for a lost dog",
+      "from": 6,
+      "to": 6
+     },
+     {
+      "text": "The floor gives way under a heavy table",
+      "from": 7,
+      "to": 7
+     },
+     {
+      "text": "A local champion challenges anyone to arm wrestling",
+      "from": 8,
+      "to": 8
+     },
+     {
+      "text": "Someone recognises a character from somewhere they would rather forget",
+      "from": 9,
+      "to": 9
+     },
+     {
+      "text": "A traveller sells maps; one of them looks real",
+      "from": 10,
+      "to": 10
+     },
+     {
+      "text": "The landlord asks for help with noises in the cellar",
+      "from": 11,
+      "to": 11
+     },
+     {
+      "text": "A wedding party arrives and takes over the place",
+      "from": 12,
+      "to": 12
+     }
+    ]
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Rumours",
+   "description": "What people are saying. Some of it is true.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d10",
+    "entries": [
+     {
+      "text": "The old mill is haunted by the miller's apprentice",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "text": "The baron owes money to someone dangerous",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "Wolves have been seen walking on two legs at night",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "text": "A ship came in with no crew, only cargo",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "text": "The well in the square grants wishes, if you give it silver",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "text": "Someone is buying up all the graveyard plots",
+      "from": 6,
+      "to": 6
+     },
+     {
+      "text": "The priest was seen meeting a hooded figure at midnight",
+      "from": 7,
+      "to": 7
+     },
+     {
+      "text": "There is gold in the hills, if you know where to dig",
+      "from": 8,
+      "to": 8
+     },
+     {
+      "text": "A dragon was seen over the mountains last winter",
+      "from": 9,
+      "to": 9
+     },
+     {
+      "text": "The new tax collector is not who he says he is",
+      "from": 10,
+      "to": 10
+     }
+    ],
+    "secret": true
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Fantasy people",
+   "description": "A quick person to meet: who they are and what stands out.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d6",
+    "entries": [
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "A tired farmer.",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "A cheerful guard.",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "A sharp-eyed merchant.",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "A young scholar.",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "An old soldier.",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "table": {
+       "name": "Quirks"
+      },
+      "text": "A wandering priest.",
+      "from": 6,
+      "to": 6
+     }
+    ]
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Quirks",
+   "description": "One thing that makes a person stand out.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d20",
+    "entries": [
+     {
+      "text": "Hums when nervous",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "text": "Never makes eye contact",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "Collects buttons",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "text": "Laughs too loudly",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "text": "Speaks in proverbs",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "text": "Is missing two fingers and tells a different story each time",
+      "from": 6,
+      "to": 6
+     },
+     {
+      "text": "Always eating something",
+      "from": 7,
+      "to": 7
+     },
+     {
+      "text": "Is very polite and very rude in the same sentence",
+      "from": 8,
+      "to": 8
+     },
+     {
+      "text": "Wears far too much perfume",
+      "from": 9,
+      "to": 9
+     },
+     {
+      "text": "Keeps a pet mouse in a pocket",
+      "from": 10,
+      "to": 10
+     },
+     {
+      "text": "Whispers everything",
+      "from": 11,
+      "to": 11
+     },
+     {
+      "text": "Hates the colour green",
+      "from": 12,
+      "to": 12
+     },
+     {
+      "text": "Tells everyone about their dreams",
+      "from": 13,
+      "to": 13
+     },
+     {
+      "text": "Is terrified of birds",
+      "from": 14,
+      "to": 14
+     },
+     {
+      "text": "Counts things out loud",
+      "from": 15,
+      "to": 15
+     },
+     {
+      "text": "Has a scar they are proud of",
+      "from": 16,
+      "to": 16
+     },
+     {
+      "text": "Owes money to everyone",
+      "from": 17,
+      "to": 17
+     },
+     {
+      "text": "Asks a question in answer to every question",
+      "from": 18,
+      "to": 18
+     },
+     {
+      "text": "Quotes a famous poet badly",
+      "from": 19,
+      "to": 19
+     },
+     {
+      "text": "Is always cold",
+      "from": 20,
+      "to": 20
+     }
+    ]
+   }
+  },
+  {
+   "type": "Tables",
+   "name": "Trinkets",
+   "description": "A small odd thing found in a pocket, a drawer or a pile of bones.",
+   "images": {},
+   "rulesets": [],
+   "table": {
+    "dice": "1d20",
+    "entries": [
+     {
+      "text": "A key with no lock to fit it",
+      "from": 1,
+      "to": 1
+     },
+     {
+      "text": "A tooth with a word carved on it",
+      "from": 2,
+      "to": 2
+     },
+     {
+      "text": "A tin soldier with one leg",
+      "from": 3,
+      "to": 3
+     },
+     {
+      "text": "A pressed flower in wax paper",
+      "from": 4,
+      "to": 4
+     },
+     {
+      "text": "A ring too small for any finger",
+      "from": 5,
+      "to": 5
+     },
+     {
+      "text": "A letter that was never sent",
+      "from": 6,
+      "to": 6
+     },
+     {
+      "text": "A glass eye",
+      "from": 7,
+      "to": 7
+     },
+     {
+      "text": "A tiny bell that makes no sound",
+      "from": 8,
+      "to": 8
+     },
+     {
+      "text": "A map of a town that does not exist",
+      "from": 9,
+      "to": 9
+     },
+     {
+      "text": "A wooden coin",
+      "from": 10,
+      "to": 10
+     },
+     {
+      "text": "A lock of silver hair tied with red thread",
+      "from": 11,
+      "to": 11
+     },
+     {
+      "text": "A dice that always rolls six for its owner",
+      "from": 12,
+      "to": 12
+     },
+     {
+      "text": "A seashell that smells of smoke",
+      "from": 13,
+      "to": 13
+     },
+     {
+      "text": "A child's drawing of a monster",
+      "from": 14,
+      "to": 14
+     },
+     {
+      "text": "A brass compass that points west",
+      "from": 15,
+      "to": 15
+     },
+     {
+      "text": "A broken mirror shard",
+      "from": 16,
+      "to": 16
+     },
+     {
+      "text": "A stone that is always warm",
+      "from": 17,
+      "to": 17
+     },
+     {
+      "text": "A recipe for soup in an unknown language",
+      "from": 18,
+      "to": 18
+     },
+     {
+      "text": "A feather as long as an arm",
+      "from": 19,
+      "to": 19
+     },
+     {
+      "text": "A candle stub that relights itself once",
+      "from": 20,
+      "to": 20
+     }
+    ]
+   }
+  }
+ ]
+}
