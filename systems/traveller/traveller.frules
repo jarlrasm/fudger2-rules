@@ -22,9 +22,7 @@ keptDice (mode, rolls) =
 effectText (effect) = if effect < 0 then toString (effect) else "+" + toString (effect)
 
 travellerLevel (natural, effect) =
-    if natural == 2 then "Failure"
-    else if natural == 12 then "Success"
-    else if effect > 5 then "Exceptional success"
+    if effect > 5 then "Exceptional success"
     else if effect < -5 then "Exceptional failure"
     else if effect < 0 then "Failure"
     else "Success"
@@ -39,13 +37,10 @@ travellerResult (dm, target, natural) =
 travellerRoll (mode, target) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Boon" then "green" else if mode == "Bane" then "red" else "" }],
     ((baseline, throws)->travellerResult (baseline, target, keptDice (mode, first (throws).rolls))))
 
-naturalText (natural) = if natural == 2 then ", natural 2: Failure" else if natural == 12 then ", natural 12: Success" else ""
-
 travellerUnset (dm, natural) =
 {
-    Text = toString (natural + dm) + naturalText (natural)
+    Text = toString (natural + dm)
     Value = natural + dm
-    Outcome = if natural == 2 then "Failure" else if natural == 12 then "Success" else ""
 }
 
 travellerAskedRoll (mode) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Boon" then "green" else if mode == "Bane" then "red" else "" }],
@@ -79,7 +74,9 @@ noSkill = { Level = -3 }
 
 zeroedPhysical (char) = (if char.Characteristics.STR.Current < 1 then 1 else 0) + (if char.Characteristics.DEX.Current < 1 then 1 else 0) + (if char.Characteristics.END.Current < 1 then 1 else 0)
 
-skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -3)
+jackOfAllTrades (char, level) = if level < 0 then min (0, level + char.Skills.'Jack of all Trades'.Level) else level
+
+skillLevel (char, name) = jackOfAllTrades (char, valueOr (valueOr (char.Skills, name, noSkill), "Level", -3))
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
@@ -96,11 +93,11 @@ attackFor (char, weapon) =
     else
         weaponAttack (weapon.Name, skillLevel (char, if weaponStat (weapon, "Skill") == "" then "Melee" else weaponStat (weapon, "Skill")) + char.Characteristics.STR.DM, weaponStat (weapon, "Damage"), "melee", 1)
 
-skill (level) = custom
+skill (level, defaultChar) = custom
 {
     Level = integer { description = "Skill level. -3 means untrained; 0 is basic training." default = level  minvalue = -3 }
-    Characteristic = string { description = "The characteristic that fits this use of the skill." default = "DEX"  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
-    Check = modifier { description = "Skill level plus characteristic DM. Roll 2d6 plus this; 8 or more succeeds." value = Level + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
+    Characteristic = string { description = "The characteristic that fits this use of the skill." default = defaultChar  keys = ["STR", "DEX", "END", "INT", "EDU", "SOC"]  editable = live }
+    Check = modifier { description = "Skill level plus characteristic DM. Roll 2d6 plus this; 8 or more succeeds. Jack of all Trades offsets the untrained -3." value = jackOfAllTrades (characterTable, Level) + charDM (characterTable, Characteristic)  valuedice = travellerDice (characterTable)  editable = none }
 }
 
 characterTable = ruleset
@@ -167,45 +164,45 @@ characterTable = ruleset
     {
         description = "Skills. Roll 2d6 plus skill level and characteristic DM; 8 or more succeeds."
         tableLayout = layout { columns = 2  size = wide }
-        Admin = skill (-3)
-        Advocate = skill (-3)
-        Animals = skill (-3)
-        Athletics = skill (-3)
-        Art = skill (-3)
-        Astrogation = skill (-3)
-        Broker = skill (-3)
-        Carouse = skill (-3)
-        Deception = skill (-3)
-        Diplomat = skill (-3)
-        Drive = skill (-3)
-        Electronics = skill (-3)
-        Engineer = skill (-3)
-        Explosives = skill (-3)
-        Flyer = skill (-3)
-        Gambler = skill (-3)
-        Gunner = skill (-3)
-        'Gun Combat' = skill (-3)
-        'Heavy Weapons' = skill (-3)
-        Investigate = skill (-3)
-        'Jack of all Trades' = skill (0)
-        Language = skill (-3)
-        Leadership = skill (-3)
-        Mechanic = skill (-3)
-        Medic = skill (-3)
-        Melee = skill (-3)
-        Navigation = skill (-3)
-        Persuade = skill (-3)
-        Pilot = skill (-3)
-        Profession = skill (-3)
-        Recon = skill (-3)
-        Science = skill (-3)
-        Seafarer = skill (-3)
-        Stealth = skill (-3)
-        Steward = skill (-3)
-        Streetwise = skill (-3)
-        Survival = skill (-3)
-        Tactics = skill (-3)
-        'Vacc Suit' = skill (-3)
+        Admin = skill (-3, "EDU")
+        Advocate = skill (-3, "EDU")
+        Animals = skill (-3, "INT")
+        Athletics = skill (-3, "DEX")
+        Art = skill (-3, "INT")
+        Astrogation = skill (-3, "EDU")
+        Broker = skill (-3, "INT")
+        Carouse = skill (-3, "SOC")
+        Deception = skill (-3, "INT")
+        Diplomat = skill (-3, "SOC")
+        Drive = skill (-3, "DEX")
+        Electronics = skill (-3, "EDU")
+        Engineer = skill (-3, "EDU")
+        Explosives = skill (-3, "EDU")
+        Flyer = skill (-3, "DEX")
+        Gambler = skill (-3, "INT")
+        Gunner = skill (-3, "DEX")
+        'Gun Combat' = skill (-3, "DEX")
+        'Heavy Weapons' = skill (-3, "DEX")
+        Investigate = skill (-3, "INT")
+        'Jack of all Trades' = skill (0, "INT")
+        Language = skill (-3, "EDU")
+        Leadership = skill (-3, "SOC")
+        Mechanic = skill (-3, "EDU")
+        Medic = skill (-3, "EDU")
+        Melee = skill (-3, "STR")
+        Navigation = skill (-3, "INT")
+        Persuade = skill (-3, "SOC")
+        Pilot = skill (-3, "DEX")
+        Profession = skill (-3, "INT")
+        Recon = skill (-3, "INT")
+        Science = skill (-3, "EDU")
+        Seafarer = skill (-3, "DEX")
+        Stealth = skill (-3, "DEX")
+        Steward = skill (-3, "SOC")
+        Streetwise = skill (-3, "INT")
+        Survival = skill (-3, "INT")
+        Tactics = skill (-3, "INT")
+        'Vacc Suit' = skill (-3, "DEX")
     }
 
     Specialities = keyvalues
