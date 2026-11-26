@@ -39,11 +39,22 @@ redDice (char) = ask ("DV", redAskedRoll)
 
 plainRed = redRoll (0)
 
+woundPenalty (char) =
+    if char.Status.'Hit Points'.Current < 1 then 4
+    else if char.Status.'Hit Points'.Current < char.Status.'Hit Points'.'Seriously Wounded' then 2
+    else 0
+
+deathSaveText (roll, body) = toString (roll) + " vs " + toString (body)
+
+deathSave (madeBefore) = ([1d10], ((baseline, throws)->
+    if first (first (throws).rolls) == 10 or first (first (throws).rolls) + madeBefore > baseline then { Text = deathSaveText (first (first (throws).rolls) + madeBefore, baseline) + ": dies"  Outcome = "Failure" }
+    else { Text = deathSaveText (first (first (throws).rolls) + madeBefore, baseline) + ": survives"  Outcome = "Success" }))
+
 skill (stat) = custom
 {
     STAT = stat
     Level = integer { description = "Skill level from 0 to 10." default = 0  minvalue = 0  maxvalue = 10 }
-    Base = integer { description = "STAT plus skill level. Add a d10 and beat the difficulty." value = stat + Level  valuedice = redDice (characterTable)  editable = none }
+    Base = integer { description = "STAT plus skill level. Add a d10 and beat the difficulty." value = stat + Level - woundPenalty (characterTable)  valuedice = redDice (characterTable)  editable = none }
 }
 
 noSkill = { Base = 0 }
@@ -113,11 +124,17 @@ characterTable = ruleset
         {
             description = "Hit points from BODY and WILL."
             Max = integer { value = maxHitPoints (Stats.BODY, Stats.WILL)  editable = none }
-            Current = integer { description = "Current hit points. Below half you are seriously wounded, below 1 mortally wounded." default = Max  editable = live }
+            Current = integer { description = "Current hit points. Below half you are seriously wounded (-2 to checks), below 1 mortally wounded (-4)." default = Max  editable = live }
             'Seriously Wounded' = (Max + 1) / 2
             Wounded = string { value = if Current < 1 then "Mortally Wounded" else if Current < 'Seriously Wounded' then "Seriously Wounded" else ""  visible = none  indicator = "#d64545" }
-            'Death Save' = integer { description = "Roll a d10 under BODY each turn while mortally wounded to stay alive." value = Stats.BODY  valuedice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) == 10 or first (first (throws).rolls) > baseline then { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": dies"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs " + toString (baseline) + ": survives"  Outcome = "Success" }))  editable = none }
-            'Day of rest' = button { description = "A full day of rest heals hit points equal to your BODY."  editable = live  onClick = updates { (root.Status.'Hit Points'.Current) = min (Max, Current + Stats.BODY) } }
+            'Death Save' = integer { description = "Roll a d10 under BODY each turn while mortally wounded to stay alive. Each earlier save adds 1 to the roll." value = Stats.BODY  valuedice = deathSave ('Death Saves made')  editable = none }
+            'Death Saves made' = integer { description = "Death Saves made since you were last stabilised." default = 0  minvalue = 0  editable = live }
+            'Day of rest' = button { description = "A full day of rest heals hit points equal to your BODY."  editable = live  onClick = updates
+                {
+                    (root.Status.'Hit Points'.Current) = min (Max, Current + Stats.BODY)
+                    (root.Status.'Hit Points'.'Death Saves made') = 0
+                }
+            }
         }
         Luck = table
         {
@@ -223,7 +240,7 @@ characterTable = ruleset
         {
             STAT = integer { default = 5 }
             Level = integer { default = 0 }
-            Base = integer { value = STAT + Level  valuedice = redDice (characterTable)  editable = none }
+            Base = integer { value = STAT + Level - woundPenalty (characterTable)  valuedice = redDice (characterTable)  editable = none }
         }
     }
 
