@@ -17,11 +17,16 @@ d20Total (mode, rolls) =
     else if mode == "Disadvantage" then min (rolls)
     else first (rolls)
 
-checkResult (bonus, natural, dc) =
+checkResult (bonus, natural, dc) = luckyResult (bonus, natural, dc, 0)
+
+luckyResult (bonus, natural, dc, reroll) =
 {
     Text = toString (natural + bonus) + (if dc > 0 then " vs DC " + toString (dc) + ": " + (if natural == 20 then "Critical success" else if natural == 1 then "Critical failure" else if natural + bonus >= dc then "Success" else "Failure") else if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
     Value = natural + bonus
     Outcome = if natural == 20 then "Critical" else if natural == 1 then "Fumble" else if dc > 0 then (if natural + bonus >= dc then "Success" else "Failure") else ""
+    Push = reroll
+    PushLabel = "Spend luck"
+    PushSets = [{ Field = "characterTable.Combat.Luck"  Value = false }]
 }
 
 sdRoll (mode, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
@@ -30,9 +35,17 @@ sdRoll (mode, dc) = ([dice { number = if mode == "Normal" then 1 else 2  sides =
 sdAskedRoll (mode) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
     ((baseline, throws)->checkResult (baseline, d20Total (mode, first (throws).rolls), asked)))
 
-sdDice (char) = ask ("DC", sdAskedRoll (char.Character.Roll))
+sdLuckyRoll (mode, luck) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
+    ((baseline, throws)->luckyResult (baseline, d20Total (mode, first (throws).rolls), asked, if luck then sdLuckReroll (mode, baseline) else 0)))
 
-sdAttackDice (char) = ask ("Target AC", sdAskedRoll (char.Character.Roll))
+sdLuckReroll (mode, bonus) = ([dice { number = if mode == "Normal" then 1 else 2  sides = 20  color = if mode == "Advantage" then "green" else if mode == "Disadvantage" then "red" else "" }],
+    ((baseline, throws)->checkResult (bonus, d20Total (mode, first (throws).rolls), asked)))
+
+sdDice (char) = ask ("DC", sdLuckyRoll (char.Character.Roll, char.Combat.Luck))
+
+sdAttackDice (char) = ask ("Target AC", sdLuckyRoll (char.Character.Roll, char.Combat.Luck))
+
+monsterAttackDice = ask ("Target AC", sdAskedRoll ("Normal"))
 
 plainD20 = sdRoll ("Normal", 0)
 
@@ -65,6 +78,11 @@ attackFor (char, weapon) =
         weaponAttack (weapon.Name, char.Stats.DEX.Modifier + char.Character.'Attack Bonus', weaponStat (weapon, "Damage"), "ranged", rangeFeet (weaponStat (weapon, "Range")))
     else
         weaponAttack (weapon.Name, (if usesDex (char, weapon) then char.Stats.DEX.Modifier else char.Stats.STR.Modifier) + char.Character.'Attack Bonus', weaponStat (weapon, "Damage"), "melee", 5)
+
+isThrown (weapon) = weaponStat (weapon, "Type") == "Melee and Ranged" or (contains (weaponStat (weapon, "Properties"), "Thrown") and weaponStat (weapon, "Type") != "Ranged")
+
+thrownFor (char, weapon) =
+    weaponAttack (weapon.Name + " (thrown)", max (char.Stats.STR.Modifier, char.Stats.DEX.Modifier) + char.Character.'Attack Bonus', weaponStat (weapon, "Damage"), "ranged", rangeFeet (if weaponStat (weapon, "Range") == "" or weaponStat (weapon, "Range") == "Close" then "Near" else weaponStat (weapon, "Range")))
 
 characterTable = ruleset
 {
@@ -139,7 +157,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        source = concat (map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons), map ((weapon)->thrownFor (characterTable, weapon), filter ((weapon)->isThrown (weapon), characterTable.Weapons)))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -213,7 +231,8 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Attack = modifier { default = 1  valuedice = plainD20  action = melee  reach = 5 }
+            Range = string { description = "Close for melee; Near or Far for ranged and thrown attacks." default = "Close"  keys = ["Close", "Near", "Far"] }
+            Attack = modifier { default = 1  valuedice = monsterAttackDice  action = if Range == "Near" or Range == "Far" then "ranged" else "melee"  reach = 5  range = rangeFeet (Range) }
             Damage = string {}
         }
     }
