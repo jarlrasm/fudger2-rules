@@ -1,0 +1,266 @@
+{
+ "name": "Fudge Miracles",
+ "description": "Example miracles for the Fudge Miracles rules (Fudge SRD section 7.2), written for Fudger: what a petition of each kind may grant at Good, Great and Superb. A petition at Fair or Mediocre goes unanswered. Fudge is a trademark of Grey Ghost Press.",
+ "url": "/systems/Fudge/extensions/miracles.json",
+ "gamemaster": "",
+ "documents": [
+  {
+   "key": "srd",
+   "name": "Fudge System Reference Document",
+   "url": "/systems/Fudge/Fudge-SRD.pdf",
+   "public": true
+  }
+ ],
+ "entities": [
+  {
+   "type": "Miracles",
+   "name": "Healing",
+   "description": "A plea to mend a wounded or sick person.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "Heals one wound level.",
+        "Great": "Heals two wound levels, or cures a sickness.",
+        "Superb": "Heals every wound."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Food and Water",
+   "description": "A plea for the hungry and thirsty.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "Enough food or clean water for a day.",
+        "Great": "A feast, or a spring that runs for a week.",
+        "Superb": "Food enough for a village, or a lasting well."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Protection",
+   "description": "A plea to be kept safe from harm.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "+1 defensive factor for a fight.",
+        "Great": "Foes hesitate and attack at -1 for a scene.",
+        "Superb": "No mundane weapon can harm the petitioner for a scene."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Guardian",
+   "description": "A plea for help against enemies.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "A wolf, dog or similar beast comes to defend.",
+        "Great": "A strong beast or a brave stranger arrives.",
+        "Superb": "Three lions, or a band of warriors, answer the call."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Guidance",
+   "description": "A plea to know the way or the truth.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "A sign that points the right way.",
+        "Great": "A clear dream or vision.",
+        "Superb": "The deity's messenger speaks plainly."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Weather",
+   "description": "A plea to change the sky.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "The rain eases or the wind turns a little.",
+        "Great": "A storm breaks or holds off for a day.",
+        "Superb": "The weather changes as asked over a whole region."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Light in Darkness",
+   "description": "A plea for light against the night or the unholy.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "A soft light for an hour.",
+        "Great": "A bright light that unholy beings shun.",
+        "Superb": "A blaze that drives back or burns the unholy."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Smite",
+   "description": "A plea to strike down the deity's enemy.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "The enemy stumbles or drops a weapon.",
+        "Great": "A blow of +2 offensive factor, as lightning or fire.",
+        "Superb": "The enemy is struck down."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Freedom",
+   "description": "A plea to be released from bonds or prison.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "A lock gives or a rope slips.",
+        "Great": "Chains fall away and a door opens.",
+        "Superb": "The prison walls crack and every captive goes free."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Miracles",
+   "name": "Courage",
+   "description": "A plea for strength of heart.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 122
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "Fudge",
+     "implementation": {
+      "miracleStats": {
+       "Stats": {
+        "Good": "Fear passes for the petitioner.",
+        "Great": "Allies nearby are steadied, +1 to resist fear for a scene.",
+        "Superb": "The petitioner and allies are fearless, and foes falter."
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

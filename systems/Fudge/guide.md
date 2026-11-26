@@ -26,3 +26,6 @@ The campaign settings list which traits roll initiative (by default the first on
 ## Other
 - **Fudge points** let a player change a result, avoid a wound or bring in a lucky break.
 - **Gifts and Faults** are short descriptions. Let them matter in play: a gift may give a +1 or let something happen at all, and a fault should bring trouble.
+
+## Extensions
+A campaign can turn on optional rules from the SRD, each with its own guide: **Magic** (Magic Potential, spell casting, Fatigue), **Psi** (powers, skills, Psychic Reservoir), **Miracles** (Divine Favor and petitions), **Supers and Cybernetics** (powers, implants, Scale) and **Combat options** (damage rolls, stun, hit location).

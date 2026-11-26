@@ -1,0 +1,130 @@
+superUse (name, level) = custom
+{
+    Name = name
+    Level = modifier
+    {
+        value = level
+        render = ladderWord (level)
+        valuedice = fudgeRoll
+        action = "ranged"
+    }
+}
+
+superUsesFor (char) = concat (map ((power)->superUse (power.Name, valueOr (power.data.superStats.Stats, "Level", 3)), char.Powers), map ((implant)->superUse (implant.Name, valueOr (implant.data.implantStats.Stats, "Level", 3)), char.Implants))
+
+signed (n) = if n > 0 then "+" + toString (n) else toString (n)
+
+traitBonusText (item, stats) = item.Name + ": " + signed (valueOr (stats, "Bonus", 0)) + " " + valueOr (stats, "Trait", "")
+
+traitBonusesFor (char) = concat (map ((power)->traitBonusText (power, power.data.superStats.Stats), filter ((power)->valueOr (power.data.superStats.Stats, "Bonus", 0) != 0, char.Powers)), map ((implant)->traitBonusText (implant, implant.data.implantStats.Stats), filter ((implant)->valueOr (implant.data.implantStats.Stats, "Bonus", 0) != 0, char.Implants)))
+
+Fudge = system
+{
+    'Powers' = superStats
+    'Implants' = implantStats
+    secondaryTypes = ["Powers", "Implants"]
+    libraries = ["/systems/Fudge/extensions/supers.json"]
+    hints = [
+        hint
+        {
+            title = "Supers and cybernetics"
+            topic = "Powers"
+            text = ["Decide how many supernormal powers a character starts with. A power with a fault attached, such as flying only while intangible, may count as just a gift.", "Use Scale for beings much stronger, heavier or faster than humans. Strength Scale adds to offensive damage factors and Mass Scale to defensive ones."]
+        }
+    ]
+}
+
+superStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Kind" prefix = "" filter = Stats.Kind }
+        ]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Movement", "Attack", "Defence", "Senses", "Mental", "Body", "Other"] }
+        Level = modifier { description = "How strong the power is, on the ladder. Roll it to use the power." default = 3  minvalue = 0  maxvalue = 6  render = ladderWord (Level) }
+        Trait = string { description = "An attribute or skill the power raises, if any." }
+        Bonus = modifier { description = "How much it raises that trait." default = 0  minvalue = -3  maxvalue = 6 }
+        Limits = string { description = "Faults tied to the power that lower its cost." }
+    }
+}
+
+implantStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+    }
+    Stats = table
+    {
+        Level = modifier { description = "How well the implant works, on the ladder. Roll it to use the implant." default = 3  minvalue = 0  maxvalue = 6  render = ladderWord (Level) }
+        Trait = string { description = "The attribute or skill the implant raises, if any." }
+        Bonus = modifier { description = "How much it raises that trait." default = 0  minvalue = -3  maxvalue = 6 }
+        Failure = string { description = "What happens when the implant fails now and then." }
+    }
+}
+
+characterTable = ruleset
+{
+    Scale = table
+    {
+        description = "Size and strength compared with humans, who are Scale 0. Each step is about 1.5 times as strong and massive." reference = ["srd", 28]
+        'Strength Scale' = modifier
+        {
+            description = "Added to offensive damage factors in combat." reference = ["srd", 60]
+            default = 0
+            minvalue = -20
+            maxvalue = 50
+        }
+        'Mass Scale' = modifier
+        {
+            description = "Added to defensive damage factors in combat. Usually the same as Strength Scale." reference = ["srd", 60]
+            default = 'Strength Scale'
+            minvalue = -20
+            maxvalue = 50
+        }
+        'Speed Scale' = modifier
+        {
+            description = "Each step is about 1.2 times as fast. A Fair human runs about 15 m a round." reference = ["srd", 29]
+            default = 0
+            minvalue = -20
+            maxvalue = 100
+        }
+    }
+    Powers = list
+    {
+        description = "Supernormal powers, such as flight, energy blasts or super strength." reference = ["srd", 34]
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+    Implants = list
+    {
+        description = "Cybernetic limbs, organs and implants. Those that go beyond human cost supernormal powers." reference = ["srd", 34]
+        source = secondary.Implants
+        singular = "Implant"
+        editable = character
+    }
+    'Power rolls' = list
+    {
+        description = "Roll a power or implant at its level."
+        visible = if count (superUsesFor (characterTable)) > 0 then visible else none
+        source = superUsesFor (characterTable)
+        singular = "Power roll"
+        editable = none
+        valueType = superUse
+    }
+    'Trait bonuses' = list
+    {
+        description = "Bonuses that powers and implants give to attributes and skills. Add them when rolling those traits."
+        visible = if count (traitBonusesFor (characterTable)) > 0 then visible else none
+        source = traitBonusesFor (characterTable)
+        singular = "Bonus"
+        editable = none
+        valueType = string
+    }
+}

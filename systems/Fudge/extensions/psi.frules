@@ -1,0 +1,117 @@
+reservoirModifier (reservoir) = if reservoir >= 3 then 0 else reservoir - 3
+
+psiAugmentResult (augment, level) =
+    if augment >= 6 then { Text = "Augment " + ladderWord (augment) + ": sacrifice up to 3 levels of Psychic Reservoir for +1 each, up to " + ladderWord (level + 3)  Outcome = "Success" }
+    else if augment == 5 then { Text = "Augment Great: sacrifice up to 2 levels of Psychic Reservoir for +1 each, up to " + ladderWord (level + 2)  Outcome = "Success" }
+    else if augment == 4 then { Text = "Augment Good: sacrifice 1 level of Psychic Reservoir for +1, to " + ladderWord (level + 1)  Outcome = "Success" }
+    else if augment <= 0 then { Text = "Augment " + ladderWord (augment) + ": lose a level of Psychic Reservoir, and the result drops to " + ladderWord (level - 1)  Outcome = "Failure" }
+    else { Text = "Augment " + ladderWord (augment) + ": no change"  Value = level }
+
+psiAugment (skill, level) = ([4df], ((baseline, throws)->psiAugmentResult (skill + sum (first (throws).rolls), level)))
+
+psiJudged (level, difficulty, known) =
+    if level <= 0 then ladderWord (level) + ": Terrible or worse, the power backfires and Psychic Reservoir drops a level"
+    else if known then ladderWord (level) + " vs " + ladderWord (difficulty + 3) + ": " + fudgeOutcome (level - difficulty - 3)
+    else ladderWord (level)
+
+psiOutcome (level, difficulty, known) =
+    if level <= 0 then "Mishap"
+    else if not (known) then ""
+    else if level >= difficulty + 3 then "Success"
+    else "Failure"
+
+psiResult (skill, rolled, reservoir, difficulty, known) =
+    if reservoir < 0 then { Text = "Psychic Reservoir is below Terrible: no psi can be used"  Outcome = "Failure" }
+    else { Text = psiJudged (skill + rolled, difficulty, known)  Value = skill + rolled  Outcome = psiOutcome (skill + rolled, difficulty, known)  Push = psiAugment (skill, skill + rolled)  PushLabel = "Augment" }
+
+psiDice (mods, reservoir) = ([4df], ((baseline, throws)->psiResult (baseline + mods + reservoirModifier (reservoir), sum (first (throws).rolls), reservoir, asked, answered)))
+
+psiRoll (reservoir) = ask ("Psi modifiers", 0, (n)->ask ("Difficulty", fudgevalues, -3, psiDice (n, reservoir)))
+
+psiState (reservoir) = if reservoir < 0 then "Psi burned out" else ""
+
+psiUse (name, skill, reservoir) = custom
+{
+    Name = name
+    Skill = modifier
+    {
+        value = skill
+        render = ladderWord (skill)
+        valuedice = psiRoll (reservoir)
+        action = "ranged"
+    }
+}
+
+psiUsesFor (char) = map ((power)->psiUse (power.Name, valueOr (power.data.psiStats.Stats, "Skill", 0), char.Psi.'Psychic Reservoir'), char.'Psi powers')
+
+Fudge = system
+{
+    'Psi powers' = psiStats
+    secondaryTypes = ["Psi powers"]
+    libraries = ["/systems/Fudge/extensions/psi.json"]
+    hints = [
+        hint
+        {
+            title = "Fudge Psi"
+            topic = "Psi"
+            text = ["Each psi power is bought on its own, with a Power level (how strong) and a skill to control it (how well). Decide how broad the powers in your game are; the library has the narrow ones from the SRD chart.", "A use asks for modifiers and the Difficulty. A low Psychic Reservoir gives a penalty, and the Augment button lets the psi burn Reservoir to raise a result."]
+        }
+    ]
+}
+
+psiStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [
+            filter { name = "Group" prefix = "" filter = split (",", Stats.Group) }
+        ]
+    }
+    Stats = table
+    {
+        Group = string { description = "The broad and mildly broad groups the power belongs to." reference = ["srd", 123] }
+        Power = modifier { description = "How strong the power is: range, size and number of things it can affect. Bought at Terrible." default = 0  minvalue = 0  maxvalue = 6  render = ladderWord (Power) }
+        Skill = modifier { description = "How well the psi controls the power. Starts at Terrible and can be at most Fair when the game begins." reference = ["srd", 126] default = 0  minvalue = 0  maxvalue = 6  render = ladderWord (Skill) }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Psi, 'Psi rolls'] }
+    Psi = table
+    {
+        description = "Psionics by the Fudge Psi rules." reference = ["srd", 123]
+        'Psychic Reservoir' = modifier
+        {
+            description = "Raw psi power. Below Fair it gives a penalty to psi skills; Terrible or worse results drain it, and below Terrible the psi passes out." reference = ["srd", 126]
+            default = 3
+            minvalue = -1
+            maxvalue = 6
+            render = ladderWord ('Psychic Reservoir')
+            editable = live
+        }
+        State = string
+        {
+            value = psiState ('Psychic Reservoir')
+            visible = none
+            indicator = "#8e5cc4"
+        }
+    }
+    'Psi powers' = list
+    {
+        description = "The psi powers the character has, each with its Power level and control skill."
+        source = secondary.'Psi powers'
+        singular = "Psi power"
+        editable = character
+    }
+    'Psi rolls' = list
+    {
+        description = "Roll a psi power's control skill."
+        visible = if count (psiUsesFor (characterTable)) > 0 then visible else none
+        source = psiUsesFor (characterTable)
+        singular = "Psi roll"
+        editable = none
+        valueType = psiUse
+    }
+}
