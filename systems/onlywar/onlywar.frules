@@ -1,0 +1,968 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+signedNumber (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+difficulties = ["Hellish -60", "Punishing -50", "Arduous -40", "Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Ordinary +10", "Routine +20", "Easy +30", "Simple +40", "Elementary +50", "Trivial +60"]
+
+owSuccess (target, roll) = roll == 1 or (roll <= target and roll != 100)
+
+tensOf (n) = max (0, n) / 10
+
+owDegrees (target, roll) = if owSuccess (target, roll) then 1 + max (0, tensOf (target) - tensOf (roll)) else 1 + max (0, tensOf (roll) - tensOf (target))
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+owText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if owSuccess (target, roll) then "Success, " + degreeWords (owDegrees (target, roll), "success") else "Failure, " + degreeWords (owDegrees (target, roll), "failure"))
+
+owResult (target, roll, reroll, spend) =
+{
+    Text = owText (target, roll)
+    Value = roll
+    Outcome = if owSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (owSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+fateSpend (char) = if char.Status.Fate > 0 then [{ Field = "characterTable.Status.Fate"  Value = char.Status.Fate - 1 }] else []
+
+owRoll (modifier) = ([1d100], ((baseline, throws)->owResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+owAskedRoll (spend) = ([1d100], ((baseline, throws)->owResult (baseline + asked * 10, first (first (throws).rolls), owAskedRoll ([]), spend)))
+
+owTest = ask ("Difficulty", difficulties, -6, owAskedRoll ([]))
+
+owFateTest (char) = ask ("Difficulty", difficulties, -6, owAskedRoll (fateSpend (char)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+locationOf (n) =
+    if n <= 10 then "Head"
+    else if n <= 20 then "Right Arm"
+    else if n <= 30 then "Left Arm"
+    else if n <= 70 then "Body"
+    else if n <= 85 then "Right Leg"
+    else "Left Leg"
+
+isDouble (roll) = roll < 100 and mod (roll, 10) == mod (roll, 100) / 10
+
+meleeModes = ["Standard attack +10", "All-out attack +30", "Charge +20", "Swift attack +0", "Lightning attack -10", "Called shot -20", "Guarded attack -10"]
+
+rangedModes = ["Standard attack +10", "Semi-auto burst +0", "Full auto burst -10", "Called shot -20", "Suppressing fire -20"]
+
+attackModes (kind) = if kind == "melee" then meleeModes else rangedModes
+
+modeBonus (kind, mode) =
+    if kind == "melee" then (switch mode case 1 then 30 case 2 then 20 case 3 then 0 case 4 then -10 case 5 then -20 case 6 then -10 else 10)
+    else (switch mode case 1 then 0 case 2 then -10 case 3 then -20 case 4 then -20 else 10)
+
+isBurst (kind, mode) = kind == "ranged" and (mode == 1 or mode == 2 or mode == 4)
+
+isFlurry (kind, mode) = kind == "melee" and (mode == 3 or mode == 4)
+
+halfRate (kind, mode) = (kind == "ranged" and (mode == 1 or mode == 4)) or (kind == "melee" and mode == 3)
+
+jams (roll, kind, mode) = kind == "ranged" and roll >= (if isBurst (kind, mode) then 94 else 96)
+
+rofCap (rof, slot) = if count (split ("/", rof)) > slot then toInt (item (slot, split ("/", rof))) else 0
+
+rofSlot (rof, mode) = if mode == 4 then (if rofCap (rof, 2) > 0 then 2 else 1) else mode
+
+lacksMode (kind, mode, rof) = isBurst (kind, mode) and rof != "" and rofCap (rof, rofSlot (rof, mode)) == 0
+
+extraHits (kind, mode, degrees) = if halfRate (kind, mode) then (degrees - 1) / 2 else degrees - 1
+
+capExtra (n, cap) = if cap > 0 then min (n, cap) else n
+
+capTotal (n, cap) = if cap > 0 then min (n, cap) else n
+
+hitsFor (kind, mode, rof, degrees) =
+    if kind == "ranged" and mode == 4 then capTotal (1 + extraHits (kind, mode, degrees), rofCap (rof, rofSlot (rof, mode)))
+    else if isBurst (kind, mode) then 1 + capExtra (extraHits (kind, mode, degrees), rofCap (rof, mode))
+    else if isFlurry (kind, mode) then 1 + extraHits (kind, mode, degrees)
+    else 1
+
+owHit (target, roll, kind, mode) = owSuccess (target, roll) and not (jams (roll, kind, mode))
+
+hitText (hits, roll) =
+    if hits == 1 then "1 hit on the " + hitLocation (roll)
+    else toString (hits) + " hits, the first on the " + hitLocation (roll)
+
+comradeText (roll) = if isDouble (roll) then "; doubles: one hit strikes the target's Comrade if in cohesion" else ""
+
+suppressText (kind, mode) = if kind == "ranged" and mode == 4 then "; everyone in the fire zone tests Pinning" else ""
+
+owAttackResult (target, roll, kind, mode, rof, reroll, spend) =
+{
+    Text = if lacksMode (kind, mode, rof) then "The weapon can't fire " + (if mode == 1 then "semi-auto bursts" else if mode == 2 then "full auto bursts" else "bursts") + " (RoF " + rof + ")"
+           else if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+           else owText (target, roll) + (if owHit (target, roll, kind, mode) then ": " + hitText (hitsFor (kind, mode, rof, owDegrees (target, roll)), roll) + comradeText (roll) else "") + suppressText (kind, mode)
+    Value = roll
+    Outcome = if lacksMode (kind, mode, rof) then "Miss" else if jams (roll, kind, mode) then "Jam" else if owHit (target, roll, kind, mode) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (lacksMode (kind, mode, rof)) and not (owHit (target, roll, kind, mode)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+owAttackDice (kind, mode, rof, spend) = ([1d100], ((baseline, throws)->owAttackResult (baseline + modeBonus (kind, mode) + asked * 10, first (first (throws).rolls), kind, mode, rof, owAttackDice (kind, mode, rof, []), spend)))
+
+owAttack (kind, rof, spend) = ask ("Attack", attackModes (kind), 0, (mode)->ask ("Difficulty", difficulties, -6, owAttackDice (kind, mode, rof, spend)))
+
+owFateAttack (char, kind, rof) = owAttack (kind, rof, fateSpend (char))
+
+hasFury (rolls) = count (filter ((x)->x == 10, rolls)) > 0
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after armour and Toughness" else ""
+
+lowestKept (rolls, tearing) = if tearing and count (rolls) > 1 then item (1, sort (rolls)) else first (sort (rolls))
+
+lowestText (rolls, tearing) = if count (rolls) > 0 then ", lowest die " + toString (lowestKept (rolls, tearing)) + " (the attack's degrees of success may replace it)" else ""
+
+furyDice = ([1d5], ((baseline, throws)->furyResult (first (first (throws).rolls))))
+
+furyResult (crit) =
+{
+    Text = "Righteous Fury: critical effect " + toString (crit) + " on the hit location's table for the damage type"
+    Value = crit
+    Outcome = "Critical"
+}
+
+damageResult (total, soak, fury, rolls, tearing) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + lowestText (rolls, tearing) + (if fury then ", Righteous Fury: 1d5 critical effect, and at least 1 damage gets through" else "")
+    Value = total
+    Outcome = if fury then "Critical" else ""
+    Push = if fury then furyDice else 0
+    PushLabel = "Righteous Fury: roll 1d5"
+}
+
+keptSum (rolls, tearing) = sum (rolls) - (if tearing and count (rolls) > 1 then min (rolls) else 0)
+
+damageDice (diceCount, dieSize, armourLeft, tearing) = ([dice { number = diceCount + (if tearing then 1 else 0)  sides = dieSize }],
+    ((baseline, throws)->damageResult (baseline + keptSum (first (throws).rolls, tearing), armourLeft + asked, hasFury (first (throws).rolls), first (throws).rolls, tearing)))
+
+owDamage (diceCount, dieSize, pen, tearing) =
+    ask ("Target's armour", 0, (armour)->ask ("Target's Toughness bonus", 0, damageDice (diceCount, dieSize, max (0, armour - pen), tearing)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
+
+characteristic (unnat) = custom
+{
+    Value = integer { description = "The characteristic as rolled at creation: 2d10 + 20, adjusted by the home world and speciality." default = 30  minvalue = 0  maxvalue = 100 }
+    Advances = integer { description = "Advances bought with experience: Simple, Intermediate, Trained and Expert, each +5." default = 0  minvalue = 0  maxvalue = 4 }
+    Unnatural = integer { description = "The Unnatural multiplier of the bonus, such as an Ogryn's Strength and Toughness." default = unnat  minvalue = 1  maxvalue = 5 }
+    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = owFateTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, times the Unnatural multiplier." value = ((Value + Advances * 5) / 10) * Unnatural  editable = none }
+}
+
+skillTarget (base, rank, specialist) =
+    switch rank
+        case "Known" then base
+        case "Trained" then base + 10
+        case "Experienced" then base + 20
+        case "Veteran" then base + 30
+        else if specialist then 0 else base - 20
+
+skill (base, specialist) = custom
+{
+    Rank = string { description = "Untrained skills test at -20, and specialist skills (lores, Linguistics, Navigate, Operate, Trade) not at all. Known +0, Trained +10, Experienced +20, Veteran +30." default = "Untrained"  keys = ["Untrained", "Known", "Trained", "Experienced", "Veteran"] }
+    Misc = integer { default = 0 }
+    Target = integer { description = "The characteristic plus the rank's modifier. Roll d100 at or under it." value = max (0, skillTarget (base, Rank, specialist) + Misc)  valuedice = owFateTest (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "owWeapon", field)
+
+isMelee (weapon) = weaponStat (weapon, "Class") == "Melee" or weaponStat (weapon, "Class") == ""
+
+dieCount (text) = max (1, firstNumber (text))
+
+dieSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+isTearing (special) = contains (toLower (special), "tearing")
+
+weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, rof, special) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = owFateAttack (characterTable, kind, rof)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = owDamage (dieCount (damage), dieSides (damage), pen, isTearing (special))  editable = none }
+    Pen = pen
+    RoF = rof
+    Special = special
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total, "melee", 0, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + char.Characteristics.Strength.Bonus, toInt (weaponStat (weapon, "Pen")), "", weaponStat (weapon, "Special"))
+    else
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (weaponStat (weapon, "Range")) * 3, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + (if weaponStat (weapon, "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), toInt (weaponStat (weapon, "Pen")), weaponStat (weapon, "RoF"), weaponStat (weapon, "Special"))
+
+woundState (wounds, critical, fatigue, toughness) =
+    if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
+    else if fatigue > toughness then "Unconscious"
+    else if fatigue > 0 then "Fatigued"
+    else ""
+
+lightlyDamaged (wounds, maxWounds, toughness) = maxWounds - wounds <= toughness * 2
+
+restHeal (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then wounds
+    else if lightlyDamaged (wounds, maxWounds, toughness) then min (maxWounds, wounds + 1)
+    else wounds
+
+madness (insanity) =
+    if insanity >= 100 then "Lost to madness"
+    else if insanity >= 80 then "Deranged"
+    else if insanity >= 60 then "Disturbed"
+    else if insanity >= 40 then "Unsettled"
+    else "Stable"
+
+powerResult (target, roll) =
+{
+    Text = owText (target, roll) + (if isDouble (roll) then ", doubles: Psychic Phenomena if unfettered or pushed" else "")
+    Value = roll
+    Outcome = if owSuccess (target, roll) then "Success" else "Failure"
+}
+
+powerDice = ([1d100], ((baseline, throws)->powerResult (baseline + asked * 10, first (first (throws).rolls))))
+
+owPower = ask ("Difficulty", difficulties, -6, powerDice)
+
+homeWorlds = ["Agri-world", "Death World", "Feral World", "Feudal World", "Forge World", "Fortress World", "Frontier World", "Hive World", "Imperial World", "Penal Colony", "Schola Progenium", "Shrine World", "Void Born", "Other"]
+
+specialities = ["Heavy Gunner", "Medic", "Operator", "Sergeant", "Weapon Specialist", "Commissar", "Ministorum Priest", "Ogryn", "Ratling", "Sanctioned Psyker", "Storm Trooper", "Tech-Priest Enginseer", "Other"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Status, Characteristics, Comrade, Attacks] }
+    Guardsman = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Regiment = string { description = "The regiment the Guardsman was raised in, built by the squad at the start of play." }
+        'Home world' = string { description = "The world or origin the regiment was raised from, which shapes characteristics, skills and Fate." keys = homeWorlds }
+        Speciality = string { description = "The Guardsman's role in the squad. Guardsman specialities have a Comrade; support specialities stand alone." keys = specialities }
+        Rank = string { description = "Rank or title in the regiment: Trooper, Corporal, Sergeant." default = "Trooper" }
+        Demeanour = string { description = "A trait of character that earns reward when played." }
+        'Total XP' = integer { description = "Experience earned in all, including the starting 600." default = 600  minvalue = 0 }
+        'XP to spend' = integer { default = 600  minvalue = 0  editable = live }
+        Description = string {}
+        Aptitudes = string { description = "The aptitudes from the speciality and regiment. Advances that share them cost less experience." multiline = true }
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total; the bonus is the tens digit."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic (1)
+        'Ballistic Skill' = characteristic (1)
+        Strength = characteristic (1)
+        Toughness = characteristic (1)
+        Agility = characteristic (1)
+        Intelligence = characteristic (1)
+        Perception = characteristic (1)
+        Willpower = characteristic (1)
+        Fellowship = characteristic (1)
+    }
+
+    Skills = table
+    {
+        description = "Skills test at the characteristic plus the rank. Untrained tests are -20; specialist skills cannot be tried untrained."
+        tableLayout = layout { columns = 2 }
+        Acrobatics = skill (Characteristics.Agility.Total, false)
+        Athletics = skill (Characteristics.Strength.Total, false)
+        Awareness = skill (Characteristics.Perception.Total, false)
+        Charm = skill (Characteristics.Fellowship.Total, false)
+        Command = skill (Characteristics.Fellowship.Total, false)
+        Commerce = skill (Characteristics.Intelligence.Total, false)
+        'Common Lore' = skill (Characteristics.Intelligence.Total, true)
+        Deceive = skill (Characteristics.Fellowship.Total, false)
+        Dodge = skill (Characteristics.Agility.Total, false)
+        'Forbidden Lore' = skill (Characteristics.Intelligence.Total, true)
+        Inquiry = skill (Characteristics.Fellowship.Total, false)
+        Interrogation = skill (Characteristics.Willpower.Total, false)
+        Intimidate = skill (Characteristics.Strength.Total, false)
+        Linguistics = skill (Characteristics.Intelligence.Total, true)
+        Logic = skill (Characteristics.Intelligence.Total, false)
+        Medicae = skill (Characteristics.Intelligence.Total, false)
+        Navigate = skill (Characteristics.Intelligence.Total, true)
+        Operate = skill (Characteristics.Agility.Total, true)
+        Parry = skill (Characteristics.'Weapon Skill'.Total, false)
+        Psyniscience = skill (Characteristics.Perception.Total, false)
+        'Scholastic Lore' = skill (Characteristics.Intelligence.Total, true)
+        Scrutiny = skill (Characteristics.Perception.Total, false)
+        Security = skill (Characteristics.Intelligence.Total, false)
+        'Sleight of Hand' = skill (Characteristics.Agility.Total, false)
+        Stealth = skill (Characteristics.Agility.Total, false)
+        Survival = skill (Characteristics.Perception.Total, false)
+        'Tech Use' = skill (Characteristics.Intelligence.Total, false)
+        Trade = skill (Characteristics.Intelligence.Total, true)
+        Specialisations = string { description = "Which lores, languages, vehicles and trades the specialist skills above cover." multiline = true }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Wounds when unhurt, from the regiment and speciality." default = 12 }
+        Wounds = integer { description = "Wounds left. Damage past 0 is critical damage." default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage taken past 0 wounds, read on the critical tables by location and damage type." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Levels of fatigue: -10 on all tests. More than your Toughness bonus and you pass out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (Wounds, 'Critical damage', Fatigue, Characteristics.Toughness.Bonus)  visible = none  indicator = "#d64545" }
+        'Fate threshold' = integer { description = "Fate points the Guardsman has each session, from the home world and speciality." default = 2 }
+        Fate = integer { description = "Spend one to reroll a test, add a degree of success, heal 1d5 wounds, shake off fatigue or act first. Burn one to cheat death." default = 'Fate threshold'  minvalue = 0  editable = live }
+        Initiative = modifier { description = "1d10 + Agility bonus, highest first." value = Characteristics.Agility.Bonus  valuedice = initiativeRoll  editable = none }
+        'New session' = button
+        {
+            description = "At the start of a session, fate points return to the threshold."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fate) = 'Fate threshold'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A night's rest clears fatigue, and a lightly damaged Guardsman heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = 0
+                (root.Status.Wounds) = restHeal (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)
+            }
+        }
+    }
+
+    Comrade = table
+    {
+        description = "A Guardsman speciality has a Comrade, a fellow soldier who follows orders. Make the Comrade its own sheet for its state."
+        tableLayout = layout { columns = 2 }
+        Name = string { description = "The Comrade's name. The Comrade's sheet holds whether it is wounded, fleeing or pinned." }
+        Notes = string { multiline = true }
+    }
+
+    Orders = list
+    {
+        description = "Orders the Guardsman can give the Comrade: standard orders, and those the speciality and talents add."
+        source = secondary.Orders
+        singular = "Order"
+        editable = character
+    }
+
+    Movement = table
+    {
+        description = "Metres moved per action, from the Agility bonus."
+        tableLayout = layout { columns = 2 }
+        'Half move' = integer { value = Characteristics.Agility.Bonus  render = distance (Characteristics.Agility.Bonus)  editable = none }
+        'Full move' = integer { value = Characteristics.Agility.Bonus * 2  render = distance (Characteristics.Agility.Bonus * 2)  editable = none }
+        Charge = integer { value = Characteristics.Agility.Bonus * 3  render = distance (Characteristics.Agility.Bonus * 3)  editable = none }
+        Run = integer { value = Characteristics.Agility.Bonus * 6  render = distance (Characteristics.Agility.Bonus * 6)  editable = none }
+    }
+
+    Armour = table
+    {
+        description = "Armour points by hit location. The Toughness bonus also soaks damage."
+        tableLayout = layout { columns = 2 }
+        Head = integer { default = 4 }
+        Body = integer { default = 4 }
+        'Right Arm' = integer { default = 4 }
+        'Left Arm' = integer { default = 4 }
+        'Right Leg' = integer { default = 4 }
+        'Left Leg' = integer { default = 4 }
+        'Toughness bonus' = integer { value = Characteristics.Toughness.Bonus  editable = none }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack tests and damage for each weapon. Attacks ask the kind of attack and the difficulty; damage asks the target's armour and Toughness bonus."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, 0, "", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Shots = integer { default = 30  minvalue = 0  editable = live }
+            Magazines = integer { default = 2  minvalue = 0  editable = live }
+        }
+    }
+
+    'Armour worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Psychic = table
+    {
+        description = "Sanctioned Psykers: psy rating and the Focus Power test."
+        tableLayout = layout { columns = 3 }
+        'Psy rating' = integer { default = 0  minvalue = 0 }
+        'Focus Power' = integer { description = "Willpower plus 5 per psy rating used. Doubles bring Psychic Phenomena when unfettered or pushed." value = Characteristics.Willpower.Total + 'Psy rating' * 5  valuedice = owPower  editable = none }
+        'Sustained powers' = string { editable = live }
+    }
+
+    'Psychic powers' = list
+    {
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Mental state' = table
+    {
+        description = "Insanity from the horrors of war and Corruption from the Warp."
+        tableLayout = layout { columns = 2  size = wide }
+        Insanity = integer { description = "Insanity points. Disorders come at 40, 60 and 80; at 100 the Guardsman is lost." default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Degree of madness' = string { value = madness (Insanity)  editable = none }
+        Corruption = integer { description = "Corruption points. Each 10 brings a Malignancy test; at 100 the Guardsman is lost to Chaos." default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Malignancy tests' = integer { description = "How many Malignancy tests the Corruption has brought so far, one per full 10." value = Corruption / 10  editable = none }
+        Disorders = string { multiline = true  editable = live }
+        Malignancies = string { multiline = true  editable = live }
+        'Critical injuries' = string { multiline = true  editable = live }
+        Mutations = string { multiline = true  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/images/monster.svg"
+    }
+    Profile = table
+    {
+        description = "Characteristics. Unnatural characteristics multiply the bonus; note them under Traits."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = owTest }
+        BS = integer { default = 30  valuedice = owTest }
+        S = integer { default = 30  valuedice = owTest }
+        T = integer { default = 30  valuedice = owTest }
+        Ag = integer { default = 30  valuedice = owTest }
+        Int = integer { default = 25  valuedice = owTest }
+        Per = integer { default = 30  valuedice = owTest }
+        WP = integer { default = 30  valuedice = owTest }
+        Fel = integer { default = 20  valuedice = owTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Wounds' = integer { default = 10 }
+        Wounds = integer { default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Armour = string { description = "Armour points by location, such as All 4 or Body 6, Head 2." default = "All 3" }
+        'Toughness bonus' = integer { description = "With any Unnatural multiplier." default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { description = "Half, full, charge and run in metres." default = "3/6/9/18" }
+        Size = string { keys = ["Miniscule", "Puny", "Scrawny", "Average", "Hulking", "Enormous", "Massive", "Immense"] default = "Average" }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Pinned = bool { description = "Pinned by suppressing fire: no actions but taking cover until rallied." default = false  editable = live  indicator = "#e8913a" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = owAttack ("melee", "", [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = owDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = owAttack ("ranged", RoF, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 100 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = owDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+comradeHit (state) = if state == "Unharmed" or state == "" then "Wounded" else "Dead"
+
+comradeHeal (state) = if state == "Wounded" then "Unharmed" else state
+
+comradeReplace (state) = if state == "Dead" then "Unharmed" else state
+
+comradeDown (state) = if state == "Dead" then "Dead" else if state == "Wounded" then "Wounded" else ""
+
+comradeTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/onlywar/comrade.svg"  important = [Comrade] }
+    Comrade = table
+    {
+        description = "A Comrade has no wounds: one hit wounds it, a second kills it. It acts on its Guardsman's orders and shares that Guardsman's Fear and Pinning results."
+        tableLayout = layout { columns = 3  size = wide }
+        Guardsman = string { description = "The player character this Comrade follows." }
+        Regiment = string {}
+        State = string { description = "Unharmed, Wounded (cannot Run) or Dead." keys = ["Unharmed", "Wounded", "Dead"] default = "Unharmed"  editable = live }
+        Hurt = string { value = comradeDown (State)  visible = none  indicator = "#d64545" }
+        'In cohesion' = bool { description = "Within 5 metres of the Guardsman with nothing solid between them. Most orders need it." default = true  editable = live }
+        Fleeing = bool { description = "Failed a Fear test with its Guardsman: runs until rallied or the fight ends." default = false  editable = live  indicator = "#8e5cc4" }
+        Pinned = bool { description = "Failed a Pinning test with its Guardsman: in cover, no actions until rallied." default = false  editable = live  indicator = "#e8913a" }
+        Hit = button
+        {
+            description = "A hit wounds an unharmed Comrade and kills a wounded one. Doubles on a hit against the Guardsman, and Blast or Spray, can strike the Comrade."
+            editable = live
+            onClick = updates
+            {
+                (root.Comrade.State) = comradeHit (State)
+            }
+        }
+        'Patch up' = button
+        {
+            description = "Medical care returns a wounded Comrade to unharmed."
+            editable = live
+            onClick = updates
+            {
+                (root.Comrade.State) = comradeHeal (State)
+            }
+        }
+        Rally = button
+        {
+            description = "An order that brings the Comrade back from fleeing or pinned."
+            editable = live
+            onClick = updates
+            {
+                (root.Comrade.Fleeing) = false
+                (root.Comrade.Pinned) = false
+            }
+        }
+        Replace = button
+        {
+            description = "Back in camp a dead Comrade is replaced by a fresh one."
+            editable = live
+            onClick = updates
+            {
+                (root.Comrade.State) = comradeReplace (State)
+                (root.Comrade.Fleeing) = false
+                (root.Comrade.Pinned) = false
+            }
+        }
+    }
+    Orders = table
+    {
+        description = "Orders any Guardsman can give. Each costs the Comrade a Half or Full Action, and helps only in cohesion."
+        tableLayout = layout { columns = 2  size = wide }
+        'Ranged Volley' = string { default = "Half Action: +5 to the Guardsman's Ballistic Skill tests this turn"  editable = none }
+        'Close Quarters' = string { default = "Half Action: the Guardsman counts as ganging up in melee"  editable = none }
+        'Take Cover' = string { default = "Full Action: the Comrade goes to ground in cover"  editable = none }
+        Move = string { default = "Half or Full Action: follow, move, run (not when wounded), disengage or advance"  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Personality = string { multiline = true }
+        Kit = string { multiline = true }
+    }
+}
+
+availabilities = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"]
+
+craftLevels = ["Poor", "Common", "Good", "Best", "Poor, standard kit", "Common, standard kit", "Good, standard kit", "Best, standard kit"]
+
+craftMod (c) = (switch mod (c + 1, 4) case 0 then 20 case 2 then -30 case 3 then -50 else 0) + (if c >= 3 then 20 else 0)
+
+deploymentIndex (deployment) = switch deployment case "Single regiment" then 1 case "Multiple regiments" then 2 else 0
+
+availMod (avail, deploy) = 0 - 10 * avail + 10 * deploy
+
+logisticsResult (baseline, avail, deploy, craft, roll) =
+{
+    Text = if avail == 7 and deploy == 0 then "Unique for a company or less: the GM decides"
+           else if availMod (avail, deploy) > 30 then "Automatic: the item is supplied without a test"
+           else "Rolled " + toString (roll) + " vs " + toString (baseline + availMod (avail, deploy) + craftMod (craft)) + ": " + (if owSuccess (baseline + availMod (avail, deploy) + craftMod (craft), roll) then "Success, the item is supplied" else "Failure, none to be had this time")
+    Value = roll
+    Outcome = if avail == 7 and deploy == 0 then "" else if availMod (avail, deploy) > 30 then "Success" else if owSuccess (baseline + availMod (avail, deploy) + craftMod (craft), roll) then "Success" else "Failure"
+}
+
+logisticsDice (deploy, avail) = ([1d100], ((baseline, throws)->logisticsResult (baseline, avail, deploy, asked, first (first (throws).rolls))))
+
+logisticsTest (deploy) = ask ("Availability", availabilities, -3, (a)->ask ("Craftsmanship", craftLevels, -1, logisticsDice (deploy, a)))
+
+squadTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/onlywar/squad.svg"  important = [Logistics, Regiment] }
+    Regiment = table
+    {
+        description = "The regiment the squad made together at the start of play."
+        tableLayout = layout { columns = 3  size = wide }
+        Regiment = string {}
+        'Home world' = string { keys = homeWorlds }
+        'Commanding officer' = string { description = "The regiment's commander and the trait that colours the regiment." }
+        'Regiment type' = string { description = "Line infantry, armoured, drop troops, mechanised, light infantry, siege, and so on." }
+        'Training doctrines' = string { multiline = true }
+        'Special equipment doctrines' = string { multiline = true }
+        Drawback = string { multiline = true }
+        'Favoured weapons' = string { description = "The regiment's favoured basic and heavy weapons." }
+        'Standard kit' = string { description = "What every Guardsman of the regiment carries. Kit standard for the warzone is easier to requisition." multiline = true }
+    }
+    Logistics = table
+    {
+        description = "The squad's Logistics Rating. A Logistics test requisitions gear beyond the standard kit: roll d100 at or under the rating plus the front, availability and craftsmanship."
+        tableLayout = layout { columns = 3  size = wide }
+        'Logistics rating' = integer { description = "Set by the regiment, raised by deeds and lowered by losses." default = 30  minvalue = 0  maxvalue = 100  editable = live }
+        Deployment = string { description = "How many troops are in the warzone: more troops make the same item easier to get." keys = ["Company or less", "Single regiment", "Multiple regiments"] default = "Company or less"  editable = live }
+        'Time at the front' = string { keys = ["Under 3 months -10", "3 to 6 months +0", "6 to 12 months +10", "1 to 5 years +20", "Over 5 years +30"] default = "3 to 6 months +0"  editable = live }
+        'Front active' = string { description = "How long the front itself has been fought over." keys = ["Under 3 months -10", "3 to 6 months +0", "6 to 12 months +10", "1 to 5 years +20", "Over 5 years +30"] default = "3 to 6 months +0"  editable = live }
+        'War conditions' = string { keys = ["Losing badly -30", "Faltering -20", "Violent impasse -10", "Near victorious +10", "Dominant +20", "Ceasefire +30"] default = "Violent impasse -10"  editable = live }
+        'Front modifier' = modifier { value = signedNumber ('Time at the front') + signedNumber ('Front active') + signedNumber ('War conditions')  editable = none }
+        'Logistics test' = integer { description = "Asks the item's availability and craftsmanship (and whether it is standard kit), then rolls d100." value = 'Logistics rating' + 'Front modifier'  valuedice = logisticsTest (deploymentIndex (Deployment))  editable = none }
+    }
+    Squad = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Guardsmen = string { multiline = true }
+        Comrades = string { multiline = true }
+        Mission = string { multiline = true  editable = live }
+        'Mission log' = string { multiline = true  editable = live }
+    }
+}
+
+vehicleWeapon = custom
+{
+    Name = string {}
+    Mount = string { keys = ["Hull", "Turret", "Sponson", "Pintle", "Rear"] default = "Hull" }
+    Test = integer { description = "The gunner's Ballistic Skill." default = 35  valuedice = owAttack ("ranged", RoF, [])  action = ranged  range = 'Range in m' * 3 }
+    'Range in m' = integer { default = 150 }
+    RoF = string { default = "S/-/-" }
+    Damage = string { default = "3d10+5" }
+    Pen = integer { default = 4 }
+    Roll = integer { value = damageBonus (Damage)  valuedice = owDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+    Special = string {}
+}
+
+motiveState (motive, integrity, onFire) =
+    if integrity <= 0 then "Wrecked"
+    else if motive == "Immobilised" then "Immobilised"
+    else if motive == "Crippled" then "Motive crippled"
+    else ""
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/onlywar/vehicle.svg"  important = [Hull, Armour, Weapons] }
+    Profile = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Wheeled", "Tracked", "Walker", "Skimmer", "Flyer", "Bike"] default = "Tracked" }
+        Size = string { keys = ["Average", "Hulking", "Enormous", "Massive", "Immense", "Monumental", "Titanic"] default = "Enormous" }
+        'Tactical speed' = integer { description = "Metres per turn at combat speed." default = 15  render = distance ('Tactical speed') }
+        'Cruising speed' = string { description = "Road speed, in kilometres per hour." default = "50 kph" }
+        Manoeuvrability = modifier { description = "Added to the driver's Operate tests." default = 0 }
+        Crew = string { default = "Driver, gunner, commander" }
+        'Carrying capacity' = string { default = "None" }
+        Availability = string { keys = availabilities default = "Rare" }
+    }
+    Armour = table
+    {
+        description = "Armour by facing. Damage past the facing's armour (less Penetration) comes off Structural Integrity; vehicles have no Toughness bonus."
+        tableLayout = layout { columns = 3  size = wide }
+        Front = integer { default = 20 }
+        Side = integer { default = 18 }
+        Rear = integer { default = 14 }
+    }
+    Hull = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Structural Integrity' = integer { default = 30 }
+        'Structural Integrity' = integer { description = "Damage past armour comes off here. At 0 the rest is critical damage." default = 'Max Structural Integrity'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage past 0 Structural Integrity, read on the vehicle critical tables." default = 0  minvalue = 0  editable = live }
+        'Motive systems' = string { keys = ["Operational", "Damaged", "Crippled", "Immobilised"] default = "Operational"  editable = live }
+        'On fire' = bool { default = false  editable = live  indicator = "#e8913a" }
+        Condition = string { value = motiveState ('Motive systems', 'Structural Integrity', 'On fire')  visible = none  indicator = "#555555" }
+        'Driver Operate' = integer { description = "The driver's Operate target." default = 35 }
+        'Driving test' = integer { description = "The driver's Operate plus Manoeuvrability, against the difficulty." value = 'Driver Operate' + Profile.Manoeuvrability  valuedice = owTest  editable = none }
+        Initiative = modifier { description = "The vehicle acts on its driver's initiative: 1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Repair = button
+        {
+            description = "A full repair in the motor pool restores Structural Integrity and the motive systems."
+            editable = live
+            onClick = updates
+            {
+                (root.Hull.'Structural Integrity') = 'Max Structural Integrity'
+                (root.Hull.'Critical damage') = 0
+                (root.Hull.'Motive systems') = "Operational"
+                (root.Hull.'On fire') = false
+            }
+        }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = vehicleWeapon
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Traits = string { multiline = true }
+        'Critical hits' = string { multiline = true  editable = live }
+    }
+}
+
+owWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Class }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Melee", "Pistol", "Basic", "Heavy", "Thrown", "Vehicle"] }
+        Range = string { description = "Range in metres. Long range is double, extreme triple." }
+        RoF = string { description = "Rate of fire: single, semi-auto and full auto, such as S/3/-." default = "S/-/-" }
+        Damage = string { default = "1d10" }
+        Type = string { description = "Energy, Impact, Rending or Explosive." keys = ["E", "I", "R", "X"] }
+        Pen = string { default = "0" }
+        Clip = string {}
+        Reload = string {}
+        Special = string { description = "Weapon qualities such as Tearing, Blast (3), Reliable or Spray." }
+        Weight = string {}
+        Availability = string { keys = availabilities default = "Common" }
+    }
+}
+
+owArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Locations = string { default = "All" }
+        AP = string { description = "Armour points, such as 4 for flak." default = "4" }
+        Weight = string {}
+        Availability = string { keys = availabilities default = "Common" }
+        Effect = string {}
+    }
+}
+
+owTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Tier" prefix = "Tier" filter = Stats.Tier }]
+        sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Talent", "Trait"] default = "Talent" }
+        Tier = integer { default = 1  minvalue = 1  maxvalue = 3 }
+        Prerequisites = string {}
+        Aptitudes = string { description = "The two aptitudes that make it cheaper." }
+    }
+}
+
+owPowerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "" sort = Stats.Discipline }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Biomancy", "Divination", "Pyromancy", "Telekinesis", "Telepathy", "Minor"] default = "Minor" }
+        Action = string {}
+        'Focus Power' = string { description = "The test and its modifier, such as Willpower +10 or opposed Willpower." }
+        Range = string {}
+        Sustained = string {}
+    }
+}
+
+owGear = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weight = string {}
+        Availability = string { keys = availabilities default = "Common" }
+        Craftsmanship = string { keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+    }
+}
+
+owOrder = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/onlywar/comrade.svg"
+        filters = [filter { name = "Speciality" prefix = "" filter = Stats.Speciality }, filter { name = "Action" prefix = "" filter = Stats.Action }]
+        sortedBy = sort { prefix = "" sort = Stats.Speciality }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Action = string { description = "What the order costs the Comrade." keys = ["Half Action", "Full Action", "Free Action", "Reaction"] default = "Half Action" }
+        Speciality = string { description = "The speciality or talent that teaches it, or Standard." default = "Standard" }
+        Cohesion = string { description = "Whether the Comrade must be in cohesion for the order to help." keys = ["Needed", "Not needed"] default = "Needed" }
+    }
+}
+
+onlyWarNameSetting = nameSetting
+{
+    name = "Only War"
+    characters = generator { library = "Grimdark imperium" variant = "Imperial" }
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    Comrades = generator { library = "Grimdark imperium" variant = "Imperial" }
+    Squads = generator { library = "Grimdark imperium" variant = "Order" }
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Order" }]
+}
+
+OnlyWar = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Regiment and Guardsmen"
+            topic = "Getting started"
+            text = ["Make the squad a Squads sheet first: together pick the regiment's home world, commanding officer, type, doctrines and drawback, which shape every Guardsman and set the Logistics Rating.", "Each player picks a speciality (Heavy Gunner, Medic, Operator, Sergeant, Weapon Specialist, or a support speciality such as Commissar or Ogryn), rolls the nine characteristics (2d10 + 20, adjusted by the regiment) and spends 600 starting XP."]
+        },
+        hint
+        {
+            title = "Comrades and orders"
+            topic = "Getting started"
+            text = ["Every Guardsman speciality comes with a Comrade: make a Comrades sheet for each. A Comrade has no wounds; one hit wounds it and a second kills it. It acts on the Guardsman's orders (Ranged Volley, Close Quarters, Take Cover, moves, and speciality orders), which help only while it is in cohesion."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target, after the difficulty (Challenging +0, Hard -20, Easy +30). A success is one degree, plus one for each tens digit the roll is under the target; failures count the same way.", "Untrained skills test at -20; specialist skills cannot be tried untrained. A failed test offers to spend a Fate point for a reroll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask the kind of attack (standard +10, all-out +30, charge +20, bursts, suppressing fire, called shot) and the difficulty. Bursts and swift or lightning attacks add hits from degrees of success. The roll's digits reversed give the hit location; ranged attacks jam on 96 or more (94 for bursts).", "Damage asks the target's armour and Toughness bonus. A 10 on a damage die is Righteous Fury: roll 1d5 on the critical table. The attack's degrees of success may replace the lowest damage die."]
+        },
+        hint
+        {
+            title = "Logistics"
+            topic = "Play"
+            text = ["Gear beyond the standard kit comes from a Logistics test on the Squads sheet: d100 against the Logistics Rating plus the front conditions, the item's availability and its craftsmanship."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: 1d10 + Agility bonus, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Comrades = comradeTable
+    Squads = squadTable
+    Vehicles = vehicleTable
+    Weapons = owWeapon
+    Armour = owArmour
+    Talents = owTalent
+    'Psychic Powers' = owPowerStats
+    Gear = owGear
+    Orders = owOrder
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Psychic Powers", "Gear", "Orders"]
+    extraEntityTypes = [entityTypeDescription ("Comrades", "comrade", true, "/systems/onlywar/comrade.svg", []), entityTypeDescription ("Squads", "squad", false, "/systems/onlywar/squad.svg", []), entityTypeDescription ("Vehicles", "vehicle", true, "/systems/onlywar/vehicle.svg", [])]
+    description = "Warhammer 40,000 Only War: Imperial Guardsmen of a regiment made at the table, with d100 tests and degrees of success, specialities, Comrades and orders, Logistics, and vehicles"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 1d5]
+    cssFiles = ["/systems/onlywar/onlywar.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [onlyWarNameSetting, grimdarkNameSetting]
+}

@@ -1,0 +1,116 @@
+@import url("/systems/sheet.css");
+
+/* Only War: an Imperial Guard field form. Olive drab title bars with
+   stencilled khaki lettering over a hazard-yellow rule, canvas-coloured
+   panels, the nine characteristics as a row of dog-tag plates, the skill
+   list beside wounds, fate, the Comrade and movement, then weapons, kit,
+   the psyker's powers and the mind's scars. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2f3322;
+    --surface: #ddd4b4;
+    --surface-alt: #cfc5a1;
+    --surface-sunken: #bdb28b;
+    --surface-muted: #a59a73;
+    --text: #1e2014;
+    --text-muted: #3e4128;
+    --text-faint: #6b6a4c;
+    --on-accent: #e6dcb8;
+    --border: #7e7a58;
+    --border-strong: #2b2e1c;
+    --accent: #4a5229;
+    --accent-hover: #5c653a;
+    --accent-soft: #d4d0a8;
+    --link: #6a3412;
+    --danger: #8c2414;
+    --danger-hover: #6a1a0e;
+    --danger-soft: #ecd1c6;
+    --success: #3d5a24;
+    --paper: #ddd4b4;
+    --card-bg: #cfc5a1;
+    --dice-bg: #3a4120;
+    --dice-text: #e6dcb8;
+    --hazard: #c9a227;
+}
+
+.entityView {
+    --sheet-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Stencil", "Stencil Std", "Black Ops One", "Impact", "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    box-shadow: inset 0 0 0 1px var(--surface-muted);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+    color: var(--on-accent);
+    padding: 3px 10px;
+    border-bottom: 3px solid var(--hazard);
+}
+
+/* ---- Characteristics: nine dog-tag plates ---- */
+
+.entityView .table-characteristics > table > tbody,
+.entityView .table-profile > table > tbody { grid-template-columns: repeat(9, minmax(0, 1fr)); column-gap: 6px; padding: 6px; }
+.entityView .table-characteristics > table > tbody > tr,
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 10px 10px 10px 10px / 14px 14px 14px 14px;
+    padding: 6px 4px;
+    background: radial-gradient(circle at 50% 7px, var(--bg) 2px, transparent 2.5px), var(--surface-alt);
+    padding-top: 14px;
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child,
+.entityView .table-profile > table > tbody > tr > td:first-child { font-family: var(--title-font); text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.06em; }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "\00D7"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(5)::before { content: "bonus "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Skills beside the status column ---- */
+
+.entityView .table-skills { --block: 66.666%; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-status,
+.entityView .table-comrade,
+.entityView .table-orders { --block: 33.333%; }
+.entityView .table-movement,
+.entityView .table-armour { --block: 50%; }
+.entityView .table-movement { clear: left; }
+.entityView .table-comrade > table > thead th,
+.entityView .table-orders > table > thead th { border-bottom-color: var(--danger); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-talents,
+.entityView .table-traits { --block: 50%; }
+.entityView .table-talents { clear: left; }
+.entityView .table-ammunition,
+.entityView .table-armour-worn,
+.entityView .table-gear { --block: 33.333%; }
+.entityView .table-ammunition { clear: left; }
+.entityView .table-psychic,
+.entityView .table-psychic-powers { --block: 50%; }
+.entityView .table-psychic { clear: left; }
+
+/* ---- Labels for list columns ---- */
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "test "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "pen "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(5)::before { content: "RoF "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Comrades, squads and vehicles ---- */
+
+.entityView .table-logistics > table > thead th,
+.entityView .table-hull > table > thead th { border-bottom-color: var(--danger); }
