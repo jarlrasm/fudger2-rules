@@ -43,9 +43,9 @@ trait (oppositeName) = custom
     Check = bool { description = "Ticked when the trait was tested in a way that earns an experience check." default = false  editable = live }
 }
 
-noSkill = { Value = 0 }
+noSkill = { Value = 5 }
 
-combatValue (char, name) = valueOr (valueOr (char.'Combat Skills', name, noSkill), "Value", 0)
+combatValue (char, name) = valueOr (valueOr (char.'Combat Skills', name, noSkill), "Value", 5)
 
 noStats = { Stats = { Skill = "Sword"  Damage = "" } }
 
