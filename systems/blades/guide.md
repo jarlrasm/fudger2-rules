@@ -12,7 +12,7 @@ A player says what their scoundrel does; the GM picks the action, the **position
 A scoundrel can **resist** a consequence: roll the Insight, Prowess or Resolve resistance (one die per action with a dot in that group). The consequence is reduced or avoided, and the scoundrel takes **6 minus the highest die** in stress (a critical clears 1 stress). At 9 stress they take a **trauma** and leave the scene; the fourth trauma retires them.
 
 ## Harm
-Level 1 harm (less effect), level 2 (−1d), level 3 (needs help to act), level 4 is fatal. Armor can absorb a consequence. Healing fills the Healing clock during downtime.
+Level 1 harm (less effect), level 2 (−1d, taken off action rolls by the sheet while either level 2 box is filled), level 3 (needs help to act), level 4 is fatal. Armor can absorb a consequence. Healing fills the Healing clock during downtime.
 
 ## Clocks and scores
 Track obstacles, threats and long projects as **clocks** of 4, 6 or 8 segments. A score begins with a plan, a detail, and an **engagement roll** (a fortune roll on the crew sheet), then cuts to the action. Use flashbacks instead of planning ahead.
