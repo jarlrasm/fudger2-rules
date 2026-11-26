@@ -1,0 +1,3654 @@
+{
+ "name": "Mausritter",
+ "description": "Gear, weapons, armour, treasure, magic swords, spells and creatures from the Mausritter System Reference Document 2.3.1 by Isaac Williams and Losing Games, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Converted from https://mausritter.com/srd/. The Condition cards are written by Fudger. This work is based on Mausritter, a product of Losing Games and Isaac Williams.",
+ "url": "/systems/mausritter/mausritter.json",
+ "gamemaster": "",
+ "entities": [
+  {
+   "type": "Items",
+   "name": "Improvised weapon",
+   "description": "Wielded in: Main paw/both paws. Always mark usage after a fight.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Improvised",
+        "Damage": "d6",
+        "Carried in": "Main paw/both paws",
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Needle",
+   "description": "Wielded in: Main paw/off paw. If attacking with two weapons, roll both dice and use the best result.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p (20p as tool)",
+        "Class": "Light",
+        "Damage": "d6",
+        "Carried in": "Main paw/off paw"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Dagger",
+   "description": "Wielded in: Main paw/off paw. If attacking with two weapons, roll both dice and use the best result.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Light",
+        "Damage": "d6",
+        "Carried in": "Main paw/off paw",
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Hatchet",
+   "description": "Wielded in: Main paw/off paw. If attacking with two weapons, roll both dice and use the best result.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Light",
+        "Damage": "d6",
+        "Carried in": "Main paw/off paw",
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sword",
+   "description": "Wielded in: Main paw/both paws. Does d6 damage in one paw, d8 wielded in both.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws",
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Axe",
+   "description": "Wielded in: Main paw/both paws. Does d6 damage in one paw, d8 wielded in both.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws",
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Staff",
+   "description": "Wielded in: Main paw/both paws. Does d6 damage in one paw, d8 wielded in both.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws",
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Trashhook",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy",
+        "Damage": "d10",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Spear",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy",
+        "Damage": "d10",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Heavy hammer",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy",
+        "Damage": "d10",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Sling",
+   "description": "Wielded in: Main paw.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Light ranged",
+        "Damage": "d6",
+        "Carried in": "Main paw",
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Light crossbow",
+   "description": "Wielded in: Main paw.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Light ranged",
+        "Damage": "d6",
+        "Carried in": "Main paw",
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bow",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy ranged",
+        "Damage": "d8",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Heavy crossbow",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy ranged",
+        "Damage": "d8",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Hooklance",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy",
+        "Damage": "d10",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Hand crossbow",
+   "description": "Wielded in: Main paw.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Light ranged",
+        "Damage": "d6",
+        "Carried in": "Main paw",
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Crossbow",
+   "description": "Wielded in: Both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy ranged",
+        "Damage": "d8",
+        "Carried in": "Both paws",
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Stones",
+   "description": "Carried in a body slot. Mark usage after a fight in which it was used, on 4-6.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Ammunition",
+        "Slots": 1,
+        "Usage": 3,
+        "Carried in": "Body slot",
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Arrows",
+   "description": "Carried in a body slot. Mark usage after a fight in which it was used, on 4-6.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Ammunition",
+        "Slots": 1,
+        "Usage": 3,
+        "Carried in": "Body slot",
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Light armour",
+   "description": "Prevents 1 damage. Worn in: Off paw and one body slot.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Armour",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Light armour",
+        "Armour": "1",
+        "Carried in": "Off paw and one body slot",
+        "Cost": "150p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Heavy armour",
+   "description": "Prevents 1 damage. Worn in: Two body slots.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Armour",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy armour",
+        "Armour": "1",
+        "Carried in": "Two body slots",
+        "Cost": "500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bedroll",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bellows",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Book, blank",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "300p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Book, reading",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "600p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bottle",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bucket",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Caltrops, bag",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chalk",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chisel",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Cookpots",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Crowbar",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Drill",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Glue",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Grease",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Hammer",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p",
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Horn",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Hourglass",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "300p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lockpicks",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Metal file",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Mirror",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "200p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Musical instrument",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "200p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Net",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Padlock and key, small",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Perfume",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "50p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Pick",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Set of loaded dice",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Shovel",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Tent",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "80p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Waterskin",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Whistle",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wooden pole, 6\"",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wooden spikes",
+   "description": "Mouse made, available in most mouse settlements.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Fishing hook",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Incense stick",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lens",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "200p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Necklace chain",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Matches, packet",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "80p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Padlock and key, large",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Twine, roll",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "40p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Soap, small block",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Thread, spool",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "20p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Mouse trap",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Poison",
+   "description": "Human made, available in mouse settlements near human populations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Torches",
+   "description": "Provides light. Mark usage every 6 Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Light",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lantern",
+   "description": "Provides light. Mark usage every 6 Turns. Refilled with oil.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Light",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "50p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Oil, for lantern",
+   "description": "Refill for a lantern.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Electric lantern",
+   "description": "Provides light. Mark usage every 6 Turns. Recharged with batteries; six usage dots.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Light",
+        "Slots": 1,
+        "Usage": 6,
+        "Cost": "200p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Batteries, for electric lantern",
+   "description": "Refill for a lantern.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "50p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Poor clothes",
+   "description": "Clothing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Clothing",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "10p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Standard clothes",
+   "description": "Clothing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Clothing",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "50p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Noble clothes",
+   "description": "Clothing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Clothing",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1000p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Winter cloak",
+   "description": "Clothing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Clothing",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "150p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Waterproof cloak",
+   "description": "Clothing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Clothing",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Lead coat",
+   "description": "Heavy armour: prevents 1 damage.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Armour",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Heavy armour",
+        "Armour": "1"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Shield & jerkin",
+   "description": "Light armour: prevents 1 damage.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Armour",
+        "Slots": 2,
+        "Usage": 3,
+        "Class": "Light armour",
+        "Armour": "1"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bottle of milk",
+   "description": "Starting item of the cage dweller background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Shears",
+   "description": "Starting item of the leatherworker background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Flask of coffee",
+   "description": "Starting item of the street tough background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Holy symbol",
+   "description": "Starting item of the mendicant priest background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Pole, 6\"",
+   "description": "Starting item of the beetleherd background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Small barrel of ale",
+   "description": "Starting item of the ale brewer background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wire, spool",
+   "description": "Starting item of the wireworker background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bag of bat teeth",
+   "description": "Starting item of the bat cultist background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Pickaxe",
+   "description": "Wielded in: Main paw/both paws.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Weapon",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Fishhook",
+   "description": "Starting item of the wall rover background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Soap",
+   "description": "Starting item of the worm wrangler background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Goggles",
+   "description": "Starting item of the sparrow rider background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Chain, 6\"",
+   "description": "Starting item of the prison guard background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Dried mushroom",
+   "description": "Eaten as rations.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Food",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Spore mask",
+   "description": "Starting item of the fungus farmer background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Quill & ink",
+   "description": "Starting item of the cartographer background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Compass",
+   "description": "Starting item of the cartographer background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Block of cheese",
+   "description": "Starting item of the trap thief background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Treasure map, dubious",
+   "description": "Starting item of the vagabond background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Documents, sealed",
+   "description": "Starting item of the message runner background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Disguise kit",
+   "description": "Starting item of the troubadour background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Jar of honey",
+   "description": "Starting item of the bee keeper background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Scrap of obscure book",
+   "description": "Starting item of the librarian background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Felt hat",
+   "description": "Starting item of the pauper noblemouse background.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Rations",
+   "description": "Food for the road. Mark usage after a meal; eating one and resting a Watch heals all HP.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Food",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "5p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Pip purse",
+   "description": "Holds 250 pips. Pips past the first 250 take a slot per 250.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Tool",
+        "Slots": 1,
+        "Usage": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Ghost lantern",
+   "description": "Casts a light that banishes ghosts.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Speaking shells",
+   "description": "One speaks what the other hears.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Breathing straw",
+   "description": "Tube that always contains air.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bat cultist's dagger",
+   "description": "Grants passage into sanctum.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic beans",
+   "description": "Grow fully in d6 Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Wheel of fine aged cheese",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "100p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Silver chain",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 2,
+        "Usage": 3,
+        "Cost": "500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Jeweled pendant",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "400p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Gold ring",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Polished diamond",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3,
+        "Cost": "1000p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "String of pearls",
+   "description": "Valuable treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 2,
+        "Usage": 3,
+        "Cost": "1500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Oversized silver spoon",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 2,
+        "Usage": 3,
+        "Cost": "300p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Ivory comb",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 4,
+        "Usage": 3,
+        "Cost": "400p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Huge bottle of fine brandy",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 4,
+        "Usage": 3,
+        "Cost": "500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Ancient mouse statue",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 4,
+        "Usage": 3,
+        "Cost": "500p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Ancient mouse throne",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 6,
+        "Usage": 3,
+        "Cost": "1000p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Giant golden wristwatch",
+   "description": "Large treasure.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 4,
+        "Usage": 3,
+        "Cost": "1000p"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Bundle of pungent herbs",
+   "description": "Unusual treasure: 200p to an apothecary.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Odd-coloured dried mushrooms",
+   "description": "Unusual treasure: 200p to a witch.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Eerily glowing stone",
+   "description": "Unusual treasure: 300p to a wizard.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Treasure",
+        "Slots": 1,
+        "Usage": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (wrought iron)",
+   "description": "While wielded: You roll critical damage Saves with Advantage. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (intricate Fae design)",
+   "description": "While wielded: You may disguise yourself as any mouse-sized creature. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (rusty nail)",
+   "description": "Critical damage: Give a Frightened Condition. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (snake fang)",
+   "description": "Critical damage: Deal d6 additional damage to DEX. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (toy soldier's sabre)",
+   "description": "While wielded: If you lead a warband, they have +1 Armour. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (water-worn glass)",
+   "description": "While wielded: You can hold breath underwater for 1 Turn. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (wolf tooth)",
+   "description": "Critical damage: Your next attack is Enhanced. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (silver sewing needle)",
+   "description": "Critical damage: Clear all usage dots from a non-spell item in your inventory. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (thorny rose stem)",
+   "description": "Critical damage: Remove a Condition. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Items",
+   "name": "Magic sword (congealed shadow)",
+   "description": "While wielded: You are invisible when standing perfectly still. Magic swords only mark usage when a 6 is rolled. Roll its class: d6, 1-4 Medium, 5 Light, 6 Heavy. 1-in-6 is cursed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrItem": {
+       "Stats": {
+        "Kind": "Magic sword",
+        "Slots": 1,
+        "Usage": 3,
+        "Class": "Medium",
+        "Damage": "d6/d8",
+        "Carried in": "Main paw/both paws"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Fireball",
+   "description": "Shoot a fireball up to 24\". Deal [SUM] + [DICE] damage to all creatures within 6\".",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 2,
+        "Effect": "Shoot a fireball up to 24\". Deal [SUM] + [DICE] damage to all creatures within 6\".",
+        "Recharge": "Burn in the heart of a raging fire for three days and nights."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Heal",
+   "description": "Heal [SUM] STR damage and remove the Injured Condition from a creature.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 3,
+        "Effect": "Heal [SUM] STR damage and remove the Injured Condition from a creature.",
+        "Recharge": "Cut self for d6 STR damage, sprinkle the spell with the blood."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Magic Missile",
+   "description": "Deal [SUM] + [DICE] damage to a creature within sight.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 4,
+        "Effect": "Deal [SUM] + [DICE] damage to a creature within sight.",
+        "Recharge": "Drop from a height of at least 30ft. Touch the spell within one Turn."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Fear",
+   "description": "Give the Frightened Condition to [DICE] creatures.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 5,
+        "Effect": "Give the Frightened Condition to [DICE] creatures.",
+        "Recharge": "Receive the Frightened Condition from a hostile creature while carrying the spell."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Darkness",
+   "description": "Create a [SUM] x 2\" diameter sphere of pure darkness for [DICE] Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 6,
+        "Effect": "Create a [SUM] x 2\" diameter sphere of pure darkness for [DICE] Turns.",
+        "Recharge": "Leave uncovered in a lightless place for three days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Restore",
+   "description": "Remove Exhausted or Frightened Condition from [DICE] + 1 creatures",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 7,
+        "Effect": "Remove Exhausted or Frightened Condition from [DICE] + 1 creatures",
+        "Recharge": "Bury in a peaceful field or riverbank for three days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Be Understood",
+   "description": "Make your meaning clear to [DICE] creatures of another species for [DICE] Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 8,
+        "Effect": "Make your meaning clear to [DICE] creatures of another species for [DICE] Turns.",
+        "Recharge": "Give away freely to a creature of another species."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Ghost Beetle",
+   "description": "Create an illusory beetle that can carry 6 inventory slots for [DICE] x 6 Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 9,
+        "Effect": "Create an illusory beetle that can carry 6 inventory slots for [DICE] x 6 Turns.",
+        "Recharge": "Bury in a beetle graveyard for three nights."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Light",
+   "description": "Force [DICE] creatures to make a WIL save or become stunned. Alternately, create light as bright as a torch for [SUM] turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 10,
+        "Effect": "Force [DICE] creatures to make a WIL save or become stunned. Alternately, create light as bright as a torch for [SUM] turns.",
+        "Recharge": "Catch in the first light of a sunrise and the last light of sunset for three days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Invisible Ring",
+   "description": "Creates [DICE] x 6\" ring of force. It is invisible and immovable. Lasts [DICE] Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 11,
+        "Effect": "Creates [DICE] x 6\" ring of force. It is invisible and immovable. Lasts [DICE] Turns.",
+        "Recharge": "Build an iron ring the same size as last cast. Pass the spell though it. Dissolves the ring."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Knock",
+   "description": "Open a door or container, as if a Save were made with STR score of 10 + [DICE] x 4.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 12,
+        "Effect": "Open a door or container, as if a Save were made with STR score of 10 + [DICE] x 4.",
+        "Recharge": "Put in a locked box, inside a locked box, inside a locked box. Leave for three days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Grease",
+   "description": "Cover [DICE] x 6\" area in slippery, flammable grease. Creatures in the area must make a DEX save or fall prone.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 13,
+        "Effect": "Cover [DICE] x 6\" area in slippery, flammable grease. Creatures in the area must make a DEX save or fall prone.",
+        "Recharge": "Rub all over in animal fat. Leave until it putrefies."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Grow",
+   "description": "Grow a creature to [DICE] + 1 times its original size for 1 Turn.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 14,
+        "Effect": "Grow a creature to [DICE] + 1 times its original size for 1 Turn.",
+        "Recharge": "Leave in the highest branches of a tall tree for three days."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Invisibility",
+   "description": "Make creature invisible for [DICE] Turns. Any movement reduces duration by 1 Turn.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 15,
+        "Effect": "Make creature invisible for [DICE] Turns. Any movement reduces duration by 1 Turn.",
+        "Recharge": "Go a day without opening your eyes once, while holding the spell."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Catnip",
+   "description": "Turn object into an irresistible lure for cats. Lasts [DICE] Turns.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrSpell": {
+       "Stats": {
+        "Roll": 16,
+        "Effect": "Turn object into an irresistible lure for cats. Lasts [DICE] Turns.",
+        "Recharge": "Give a cat a gift it truly desires."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Cat",
+   "description": "Wants to be served. If mice pledge fealty and give bribes, they may be allowed to live.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 15,
+        "Max HP": 15,
+        "Armour": 1,
+        "Warband scale": true,
+        "STR": 15,
+        "DEX": 15,
+        "WIL": 10
+       },
+       "Attacks": [
+        {
+         "Name": "swipe",
+         "Die": 6,
+         "Damages": "STR",
+         "Ranged": false
+        },
+        {
+         "Name": "bite",
+         "Die": 8,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Cat lords: Balthazar - Loves to eat the finest delicacies; Melchior - Loves gold, jewels and wealth; Solomon - Plays cruel games with captives; Hammurabi - Rules with harsh, unbending logic; Nefertiti - Loves art, poetry and beautiful things; Zenobia - Forming an army of conquest, wants to rule.",
+        "Wants": "to be served. If mice pledge fealty and give bribes, they may be allowed to live"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Centipede",
+   "description": "Wants to wander and devour.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 8,
+        "Max HP": 8,
+        "Armour": 1,
+        "Warband scale": false,
+        "STR": 10,
+        "DEX": 12,
+        "WIL": 8
+       },
+       "Attacks": [
+        {
+         "Name": "venomous bite",
+         "Die": 6,
+         "Damages": "DEX",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "Venom takes effect, d12 damage to STR",
+        "Special": "Chilling centipedes: Giant - As big as a snake. 12hp, STR 15, Armour 2; Swimming - Drags prey under water; Tiger - Yellow and black bands, d8 damage bite; Glutton - Always hungry, never stops growing; Racer - A delicacy, if you can catch them; Feathered - Can glide short distances.",
+        "Wants": "to wander and devour"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Crow",
+   "description": "Wants to protect the secret hallowed places from those that would do them harm.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Max HP": 12,
+        "Armour": 1,
+        "Warband scale": false,
+        "STR": 12,
+        "DEX": 15,
+        "WIL": 15
+       },
+       "Attacks": [
+        {
+         "Name": "peck",
+         "Die": 8,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Flies 3x normal speed, knows two songs\nCrow songs: Dawn - Create a blindingly bright light; Sorrow - All who hear: Make WIL save or take Frightened; Sight - Vaguely foretell a future event; Wind - Powerful gust. Make STR save or knocked down.; Past - See past event concerning those present; Truth - All who hear: Cannot lie while the song lasts.",
+        "Wants": "to protect the secret hallowed places from those that would do them harm"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Faerie",
+   "description": "Wants to further the Faerie Queen's strange agenda.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Max HP": 6,
+        "Armour": 0,
+        "Warband scale": false,
+        "STR": 10,
+        "DEX": 15,
+        "WIL": 15
+       },
+       "Attacks": [
+        {
+         "Name": "silver rapier",
+         "Die": 8,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Knows one spell\nFaerie agendas: Kidnapping baby mice, to raise as their own; Giving gifts that cause violent jealousy; Playing music that bewitches mice into their service; Using a glamour to appear as a mouse in distress; Rotting the food in winter storehouses; Tricking a settlement out of their legal standing.",
+        "Wants": "to further the Faerie Queen's strange agenda"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Frog",
+   "description": "Wants to gallantly complete their quest.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Max HP": 6,
+        "Armour": 1,
+        "Warband scale": false,
+        "STR": 12,
+        "DEX": 15,
+        "WIL": 8
+       },
+       "Attacks": [
+        {
+         "Name": "spear",
+         "Die": 10,
+         "Damages": "STR",
+         "Ranged": false
+        },
+        {
+         "Name": "tongue",
+         "Die": 6,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "Leap out of reach",
+        "Special": "Always goes first unless surprised, leaps 2x normal speed\nFrog knights-errant: Gwal - Strong, kind of heart and simple of mind; Phillip - Cursed human, searching for a cure; Lurf - Unsound sense of honor, rash in anger; Slup - Set on slaying a great beast, no matter the cost; Uuu - Desperate to prove their strength at jousting; Puc - Searching for the legendary Mug of Truth.",
+        "Wants": "to gallantly complete their quest"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Ghost",
+   "description": "Wants freedom from the pain that binds them to the mortal realm.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 9,
+        "Max HP": 9,
+        "Armour": 0,
+        "Warband scale": false,
+        "STR": 5,
+        "DEX": 10,
+        "WIL": 10
+       },
+       "Attacks": [
+        {
+         "Name": "chilling touch",
+         "Die": 8,
+         "Damages": "WIL",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "Possess the creature",
+        "Special": "Only harmed by silver or magic weapons\nAlso: ghostly power.\nGhostly powers: Shimmer - Create d3 illusions of itself; Poltergeist - Throws a creature/object d6 x 6\"; Entrap - Pull a creature into the spirit realm for a Round; Doom - Give Frightened Condition to a creature; Rot - Destroys all rations carried by a creature; Incorporeal - Float into wall/floor, reappear elsewhere.",
+        "Wants": "freedom from the pain that binds them to the mortal realm"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Mouse",
+   "description": "Wants to feel safe.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Max HP": 3,
+        "Armour": 0,
+        "Warband scale": false,
+        "STR": 9,
+        "DEX": 9,
+        "WIL": 9
+       },
+       "Attacks": [
+        {
+         "Name": "sword",
+         "Die": 6,
+         "Damages": "STR",
+         "Ranged": false
+        },
+        {
+         "Name": "bow",
+         "Die": 6,
+         "Damages": "STR",
+         "Ranged": true
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Rival mouse adventurers: Thistle - Disgraced knight, still haughty; Belladonna - Off-kilter wizard, looking for spells; Hayseed - Trying to steal enough to buy back their farm; Mandrake - Con artist. Appears unthreatening; Marigold - Loves fire. Fears its absence; Leif - Massive mouse exiled from far away land.",
+        "Wants": "to feel safe"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Owl",
+   "description": "Wants to collect rare knowledge and spells.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 15,
+        "Max HP": 15,
+        "Armour": 1,
+        "Warband scale": false,
+        "STR": 15,
+        "DEX": 15,
+        "WIL": 15
+       },
+       "Attacks": [
+        {
+         "Name": "bite",
+         "Die": 10,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Flies 3x normal speed. Knows two spells\nOwl sorcerers: Bezalel - Builds mechanical servants; Morgana - In league with a faerie kingdom; Prospero - Creates chimeric servants; Sparrowhawk - Can shape-shift into any other bird; Crowley - Binds ghosts into spells; Lechuza - Human witch trapped in owl form.",
+        "Wants": "to collect rare knowledge and spells"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Rat",
+   "description": "Wants easy wealth, to take from the weak.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 3,
+        "Max HP": 3,
+        "Armour": 0,
+        "Warband scale": false,
+        "STR": 12,
+        "DEX": 8,
+        "WIL": 8
+       },
+       "Attacks": [
+        {
+         "Name": "cleaver",
+         "Die": 6,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "",
+        "Special": "Rat gangs: Dedratz - Construct elaborate scavenged traps; Water Rats - Expert riverboat navigators; Lab Rats - Bizarre looks, innate magical abilities; Trashknights - 1 armour tin breastplates and helms; Gentlerats - Top hats and rumpled suits; The Kings - Tails locked together in gordian knot.",
+        "Wants": "easy wealth, to take from the weak"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Snake",
+   "description": "Wants to sleep undisturbed.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 12,
+        "Max HP": 12,
+        "Armour": 2,
+        "Warband scale": false,
+        "STR": 12,
+        "DEX": 10,
+        "WIL": 10
+       },
+       "Attacks": [
+        {
+         "Name": "bite",
+         "Die": 8,
+         "Damages": "STR",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "Swallow whole, d4 STR damage per Round until rescued or escape",
+        "Special": "Strange snakes: Wood - Carved stick of wood, ensorcelled into life; Shadow - Slithers always just out of sight; Bone - Snake skeleton, raised from the dead; Eel - Lives underwater. Raises stolen snake eggs; Scroll - Born with a spell etched into its scales; Drake - Has wings, breathes small gouts of fame.",
+        "Wants": "to sleep undisturbed"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Creature",
+   "name": "Spider",
+   "description": "Wants to feed its babies.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "creatureTable": {
+       "Stats": {
+        "HP": 6,
+        "Max HP": 6,
+        "Armour": 1,
+        "Warband scale": false,
+        "STR": 8,
+        "DEX": 15,
+        "WIL": 10
+       },
+       "Attacks": [
+        {
+         "Name": "poison bite",
+         "Die": 6,
+         "Damages": "DEX",
+         "Ranged": false
+        }
+       ],
+       "Notes": {
+        "Critical damage": "Carry away in web",
+        "Special": "Spider species: Widow - Bright red markings, d10 damage bite; Wolf - Furry, hunts in packs of d6 spiders; Longlegs - Mostly peaceful, can walk on water; Architect - Weave confusing tunnels of webs; Blink - As an action, can teleport d6 x 10\"; Ghost - Can only be harmed by silver or magic weapons.",
+        "Wants": "to feed its babies"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Conditions",
+   "name": "Exhausted",
+   "description": "Worn out by travel without rest, bad weather or hard work. It fills a slot.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrCondition": {
+       "Stats": {
+        "Effect": "Worn out by travel without rest, bad weather or hard work. It fills a slot.",
+        "Clear": "After a long rest."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Conditions",
+   "name": "Frightened",
+   "description": "Shaken by fear. It fills a slot, and the mouse will not move closer to what frightened it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrCondition": {
+       "Stats": {
+        "Effect": "Shaken by fear. It fills a slot, and the mouse will not move closer to what frightened it.",
+        "Clear": "After a short rest."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Conditions",
+   "name": "Hungry",
+   "description": "A day without food. It fills a slot.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrCondition": {
+       "Stats": {
+        "Effect": "A day without food. It fills a slot.",
+        "Clear": "After a meal."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Conditions",
+   "name": "Injured",
+   "description": "Hurt by critical damage. It fills a slot; STR and DEX saves are made with disadvantage.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrCondition": {
+       "Stats": {
+        "Effect": "Hurt by critical damage. It fills a slot; STR and DEX saves are made with disadvantage.",
+        "Clear": "After a full rest."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Conditions",
+   "name": "Drained",
+   "description": "Spent by a miscast. It fills a slot; WIL saves are made with disadvantage.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "Mausritter",
+     "implementation": {
+      "mrCondition": {
+       "Stats": {
+        "Effect": "Spent by a miscast. It fills a slot; WIL saves are made with disadvantage.",
+        "Clear": "After a full rest."
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
