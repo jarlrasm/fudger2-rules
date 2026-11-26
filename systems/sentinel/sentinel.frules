@@ -1,0 +1,749 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieKeys = ["d4", "d6", "d8", "d10", "d12"]
+
+minionDieKeys = ["d4", "d6", "d8", "d10", "d12", "Defeated"]
+
+zoneKeys = ["Green", "Yellow", "Red"]
+
+actionKeys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]
+
+sidesOf (die) = max (4, toInt (replace ("d", "", die)))
+
+stepDown (die) =
+    switch die
+        case "d12" then "d10"
+        case "d10" then "d8"
+        case "d8" then "d6"
+        case "d6" then "d4"
+        else "Defeated"
+
+zoneRank (zone) =
+    switch zone
+        case "Green" then 0
+        case "Yellow" then 1
+        case "Red" then 2
+        else 3
+
+worseZone (a, b) = if zoneRank (a) >= zoneRank (b) then a else b
+
+zoneOf (health, yellowAt, redAt) =
+    if health <= 0 then "Out"
+    else if health <= redAt then "Red"
+    else if health <= yellowAt then "Yellow"
+    else "Green"
+
+zoneColor (zone) =
+    switch zone
+        case "Green" then "green"
+        case "Yellow" then "yellow"
+        case "Red" then "red"
+        else "black"
+
+healthZone (char) = zoneOf (char.Health.Health, char.Health.'Yellow at', char.Health.'Red at')
+
+currentZone (char) = worseZone (healthZone (char), char.Health.Scene)
+
+statusDie (char) =
+    switch currentZone (char)
+        case "Green" then char.Status.'Green die'
+        case "Yellow" then char.Status.'Yellow die'
+        else char.Status.'Red die'
+
+zoneBadge (zone, wanted, text) = if zone == wanted then text else ""
+
+boostSize (effect) =
+    if effect >= 12 then 4
+    else if effect >= 8 then 3
+    else if effect >= 4 then 2
+    else if effect >= 1 then 1
+    else 0
+
+overcomeText (effect) =
+    if effect <= 0 then "the action fails"
+    else if effect <= 3 then "fails, or succeeds with a major twist"
+    else if effect <= 7 then "succeeds with a minor twist"
+    else if effect <= 11 then "succeeds"
+    else "succeeds beyond expectations"
+
+overcomeOutcome (effect) =
+    if effect <= 0 then "Failure"
+    else if effect <= 3 then "Major twist"
+    else if effect <= 7 then "Minor twist"
+    else if effect <= 11 then "Success"
+    else "Spectacular success"
+
+actionText (action, effect) =
+    switch action
+        case "Overcome" then overcomeText (effect)
+        case "Attack" then toString (max (0, effect)) + " damage"
+        case "Defend" then "defend " + toString (max (0, effect))
+        case "Boost" then "boost +" + toString (boostSize (effect))
+        case "Hinder" then "hinder -" + toString (boostSize (effect))
+        else "recover " + toString (max (0, effect)) + " health"
+
+actionOutcome (action, effect) =
+    switch action
+        case "Overcome" then overcomeOutcome (effect)
+        case "Attack" then "Hit"
+        else ""
+
+modText (die, modifier) =
+    if modifier == 0 then toString (die)
+    else toString (die) + (if modifier > 0 then " + " else " - ") + toString (abs (modifier)) + " = " + toString (die + modifier)
+
+pick (sorted, mode) =
+    switch mode
+        case "Min" then first (sorted)
+        case "Max" then item (count (sorted) - 1, sorted)
+        else item (1, sorted)
+
+diceText (sorted) = "Min " + toString (first (sorted)) + ", Mid " + toString (item (1, sorted)) + ", Max " + toString (item (2, sorted))
+
+outText (zone) = if zone == "Out" then "Out, only the Out ability: " else ""
+
+zoneNote (zone, needed) = if zoneRank (zone) < zoneRank (needed) then " (needs " + needed + ")" else ""
+
+poolResult (sorted, action, mode, modifier, zone, needed) =
+{
+    Text = outText (zone) + mode + " " + modText (pick (sorted, mode), modifier) + ": " + actionText (action, pick (sorted, mode) + modifier) + " (" + diceText (sorted) + ")" + zoneNote (zone, needed)
+    Value = pick (sorted, mode) + modifier
+    Outcome = actionOutcome (action, pick (sorted, mode) + modifier)
+}
+
+scPool (powerSides, qualitySides, statusSides, zone, action, mode, needed) = ([dice { number = 1  sides = powerSides  label = "Power"  color = "blue" }, dice { number = 1  sides = qualitySides  label = "Quality"  color = "purple" }, dice { number = 1  sides = statusSides  label = "Status"  color = zoneColor (zone) }],
+    ((baseline, throws)->poolResult (sort ([first (first (throws).rolls), first (item (1, throws).rolls), first (item (2, throws).rolls)]), action, mode, asked, zone, needed)))
+
+scRoll (powerSides, qualitySides, char, action, mode, needed) = ask ("Boosts and hinders", 0, scPool (powerSides, qualitySides, sidesOf (statusDie (char)), currentZone (char), action, mode, needed))
+
+powerRoll (char, dieSides) = scRoll (dieSides, sidesOf (char.'Dice pool'.'Paired die'), char, char.'Dice pool'.Action, char.'Dice pool'.'Effect die', "Green")
+
+qualityRoll (char, dieSides) = scRoll (sidesOf (char.'Dice pool'.'Paired die'), dieSides, char, char.'Dice pool'.Action, char.'Dice pool'.'Effect die', "Green")
+
+traitSides (traits, name) =
+    if count (filter ((t)->toLower (t.Name) == toLower (name), traits)) > 0 then sidesOf (first (filter ((t)->toLower (t.Name) == toLower (name), traits)).Die)
+    else 4
+
+abilityRoll (char, power, quality, action, mode, needed) = scRoll (traitSides (char.Powers, power), traitSides (char.Qualities, quality), char, action, mode, needed)
+
+abilityKind (action) = if action == "Attack" or action == "Hinder" then "ranged" else ""
+
+singleResult (roll, action, modifier, dieLabel) =
+{
+    Text = dieLabel + " " + modText (roll, modifier) + ": " + actionText (action, roll + modifier)
+    Value = roll + modifier
+    Outcome = actionOutcome (action, roll + modifier)
+}
+
+singleRoll (dieSides, action, dieLabel, start) = ask ("Boosts and hinders", start, ([dice { number = 1  sides = dieSides  label = dieLabel  color = "red" }],
+    ((baseline, throws)->singleResult (first (first (throws).rolls), action, asked, dieLabel))))
+
+shrinkText (dieSides) = if dieSides <= 4 then "defeated, a d4 has no smaller die" else "reduced to d" + toString (dieSides - 2)
+
+saveText (save, damage, dieSides, kind, answered) =
+    if not (answered) then "Save " + toString (save)
+    else if kind == "Lieutenant" and damage >= dieSides * 2 then toString (damage) + " damage is twice d" + toString (dieSides) + " or more: defeated"
+    else if save < damage then "Save " + toString (save) + " vs " + toString (damage) + ": " + (if kind == "Lieutenant" then shrinkText (dieSides) else "defeated")
+    else "Save " + toString (save) + " vs " + toString (damage) + ": " + (if kind == "Lieutenant" then "no effect" else shrinkText (dieSides))
+
+saveOutcome (save, damage, dieSides, kind, answered) =
+    if not (answered) then ""
+    else if contains (saveText (save, damage, dieSides, kind, answered), "defeated") then "Save failed"
+    else if kind == "Lieutenant" and save >= damage then "Save success"
+    else "Reduced"
+
+saveResult (save, damage, dieSides, kind, answered) =
+{
+    Text = saveText (save, damage, dieSides, kind, answered)
+    Value = save
+    Outcome = saveOutcome (save, damage, dieSides, kind, answered)
+}
+
+minionSave (dieSides, kind) = ask ("Damage", ([dice { number = 1  sides = dieSides  label = "Save" }],
+    ((baseline, throws)->saveResult (first (first (throws).rolls), asked, dieSides, kind, answered))))
+
+sceneTotal (g, y, r) = g + y + r
+
+sceneZone (ticked, g, y, r) =
+    if ticked >= g + y + r then "Time is up"
+    else if ticked < g then "Green"
+    else if ticked < g + y then "Yellow"
+    else "Red"
+
+environmentDie (env) =
+    switch sceneZone (max (0, env.'Scene tracker'.Rounds.realvalue), env.'Scene tracker'.'Green rounds', env.'Scene tracker'.'Yellow rounds', env.'Scene tracker'.'Red rounds')
+        case "Green" then env.Environment.'Green die'
+        case "Yellow" then env.Environment.'Yellow die'
+        else env.Environment.'Red die'
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Health, 'Dice pool', Powers, Qualities, Status] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Real name' = string {}
+        Background = string { description = "Who the hero was before the powers: it gives the first qualities and a principle." }
+        'Power source' = string { description = "Where the powers come from: it gives the first powers and a Yellow ability." }
+        Archetype = string { description = "How the hero fights: more powers, qualities and abilities." }
+        Personality = string { description = "How the hero behaves under pressure: it sets the status dice and the Out ability." }
+        Team = string {}
+        'Hero points' = integer { description = "Earned by taking twists; spend one to reroll, add a +1 bonus, or recover." default = 0  minvalue = 0  editable = live }
+    }
+
+    'Dice pool' = table
+    {
+        description = "Every roll is one power, one quality and your status die. Pick the action, the effect die and the die of the other trait, then roll a power or quality."
+        tableLayout = layout { columns = 4  size = wide }
+        Action = selector { description = "The basic action you take with the roll." options = actionKeys  labels = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]  colors = ["", "red", "blue", "green", "red", "green"]  default = "Overcome"  editable = live  save = nosave }
+        'Effect die' = selector { description = "Which die of the three is the effect. Basic actions use the Mid die." options = ["Min", "Mid", "Max"]  labels = ["Min", "Mid", "Max"]  colors = ["", "", ""]  default = "Mid"  editable = live  save = nosave }
+        'Paired die' = selector { description = "The die of the other trait: the quality when you roll a power, the power when you roll a quality. d4 when nothing fits." options = dieKeys  labels = dieKeys  colors = ["", "", "", "", ""]  default = "d8"  editable = live  save = nosave }
+        Zone = string { description = "The worse of your health zone and the scene tracker's zone. It picks your status die and which abilities you may use." value = currentZone (characterTable)  editable = none }
+        'Status die' = string { description = "Your status die for the current zone." value = statusDie (characterTable)  editable = none }
+    }
+
+    Powers = list
+    {
+        description = "What the hero can do that people can't. Each is a die from d4 to d12."
+        singular = "Power"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d8"  keys = dieKeys }
+            Roll = integer { value = sidesOf (Die)  valuedice = powerRoll (characterTable, sidesOf (Die))  action = ranged  editable = none  render = Die }
+        }
+    }
+
+    Qualities = list
+    {
+        description = "What the hero is good at as a person: skills, knowledge and nature. Each is a die from d4 to d12."
+        singular = "Quality"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d8"  keys = dieKeys }
+            Roll = integer { value = sidesOf (Die)  valuedice = qualityRoll (characterTable, sidesOf (Die))  editable = none  render = Die }
+        }
+    }
+
+    Status = table
+    {
+        description = "The status die joins every roll. It comes from your personality and changes with your zone."
+        tableLayout = layout { columns = 3 }
+        'Green die' = string { default = "d8"  keys = dieKeys }
+        'Yellow die' = string { default = "d8"  keys = dieKeys }
+        'Red die' = string { default = "d8"  keys = dieKeys }
+    }
+
+    Health = table
+    {
+        description = "Health falls through the Green, Yellow and Red zones to Out at 0."
+        tableLayout = layout { columns = 3 }
+        'Max Health' = integer { description = "Set at hero creation." default = 30  minvalue = 1 }
+        'Yellow at' = integer { description = "The top of the Yellow range: at or below this the hero is in Yellow." default = 'Max Health' * 2 / 3 }
+        'Red at' = integer { description = "The top of the Red range: at or below this the hero is in Red." default = 'Max Health' / 3 }
+        Health = integer { description = "Current health." default = 'Max Health'  minvalue = 0  editable = live }
+        Defense = integer { description = "What your last Defend gave: it lowers the attacks against you until your next turn." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Scene = string { description = "The scene tracker's zone. When it is worse than your health zone, it sets your status die and abilities." default = "Green"  keys = zoneKeys  editable = live }
+        'In Yellow' = string { value = zoneBadge (healthZone (characterTable), "Yellow", "Yellow zone")  visible = none  indicator = "#d4b106" }
+        'In Red' = string { value = zoneBadge (healthZone (characterTable), "Red", "Red zone")  visible = none  indicator = "#d64545" }
+        Down = string { value = zoneBadge (healthZone (characterTable), "Out", "Out")  visible = none  indicator = "#555555" }
+        'End of scene' = button { description = "Defense ends and the next scene starts in Green."  editable = live  onClick = updates
+            {
+                (root.Health.Defense) = 0
+                (root.Health.Scene) = "Green"
+            }
+        }
+        Recovered = button { description = "Back to full health, after a scene spent recovering."  editable = live  onClick = updates
+            {
+                (root.Health.Health) = 'Max Health'
+                (root.Health.Defense) = 0
+            }
+        }
+    }
+
+    Principles = list
+    {
+        description = "The hero's two principles: how they roleplay, the twists that earn hero points, and a Green ability for overcoming."
+        tableLayout = layout { size = wide }
+        source = secondary.Principles
+        singular = "Principle"
+        editable = character
+    }
+
+    'Green abilities' = list
+    {
+        description = "Abilities you can always use."
+        tableLayout = layout { size = wide }
+        singular = "Green ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Mid"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (characterTable, Power, Quality, Action, Die, "Green")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    'Yellow abilities' = list
+    {
+        description = "Abilities you can use once you or the scene are in Yellow or Red."
+        tableLayout = layout { size = wide }
+        singular = "Yellow ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Mid"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (characterTable, Power, Quality, Action, Die, "Yellow")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    'Red abilities' = list
+    {
+        description = "Abilities you can use only once you or the scene are in Red."
+        tableLayout = layout { size = wide }
+        singular = "Red ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Max"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (characterTable, Power, Quality, Action, Die, "Red")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    Out = table
+    {
+        description = "What the hero can still do once Out: one small action each turn."
+        tableLayout = layout { size = wide  rowTitle = hidden }
+        'Out ability' = string { multiline = true }
+    }
+
+    'Boosts and hinders' = list
+    {
+        description = "Bonuses and penalties on the hero. Add them up when a roll asks for boosts and hinders."
+        singular = "Bonus or penalty"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Value = integer { default = 1 }
+            Persistent = bool { description = "Lasts until removed, instead of being used up by one roll." default = false }
+            Exclusive = bool { description = "Only for the hero who made it." default = false }
+        }
+    }
+
+    Twists = list
+    {
+        description = "Twists the hero has taken. Each one earns a hero point."
+        singular = "Twist"
+        editable = live
+        valueType = custom
+        {
+            Twist = string {}
+            Kind = string { default = "Minor"  keys = ["Minor", "Major"] }
+        }
+    }
+
+    Collections = list
+    {
+        description = "Finished story arcs: once per session, recall one to help in a scene."
+        singular = "Collection"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        Retcons = string { description = "What the hero has changed with retcons." multiline = true }
+    }
+}
+
+villainTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/sentinel/villain.svg"  important = [Health, 'Dice pool', Powers, Qualities, 'Green abilities', 'Yellow abilities', 'Red abilities'] }
+    Villain = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Real name' = string {}
+        Kind = string { description = "How the villain works against the heroes." keys = ["Mastermind", "Overlord", "Brute", "Blaster", "Minion maker", "Sorcerer", "Monster", "Rival", "Agent of chaos"] }
+        Goal = string {}
+        Allies = string {}
+    }
+
+    'Dice pool' = table
+    {
+        description = "Villains roll like heroes: a power, a quality and a status die."
+        tableLayout = layout { columns = 4  size = wide }
+        Action = selector { options = actionKeys  labels = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]  colors = ["", "red", "blue", "green", "red", "green"]  default = "Attack"  editable = live  save = nosave }
+        'Effect die' = selector { options = ["Min", "Mid", "Max"]  labels = ["Min", "Mid", "Max"]  colors = ["", "", ""]  default = "Mid"  editable = live  save = nosave }
+        'Paired die' = selector { options = dieKeys  labels = dieKeys  colors = ["", "", "", "", ""]  default = "d8"  editable = live  save = nosave }
+        Zone = string { value = currentZone (villainTable)  editable = none }
+        'Status die' = string { value = statusDie (villainTable)  editable = none }
+    }
+
+    Powers = list
+    {
+        singular = "Power"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d8"  keys = dieKeys }
+            Roll = integer { value = sidesOf (Die)  valuedice = powerRoll (villainTable, sidesOf (Die))  action = ranged  editable = none  render = Die }
+        }
+    }
+
+    Qualities = list
+    {
+        singular = "Quality"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d8"  keys = dieKeys }
+            Roll = integer { value = sidesOf (Die)  valuedice = qualityRoll (villainTable, sidesOf (Die))  editable = none  render = Die }
+        }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Green die' = string { default = "d8"  keys = dieKeys }
+        'Yellow die' = string { default = "d10"  keys = dieKeys }
+        'Red die' = string { default = "d12"  keys = dieKeys }
+    }
+
+    Health = table
+    {
+        description = "Villains have health and zones like heroes. At 0 they are defeated, captured or flee."
+        tableLayout = layout { columns = 3 }
+        'Max Health' = integer { default = 40  minvalue = 1 }
+        'Yellow at' = integer { default = 'Max Health' * 2 / 3 }
+        'Red at' = integer { default = 'Max Health' / 3 }
+        Health = integer { default = 'Max Health'  minvalue = 0  editable = live }
+        Defense = integer { default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Scene = string { default = "Green"  keys = zoneKeys  editable = live }
+        'In Yellow' = string { value = zoneBadge (healthZone (villainTable), "Yellow", "Yellow zone")  visible = none  indicator = "#d4b106" }
+        'In Red' = string { value = zoneBadge (healthZone (villainTable), "Red", "Red zone")  visible = none  indicator = "#d64545" }
+        Defeated = string { value = zoneBadge (healthZone (villainTable), "Out", "Defeated")  visible = none  indicator = "#555555" }
+    }
+
+    'Green abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Green ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Mid"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (villainTable, Power, Quality, Action, Die, "Green")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    'Yellow abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Yellow ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Mid"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (villainTable, Power, Quality, Action, Die, "Yellow")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    'Red abilities' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Red ability"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Action"  keys = ["Action", "Reaction", "Inherent"] }
+            Action = string { default = "Attack"  keys = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover", "None"] }
+            Die = string { default = "Max"  keys = ["Min", "Mid", "Max"] }
+            Power = string {}
+            Quality = string {}
+            Roll = integer { value = 0  valuedice = abilityRoll (villainTable, Power, Quality, Action, Die, "Red")  action = abilityKind (Action)  editable = none  render = Die }
+            Text = string { multiline = true }
+        }
+    }
+
+    'Minion forms' = list
+    {
+        description = "Minions and lieutenants the villain brings into the scene."
+        singular = "Minion form"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d6"  keys = dieKeys }
+            Lieutenant = bool { default = false }
+            Notes = string {}
+        }
+    }
+
+    'Boosts and hinders' = list
+    {
+        singular = "Bonus or penalty"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Value = integer { default = 1 }
+            Persistent = bool { default = false }
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide  rowTitle = hidden }
+        Notes = string { multiline = true }
+    }
+}
+
+minionTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Minion] }
+    Minion = table
+    {
+        description = "Minions and lieutenants are a single die, d4 to d12, rolled for whatever they do."
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "A minion that fails a save is gone and one that saves shrinks a size. A lieutenant that fails shrinks a size and one that saves is unharmed." default = "Minion"  keys = ["Minion", "Lieutenant"] }
+        Die = string { default = "d6"  keys = minionDieKeys  editable = live }
+        Action = selector { options = actionKeys  labels = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]  colors = ["", "red", "blue", "green", "red", "green"]  default = "Attack"  editable = live  save = nosave }
+        Roll = integer { description = "Roll the die for the chosen action: the number is the effect." value = sidesOf (Die)  valuedice = singleRoll (sidesOf (Die), Action, "Die", Bonus)  action = ranged  editable = none  render = Die }
+        Save = integer { description = "When attacked, roll the die against the damage." value = sidesOf (Die)  valuedice = minionSave (sidesOf (Die), Kind)  editable = none  render = Die }
+        'Step down' = button { description = "The die shrinks one size; below d4 it is defeated."  editable = live  onClick = updates { (root.Minion.Die) = stepDown (Die) } }
+        Bonus = integer { description = "A boost or hinder on the minion or its group, added to its rolls." default = 0  editable = live }
+        Defeated = string { value = if Die == "Defeated" then "Defeated" else ""  visible = none  indicator = "#555555" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Description = string { multiline = true }
+        Abilities = string { multiline = true }
+    }
+}
+
+environmentTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/sentinel/environment.svg"  important = ['Scene tracker', Environment] }
+    'Scene tracker' = table
+    {
+        description = "Tick a box each time every hero, villain and the environment has had a turn. The zone of the last ticked box is the scene's zone; when the last box is ticked, time is up."
+        tableLayout = layout { columns = 4  size = wide }
+        'Green rounds' = integer { default = 2  minvalue = 0 }
+        'Yellow rounds' = integer { default = 3  minvalue = 0 }
+        'Red rounds' = integer { default = 2  minvalue = 0 }
+        Zone = string { value = sceneZone (max (0, Rounds.realvalue), 'Green rounds', 'Yellow rounds', 'Red rounds')  editable = none }
+        Rounds = slots { number = sceneTotal ('Green rounds', 'Yellow rounds', 'Red rounds')  editable = live }
+        'Next round' = button { description = "Ticks the next box of the scene tracker."  editable = live  onClick = updates { (root.'Scene tracker'.Rounds.realvalue) = min (sceneTotal ('Green rounds', 'Yellow rounds', 'Red rounds'), max (0, Rounds.realvalue) + 1) } }
+        'New scene' = button { description = "Clears the scene tracker."  editable = live  onClick = updates { (root.'Scene tracker'.Rounds.realvalue) = 0 } }
+        'Time is up' = string { value = if Zone == "Time is up" then "Time is up" else ""  visible = none  indicator = "#d64545" }
+        'Time runs out' = string { description = "What happens when the last box is ticked." multiline = true }
+    }
+    Environment = table
+    {
+        description = "The environment takes its own turn each round, rolling the die of the scene's zone."
+        tableLayout = layout { columns = 3  size = wide }
+        'Green die' = string { default = "d8"  keys = dieKeys }
+        'Yellow die' = string { default = "d10"  keys = dieKeys }
+        'Red die' = string { default = "d12"  keys = dieKeys }
+        Action = selector { options = actionKeys  labels = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]  colors = ["", "red", "blue", "green", "red", "green"]  default = "Hinder"  editable = live  save = nosave }
+        'Current die' = string { value = environmentDie (environmentTable)  editable = none }
+        Roll = integer { value = sidesOf (environmentDie (environmentTable))  valuedice = singleRoll (sidesOf (environmentDie (environmentTable)), Action, "Environment", 0)  action = ranged  editable = none  render = environmentDie (environmentTable) }
+    }
+    'Green actions' = list { tableLayout = layout { size = wide }  singular = "Green action"  editable = character  valueType = nameAndDescription }
+    'Yellow actions' = list { tableLayout = layout { size = wide }  singular = "Yellow action"  editable = character  valueType = nameAndDescription }
+    'Red actions' = list { tableLayout = layout { size = wide }  singular = "Red action"  editable = character  valueType = nameAndDescription }
+    Challenges = list
+    {
+        description = "Things the heroes must overcome in the scene, each with boxes to tick."
+        singular = "Challenge"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Boxes = integer { default = 3  minvalue = 1 }
+            Done = integer { default = 0  minvalue = 0 }
+        }
+    }
+    'Environment minions' = list
+    {
+        singular = "Minion"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = string { default = "d6"  keys = dieKeys }
+            Notes = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide  rowTitle = hidden }
+        Description = string { multiline = true }
+    }
+}
+
+principleStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Category }
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Category = string { default = "Ideals"  keys = ["Esoteric", "Expertise", "Ideals", "Identity", "Responsibility"] }
+        'Roleplaying' = string { description = "How the principle shows when you play the hero." multiline = true }
+        'Minor twist' = string { description = "A small setback you can take for a hero point." multiline = true }
+        'Major twist' = string { description = "A big complication you can take for a hero point." multiline = true }
+        'Green ability' = string { description = "The principle's ability: usually an Overcome tied to it." multiline = true }
+    }
+}
+
+personalityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.'Green die' }
+        filters = [filter { name = "Green die" prefix = "" filter = Stats.'Green die' }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Green die' = string { default = "d8"  keys = dieKeys }
+        'Yellow die' = string { default = "d8"  keys = dieKeys }
+        'Red die' = string { default = "d8"  keys = dieKeys }
+        'Roleplaying quality' = string {}
+        'Out ability' = string { multiline = true }
+    }
+}
+
+originStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Dice }
+        filters = [filter { name = "Dice" prefix = "" filter = Stats.Dice }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Dice = string { description = "The dice this step gives to share out." }
+        Grants = string { description = "The qualities, powers, principles or abilities to pick from." multiline = true }
+    }
+}
+
+sentinelNameSetting = nameSetting
+{
+    name = "Sentinel Comics"
+    characters = [generator { library = "Superheroes" variant = "Hero" }, generator { library = "Superheroes" variant = "Civilian" }]
+    creatures = [generator { library = "Superheroes" variant = "Villain" }, generator { library = "Superheroes" variant = "Civilian" }]
+    Villains = [generator { library = "Superheroes" variant = "Villain" }, generator { library = "Superheroes" variant = "Civilian" }]
+    Environments = [generator { library = "Superheroes" variant = "Organisation" }, generator { library = "Superheroes" variant = "Team" }]
+    Location = [generator { library = "Superheroes" variant = "Organisation" }, generator { library = "Superheroes" variant = "Team" }]
+}
+
+SentinelComics = system
+{
+    hints = [
+        hint
+        {
+            title = "Heroes"
+            topic = "Getting started"
+            text = ["A hero is built from a background, a power source, an archetype and a personality. Each gives powers or qualities rated d4 to d12, principles, abilities and the status dice. Write them on the sheet; the Background, Personality and Origin library types can hold your table's choices."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Every roll is three dice: one power, one quality and your status die for the current zone. Pick the action, the effect die (basic actions use the Mid die) and the die of the other trait in the Dice pool, then roll a power or quality. An ability rolls its own power, quality, action and die.", "The roll asks the boosts and hinders that apply. Overcome: 0 or less fails, 1 to 3 is a major twist, 4 to 7 a minor twist, 8 to 11 success, 12 or more beyond expectations. Boosts and hinders are worth 1 to 4 by the same bands."]
+        },
+        hint
+        {
+            title = "Health and zones"
+            topic = "Combat"
+            text = ["Attacks always hit: the effect is the damage, less any Defend. Health falls through Green, Yellow and Red to Out at 0. The worse of your health zone and the scene tracker's zone picks your status die and unlocks Yellow and Red abilities. An Out hero can still use the Out ability."]
+        },
+        hint
+        {
+            title = "Minions and lieutenants"
+            topic = "Combat"
+            text = ["Minions and lieutenants are one die. When attacked they roll it as a save against the damage. A minion that fails is gone and one that saves shrinks a size; a lieutenant that fails shrinks and one that saves shrugs it off. Twice its die size in damage defeats a lieutenant outright."]
+        },
+        hint
+        {
+            title = "Environment and scene tracker"
+            topic = "Combat"
+            text = ["Make an Environment for the scene. It acts once per round with the die of the scene's zone, and Next round ticks the scene tracker. When the last box is ticked, time is up."]
+        },
+        hint
+        {
+            title = "Turn order"
+            topic = "Initiative"
+            text = ["There is no initiative roll. Whoever finishes a turn picks who goes next, hero or villain, and the environment acts once each round. Put the order in the encounter by hand."]
+        }
+    ]
+    characters = characterTable
+    creatures = minionTable
+    Villains = villainTable
+    Environments = environmentTable
+    Principles = principleStats
+    Personalities = personalityStats
+    Backgrounds = originStats
+    'Power Sources' = originStats
+    Archetypes = originStats
+    secondaryTypes = ["Principles", "Personalities"]
+    otherLibararyTypes = ["Backgrounds", "Power Sources", "Archetypes"]
+    extraEntityTypes = [entityTypeDescription ("Villains", "villain", true, "/systems/sentinel/villain.svg", ["Principles"]), entityTypeDescription ("Environments", "environment", true, "/systems/sentinel/environment.svg", [])]
+    entityTypeNames = [entityTypeName ("Creature", "Minion or lieutenant", "Minions and lieutenants")]
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    description = "Sentinel Comics: the Roleplaying Game: three-die pools of power, quality and status, Min, Mid or Max effects, Green, Yellow and Red zones, minions, villains and environments"
+    distanceUnit = "m"
+    quickdice = [1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/sentinel/sentinel.css"]
+    libraries = ["/systems/names/heroes.json"]
+    nameSettings = [sentinelNameSetting, superheroesNameSetting]
+}

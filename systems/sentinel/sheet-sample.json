@@ -1,0 +1,40 @@
+{
+  "values": {
+    "Hero": { "Real name": "Marisol Achebe", "Background": "Academic", "Power source": "Accident", "Archetype": "Elemental Manipulator", "Personality": "Analytical", "Team": "The Harbor Guard", "Hero points": 2 },
+    "Powers": [
+      { "Name": "Fire", "Die": "d10" },
+      { "Name": "Flight", "Die": "d8" },
+      { "Name": "Heat Sense", "Die": "d6" }
+    ],
+    "Qualities": [
+      { "Name": "Science", "Die": "d10" },
+      { "Name": "Close Combat", "Die": "d6" },
+      { "Name": "Insight", "Die": "d8" },
+      { "Name": "Self-Discipline", "Die": "d8" }
+    ],
+    "Status": { "Green die": "d8", "Yellow die": "d8", "Red die": "d10" },
+    "Health": { "Max Health": 29, "Yellow at": 21, "Red at": 10, "Health": 18, "Defense": 3, "Scene": "Green" },
+    "Green abilities": [
+      { "Name": "Flash Point", "Type": "Action", "Action": "Attack", "Die": "Max", "Power": "Fire", "Quality": "Science", "Text": "Attack one target with Max. Hinder that target with Min." },
+      { "Name": "Thermal Lift", "Type": "Action", "Action": "Boost", "Die": "Mid", "Power": "Flight", "Quality": "Insight", "Text": "Boost an ally's next movement or rescue roll." },
+      { "Name": "Lab Notes", "Type": "Action", "Action": "Overcome", "Die": "Mid", "Power": "Heat Sense", "Quality": "Science", "Text": "Overcome a puzzle about heat, chemistry or machines." }
+    ],
+    "Yellow abilities": [
+      { "Name": "Firewall", "Type": "Reaction", "Action": "Defend", "Die": "Max", "Power": "Fire", "Quality": "Self-Discipline", "Text": "When an ally in your zone is attacked, Defend them with Max." }
+    ],
+    "Red abilities": [
+      { "Name": "Supernova", "Type": "Action", "Action": "Attack", "Die": "Max", "Power": "Fire", "Quality": "Science", "Text": "Attack every target in the zone with Max. Take damage equal to Min." }
+    ],
+    "Out": { "Out ability": "Boost one hero by 2 with a warning shouted from the rubble." },
+    "Boosts and hinders": [ { "Name": "Hot air current", "Value": 2, "Persistent": false, "Exclusive": false } ],
+    "Twists": [ { "Twist": "The lab fire spread to the next floor", "Kind": "Minor" } ],
+    "Collections": [ { "Name": "The Boiling Point Saga", "Description": "Stopped the Thermocline cult from cracking the harbour's geothermal vents." } ],
+    "Notes": { "Description": "A materials scientist who survived a reactor flash and now runs hot all the time. Works nights at the university, patrols the docks after." }
+  },
+  "secondary": {
+    "Principles": [
+      { "name": "Principle of Discovery", "values": { "Stats": { "Category": "Expertise", "Roleplaying": "Has to know how things work, and takes them apart to find out.", "Minor twist": "You get lost in the details while the clock runs.", "Major twist": "Your experiment goes wrong in public.", "Green ability": "Overcome a scientific problem using Max; use Min to Boost an ally." } } },
+      { "name": "Principle of Responsibility", "values": { "Stats": { "Category": "Responsibility", "Roleplaying": "Protects the harbour district before anything else.", "Minor twist": "A bystander needs saving right now.", "Major twist": "Something you care about in the district is destroyed.", "Green ability": "Overcome to get civilians out of a zone using Max." } } }
+    ]
+  }
+}
