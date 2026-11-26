@@ -1,0 +1,110 @@
+@import url("/systems/sheet.css");
+
+/* Thirsty Sword Lesbians: a playbook spread in rose and plum. Blush paper,
+   plum ink, magenta ribbon titles in a flowing italic serif. The name,
+   pronouns and aesthetics run across the top; the five stats stand in a
+   column on the left with the Conditions, XP and end of session ticks under
+   them, and the basic moves, playbook feature and Strings fill the right,
+   as on the paper playbook. Moves, Advances and the story notes follow. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9c3d4;
+    --surface: #fff6f9;
+    --surface-alt: #fbe6ee;
+    --surface-sunken: #f4d3e0;
+    --surface-muted: #e7b9cc;
+    --text: #3a0d2c;
+    --text-muted: #5e2449;
+    --text-faint: #8f5a7b;
+    --on-accent: #fff6f9;
+    --border: #c98aa8;
+    --border-strong: #6d1745;
+    --accent: #a3195b;
+    --accent-hover: #c02a70;
+    --accent-soft: #f6d6e4;
+    --link: #a3195b;
+    --danger: #b0123f;
+    --danger-hover: #8c0e32;
+    --danger-soft: #f7d0dc;
+    --success: #2f7a55;
+    --paper: #fff6f9;
+    --card-bg: #fbe6ee;
+    --dice-bg: #6d1745;
+    --dice-text: #fff6f9;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --block-radius: 14px 2px 14px 2px;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text-muted);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-style: italic;
+    font-size: 1.15em;
+    letter-spacing: 0.04em;
+    padding: 2px 12px;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+/* ---- The name, pronouns and aesthetics across the top ---- */
+
+.entityView .table-character > table > tbody > tr > td:first-child { font-style: italic; }
+
+/* ---- Left column: stats, Conditions, XP ---- */
+
+.entityView .table-stats,
+.entityView .table-conditions,
+.entityView .table-experience,
+.entityView .table-end-of-session { --block: 28%; clear: left; }
+
+.entityView .table-stats > table > tbody > tr {
+    border: 2px solid var(--border-strong);
+    border-radius: 50% / 18%;
+    margin: 3px 6px;
+    padding: 2px 10px;
+    background: var(--surface-alt);
+    font-size: 1.15em;
+}
+.entityView .table-stats > table > tbody > tr > td:first-child {
+    font-style: italic;
+    font-weight: bold;
+    color: var(--accent);
+}
+.entityView .table-conditions > table > tbody > tr > td:first-child { font-weight: bold; }
+
+/* ---- Right column: basic moves, the playbook feature and Strings ---- */
+
+.entityView .table-basic-moves,
+.entityView .table-playbook-feature,
+.entityView .table-destiny-aspects,
+.entityView .table-trials,
+.entityView .table-strings { --block: 72%; float: right; }
+
+.entityView .table-strings > table > tbody > tr > td:nth-child(2),
+.entityView .table-strings > table > tbody > tr > td:nth-child(3) { text-align: center; }
+
+/* ---- Moves, Advances and story across the bottom ---- */
+
+.entityView .table-moves { --block: 100%; clear: both; }
+.entityView .table-move-rolls { --block: 50%; clear: left; }
+.entityView .table-advances { --block: 50%; }
+.entityView .table-story { --block: 100%; clear: both; }
+
+/* ---- NPCs and Toxic Powers ---- */
+
+.entityView .table-npc,
+.entityView .table-power { --block: 100%; }
+.entityView .table-countdowns { --block: 100%; clear: both; }
+
+.entityView tbody td pre,
+.entityView tbody td span { font-family: var(--sheet-font); }
+.entityView .table-conditions > table > tbody > tr:nth-last-child(2) > td:last-child { text-align: left; font-size: 0.9em; }
+.entityView .table-strings > table > tbody > tr > td:nth-child(2)::before { content: "on them "; color: var(--text-faint); font-size: 0.8em; font-style: italic; }
+.entityView .table-strings > table > tbody > tr > td:nth-child(3)::before { content: "on me "; color: var(--text-faint); font-size: 0.8em; font-style: italic; }
+.entityView .table-strings > table > tbody > tr > td:nth-child(4)::before { content: "smitten "; color: var(--text-faint); font-size: 0.8em; font-style: italic; }
