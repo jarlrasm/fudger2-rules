@@ -100,6 +100,16 @@ attackFor (char, weapon) =
     else
         weaponAttack (weapon.Name, skillValue (char, char.'Weapon Skills', weaponStat (weapon, "Skill")), weaponAttribute (weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage") + " " + damageBonus (if weaponAttribute (weaponStat (weapon, "Skill")) == "AGL" then char.Attributes.AGL else char.Attributes.STR), "melee", max (2, toInt (weaponStat (weapon, "Range"))))
 
+kinMove (kin) =
+    switch kin
+        case "Halfling" then 8
+        case "Dwarf" then 8
+        case "Mallard" then 8
+        case "Wolfkin" then 12
+        else 10
+
+aglMove (agl) = if agl < 7 then -4 else if agl < 10 then -2 else if agl < 13 then 0 else if agl < 16 then 2 else 4
+
 characterTable = ruleset
 {
     rulesetConfiguration = { important = [Attributes, Conditions, Status, Armor, Attacks] }
@@ -157,7 +167,7 @@ characterTable = ruleset
         WP = integer { description = "Willpower points left, spent on heroic abilities and spells." default = 'Max WP'  minvalue = 0  editable = live }
         'Damage Bonus STR' = string { description = "Extra damage for melee weapons that use STR." value = damageBonus (Attributes.STR)  editable = none }
         'Damage Bonus AGL' = string { description = "Extra damage for ranged and light weapons that use AGL." value = damageBonus (Attributes.AGL)  editable = none }
-        Movement = integer { description = "How far you move in a round, in metres." default = 10 }
+        Movement = integer { description = "How far you move in a round, in metres: the kin's base, changed by AGL." value = kinMove (Character.Kin) + aglMove (Attributes.AGL)  editable = none }
         Initiative = integer { description = "Initiative card drawn each round. Lowest acts first." default = 0  valuedice = 1d10 }
         'Death Rolls' = integer { description = "Roll d20 at or under CON each round while dying." value = Attributes.CON  valuedice = deathRoll  editable = none }
         'Death Successes' = slots { description = "Three successes and you stabilise." number = 3  editable = live }
