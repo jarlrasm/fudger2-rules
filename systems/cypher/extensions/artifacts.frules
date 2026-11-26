@@ -1,0 +1,139 @@
+artifactCount (dep, regex) = bonusWithValue ([[dep]], regex)
+
+artifactKind (dep) =
+    if bonusFrom ([[dep]], "^\s*[0-9]", 1) == 0 then
+        if bonusFrom ([[dep]], "^\s*[Aa]utomatic", 1) > 0 then "Automatic" else "Never"
+    else if bonusFrom ([[dep]], "^\s*[0-9]+\s+[^0-9A-Za-z\s]\s+[A-Za-z]", 1) > 0 then "Multiplied"
+    else "Roll"
+
+artifactThreshold (dep) =
+    if artifactCount (dep, "^\s*[0-9]+\s*[^0-9A-Za-z\s]\s*([0-9]+)\s+in\b") > 0 then artifactCount (dep, "^\s*[0-9]+\s*[^0-9A-Za-z\s]\s*([0-9]+)\s+in\b")
+    else artifactCount (dep, "^\s*([0-9]+)")
+
+artifactDie (dep) =
+    if artifactCount (dep, "^.*?\bin\s+[0-9]*d([0-9]+)") > 0 then artifactCount (dep, "^.*?\bin\s+[0-9]*d([0-9]+)") else 100
+
+artifactAskLabel (dep) = if contains (toLower (dep), "previous uses") then "Previous uses" else "Task difficulty"
+
+artifactTimes (threshold, dep) = (if threshold == 1 then "" else toString (threshold) + " times ") + (if contains (toLower (dep), "previous uses") then "the number of previous uses" else "the task difficulty")
+
+artifactJudged (rolled, threshold, dieSize) =
+    if rolled <= threshold then
+        { Text = "Depleted: " + toString (rolled) + " on d" + toString (dieSize) + ", at or under " + toString (threshold) + ". It works, but this is its last use."  Value = rolled  Outcome = "Depleted"  Color = "red" }
+    else
+        { Text = toString (rolled) + " on d" + toString (dieSize) + ", over " + toString (threshold) + ": it works and keeps its power"  Value = rolled  Outcome = "Works" }
+
+artifactResult (kind, threshold, dieSize, rolled, factor, known, dep) =
+    if kind == "Never" then { Text = "Never depletes"  Outcome = "Works" }
+    else if kind == "Automatic" then { Text = "Depleted: it works once, and this use is its last"  Outcome = "Depleted"  Color = "red" }
+    else if kind == "Multiplied" and not (known) then { Text = toString (rolled) + " on d" + toString (dieSize) + ": depleted if at or under " + artifactTimes (threshold, dep)  Value = rolled }
+    else if kind == "Multiplied" then artifactJudged (rolled, threshold * factor, dieSize)
+    else artifactJudged (rolled, threshold, dieSize)
+
+artifactRolls (kind) = if kind == "Roll" or kind == "Multiplied" then 1 else 0
+
+artifactDice (dep) = ([dice { number = artifactRolls (artifactKind (dep))  sides = artifactDie (dep)  label = "" }],
+    ((baseline, throws)->artifactResult (artifactKind (dep), artifactThreshold (dep), artifactDie (dep), if count (first (throws).rolls) > 0 then first (first (throws).rolls) else 0, asked, answered, dep)))
+
+depletionRoll (dep) = if artifactKind (dep) == "Multiplied" then ask (artifactAskLabel (dep), artifactDice (dep)) else artifactDice (dep)
+
+artifactUse (artifactName, artifactLevel, dep) = custom
+{
+    Name = artifactName
+    Level = artifactLevel
+    Depletion = integer
+    {
+        description = "Roll when the artifact is used or activated. At or under the depletion number, it works but this is its last use."
+        reference = ["csrd", 239]
+        value = artifactThreshold (dep)
+        render = dep
+        valuedice = depletionRoll (dep)
+        editable = none
+    }
+}
+
+artifactUsesFor (char) = map ((artifact)->artifactUse (artifact.Name, valueOr (artifact.data.artifactStats.Stats, "Level", ""), valueOr (artifact.data.artifactStats.Stats, "Depletion", "")), char.Artifacts)
+
+artifactRollsShown (n) = if n > 0 then visible else none
+
+artifactGenres = ["Any", "Fantasy", "Fairy tale", "Science fiction", "Superhero", "Horror", "Post-apocalyptic", "Cyberpunk", "Weird West", "Modern fantasy"]
+
+CypherSystem = system
+{
+    Artifacts = artifactStats
+    secondaryTypes = ["Artifacts"]
+    libraries = ["/systems/cypher/extensions/artifacts.json"]
+    hints = [
+        hint
+        {
+            title = "Artifacts"
+            topic = "Artifacts"
+            text = ["Artifacts are lasting devices or magic items with a level, a form, an effect and a depletion. The library has over two hundred from the genre chapters of the reference document; roll an artifact's level when the group finds it.", "Each time an artifact is used, click its Depletion in Depletion rolls. At or under the depletion number it still works, but that use is its last."]
+        }
+    ]
+}
+
+artifactStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/cypher/extensions/artifact.svg"
+        filters = [
+            filter { name = "Genre" prefix = "" filter = split (",", Stats.Genre) }
+        ]
+    }
+    Stats = table
+    {
+        description = "An artifact: a lasting device or magic item that depletes with use." reference = ["csrd", 239]
+        Level = string { description = "The artifact's level, often rolled when it is found. Identifying it and using it the first time are Intellect tasks at about this level." reference = ["csrd", 239] }
+        Form = string { description = "What the artifact looks like." }
+        Effect = string { description = "What the artifact does when used or activated." multiline = true }
+        Depletion = string { description = "The die rolled each use and the numbers that deplete it, such as 1 in 1d20. A dash never depletes; Automatic works once." reference = ["csrd", 239] }
+        Genre = string { description = "The genre chapter the artifact comes from." keys = artifactGenres }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Depletion rolls'] }
+    Artifacts = list
+    {
+        description = "Artifacts carried: lasting devices that work until they deplete." reference = ["csrd", 239]
+        tableLayout = layout { size = wide }
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+    'Depletion rolls' = list
+    {
+        description = "Roll an artifact's depletion each time it is used." reference = ["csrd", 239]
+        tableLayout = layout { size = wide }
+        visible = artifactRollsShown (count (Artifacts))
+        source = artifactUsesFor (characterTable)
+        singular = "Depletion roll"
+        editable = none
+        valueType = artifactUse
+    }
+}
+
+creatureTable = ruleset
+{
+    Artifacts = list
+    {
+        description = "Artifacts the creature carries or uses." reference = ["csrd", 239]
+        tableLayout = layout { size = wide }
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+    'Depletion rolls' = list
+    {
+        description = "Roll an artifact's depletion each time it is used." reference = ["csrd", 239]
+        tableLayout = layout { size = wide }
+        visible = artifactRollsShown (count (Artifacts))
+        source = artifactUsesFor (creatureTable)
+        singular = "Depletion roll"
+        editable = none
+        valueType = artifactUse
+    }
+}

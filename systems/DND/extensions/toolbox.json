@@ -1,0 +1,947 @@
+{
+ "name": "DND SRD 5.2 Gameplay Toolbox",
+ "description": "Traps, poisons, curses and magical contagions from the Gameplay Toolbox of the System Reference Document 5.2.1, summarised for Fudger. This work includes material from the System Reference Document 5.2 by Wizards of the Coast LLC, licensed under CC-BY-4.0.",
+ "url": "/systems/DND/extensions/toolbox.json",
+ "gamemaster": "",
+ "documents": [
+  {
+   "key": "srd",
+   "name": "SRD 5.2.1",
+   "url": "/systems/DND/SRD_CC_v5.2.1.pdf",
+   "public": true
+  }
+ ],
+ "entities": [
+  {
+   "type": "Traps",
+   "name": "Collapsing Roof",
+   "description": "A trip wire 3 inches above the floor pulls down two weak supports, and a section of ceiling falls.\n\n**Effect.** Each creature under the ceiling makes a DC 13 Dexterity save, taking 11 (2d10) Bludgeoning damage on a failure or half on a success. The rubble makes the area Difficult Terrain.\n\n**Detect and disarm.** As a Search action, DC 11 Wisdom (Perception) spots the wire and the weak ceiling. A found wire is easy to cut or step over.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 199
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Deadly",
+        "Levels": "1-4",
+        "Trigger": "A creature crosses a trip wire",
+        "Duration": "Instantaneous",
+        "Save": "Dex",
+        "Save DC": 13,
+        "Half on save": true,
+        "Damage": "2d10",
+        "Damage type": "Bludgeoning",
+        "Detect DC": 11,
+        "Detect check": "Wisdom (Perception), as a Search action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "4d10",
+         "Save DC": 15,
+         "Other": ""
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "10d10",
+         "Save DC": 17,
+         "Other": ""
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "18d10",
+         "Save DC": 19,
+         "Other": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Falling Net",
+   "description": "A trip wire between two columns or trees drops a weighted 10-foot-square Net.\n\n**Effect.** The first creature to cross the wire makes a DC 10 Dexterity save or is Restrained until it gets free. Huge and larger creatures succeed automatically. An action and a DC 10 Strength (Athletics) check frees the creature or another within reach.\n\n**Detect and disarm.** As a Search action, DC 11 Wisdom (Perception) spots the wire and the net. A found wire is easy to cut or step over.\n\n**Destroy the net.** Bringing the Net to 0 Hit Points frees everyone in it.\n\n**Set the trap.** With Thieves' Tools and a Net, 10 minutes and a DC 13 Dexterity (Sleight of Hand) check set it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 199
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Nuisance",
+        "Levels": "1-4",
+        "Trigger": "A creature crosses a trip wire",
+        "Duration": "Instantaneous",
+        "Save": "Dex",
+        "Save DC": 10,
+        "Half on save": false,
+        "Damage": "",
+        "Damage type": "",
+        "Detect DC": 11,
+        "Detect check": "Wisdom (Perception), as a Search action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "",
+         "Save DC": 12,
+         "Other": "Athletics DC 12"
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "",
+         "Save DC": 14,
+         "Other": "Athletics DC 14"
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "",
+         "Save DC": 16,
+         "Other": "Athletics DC 16"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Fire-Casting Statue",
+   "description": "A statue near a pressure plate breathes a 15-foot Cone of magical fire.\n\n**Effect.** When a creature first moves onto the plate in a turn, or starts its turn there, each creature in the Cone makes a DC 15 Dexterity save, taking 11 (2d10) Fire damage on a failure or half on a success.\n\n**Detect and disarm.** Detect Magic shows Evocation magic on the statue. As a Search action, DC 10 Wisdom (Perception) within 5 feet finds a tiny glyph; a Study action and DC 15 Intelligence (Arcana) reads it as fire. Defacing the glyph with a sharp tool, as an action, disarms the trap. A DC 15 Wisdom (Perception) Search finds the pressure plate, and an Iron Spike under it stops the trap.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 199
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Deadly",
+        "Levels": "1-4",
+        "Trigger": "A creature moves onto a pressure plate",
+        "Duration": "Instantaneous, and the trap resets at the start of the next turn",
+        "Save": "Dex",
+        "Save DC": 15,
+        "Half on save": true,
+        "Damage": "2d10",
+        "Damage type": "Fire",
+        "Detect DC": 10,
+        "Detect check": "Wisdom (Perception) within 5 feet of the statue, as a Search action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "4d10",
+         "Save DC": 15,
+         "Other": "30-foot Cone"
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "10d10",
+         "Save DC": 15,
+         "Other": "60-foot Cone"
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "18d10",
+         "Save DC": 15,
+         "Other": "120-foot Cone"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Hidden Pit",
+   "description": "A 10-foot-deep pit under a hinged lid that looks like the rest of the floor.\n\n**Effect.** A creature that steps on the lid falls in and takes 3 (1d6) Bludgeoning damage. The lid stays open afterwards.\n\n**Detect and disarm.** Study action: DC 15 Intelligence (Investigation) finds the lid. An Iron Spike wedged in, or Arcane Lock, keeps it shut.\n\n**Escape.** The walls are smooth: climbing out needs a Climb Speed, climbing gear or magic such as Spider Climb. Cracks for handholds make it easier.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 200
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Nuisance",
+        "Levels": "1-4",
+        "Trigger": "A creature moves onto the pit's lid",
+        "Duration": "Instantaneous",
+        "Save": "None",
+        "Save DC": 0,
+        "Half on save": false,
+        "Damage": "1d6",
+        "Damage type": "Bludgeoning",
+        "Detect DC": 15,
+        "Detect check": "Intelligence (Investigation), as a Study action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "3d6",
+         "Save DC": 0,
+         "Other": "30 feet deep"
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "6d6",
+         "Save DC": 0,
+         "Other": "60 feet deep"
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "12d6",
+         "Save DC": 0,
+         "Other": "120 feet deep"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Poisoned Darts",
+   "description": "Hidden tubes in the walls shoot poisoned darts when a creature first steps on a pressure plate in a turn.\n\n**Effect.** Each creature in the darts' path makes a DC 13 Dexterity save or is hit by 1d3 darts, taking 3 (1d6) Poison damage from each. Roll the damage once per dart.\n\n**Detect and disarm.** A DC 15 Wisdom (Perception) Search finds the holes, and plugging them all stops the darts. Another DC 15 Search finds the plate, and an Iron Spike under it stops the trap.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 200
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Deadly",
+        "Levels": "1-4",
+        "Trigger": "A creature moves onto a pressure plate",
+        "Duration": "Instantaneous, and the trap resets at the start of the next turn if it has gone off fewer than three times",
+        "Save": "Dex",
+        "Save DC": 13,
+        "Half on save": false,
+        "Damage": "1d6",
+        "Damage type": "Poison, per dart, 1d3 darts",
+        "Detect DC": 15,
+        "Detect check": "Wisdom (Perception), as a Search action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "2d6",
+         "Save DC": 13,
+         "Other": "per dart"
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "4d6",
+         "Save DC": 13,
+         "Other": "per dart"
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "7d6",
+         "Save DC": 13,
+         "Other": "per dart"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Poisoned Needle",
+   "description": "A needle hidden in a lock stabs whoever opens it with anything but the right key.\n\n**Effect.** The creature makes a DC 11 Constitution save. On a failure it takes 5 (1d10) Poison damage and is Poisoned for 1 hour; on a success it takes half the damage only.\n\n**Avoid.** Knock and similar magic opens the lock without setting it off.\n\n**Detect and disarm.** A DC 15 Wisdom (Perception) Search finds the needle. An action and a DC 15 Dexterity (Sleight of Hand) check disarms it; a failure sets it off.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 200
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Nuisance",
+        "Levels": "1-4",
+        "Trigger": "A creature opens the lock improperly or fails to disarm the trap",
+        "Duration": "Instantaneous",
+        "Save": "Con",
+        "Save DC": 11,
+        "Half on save": true,
+        "Damage": "1d10",
+        "Damage type": "Poison",
+        "Detect DC": 15,
+        "Detect check": "Wisdom (Perception), as a Search action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "2d10",
+         "Save DC": 13,
+         "Other": ""
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "4d10",
+         "Save DC": 15,
+         "Other": ""
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "10d10",
+         "Save DC": 17,
+         "Other": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Rolling Stone",
+   "description": "A pressure plate releases a stone ball 5 feet in radius that rolls through the halls.\n\n**Effect.** The stone and the creatures nearby roll Initiative, the stone with +8. On its turn it rolls 60 feet in a straight line, turned only by obstacles. It can pass through creatures' spaces, and its own space is Difficult Terrain to them. When it enters a creature's space, or a creature enters its space, the creature makes a DC 15 Dexterity save or takes 55 (10d10) Bludgeoning damage and falls Prone. It stops at a wall or similar barrier and can't turn corners.\n\n**Detect and disarm.** A Study action and DC 15 Intelligence (Investigation) works out the plate; an Iron Spike under it stops the trap.\n\n**Destroy the stone.** A Large object with AC 17, 100 HP, Damage Threshold 10 and Immunity to Poison and Psychic damage.\n\n**Slow the stone.** An action and a DC 20 Strength (Athletics) check takes 15 feet off its movement; at 0 it stops.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 201
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Deadly",
+        "Levels": "11-16, or a nuisance at 17-20",
+        "Trigger": "A creature moves onto a pressure plate",
+        "Duration": "Until the stone stops rolling",
+        "Save": "Dex",
+        "Save DC": 15,
+        "Half on save": false,
+        "Damage": "10d10",
+        "Damage type": "Bludgeoning, and Prone",
+        "Detect DC": 15,
+        "Detect check": "Intelligence (Investigation), as a Study action"
+       },
+       "Higher levels": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Traps",
+   "name": "Spiked Pit",
+   "description": "A 10-foot-deep pit with spikes at the bottom, under a hinged lid that looks like the floor.\n\n**Effect.** A creature that steps on the lid falls in, taking 3 (1d6) Bludgeoning damage from the fall and 9 (2d8) Piercing damage from the spikes. The lid stays open afterwards.\n\n**Detect and disarm.** Study action: DC 15 Intelligence (Investigation) finds the lid. An Iron Spike wedged in, or Arcane Lock, keeps it shut.\n\n**Escape.** The walls are smooth: climbing out needs a Climb Speed, climbing gear or magic such as Spider Climb. Cracks for handholds make it easier.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 201
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "trapStats": {
+       "Stats": {
+        "Severity": "Deadly",
+        "Levels": "1-4",
+        "Trigger": "A creature moves onto the pit's lid",
+        "Duration": "Instantaneous",
+        "Save": "None",
+        "Save DC": 0,
+        "Half on save": false,
+        "Damage": "1d6 + 2d8",
+        "Damage type": "Bludgeoning plus Piercing",
+        "Detect DC": 15,
+        "Detect check": "Intelligence (Investigation), as a Study action"
+       },
+       "Higher levels": [
+        {
+         "Levels": "5-10",
+         "Damage": "3d6 + 3d8",
+         "Save DC": 0,
+         "Other": "30 feet deep"
+        },
+        {
+         "Levels": "11-16",
+         "Damage": "6d6 + 8d8",
+         "Save DC": 0,
+         "Other": "60 feet deep"
+        },
+        {
+         "Levels": "17-20",
+         "Damage": "12d6 + 13d8",
+         "Save DC": 0,
+         "Other": "120 feet deep"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Assassin's Blood",
+   "description": "A failed DC 10 Constitution save deals 6 (1d12) Poison damage and makes the creature Poisoned for 24 hours. A success halves the damage and there is no other effect.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Ingested",
+        "Cost": "150 GP",
+        "Save": "Con",
+        "Save DC": 10,
+        "Half on save": true,
+        "Damage": "1d12",
+        "Conditions": "Poisoned for 24 hours on a failed save"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Burnt Othur Fumes",
+   "description": "A failed DC 13 Constitution save deals 10 (3d6) Poison damage. The creature repeats the save at the start of each of its turns, taking 3 (1d6) Poison damage on each later failure. The poison ends after three successful saves.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Inhaled",
+        "Cost": "500 GP",
+        "Save": "Con",
+        "Save DC": 13,
+        "Half on save": false,
+        "Damage": "3d6",
+        "Conditions": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Crawler Mucus",
+   "description": "A failed DC 13 Constitution save makes the creature Poisoned for 1 minute, and Paralyzed while Poisoned this way. It repeats the save at the end of each of its turns, ending the effect on a success.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Contact",
+        "Cost": "200 GP",
+        "Save": "Con",
+        "Save DC": 13,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned and Paralyzed for 1 minute"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Essence of Ether",
+   "description": "A failed DC 15 Constitution save makes the creature Poisoned for 8 hours, and Unconscious while Poisoned this way. Taking damage, or another creature using an action to shake it, wakes it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Inhaled",
+        "Cost": "300 GP",
+        "Save": "Con",
+        "Save DC": 15,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned and Unconscious for 8 hours"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Malice",
+   "description": "A failed DC 15 Constitution save makes the creature Poisoned for 1 hour, and Blinded while Poisoned this way.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Inhaled",
+        "Cost": "250 GP",
+        "Save": "Con",
+        "Save DC": 15,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned and Blinded for 1 hour"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Midnight Tears",
+   "description": "Nothing happens until midnight. Anything that ends the Poisoned condition neutralizes it before then. At midnight the creature makes a DC 17 Constitution save, taking 31 (9d6) Poison damage on a failure or half on a success.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 197
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Ingested",
+        "Cost": "1,500 GP",
+        "Save": "Con",
+        "Save DC": 17,
+        "Half on save": true,
+        "Damage": "9d6",
+        "Conditions": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Oil of Taggit",
+   "description": "A failed DC 13 Constitution save makes the creature Poisoned for 24 hours, and Unconscious while Poisoned this way. Taking damage wakes it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Contact",
+        "Cost": "400 GP",
+        "Save": "Con",
+        "Save DC": 13,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned and Unconscious for 24 hours"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Pale Tincture",
+   "description": "A failed DC 16 Constitution save deals 3 (1d6) Poison damage and makes the creature Poisoned. It repeats the save every 24 hours, taking 3 (1d6) Poison damage on each failure. This damage can't be healed while the creature stays Poisoned. After seven successful saves it is no longer Poisoned.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Ingested",
+        "Cost": "250 GP",
+        "Save": "Con",
+        "Save DC": 16,
+        "Half on save": false,
+        "Damage": "1d6",
+        "Conditions": "Poisoned until seven successful saves"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Purple Worm Poison",
+   "description": "The creature makes a DC 21 Constitution save, taking 35 (10d6) Poison damage on a failure or half on a success.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Injury",
+        "Cost": "2,000 GP",
+        "Save": "Con",
+        "Save DC": 21,
+        "Half on save": true,
+        "Damage": "10d6",
+        "Conditions": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Serpent Venom",
+   "description": "The creature makes a DC 11 Constitution save, taking 10 (3d6) Poison damage on a failure or half on a success.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Injury",
+        "Cost": "200 GP",
+        "Save": "Con",
+        "Save DC": 11,
+        "Half on save": true,
+        "Damage": "3d6",
+        "Conditions": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Spider's Sting",
+   "description": "A failed DC 13 Constitution save makes the creature Poisoned for 1 hour. If it fails by 5 or more, it is also Unconscious while Poisoned this way, until it takes damage or another creature uses an action to shake it awake.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Injury",
+        "Cost": "200 GP",
+        "Save": "Con",
+        "Save DC": 13,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned for 1 hour; Unconscious too if the save fails by 5 or more"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Torpor",
+   "description": "A failed DC 15 Constitution save makes the creature Poisoned for 4d6 hours. Its Speed is halved while Poisoned this way.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Ingested",
+        "Cost": "600 GP",
+        "Save": "Con",
+        "Save DC": 15,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned for 4d6 hours, Speed halved"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Truth Serum",
+   "description": "A failed DC 11 Constitution save makes the creature Poisoned for 1 hour. While Poisoned this way it can't knowingly tell a lie.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Ingested",
+        "Cost": "150 GP",
+        "Save": "Con",
+        "Save DC": 11,
+        "Half on save": false,
+        "Damage": "",
+        "Conditions": "Poisoned for 1 hour, can't knowingly lie"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Poisons",
+   "name": "Wyvern Poison",
+   "description": "The creature makes a DC 14 Constitution save, taking 24 (7d6) Poison damage on a failure or half on a success.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 198
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "poisonStats": {
+       "Stats": {
+        "Type": "Injury",
+        "Cost": "1,200 GP",
+        "Save": "Con",
+        "Save DC": 14,
+        "Half on save": true,
+        "Damage": "7d6",
+        "Conditions": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Afflictions",
+   "name": "Demonic Possession",
+   "description": "An environmental curse: a bodiless demon tries to take over the creature, which makes a DC 15 Charisma save to resist.\n\n**Possessed.** Whenever the creature rolls a 1 on a D20 Test, the demon takes control and decides what it does. At the end of each of the creature's later turns it makes a DC 15 Charisma save, taking back control on a success.\n\n**Ending it.** A DC 15 Charisma save after each Long Rest, or Dispel Evil and Good or curse-removing magic.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 193
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "afflictionStats": {
+       "Stats": {
+        "Kind": "Curse",
+        "Affects": "Creatures near demonic objects or in desecrated places",
+        "Save": "Cha",
+        "Save DC": 15,
+        "Onset": "At once",
+        "Damage": "",
+        "Fighting it": "Each time it finishes a Long Rest, the creature makes a DC 15 Charisma save, ending the possession on a success. Dispel Evil and Good, or any magic that removes a curse, also ends it.",
+        "Spreading": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Afflictions",
+   "name": "Cackle Fever",
+   "description": "Spread by cheap, tainted potions and elixirs.\n\n**Fever.** 1d4 days after infection, the creature gains 1 Exhaustion level that lasts until the contagion ends.\n\n**Laughter.** While it has Exhaustion, each time it takes damage other than Psychic, it makes a DC 13 Constitution save. On a failure it takes 5 (1d10) Psychic damage and is Incapacitated with laughter, repeating the save at the end of each of its turns and succeeding automatically after 1 minute.\n\n**Fighting it.** A DC 13 Constitution save after each Long Rest; three successes end it and give a year's immunity.\n\n**Spreading.** Humanoids (not gnomes) starting a turn within 10 feet make a DC 10 Constitution save or catch it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 194
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "afflictionStats": {
+       "Stats": {
+        "Kind": "Magical Contagion",
+        "Affects": "Humanoids, except gnomes",
+        "Save": "Con",
+        "Save DC": 13,
+        "Onset": "1d4 days",
+        "Damage": "1d10",
+        "Fighting it": "After each Long Rest, a DC 13 Constitution save. Three successes end it, and the creature can't catch it again for a year.",
+        "Spreading": "A Humanoid other than a gnome that starts its turn within 10 feet of an infected creature makes a DC 10 Constitution save or is infected. A success keeps it safe from that creature for 24 hours."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Afflictions",
+   "name": "Sewer Plague",
+   "description": "Bred in sewers and refuse heaps from fouled potions and alchemical waste.\n\n**Fatigue.** 1d4 days after infection, the creature gains 1 Exhaustion level.\n\n**Weakness.** While it has Exhaustion, it regains only half the Hit Points from spending Hit Point Dice.\n\n**Restlessness.** While it has Exhaustion, a Long Rest restores no Hit Points and doesn't lower Exhaustion.\n\n**Fighting it.** A DC 11 Constitution save every dawn: a failure adds an Exhaustion level, a success removes one, and at 0 the plague ends.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 194
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "afflictionStats": {
+       "Stats": {
+        "Kind": "Magical Contagion",
+        "Affects": "Humanoids",
+        "Save": "Con",
+        "Save DC": 11,
+        "Onset": "1d4 days",
+        "Damage": "",
+        "Fighting it": "Every day at dawn, a DC 11 Constitution save. A failure adds 1 Exhaustion level, a success removes one. At Exhaustion 0 the contagion ends.",
+        "Spreading": "Caught from the wounds of creatures that carry it, such as otyughs and rats, or from contact with filth: DC 11 Constitution save or be infected."
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Afflictions",
+   "name": "Sight Rot",
+   "description": "Caught by drinking tainted water: a DC 15 Constitution save, or the creature is Blinded until the contagion ends.\n\n**Fighting it.** Heal or Lesser Restoration cures it. A proficient herbalist can make an ointment in 1 hour that suppresses it for 24 hours; three doses, 72 hours in all, end it.\n\n**Spreading.** Skin contact with an infected creature: DC 15 Constitution save or catch it.",
+   "references": [
+    {
+     "document": "srd",
+     "page": 194
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "DND5e",
+     "implementation": {
+      "afflictionStats": {
+       "Stats": {
+        "Kind": "Magical Contagion",
+        "Affects": "Beasts and Humanoids",
+        "Save": "Con",
+        "Save DC": 15,
+        "Onset": "At once",
+        "Damage": "",
+        "Fighting it": "Heal, Lesser Restoration or similar magic ends it. An ointment made with an Herbalism Kit in 1 hour suppresses it for 24 hours; 72 hours of suppression (three doses) ends it.",
+        "Spreading": "A Humanoid that touches an infected creature's skin makes a DC 15 Constitution save or is infected. A success keeps it safe from that creature for 24 hours."
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

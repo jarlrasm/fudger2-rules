@@ -1,0 +1,1982 @@
+{
+ "name": "Year Zero Engine spells",
+ "description": "The general spells and the spells of the seven magic disciplines (Awareness, Healing, Shapeshifting, Blood Magic, Death Magic, Elementalism and Symbolism) from chapter 5 of the Year Zero Engine Standard Reference Document by Fria Ligan AB, summarised in our own words for Forbidden Lands, with page references to the SRD. This game is not affiliated with, sponsored, or endorsed by Fria Ligan AB. The Year Zero Engine System Reference Document is used under Fria Ligan AB's Free Tabletop License (/systems/yze/Year-Zero-Engine-License-Agreement.pdf).",
+ "url": "/systems/forbiddenlands/extensions/magic.json",
+ "gamemaster": "",
+ "documents": [
+  {
+   "key": "yze",
+   "name": "Year Zero Engine SRD",
+   "url": "/systems/yze/YZE-Standard-Reference-Document.pdf",
+   "public": true
+  },
+  {
+   "key": "yze-license",
+   "name": "Year Zero Engine Free Tabletop License",
+   "url": "/systems/yze/Year-Zero-Engine-License-Agreement.pdf",
+   "public": true
+  }
+ ],
+ "entities": [
+  {
+   "type": "Spells",
+   "name": "Magical Seal",
+   "description": "Wards one person or a spot no bigger than a person. Any spell cast at it while the seal holds loses power levels equal to the seal's power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 31
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Shift",
+        "Effect": "Lowers spells against the target by the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Sense Magic",
+   "description": "Casters feel magic used nearby or held in their hands anyway; this spell tells what kind it is. It also finds obscured magic if its power level is at least that of the Obscure Magic.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 31
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Learn what magic is at work"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Dispel Magic",
+   "description": "A reaction that cuts in on the initiative order. The enemy spell loses power levels equal to this one's, and does nothing at zero. Both casters roll for overcharge and mishaps; choose your Willpower before either rolls.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 31
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 2,
+        "Casting": "Power word",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Lowers another spell by the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Obscure Magic",
+   "description": "Hides another spell as you cast it. It costs one more Willpower that adds no power, and is not an action of its own. Only Sense Magic can find the hidden spell.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "Cast a spell unnoticed for 1 extra Willpower"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Bind Magic",
+   "description": "Locks another spell, not a ritual, into an object as a trap or artifact, triggered as you choose. Extra Willpower counts for the dice but not the power level: 1 keeps it a day, 2 keeps it until triggered, 5 makes it permanent and usable once a day for Willpower equal to its power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Personal",
+        "Duration": "Varies",
+        "Effect": "Store a spell in an object"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Transfer",
+   "description": "For one Willpower, take or give any amount of Willpower. A target who resists limits the amount to the power level. The casting cost itself is not passed on.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "General",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Move Willpower between you and another"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Lightbringer",
+   "description": "Calls up a light that drives away every shadow in the zone you stand in.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "One stretch per power level",
+        "Effect": "Bright light fills your zone"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "True Sight",
+   "description": "Your sight becomes so keen that things at Extreme range look close. You see in the dark and through smoke, fog, disguises and shapeshifts, as long as you have line of sight.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Extreme",
+        "Duration": "Round",
+        "Effect": "See far, in darkness and through disguises"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Words on the Wind",
+   "description": "Pick a place you can see and hear what happens there as if you stood in it.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Extreme",
+        "Duration": "One stretch per power level",
+        "Effect": "Hear sounds far away"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Farsight",
+   "description": "Your mind's eye travels to a place you know of and watches it now. Power 1 reaches Long range, 2 about ten kilometres, 3 anywhere. A place you have never visited needs two more. The GM decides what the hazy visions show.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 32
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Varies",
+        "Duration": "Stretch",
+        "Effect": "See a distant place you know"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "True Path",
+   "description": "Facing a hard choice, you cast this and the GM tells you which option they think is wisest.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "The GM names the wisest choice"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Visions of the Past",
+   "description": "Glimpse past events at your location. Power 1 looks back a day, 2 a year, 3 centuries. The GM decides what the broken visions show.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Stretch",
+        "Effect": "See what happened here long ago"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Divination",
+   "description": "A ritual that shows things to come. Ask the GM questions about yourself or someone present; the short answers are often riddles, or omens of luck or doom.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Ask the GM about the future"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Intuition",
+   "description": "Ask one yes-or-no question about anything. The GM answers yes, no or maybe and may not lie, though maybe is allowed when the truth would wreck the game. Truth depends on who asks.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "A yes, no or maybe answer"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Telepathy",
+   "description": "Read someone's surface thoughts for a few minutes; older memories need more power. You can also send thoughts, at Long range to someone you know well, and painful ones inflict stress equal to the power level. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Awareness",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Read thoughts, send them, or inflict stress"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Cleanse Spirit",
+   "description": "Nature's light soothes a troubled mind, healing stress (Wits or Empathy) equal to the power level. Not on yourself.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Heal Wits or Empathy equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Healing Hands",
+   "description": "Lay hands on someone hurt to heal damage (Strength or Agility) equal to the power level. It does not touch critical injuries, and not on yourself.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Heal Strength or Agility equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Nature's Cure",
+   "description": "Ends a sickness or poison in yourself or another. The power level must be at least its virulence or toxicity divided by three, rounded down.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Cure a disease or poison"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Banish Demon",
+   "description": "Hurts a demon by the power level, even one that weapons cannot harm.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 33
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level on a demon"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Mend Wounds",
+   "description": "Knits bones and closes wounds, healing one critical injury at once. A lethal one needs power 2. Lost limbs stay lost.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Heal a critical injury"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Purge Undead",
+   "description": "Strikes one undead for damage equal to the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level on an undead"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Resurrection",
+   "description": "Returns a dead person to true life. Power 1 works within the shift of death, 2 within a day, 3 within a week; after that it is too late. The returned lose one Empathy for good.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Bring the dead back to life"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Serenity",
+   "description": "Calm and harmony make the target go along with you, with no roll to persuade them. Only on living humanoids.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "A living humanoid does what you ask"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Weathermaster",
+   "description": "Shifts the local weather. A small change needs power 1, strong weather fit for the season power 2, and weather against the season power 3.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Healing",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Extreme",
+        "Duration": "Shift",
+        "Effect": "Change the weather"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Animal Speech",
+   "description": "Talk with a mammal and ask questions up to the power level. It tells what it saw, heard or smelled, in a beast's terms that are hard to read, but it never lies.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Ask a mammal as many questions as the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Cat's Paw",
+   "description": "Move as silently as a cat. Cast it in place of a Stealth roll; it succeeds, with one success per power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "Automatic Stealth, one success per power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Hawk's Eye",
+   "description": "Share a hawk's sight and make out every detail within Extreme range, enough to tell people apart.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Extreme",
+        "Duration": "Stretch",
+        "Effect": "See every detail out to the horizon"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Beastmaster",
+   "description": "Bend one animal to your will: call off an attack, track, carry a message, bear a rider or fight. Its Strength can be at most twice the power level, and you need one more power if it is upset or fighting, or for tricks it would never do. Not on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 34
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Command an animal"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Bear's Claw",
+   "description": "Strike with a bear's might. The blow always lands and can't be parried or dodged, dealing damage equal to the power level; armour still counts.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Automatic hit, damage equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Deer's Dash",
+   "description": "Sprint like a deer: a fast move as an animal, with the power level added to the Move roll. Casting is not an action; roll for overcharge and mishap just before you run.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "Move like an animal with +power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Animal Form",
+   "description": "Become an animal with Strength up to twice the power level, taking its Strength, Agility and natural attacks. You can't speak, and Wits and Empathy drop to 1. Cast it again to change back.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Immediate",
+        "Effect": "Turn into an animal"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Primal Soul",
+   "description": "Stir up a beast's mood in someone whose Wits is at most the power level, such as rage, sloth or fear; the GM decides how they act. A small crowd needs power 2, a large one 3, a village 4.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Shapeshifting",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Long",
+        "Duration": "Stretch",
+        "Effect": "Wake a primal mood in someone"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Firewalker",
+   "description": "Heat and cold no longer harm you, and fire does no damage.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Shift",
+        "Effect": "Immune to heat, cold and fire"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Stir Blood",
+   "description": "Heats the victim's blood with a strong feeling they must act on somehow, as the GM decides. No use in combat or on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Fill someone with lust, fear or rage"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Bind Demon",
+   "description": "Forces a demon to obey. It resists with Insight, minus the power level. Demons take badly to being bound.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Shift",
+        "Effect": "Make a demon serve you"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Blood Bond",
+   "description": "Move attribute points equal to the power level between you and another of your kind, never above the starting score. An unwilling target resists with Insight minus the power level. It can raise someone broken, but does nothing for critical injuries.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 35
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Move attribute points equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Immolate",
+   "description": "The victim's blood boils into flame: damage equal to the power level, then fire with an intensity of twice the power level. Armour does not help.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level, then fire"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Blood Channeling",
+   "description": "Draws on your own blood for Willpower equal to twice the power level, lost if not used next round. A sacrifice, even a small animal, must die before you cast.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Round",
+        "Effect": "Gain twice the power level in Willpower for a round"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Blood Curse",
+   "description": "Curses a living humanoid whose name and rough location you know. They take damage or stress to any attribute, one point per shift, up to the power level, and can't heal naturally meanwhile.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Unlimited",
+        "Duration": "One shift per power level",
+        "Effect": "Damage equal to the power level, one point per shift"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Bind Soul",
+   "description": "Pulls the victim's soul into a vessel such as a mirror or gem, unless they pass Insight minus the power level. Power 1 holds it a shift, 2 a day, 3 forever or until a condition you set. Dispel Magic frees it; meanwhile the body lies senseless and open to other spirits.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Blood Magic",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Engaged",
+        "Duration": "Varies",
+        "Effect": "Trap a soul in an object"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Befoul",
+   "description": "Rots one ration per power level into poison with a toxicity of three times the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Turn food into poison"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Chill of the Grave",
+   "description": "Grave-cold seeps into the victim, who becomes cold and takes 1 damage to Strength and 1 stress to Wits now and each round until each totals the power level. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "One round per power level",
+        "Effect": "Cold, 1 damage and 1 stress each round"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Contaminate",
+   "description": "Gives a living humanoid a disease with a virulence of three times the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "A disease of virulence three times the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Ghoulish Glare",
+   "description": "Your dreadful look fills a living humanoid with dread, dealing stress to Empathy equal to the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 36
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Stress to Empathy equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Hand of Doom",
+   "description": "An unseen hand crushes the victim's heart for damage equal to the power level. One extra Willpower, adding no power, stretches the range to Medium. Only on living humanoids.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Raise the Dead",
+   "description": "Wakes one dead humanoid or animal as a rank 1 undead, which keeps its Strength, loses 1 Agility, has no Wits or Empathy, and obeys simple orders. Each power level past the first raises one more or adds a rank to all of them; higher ranks can be stronger, smarter or last longer.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 2,
+        "Casting": "Ritual",
+        "Range": "Short",
+        "Duration": "Shift",
+        "Effect": "Raise rank 1 undead"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Speak to the Dead",
+   "description": "Near where someone died or lies, and knowing their name, ask them a few simple questions. The dead may not want to help. Not on undead.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Stretch",
+        "Effect": "Ask the dead a few questions"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Steal Life",
+   "description": "Drains living things around you for Willpower equal to twice the power level. It needs plants nearby, and every person, beast and plant in your zone dies.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Gain twice the power level in Willpower; all life in the zone dies"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Terror",
+   "description": "Visions of their own decay and death flood the victim, dealing stress to both Wits and Empathy equal to the power level. Only on living humanoids.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Death Magic",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Stress to Wits and Empathy equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Combustion",
+   "description": "Makes a lifeless object burst into flame. A held item must be dropped or deals 1 damage; burning clothes or armour expose the wearer to fire with an intensity of twice the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Set an object alight"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Sunder",
+   "description": "Breaks a lifeless, unmagical object: each power level takes 1 from its gear bonus or deals 10 damage to it. Armour gives no protection.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 37
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Break an object, -1 gear bonus per power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Suffocate",
+   "description": "Pulls the air from the victim's lungs: 1 damage at the start of each following round, as many rounds as the power level, ignoring armour. They can't speak or scream, and if broken by it die in D6 rounds without a Healing roll.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "One round per power level",
+        "Effect": "1 damage each round for the power level in rounds"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Water Breathing",
+   "description": "You or someone you touch breathes water like air. Each power level adds one more creature or one more stretch, in any mix.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Stretch",
+        "Effect": "Breathe underwater"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Heat of the Moment",
+   "description": "Roll twice the power level in base dice, without pushing, against the victim's Insight. If you win, they go berserk and attack everyone near until broken or alone. No effect on monsters or beings without Wits.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Immediate",
+        "Effect": "Opposed roll to drive a victim berserk"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Rock Storm",
+   "description": "Hurls stones at a foe for damage equal to the power level. Armour works as usual.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Flight",
+   "description": "A whirlwind lifts you to fly for a round, two zones per move. Casting is not an action. Each extra power level adds a round or carries another person.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Round",
+        "Effect": "Fly two zones per move for a round"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Parch",
+   "description": "Draws the water out of a living victim, dealing damage to Agility equal to the power level. Armour does not help.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Agility damage equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Fireball",
+   "description": "A ball of fire bursts on the target for damage equal to the power level, and everyone else in that zone faces fire with an intensity of twice the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Long",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level, fire in the zone"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Stoneskin",
+   "description": "Living stone covers your body, giving an armour rating of twice the power level.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Personal",
+        "Duration": "Stretch",
+        "Effect": "Armour rating twice the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Tornado",
+   "description": "A whirlwind deals blunt damage equal to the power level, split as you like among targets in one zone. Everyone there must roll Might to keep their feet, and fliers to stay aloft.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 38
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level, split among a zone"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Flood Wave",
+   "description": "Nearby water or snow crashes over your foes as a wave or small avalanche. Split damage equal to the power level among them; anyone hurt falls down.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Elementalism",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Damage equal to the power level, split, knocks down"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Entice",
+   "description": "Unless they pass Insight minus the power level, the victim spends their actions moving to the symbol. Reaching it or moving the symbol ends the spell. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Lure a victim to the symbol"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Horrify",
+   "description": "The symbol wakes a deep fear, dealing stress to Wits equal to the power level. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "Stress to Wits equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Paralyze",
+   "description": "The symbol entrances a foe. Power 1 takes their fast action, 2 their slow action, 3 both, and 4 talent bonus actions as well. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 1,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Immediate",
+        "Effect": "The victim loses actions"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Blind",
+   "description": "Unless they pass Insight minus the power level, the victim is blinded as in total darkness. Beasts without Wits are blinded anyway; monsters are not.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Shift",
+        "Effect": "Blind a victim"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Illusion",
+   "description": "One person sees or hears something false, or misses something real. A small thing needs power 1, a person-sized one 2, a house 3. They see through it with Insight minus the power level. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 2,
+        "Casting": "Slow action",
+        "Range": "Medium",
+        "Duration": "Stretch",
+        "Effect": "Show or hide something to one person"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Mind Trick",
+   "description": "An NPC absent-mindedly fails to do some small thing, such as checking who passes or picking up their keys. Not in combat.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 39
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 2,
+        "Casting": "Power word",
+        "Range": "Medium",
+        "Duration": "Round",
+        "Effect": "Make an NPC skip a small action"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Puppeteer",
+   "description": "Unless they pass Insight minus the power level, you take over the victim's body for one fast and one slow action until their next turn; they can't react first. No effect on monsters.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 40
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 3,
+        "Casting": "Slow action",
+        "Range": "Short",
+        "Duration": "Round",
+        "Effect": "Control the victim's next actions"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Power Rune",
+   "description": "Charges a drawn or carved rune with Willpower equal to the power level, to spend on later spells without Bind Magic. Other rune-casters who find it can use it too.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 40
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Engaged",
+        "Duration": "Immediate",
+        "Effect": "Store Willpower equal to the power level"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Spells",
+   "name": "Portal",
+   "description": "Tears open a passage to another world, where demons and worse may wait; Bind Demon helps. It can also make a new portal from the far side leading anywhere.",
+   "references": [
+    {
+     "document": "yze",
+     "page": 40
+    }
+   ],
+   "rulesets": [
+    {
+     "system": "ForbiddenLands",
+     "implementation": {
+      "flSpellStats": {
+       "Stats": {
+        "Discipline": "Symbolism",
+        "Rank": 3,
+        "Casting": "Ritual",
+        "Range": "Short",
+        "Duration": "One shift per power level",
+        "Effect": "Open a way to another world"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

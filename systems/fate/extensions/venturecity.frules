@@ -1,0 +1,139 @@
+vcNoStats = { Stats = { Kind = "Power" } }
+
+vcStat (power, field, fallback) = valueOr (valueOr (valueOr (power.data, "ventureStats", vcNoStats), "Stats", vcNoStats.Stats), field, fallback)
+
+vcIsTheme (power) = vcStat (power, "Kind", "Power") == "Power theme"
+
+vcStatsCost (kind, enhancements, improved) = (if kind == "Power theme" then 0 else 1) + enhancements + improved
+
+vcItemCost (power) = vcStatsCost (vcStat (power, "Kind", "Power"), vcStat (power, "Enhancements bought", 0), vcStat (power, "Improved effects bought", 0))
+
+vcThemeCost (themes) = max (0, themes - 1)
+
+vcPowerCost (powers, effectBuys) = sum (map ((power)->vcItemCost (power), powers)) + vcThemeCost (count (filter ((power)->vcIsTheme (power), powers))) + effectBuys
+
+vcFreeUsed (cost, powerStunts, stunts) = max (0, cost - powerStunts) + stunts
+
+vcRefreshSpent (cost, powerStunts, stunts, freeStunts) = max (0, vcFreeUsed (cost, powerStunts, stunts) - freeStunts)
+
+vcRefreshLeft (start, cost, powerStunts, stunts, freeStunts) = start - vcRefreshSpent (cost, powerStunts, stunts, freeStunts)
+
+vcBudgetState (refreshLeft, unspent) =
+    if refreshLeft < 1 then "Over budget: refresh below 1"
+    else if unspent > 0 then toString (unspent) + " power stunts unspent"
+    else "Within budget"
+
+vcCost (char) = vcPowerCost (char.Powers, char.'Power Budget'.'Effect Buys')
+
+vcOtherStunts (char) = count (char.Stunts) + count (char.'Own Stunts')
+
+vcCharRefreshLeft (char) = vcRefreshLeft (char.'Power Budget'.'Starting Refresh', vcCost (char), char.'Power Budget'.'Power Stunts', vcOtherStunts (char), char.'Power Budget'.'Free Stunts')
+
+FateCore = system
+{
+    Powers = ventureStats
+    secondaryTypes = ["Powers"]
+    libraries = ["/systems/fate/extensions/venturecity.json"]
+    hints = [
+        hint
+        {
+            title = "Venture City powers"
+            topic = "Powers"
+            text = ["Each player character gets three extra stunts that can only go to powers, on top of the usual free stunts and refresh. Most heroes have one power suite, two at most.", "Add powers from the library. A basic power or synergy costs one stunt, each enhancement and improved special effect one more, the first theme is free. The Power Budget section adds it up and shows the refresh left."]
+        },
+        hint
+        {
+            title = "Special effects and collateral damage"
+            topic = "Powers"
+            text = ["On a success with style using a power, take a special effect instead of the boost, or pay a fate point to add one to any success.", "The collateral damage effect can be used at any time, but the GM then puts a situation aspect on the area for the damage done."]
+        }
+    ]
+}
+
+ventureStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/fate/extensions/power.svg"
+        filters = [
+            filter { name = "Kind" prefix = "" filter = Stats.Kind },
+            filter { name = "Skill" prefix = "" filter = split (", ", Stats.Skill) }
+        ]
+    }
+    Stats = table
+    {
+        Kind = string { description = "A power, bought as a basic power or a synergy, or a power theme that colours the whole suite." reference = ["Venture-City-SRD", 2] keys = ["Power", "Power theme"] default = "Power" }
+        Skill = string { description = "The skill the basic power uses, when it names one." }
+        'Enhancements bought' = integer { description = "How many enhancements the character bought for this power, one stunt each. Master enhancements can be bought more than once." reference = ["Venture-City-SRD", 1] default = 0  minvalue = 0 }
+        'Improved effects bought' = integer { description = "How many improved special effects the character bought for this power, one stunt each." reference = ["Venture-City-SRD", 2] default = 0  minvalue = 0 }
+        Cost = integer { description = "Stunts this power costs: one for a basic power or synergy, none for a theme, plus one per enhancement and improved special effect. Themes after the first cost one each, added on the character." value = vcStatsCost (Kind, 'Enhancements bought', 'Improved effects bought')  editable = none }
+        Chosen = string { description = "Which enhancements and improved special effects were bought, and how the power looks." multiline = true }
+        Enhancements = string { description = "Extra effects stacked on the basic power." reference = ["Venture-City-SRD", 1] multiline = true }
+        Synergies = string { description = "Powers that often join this one in a suite, each bought as a synergy for one stunt." reference = ["Venture-City-SRD", 2] multiline = true }
+        'Improved Special Effect' = string { description = "Bigger special effects unique to this power, one stunt each." reference = ["Venture-City-SRD", 2] multiline = true }
+        Drawbacks = string { description = "Aspects the suite's one drawback can be picked from." reference = ["Venture-City-SRD", 3] multiline = true }
+        'Collateral Damage' = string { description = "Effects the suite's one collateral damage effect can be picked from." reference = ["Venture-City-SRD", 3] multiline = true }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Power Suite'] }
+    'Power Budget' = table
+    {
+        description = "Stunts spent on powers, from the power stunts first, then the free stunts, then refresh." reference = ["Venture-City-SRD", 1]
+        tableLayout = layout { columns = 4  size = wide }
+        'Power Stunts' = integer { description = "Extra stunts that can only be spent on powers: three for player characters and main NPCs, three or four for supporting NPCs, one or two for nameless ones." reference = ["Venture-City-SRD", 1] default = 3  minvalue = 0 }
+        'Free Stunts' = integer { description = "The usual free stunts, for powers or ordinary stunts." default = 3  minvalue = 0 }
+        'Starting Refresh' = integer { description = "Refresh before any is traded for stunts." default = 3  minvalue = 0 }
+        'Effect Buys' = integer { description = "Stunts or refresh spent on more special effects. Each buys two more." reference = ["Venture-City-SRD", 2] default = 0  minvalue = 0 }
+        'Power Cost' = integer { description = "Stunts the powers cost, with themes after the first and special effect buys." value = vcCost (characterTable)  editable = none }
+        'Other Stunts' = integer { description = "Ordinary stunts the character has." value = vcOtherStunts (characterTable)  editable = none }
+        'Unspent Power Stunts' = integer { description = "Power stunts not yet spent. They can't go to ordinary stunts." value = 'Power Stunts' - min ('Power Cost', 'Power Stunts')  editable = none }
+        'Free Stunts Left' = integer { value = max (0, 'Free Stunts' - vcFreeUsed ('Power Cost', 'Power Stunts', 'Other Stunts'))  editable = none }
+        'Refresh Spent' = integer { description = "Refresh traded for stunts beyond the free ones, one per stunt." value = vcRefreshSpent ('Power Cost', 'Power Stunts', 'Other Stunts', 'Free Stunts')  editable = none }
+        'Refresh Left' = integer { description = "What Refresh should be. Fate Core keeps it at 1 or more." value = 'Starting Refresh' - 'Refresh Spent'  editable = none }
+        Budget = string { value = vcBudgetState ('Refresh Left', 'Unspent Power Stunts')  editable = none }
+        'Set Refresh' = button { description = "Sets Refresh to the refresh left after powers and stunts."  editable = live  onClick = updates { (root.Character.Refresh) = vcCharRefreshLeft (characterTable) } }
+    }
+
+    'Power Suite' = table
+    {
+        description = "What the powers do together: special effects, one drawback and one collateral damage effect." reference = ["Venture-City-SRD", 1]
+        tableLayout = layout { columns = 1  size = wide }
+        Drawback = string { description = "The suite's one drawback, an aspect that brings trouble with the power. It does not replace the trouble." reference = ["Venture-City-SRD", 3] }
+        'Special Effects' = string { description = "Two to start, two more per effect buy. Take one instead of the boost on a success with style using a power, or pay a fate point to add one to any success." reference = ["Venture-City-SRD", 2] multiline = true }
+        'Improved Special Effects' = string { description = "Bigger effects from the powers, used the same way." reference = ["Venture-City-SRD", 2] multiline = true }
+        'Collateral Damage Effect' = string { description = "Usable at any time, but the GM puts a situation aspect for the damage on the area." reference = ["Venture-City-SRD", 3] multiline = true }
+    }
+
+    Powers = list
+    {
+        description = "The powers, synergies and themes in the suite, with the enhancements bought for each." reference = ["Venture-City-SRD", 4]
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { important = ['Power Suite'] }
+    'Power Suite' = table
+    {
+        description = "Nameless NPCs have one or two stunts of powers and no collateral damage or special effects. Supporting NPCs have three or four, with a collateral damage effect." reference = ["Venture-City-SRD", 1]
+        tableLayout = layout { columns = 1  size = wide }
+        'Power Cost' = integer { description = "Stunts the powers cost." value = vcPowerCost (creatureTable.Powers, 0)  editable = none }
+        Drawback = string { reference = ["Venture-City-SRD", 3] }
+        'Special Effects' = string { reference = ["Venture-City-SRD", 2] multiline = true }
+        'Collateral Damage Effect' = string { reference = ["Venture-City-SRD", 3] multiline = true }
+    }
+    Powers = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+}

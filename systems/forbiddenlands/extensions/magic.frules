@@ -1,0 +1,218 @@
+flMishapText (n) =
+    switch n
+    case 1 then "1: sleepless for D6 days"
+    case 2 then "2: the spell drains you, take 1 stress to Wits or Empathy"
+    case 3 then "3: the magic hurts you, take 1 damage to Strength or Agility"
+    case 4 then "4: a magical disease of virulence 2D6 strikes you and everyone Engaged with you during the next shift"
+    case 5 then "5: the spell also hits a friend or bystander, and a helping spell also helps a foe"
+    case 6 then "6: your looks change for good, as the GM decides"
+    case 7 then "7: blinded, you act as in total darkness for a full day"
+    case 8 then "8: the spell tears at your mind, roll a mental critical injury"
+    case 9 then "9: the magic breaks your bones, roll a physical critical injury"
+    case 10 then "10: a demon notices you and arrives within a shift to make trouble"
+    case 11 then "11: backfire, the spell turns on you: harm hits you, healing wounds, a shapeshift leaves you a witless beast, summoned things rebel"
+    else "12: a rift opens and a demon drags you through; the character is gone, and may return changed as an NPC after D66 days"
+
+flMishapRoll = ([dice { number = 1  sides = 12  color = "red"  label = "Mishap" }], ((baseline, throws)->{ Text = flMishapText (first (first (throws).rolls))  Value = first (first (throws).rolls)  Outcome = "Mishap" }))
+
+flSpellRank (stats) = valueOr (stats, "Rank", 1)
+
+flDisciplineRank (char, discipline) =
+    if discipline == "General" then max (char.Disciplines.Awareness, char.Disciplines.Healing, char.Disciplines.Shapeshifting, char.Disciplines.'Blood Magic', char.Disciplines.'Death Magic', char.Disciplines.Elementalism, char.Disciplines.Symbolism)
+    else valueOr (char.Disciplines, discipline, 0)
+
+flCastRank (rank, grimoire) = if grimoire then rank - 1 else rank
+
+flSafeDice (spellRank, talentRank, safe) = min (max (0, safe), max (0, talentRank - spellRank))
+
+flPowerText (power, overcharge) =
+    "Power level " + toString (power) + (if overcharge > 0 then ", overcharged by " + toString (overcharge) else "")
+
+flMishapNote (chance, banes) =
+    if chance then ", chance casting: magic mishap"
+    else if banes == 1 then ", 1 bane: magic mishap"
+    else if banes > 1 then ", " + toString (banes) + " banes: magic mishap"
+    else ""
+
+flBlocked (spellRank, talentRank) =
+    if talentRank < 1 then "You need a rank in this spell's discipline to cast it"
+    else if spellRank > talentRank + 1 then "A rank " + toString (spellRank) + " spell is two or more ranks above your rank " + toString (talentRank) + ": it cannot be cast"
+    else ""
+
+flPaid (wp, left) = ([dice { number = 0  sides = 6  label = "" }], ((baseline, throws)->{ Text = "Spent " + toString (wp) + " Willpower, " + toString (left) + " left" }))
+
+flCastResult (wp, rolls, spellRank, talentRank, have) =
+    if flBlocked (spellRank, talentRank) != "" then { Text = flBlocked (spellRank, talentRank)  Outcome = "Failure" }
+    else if wp < 1 then { Text = "A spell costs at least 1 Willpower"  Outcome = "Failure" }
+    else
+    {
+        Text = flPowerText (wp + sixes (rolls), sixes (rolls)) + flMishapNote (spellRank > talentRank, skulls (rolls)) + (if wp > have then ", more Willpower than the " + toString (have) + " on the sheet" else "")
+        Value = wp + sixes (rolls)
+        Outcome = if spellRank > talentRank or skulls (rolls) > 0 then "Mishap" else "Success"
+        Push = if spellRank > talentRank or skulls (rolls) > 0 then flMishapRoll else flPaid (wp, max (0, have - wp))
+        PushLabel = if spellRank > talentRank or skulls (rolls) > 0 then "Spend Willpower, roll mishap" else "Spend Willpower"
+        PushSets = [{ Field = "characterTable.Status.Willpower"  Value = max (0, have - wp) }]
+    }
+
+flCastDice (wp, safe, spellRank, talentRank, have) = ([dice { number = max (0, wp - flSafeDice (spellRank, talentRank, safe))  sides = 6  color = "yellow"  label = "Base" }],
+    ((baseline, throws)->flCastResult (wp, first (throws).rolls, spellRank, talentRank, have)))
+
+flCastRoll (spellRank, talentRank, have) = ask ("Willpower to spend", 1, (wp)->ask ("Dice left out for safe casting", 0, (safe)->flCastDice (wp, safe, spellRank, talentRank, have)))
+
+flNpcResult (power, rolls, spellRank, rank) =
+    if flBlocked (spellRank, rank) != "" then { Text = flBlocked (spellRank, rank)  Outcome = "Failure" }
+    else if power < 1 then { Text = "A spell needs a power level of at least 1"  Outcome = "Failure" }
+    else
+    {
+        Text = flPowerText (power + sixes (rolls), sixes (rolls)) + flMishapNote (spellRank > rank, skulls (rolls)) + (if power > rank then ", above the caster's rank " + toString (rank) else "")
+        Value = power + sixes (rolls)
+        Outcome = if spellRank > rank or skulls (rolls) > 0 then "Mishap" else "Success"
+        Push = if spellRank > rank or skulls (rolls) > 0 then flMishapRoll else 0
+        PushLabel = "Roll mishap"
+    }
+
+flNpcDice (power, spellRank, rank) = ([dice { number = max (0, power)  sides = 6  color = "yellow"  label = "Base" }],
+    ((baseline, throws)->flNpcResult (power, first (throws).rolls, spellRank, rank)))
+
+flNpcCastRoll (spellRank, rank) = ask ("Base power level", 1, (power)->flNpcDice (power, spellRank, rank))
+
+flRangeMetres (text) =
+    if text == "Personal" then 0
+    else if text == "Engaged" then 2
+    else if text == "Short" then 10
+    else if text == "Medium" then 25
+    else if text == "Long" then 100
+    else 1000
+
+flShowIf (flag) = if flag then visible else none
+
+flSpellCast (name, rank, discipline, spellRange, effect, roll) = custom
+{
+    Name = name
+    Rank = rank
+    Discipline = discipline
+    Range = spellRange
+    Cast = integer { value = rank  valuedice = roll  action = "ranged"  reach = 2  range = flRangeMetres (spellRange) }
+    Effect = effect
+}
+
+flSpellStat (spell, field) = valueOr (spell.data.flSpellStats.Stats, field, "")
+
+flCastFor (char, spell) =
+    flSpellCast (spell.Name, flSpellRank (spell.data.flSpellStats.Stats), flSpellStat (spell, "Discipline"), flSpellStat (spell, "Range"), flSpellStat (spell, "Effect"),
+        flCastRoll (flCastRank (flSpellRank (spell.data.flSpellStats.Stats), char.Magic.Grimoire), flDisciplineRank (char, flSpellStat (spell, "Discipline")), char.Status.Willpower))
+
+flCastsFor (char) = map ((spell)->flCastFor (char, spell), char.Spells)
+
+flNpcCastFor (creature, spell) =
+    flSpellCast (spell.Name, flSpellRank (spell.data.flSpellStats.Stats), flSpellStat (spell, "Discipline"), flSpellStat (spell, "Range"), flSpellStat (spell, "Effect"),
+        flNpcCastRoll (flSpellRank (spell.data.flSpellStats.Stats), creature.Magic.'Magic Rank'))
+
+flNpcCastsFor (creature) = map ((spell)->flNpcCastFor (creature, spell), creature.Spells)
+
+ForbiddenLands = system
+{
+    Spells = flSpellStats
+    secondaryTypes = ["Spells"]
+    libraries = ["/systems/forbiddenlands/extensions/magic.json"]
+    hints = [
+        hint
+        {
+            title = "Year Zero magic"
+            topic = "Magic"
+            text = ["Druids and sorcerers learn seven disciplines, each a talent with a rank from 1 to 3. Set the ranks under Disciplines and add spells from the library; general spells can be cast with any discipline.", "Casting never fails. Spend Willpower for the base power level and roll that many base dice: each 6 raises the power level, any 1 means a magic mishap. The roll can't be pushed; its button spends the Willpower and, after a mishap, rolls on the mishap table."]
+        }
+    ]
+}
+
+flSpellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/forbiddenlands/extensions/spell.svg"
+        sortedBy = sort { prefix = "Rank" sort = Stats.Rank }
+        filters = [
+            filter { name = "Discipline" prefix = "" filter = Stats.Discipline },
+            filter { name = "Rank" prefix = "Rank" filter = Stats.Rank },
+            filter { name = "Casting" prefix = "" filter = Stats.Casting }
+        ]
+    }
+    Stats = table
+    {
+        Discipline = string { description = "The discipline the spell belongs to. General spells can be cast with any discipline." reference = ["yze", 30]  keys = ["General", "Awareness", "Healing", "Shapeshifting", "Blood Magic", "Death Magic", "Elementalism", "Symbolism"] }
+        Rank = integer { description = "The spell's rank. You can cast spells up to your rank in the discipline, or one above by chance casting." reference = ["yze", 30]  default = 1  minvalue = 1  maxvalue = 5 }
+        Casting = string { description = "A normal spell is a slow action, a power word a fast action, and a ritual takes about a shift." reference = ["yze", 30]  keys = ["Slow action", "Power word", "Ritual"]  default = "Slow action" }
+        Range = string { description = "The farthest the spell reaches: Personal, Engaged, Short, Medium, Long, Extreme or more." reference = ["yze", 30] }
+        Duration = string { description = "How long the spell lasts. Immediate effects do not last." reference = ["yze", 30] }
+        Effect = string { description = "What the power level does, in short." }
+    }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Spell casting'] }
+    Magic = table
+    {
+        description = "Year Zero Engine magic. Spells cost Willpower, which comes from pushing rolls." reference = ["yze", 30]
+        tableLayout = layout { columns = 2  size = wide }
+        Grimoire = bool { description = "Casting from a grimoire or scroll: the spell counts as one rank lower. In combat, readying it takes a fast action." reference = ["yze", 31]  default = false  editable = live }
+        'Magic mishap' = integer { description = "Roll on the magic mishap table." reference = ["yze", 31]  value = 0  valuedice = flMishapRoll  editable = none  render = "roll" }
+    }
+    Disciplines = table
+    {
+        description = "Rank 0 to 3 in each magic discipline talent. Learning from a master is needed; without one the XP cost triples." reference = ["yze", 30]
+        tableLayout = layout { columns = 4  size = wide }
+        Awareness = integer { description = "Druidic magic of seeing and hearing beyond the senses, the past and the future." reference = ["yze", 32]  default = 0  minvalue = 0  maxvalue = 3 }
+        Healing = integer { description = "Druidic magic that mends body and mind and turns back the dead." reference = ["yze", 33]  default = 0  minvalue = 0  maxvalue = 3 }
+        Shapeshifting = integer { description = "Druidic magic of animals, their senses and their forms." reference = ["yze", 34]  default = 0  minvalue = 0  maxvalue = 3 }
+        'Blood Magic' = integer { description = "Sorcery drawing on the power of blood and life." reference = ["yze", 35]  default = 0  minvalue = 0  maxvalue = 3 }
+        'Death Magic' = integer { description = "Sorcery of rot, fear and the restless dead." reference = ["yze", 36]  default = 0  minvalue = 0  maxvalue = 3 }
+        Elementalism = integer { description = "Sorcery commanding earth, wind, water and fire." reference = ["yze", 37]  default = 0  minvalue = 0  maxvalue = 3 }
+        Symbolism = integer { description = "Sorcery of runes and signs drawn, carved or traced in the air." reference = ["yze", 39]  default = 0  minvalue = 0  maxvalue = 3 }
+    }
+    Spells = list
+    {
+        description = "The spells the character knows."
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+    'Spell casting' = list
+    {
+        description = "Cast a spell: spend Willpower and roll that many base dice. Sixes overcharge, ones cause a mishap." reference = ["yze", 30]
+        tableLayout = layout { size = wide }
+        visible = flShowIf (count (flCastsFor (characterTable)) > 0)
+        source = flCastsFor (characterTable)
+        singular = "Spell"
+        editable = none
+        valueType = flSpellCast
+    }
+}
+
+creatureTable = ruleset
+{
+    Magic = table
+    {
+        description = "NPCs have no Willpower: the GM picks a base power level up to the caster's rank." reference = ["yze", 31]
+        tableLayout = layout { columns = 2 }
+        'Magic Rank' = integer { description = "The caster's rank in its magic discipline, 0 for none." reference = ["yze", 31]  default = 0  minvalue = 0  maxvalue = 5 }
+        'Magic mishap' = integer { description = "Roll on the magic mishap table." reference = ["yze", 31]  value = 0  valuedice = flMishapRoll  editable = none  render = "roll" }
+    }
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+    'Spell casting' = list
+    {
+        tableLayout = layout { size = wide }
+        visible = flShowIf (count (flNpcCastsFor (creatureTable)) > 0)
+        source = flNpcCastsFor (creatureTable)
+        singular = "Spell"
+        editable = none
+        valueType = flSpellCast
+    }
+}
