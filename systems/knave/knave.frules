@@ -1,0 +1,427 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+advantageText (adv) =
+    if adv > 0 then " (+" + toString (5 * adv) + ")"
+    else if adv < 0 then " (" + toString (5 * adv) + ")"
+    else ""
+
+checkOutcome (total, target) = if total >= target then "Success" else "Failure"
+
+checkResult (total, target, adv) =
+{
+    Text = toString (total) + advantageText (adv) + " vs " + toString (target) + ": " + checkOutcome (total, target)
+    Value = total
+    Outcome = checkOutcome (total, target)
+}
+
+knaveCheckRoll (adv) = ([1d20], ((baseline, throws)->checkResult (first (first (throws).rolls) + baseline + 5 * adv, 11 + asked, adv)))
+
+knaveCheck = ask ("Advantage (+1) or disadvantage (-1)", 0, (adv)->ask ("Difficulty (0 to 10, or the opponent's ability)", 5, knaveCheckRoll (adv)))
+
+hitOutcome (total, ac, answered) =
+    if not (answered) then (if total >= 21 then "Free maneuver on a hit" else "")
+    else if total < ac then "Miss"
+    else if total >= 21 then "Hit and free maneuver"
+    else "Hit"
+
+breakText (roll) = if roll == 1 then "weapon breaks" else ""
+
+joinText (a, b) = if a == "" then b else if b == "" then a else a + ", " + b
+
+attackOutcome (roll, total, ac, answered) = joinText (hitOutcome (total, ac, answered), breakText (roll))
+
+attackResult (roll, total, ac, answered, adv) =
+{
+    Text = toString (total) + advantageText (adv) + (if answered then " vs AC " + toString (ac) else "")
+        + (if attackOutcome (roll, total, ac, answered) == "" then "" else ": " + attackOutcome (roll, total, ac, answered))
+    Value = total
+    Outcome = attackOutcome (roll, total, ac, answered)
+}
+
+knaveAttackRoll (adv) = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), first (first (throws).rolls) + baseline + 5 * adv, asked, answered, adv)))
+
+knaveAttack = ask ("Advantage (+1) or disadvantage (-1)", 0, (adv)->ask ("Target's armour class", knaveAttackRoll (adv)))
+
+damageText (total, mode) =
+    if mode == 1 then toString (total) + " damage, power attack: the weapon breaks"
+    else if mode == 2 then toString (total) + " direct damage: straight to wounds"
+    else toString (total) + " damage"
+
+damageResult (total, mode) =
+{
+    Text = damageText (total, mode)
+    Value = total
+}
+
+damageDice (weaponDie, mode) = ([dice { number = if mode == 1 then 2 else 1  sides = weaponDie }], ((baseline, throws)->damageResult (sum (first (throws).rolls) + baseline, asked)))
+
+knaveDamage (weaponDie) = ask ("Attack", ["Normal", "Power attack", "Sneak attack"], 0, (mode)->damageDice (weaponDie, mode))
+
+moraleOutcome (roll, morale) = if roll > morale then "Failure: breaks and flees" else "Success: holds"
+
+moraleResult (roll, morale) =
+{
+    Text = toString (roll) + " vs Morale " + toString (morale) + ": " + moraleOutcome (roll, morale)
+    Value = roll
+    Outcome = moraleOutcome (roll, morale)
+}
+
+moraleRoll = ([2d6], ((baseline, throws)->moraleResult (sum (first (throws).rolls), baseline)))
+
+hpResult (total, oldMax) =
+{
+    Text = "Rolled " + toString (total) + ": new max HP " + toString (if total > oldMax then total else oldMax + 1)
+    Value = if total > oldMax then total else oldMax + 1
+}
+
+hpReroll (level) = ([dice { number = max (1, level)  sides = 6 }], ((baseline, throws)->hpResult (sum (first (throws).rolls), baseline)))
+
+knaveLevel (xp) =
+    if xp >= 500000 then 10
+    else if xp >= 250000 then 9
+    else if xp >= 125000 then 8
+    else if xp >= 64000 then 7
+    else if xp >= 32000 then 6
+    else if xp >= 16000 then 5
+    else if xp >= 8000 then 4
+    else if xp >= 4000 then 3
+    else if xp >= 2000 then 2
+    else 1
+
+nextLevel (level) =
+    switch level
+    case 1 then 2000
+    case 2 then 4000
+    case 3 then 8000
+    case 4 then 16000
+    case 5 then 32000
+    case 6 then 64000
+    case 7 then 125000
+    case 8 then 250000
+    case 9 then 500000
+    else 0
+
+dieOf (text) = max (2, bonusWithValue ([[text]], "d([0-9]+)"))
+
+noStats = { Stats = { Kind = "" } }
+
+itemStat (item, field) = valueOr (valueOr (valueOr (item.data, "knaveItem", noStats), "Stats", noStats.Stats), field, "")
+
+itemNumber (item, field, fallback) = if itemStat (item, field) == "" then fallback else itemStat (item, field)
+
+itemSlots (item) = itemNumber (item, "Slots", 1)
+
+armourPoints (char) = min (7, sum (map ((item)->itemNumber (item, "Armour points", 0), char.Inventory)))
+
+usedSlots (char) = sum (map ((item)->itemSlots (item), char.Inventory)) + count (char.Spellbooks) + count (char.Relics) + char.Status.Wounds + char.Status.Coins / 500
+
+totalSlots (char) = 10 + char.Abilities.CON.Bonus
+
+downState (char) =
+    if char.Status.Wounds >= totalSlots (char) then "Dead"
+    else if char.Status.HP == 0 then "0 HP"
+    else ""
+
+loadState (char) = if usedSlots (char) > totalSlots (char) then "Over-encumbered" else ""
+
+weaponsOf (char) = filter ((item)->itemStat (item, "Kind") == "Weapon", char.Inventory)
+
+isRanged (item) = itemStat (item, "Ranged") == true
+
+rangeOf (item) = if itemNumber (item, "Range", 0) > 0 then itemNumber (item, "Range", 0) else 120
+
+weaponAttack (name, bonusValue, weaponDie, kind, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = bonusValue  valuedice = knaveAttack  action = kind  reach = 5  range = rangeFeet  editable = none }
+    Damage = integer { value = 0  valuedice = knaveDamage (weaponDie)  render = "d" + toString (weaponDie)  editable = none }
+}
+
+attackFor (char, item) =
+    weaponAttack (item.Name,
+        if isRanged (item) then char.Abilities.WIS.Bonus else char.Abilities.STR.Bonus,
+        dieOf (itemStat (item, "Damage")),
+        if isRanged (item) then "ranged" else "melee",
+        rangeOf (item))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Abilities, Status, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Careers = string { description = "Two careers, rolled or picked from the book's career table. A fitting career gives +5 to a check outside combat." }
+        Level = integer { description = "From XP: 2,000 for level 2, doubling to 500,000 for level 10." value = knaveLevel (XP)  editable = none }
+        XP = integer { description = "Treasure brought back to safety, one XP per coin." default = 0  minvalue = 0  editable = live }
+        'Next level' = integer { description = "XP needed for the next level." value = nextLevel (Level)  editable = none }
+    }
+
+    Abilities = keyvalues
+    {
+        description = "Checks: d20 plus the ability, against 11 plus a difficulty of 0 to 10 (5 by default). Each advantage is +5, each disadvantage -5."
+        keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+        descriptions = {
+            STR = "Strength: melee attacks, lifting, breaking and grappling."
+            DEX = "Dexterity: dodging, balance, sneaking and quick hands."
+            CON = "Constitution: toughness and resisting poison, sickness and cold. Item slots are 10 plus CON."
+            INT = "Intelligence: knowledge, alchemy and lockpicking. Spells you can cast each day."
+            WIS = "Wisdom: ranged attacks, perception, foraging and resisting magic."
+            CHA = "Charisma: persuading, leading, initiative. Active blessings and companions at most CHA."
+        }
+        valueType = custom
+        {
+            Bonus = integer { default = 0  minvalue = 0  maxvalue = 10 }
+            Check = modifier { value = Bonus  valuedice = knaveCheck  editable = none }
+        }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { description = "Level times d6, rerolled on each level up." default = 3  minvalue = 1 }
+        HP = integer { description = "Damage past 0 HP fills item slots with wounds." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Wounds = integer { description = "Each fills an item slot, from the last one up; drop what was there. Wounds in every slot mean death." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        AC = integer { description = "Armour class: 11 plus armour points (one per armour piece, at most 7)." value = 11 + armourPoints (characterTable)  editable = none }
+        'Armour points' = integer { value = armourPoints (characterTable)  editable = none }
+        Slots = integer { description = "Item slots: 10 plus CON." value = totalSlots (characterTable)  editable = none }
+        'Slots used' = integer { description = "Items (two-handed ones take two), spellbooks, relics, wounds, and a slot per 500 coins." value = usedSlots (characterTable)  editable = none }
+        Coins = integer { default = 0  minvalue = 0  editable = live }
+        Initiative = modifier { description = "Side initiative: the leaders roll CHA checks against each other." value = Abilities.CHA.Bonus  valuedice = 1d20  editable = none }
+        'Spells per day' = integer { description = "Spells you can cast each day: your INT. Each spellbook once a day." value = Abilities.INT.Bonus  editable = none }
+        'Spells cast' = integer { description = "Spells cast since the last night of rest." default = 0  minvalue = 0  editable = live }
+        'HP reroll' = integer { description = "On level up: roll level d6. Higher than the old max is the new max; otherwise the max goes up by 1." value = 'Max HP'  valuedice = hpReroll (Character.Level)  render = "Level up"  editable = none }
+        State = string { value = downState (characterTable)  visible = none  indicator = "#555555" }
+        Load = string { value = loadState (characterTable)  visible = none  indicator = "#e8913a" }
+        'Night of rest' = button
+        {
+            description = "Two watches of sleep after a meal restore all HP and the day's spells."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.HP) = 'Max HP'
+                (root.Status.'Spells cast') = 0
+            }
+        }
+        'Safe haven' = button
+        {
+            description = "A night of rest in a safe haven also heals one wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.HP) = 'Max HP'
+                (root.Status.'Spells cast') = 0
+                (root.Status.Wounds) = max (0, Wounds - 1)
+            }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Melee: d20 plus STR; ranged: d20 plus WIS (-5 while in melee), against the target's AC. A natural 1 breaks the weapon; 21 or more also allows a free maneuver."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Abilities.STR.Bonus, 2, "melee", 5)], map ((item)->attackFor (characterTable, item), weaponsOf (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Inventory = list
+    {
+        description = "Each item takes a slot, two-handed ones two. Wounds take slots from the last one up."
+        tableLayout = layout { size = wide }
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Spellbooks = list
+    {
+        description = "One spell per book, one slot each. Each book can be cast once a day, up to INT spells in all."
+        source = secondary.Spellbooks
+        singular = "Spellbook"
+        editable = character
+    }
+
+    Relics = list
+    {
+        description = "Holy relics grant blessings while carried. At most CHA blessings are active."
+        source = secondary.Relics
+        singular = "Relic"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Traits = string { description = "Physique, face, skin, hair, clothing, speech, virtue and vice." multiline = true }
+        Companions = string { description = "Hirelings and companions. You can have at most CHA companions in a lifetime." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Stats, Attack]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { description = "Used for its checks and attacks, and as the difficulty when opposing it." default = 1  minvalue = 0 }
+        AC = integer { description = "Armour class: what an attack must reach." default = 11  minvalue = 0 }
+        HP = integer { description = "Monsters die at 0 HP." default = 4  minvalue = 0  editable = live  indicator = "#d64545" }
+        Morale = integer { description = "On 2d6 above this it breaks and flees." default = 7  minvalue = 2  maxvalue = 12 }
+        Movement = string { default = "40'" }
+        Appearing = string { description = "Number appearing: dungeon (wilderness)." default = "d6 (0)" }
+        Check = modifier { description = "d20 plus level against a difficulty." value = Level  valuedice = knaveCheck  editable = none }
+        'Morale check' = integer { value = Morale  valuedice = moraleRoll  editable = none }
+        Initiative = modifier { value = Level  valuedice = 1d20  editable = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Attacks = string { description = "What it attacks with, as in its stat block." default = "weapon (d6)" }
+        Damage = string { description = "The die of its main attack." default = "d6" }
+        Strike = modifier { description = "d20 plus level against the target's AC." value = Stats.Level  valuedice = knaveAttack  action = "melee"  reach = 5  editable = none }
+        'Damage roll' = integer { value = 0  valuedice = knaveDamage (dieOf (Damage))  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Traits = string { multiline = true }
+    }
+}
+
+hirelingTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/knave/hireling.svg"  important = [Hireling, Attack] }
+    Hireling = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { description = "Hirelings avoid danger; mercenaries fight; experts have a trade." keys = ["Hireling", "Mercenary", "Expert", "Companion"] default = "Hireling" }
+        Wage = string { description = "Coins per month." default = "300c" }
+        Employer = string {}
+        Level = integer { default = 1  minvalue = 0 }
+        AC = integer { default = 11  minvalue = 0 }
+        'Max HP' = integer { default = 3  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Morale = integer { description = "On 2d6 above this they flee. Companions never check morale." default = 4  minvalue = 2  maxvalue = 12 }
+        Slots = integer { description = "Items they carry for you." default = 10  minvalue = 0 }
+        'Slots used' = integer { default = 0  minvalue = 0  editable = live }
+        Check = modifier { value = Level  valuedice = knaveCheck  editable = none }
+        'Morale check' = integer { value = Morale  valuedice = moraleRoll  editable = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Damage = string { description = "The die of its weapon; a punch is d2." default = "d2" }
+        Strike = modifier { value = Hireling.Level  valuedice = knaveAttack  action = "melee"  reach = 5  editable = none }
+        'Damage roll' = integer { value = 0  valuedice = knaveDamage (dieOf (Damage))  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Carrying = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+knaveItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armour", "Gear", "Light", "Food", "Tool", "Treasure", "Animal"] }
+        Damage = string { description = "Weapon die, such as d6." }
+        Ranged = bool { description = "Attacks with WIS instead of STR." default = false }
+        Range = integer { description = "In feet, for ranged weapons." default = 0  minvalue = 0 }
+        Slots = integer { description = "Two-handed weapons take two." default = 1  minvalue = 0 }
+        'Armour points' = integer { description = "One per armour piece." default = 0  minvalue = 0 }
+        Cost = string { description = "In coins." }
+    }
+}
+
+knaveSpell = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        'Book quirk' = string { description = "How this spellbook looks or behaves." multiline = true }
+    }
+}
+
+knaveRelic = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/cairn/relic.svg" }
+    Stats = table
+    {
+        Blessing = string { description = "What the relic grants while carried and active." multiline = true }
+        Saint = string { description = "The saint or power it belongs to." }
+    }
+}
+
+knaveNameSetting = nameSetting
+{
+    name = "Knave"
+    characters = [generator { library = "Old world" variant = "Rogue" }, generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }]
+    creatures = [generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Fantasy folk" variant = "Orc" }]
+    Hirelings = [generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }]
+    Location = [generator { library = "Fantasy places" variant = "Dungeon" }, generator { library = "Old world" variant = "Town" }, generator { library = "Old world" variant = "Inn" }]
+    Items = generator { library = "Fantasy things" variant = "Weapon" }
+    Relics = generator { library = "Fantasy things" variant = "Artifact" }
+}
+
+Knave = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a character"
+            topic = "Getting started"
+            text = ["Spread 3 points among the six abilities, roll a d6 for max HP and pick or roll two careers with their items. Add 3d6 x 10 coins, rations, rope, torches, and a random spellbook for each point of INT."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 plus the ability against 11 plus a difficulty of 0 to 10, 5 by default. Against a creature the difficulty is its ability or level. The roll asks for advantages (+5 each, -1 for a disadvantage) and the difficulty."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Melee attacks roll d20 plus STR, ranged d20 plus WIS, against the target's AC. A natural 1 breaks the weapon, a total of 21 or more allows a free maneuver. Damage asks for a power attack (double dice, the weapon breaks) or a sneak attack (direct damage). Past 0 HP each point of damage fills an item slot with a wound."]
+        },
+        hint
+        {
+            title = "Initiative and morale"
+            topic = "Initiative"
+            text = ["Sides act in turn: the leaders roll CHA checks against each other. Monsters and hirelings roll 2d6 for morale and flee above their Morale."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Hirelings = hirelingTable
+    Items = knaveItem
+    Spellbooks = knaveSpell
+    Relics = knaveRelic
+    secondaryTypes = ["Items", "Spellbooks", "Relics"]
+    extraEntityTypes = [entityTypeDescription ("Hirelings", "hireling", true, "/systems/knave/hireling.svg", [])]
+    description = "Knave 2nd edition: old-school dungeon delving with six ability bonuses, d20 checks against 11 plus difficulty, item slots, wounds and spellbooks"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 2d6, 1d4, 1d8]
+    cssFiles = ["/systems/knave/knave.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/fantasy.json"]
+    nameSettings = [knaveNameSetting, oldWorldNameSetting, fantasyNameSetting]
+}

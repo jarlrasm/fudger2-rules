@@ -1,0 +1,72 @@
+@import url("/systems/sheet.css");
+
+/* Knave 2e: a plain black-ink sheet on off-white paper, heavy rules and
+   small-caps headings with a touch of oxblood; the six abilities stacked
+   in a column at the left with their check rolls, HP, wounds, armour and
+   slots beside them, then the numbered item slots across the page. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d9d4c7;
+    --surface: #faf8f2;
+    --surface-alt: #efebe0;
+    --surface-sunken: #e4dfd2;
+    --surface-muted: #c9c3b3;
+    --text: #141414;
+    --text-muted: #3d3b37;
+    --text-faint: #75716a;
+    --on-accent: #faf8f2;
+    --border: #8c877c;
+    --border-strong: #141414;
+    --accent: #7a1f1a;
+    --accent-hover: #942720;
+    --accent-soft: #f0dcd8;
+    --link: #7a1f1a;
+    --danger: #7a1f1a;
+    --danger-hover: #5f1814;
+    --danger-soft: #f0dcd8;
+    --success: #2f5a34;
+    --paper: #faf8f2;
+    --card-bg: #efebe0;
+    --dice-bg: #141414;
+    --dice-text: #faf8f2;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", "Garamond", "Georgia", serif;
+    --title-font: "IM Fell English SC", "Cormorant SC", "Georgia", serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    font-variant: small-caps;
+    letter-spacing: 0.08em;
+    font-size: 1.35em;
+    border-bottom: 3px double var(--border-strong);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    font-variant: small-caps;
+    font-weight: 700;
+}
+
+.entityView .table-abilities { --block: 34%; clear: left; }
+.entityView .table-status { --block: 66%; }
+.entityView .table-abilities > table > tbody > tr { font-size: 1.15em; }
+.entityView .table-abilities > table > tbody > tr > td { white-space: nowrap; }
+.entityView .table-abilities > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    font-size: 1.35em;
+    color: var(--accent);
+}
+.entityView .table-abilities > table > tbody > tr > td:nth-child(2)::before { content: "BONUS "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-abilities > table > tbody > tr > td:nth-child(3)::before { content: "CHECK "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-attacks { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Attack "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-spellbooks { --block: 50%; clear: left; }
+.entityView .table-relics { --block: 50%; }
+.entityView .table-notes { clear: left; }
+.entityView pre { font-family: var(--sheet-font); text-align: left; }
