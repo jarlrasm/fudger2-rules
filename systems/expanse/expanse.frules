@@ -47,7 +47,14 @@ noStats = { Stats = { Group = "" } }
 
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "expanseWeapon", noStats), "Stats", noStats.Stats), field, "")
 
-isRangedGroup (group) = group == "Pistols" or group == "Rifles" or group == "Grenades" or group == "Heavy Weapons"
+isRangedGroup (group) = group == "Pistols" or group == "Rifles" or group == "Grenades"
+
+groupFocus (group) =
+    switch group
+        case "Light Melee" then "Light Weapons"
+        case "Heavy Melee" then "Heavy Weapons"
+        case "Grenades" then "Throwing"
+        else group
 
 weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 {
@@ -58,9 +65,9 @@ weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 
 attackFor (char, weapon) =
     if isRangedGroup (weaponStat (weapon, "Group")) then
-        weaponAttack (weapon.Name, char.Abilities.Accuracy + (if hasFocus (char, weaponStat (weapon, "Group")) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long range")))
+        weaponAttack (weapon.Name, char.Abilities.Accuracy + (if hasFocus (char, groupFocus (weaponStat (weapon, "Group"))) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long range")))
     else
-        weaponAttack (weapon.Name, char.Abilities.Fighting + (if hasFocus (char, weaponStat (weapon, "Group")) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
+        weaponAttack (weapon.Name, char.Abilities.Fighting + (if hasFocus (char, groupFocus (weaponStat (weapon, "Group"))) then 2 else 0) - conditionPenalty (char), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
 
 characterTable = ruleset
 {
@@ -115,7 +122,7 @@ characterTable = ruleset
         Toughness = integer { description = "Constitution, taken off damage." value = max (0, Abilities.Constitution)  editable = none }
         Armor = integer { description = "Armor rating, taken off damage with Toughness." default = 0  minvalue = 0 }
         Speed = integer { description = "10 plus Dexterity, in metres a move." value = 10 + Abilities.Dexterity  editable = none }
-        Initiative = modifier { description = "Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity  valuedice = initiativeRoll  editable = none }
+        Initiative = modifier { description = "Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity - conditionPenalty (characterTable)  valuedice = initiativeRoll  editable = none }
         Interlude = button
         {
             description = "An interlude between scenes restores all Fortune and clears fatigue."
@@ -318,7 +325,7 @@ expanseWeapon = ruleset
     Stats = table
     {
         tableLayout = layout { columns = 3 }
-        Group = string { default = "Pistols"  keys = ["Brawling", "Grenades", "Heavy Weapons", "Light Melee", "Heavy Melee", "Makeshift Weapons", "Pistols", "Rifles"] }
+        Group = string { description = "The focus that adds 2: Accuracy (Pistols, Rifles, Throwing for grenades) or Fighting (Brawling, Light Weapons, Heavy Weapons for melee)." default = "Pistols"  keys = ["Brawling", "Grenades", "Light Melee", "Heavy Melee", "Makeshift Weapons", "Pistols", "Rifles"] }
         Damage = string { description = "Damage dice; melee adds Strength, ranged Perception." default = "2d6" }
         'Short range' = string { description = "Metres." }
         'Long range' = string { description = "Metres." }
