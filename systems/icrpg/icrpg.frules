@@ -12,18 +12,27 @@ icrpgText (natural, total, target, known) =
     + (if known then " vs Target " + toString (target) + ": " + icrpgOutcome (natural, total, target) else if natural == 20 then ": Critical success" else if natural == 1 then ": Fumble" else "")
     + (if natural == 20 then ", roll Ultimate effort" else "")
 
-icrpgResult (natural, total, target, known) =
+icrpgResult (natural, total, target, known, reroll) =
 {
     Text = icrpgText (natural, total, target, known)
     Value = total
     Outcome = if known or natural == 20 or natural == 1 then icrpgOutcome (natural, total, target) else ""
+    Push = reroll
+    PushLabel = "Spend hero coin"
+    PushSets = [{ Field = "characterTable.Hero.Hero Coin"  Value = false }]
 }
 
-icrpgRoll (easeBonus) = ([dice { number = 1  sides = 20  bonus = easeBonus }], ((baseline, throws)->icrpgResult (first (first (throws).rolls), baseline + easeBonus + first (first (throws).rolls), asked, answered)))
+icrpgReroll (modifierTotal) = ([dice { number = 1  sides = 20 }], ((baseline, throws)->icrpgResult (first (first (throws).rolls), modifierTotal + first (first (throws).rolls), asked, answered, 0)))
 
-icrpgTest = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target", icrpgRoll (n)))
+icrpgRoll (easeBonus, coin) = ([dice { number = 1  sides = 20  bonus = easeBonus }], ((baseline, throws)->icrpgResult (first (first (throws).rolls), baseline + easeBonus + first (first (throws).rolls), asked, answered, if coin then icrpgReroll (baseline + easeBonus) else 0)))
 
-icrpgAttack = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target's Defense", icrpgRoll (n)))
+icrpgCheck (coin) = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target", icrpgRoll (n, coin)))
+
+icrpgStrike (coin) = ask ("Easy +3 or Hard -3", 0, (n)->ask ("Target's Defense", icrpgRoll (n, coin)))
+
+icrpgTest = icrpgCheck (false)
+
+icrpgAttack = icrpgStrike (false)
 
 effortRoll (dieSides) = ([dice { number = 1  sides = dieSides }], ((baseline, throws)->{
     Text = toString (max (0, baseline + first (first (throws).rolls))) + " effort"
@@ -34,7 +43,7 @@ stat = custom
 {
     Base = modifier { description = "Points put into the stat at creation and from milestones." default = 0  minvalue = -2  maxvalue = 10 }
     Loot = modifier { description = "Bonus from equipped loot." default = 0  minvalue = 0  maxvalue = 10 }
-    Total = modifier { description = "Roll d20 plus this against the Target." value = Base + Loot  valuedice = icrpgTest  editable = none }
+    Total = modifier { description = "Roll d20 plus this against the Target." value = Base + Loot  valuedice = icrpgCheck (characterTable.Hero.'Hero Coin')  editable = none }
 }
 
 effort (dieSides) = custom
@@ -73,10 +82,10 @@ effortBonus (char, name) =
         case "Ultimate" then char.Effort.Ultimate.Roll
         else char.Effort.'Weapons and Tools'.Roll
 
-weaponAttack (name, attackBonus, dieSides, damageBonus, kind, distance) = custom
+weaponAttack (name, attackBonus, dieSides, damageBonus, kind, distance, coin) = custom
 {
     Name = name
-    Attack = modifier { value = attackBonus  valuedice = icrpgAttack  action = kind  reach = 1  range = distance  editable = none }
+    Attack = modifier { value = attackBonus  valuedice = icrpgStrike (coin)  action = kind  reach = 1  range = distance  editable = none }
     Effort = integer { value = damageBonus  valuedice = effortRoll (dieSides)  render = "d" + toString (dieSides) + (if damageBonus > 0 then "+" + toString (damageBonus) else "")  editable = none }
 }
 
@@ -85,12 +94,12 @@ isWeapon (item) = lootStat (item, "Attack Stat") != ""
 attackFor (char, item) =
     weaponAttack (item.Name, statTotal (char, lootStat (item, "Attack Stat")), effortSides (lootStat (item, "Effort")), effortBonus (char, lootStat (item, "Effort")),
         if lootStat (item, "Attack Stat") == "DEX" then "ranged" else if lootStat (item, "Attack Stat") == "WIS" or lootStat (item, "Attack Stat") == "INT" then "ranged" else "melee",
-        if lootStat (item, "Attack Stat") == "STR" then 1 else 12)
+        if lootStat (item, "Attack Stat") == "STR" then 1 else 12, char.Hero.'Hero Coin')
 
 hpState (char) =
-    if char.Health.Dying then "Dying"
-    else if char.Health.HP < 1 then "Down"
-    else ""
+    if char.Health.HP > 0 then ""
+    else if char.Health.Stabilized then "Stable"
+    else "Dying"
 
 characterTable = ruleset
 {
@@ -137,12 +146,15 @@ characterTable = ruleset
         HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
         Defense = integer { description = "10 plus CON plus armor loot: the Target for attacks against you." value = 10 + Stats.CON.Total + 'Armor Loot'  editable = none }
         'Armor Loot' = integer { default = 0  minvalue = 0 }
-        Dying = bool { description = "At 0 HP you are dying: roll a d4 for the rounds you have left unless someone stabilizes you." default = false  editable = live  indicator = "#555555" }
+        'Dying timer' = integer { description = "At 0 HP you are dying: roll a d4 for the rounds you have left. When it runs out, the hero dies." default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        'Roll timer' = integer { description = "Roll the d4 dying timer." value = 0  valuedice = 1d4  render = "d4"  editable = none }
+        Stabilized = bool { description = "An ally stabilized the hero at 0 HP: no longer dying, but out until healed." default = false  editable = live }
         State = string { value = hpState (characterTable)  visible = none  indicator = "#d64545" }
         Recover = button { description = "A real rest between scenes restores all hit points and ends dying." editable = live  onClick = updates
             {
                 (root.Health.HP) = 'Max HP'
-                (root.Health.Dying) = false
+                (root.Health.'Dying timer') = 0
+                (root.Health.Stabilized) = false
             }
         }
     }
@@ -151,7 +163,7 @@ characterTable = ruleset
     {
         description = "Attacks roll the stat against the target's Defense; on a hit roll the effort die."
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Fists", characterTable.Stats.STR.Total, 4, characterTable.Effort.Basic.Roll, "melee", 1)], map ((item)->attackFor (characterTable, item), filter ((item)->isWeapon (item), characterTable.Loot)))
+        source = concat ([weaponAttack ("Fists", characterTable.Stats.STR.Total, 4, characterTable.Effort.Basic.Roll, "melee", 1, characterTable.Hero.'Hero Coin')], map ((item)->attackFor (characterTable, item), filter ((item)->isWeapon (item), characterTable.Loot)))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -205,7 +217,8 @@ monsterTable = ruleset
         {
             Name = string {}
             Attack = modifier { default = 2  valuedice = icrpgAttack  action = if 'Range sq' > 1 then "ranged" else "melee"  reach = 1  range = 'Range sq' }
-            Effort = integer { description = "Effort die size." default = 6  valuedice = effortRoll (Effort)  render = "d" + toString (Effort) }
+            'Effort die' = integer { description = "Effort die size: 4, 6, 8, 10 or 12." default = 6  minvalue = 4  maxvalue = 12 }
+            Effort = integer { description = "Roll the effort die for damage." value = 0  valuedice = effortRoll ('Effort die')  render = "d" + toString ('Effort die')  editable = none }
             'Range sq' = integer { default = 1 }
         }
     }

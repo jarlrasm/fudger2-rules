@@ -60,6 +60,8 @@ skill (attr) = custom
 
 skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -1)
 
+combatSkill (char, name) = if skillLevel (char, name) < 0 then -2 else skillLevel (char, name)
+
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
@@ -73,7 +75,7 @@ weaponAttack (name, bonus, damage, kind, distance) = custom
 
 attackFor (char, weapon) =
     weaponAttack (weapon.Name,
-        char.Combat.'Attack Bonus' + skillLevel (char, weaponStat (weapon, "Skill")) + modOf (char, weaponStat (weapon, "Attribute")),
+        char.Combat.'Attack Bonus' + combatSkill (char, weaponStat (weapon, "Skill")) + modOf (char, weaponStat (weapon, "Attribute")),
         weaponStat (weapon, "Damage"),
         if weaponStat (weapon, "Skill") == "Shoot" then "ranged" else "melee",
         firstNumber (weaponStat (weapon, "Range")))
@@ -188,7 +190,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", Combat.'Attack Bonus' + skillLevel (characterTable, "Punch") + Attributes.STR.Modifier, "d2", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", Combat.'Attack Bonus' + combatSkill (characterTable, "Punch") + Attributes.STR.Modifier, "d2", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack

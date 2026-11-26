@@ -5,7 +5,7 @@ The world is ending. The Demon Lord presses against reality, the empire is colla
 
 ## Rolls
 - A **challenge roll** is d20 + attribute modifier (attribute - 10). **10 or more succeeds.**
-- **Boons and banes**: circumstances add boons (good) or banes (bad). They cancel one for one. Roll a d6 for each one left; only the **highest** counts, added for boons and subtracted for banes. Set Boons on the sheet before rolling (negative for banes); frightened, impaired and fatigued each add a bane on their own.
+- **Boons and banes**: circumstances add boons (good) or banes (bad). They cancel one for one. Roll a d6 for each one left; only the **highest** counts, added for boons and subtracted for banes. Set Boons on the sheet before rolling (negative for banes); diseased, fatigued, frightened, impaired and poisoned each add a bane on their own.
 - An **attack roll** must reach the target's Defense, or the attribute the attack names. A total of **20 or more that beats the target by 5** deals an extra 1d6 damage.
 
 ## Turns

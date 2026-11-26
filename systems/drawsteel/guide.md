@@ -22,7 +22,7 @@ Abilities never miss outright: each tier has its own effect, written on the abil
 - **Heroic resources** (Wrath, Piety, Essence, Ferocity, Discipline, Insight, Focus, Clarity, Drama) rise each turn and pay for heroic abilities. **Surges** add damage or extend potencies. **Victories** count encounters won since the last respite.
 
 ## Stamina
-At half stamina or less a hero is **winded**. At 0 they are **dying** (can still act, but bleed), and at minus their winded value they die. Spending a **Recovery** as a main action regains a third of max stamina. A respite restores recoveries and stamina.
+At half stamina or less a hero is **winded**. At 0 they are **dying** (can still act, but bleed), and at minus their winded value they die. Spending a **Recovery** as a main action regains a third of max stamina. A respite restores recoveries and stamina, and turns the hero's Victories into XP (the Respite button does both).
 
 ## Monsters
 Monsters have a level, organization (minion to solo), role and **EV** (encounter value) for budgeting; a minion's EV buys a group of four. Each hero adds 4 + 2 × level to the party's encounter strength, plus one more hero for every 2 Victories on average. Spending less EV than that strength minus one hero is trivial, less than the strength easy, up to one hero over it standard, up to three heroes over it hard, and more extreme. create_encounter and get_entity on an encounter give this rating as difficulty, and the Director sees it on the encounter page. Their abilities list a fixed power-roll bonus and three tiers like heroes'. Minions share a stamina pool.

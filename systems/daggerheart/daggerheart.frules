@@ -37,6 +37,24 @@ dualityDice (char) = ask ("Difficulty", dualityAskedRoll (char.Character.Roll))
 
 plainDuality = dualityRoll ("Normal", 0)
 
+adversaryText (natural, total, evasion) =
+    toString (total)
+    + (if evasion > 0 then " vs Evasion " + toString (evasion) + (if natural == 20 then ": critical hit" else if total >= evasion then ": hit" else ": miss")
+        else if natural == 20 then ", critical" else "")
+
+adversaryResult (natural, total, evasion) =
+{
+    Text = adversaryText (natural, total, evasion)
+    Value = total
+    Outcome = if natural == 20 then "Critical" else if evasion < 1 then "" else if total >= evasion then "Hit" else "Miss"
+}
+
+adversaryRoll (evasion) = ([1d20], ((baseline, throws)->adversaryResult (first (first (throws).rolls), baseline + first (first (throws).rolls), evasion)))
+
+adversaryAsked = ([1d20], ((baseline, throws)->adversaryResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked)))
+
+adversaryAttack = ask ("Evasion", adversaryAsked)
+
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
 rangeFeet (text) =
@@ -248,7 +266,7 @@ creatureTable = ruleset
         HP = slots { description = "Marked hit points. Fully marked means defeated." reference = ["srd", 70] number = 'HP Slots'  editable = live  indicator = "#d64545"  indicatorLabel = "HP marked" }
         'Stress Slots' = integer { default = 3  minvalue = 0 }
         Stress = slots { description = "Marked stress, spent on the adversary's features." reference = ["srd", 70] number = 'Stress Slots'  editable = live  indicator = "#8e5cc4" }
-        ATK = modifier { description = "Bonus to the adversary's d20 attack roll." reference = ["srd", 70] default = 1  valuedice = ([1d20], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls)) + (if first (first (throws).rolls) == 20 then ", critical" else "")  Value = baseline + first (first (throws).rolls)  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))  action = melee  reach = 5 }
+        ATK = modifier { description = "Bonus to the adversary's d20 attack roll." reference = ["srd", 70] default = 1  valuedice = adversaryAttack  action = if Range == "Melee" or Range == "Very Close" or Range == "" then "melee" else "ranged"  reach = rangeFeet (Range)  range = rangeFeet (Range) }
         Attack = string {}
         Range = string { keys = ["Melee", "Very Close", "Close", "Far", "Very Far"] }
         Damage = string {}

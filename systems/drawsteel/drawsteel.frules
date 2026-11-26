@@ -58,6 +58,17 @@ characteristicOf (char, name) =
         case "Presence" then char.Characteristics.Presence
         else 0
 
+abilityKind (text, fallback) =
+    if contains (toLower (text), "ranged") or contains (toLower (text), "within") then "ranged"
+    else if contains (toLower (text), "melee") or contains (toLower (text), "burst") or contains (toLower (text), "aura") then "melee"
+    else fallback
+
+abilityReach (text) = max (1, bonusWithValue ([[text]], "[Mm]elee ([0-9]+)"), bonusWithValue ([[text]], "([0-9]+) (?:burst|aura)"))
+
+abilityRange (text) =
+    if contains (toLower (text), "ranged") then bonusWithValue ([[text]], "[Rr]anged ([0-9]+)")
+    else bonusWithValue ([[text]], "within ([0-9]+)")
+
 stateOf (stamina, maxStamina) =
     if stamina <= 0 - maxStamina / 2 then "Dead"
     else if stamina <= 0 then "Dying"
@@ -77,6 +88,7 @@ characterTable = ruleset
         Subclass = string {}
         Level = integer { description = "Hero level from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
         Victories = integer { description = "Victories earned this adventure, turned into experience when you rest." default = 0  minvalue = 0  editable = live }
+        XP = integer { description = "Experience: each respite turns your Victories into XP, which raises your level." default = 0  minvalue = 0  editable = live }
         Roll = selector { description = "Edges add 2 to the power roll and banes take 2 away; doubles shift the tier instead." options = ["Double bane", "Bane", "Normal", "Edge", "Double edge"]  labels = ["2 bane", "Bane", "Normal", "Edge", "2 edge"]  colors = ["red", "red", "white", "green", "green"]  hold = ["", "Ctrl", "", "Shift", ""]  default = "Normal"  editable = live  save = nosave }
     }
 
@@ -106,11 +118,13 @@ characterTable = ruleset
                 (root.Health.Recoveries) = max (0, Recoveries - 1)
             }
         }
-        Respite = button { description = "A day of rest: regain all stamina and recoveries."  editable = live  onClick = updates
+        Respite = button { description = "A day of rest: regain all stamina and recoveries, and turn Victories into XP."  editable = live  onClick = updates
             {
                 (root.Health.Stamina) = 'Max Stamina'
                 (root.Health.Temporary) = 0
                 (root.Health.Recoveries) = 'Max recoveries'
+                (root.Hero.XP) = Hero.XP + Hero.Victories
+                (root.Hero.Victories) = 0
             }
         }
     }
@@ -165,7 +179,7 @@ characterTable = ruleset
             'Tier 1' = string {}
             'Tier 2' = string {}
             'Tier 3' = string {}
-            Roll = modifier { value = characteristicOf (characterTable, Characteristic)  valuedice = powerRoll (characterTable.Hero.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  editable = none  action = if contains (toLower (Distance), "ranged") then "ranged" else if contains (toLower (Distance), "melee") then "melee" else ""  reach = 1  range = bonusWithValue ([[Distance]], "[Rr]anged ([0-9]+)") }
+            Roll = modifier { value = characteristicOf (characterTable, Characteristic)  valuedice = powerRoll (characterTable.Hero.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  editable = none  action = abilityKind (Distance, "")  reach = abilityReach (Distance)  range = abilityRange (Distance) }
             Effect = string { multiline = true }
         }
     }
@@ -251,7 +265,7 @@ monsterTable = ruleset
             Type = string { default = "Main action" }
             Distance = string {}
             Target = string {}
-            Bonus = modifier { default = 2  valuedice = powerRoll (Monster.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  action = if contains (toLower (Distance), "ranged") then "ranged" else "melee"  reach = 1  range = bonusWithValue ([[Distance]], "[Rr]anged ([0-9]+)") }
+            Bonus = modifier { default = 2  valuedice = powerRoll (Monster.Roll, 'Tier 1', 'Tier 2', 'Tier 3')  action = abilityKind (Distance, "melee")  reach = abilityReach (Distance)  range = abilityRange (Distance) }
             'Tier 1' = string {}
             'Tier 2' = string {}
             'Tier 3' = string {}

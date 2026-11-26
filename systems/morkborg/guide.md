@@ -18,7 +18,7 @@ Players roll everything. Monsters do not roll to hit.
 At 0 HP a scvm is **broken**: roll on the broken table. Below 0 they die.
 
 ## Omens and powers
-**Omens** (d2 a day for most) let a player reroll any die, lower damage to 0, or make a monster reroll. **Powers** come from scrolls: roll Presence + d4 for uses per day, and each use is a Presence test DR12. A failure ends the uses and hurts.
+**Omens** (d2 a day for most, d4 for the Esoteric Hermit and Heretical Priest; the Omen Die follows the class) let a player reroll any die, lower damage to 0, or make a monster reroll. While the scvm has omens, every test offers Spend an omen, which rerolls it and takes one off. **Powers** come from scrolls: roll Presence + d4 for uses per day, and each use is a Presence test DR12. A failure ends the uses and hurts.
 
 ## Style
 The world is ending. Roll the Calendar of Nechrubel each day; when the last misery strikes, it is over. Be brutal and quick, and make every room a bad idea.

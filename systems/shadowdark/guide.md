@@ -5,7 +5,7 @@ Roll **d20 + stat modifier** (plus talents and bonuses) and meet or beat a DC: 9
 
 - **Advantage** rolls two d20 and keeps the best, **disadvantage** the worst (Shift and Ctrl).
 - A natural 20 is a critical success (double weapon damage dice on attacks); a natural 1 always fails.
-- **Luck tokens** can be spent to reroll any roll.
+- **Luck tokens** can be spent to reroll any roll: while Luck is ticked, every check and attack offers Spend luck, which rerolls and unticks it.
 
 ## Spellcasting
 Priests (WIS) and wizards (INT) roll a spellcasting check: d20 + modifier against 10 + the spell's tier. On a failure, the spell is **lost** until the caster rests. A natural 1 brings a mishap or a deity's displeasure.
@@ -16,7 +16,7 @@ Torches and lanterns burn for **one hour of real time**. The Torch clock on the 
 ## Combat
 1. Everyone rolls **initiative** (d20 + DEX), and the highest goes first; then play continues **clockwise** around the table.
 2. On a turn: move up to near (30 ft) and take an action, or move twice.
-3. Attacks: d20 + STR (melee) or DEX (ranged and finesse weapons) against AC. Damage comes off HP.
+3. Attacks: d20 + STR (melee) or DEX (ranged and finesse weapons) against AC. Thrown weapons also get a ranged "(thrown)" attack with STR or DEX, whichever is better. Monster attacks ask for the target's AC and are ranged when their Range is Near or Far. Damage comes off HP.
 4. At 0 HP a character is **dying**: they die in 1d4 + CON modifier rounds unless stabilised. Each turn they roll a d20, and a 20 brings them back with 1 HP.
 
 ## Advancement
