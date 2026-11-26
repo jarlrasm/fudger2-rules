@@ -33,13 +33,24 @@ m20Result (rolls, difficulty, willpower) =
 
 m20Roll (pool, difficulty) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, difficulty, 0)))
 
-m20Asked (pool, willpower) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, if answered then asked else 6, willpower)))
+m20Asked (pool, willpower, fallback) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->m20Result (first (throws).rolls, if answered then asked else fallback, willpower)))
 
 willpowerSuccess (char) = if char.Mage.'Spend Willpower' == "Spend" and char.Mage.Willpower > 0 then 1 else 0
 
-m20Dice (char, pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 6, m20Asked (pool + n - woundPenalty (char), willpowerSuccess (char))))
+m20DiceAt (char, pool, difficulty) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", difficulty, m20Asked (pool + n - woundPenalty (char), willpowerSuccess (char), difficulty)))
 
-m20Magick (char) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 4, m20Asked (char.Mage.Arete + n - woundPenalty (char), willpowerSuccess (char))))
+m20Dice (char, pool) = m20DiceAt (char, pool, 6)
+
+magickLevels = ["3, lowered by Quintessence", "4: coincidental Sphere 1", "5: coincidental Sphere 2, vulgar Sphere 1", "6: coincidental Sphere 3, vulgar Sphere 2", "7: coincidental Sphere 4, vulgar Sphere 3", "8: coincidental Sphere 5, vulgar Sphere 4", "9: vulgar Sphere 5"]
+
+m20Magick (char) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", magickLevels, 3, m20Asked (char.Mage.Arete + n - woundPenalty (char), willpowerSuccess (char), 6)))
+
+untrainedRoll = ([dice { number = 0  sides = 10 }], ((baseline, throws)->{ Text = "Can't be rolled untrained"  Outcome = "Failure" }))
+
+abilityDice (char, abilityKind, dots, pool) =
+    if abilityKind == "Knowledge" and dots == 0 then untrainedRoll
+    else if abilityKind == "Skill" and dots == 0 then m20DiceAt (char, pool, 7)
+    else m20DiceAt (char, pool, 6)
 
 damageRoll (pool) = ([dice { number = max (0, pool)  sides = 10 }],
     ((baseline, throws)->{ Text = plural (count (filter ((x)->x >= 6, first (throws).rolls)), "health level", "health levels") + " of damage"  Value = count (filter ((x)->x >= 6, first (throws).rolls)) }))
@@ -74,11 +85,11 @@ attributeValue (char, name) =
         case "Intelligence" then char.Attributes.Intelligence
         else char.Attributes.Wits
 
-ability (usual) = custom
+ability (usual, abilityKind) = custom
 {
     Dots = integer { description = "Ability dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
     With = string { description = "The attribute it rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
-    Pool = integer { description = "Attribute plus ability, rolled against the difficulty." value = Dots + attributeValue (characterTable, With)  valuedice = m20Dice (characterTable, Dots + attributeValue (characterTable, With))  editable = none }
+    Pool = integer { description = "Attribute plus ability, rolled against the difficulty. Untrained, a Skill rolls at +1 difficulty and a Knowledge can't be rolled." value = if abilityKind == "Knowledge" and Dots == 0 then 0 else Dots + attributeValue (characterTable, With)  valuedice = abilityDice (characterTable, abilityKind, Dots, Dots + attributeValue (characterTable, With))  editable = none }
 }
 
 noDots = { Dots = 0 }
@@ -91,21 +102,23 @@ noStats = { Stats = { Damage = "" } }
 
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "m20Weapon", noStats), "Stats", noStats.Stats), field, "")
 
-weaponAttack (name, pool, damagePool, damageKind, kind, distance) = custom
+weaponAttack (name, pool, difficulty, damagePool, damageKind, kind, distance) = custom
 {
     Name = name
-    Attack = integer { value = pool  valuedice = m20Dice (characterTable, pool)  action = kind  reach = 2  range = distance  editable = none }
+    Attack = integer { value = pool  valuedice = m20DiceAt (characterTable, pool, difficulty)  action = kind  reach = 2  range = distance  editable = none }
     Damage = integer { value = damagePool  valuedice = damageRoll (damagePool)  editable = none }
     Kind = damageKind
 }
+
+weaponDifficulty (weapon) = if toInt (weaponStat (weapon, "Difficulty")) > 0 then toInt (weaponStat (weapon, "Difficulty")) else 6
 
 meleeDamage (char, weapon) = if contains (weaponStat (weapon, "Damage"), "Str") then char.Attributes.Strength + firstNumber (weaponStat (weapon, "Damage")) else firstNumber (weaponStat (weapon, "Damage"))
 
 attackFor (char, weapon) =
     if firstNumber (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Firearms") - woundPenalty (char), firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Kind"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Firearms"), weaponDifficulty (weapon), firstNumber (weaponStat (weapon, "Damage")), weaponStat (weapon, "Kind"), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Melee") - woundPenalty (char), meleeDamage (char, weapon), weaponStat (weapon, "Kind"), "melee", 2)
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + abilityDots (char, char.Skills, "Melee"), weaponDifficulty (weapon), meleeDamage (char, weapon), weaponStat (weapon, "Kind"), "melee", 2)
 
 characterTable = ruleset
 {
@@ -143,51 +156,51 @@ characterTable = ruleset
     {
         description = "Talents: an untrained Talent rolls the attribute alone."
         tableLayout = layout { columns = 1 }
-        Alertness = ability ("Perception")
-        Art = ability ("Appearance")
-        Athletics = ability ("Dexterity")
-        Awareness = ability ("Perception")
-        Brawl = ability ("Dexterity")
-        Empathy = ability ("Perception")
-        Expression = ability ("Charisma")
-        Intimidation = ability ("Manipulation")
-        Leadership = ability ("Charisma")
-        Streetwise = ability ("Charisma")
-        Subterfuge = ability ("Manipulation")
+        Alertness = ability ("Perception", "Talent")
+        Art = ability ("Appearance", "Talent")
+        Athletics = ability ("Dexterity", "Talent")
+        Awareness = ability ("Perception", "Talent")
+        Brawl = ability ("Dexterity", "Talent")
+        Empathy = ability ("Perception", "Talent")
+        Expression = ability ("Charisma", "Talent")
+        Intimidation = ability ("Manipulation", "Talent")
+        Leadership = ability ("Charisma", "Talent")
+        Streetwise = ability ("Charisma", "Talent")
+        Subterfuge = ability ("Manipulation", "Talent")
     }
 
     Skills = table
     {
         description = "Skills: an untrained Skill rolls the attribute at +1 difficulty."
         tableLayout = layout { columns = 1 }
-        Crafts = ability ("Dexterity")
-        Drive = ability ("Dexterity")
-        Etiquette = ability ("Charisma")
-        Firearms = ability ("Dexterity")
-        'Martial Arts' = ability ("Dexterity")
-        Meditation = ability ("Wits")
-        Melee = ability ("Dexterity")
-        Research = ability ("Intelligence")
-        Stealth = ability ("Dexterity")
-        Survival = ability ("Perception")
-        Technology = ability ("Intelligence")
+        Crafts = ability ("Dexterity", "Skill")
+        Drive = ability ("Dexterity", "Skill")
+        Etiquette = ability ("Charisma", "Skill")
+        Firearms = ability ("Dexterity", "Skill")
+        'Martial Arts' = ability ("Dexterity", "Skill")
+        Meditation = ability ("Wits", "Skill")
+        Melee = ability ("Dexterity", "Skill")
+        Research = ability ("Intelligence", "Skill")
+        Stealth = ability ("Dexterity", "Skill")
+        Survival = ability ("Perception", "Skill")
+        Technology = ability ("Intelligence", "Skill")
     }
 
     Knowledges = table
     {
         description = "Knowledges: an untrained Knowledge can't be rolled."
         tableLayout = layout { columns = 1 }
-        Academics = ability ("Intelligence")
-        Computer = ability ("Intelligence")
-        Cosmology = ability ("Intelligence")
-        Enigmas = ability ("Intelligence")
-        Esoterica = ability ("Intelligence")
-        Investigation = ability ("Perception")
-        Law = ability ("Intelligence")
-        Medicine = ability ("Intelligence")
-        Occult = ability ("Intelligence")
-        Politics = ability ("Intelligence")
-        Science = ability ("Intelligence")
+        Academics = ability ("Intelligence", "Knowledge")
+        Computer = ability ("Intelligence", "Knowledge")
+        Cosmology = ability ("Intelligence", "Knowledge")
+        Enigmas = ability ("Intelligence", "Knowledge")
+        Esoterica = ability ("Intelligence", "Knowledge")
+        Investigation = ability ("Perception", "Knowledge")
+        Law = ability ("Intelligence", "Knowledge")
+        Medicine = ability ("Intelligence", "Knowledge")
+        Occult = ability ("Intelligence", "Knowledge")
+        Politics = ability ("Intelligence", "Knowledge")
+        Science = ability ("Intelligence", "Knowledge")
     }
 
     Spheres = table
@@ -209,7 +222,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 4  size = wide }
         Arete = integer { description = "Enlightenment: the dice pool for every magickal effect." default = 1  minvalue = 1  maxvalue = 10 }
-        Magick = integer { description = "Roll Arete. Coincidental difficulty is the highest Sphere used + 3, vulgar + 4; Quintessence lowers it." value = Arete  valuedice = m20Magick (characterTable)  editable = none }
+        Magick = integer { description = "Roll Arete. Coincidental difficulty is the highest Sphere used + 3, vulgar + 4; Quintessence lowers it. The roll offers these difficulties to pick from." value = Arete  valuedice = m20Magick (characterTable)  editable = none }
         'Permanent Willpower' = integer { default = 5  minvalue = 1  maxvalue = 10 }
         Willpower = integer { description = "Spend one for an automatic success." default = 'Permanent Willpower'  minvalue = 0  maxvalue = 10  editable = live }
         'Spend Willpower' = selector { description = "Hold Shift while rolling, or switch it on, for one automatic success; then lower Willpower." options = ["No", "Spend"]  labels = ["No", "Spend"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
@@ -267,7 +280,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Punch", characterTable.Attributes.Dexterity + abilityDots (characterTable, characterTable.Talents, "Brawl") - woundPenalty (characterTable), characterTable.Attributes.Strength, "Bashing", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Punch", characterTable.Attributes.Dexterity + abilityDots (characterTable, characterTable.Talents, "Brawl"), 6, characterTable.Attributes.Strength, "Bashing", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -295,7 +308,7 @@ creatureTable = ruleset
         Physical = integer { description = "Strength, Dexterity and Stamina, as Str/Dex/Sta." default = 2 }
         Willpower = integer { default = 4  editable = live }
         Arete = integer { default = 0 }
-        Magick = integer { value = Arete  valuedice = m20Roll (Arete, 6)  editable = none }
+        Magick = integer { value = Arete  valuedice = ask ("Difficulty", magickLevels, 3, m20Asked (Arete, 0, 6))  editable = none }
         Soak = integer { default = 2  valuedice = soakPool (Soak) }
         Initiative = modifier { default = 4  valuedice = initiativeRoll }
         Damage = slots { number = 7  labels = ["Bruised", "Hurt", "Injured", "Wounded", "Mauled", "Crippled", "Incap."]  editable = live  indicator = "#d64545" }
