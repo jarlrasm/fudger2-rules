@@ -26,7 +26,7 @@ msSecond (rolls) = if count (rolls) == 0 then 0 else mod (first (rolls), 100)
 msRoll (mode) = ([dice { number = 1  sides = 100 }, dice { number = if mode == "Advantage" or mode == "Disadvantage" then 1 else 0  sides = 100  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
     ((baseline, throws)->msResult (baseline + asked, msPick (mode, mod (first (first (throws).rolls), 100), msSecond (item (1, throws).rolls)))))
 
-hundred = msRoll ("Normal")
+hundred = ([1d100], ((baseline, throws)->msResult (baseline, mod (first (first (throws).rolls), 100))))
 
 checkRoll (char) = ask ("Skill bonus", 0, msRoll (char.Basics.Roll))
 
