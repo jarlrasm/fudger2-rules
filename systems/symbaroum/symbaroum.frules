@@ -29,8 +29,24 @@ symAttack (damage) = ask ("Target Defense", 10, symRoll (-1, if damage == "" the
 initiativeResult (quick, vigilant) =
 {
     Text = "Quick " + toString (quick) + ", Vigilant " + toString (vigilant)
-    Value = quick
+    Value = quick * 100 + vigilant
 }
+
+initiativeOrder (text) =
+    if contains (text, "Quick") then toInt (item (1, split (" ", replace (",", "", text)))) * 100 + toInt (item (3, split (" ", replace (",", "", text))))
+    else toInt (text) * 100
+
+deathText (x) =
+    if x == 1 then "Rolled 1: success, wakes up with 1d4 Toughness"
+    else if x == 20 then "Rolled 20: two failures"
+    else if x <= 10 then "Rolled " + toString (x) + ": success"
+    else "Rolled " + toString (x) + ": failure"
+
+deathRoll = ([1d20], ((baseline, throws)->{
+    Text = deathText (first (first (throws).rolls))
+    Value = first (first (throws).rolls)
+    Outcome = if first (first (throws).rolls) == 1 then "Critical success" else if first (first (throws).rolls) <= 10 then "Success" else "Failure"
+}))
 
 initiativeRoll (vigilant) = ([dice { number = 0  sides = 20  label = "" }],
     ((baseline, throws)->initiativeResult (baseline, vigilant)))
@@ -121,6 +137,7 @@ characterTable = ruleset
         Defense = integer { description = "Defense test: roll Quick against the attacker to avoid being hit." value = Attributes.Quick.Value - impeding (characterTable)  valuedice = ask ("Attacker Accurate", 10, symRoll (-1, ""))  editable = none }
         Armor = string { description = "The armor's protection die, rolled to reduce damage." value = protection (characterTable)  editable = none }
         Initiative = integer { description = "Initiative: highest Quick acts first, Vigilant breaks ties." value = Attributes.Quick.Value  valuedice = initiativeRoll (Attributes.Vigilant.Value)  editable = none }
+        'Death test' = integer { description = "Dying at 0 Toughness: roll d20 each turn, 10 or less succeeds. Three successes stabilise, three failures kill; a 1 wakes you with 1d4 Toughness, a 20 is two failures." value = 10  valuedice = deathRoll  editable = none }
     }
 
     Corruption = table
@@ -302,7 +319,7 @@ Symbaroum = system
     Armor = symArmor
     secondaryTypes = ["Weapons", "Armor"]
     description = "Symbaroum: dark fantasy where the players roll every d20 under eight attributes"
-    initiativeCompare (item1, item2) = compare (item1, item2)
+    initiativeCompare (item1, item2) = compare (initiativeOrder (item1), initiativeOrder (item2))
     quickdice = [1d20, 1d4, 1d6, 1d8, 1d10]
     cssFiles = ["/systems/symbaroum/symbaroum.css"]
     libraries = ["/systems/names/oldworld.json", "/systems/names/gothic.json", "/systems/names/faerie.json"]

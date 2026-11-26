@@ -11,7 +11,7 @@ When someone opposes the test, their attribute modifies it: the target number ch
 - **Initiative** is Quick, ties broken by Vigilant. No roll.
 - An attack hits on a successful Accurate test against the target's Defense. **Damage** is the weapon's die (plus bonuses) minus the target's **armor** die.
 - Damage reduces **Toughness** (Strong, at least 10). Damage higher than the **pain threshold** (half Strong) lets the attacker knock the target down or impose another effect.
-- At 0 Toughness a character is **dying**: they make a death test each turn: a d20 of 10 or less is a success, higher a failure. Three successes and they stabilise, three failures and they die.
+- At 0 Toughness a character is **dying**: they make a death test each turn: a d20 of 10 or less is a success, higher a failure. Three successes and they stabilise, three failures and they die. A 1 wakes them at once with 1d4 Toughness; a 20 counts as two failures. The sheet's Death test rolls it.
 - Armor's **impeding** value lowers Defense and Discreet tests.
 
 ## Corruption
