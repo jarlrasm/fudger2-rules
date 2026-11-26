@@ -13,33 +13,44 @@ mbText (natural, total, dr) =
     + (if dr > 0 then " vs DR" + toString (dr) else "")
     + (if natural == 20 then ": crit" else if natural == 1 then ": fumble" else if dr < 1 then "" else if total >= dr then ": success" else ": failure")
 
-mbResult (natural, total, dr) =
+mbResult (natural, total, dr, reroll, omens) =
 {
     Text = mbText (natural, total, dr)
     Value = total
     Outcome = mbOutcome (natural, total, dr)
+    Push = reroll
+    PushLabel = "Spend an omen"
+    PushSets = [{ Field = "characterTable.Status.Omens"  Value = omens - 1 }]
 }
 
-mbTest (dr) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dr > 0 then dr else asked)))
+mbReroll (modifierTotal, dr) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), modifierTotal + first (first (throws).rolls), if dr > 0 then dr else asked, 0, 0)))
+
+mbOmenTest (dr, omens) = ([1d20], ((baseline, throws)->mbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dr > 0 then dr else asked, if omens > 0 then mbReroll (baseline, dr) else 0, omens)))
+
+mbTest (dr) = mbOmenTest (dr, 0)
 
 mbDice = ask ("DR", 12, mbTest (0))
+
+mbScumDice (omens) = ask ("DR", 12, mbOmenTest (0, omens))
+
+omenSides (scumClass) = if scumClass == "Esoteric Hermit" or scumClass == "Heretical Priest" then 4 else 2
 
 dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
-weaponAttack (name, bonus, damage, kind) = custom
+weaponAttack (name, bonus, damage, kind, omens) = custom
 {
     Name = name
-    Attack = modifier { value = bonus  valuedice = mbDice  action = kind  reach = 2 }
+    Attack = modifier { value = bonus  valuedice = mbScumDice (omens)  action = kind  reach = 2 }
     Damage = damage
 }
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Kind") == "Ranged" then
-        weaponAttack (weapon.Name, char.Abilities.Presence, weaponStat (weapon, "Damage"), "ranged")
+        weaponAttack (weapon.Name, char.Abilities.Presence, weaponStat (weapon, "Damage"), "ranged", char.Status.Omens)
     else
-        weaponAttack (weapon.Name, char.Abilities.Strength, weaponStat (weapon, "Damage"), "melee")
+        weaponAttack (weapon.Name, char.Abilities.Strength, weaponStat (weapon, "Damage"), "melee", char.Status.Omens)
 
 armourText (tier) =
     if tier == 1 then "-d2 damage, no penalty"
@@ -63,10 +74,10 @@ characterTable = ruleset
     Abilities = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Strength = modifier { description = "Strength: hitting, lifting and grappling." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Agility = modifier { description = "Agility: dodging, sneaking and balance. Also your defence." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Presence = modifier { description = "Presence: perception, charm, ranged aim and powers." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
-        Toughness = modifier { description = "Toughness: resisting poison, cold and falling unconscious." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbDice }
+        Strength = modifier { description = "Strength: hitting, lifting and grappling." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbScumDice (Status.Omens) }
+        Agility = modifier { description = "Agility: dodging, sneaking and balance. Also your defence." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbScumDice (Status.Omens) }
+        Presence = modifier { description = "Presence: perception, charm, ranged aim and powers." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbScumDice (Status.Omens) }
+        Toughness = modifier { description = "Toughness: resisting poison, cold and falling unconscious." default = 0  minvalue = -3  maxvalue = 6  valuedice = mbScumDice (Status.Omens) }
     }
 
     Status = table
@@ -77,10 +88,10 @@ characterTable = ruleset
         Down = string { value = if HP < 0 then "Dead" else if HP < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
         Omens = integer { description = "Omens: spend one to reroll, deal maximum damage, or lower damage taken." default = 1  minvalue = 0  editable = live  indicator = "#d4b106" }
         Rest = integer { description = "Roll d6 for the hit points a night's sleep heals, or d4 for a short rest with food and drink."  default = 0  valuedice = 1d6 }
-        'Omen Die' = integer { description = "Roll for omens at the start of each day." default = 0  valuedice = 1d2 }
+        'Omen Die' = integer { description = "Roll for omens at the start of each day: d2, or d4 for an Esoteric Hermit or Heretical Priest." default = 0  valuedice = ([dice { number = 1  sides = omenSides (Scum.Class) }], ((baseline, throws)->first (first (throws).rolls))) }
         Powers = integer { description = "Scrolls of power the character can read, if any." default = 0  minvalue = 0  editable = live }
         'Power Uses' = integer { description = "Roll d4 plus Presence each morning: how many times you can use powers today." default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Presence + first (first (throws).rolls))) + " uses of powers today"  Value = max (0, Abilities.Presence + first (first (throws).rolls)) }))  editable = none }
-        Defence = modifier { description = "Defence test with Agility when attacked: roll d20 plus Agility." value = Abilities.Agility  valuedice = mbDice  editable = none }
+        Defence = modifier { description = "Defence test with Agility when attacked: roll d20 plus Agility." value = Abilities.Agility  valuedice = mbScumDice (Omens)  editable = none }
         Initiative = integer { description = "Party initiative: d6 plus Agility." default = 0  valuedice = ([1d6], ((baseline, throws)->{ Text = toString (Abilities.Agility + first (first (throws).rolls))  Value = Abilities.Agility + first (first (throws).rolls) })) }
         Infected = bool { description = "Infected characters lose HP each day until cured." default = false  editable = live  indicator = "#3fa34d" }
         Silver = integer { description = "Silver coins carried." default = 0  minvalue = 0  editable = live }
@@ -106,7 +117,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", Abilities.Strength, "d2", "melee")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", Abilities.Strength, "d2", "melee", Status.Omens)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -207,6 +218,7 @@ MorkBorg = system
     Scrolls = scrollStats
     secondaryTypes = ["Weapons", "Scrolls"]
     description = "MÖRK BORG: a doom metal art-punk game of dying in a dying world"
+    initiativeCompare (item1, item2) = compare (item1, item2)
     quickdice = [1d20, 1d2, 1d4, 1d6, 1d8, 1d10]
     cssFiles = ["/systems/morkborg/morkborg.css"]
     libraries = ["/systems/names/gothic.json", "/systems/names/barbarian.json"]
