@@ -2,7 +2,8 @@
 
 Every item must name the system, a type the system has, and a ruleset the
 system defines, and every table and field it fills in must exist in that
-ruleset. A name that does not match fails silently in the app (the value is
+ruleset. Random tables (type Tables) must have valid dice and ranges, and
+every item or table they link must be in the libraries the system lists. A name that does not match fails silently in the app (the value is
 simply not shown), so this catches typos in import scripts.
 
     python3 tools/check_library.py systems/daggerheart/daggerheart.frules systems/daggerheart/daggerheart.json
@@ -50,16 +51,69 @@ def open_tables(body):
     return set(n.strip("'") for n in re.findall(r"([A-Za-z0-9]+|'[A-Za-z0-9 ]+')\s*=\s*keyvalues\s*\{[^{}]*?\beditablekeys\b", body))
 
 
+DICE = re.compile(r"^\s*(\d*)d(\d+)\s*(?:([+-])\s*(\d+))?\s*$", re.I)
+
+
+def dice_range(dice):
+    if dice.strip().lower() == "d66":
+        return (11, 66)
+    match = DICE.match(dice)
+    if not match:
+        return None
+    count = int(match.group(1) or 1)
+    bonus = int(match.group(4) or 0) * (-1 if match.group(3) == "-" else 1)
+    return (count + bonus, count * int(match.group(2)) + bonus)
+
+
+def table_problems(item, names):
+    table = item.get("table")
+    label = item["name"]
+    if not isinstance(table, dict) or not table.get("entries"):
+        return [f"{label}: a table needs entries"]
+    entries = table["entries"]
+    problems = [f"{label}: an entry needs text, an item, a table or again"
+                for entry in entries if not any(key in entry for key in ("text", "item", "table", "again"))]
+    if "dice" in table:
+        found = dice_range(table["dice"])
+        if not found:
+            return problems + [f"{label}: dice {table['dice']} are not like 1d20, 2d6 or d66"]
+        spans = sorted((entry.get("from"), entry.get("to")) for entry in entries)
+        if not all(isinstance(low, int) and isinstance(high, int) and found[0] <= low <= high <= found[1] for low, high in spans):
+            problems.append(f"{label}: every entry needs from and to between {found[0]} and {found[1]}")
+        elif any(nxt[0] <= prev[1] for prev, nxt in zip(spans, spans[1:])):
+            problems.append(f"{label}: entries overlap")
+    for entry in entries:
+        for kind in ("item", "table"):
+            ref = entry.get(kind)
+            if ref and ref.get("name", "").strip().lower() not in names[kind]:
+                problems.append(f"{label}: no {kind} called {ref.get('name')} in the system's libraries")
+    return problems
+
+
+def linkable_names(system_body, library):
+    paths = re.findall(r'"([^"]+\.json)"', " ".join(re.findall(r"(?<![A-Za-z])libraries\s*=\s*\[([^\]]*)\]", system_body)))
+    entities = list(library["entities"])
+    for path in paths:
+        target = ROOT / path.lstrip("/")
+        if target.exists():
+            entities += json.load(open(target)).get("entities", [])
+    return {"table": {e["name"].strip().lower() for e in entities if e.get("type") == "Tables"},
+            "item": {e["name"].strip().lower() for e in entities if e.get("type") != "Tables"}}
+
+
 def main(rules_path, library_path):
     text = source("/" + str(Path(rules_path).resolve().relative_to(ROOT)))
     found = blocks(text)
     systems = [name for name, defs in found.items() if any(kind == "system" for kind, _ in defs)]
     system_body = "".join(body for name in systems for kind, body in found[name] if kind == "system")
-    types = set(re.findall(r'"([^"]+)"', " ".join(re.findall(r"(?:secondaryTypes|otherLibararyTypes)\s*=\s*\[([^\]]*)\]", system_body)))) | {"Creature", "Decks", "Names"}
+    types = set(re.findall(r'"([^"]+)"', " ".join(re.findall(r"(?:secondaryTypes|otherLibararyTypes)\s*=\s*\[([^\]]*)\]", system_body)))) | {"Creature", "Decks", "Names", "Tables"}
     types |= set(re.findall(r'"([^"]+)"', " ".join(re.findall(r"entityTypeDescription\s*\(([^)]*)\)", system_body))))
     library = json.load(open(library_path))
     problems = []
+    names = linkable_names(system_body, library)
     for item in library["entities"]:
+        if item["type"] == "Tables":
+            problems += table_problems(item, names)
         if item["type"] not in types:
             problems.append(f"{item['name']}: type {item['type']} is not in the system")
         for ruleset in item.get("rulesets", []):
