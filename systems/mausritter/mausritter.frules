@@ -1,0 +1,818 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+modeLabel (mode) = if mode < 0 then "Disadvantage" else if mode > 0 then "Advantage" else ""
+
+modeText (mode) = if mode < 0 then " (disadvantage)" else if mode > 0 then " (advantage)" else ""
+
+clampMode (m) = max (-1, min (1, m))
+
+keptRoll (rolls, mode) = if mode < 0 then max (rolls) else if mode > 0 then min (rolls) else first (rolls)
+
+saveOutcome (roll, score) = if roll <= score then "Success" else "Failure"
+
+saveResult (roll, score, attrName, mode) =
+{
+    Text = toString (roll) + " vs " + attrName + " " + toString (score) + ": " + saveOutcome (roll, score) + modeText (mode)
+    Value = roll
+    Outcome = saveOutcome (roll, score)
+}
+
+saveDice (score, attrName, mode) = ([dice { number = 1  sides = 20 }, dice { number = if mode == 0 then 0 else 1  sides = 20  label = modeLabel (mode) }],
+    ((baseline, throws)->saveResult (keptRoll (concat (first (throws).rolls, item (1, throws).rolls), mode), score, attrName, mode)))
+
+mrSave (score, attrName, penalty) = ask ("Roll", ["Disadvantage", "Normal", "Advantage"], -1, (m)->saveDice (score, attrName, clampMode (m - penalty)))
+
+initiativeResult (roll, score, mode) =
+{
+    Text = (if roll <= score then "Ahead" else "Behind") + ": " + toString (roll) + " vs DEX " + toString (score) + modeText (mode)
+    Value = roll
+    Outcome = saveOutcome (roll, score)
+}
+
+initiativeDice (score, mode) = ([dice { number = 1  sides = 20 }, dice { number = if mode == 0 then 0 else 1  sides = 20  label = modeLabel (mode) }],
+    ((baseline, throws)->initiativeResult (keptRoll (concat (first (throws).rolls, item (1, throws).rolls), mode), score, mode)))
+
+enemyTurn = ([dice { number = 0  sides = 20 }], ((baseline, throws)->{ Text = "Enemies"  Value = 0 }))
+
+initiativeRank (text) =
+    if contains (text, "Ahead") then 3
+    else if contains (text, "Enemies") then 2
+    else if contains (text, "Behind") then 1
+    else 0
+
+attackSides (mode, die) = if mode < 0 then 4 else if mode > 0 then 12 else die
+
+attackModeText (mode) = if mode < 0 then " (impaired)" else if mode > 0 then " (enhanced)" else ""
+
+damageText (roll, armour, answered, mode) =
+    toString (max (0, roll - armour)) + " damage" + attackModeText (mode)
+    + (if answered and armour > 0 then " after " + toString (armour) + " Armour" else "")
+
+damageResult (roll, armour, answered, mode) =
+{
+    Text = damageText (roll, armour, answered, mode)
+    Value = max (0, roll - armour)
+}
+
+mrDamage (dieSides, mode) = ([dice { number = 1  sides = dieSides }], ((baseline, throws)->damageResult (first (first (throws).rolls), asked, answered, mode)))
+
+mrAttack (die) = ask ("Attack", ["Impaired d4", "Normal", "Enhanced d12"], -1, (mode)->ask ("Target's Armour", 0, mrDamage (attackSides (mode, die), mode)))
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+sixesIn (rolls) = count (filter ((x)->x == 6, rolls))
+
+marksIn (rolls) = count (filter ((x)->x >= 4, rolls))
+
+miscastText (sixes) = if sixes > 0 then ". Miscast: " + plural (sixes, "six", "sixes") + ", take d6 WIL damage for each, then a WIL save or Drained" else ""
+
+castResult (rolls, power) =
+    if power <= 0 then { Text = "Depleted: fulfil its recharge to cast it again"  Outcome = "Failure" }
+    else
+    {
+        Text = "[SUM] " + toString (sum (rolls)) + ", [DICE] " + toString (power) + ": mark " + toString (marksIn (rolls)) + " usage" + miscastText (sixesIn (rolls))
+        Value = sum (rolls)
+        Outcome = if sixesIn (rolls) > 0 then "Miscast" else "Cast"
+        Color = if sixesIn (rolls) > 0 then "red" else ""
+        Push = if sixesIn (rolls) > 0 then miscastDamage (sixesIn (rolls)) else 0
+        PushLabel = "Roll the miscast's WIL damage"
+    }
+
+miscastDamage (sixes) = ([dice { number = sixes  sides = 6  label = "WIL damage" }],
+    ((baseline, throws)->{ Text = toString (sum (first (throws).rolls)) + " WIL damage. Now make a WIL save; on a failure take the Drained Condition."  Value = sum (first (throws).rolls)  Outcome = "Miscast" }))
+
+castDice (power) = ([dice { number = max (0, power)  sides = 6  label = "Power" }], ((baseline, throws)->castResult (first (throws).rolls, power)))
+
+castSpell (remaining) = ask ("Power (dice)", 1, (n)->castDice (min (remaining, max (1, n))))
+
+shortRestResult (roll, hp, maxHp) =
+{
+    Text = "Restore " + toString (roll) + " HP: " + toString (min (maxHp, hp + roll)) + " of " + toString (maxHp)
+    Value = roll
+}
+
+shortRestDice (hp, maxHp) = ([1d6], ((baseline, throws)->shortRestResult (first (first (throws).rolls) + 1, hp, maxHp)))
+
+luckResult (roll, chance, answered) =
+{
+    Text = toString (roll) + (if answered then " vs " + toString (chance) + "-in-6: " + (if roll <= chance then "it happens" else "it does not happen") else "")
+    Value = roll
+    Outcome = if answered then (if roll <= chance then "Success" else "Failure") else ""
+}
+
+luckRoll = ask ("Chance (X-in-6)", ([1d6], ((baseline, throws)->luckResult (first (first (throws).rolls), asked, answered))))
+
+reactionText (total) =
+    if total <= 2 then "Hostile"
+    else if total <= 5 then "Unfriendly"
+    else if total <= 8 then "Unsure"
+    else if total <= 11 then "Talkative"
+    else "Helpful"
+
+reactionRoll = ([2d6], ((baseline, throws)->{ Text = toString (sum (first (throws).rolls)) + ": " + reactionText (sum (first (throws).rolls))  Value = sum (first (throws).rolls) }))
+
+goalText (total) = if total >= 6 then "mark 2 progress" else if total >= 4 then "mark 1 progress" else "no progress"
+
+goalResult (roll, bonus) =
+{
+    Text = toString (roll + bonus) + ": " + goalText (roll + bonus)
+    Value = roll + bonus
+    Outcome = if roll + bonus >= 4 then "Success" else "Failure"
+}
+
+goalRoll = ask ("Relevant resources, minus a targeted rival's", 0, ([1d6], ((baseline, throws)->goalResult (first (first (throws).rolls), asked))))
+
+noStats = { Stats = { Class = "" } }
+
+libraryItem (text) = filter ((x)->toLower (x.name) == toLower (text), library.Items)
+
+libraryStatOr (text, field, fallback) =
+    if text == "" then fallback
+    else if count (libraryItem (text)) > 0 then valueOr (valueOr (valueOr (first (libraryItem (text)).data, "mrItem", noStats), "Stats", noStats.Stats), field, fallback)
+    else fallback
+
+libraryStat (text, field) = libraryStatOr (text, field, "")
+
+isSpell (text) = text != "" and (contains (toLower (text), "spell") or count (filter ((x)->toLower (x.name) == toLower (text), library.Spells)) > 0)
+
+conditionNames = ["exhausted", "frightened", "hungry", "injured", "drained"]
+
+isCondition (text) = text != "" and (count (filter ((c)->contains (toLower (text), c), conditionNames)) > 0 or count (filter ((x)->toLower (x.name) == toLower (text), library.Conditions)) > 0)
+
+usageDots (text) =
+    if text == "" then 0
+    else if isCondition (text) then 0
+    else libraryStatOr (text, "Usage", 3)
+
+noUsage = { realvalue = 0 }
+
+slotItem (slot) = valueOr (slot, "Item", "")
+
+slotUsed (slot) = valueOr (valueOr (slot, "Usage", noUsage), "realvalue", 0)
+
+spellCast (name, remaining) = custom
+{
+    Name = name
+    Left = remaining
+    Cast = integer { value = 0  valuedice = castSpell (remaining)  render = "Cast"  editable = none }
+}
+
+spellCasts (slots) = map ((x)->spellCast (slotItem (x), usageDots (slotItem (x)) - slotUsed (x)), filter ((x)->isSpell (slotItem (x)), slots))
+
+itemSlot = custom
+{
+    Item = string { default = ""  editable = live }
+    Usage = slots { number = usageDots (Item)  editable = live }
+}
+
+firstDie (text) = bonusWithValue ([[text]], "^.*?\bd([0-9]+)")
+
+weaponClass (text) = if libraryStat (text, "Class") != "" then libraryStat (text, "Class") else ""
+
+weaponDie (text, bothPaws) =
+    switch weaponClass (text)
+    case "Improvised" then 6
+    case "Light" then 6
+    case "Medium" then (if bothPaws then 8 else 6)
+    case "Heavy" then 10
+    case "Light ranged" then 6
+    case "Heavy ranged" then 8
+    else (if contains (text, "/d8") and bothPaws then 8 else firstDie (text))
+
+isRanged (text) =
+    contains (weaponClass (text), "ranged") or contains (toLower (text), "bow") or contains (toLower (text), "sling") or contains (toLower (text), "crossbow")
+
+isWeapon (text) = text != "" and not (isCondition (text)) and weaponDie (text, false) > 0
+
+attackKind (text) = if isRanged (text) then "ranged" else "melee"
+
+weaponAttack (name, die, kind) = custom
+{
+    Name = name
+    Damage = integer { value = 0  valuedice = mrAttack (die)  action = kind  reach = 6  render = "d" + toString (die)  editable = none }
+}
+
+pawAttacks (mainPaw, offPaw) =
+    concat (
+        if isWeapon (mainPaw) then [weaponAttack (mainPaw, weaponDie (mainPaw, mainPaw == offPaw), attackKind (mainPaw))] else [],
+        if isWeapon (offPaw) and offPaw != mainPaw then [weaponAttack (offPaw, weaponDie (offPaw, false), attackKind (offPaw))] else [])
+
+carried (char) = concat ([
+    char.Paw.'Main paw'.Item, char.Paw.'Off paw'.Item,
+    char.Body.'Body 1'.Item, char.Body.'Body 2'.Item,
+    char.Pack.'Pack 1'.Item, char.Pack.'Pack 2'.Item, char.Pack.'Pack 3'.Item,
+    char.Pack.'Pack 4'.Item, char.Pack.'Pack 5'.Item, char.Pack.'Pack 6'.Item], char.'Over the limit')
+
+hirelingCarried (char) = [
+    char.Paw.'Main paw'.Item, char.Paw.'Off paw'.Item,
+    char.Body.'Body 1'.Item, char.Body.'Body 2'.Item,
+    char.Pack.'Pack 1'.Item, char.Pack.'Pack 2'.Item]
+
+hasCondition (items, conditionName) = count (filter ((t)->contains (toLower (t), conditionName), items)) > 0
+
+conditionMark (items, conditionName, shown) = if hasCondition (items, conditionName) then shown else ""
+
+joinNames (names) = fold ("", (acc, x)->if acc == "" then x else acc + ", " + x, names)
+
+conditionList (items) = joinNames (filter ((x)->x != "", [
+    conditionMark (items, "exhausted", "Exhausted"),
+    conditionMark (items, "frightened", "Frightened"),
+    conditionMark (items, "hungry", "Hungry"),
+    conditionMark (items, "injured", "Injured"),
+    conditionMark (items, "drained", "Drained")]))
+
+isEncumbered (char) = count (filter ((x)->x != "", char.'Over the limit')) > 0
+
+savePenalty (items, encumbered, attrName) =
+    if encumbered then 1
+    else if attrName == "WIL" then (if hasCondition (items, "drained") then 1 else 0)
+    else if hasCondition (items, "injured") then 1
+    else 0
+
+downState (strength, dex, wil, incapacitated) =
+    if strength <= 0 then "Dead"
+    else if incapacitated then "Incapacitated"
+    else if dex <= 0 then "Unable to move"
+    else if wil <= 0 then "Insensible"
+    else ""
+
+gritFor (level) = if level >= 5 then 3 else if level >= 3 then 2 else if level >= 2 then 1 else 0
+
+nextLevel (level) = if level <= 1 then 1000 else if level == 2 then 3000 else if level == 3 then 6000 else 6000 + (level - 3) * 5000
+
+hitDiceFor (level) = toString (min (4, max (1, level))) + "d6"
+
+gritSlot (grit, n) = if grit >= n then visible else none
+
+birthsignDisposition (sign) =
+    switch sign
+    case "Star" then "Brave / Reckless"
+    case "Wheel" then "Industrious / Unimaginative"
+    case "Acorn" then "Inquisitive / Stubborn"
+    case "Storm" then "Generous / Wrathful"
+    case "Moon" then "Wise / Mysterious"
+    case "Mother" then "Nurturing / Worrying"
+    else ""
+
+clearOf (text, kinds) = if count (filter ((k)->contains (toLower (text), k), kinds)) > 0 then "" else text
+
+shortRestClears = ["frightened"]
+
+longRestClears = ["frightened", "exhausted", "hungry"]
+
+fullRestClears = ["frightened", "exhausted", "hungry", "injured", "drained"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mausritter/mouse.svg"  important = [Attributes, 'Hit Protection', Paw, Status, Attacks] }
+    Mouse = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Background = string { description = "What your mouse was before adventuring, from HP and pips." keys = ["Test subject", "Kitchen forager", "Cage dweller", "Hedge witch", "Leatherworker", "Street tough", "Mendicant priest", "Beetleherd", "Ale brewer", "Fishermouse", "Blacksmith", "Wireworker", "Woodcutter", "Bat cultist", "Tin miner", "Trash collector", "Wall rover", "Merchant", "Raft crew", "Worm wrangler", "Sparrow rider", "Sewer guide", "Prison guard", "Fungus farmer", "Dam builder", "Cartographer", "Trap thief", "Vagabond", "Grain farmer", "Message runner", "Troubadour", "Gambler", "Sap tapper", "Bee keeper", "Librarian", "Pauper noblemouse"] }
+        Birthsign = string { description = "The sign your mouse was born under, and the disposition it gives." keys = ["Star", "Wheel", "Acorn", "Storm", "Moon", "Mother"] }
+        Disposition = string { value = birthsignDisposition (Birthsign)  editable = none }
+        Coat = string { description = "Colour and pattern, such as tan brindle." }
+        Look = string { description = "A physical detail, such as a cropped tail or wise eyes." }
+    }
+
+    Attributes = table
+    {
+        description = "Saves: roll d20 equal to or under the current score. The roll asks for advantage (2d20, lowest) or disadvantage (2d20, highest)."
+        tableLayout = layout { columns = 3 }
+        STR = custom
+        {
+            description = "Strength: physical power and resilience. Damage past HP comes off STR; at 0 your mouse is dead."
+            Max = integer { default = 9  minvalue = 1  maxvalue = 20 }
+            Current = integer { default = Max  minvalue = 0  maxvalue = 20  editable = live }
+            Save = integer { value = Current  valuedice = mrSave (Current, "STR", savePenalty (carried (characterTable), isEncumbered (characterTable), "STR"))  editable = none }
+        }
+        DEX = custom
+        {
+            description = "Dexterity: speed and agility. At 0 your mouse cannot move."
+            Max = integer { default = 9  minvalue = 1  maxvalue = 20 }
+            Current = integer { default = Max  minvalue = 0  maxvalue = 20  editable = live }
+            Save = integer { value = Current  valuedice = mrSave (Current, "DEX", savePenalty (carried (characterTable), isEncumbered (characterTable), "DEX"))  editable = none }
+        }
+        WIL = custom
+        {
+            description = "Will: strength of will and charisma. At 0 your mouse is insensible."
+            Max = integer { default = 9  minvalue = 1  maxvalue = 20 }
+            Current = integer { default = Max  minvalue = 0  maxvalue = 20  editable = live }
+            Save = integer { value = Current  valuedice = mrSave (Current, "WIL", savePenalty (carried (characterTable), isEncumbered (characterTable), "WIL"))  editable = none }
+        }
+    }
+
+    'Hit Protection' = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max HP' = integer { description = "Hit Protection: the harm your mouse can shrug off before taking real damage." default = 3  minvalue = 1  maxvalue = 24 }
+        HP = integer { description = "Damage comes off HP first, then off STR, with a STR save against critical damage." default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Pips = integer { description = "Coins of the mouse kingdoms. The first 250 ride in your pockets; every 250 more fills a slot." default = 0  minvalue = 0  editable = live }
+        Initiative = integer { description = "A DEX save to act before the enemies, unless you caught them unawares." value = Attributes.DEX.Current  valuedice = initiativeDice (Attributes.DEX.Current, clampMode (0 - savePenalty (carried (characterTable), isEncumbered (characterTable), "DEX")))  editable = none }
+    }
+
+    Paw = table
+    {
+        description = "Two paw slots: what your mouse holds. Weapons here can attack."
+        tableLayout = layout { columns = 1 }
+        'Main paw' = itemSlot {}
+        'Off paw' = itemSlot {}
+    }
+
+    Body = table
+    {
+        description = "Two body slots: worn items, swapped with the paws as a free action."
+        tableLayout = layout { columns = 1 }
+        'Body 1' = itemSlot {}
+        'Body 2' = itemSlot {}
+    }
+
+    Pack = table
+    {
+        description = "Six pack slots. Finding an item here in a fight takes your action. Conditions fill slots too; a two-slot item fills both."
+        tableLayout = layout { columns = 3 }
+        'Pack 1' = itemSlot {}
+        'Pack 2' = itemSlot {}
+        'Pack 3' = itemSlot {}
+        'Pack 4' = itemSlot {}
+        'Pack 5' = itemSlot {}
+        'Pack 6' = itemSlot {}
+    }
+
+    'Over the limit' = list { description = "Items and Conditions with no slot left. While any are here your mouse is encumbered: no running, and every save at disadvantage." singular = "Item"  editable = live  valueType = string }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Armour = integer { description = "Taken off every hit. Light and heavy armour each prevent 1." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Conditions = string { description = "The Conditions in your slots, outside the Grit space." value = conditionList (carried (characterTable))  editable = none }
+        Encumbered = string { description = "More items than slots: no running, saves at disadvantage." value = if isEncumbered (characterTable) then "Encumbered" else ""  editable = none  indicator = "#e8913a" }
+        Incapacitated = bool { description = "Took critical damage: Injured and out of the fight until an ally tends to you and you take a short rest. Left untended for 6 Turns, you die." default = false  editable = live  indicator = "#555555" }
+        State = string { value = downState (Attributes.STR.Current, Attributes.DEX.Current, Attributes.WIL.Current, Incapacitated)  visible = none  indicator = "#555555" }
+        Exhausted = string { value = conditionMark (carried (characterTable), "exhausted", "Exhausted")  visible = none  indicator = "#d4b106" }
+        Frightened = string { value = conditionMark (carried (characterTable), "frightened", "Frightened")  visible = none  indicator = "#8e5cc4" }
+        Hungry = string { value = conditionMark (carried (characterTable), "hungry", "Hungry")  visible = none  indicator = "#e8913a" }
+        Injured = string { value = conditionMark (carried (characterTable), "injured", "Injured")  visible = none  indicator = "#d64545" }
+        Drained = string { value = conditionMark (carried (characterTable), "drained", "Drained")  visible = none  indicator = "#3a7bd5" }
+        'Short rest HP' = integer { description = "A swig of water and a Turn of rest restore d6+1 HP." value = 0  valuedice = shortRestDice ('Hit Protection'.HP, 'Hit Protection'.'Max HP')  render = "d6+1"  editable = none }
+        'Short rest' = button
+        {
+            description = "One Turn: clears Frightened and tended incapacitation. Roll Short rest HP for the healing."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Incapacitated) = false
+                (root.Paw.'Main paw'.Item) = clearOf (Paw.'Main paw'.Item, shortRestClears)
+                (root.Paw.'Off paw'.Item) = clearOf (Paw.'Off paw'.Item, shortRestClears)
+                (root.Body.'Body 1'.Item) = clearOf (Body.'Body 1'.Item, shortRestClears)
+                (root.Body.'Body 2'.Item) = clearOf (Body.'Body 2'.Item, shortRestClears)
+                (root.Pack.'Pack 1'.Item) = clearOf (Pack.'Pack 1'.Item, shortRestClears)
+                (root.Pack.'Pack 2'.Item) = clearOf (Pack.'Pack 2'.Item, shortRestClears)
+                (root.Pack.'Pack 3'.Item) = clearOf (Pack.'Pack 3'.Item, shortRestClears)
+                (root.Pack.'Pack 4'.Item) = clearOf (Pack.'Pack 4'.Item, shortRestClears)
+                (root.Pack.'Pack 5'.Item) = clearOf (Pack.'Pack 5'.Item, shortRestClears)
+                (root.Pack.'Pack 6'.Item) = clearOf (Pack.'Pack 6'.Item, shortRestClears)
+                (root.Grit.'Grit 1') = clearOf (Grit.'Grit 1', shortRestClears)
+                (root.Grit.'Grit 2') = clearOf (Grit.'Grit 2', shortRestClears)
+                (root.Grit.'Grit 3') = clearOf (Grit.'Grit 3', shortRestClears)
+            }
+        }
+        'Long rest' = button
+        {
+            description = "A Watch with a meal and sleep: all HP back, and Exhausted, Frightened and Hungry cleared. If HP was already full, restore d6 to one attribute by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.'Hit Protection'.HP) = 'Hit Protection'.'Max HP'
+                (root.Paw.'Main paw'.Item) = clearOf (Paw.'Main paw'.Item, longRestClears)
+                (root.Paw.'Off paw'.Item) = clearOf (Paw.'Off paw'.Item, longRestClears)
+                (root.Body.'Body 1'.Item) = clearOf (Body.'Body 1'.Item, longRestClears)
+                (root.Body.'Body 2'.Item) = clearOf (Body.'Body 2'.Item, longRestClears)
+                (root.Pack.'Pack 1'.Item) = clearOf (Pack.'Pack 1'.Item, longRestClears)
+                (root.Pack.'Pack 2'.Item) = clearOf (Pack.'Pack 2'.Item, longRestClears)
+                (root.Pack.'Pack 3'.Item) = clearOf (Pack.'Pack 3'.Item, longRestClears)
+                (root.Pack.'Pack 4'.Item) = clearOf (Pack.'Pack 4'.Item, longRestClears)
+                (root.Pack.'Pack 5'.Item) = clearOf (Pack.'Pack 5'.Item, longRestClears)
+                (root.Pack.'Pack 6'.Item) = clearOf (Pack.'Pack 6'.Item, longRestClears)
+                (root.Grit.'Grit 1') = clearOf (Grit.'Grit 1', longRestClears)
+                (root.Grit.'Grit 2') = clearOf (Grit.'Grit 2', longRestClears)
+                (root.Grit.'Grit 3') = clearOf (Grit.'Grit 3', longRestClears)
+            }
+        }
+        'Full rest' = button
+        {
+            description = "A week in safety, about 20p of food and board: HP and attributes fully restored, and the usual Conditions cleared."
+            editable = live
+            onClick = updates
+            {
+                (root.'Hit Protection'.HP) = 'Hit Protection'.'Max HP'
+                (root.Attributes.STR.Current) = Attributes.STR.Max
+                (root.Attributes.DEX.Current) = Attributes.DEX.Max
+                (root.Attributes.WIL.Current) = Attributes.WIL.Max
+                (root.Status.Incapacitated) = false
+                (root.Paw.'Main paw'.Item) = clearOf (Paw.'Main paw'.Item, fullRestClears)
+                (root.Paw.'Off paw'.Item) = clearOf (Paw.'Off paw'.Item, fullRestClears)
+                (root.Body.'Body 1'.Item) = clearOf (Body.'Body 1'.Item, fullRestClears)
+                (root.Body.'Body 2'.Item) = clearOf (Body.'Body 2'.Item, fullRestClears)
+                (root.Pack.'Pack 1'.Item) = clearOf (Pack.'Pack 1'.Item, fullRestClears)
+                (root.Pack.'Pack 2'.Item) = clearOf (Pack.'Pack 2'.Item, fullRestClears)
+                (root.Pack.'Pack 3'.Item) = clearOf (Pack.'Pack 3'.Item, fullRestClears)
+                (root.Pack.'Pack 4'.Item) = clearOf (Pack.'Pack 4'.Item, fullRestClears)
+                (root.Pack.'Pack 5'.Item) = clearOf (Pack.'Pack 5'.Item, fullRestClears)
+                (root.Pack.'Pack 6'.Item) = clearOf (Pack.'Pack 6'.Item, fullRestClears)
+                (root.Grit.'Grit 1') = clearOf (Grit.'Grit 1', fullRestClears)
+                (root.Grit.'Grit 2') = clearOf (Grit.'Grit 2', fullRestClears)
+                (root.Grit.'Grit 3') = clearOf (Grit.'Grit 3', fullRestClears)
+            }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks always hit: roll the weapon die minus the target's Armour. The roll asks whether it is impaired (d4) or enhanced (d12). Medium weapons do d8 held in both paws."
+        tableLayout = layout { size = wide }
+        source = concat (pawAttacks (Paw.'Main paw'.Item, Paw.'Off paw'.Item), [weaponAttack ("Improvised", 6, "melee")])
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Spell casting' = list
+    {
+        description = "Spells carried in a slot. Pick the power, up to the usage dots left, and roll that many d6: each 4-6 marks usage, each 6 is a miscast."
+        tableLayout = layout { size = wide }
+        source = spellCasts ([Paw.'Main paw', Paw.'Off paw', Body.'Body 1', Body.'Body 2', Pack.'Pack 1', Pack.'Pack 2', Pack.'Pack 3', Pack.'Pack 4', Pack.'Pack 5', Pack.'Pack 6'])
+        singular = "Spell"
+        editable = none
+        valueType = spellCast
+    }
+
+    Advancement = table
+    {
+        tableLayout = layout { columns = 2 }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 20 }
+        XP = integer { description = "1 XP per pip of treasure brought back to a settlement, and 1 per 10 pips spent for the community." default = 0  minvalue = 0  editable = live }
+        'Next level' = integer { description = "Total XP for the next Level. Then roll d20 per attribute (higher raises it by 1) and the new Hit Dice for HP." value = nextLevel (Level)  editable = none }
+        'Next Hit Dice' = string { value = hitDiceFor (Level + 1)  editable = none }
+    }
+
+    Grit = table
+    {
+        description = "From Level 2, a Condition put here is ignored until it is cleared."
+        tableLayout = layout { columns = 4 }
+        Grit = integer { value = gritFor (Advancement.Level)  editable = none }
+        'Grit 1' = string { default = ""  editable = live  visible = gritSlot (gritFor (Advancement.Level), 1) }
+        'Grit 2' = string { default = ""  editable = live  visible = gritSlot (gritFor (Advancement.Level), 2) }
+        'Grit 3' = string { default = ""  editable = live  visible = gritSlot (gritFor (Advancement.Level), 3) }
+    }
+
+    'Banked items and pips' = table
+    {
+        description = "Stored in a settlement's bank, for a 1% fee on what you take out."
+        tableLayout = layout { columns = 2 }
+        'Banked pips' = integer { default = 0  minvalue = 0  editable = live }
+        Bank = string { description = "Where it is kept." }
+        'Banked items' = string { multiline = true  editable = live }
+    }
+
+    'Item cards' = list
+    {
+        description = "Cards for what your mouse owns, with their rules. Write each into a slot to carry it."
+        source = secondary.Items
+        singular = "Item"
+        editable = character
+    }
+
+    Spells = list
+    {
+        description = "Spell tablets: write one into a slot to carry and cast it."
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureAttackKind (ranged) = if ranged then "ranged" else "melee"
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/mausritter/cat.svg"
+        important = [Stats, Attacks]
+        filters = [filter { name = "Scale" prefix = "" filter = if Stats.'Warband scale' then "Warband scale" else "Mouse scale" }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        HP = integer { default = 3  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max HP' = integer { default = 3  minvalue = 0 }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        'Warband scale' = bool { description = "Ignores damage from creatures smaller than a warband, unless large scale; its attacks on them are enhanced." default = false }
+        STR = integer { default = 9  minvalue = 0  editable = live }
+        DEX = integer { default = 9  minvalue = 0  editable = live }
+        WIL = integer { default = 9  minvalue = 0  editable = live }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+        'STR save' = integer { value = STR  valuedice = mrSave (STR, "STR", 0)  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = mrSave (DEX, "DEX", 0)  editable = none }
+        'WIL save' = integer { description = "Also its morale: when outmatched, on first critical damage, or when an ally flees or falls." value = WIL  valuedice = mrSave (WIL, "WIL", 0)  editable = none }
+        Initiative = integer { description = "Enemies act after the mice who passed their DEX save." value = 0  valuedice = enemyTurn  editable = none }
+        State = string { value = downState (STR, DEX, WIL, Incapacitated)  visible = none  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        description = "Attacks always hit. Damage past HP goes to the attribute named here."
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Die = integer { default = 6  minvalue = 2  maxvalue = 20 }
+            Damages = string { default = "STR"  keys = ["STR", "DEX", "WIL"] }
+            Ranged = bool { default = false }
+            Roll = integer { value = 0  valuedice = mrAttack (Die)  action = creatureAttackKind (Ranged)  reach = 6  render = "d" + toString (Die)  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 1  size = wide }
+        'Critical damage' = string { description = "Happens instead of the usual critical damage." }
+        Special = string { multiline = true }
+        Wants = string {}
+        Reaction = integer { description = "2d6 when its attitude to the mice is not obvious: 2 hostile, 3-5 unfriendly, 6-8 unsure, 9-11 talkative, 12 helpful." value = 0  valuedice = reactionRoll  render = "2d6"  editable = none }
+        'Luck roll' = integer { description = "For chance outside any save: the roll asks the X-in-6 chance." value = 0  valuedice = luckRoll  render = "d6"  editable = none }
+    }
+}
+
+hirelingTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mausritter/hireling.svg"  important = [Hireling, Attributes, Paw] }
+    Hireling = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Torchbearer", "Labourer", "Tunnel digger", "Armourer/blacksmith", "Local guide", "Mouse-at-arms", "Scholar", "Knight", "Interpreter"] }
+        Wages = integer { description = "Pips per day, without food or shelter." default = 1  minvalue = 0 }
+        Level = integer { default = 1  minvalue = 1 }
+        XP = integer { description = "1 XP per pip of treasure given above the daily wage." default = 0  minvalue = 0  editable = live }
+        'Max HP' = integer { default = 3  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        STR = integer { description = "2d6 for a typical hireling." default = 7  minvalue = 0  editable = live }
+        DEX = integer { default = 7  minvalue = 0  editable = live }
+        WIL = integer { default = 7  minvalue = 0  editable = live }
+        'Max STR' = integer { default = 7  minvalue = 1 }
+        'Max DEX' = integer { default = 7  minvalue = 1 }
+        'Max WIL' = integer { default = 7  minvalue = 1 }
+        'STR save' = integer { value = STR  valuedice = mrSave (STR, "STR", savePenalty (hirelingCarried (hirelingTable), false, "STR"))  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = mrSave (DEX, "DEX", savePenalty (hirelingCarried (hirelingTable), false, "DEX"))  editable = none }
+        Morale = integer { description = "A WIL save or flee: under stress, unpaid or unfed, or asked to do worse than agreed. Loyal or well paid hirelings roll with advantage." value = WIL  valuedice = mrSave (WIL, "WIL", savePenalty (hirelingCarried (hirelingTable), false, "WIL"))  editable = none }
+        Initiative = integer { value = DEX  valuedice = initiativeDice (DEX, 0)  editable = none }
+        State = string { value = downState (STR, DEX, WIL, Hireling.Incapacitated)  visible = none  indicator = "#555555" }
+        Conditions = string { value = conditionList (hirelingCarried (hirelingTable))  editable = none }
+    }
+    Paw = table
+    {
+        tableLayout = layout { columns = 1 }
+        'Main paw' = itemSlot {}
+        'Off paw' = itemSlot {}
+    }
+    Body = table
+    {
+        tableLayout = layout { columns = 1 }
+        'Body 1' = itemSlot {}
+        'Body 2' = itemSlot {}
+    }
+    Pack = table
+    {
+        description = "Hirelings carry six slots: two paw, two body, two pack."
+        tableLayout = layout { columns = 1 }
+        'Pack 1' = itemSlot {}
+        'Pack 2' = itemSlot {}
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat (pawAttacks (Paw.'Main paw'.Item, Paw.'Off paw'.Item), [weaponAttack ("Improvised", 6, "melee")])
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+warbandTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mausritter/warband.svg"  important = [Warband, Attributes] }
+    Warband = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Commander = string {}
+        Fighters = integer { description = "20 or more fighting mice, plus a follower for each." default = 20  minvalue = 1 }
+        Level = integer { default = 1  minvalue = 1 }
+        XP = integer { description = "1 XP per 10 pips of treasure given above the weekly wage." default = 0  minvalue = 0  editable = live }
+        'Max HP' = integer { default = 3  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Upkeep = integer { description = "Pips a week for wages and upkeep. Unpaid, it may mutiny." default = 1000  minvalue = 0 }
+    }
+    Attributes = table
+    {
+        description = "Damage from creatures smaller than a warband is ignored unless it is large scale; its attacks on them are enhanced."
+        tableLayout = layout { columns = 3  size = wide }
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        WIL = integer { default = 10  minvalue = 0  editable = live }
+        'Max STR' = integer { default = 10  minvalue = 1 }
+        'Max DEX' = integer { default = 10  minvalue = 1 }
+        'Max WIL' = integer { default = 10  minvalue = 1 }
+        'STR save' = integer { value = STR  valuedice = mrSave (STR, "STR", 0)  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = mrSave (DEX, "DEX", 0)  editable = none }
+        Morale = integer { description = "A WIL save at half STR, or the warband is routed." value = WIL  valuedice = mrSave (WIL, "WIL", 0)  editable = none }
+        Broken = bool { description = "Took critical damage: cannot act until rallied." default = false  editable = live  indicator = "#555555" }
+        Routed = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        State = string { value = if STR <= 0 then "Wiped out" else if STR * 2 <= 'Max STR' then "Half STR" else ""  visible = none  indicator = "#d64545" }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weapons = string { default = "clubs and axes" }
+        Die = integer { default = 6  minvalue = 2  maxvalue = 20 }
+        Strike = integer { value = 0  valuedice = mrAttack (Die)  action = "melee"  reach = 6  render = "d" + toString (Die)  editable = none }
+        Initiative = integer { value = Attributes.DEX  valuedice = initiativeDice (Attributes.DEX, 0)  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Equipment = string { description = "Equipping a warband costs 20 times the price for one mouse." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+factionTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mausritter/faction.svg"  important = [Faction, Goals] }
+    Faction = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Leader = string {}
+        'Goal roll' = integer { description = "Between sessions: d6, plus 1 for each relevant resource, minus 1 for each relevant resource of a rival the goal targets. 4-5 marks 1 progress, 6+ marks 2." value = 0  valuedice = goalRoll  render = "d6"  editable = none }
+    }
+    Resources = list
+    {
+        description = "The faction's power and influence. With three or more it can field a warband. A completed goal adds one."
+        singular = "Resource"
+        editable = live
+        valueType = string
+    }
+    Goals = list
+    {
+        description = "Each goal needs 2 to 5 progress marks. Players who help or hinder it mark or erase 1 to 3."
+        tableLayout = layout { size = wide }
+        singular = "Goal"
+        editable = live
+        valueType = custom
+        {
+            Goal = string {}
+            Needed = integer { default = 3  minvalue = 2  maxvalue = 5 }
+            Progress = integer { default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+mrItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armour", "Ammunition", "Light", "Tool", "Clothing", "Treasure", "Food", "Magic sword"] }
+        Class = string { description = "Weapon or armour class, which sets the damage die." keys = ["", "Improvised", "Light", "Medium", "Heavy", "Light ranged", "Heavy ranged", "Light armour", "Heavy armour"] }
+        Damage = string { description = "Weapon die, such as d6/d8 (one paw / both paws)." }
+        Armour = string { description = "Damage it prevents." }
+        Slots = integer { description = "Inventory slots it fills." default = 1  minvalue = 0 }
+        'Carried in' = string { description = "Paws or body slots it is wielded or worn in." }
+        Usage = integer { description = "Usage dots before it is depleted or broken." default = 3  minvalue = 0 }
+        Cost = string { description = "In pips." }
+    }
+}
+
+mrSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/mausritter/spell.svg"
+        sortedBy = sort { prefix = "2d8 " sort = Stats.Roll }
+    }
+    Stats = table
+    {
+        Roll = integer { description = "Its number on the 2d8 spell table." default = 0 }
+        Effect = string { description = "[DICE] is the power cast with, [SUM] the total rolled." multiline = true }
+        Recharge = string { description = "What brings the spirit back and clears all usage." multiline = true }
+    }
+}
+
+mrCondition = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/mausritter/condition.svg" }
+    Stats = table
+    {
+        Effect = string { multiline = true }
+        Clear = string { description = "What removes it from your slots." }
+    }
+}
+
+Mausritter = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a mouse"
+            topic = "Getting started"
+            text = ["Roll 3d6 for STR, DEX and WIL, keeping the two highest each time, and swap two if you like. Roll d6 for HP and d6 for pips, and read your background from the two. Start with torches, rations, a weapon and your background's two items, written into your slots."]
+        },
+        hint
+        {
+            title = "Saves"
+            topic = "Play"
+            text = ["The GM asks for a save only when an action is risky and failure has consequences: roll d20 equal to or under STR, DEX or WIL. The roll asks for advantage or disadvantage; Injured, Drained and being encumbered add disadvantage on their own. In an opposed save, the lowest success wins."]
+        },
+        hint
+        {
+            title = "Inventory"
+            topic = "Play"
+            text = ["Two paw slots, two body slots and six pack slots. Write each item or Condition into a slot, and tick its usage dots as it wears out. Weapons in the paws show up as attacks; spells in any slot can be cast from there."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks always hit: roll the weapon die minus Armour. Impaired attacks roll d4, enhanced d12. Damage past HP comes off STR, then a STR save: on a failure the target takes critical damage, gets Injured and is incapacitated."]
+        },
+        hint
+        {
+            title = "Who goes first"
+            topic = "Initiative"
+            text = ["Ambushers act first. Otherwise each mouse makes a DEX save: those who pass (Ahead) act before the enemies, the rest (Behind) after them. Keep that order for the rest of the fight."]
+        }
+    ]
+    distanceUnit = "in"
+    squareSize = 6
+    characters = characterTable
+    creatures = creatureTable
+    Hirelings = hirelingTable
+    Warbands = warbandTable
+    Factions = factionTable
+    Items = mrItem
+    Spells = mrSpell
+    Conditions = mrCondition
+    secondaryTypes = ["Items", "Spells"]
+    otherLibararyTypes = ["Conditions"]
+    extraEntityTypes = [
+        entityTypeDescription ("Hirelings", "hireling", true, "/systems/mausritter/hireling.svg", []),
+        entityTypeDescription ("Warbands", "warband", true, "/systems/mausritter/warband.svg", []),
+        entityTypeDescription ("Factions", "faction", false, "/systems/mausritter/faction.svg", [])
+    ]
+    description = "Mausritter: brave mice in a dangerous world, d20 roll-under saves, attacks that always hit, and inventory slots with usage dots"
+    initiativeCompare (item1, item2) = compare (initiativeRank (item1), initiativeRank (item2))
+    quickdice = [1d20, 1d6, 1d8, 1d10, 1d12, 1d4, 2d6]
+    cssFiles = ["/systems/mausritter/mausritter.css"]
+    libraries = ["/systems/mausritter/mausritter.json", "/systems/names/woodland.json", "/systems/names/arthurian.json"]
+    nameSettings = [mouseKingdomsNameSetting, arthurianNameSetting]
+}
+
+mouseKingdomsNameSetting = nameSetting
+{
+    name = "Mouse kingdoms"
+    characters = [generator { library = "Woodland" variant = "Villager" }, generator { library = "Woodland" variant = "Vagabond" }]
+    creatures = generator { library = "Woodland" variant = "Vagabond" }
+    Hirelings = generator { library = "Woodland" variant = "Villager" }
+    Location = [generator { library = "Woodland" variant = "Clearing" }, generator { library = "Woodland" variant = "Path" }]
+    Items = generator { library = "Woodland" variant = "Item" }
+}
