@@ -127,7 +127,7 @@ weapons (char) = filter ((x)->dieSides (itemStat (x, "Damage")) > 0, char.Equipm
 
 characterTable = ruleset
 {
-    rulesetConfiguration = { important = [Resistances, Fallout, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Resistances, Fallout, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }

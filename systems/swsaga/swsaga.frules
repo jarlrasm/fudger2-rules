@@ -66,6 +66,8 @@ checkDice (kind, fp, fpd) = ([1d20], ((baseline, throws)->checkResult (baseline 
 
 sagaPlain = checkDice ("plain", 0, 1)
 
+sagaInitiative = ([1d20], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
 sagaCheckWith (fp, fpd) = ask ("DC", checkDice ("skill", fp, fpd))
 
 sagaForceWith (fp, fpd) = ask ("DC or target's Defense", checkDice ("force", fp, fpd))
@@ -405,7 +407,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Speed = integer { description = "Squares moved with one move action. A square is 1.5 m." default = 6  minvalue = 0  render = toString (Speed) + " squares (" + distance (Speed * 5) + ")" }
-        Initiative = modifier { description = "Initiative: d20 plus your Initiative skill." value = Skills.Initiative.Total  valuedice = sagaPlain  editable = none }
+        Initiative = modifier { description = "Initiative: d20 plus your Initiative skill." value = Skills.Initiative.Total  valuedice = sagaInitiative  editable = none }
         BAB = integer { description = "Base attack bonus: your level for Jedi and Soldiers, three quarters of it for the other classes." default = classBab (Hero.Class, Hero.Level) }
         'Attack misc' = integer { description = "Bonuses to every attack, such as from a talent." default = 0 }
         Melee = modifier { description = "Melee attack bonus: BAB plus Str, minus penalties." value = meleeBonus (characterTable)  editable = none }
@@ -576,7 +578,7 @@ creatureTable = ruleset
         CL = integer { description = "Challenge level: about the heroic level of a fair match for it." default = 1  minvalue = 0 }
         Type = string { default = "Nonheroic"  keys = ["Nonheroic", "Heroic", "Beast", "Droid"] }
         Size = string { default = "Medium"  keys = sizeNames }
-        Initiative = modifier { default = 0  valuedice = sagaPlain }
+        Initiative = modifier { default = 0  valuedice = sagaInitiative }
         Perception = modifier { default = 0  valuedice = sagaCheckWith (0, 1) }
         Senses = string {}
         Languages = string {}
@@ -667,7 +669,7 @@ vehicleTable = ruleset
         CL = integer { description = "Challenge level." default = 5  minvalue = 0 }
         Size = string { default = "Gargantuan"  keys = ["Large", "Huge", "Gargantuan", "Colossal", "Colossal (frigate)", "Colossal (cruiser)", "Colossal (station)"] }
         Type = string { description = "Speeder, walker, starfighter, space transport, capital ship..." }
-        Initiative = modifier { description = "The pilot's Initiative with the vehicle's size modifier." default = 0  valuedice = sagaPlain }
+        Initiative = modifier { description = "The pilot's Initiative with the vehicle's size modifier." default = 0  valuedice = sagaInitiative }
         Perception = modifier { default = 0  valuedice = sagaCheckWith (0, 1) }
         Pilot = modifier { description = "The pilot's Pilot check with the vehicle's Dex." default = 0  valuedice = sagaCheckWith (0, 1) }
         Speed = string { description = "Squares per move at character scale, and at starship scale." default = "12 squares (starship scale 4)" }

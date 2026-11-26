@@ -239,7 +239,7 @@ rtPower = ask ("Difficulty", difficulties, -6, powerDice)
 
 characterTable = ruleset
 {
-    rulesetConfiguration = { important = [Status, Characteristics, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Status, Characteristics, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 4  size = wide }

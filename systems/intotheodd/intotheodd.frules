@@ -31,6 +31,12 @@ oddInitiative = ([1d20], ((baseline, throws)->surpriseResult (first (first (thro
 
 enemyInitiative = ([1d6], ((baseline, throws)->{ Text = "acts after the players"  Value = 1 }))
 
+oddInitiativeRank (text) =
+    if contains (text, "acts before") then 3
+    else if contains (text, "acts after") then 2
+    else if contains (text, "surprised") then 1
+    else 0
+
 attackSides (mode, die) = if mode < 0 then 4 else if mode == 1 then 12 else die
 
 attackDice (mode) = if mode == 2 then 2 else 1
@@ -130,6 +136,7 @@ characterTable = ruleset
         HP = integer { description = "Lost first. At 0 HP further damage comes off STR, and you save STR against Critical Damage." default = 'Max HP'  minvalue = 0  editable = live }
         Armour = integer { description = "Taken off every hit. Modern or crude armour is 1, a shield adds 1." default = 0  minvalue = 0  maxvalue = 3  editable = live }
         'Critical Damage' = bool { description = "Failed the STR save: cannot act until an ally tends you and you rest. Dies within the hour if left alone." default = false  editable = live  indicator = "#555555" }
+        Tended = bool { description = "An ally has tended the Critical Damage; the next short rest ends it." default = false  editable = live }
         Deprived = bool { description = "Lacking food, water or warmth: rests do nothing." default = false  editable = live  indicator = "#e8913a" }
         'Bulky items' = integer { description = "Bulky items need two hands or real storage. Three or more drop you to 0 HP." value = bulkyCount (characterTable)  editable = none }
         State = string { value = downState (Abilities.STR.Score, Abilities.DEX.Score, Abilities.WIL.Score, 'Critical Damage', HP, 'Bulky items')  visible = none  indicator = "#d64545" }
@@ -141,7 +148,8 @@ characterTable = ruleset
             onClick = updates
             {
                 (root.Protection.HP) = if Deprived then HP else 'Max HP'
-                (root.Protection.'Critical Damage') = if Deprived then 'Critical Damage' else false
+                (root.Protection.'Critical Damage') = if Deprived or not (Tended) then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
             }
         }
         'Full rest' = button
@@ -377,7 +385,7 @@ IntoTheOdd = system
     secondaryTypes = ["Equipment", "Arcana"]
     extraEntityTypes = [entityTypeDescription ("Detachments", "detachment", true, "/systems/intotheodd/detachment.svg", [])]
     description = "Into the Odd Remastered: explorers in an industrial city of weird science, d20 roll-under saves, attacks that always hit, and Arcana"
-    initiativeCompare (item1, item2) = compare (item1, item2)
+    initiativeCompare (item1, item2) = compare (oddInitiativeRank (item1), oddInitiativeRank (item2))
     quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
     cssFiles = ["/systems/intotheodd/intotheodd.css"]
     libraries = ["/systems/names/victorian.json"]
