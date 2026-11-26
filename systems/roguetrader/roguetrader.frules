@@ -1,0 +1,907 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+difficulties = ["Hellish -60", "Punishing -50", "Arduous -40", "Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Ordinary +10", "Routine +20", "Easy +30", "Simple +40", "Elementary +50", "Trivial +60"]
+
+rtSuccess (target, roll) = roll <= target and roll != 100
+
+rtDegrees (target, roll) = if rtSuccess (target, roll) then (target - roll) / 10 else (roll - target) / 10
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+rtText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if rtSuccess (target, roll) then "Success" else "Failure")
+    + (if rtDegrees (target, roll) > 0 then ", " + degreeWords (rtDegrees (target, roll), if rtSuccess (target, roll) then "success" else "failure") else "")
+
+rtResult (target, roll, reroll, spend) =
+{
+    Text = rtText (target, roll)
+    Value = roll
+    Outcome = if rtSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (rtSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+fateSpend (char) = if char.Status.Fate > 0 then [{ Field = "characterTable.Status.Fate"  Value = char.Status.Fate - 1 }] else []
+
+rtRoll (modifier) = ([1d100], ((baseline, throws)->rtResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+rtAskedRoll (spend) = ([1d100], ((baseline, throws)->rtResult (baseline + asked * 10, first (first (throws).rolls), rtAskedRoll ([]), spend)))
+
+rtTest = ask ("Difficulty", difficulties, -6, rtAskedRoll ([]))
+
+rtFateTest (char) = ask ("Difficulty", difficulties, -6, rtAskedRoll (fateSpend (char)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+locationOf (n) =
+    if n <= 10 then "Head"
+    else if n <= 20 then "Right Arm"
+    else if n <= 30 then "Left Arm"
+    else if n <= 70 then "Body"
+    else if n <= 85 then "Right Leg"
+    else "Left Leg"
+
+meleeModes = ["Standard attack +10", "All-out attack +20", "Charge +10", "Called shot -20"]
+
+rangedModes = ["Standard attack +10", "Semi-auto burst +0", "Full auto burst -10", "Called shot -20"]
+
+attackModes (kind) = if kind == "melee" then meleeModes else rangedModes
+
+modeBonus (kind, mode) =
+    if kind == "melee" then (switch mode case 1 then 20 case 3 then -20 else 10)
+    else (switch mode case 1 then 0 case 2 then -10 case 3 then -20 else 10)
+
+isBurst (kind, mode) = kind == "ranged" and (mode == 1 or mode == 2)
+
+jams (roll, kind, mode) = kind == "ranged" and roll >= (if isBurst (kind, mode) then 94 else 96)
+
+rofCap (rof, mode) = if count (split ("/", rof)) > mode then toInt (item (mode, split ("/", rof))) else 0
+
+capHits (n, cap) = if cap > 0 then min (n, cap) else n
+
+hitsFor (kind, mode, rof, degrees) =
+    if isBurst (kind, mode) then capHits (1 + (if mode == 1 then degrees / 2 else degrees), rofCap (rof, mode))
+    else 1
+
+rtHit (target, roll, kind, mode) = rtSuccess (target, roll) and not (jams (roll, kind, mode))
+
+hitText (hits, roll) =
+    if hits == 1 then "1 hit on the " + hitLocation (roll)
+    else toString (hits) + " hits, the first on the " + hitLocation (roll)
+
+rtAttackResult (target, roll, kind, mode, rof, reroll, spend) =
+{
+    Text = if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+           else rtText (target, roll) + (if rtHit (target, roll, kind, mode) then ": " + hitText (hitsFor (kind, mode, rof, rtDegrees (target, roll)), roll) else "")
+    Value = roll
+    Outcome = if jams (roll, kind, mode) then "Jam" else if rtHit (target, roll, kind, mode) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (rtHit (target, roll, kind, mode)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+rtAttackDice (kind, mode, rof, spend) = ([1d100], ((baseline, throws)->rtAttackResult (baseline + modeBonus (kind, mode) + asked * 10, first (first (throws).rolls), kind, mode, rof, rtAttackDice (kind, mode, rof, []), spend)))
+
+rtAttack (kind, rof, spend) = ask ("Attack", attackModes (kind), 0, (mode)->ask ("Difficulty", difficulties, -6, rtAttackDice (kind, mode, rof, spend)))
+
+rtFateAttack (char, kind, rof) = rtAttack (kind, rof, fateSpend (char))
+
+hasFury (rolls) = count (filter ((x)->x == 10, rolls)) > 0
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after armour and Toughness" else ""
+
+furyDice (total, soak) = ([1d10], ((baseline, throws)->furyResult (total + first (first (throws).rolls), soak, first (first (throws).rolls))))
+
+furyResult (total, soak, extra) =
+{
+    Text = "Righteous Fury adds " + toString (extra) + ": " + toString (total) + " damage" + afterSoak (total, soak) + (if extra == 10 then ", another 10: confirm again" else "")
+    Value = total
+    Outcome = "Critical"
+    Push = if extra == 10 then furyDice (total, soak) else 0
+    PushLabel = "Confirmed: add 1d10"
+}
+
+damageResult (total, soak, fury) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + (if fury then ", Righteous Fury: test the attack again, and on a success add 1d10" else "")
+    Value = total
+    Outcome = if fury then "Critical" else ""
+    Push = if fury then furyDice (total, soak) else 0
+    PushLabel = "Confirmed: add 1d10"
+}
+
+keptSum (rolls, tearing) = sum (rolls) - (if tearing and count (rolls) > 1 then min (rolls) else 0)
+
+damageDice (diceCount, dieSize, armourLeft, tearing) = ([dice { number = diceCount + (if tearing then 1 else 0)  sides = dieSize }],
+    ((baseline, throws)->damageResult (baseline + keptSum (first (throws).rolls, tearing), armourLeft + asked, hasFury (first (throws).rolls))))
+
+rtDamage (diceCount, dieSize, pen, tearing) =
+    ask ("Target's armour", 0, (armour)->ask ("Target's Toughness bonus", 0, damageDice (diceCount, dieSize, max (0, armour - pen), tearing)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
+
+characteristic = custom
+{
+    Value = integer { description = "The characteristic as rolled at creation, usually 25 to 45." default = 30  minvalue = 0  maxvalue = 100 }
+    Advances = integer { description = "Advances bought with experience: Simple, Intermediate, Trained and Expert, each +5." default = 0  minvalue = 0  maxvalue = 4 }
+    Unnatural = integer { description = "The Unnatural multiplier of the bonus: 1 for none, 2 for Unnatural (x2)." default = 1  minvalue = 1  maxvalue = 5 }
+    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = rtFateTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, times the Unnatural multiplier." value = ((Value + Advances * 5) / 10) * Unnatural  editable = none }
+}
+
+skillTarget (base, level, basic) =
+    switch level
+        case "Trained" then base
+        case "+10" then base + 10
+        case "+20" then base + 20
+        else if basic then base / 2 else 0
+
+skill (base, basic) = custom
+{
+    Level = string { description = "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained." default = "Untrained"  keys = ["Untrained", "Trained", "+10", "+20"] }
+    Misc = integer { default = 0 }
+    Target = integer { description = "The characteristic, halved when untrained, plus 10 or 20 for mastery. Roll d100 at or under it." value = skillTarget (base, Level, basic) + Misc  valuedice = rtFateTest (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "rtWeapon", field)
+
+isMelee (weapon) = weaponStat (weapon, "Class") == "Melee" or weaponStat (weapon, "Class") == ""
+
+dieCount (text) = max (1, firstNumber (text))
+
+dieSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+isTearing (special) = contains (toLower (special), "tearing")
+
+weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, rof, special) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = rtFateAttack (characterTable, kind, rof)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = rtDamage (dieCount (damage), dieSides (damage), pen, isTearing (special))  editable = none }
+    Pen = pen
+    RoF = rof
+    Special = special
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total, "melee", 0, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + char.Characteristics.Strength.Bonus, toInt (weaponStat (weapon, "Pen")), "", weaponStat (weapon, "Special"))
+    else
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (weaponStat (weapon, "Range")) * 3, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + (if weaponStat (weapon, "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), toInt (weaponStat (weapon, "Pen")), weaponStat (weapon, "RoF"), weaponStat (weapon, "Special"))
+
+woundState (wounds, critical, fatigue, toughness) =
+    if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
+    else if fatigue > toughness then "Unconscious"
+    else if fatigue > 0 then "Fatigued"
+    else ""
+
+lightlyDamaged (wounds, maxWounds, toughness) = maxWounds - wounds <= toughness * 2
+
+restHeal (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then wounds
+    else if lightlyDamaged (wounds, maxWounds, toughness) then min (maxWounds, wounds + 1)
+    else wounds
+
+availabilities = ["Unique -70", "Near Unique -50", "Extremely Rare -30", "Very Rare -20", "Rare -10", "Scarce +0", "Average +10", "Common +20", "Plentiful +30", "Abundant +50", "Ubiquitous +70"]
+
+availabilityMod (n) =
+    switch n
+        case -5 then -70
+        case -4 then -50
+        case -3 then -30
+        case -2 then -20
+        case -1 then -10
+        case 1 then 10
+        case 2 then 20
+        case 3 then 30
+        case 4 then 50
+        case 5 then 70
+        else 0
+
+acquisitionResult (target, roll) =
+{
+    Text = rtText (target, roll) + (if rtSuccess (target, roll) then ": acquired" else ": not this time")
+    Value = roll
+    Outcome = if rtSuccess (target, roll) then "Success" else "Failure"
+}
+
+acquisitionDice (extra) = ([1d100], ((baseline, throws)->acquisitionResult (baseline + extra + availabilityMod (asked), first (first (throws).rolls))))
+
+rtAcquisition = ask ("Craftsmanship, scale and other modifiers", 0, (n)->ask ("Availability", availabilities, -5, acquisitionDice (n)))
+
+isDouble (roll) = roll < 100 and mod (roll, 10) == mod (roll, 100) / 10
+
+powerResult (target, roll) =
+{
+    Text = rtText (target, roll) + (if isDouble (roll) then ", doubles: Psychic Phenomena if unfettered or pushed" else "")
+    Value = roll
+    Outcome = if rtSuccess (target, roll) then "Success" else "Failure"
+}
+
+powerDice = ([1d100], ((baseline, throws)->powerResult (baseline + asked * 10, first (first (throws).rolls))))
+
+rtPower = ask ("Difficulty", difficulties, -6, powerDice)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Status, Characteristics, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Career = string { description = "The career the character follows aboard the dynasty's ship." keys = ["Rogue Trader", "Arch-militant", "Astropath Transcendent", "Explorator", "Missionary", "Navigator", "Seneschal", "Void-master"] }
+        Rank = integer { description = "Career rank, from 1 upward as experience is spent." default = 1  minvalue = 1  maxvalue = 8 }
+        'Home World' = string { keys = ["Death World", "Void Born", "Forge World", "Hive World", "Imperial World", "Noble Born"] }
+        Birthright = string { keys = ["Scavenger", "Scapegrace", "Stubjack", "Child of the Creed", "Savant", "Vaunted"] }
+        'Lure of the Void' = string { keys = ["Tainted", "Criminal", "Renegade", "Duty Bound", "Zealot", "Chosen by Destiny"] }
+        'Trials and Travails' = string { keys = ["The Hand of War", "Press-Ganged", "Calamity", "Ship-Lorn", "Dark Voyage", "High Vendetta"] }
+        Motivation = string { keys = ["Endurance", "Fortune", "Vengeance", "Renown", "Pride", "Prestige"] }
+        'Experience to spend' = integer { default = 0  editable = live }
+        'Total experience' = integer { default = 500 }
+        Age = string {}
+        Build = string {}
+        Complexion = string {}
+        Hair = string {}
+        Quirks = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total; the bonus is the tens digit."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic {}
+        'Ballistic Skill' = characteristic {}
+        Strength = characteristic {}
+        Toughness = characteristic {}
+        Agility = characteristic {}
+        Intelligence = characteristic {}
+        Perception = characteristic {}
+        Willpower = characteristic {}
+        Fellowship = characteristic {}
+    }
+
+    Skills = table
+    {
+        description = "Basic skills can be tried untrained at half the characteristic; advanced skills need training. Mastery adds +10 or +20."
+        tableLayout = layout { columns = 2 }
+        Acrobatics = skill (Characteristics.Agility.Total, false)
+        Awareness = skill (Characteristics.Perception.Total, true)
+        Barter = skill (Characteristics.Fellowship.Total, true)
+        Blather = skill (Characteristics.Fellowship.Total, false)
+        Carouse = skill (Characteristics.Toughness.Total, true)
+        Charm = skill (Characteristics.Fellowship.Total, true)
+        'Chem Use' = skill (Characteristics.Intelligence.Total, false)
+        Ciphers = skill (Characteristics.Intelligence.Total, false)
+        Climb = skill (Characteristics.Strength.Total, true)
+        Command = skill (Characteristics.Fellowship.Total, true)
+        'Common Lore' = skill (Characteristics.Intelligence.Total, false)
+        Concealment = skill (Characteristics.Agility.Total, true)
+        Contortionist = skill (Characteristics.Agility.Total, true)
+        Deceive = skill (Characteristics.Fellowship.Total, true)
+        Demolition = skill (Characteristics.Intelligence.Total, false)
+        Disguise = skill (Characteristics.Fellowship.Total, true)
+        Dodge = skill (Characteristics.Agility.Total, true)
+        Drive = skill (Characteristics.Agility.Total, false)
+        Evaluate = skill (Characteristics.Intelligence.Total, true)
+        'Forbidden Lore' = skill (Characteristics.Intelligence.Total, false)
+        Gamble = skill (Characteristics.Intelligence.Total, true)
+        Inquiry = skill (Characteristics.Fellowship.Total, true)
+        Interrogation = skill (Characteristics.Willpower.Total, false)
+        Intimidate = skill (Characteristics.Strength.Total, true)
+        Invocation = skill (Characteristics.Willpower.Total, false)
+        'Lip Reading' = skill (Characteristics.Perception.Total, false)
+        Literacy = skill (Characteristics.Intelligence.Total, false)
+        Logic = skill (Characteristics.Intelligence.Total, true)
+        Medicae = skill (Characteristics.Intelligence.Total, false)
+        Navigation = skill (Characteristics.Intelligence.Total, false)
+        Performer = skill (Characteristics.Fellowship.Total, false)
+        Pilot = skill (Characteristics.Agility.Total, false)
+        Psyniscience = skill (Characteristics.Perception.Total, false)
+        'Scholastic Lore' = skill (Characteristics.Intelligence.Total, false)
+        Scrutiny = skill (Characteristics.Perception.Total, true)
+        Search = skill (Characteristics.Perception.Total, true)
+        'Secret Tongue' = skill (Characteristics.Intelligence.Total, false)
+        Security = skill (Characteristics.Agility.Total, false)
+        Shadowing = skill (Characteristics.Agility.Total, false)
+        'Silent Move' = skill (Characteristics.Agility.Total, true)
+        'Sleight of Hand' = skill (Characteristics.Agility.Total, false)
+        'Speak Language' = skill (Characteristics.Intelligence.Total, false)
+        Survival = skill (Characteristics.Intelligence.Total, false)
+        Swim = skill (Characteristics.Strength.Total, true)
+        'Tech Use' = skill (Characteristics.Intelligence.Total, false)
+        Tracking = skill (Characteristics.Intelligence.Total, false)
+        Trade = skill (Characteristics.Intelligence.Total, false)
+        Wrangling = skill (Characteristics.Intelligence.Total, false)
+        Specialities = string { description = "Which lores, languages, trades, pilot and navigation fields the skills above cover." multiline = true }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Wounds when unhurt." default = 12 }
+        Wounds = integer { description = "Wounds left. Damage past 0 is critical damage." default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage taken past 0 wounds, read on the critical tables by location and damage type." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Levels of fatigue: -10 on all tests. More than your Toughness bonus and you pass out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (Wounds, 'Critical damage', Fatigue, Characteristics.Toughness.Bonus)  visible = none  indicator = "#d64545" }
+        'Fate threshold' = integer { description = "Fate points the character has each session." default = 3 }
+        Fate = integer { description = "Spend one to reroll a test, add a degree of success, heal 1d5 wounds, shake off fatigue or act first. Burn one to cheat death." default = 'Fate threshold'  minvalue = 0  editable = live }
+        Initiative = modifier { description = "1d10 + Agility bonus, highest first." value = Characteristics.Agility.Bonus  valuedice = initiativeRoll  editable = none }
+        'New session' = button
+        {
+            description = "At the start of a session, fate points return to the threshold."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fate) = 'Fate threshold'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A night's rest clears fatigue, and a lightly damaged character heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = 0
+                (root.Status.Wounds) = restHeal (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)
+            }
+        }
+    }
+
+    Movement = table
+    {
+        description = "Metres moved per action, from the Agility bonus."
+        tableLayout = layout { columns = 2 }
+        'Half move' = integer { value = Characteristics.Agility.Bonus  render = distance (Characteristics.Agility.Bonus)  editable = none }
+        'Full move' = integer { value = Characteristics.Agility.Bonus * 2  render = distance (Characteristics.Agility.Bonus * 2)  editable = none }
+        Charge = integer { value = Characteristics.Agility.Bonus * 3  render = distance (Characteristics.Agility.Bonus * 3)  editable = none }
+        Run = integer { value = Characteristics.Agility.Bonus * 6  render = distance (Characteristics.Agility.Bonus * 6)  editable = none }
+    }
+
+    Armour = table
+    {
+        description = "Armour points by hit location. The Toughness bonus also soaks damage."
+        tableLayout = layout { columns = 2 }
+        Head = integer { default = 0 }
+        Body = integer { default = 0 }
+        'Right Arm' = integer { default = 0 }
+        'Left Arm' = integer { default = 0 }
+        'Right Leg' = integer { default = 0 }
+        'Left Leg' = integer { default = 0 }
+        'Toughness bonus' = integer { value = Characteristics.Toughness.Bonus  editable = none }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack tests and damage for each weapon. Attacks ask the kind of attack and the difficulty; damage asks the target's armour and Toughness bonus."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, 0, "", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Clip"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Shots = integer { default = 30  minvalue = 0  editable = live }
+            Clips = integer { default = 2  minvalue = 0  editable = live }
+        }
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Armour worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    'Profit Factor' = table
+    {
+        description = "The dynasty's wealth and influence, shared by the whole crew."
+        tableLayout = layout { columns = 2 }
+        'Starting Profit Factor' = integer { default = 30 }
+        Current = integer { description = "Profit Factor now: Endeavours raise it, Misfortunes and failures lower it." default = 'Starting Profit Factor'  minvalue = 0  editable = live }
+        Acquisition = integer { description = "Test Profit Factor to acquire something, modified by its availability, craftsmanship and scale." value = Current  valuedice = rtAcquisition  editable = none }
+        Misfortunes = string { multiline = true  editable = live }
+    }
+
+    Acquisitions = list
+    {
+        description = "Things the dynasty has acquired that the character may call on."
+        singular = "Acquisition"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Endeavours = list
+    {
+        description = "Undertakings of the dynasty. Fill the Achievement Points to complete one and earn its reward in Profit Factor."
+        tableLayout = layout { size = wide }
+        singular = "Endeavour"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Size = string { keys = ["Lesser", "Endeavour", "Grand"] default = "Endeavour" }
+            Objectives = string {}
+            'Achievement points' = integer { default = 0  minvalue = 0  editable = live }
+            Required = integer { default = 1000  minvalue = 0 }
+            Reward = string {}
+        }
+    }
+
+    Psychic = table
+    {
+        description = "Astropaths and Navigators: psy rating and the power test."
+        tableLayout = layout { columns = 3 }
+        'Psy rating' = integer { default = 0  minvalue = 0 }
+        'Power test' = integer { description = "Willpower plus 5 per psy rating used. Doubles bring Psychic Phenomena when unfettered or pushed." value = Characteristics.Willpower.Total + 'Psy rating' * 5  valuedice = rtPower  editable = none }
+        'Sustained powers' = string { editable = live }
+    }
+
+    'Psychic powers' = list
+    {
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Mental state' = table
+    {
+        description = "Insanity from horror and Corruption from the Warp; each brings worse effects as the points grow."
+        tableLayout = layout { columns = 2  size = wide }
+        Insanity = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        Corruption = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        Disorders = string { multiline = true  editable = live }
+        Malignancies = string { multiline = true  editable = live }
+        'Critical injuries' = string { multiline = true  editable = live }
+        Mutations = string { multiline = true  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/roguetrader/xenos.svg"
+    }
+    Profile = table
+    {
+        description = "Characteristics. Unnatural characteristics multiply the bonus; note them under Traits."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = rtTest }
+        BS = integer { default = 30  valuedice = rtTest }
+        S = integer { default = 30  valuedice = rtTest }
+        T = integer { default = 30  valuedice = rtTest }
+        Ag = integer { default = 30  valuedice = rtTest }
+        Int = integer { default = 30  valuedice = rtTest }
+        Per = integer { default = 30  valuedice = rtTest }
+        WP = integer { default = 30  valuedice = rtTest }
+        Fel = integer { default = 30  valuedice = rtTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Wounds' = integer { default = 10 }
+        Wounds = integer { default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Armour = string { description = "Armour points by location, such as All 4 or Body 6, Head 2." default = "All 0" }
+        'Toughness bonus' = integer { default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { description = "Half, full, charge and run in metres." default = "3/6/9/18" }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = rtAttack ("melee", "", [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = rtDamage (dieCount (Damage), dieSides (Damage), Pen, false)  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = rtAttack ("ranged", RoF, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 30 }
+            RoF = string { default = "S/-/-" }
+            Damage = string { default = "1d10" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = rtDamage (dieCount (Damage), dieSides (Damage), Pen, false)  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+shipHits (weaponType, strength, degrees) =
+    switch weaponType
+        case "Lance" then min (strength, 1 + degrees / 3)
+        case "Torpedoes" then 0
+        else min (strength, 1 + degrees)
+
+shipFireText (weaponType, strength, crit, target, roll) =
+    rtText (target, roll)
+    + (if not (rtSuccess (target, roll)) then ""
+       else if weaponType == "Torpedoes" then ": the salvo is launched"
+       else ": " + toString (shipHits (weaponType, strength, rtDegrees (target, roll))) + (if shipHits (weaponType, strength, rtDegrees (target, roll)) == 1 then " hit" else " hits") + ", Crit Rating " + toString (crit))
+
+shipFireResult (weaponType, strength, crit, target, roll) =
+{
+    Text = shipFireText (weaponType, strength, crit, target, roll)
+    Value = roll
+    Outcome = if rtSuccess (target, roll) then "Hit" else "Miss"
+}
+
+shipFireDice (weaponType, strength, crit) = ([1d100], ((baseline, throws)->shipFireResult (weaponType, strength, crit, baseline + asked * 10, first (first (throws).rolls))))
+
+shipFire (weaponType, strength, crit) = ask ("Difficulty", difficulties, -6, shipFireDice (weaponType, strength, crit))
+
+shipDamageText (total, armourValue, hits, lance) =
+    if hits <= 0 then "No hits got past the void shields"
+    else toString (total) + " damage from " + toString (hits) + (if hits == 1 then " hit" else " hits")
+        + (if lance then ", Lance: ignores armour" else if armourValue > 0 then ", " + toString (max (0, total - armourValue)) + " after Armour " + toString (armourValue) else "")
+
+shipDamageDice (hits, diceCount, dieSize, lance) = ([dice { number = max (0, hits) * diceCount  sides = dieSize }],
+    ((baseline, throws)->shipDamageText (sum (first (throws).rolls) + baseline * max (0, hits), asked, hits, lance)))
+
+shipDamage (diceCount, dieSize, lance) = ask ("Hits past the void shields", 1, (hits)->ask ("Target's Armour", 0, shipDamageDice (hits, diceCount, dieSize, lance)))
+
+componentStat (item, field) = itemStat (item, "rtComponent", field)
+
+componentSum (items, field) = sum (map ((c)->toInt (componentStat (c, field)), items))
+
+shipState (integrity, maxIntegrity) =
+    if integrity <= 0 then "Crippled"
+    else if integrity * 2 <= maxIntegrity then "Badly damaged"
+    else ""
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/roguetrader/voidship.svg"  important = [Status, 'Ship weapons'] }
+    Hull = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { description = "The ship's class, such as Sword-class frigate." }
+        'Hull type' = string { keys = ["Transport", "Raider", "Frigate", "Light Cruiser", "Cruiser"] }
+        Dimensions = string {}
+        Mass = string {}
+        'Crew complement' = string {}
+        'Ship Points' = integer { description = "Points spent on hull and components when the ship was built." default = 0 }
+        Speed = integer { description = "Void units moved each turn." default = 6  minvalue = 0 }
+        Manoeuvrability = modifier { description = "Added to the pilot's tests to manoeuvre the ship." default = 0 }
+        Detection = modifier { description = "Added to augury tests; its tens digit adds to the ship's initiative." default = 10 }
+        Armour = integer { description = "Taken off each macrobattery salvo's damage. Lances ignore it." default = 15  minvalue = 0 }
+        'Void Shields' = integer { description = "Each shield stops one hit a turn." default = 1  minvalue = 0 }
+        'Turret Rating' = integer { description = "Defence against torpedoes and attack craft." default = 1  minvalue = 0 }
+        'Max Hull Integrity' = integer { default = 35  minvalue = 1 }
+        'Crew Rating' = integer { description = "The crew's skill for tests they make, from Incompetent 20 to Elite 60." default = 30  minvalue = 0  maxvalue = 100 }
+        Initiative = modifier { description = "1d10 + the tens digit of Detection." value = Detection / 10  valuedice = initiativeRoll  editable = none }
+        'Weapon capacity' = string { description = "Weapon slots by location, such as Prow 1, Dorsal 1, Port 1, Starboard 1." }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Hull Integrity' = integer { description = "What the hull can take. At 0 the ship is crippled; past it, critical hits." default = Hull.'Max Hull Integrity'  minvalue = -100  editable = live  indicator = "#d64545" }
+        'Shields up' = integer { description = "Void shields still holding this turn." default = Hull.'Void Shields'  minvalue = 0  editable = live }
+        'Crew Population' = integer { description = "Percent of the crew left. Losses make the ship's tests harder." default = 100  minvalue = 0  maxvalue = 100  editable = live }
+        'Max Morale' = integer { default = 100  minvalue = 0 }
+        Morale = integer { default = 'Max Morale'  minvalue = 0  maxvalue = 100  editable = live }
+        Fires = integer { description = "Fires burning aboard. Each spreads or eats crew and morale until put out." default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
+        State = string { value = shipState ('Hull Integrity', Hull.'Max Hull Integrity')  visible = none  indicator = "#d64545" }
+        'Critical hits' = string { multiline = true  editable = live }
+        'New turn' = button
+        {
+            description = "At the start of each turn the void shields come back up."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.'Shields up') = Hull.'Void Shields'
+            }
+        }
+    }
+    Tests = table
+    {
+        description = "The ship's own tests with the crew rating. A named officer uses their own skill plus the same modifier."
+        tableLayout = layout { columns = 3  size = wide }
+        Manoeuvre = integer { value = Hull.'Crew Rating' + Hull.Manoeuvrability  valuedice = rtTest  editable = none }
+        Augury = integer { value = Hull.'Crew Rating' + Hull.Detection  valuedice = rtTest  editable = none }
+        'Crew test' = integer { value = Hull.'Crew Rating'  valuedice = rtTest  editable = none }
+    }
+    Power = table
+    {
+        description = "Power and space from the components listed below."
+        tableLayout = layout { columns = 4  size = wide }
+        'Power generated' = integer { value = componentSum (shipTable.Components, "Power generated")  editable = none }
+        'Power used' = integer { value = componentSum (shipTable.Components, "Power")  editable = none }
+        'Space available' = integer { default = 40  minvalue = 0 }
+        'Space used' = integer { value = componentSum (shipTable.Components, "Space")  editable = none }
+    }
+    Components = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Ship Components'
+        singular = "Component"
+        editable = character
+    }
+    'Ship weapons' = list
+    {
+        description = "Fire rolls the gunnery test (the crew rating or the gunner's Ballistic Skill); Damage asks how many hits got past the shields and the target's Armour."
+        tableLayout = layout { size = wide }
+        singular = "Ship weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Location = string { keys = ["Prow", "Dorsal", "Port", "Starboard", "Keel"] default = "Dorsal" }
+            Kind = string { keys = ["Macrobattery", "Lance", "Torpedoes"] default = "Macrobattery" }
+            Strength = integer { default = 3  minvalue = 1 }
+            Damage = string { default = "1d10+2" }
+            Crit = integer { default = 5 }
+            'Range VU' = integer { default = 5 }
+            Fire = integer { default = 30  valuedice = shipFire (Kind, Strength, Crit)  action = ranged }
+            Roll = integer { value = damageBonus (Damage)  valuedice = shipDamage (dieCount (Damage), dieSides (Damage), Kind == "Lance")  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Complications and history' = string { multiline = true }
+        'Machine spirit' = string { multiline = true }
+    }
+}
+
+rtWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Type" prefix = "" filter = Stats.Type }]
+        sortedBy = sort { prefix = "" sort = Stats.Class }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Melee", "Pistol", "Basic", "Heavy", "Thrown"] }
+        Range = string { description = "Range in metres. Long range is double, extreme triple." }
+        RoF = string { description = "Rate of fire: single, semi-auto and full auto, such as S/3/10." default = "S/-/-" }
+        Damage = string { default = "1d10" }
+        Type = string { description = "Energy, Impact, Rending or Explosive." keys = ["E", "I", "R", "X"] }
+        Pen = string { default = "0" }
+        Clip = string {}
+        Reload = string {}
+        Special = string { description = "Weapon qualities such as Tearing, Reliable or Unreliable." }
+        Weight = string {}
+        Availability = string {}
+        Craftsmanship = string { keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+    }
+}
+
+rtArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Locations" prefix = "" filter = Stats.Locations }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Locations = string { default = "Body" }
+        AP = integer { default = 2 }
+        Weight = string {}
+        Availability = string {}
+        Craftsmanship = string { keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+    }
+}
+
+rtTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Talent", "Trait"] default = "Talent" }
+        Prerequisites = string {}
+        Careers = string {}
+    }
+}
+
+rtPowerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "" sort = Stats.Discipline }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Telepathy", "Divination", "Navigator", "Other"] }
+        Threshold = string { description = "How hard the power is to manifest." }
+        Action = string {}
+        'Focus Power' = string {}
+        Range = string {}
+        Sustained = string {}
+    }
+}
+
+rtGear = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weight = string {}
+        Availability = string { keys = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"] }
+        Craftsmanship = string { keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+    }
+}
+
+rtComponent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/roguetrader/component.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Essential", "Supplemental", "Weapon"] default = "Supplemental" }
+        Hulls = string { description = "The hull types that can mount it." default = "All" }
+        'Power generated' = string { description = "Power the component makes, for plasma drives." default = "0" }
+        Power = string { description = "Power the component uses." default = "0" }
+        Space = string { default = "0" }
+        'Ship Points' = string { default = "0" }
+        Effect = string {}
+    }
+}
+
+RogueTrader = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Explorers"
+            topic = "Getting started"
+            text = ["Walk the origin path (home world, birthright, lure of the void, trials and travails, motivation), pick a career such as Rogue Trader, Navigator or Void-master, and roll the nine characteristics (2d10 + 25 each, adjusted by home world).", "Make the dynasty's ship as a Spaceship and set the starting Profit Factor on each sheet."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target, after the difficulty (Challenging +0, Hard -20, Easy +30). Every full 10 under the target is a degree of success; every full 10 over is a degree of failure.", "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained. A failed test offers to spend a Fate point for a reroll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask the kind of attack (standard, all-out, burst, called shot) and the difficulty. Bursts add hits from degrees of success. The roll's digits reversed give the hit location; ranged attacks jam on 96 or more (94 for bursts).", "Damage asks the target's armour and Toughness bonus. A 10 on a damage die is Righteous Fury: test the attack again and add 1d10 on a success."]
+        },
+        hint
+        {
+            title = "Profit Factor"
+            topic = "Play"
+            text = ["Acquisitions test the dynasty's Profit Factor, asking the item's availability and any craftsmanship or scale modifier. Endeavours earn Achievement Points that raise Profit Factor when complete."]
+        },
+        hint
+        {
+            title = "Void combat"
+            topic = "Combat"
+            text = ["Spaceships roll initiative with 1d10 + their Detection bonus. Fire rolls the gunnery test and counts the hits; Damage asks how many hits got past the void shields and the target's Armour. New turn raises the shields again."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: 1d10 + Agility bonus, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = shipTable
+    Weapons = rtWeapon
+    Armour = rtArmour
+    Talents = rtTalent
+    'Psychic Powers' = rtPowerStats
+    Gear = rtGear
+    'Ship Components' = rtComponent
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Psychic Powers", "Gear"]
+    otherLibararyTypes = ["Ship Components"]
+    extraEntityTypes = [entityTypeDescription ("Spaceships", "voidship", true, "/systems/roguetrader/voidship.svg", ["Ship Components"])]
+    description = "Warhammer 40,000 Rogue Trader: a dynasty of explorers beyond the Imperium, with d100 tests, degrees of success, Profit Factor and voidships"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 1d5]
+    cssFiles = ["/systems/roguetrader/roguetrader.css"]
+    libraries = ["/systems/names/grimdark.json", "/systems/names/scifi.json"]
+    nameSettings = [grimdarkNameSetting, spaceNameSetting]
+}
