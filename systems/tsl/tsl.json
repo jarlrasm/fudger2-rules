@@ -1,0 +1,2243 @@
+{
+ "name": "Sapphic Reference Document",
+ "description": "The basic moves, the nine playbooks and every playbook move from the Sapphic Reference Document of the Thirsty Sword Lesbians roleplaying game (https://poweredbylesbians.com/srd/), designed by April Kit Walsh and published by Evil Hat Productions, LLC, used under its open licence (CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/, with the terms at poweredbylesbians.com). Converted with tools/tsl_import.py, changing format only; commentary and examples of play are left out. This library is offered under the same licence.",
+ "url": "/systems/tsl/tsl.json",
+ "gamemaster": "",
+ "entities": [
+  {
+   "type": "Moves",
+   "name": "Fight",
+   "description": "When you seek to incapacitate someone with violence, roll **+Daring** or **+Grace**:\n\n**10+:** Choose 3 and your opponent chooses 1 to apply to you in response\n\n**7-9:** Choose 2 and your opponent chooses 1\n- Flirt with or provoke your opponent and gain a String on them\n- Through violence or cutting words, inflict a Condition\n- Create an opportunity for an ally through prowess or distraction\n- Take an object from your opponent or seize a superior position\n\nYou may not pick the same option more than once for a single **Fight** move. For instance, you can't take three Strings on a roll of 10+.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "Daring, Grace",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Defy Disaster",
+   "description": "When you push your limits to achieve something extraordinary that's not covered by another move, or to avert an imminent danger to yourself or someone else, say what you're willing to sacrifice and pick your approach:\n- Might, endurance, or courage. **+Daring**\n- Swiftness or elegance. **+Grace**\n- Charm or social insight. **+Heart**\n- Cleverness or knowledge. **+Wit**\n- Willpower or metaphysical skill. **+Spirit**\n\n**10+:** Do it with style. At the GM's discretion, you may also learn new information, discover a new opportunity, or gain a String on someone.\n\n**7-9:** The GM will offer you a hard choice or success with a sacrifice.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "Daring, Grace, Heart, Wit, Spirit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Stagger",
+   "description": "When you suffer a staggering physical or emotional blow, choose an option from the following based on the number of Conditions you have marked.\n\n**4-5 Conditions:**\n- You're rendered helpless for the scene\n- You're utterly humiliated and news will spread; this could be a consequence of a setback in the confrontation, or might be caused by something you confess in the heat of the moment\n- Choose 2 from the '0-3 Conditions' options\n\n**0-3 Conditions:**\n- You lash out at someone whose regard matters to you: provoke them to do something foolish or harmful and take advantage of a String on them if you have one\n- You hesitate or stumble and the opposition gains an opportunity\n- You grin and bear the blow; mark two Conditions",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Entice",
+   "description": "When you appeal to someone's physical or emotional sensibilities, roll +Heart:\n\n**10+:** Gain a String on them and they choose 1\n\n**7-9:** Gain a String on them, unless they decide instead to choose 1\n- Get flustered and awkward\n- Promise something they think you want\n- Give in to desire",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "Heart",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Figure Out a Person",
+   "description": "When you try to understand a person, roll +Wit (+3 more if you spend a String on them):\n\n**10+:** You may ask 2 questions, now or later in the scene\n\n**7-9:** You may ask 2 questions, but they may ask 1 of you\n- What are your feelings towards _____?\n- What do you hope to get from ***?\n- How could I get you to***?\n- What do you love most?\n- How would you feel if I _____?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "Wit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Influence with a String",
+   "description": "At any time, spend a String on someone to do one of the following:\n- Offer them an XP to do something (don't spend the String if they refuse the temptation)\n- Find out what it will take to get them to do what you want (for an NPC, spending the String means they may simply agree)\n- Add 1 to your roll against them (after rolling)\n- Add or subtract 1 from any roll they make (after rolling)\n- Each character may only spend one String to add or subtract from a given roll.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Smitten",
+   "description": "When you become **Smitten** with someone (always your choice), say why, give them a String on you, and answer the question in the Truths of Heart and Blade section of your playbook:\n- **Beast:** What have you done that you are sure they view as inappropriate?\n- **Chosen:** How do our respective stations make it impossible to be together?\n- **Devoted:** How does pursuing them conflict with your Devotion?\n- **Infamous:** Why do you think they would be wrong to forgive you?\n- **Nature Witch:** What is a clear challenge to being with them that you're overlooking because of your naivete?\n- **Scoundrel:** Why would your romance never last?\n- **Seeker:** Which of your values do they openly violate or decry?\n- **Spooky Witch:** What obvious thing about you are you sure would make them reject you?\n- **Trickster:** What secret do you have that you think would make them reject you if they knew?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Finally Kiss, in a Dangerous Situation",
+   "description": "When people finally kiss after a period of tension, each takes +1 ongoing to get to safety and protect the other for the rest of the scene.\n\nIf more than two people finally kiss in these circumstances, they all get the bonus. Each participant must be enthusiastic about kissing to trigger this move.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Emotional Support",
+   "description": "When you offer someone support in a way that could be meaningful to them, roll **+Heart** or **+Spirit** (+3 more if you spend a String on them):\n\n**10+:** If they open up to you, they choose 1 and you either choose 1 or take a String on them\n\n**7-9:** If they open up to you, they choose 1\n- Clear a Condition\n- Mark XP\n- +1 forward\n- Gain insight from the GM about an obstacle facing one of you\n\nIf they're **Smitten** with you, they may choose an additional option.\n\nIf you're **Smitten** with them and they refuse to open up to you, it stings. You mark a Condition.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Basic",
+        "Stat": "Heart, Spirit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Call on a Toxic Power",
+   "description": "When you parley with a Toxic Power, ask it your question and roll **+Spirit**:\n\n**10+:** It answers the question and grants you +1 forward to act on the information\n\n**7-9:** It answers the question and the GM chooses 1\n- It takes something from you, either knowledge, reputation, or something physical\n- You mark a Condition\n- It gains a String on you",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Special",
+        "Stat": "Spirit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "End of Session",
+   "description": "At the end of every session, each player marks XP if, during the session:\n- Any PC confessed their love\n- Any PC struck a blow against oppression or de-escalated a violent situation\n- Any PC leapt into danger with daring and panache\n- Any player used a safety practice such as adding to the palette or checking in\n\nEach PC marks XP for each condition that is met by anyone in the group. In other words, each PC marks the same number of XP as a result of this move.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "Basic",
+        "Kind": "Special",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Transform",
+   "description": "You have a bestial form, which you can assume at will and must assume whenever your Feral hits 4. When you do, tell everyone what the beast in you looks like, increase your Feral to 4 if it's not there already, and roll **+Daring**:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - You are in harmony with your beast and may clear a Condition\n  - You are magnificent and little escapes your notice; you gain leverage or an opportunity with a monster\n  - Pain is nothing to you; ignore the next time you would **Stagger** while transformed\n  - You can move in ways no ordinary person could\nYou revert to your usual form when your Feral drops below 4. While transformed, you may mark a Condition to avoid reducing your Feral, as often as you like.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "Daring",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Big Dyke Energy",
+   "description": "When you make it clear to your foes that you're the biggest threat, then for the rest of the scene, whenever you roll a 10+, you may choose someone present to be impressed or intrigued with you. Once during the scene, when you gain a String on someone, gain an additional String on someone else who considers you an enemy.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Ferocious",
+   "description": "When you **Fight**, you may mark a Condition to choose an additional option, even on a 6-.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Shameless",
+   "description": "When you say aloud what you want from an NPC, you may give them a String on you to ask a question about them from the **Figure Out a Person** move.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Tenacious Purpose",
+   "description": "When you commit yourself to a specific goal, you may ask the GM once per scene how you could advance that goal in a way that violates 'civilized' norms. Take +1 forward to act on the answer. If you refrain, it counts as an uncomfortable situation that reduces your Feral by 1 and you must mark a Condition.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Tracker",
+   "description": "When you investigate a person's living space, camp, or trail, or an object important to them, you can roll **+Heart** instead of **+Wit** to **Figure Them Out**, and may do so even when they're not present. You can also ask the question, 'Where did they go?' as if it were an option on the list for that move. On a 7-9, they take a String on you instead of asking a question back. Say why. Do they just smell that good or that fearsome?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Playbook",
+        "Stat": "Heart, Wit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Smitten Kitten",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- What have you done that you are sure they view as inappropriate?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "The Bloody Truth",
+   "description": "When you **Figure Out a Person** in physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What awakens the beast inside you?\n- How could I get you to kiss me?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Beast",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "The Fated Day Approaches",
+   "description": "Whenever you miss an opportunity to make progress towards your Destiny, choose 1:\n- Someone with power over you makes an uncomfortable demand in furtherance of your Destiny, backed by a threat\n- The PC you care about the most receives bad news or has an accident serious enough to make them **Stagger**\n\nThe GM will tell you the details, inspired by your Destiny. They may wait until a lull in the action to drop the consequences on you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Don't You Know Who I Am?",
+   "description": "When you meet someone who knows you by reputation (you decide), roll **+Heart**:\n- 10+: Say two things they've heard about you\n- 7-9: You say one, the GM says one",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "Heart",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Entourage",
+   "description": "You have a group of loyal attendants. Name three of them who accompany you and choose a trait for them: Dangerous, Fanatical, Resourceful, Charming\n\nChoose a basic move. Your entourage grants you a +1 on rolls for this move when present. When you would **Stagger**, you may choose instead for one of your named Entourage to die. If you do, your Entourage gains a String on you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Gossip",
+   "description": "When you seek insight about a person by spending some time gossiping with those who know them, roll **+Wit**:\n- 10+: You learn a dangerous secret and gain a String on the target. You may also ask a question from the **Figure Out a Person** move.\n- 7-9: You may ask a question from the **Figure Out a Person** move.\n\nSomeone you speak to who is dangerous to you may ask a question of you from the same list.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "Wit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Guidance from Above",
+   "description": "When you petition a superior for guidance, they give you instructions and useful information. Mark XP or clear a Condition if you do as commanded. They gain a String on you if you do otherwise.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Help Me~~!",
+   "description": "You're a magnet for trouble and hunted by those who would use you for their own purposes. Others mark XP when they **Defy Disaster** that would otherwise befall you. In addition, whenever you're captured, your captor reveals something they hope to achieve; gain a String on them and mark XP.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Know Your Place!",
+   "description": "When someone dares insult you and you deliver a scathing retort, roll **+Wit**:\n- 10+: Word spreads of your sharp wit, take +1 forward, and they choose 1\n- 7-9: They choose 1\n  - Back down\n  - Make a fool of themself\n  - Attack you",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Playbook",
+        "Stat": "Wit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Love Is Not My Destiny",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n\nHow do our respective stations make it impossible to be together?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Inescapable Conclusions",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may ask one additional question from this list, even on a 6-:\n- What do you hope for your future?\n- What do you fear is your destiny?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Chosen",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Last Stand",
+   "description": "When you face a superior foe on behalf of your Devotion, you may roll +Conditions (the number of Conditions you have marked) instead of the normal stat to **Fight** or to **Defy Disaster** that's about to befall someone else.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Feature",
+        "Stat": "Conditions",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "What's Best for Them",
+   "description": "When you're **Smitten** with someone, you may treat them as a subject of your Devotion. Also, when you take action to help them be romantic with someone other than you, mark XP.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Feature",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Fanatical Self-Sacrifice",
+   "description": "You may mark a Condition to prevent a Condition being inflicted on another. When you do, mark XP, and you may only clear that Condition by taking the associated destructive action. Mark it with an asterisk to remind yourself. Also, your Conditions only cause a -1 penalty to the associated basic moves (instead of -2).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "For the Cause!",
+   "description": "When you **Fight** the enemy of your Devotion, you can suffer a Condition to choose an additional option from the **Fight** move, even if you roll a 6-. You can inflict a Condition a second time within a single **Fight** move this way.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Gallant Rescue",
+   "description": "When you **Defy Disaster** that's about to befall someone else, you can either gain a String on them or ask one of the following questions, even if you roll a 6-. You can only gain one String per scene in this way on any given person.\n- How do you feel about my Devotion?\n- What secret pain lies in your heart?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Power of Conviction",
+   "description": "When you **Entice** someone while extolling the virtues of your Devotion or invoking its authority, you may roll +Spirit instead of **+Heart**. A superior in your Devotion gains a String on you, representing your dependence.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "Heart, Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Lay on Hands",
+   "description": "When you touch someone as part of **Emotional Support**, you heal their physical ailments. Tell them how your Devotion sustains you; they mark an XP if they validate your Devotion, and you gain a String on them if they criticize it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Loyal Steed",
+   "description": "Name your steed and detail two strengths and two weaknesses from the following list. When riding your steed, you may roll +Spirit instead of **+Daring** to **Fight** and may take a person with you whenever you **Defy Disaster**.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "Daring, Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Toxic Devotion",
+   "description": "Once per scene, when you forgive your Devotion for abusing you or make excuses for obvious problems with your Devotion, take +1 forward or mark XP. Also, once per scene, when you learn that another PC thinks your Devotion is problematic and you don't defend it, mark a Condition and give them a String on you.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "My Heart is Not Mine to Give",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- How does pursuing them conflict with your Devotion?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "What Will You Fight For?",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What are you willing to risk death for?\n- What kind of deeds earn your loyalty?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Devoted",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Wicked Past",
+   "description": "When you hear about a villain for the first time, you may decide that you know them from your past. If so, give them a String on you to ask a question from the **Figure Out a Person** list and take +1 forward against them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Make It Right",
+   "description": "When you allow yourself to be vulnerable to someone you hurt during your villainous past, they choose 1:\n- Decline to engage; they gain a String on you\n- Lash out; you **Stagger**\n- Guide you; they mark XP and give you a task to help make amends\n- Show vulnerability; you take +1 forward to interact with them\n- Forgive you; you each clear a Condition and this move no longer triggers with this person",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Always Suspect",
+   "description": "When you pretend to be a villain to win a villain's trust, they trust you enough to offer you an opportunity and you gain a String on them. You must choose one of the following options:\n- Someone watching comes to the worst possible conclusion\n- The villain requires an act of villainy to prove your intentions first\n- The villain is only pretending to trust you and the opportunity is a trap",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Talons of the Past",
+   "description": "When you gain a String on someone associated with your villainous past, or vice versa, mark XP. The first time this happens for a given person, you each can define a secret or vulnerability you know about the other.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "They Can Change, Too",
+   "description": "When you give up an advantage on someone dangerous because you believe they can mend their wicked ways, you can ask a question as if you'd **Figured Them Out**.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Used to Disappointment",
+   "description": "When you rely upon or trust someone else with something important, say how you expect them to let you down.\n- If they pleasantly surprise you, they gain a String on you\n- If they do as you expect, choose 1: they lose a String on you, or you gain a String on them\n- If they are somehow even worse than you expected, you have a choice: berate them and inflict a Condition, or swallow your loneliness and take a Condition yourself",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "What Makes a Home",
+   "description": "If every other PC in a scene has a String on you, your Conditions cause you only a -1 penalty instead of a -2 to the associated basic moves.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Who's the Monster?",
+   "description": "When you expose the hypocrisy of someone who is supposedly virtuous, roll **+Daring**:\n- 10+: Gain a String on them and choose 1\n- 7-9: Choose 1\n  - The wrongness of their act is exposed to all; they mark XP if they change their mind. If they don't, they must attack you or take a Condition.\n  - Your words sting; they take a Condition.\n  - You impress an onlooker; gain a String on them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Playbook",
+        "Stat": "Daring",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Undeserving",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- Why do you think they would be wrong to forgive you?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Your Wicked Heart",
+   "description": "When you **Figure Out a Person** during physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What are you most ashamed of?\n- How could I get you to betray your ideals?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Infamous",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Wild Friends",
+   "description": "You can speak with animals and plants and may **Influence** them with Strings just like other NPCs. Near your home, or anywhere you have spent a long period of time, animal and plant friends are always nearby when you want them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Awaken the Wild",
+   "description": "When you are in a safe position and attempt to commune with a place or non-sentient creature, roll +Spirit:\n- 10+: Choose 1\n- 7-9: Choose 1; GM will offer you a hard choice or success at a cost\n  - You cleanse it of hurt, corruption, or sickness\n  - You alter its behavior, ecosystem, or atmosphere to one you choose\n  - You make it dangerous to a certain person or creature, or a type of person or creature\nIf you attempt this move while rushed or while distressed to the point of having three or more Conditions, it works as above, briefly, but afterwards the place or creature will fall dead and barren.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Familiar",
+   "description": "You have a cute animal as your loyal familiar. You can perceive the world through its senses whenever you choose and communicate with it at any distance. In addition, choose a basic move. When the familiar helps with that basic move or with **Emotional Support**, take +1 to your roll.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "I Ship It",
+   "description": "When you want to make a match between two other people and talk up one to the other, roll **+Heart**:\n- 10+: You may give the listener a String on the other person or give the other person a String on the listener\n- 7-9: As above, and the listener can either take a String on you or give the other person a String on you\n\nAnyone involved may mark XP if they become **Smitten** with anyone else involved, including the Witch (immediately or later this session, maximum of 1 XP per PC).",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "Heart",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "The Magic of Love",
+   "description": "When you're **Smitten** with someone and proudly extol the power of love, either of you may spend a String on the other to gain the use of one of their playbook moves for one scene.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Nature's Touch",
+   "description": "When you touch someone and let the power of the natural world flow into them, roll +Spirit:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - They may give you a String on them to clear a Condition\n  - They gain the ability to speak with plants and animals for the rest of the scene\n  - They must answer one of the **Figure Out a Person** questions of your choice or else they take a Condition",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Playbook",
+        "Stat": "Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Love Conquers All",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- What is a clear challenge to being with them that you're overlooking because of your naivete?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Clear-Hearted Insight",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What makes you feel loved?\n- What do you hope for the future?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Nature Witch",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Heat of the Moment",
+   "description": "When you taunt someone into doing something they want to do but find unwise, roll **+Daring**:\n\nIf the target is an NPC:\n- 10+: They'll do it in exchange for a small concession or reassurance\n- 7-9: They choose 1\n  - Create an opportunity for you or your allies\n  - They give you a String on them\nIf the target is a PC:\n- 10+: They mark XP if they do it, and must take a Condition if they don't\n- 7-9: You choose 1\n  - They mark XP if they do it\n  - They take a Condition if they don't\nFor either a PC or an NPC, if you aren't already **Smitten** with them, you may choose to treat a 7-9 result as a 10+ by choosing to become **Smitten** with the target.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Feature",
+        "Stat": "Daring",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Lust at First Sight",
+   "description": "When you become **Smitten** with someone you barely know, declare your undying love and give them a String on you. Lose your **Smitten** status with anyone who has no Strings on you. Take +1 forward to any act you think might impress your new interest.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Shiny and New",
+   "description": "When you give or receive **Emotional Support** in an intimate moment with someone new, you each mark XP or clear a Condition.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Better to Seek Forgiveness",
+   "description": "When you apologize to someone for your outrageous conduct and put yourself at their mercy, roll **+Daring**:\n- 10+: You find out what it will take for them to forgive you and you each gain a String on the other. If they forgive you, you each clear a Condition.\n- 7-9: You find out what it will take for them to forgive you. If you do it, you either take Strings on each other or they may clear a Condition, your choice.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "Daring",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Fools Rush In",
+   "description": "When you vault into a situation without forethought and wind up way over your head, give someone dangerous to you a String, mark XP, and take +1 forward to **Defy Disaster**.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Impressive Swordplay",
+   "description": "Whenever you roll a 7+ to **Fight**, you may gain a String on someone who is present and ask their player what it is about you that has impressed or intrigued them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "The Main Attraction",
+   "description": "When you make a dramatic entrance, roll **+Grace**:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - All attention is focused on you for a moment\n  - You hold the attention of one person for as long as you deliver a dramatic speech\n  - Take a String on someone present\n  - You take +1 forward",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "Grace",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "One in Every Port",
+   "description": "When you return to any town you've been to before, name a person with whom you shared intimacy here and say how you left things. If you left on bad terms, mark XP and the GM will tell you something interesting that has changed since you were last here.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Rrrip!",
+   "description": "When you take or narrowly evade a physical blow from someone dangerous to you, you may declare that your clothes were damaged and are now practically indecent. For the remainder of the scene, when you roll a 10+ on any move against an NPC, you may declare that they have a crush on you (up to one NPC per roll and subject to GM discretion). Additionally, any PC who becomes **Smitten** with you during the remainder of the scene may mark XP.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "To Love and Lose",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- Why would your romance never last?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Reparte",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What would make you run away with me?\n- Where did you learn to fight?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Scoundrel",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "People Are People",
+   "description": "When you talk about your home, roll **+Heart**:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - Admit a flaw about your home; gain +1 forward\n  - Share something good about your home; clear a Condition\n  - Lie about your home to impress a listener; take a String on them",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "Heart",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Hear Me!",
+   "description": "When you shout one of your Convictions aloud in confrontation with those who hold a contrary belief, roll **+Daring**:\n- 10+: Ask 2\n- 7-9: Ask 1\n  - Why do you think you have to follow that belief?\n  - What does it cost you to follow that belief?\n  - What do you wish for that is contrary to that belief?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "Daring",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "It Wasn't All Bad",
+   "description": "When you encounter someone whose perspective is different from that of your companions, share a relevant story from your home culture and roll +Spirit:\n- 10+: Gain a String on them and either take +1 forward to interact with them or grant that +1 forward to a companion\n- 7-9: Gain a String on them\n\nIn either case, they also tell you something interesting or useful about their upbringing.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Listen and Learn",
+   "description": "When you ask someone what you should do in an unfamiliar situation:\n- If you follow their advice, take +1 forward and clear a Condition\n- If you follow their advice and it goes poorly, mark XP",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Proper Courtship",
+   "description": "When you're Smitten with someone and perform an elaborate and roundabout courtship ritual\n\nIf the recipient responds properly, you each get +1 forward to protect each other until either of you breaks a Commandment, and they gain a point of Tradition that they can spend for the same effects you can\n\nIf they don't understand that you're Smitten, give a String to an onlooker who does understand",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Silly Tourist",
+   "description": "When you **Figure Out a Person** or **Defy Disaster** by playing the fool, you may additionally ask a question from this list, even on a 6-:\n- What would make you laugh?\n- What hidden threat or opportunity am I missing?\n- How are you vulnerable?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Stiff Upper Lip",
+   "description": "You can spend a point of Tradition to ignore the -2 penalty caused by Conditions. This effect ends if you violate a Commandment or at the end of the scene. When the effect ends, take a Condition.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "I Don't Belong",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n\nWhich of your values do they openly violate or decry?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Not So Different",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What prejudice do you hold?\n- What tradition do you most value?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Seeker",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Commune with the Unseen",
+   "description": "When you perform a ritual to commune with the Unseen, give a dangerous Unseen a String on you and roll +Spirit:\n\n10+: Choose 2\n  - Hide something in the Unseen world\n  - Learn something important from the Unseen\n  - Temporarily alter the Unseen nature of a place\n  - Ask a question from **Figure Out a Person** of anyone, anywhere, if you can name one of their deceased loved ones\n  - Learn the recent history of an object you hold\n7-9: Choose 2 from the 10+ list, but choose 1 thing that goes awry\n  - Restless Unseen cause a haunting\n  - Hungry Unseen destroy all non-sentient life in a small area\n  - Stern Unseen judge you, inflicting a Condition",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Feature",
+        "Stat": "Spirit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "I Like Snails!",
+   "description": "When you are **Smitten** with someone and **Figure Them Out**, blurt out something weird and let them ask you a question from the list. Then ask them another question from the list, even on a 6-.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Astral Dance",
+   "description": "When you dance across the boundary into the realm beyond, describe it and roll **+Grace**:\n- 10+: You and a small number of others who dance with you arrive at a distant destination of your choice.\n- 7-9: You don't arrive where you intend, you arrive almost too late, or you lose something important in the process. The GM will tell you which.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "Grace",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Divination",
+   "description": "When you have time and safety to read the unseen truth of someone present, describe your divination process and what makes it conspicuous. The GM will tell you something interesting about the person or the obstacles they face that they don't know. Then roll +Spirit:\n- 10+: If you tell the truth, they clear a Condition. If you lie, gain a String on them.\n- 7-9: They learn the truth and clear a Condition.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Dreamwalk",
+   "description": "When you touch an unconscious, sleeping, or willing subject, you can see an impression of their thoughts and appear in their dreams. You may roll +Spirit to **Figure Out** or **Entice** them in this state.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Eerie Companion",
+   "description": "You have a little pet monster or spirit. Choose two basic moves. The companion grants you +1 to these moves when it assists you, but its assistance is always obvious and alarming to ordinary people. In addition, you can speak with monsters.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Friends in Weird Places",
+   "description": "You are friends with some odd people. Folx that others might not consider people at all.\n\nName three of them. For each one, write down one thing they're good at, one reason why everyone else is afraid of them, and what you like to do together when you hang out.\n\nWhen you call on them for help, the GM tells you what they provide. Give them a String on you and mark the Favor next to their name. Whenever significant time passes, one of your friends with marked Favor will need help from you. Clear their Favor if you help, mark a Condition if you don't.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Talk Nerdy to Me",
+   "description": "You may roll **+Wit** instead of **+Heart** to **Entice** someone. In addition, choose an area of study that holds special interest for you. You have top-tier knowledge of this area and are always prepared with an interesting fact, and sometimes even a useful fact, when you come across something within your expertise. The GM will provide the information or invite you to make something up.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "Heart, Wit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Witchfire",
+   "description": "You may roll +Spirit instead of **+Daring** to **Fight**, but you're very conspicuous when you do. The consequences of a 6- will be severe.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Playbook",
+        "Stat": "Daring, Spirit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Why Did I Bring up the Snails?",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- What obvious thing about you are you sure would make them reject you?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Whispered Secrets",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- What makes you insecure?\n- What haunts you?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Spooky Witch",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Ew, Feelings",
+   "description": "When someone offers you **Emotional Support** and you refuse to open up, increase your Feelings by 1 and choose 1 from the listed options for that move as if they rolled 7-9. If they rolled 10+, they know they got through to you; they gain the benefits of a 10+ result as if you had opened up.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "The Mask",
+   "description": "When you seek to persuade an NPC of a lie about yourself, roll **+Wit**:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - They believe a big lie\n  - The lie you have chosen is unexpectedly perfect, creating a new opportunity\n  - They give you the benefit of the doubt and remain convinced even if there is some evidence of your lie\nAdditionally, whenever a PC **Figures You Out**, you can give false answers. You must increase your Feelings by 1 at the end of any scene where you do this.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "Wit",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Center of the Web",
+   "description": "When someone approaches you to get something from you or threaten you, choose 1:\n- Gain a String on them or they lose a String on you\n- Ask them a question from the **Figure Out a Person** move\n- +1 ongoing against them for the scene",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Deft Fingers",
+   "description": "When you filch something from a person, roll **+Grace**:\n- 10+: Choose 2\n- 7-9: Choose 1\n  - The item reveals a secret love or vulnerability\n  - The item creates an opportunity (such as a map, key, or note)\n  - The person doesn't know you took it",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "Grace",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Devious Scheme",
+   "description": "When others go along with your cunning plan, roll **+Wit**:\n- 10+: Twice during your plan, you may choose 1\n- 7-9: Once during your plan, you may choose 1\n  - Produce just the right object\n  - Describe an unexpected weakness in an obstacle\n  - Appear right behind someone at a crucial moment",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "Wit",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Knives behind the Mask",
+   "description": "When someone reveals a secret about you in your presence, you're prepared with a damaging secret about them. If you reveal it now in retaliation, they mark a Condition. If you keep the secret for the time being, gain a String on them.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "Play the Part",
+   "description": "When you use someone else's personal item or clothing to disguise yourself as them, roll **+Daring**:\n- 10+: While you remain so dressed, your disguise is perfect; only your words or deeds may expose you.\n- 7-9: Someone sees through your disguise, but they don't give you away just yet. Give them a String.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Playbook",
+        "Stat": "Daring",
+        "Starting": false
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "A Beautiful Lie",
+   "description": "When you become **Smitten** with someone, say why, give them a String, and answer this question:\n- What secret do you have that you think would make them reject you if they knew?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Moves",
+   "name": "I See through You",
+   "description": "When you **Figure Out a Person** during a physical conflict, you may additionally ask one of these questions, even on a 6-:\n- Who do you want me to be?\n- What are you most afraid of right now?",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "moveStats": {
+       "Stats": {
+        "Playbook": "The Trickster",
+        "Kind": "Truth",
+        "Stat": "",
+        "Starting": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Beast",
+   "description": "The Beast follows their truth and their passions, which puts them in conflict with civilization and civilized norms. Unless they give up what makes them special and powerful, they cannot make themself acceptable to that civilized society.\n\nTheir central conflict is living their truth versus fitting in with a dominant social order.\n\n**Example archetypes:** Ranger between Worlds, Bitten, Raised by Beasts\n\n**Feral**\n\nYou may walk in civilized circles, but sooner or later your feral truth will come to the fore.\n\n**Feral:** 0 1 2 3 4\n\nYour Feral score starts at 1. If it hits 4, you can't hold back the beast any longer and you **Transform**.\n\nIf your Feral drops to 0, you lose access to all your Beast playbook moves until it increases again. On the plus side, you're fitting in. You blend. You've assimilated.\n\n**Increase Feral when:**\n- You express yourself in a shocking way through your appearance\n- You display intense emotion that society wants you to conceal\n\n**Decrease Feral when:**\n- You feel that your bestial nature has hurt someone you care about\n- You go along with an uncomfortable interaction to fit in",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace +0, Heart +1, Wit -1, Spirit +0",
+        "Column 2": "Daring +1, Grace +1, Heart -1, Wit +0, Spirit +0",
+        "Aesthetics": "- Wild demeanor, hungry demeanor, piercing demeanor\n- Torn clothes, practical clothes, chitinous clothes, raider's clothes\n- A cold-wrought sword, a sword of teeth, a found sword",
+        "Starting move": "Transform",
+        "Feature": "Feral"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Chosen",
+   "description": "The Chosen playbook revolves around special status, relationships across social strata, and the crushing expectations of fate, family, or the adoring public.\n\nTheir central conflict is inner truth versus crushing social expectations.\n\n**Example archetypes:** Magical Princess, Pop Idol, Chosen One\n\n**Destiny**\n\nThey keep telling you that you have a Destiny, but it's not what your heart truly desires. What is it?\n\n**Destiny Examples:**\n- Marry the Prince of Heteronormia\n- Be sacrificed to appease the Horror\n- Banish magic from the world\n- Melt the heart of the Undying One\n\nChoose two Heroic Aspects and two Tragic Aspects from the following lists. When you act in accordance with one of your Aspects, check it off and take +1 forward. If it's a Tragic Aspect, also mark XP. When all four Aspects are checked off, describe how your Destiny grows ever nearer, then erase the check marks and begin again.\n\n**Destiny Aspects:**\n- Heroic Aspects / Tragic Aspects\n- Portents & Prophecies / Love that Cannot Be\n- Spiritual Prowess / End of the Universe\n- Heir to a Mystic Power / Lose Those You Love\n- Prominent Suitors / Arch-Nemesis\n- Save Your World / Bitter Rival\n- Soother of Monsters / Betrayal\n- Helper of the Masses / Seduced by Evil\n- Chosen by a God / Coveted Destiny\n- Legendary Skill / The End of Love Itself\n\nYou may fulfill your Destiny in the course of play, or reject it so firmly that you no longer feel pressure to fulfill it. This deserves a climactic scene either way, and trying to reject your Destiny draws the full wrath of your Aspects and those pressing you to fulfill it. Afterwards, choose a new Destiny, adopt a new playbook, or live happily ever after.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring -1, Grace +1, Heart +1, Wit +0, Spirit +0",
+        "Column 2": "Daring +0, Grace +1, Heart +0, Wit +1, Spirit -1",
+        "Aesthetics": "- Stoic demeanor, benevolent demeanor, authoritative demeanor\n- Fancy clothes, holy vestments, clothes denoting status\n- A bejeweled sword, an ancestral sword, a holy sword",
+        "Starting move": "The Fated Day Approaches",
+        "Feature": "Destiny"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Devoted",
+   "description": "The Devoted is a selfless protector, committed to a person or a cause.\n\nTheir central conflict lies in pitting this devotion against self-care.\n\n**Example archetypes:** Sidekick, Champion, Protective Friend\n\n**Devotion**\n\n(choose one or invent your own)\n\n**To a cause:** Freedom, vengeance, justice, love, the gay agenda\n\n**To a person:** A PC, a liege, an idol\n\n**To a higher power:** A god, a sexy dragon, a sentient planet\n\nWhat three tenets of your Devotion have you found yourself tempted to violate?\n\nMark a Condition if you act contrary to your Devotion, for instance by violating its tenets or disobeying a superior.\n\nWhen you **Defy Disaster**, you may bring a subject of your Devotion with you safely.\n\nNon-Devoteds cannot take these moves with Advances.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace +0, Heart +0, Wit -1, Spirit +1",
+        "Column 2": "Daring +1, Grace +1, Heart -1, Wit +0, Spirit +0",
+        "Aesthetics": "- Hard demeanor, affectionate demeanor, alert demeanor\n- Armor, uniform, sturdy clothes\n- A bestowed sword, a well-worn sword, a defensive sword",
+        "Starting move": "Fanatical Self-Sacrifice",
+        "Feature": "Devotion"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Infamous",
+   "description": "The Infamous once participated in wicked deeds, but they've become fiercely righteous in trying to atone.\n\nTheir central conflict arises from the lasting consequences of their past actions and beliefs versus their new convictions. Will they repair the harm they caused, will they seek forgiveness, or will they despair? Will they find a new place to belong?\n\n**Example archetypes:** Former Villain, Escaped Henchperson, Veteran of Dishonor\n\n**What Cannot Be Undone**\n\nYou've hurt people, and they have no obligation to forgive you or engage with you.\n\nBefore defining Relationships in character creation, propose a wicked past that you think could be forgiven, and ask each PC this question:\n\nWhat circumstances or subsequent deeds could make it possible to forgive this past?\n\nIf anyone hesitates or can't answer the question, revisit your past and tone it down. You can tone down the gravity of your backstory by reducing the severity of your deeds or the agency you had in enacting them.\n\nAfterwards, answer these questions:\n- What personal growth are you proud of?\n- What about your past causes you the most grief?\n\nYou swore to never again perform certain actions that could lead to harm. What are they? Examples include: Lying, stealing, accepting someone's love, drawing blood, or breaking a promise. If you break your vow, you **Stagger**. Then decide whether to keep the vow or abandon it.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace -1, Heart +0, Wit +0, Spirit +1",
+        "Column 2": "Daring +1, Grace +0, Heart +0, Wit +1, Spirit -1",
+        "Aesthetics": "- Haunted demeanor, challenging demeanor, disdainful demeanor\n- Dangerous clothes, unremarkable clothes, transgressive clothes\n- A broken sword, a wicked sword, an enemy's sword",
+        "Starting move": "Wicked Past, Make It Right",
+        "Feature": "What Cannot Be Undone"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Nature Witch",
+   "description": "The Nature Witch is deeply connected to their environment and less experienced when it comes to people. They're either new to socializing or are newly exploring what it feels like to socialize as their true self.\n\nTheir central conflict revolves around the growth that their explorations will require from them and those who love them.\n\n**Example archetypes:** Oblivious Horse Girl, Beacon of Kindness, Plant Geek Babygay\n\n**Curiosity**\n\nDealing with people feels new to you and you might be awkward, but you want to learn. What better way to learn than by doing?\n\nChoose four Trials from the list. When you complete a circled Trial, cross it out and choose one: mark XP, clear a Condition, or take a String on someone involved. When your four chosen Trials are all fulfilled, reflect on what you've learned about yourself and pick four more. If you complete the entire list, choose the ones that meant the most to you and then evolve into a new form of life inspired by those experiences. Adopt a new playbook, remain a Nature Witch, or retire to live happily ever after.\n\n**Trials**\n\n- Ride a fantastical creature\n- Win a duel\n- Go somewhere no person has tread before\n- Fall in love\n- Stick up for yourself, though it breaks someone's heart\n- Lose someone you care about\n- Befriend someone very different from you\n- Liberate something dangerous\n- Receive a rare gift from someone you respect\n- Experience an altered state with a friend\n- Fail at something that means the world to you\n- Reject a conviction you once held\n- Extend kindness to someone who doesn't deserve it\n- Achieve a lost cause\n- Throw away something comfortable to pursue a dream\n- Kiss someone dangerous\n- Forgive someone who deserves forgiveness\n- Trust someone with your secrets, only to be betrayed\n- Shock someone with an unwelcome truth\n- Earn forgiveness for a misdeed",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +0, Grace +0, Heart +1, Wit -1, Spirit +1",
+        "Column 2": "Daring -1, Grace +1, Heart +0, Wit +0, Spirit +1",
+        "Aesthetics": "- Innocent demeanor, wise demeanor, sad demeanor\n- Modest clothes, rough clothes, simple clothes\n- A wooden sword, a harmless sword, an elemental sword",
+        "Starting move": "Wild Friends",
+        "Feature": "Curiosity, Trials"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Scoundrel",
+   "description": "The Scoundrel is a hero of action and intense physicality. Their sword fights are punctuated by banter and flirtation and end in kisses as often as they end in bloodshed.\n\nTheir central conflict lies in their urge to explore new horizons versus committing to purpose or security.\n\n**Example archetypes:** Shimbo Pirate, Diva Fencing Champion, Dashing Jewel Thief\n\n**Living in the Moment**\n\nWhy are you so fickle? Is there something you need to figure out about yourself, and you keep looking for it in other people instead? Are you afraid of the vulnerability that comes from investing in a relationship? Is your true love unattainable? Are you just that oblivious?\n\nChoose something that you'll be able to grow past to give your character an emotional story arc. You don't need to figure it out immediately, and the Scoundrel themself may not know at all.\n\nNon-Scoundrels cannot take this move with Advances.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace +1, Heart +0, Wit -1, Spirit +0",
+        "Column 2": "Daring +1, Grace +0, Heart -1, Wit +1, Spirit +0",
+        "Aesthetics": "- Playful demeanor, provocative demeanor, eyes only for you\n- Revealing clothes, flowing clothes, tight clothes, gaudy costume\n- A flashy sword, a famous sword, a delicate sword",
+        "Starting move": "Lust at First Sight, Shiny and New",
+        "Feature": "Living in the Moment"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Seeker",
+   "description": "The Seeker comes from a toxic society and has found a new community in which to belong and grow.\n\nTheir central conflict pits tradition and upbringing against justice and developing their personal values.\n\n**Example archetypes:** Immigrant from Heteronormia, Enclave-Raised, Privileged Background\n\n**Commandments**\n\nDescribe the Authority that governed your upbringing and choose at least six Commandments the Authority has issued:\n- Always answer an insult with a drawn sword\n- Never admit to your weak emotions\n- Always cover your sinful body\n- No intimacy until after a monogamous marriage\n- Never give when you can sell\n- Never let a weaker person fight their own battles\n- Never fight a weaker person's battles\n- Always obey the Authority\n- Always obey a certain type of person (gender, race, class, belief, elders)\n- Never go unchaperoned (or at all) with a certain type of person\n\n**Tradition**\n\nTradition is a measure of how you feel your Authority would judge your behavior.\n\n**Tradition:** 0 1 2 3 4\n\nYour Tradition starts at 1. Gain a point of Tradition whenever you make a personal sacrifice to act in accordance with your Commandments, to a maximum of 4. When you are at 4 Tradition, you incur a Condition each time you act contrary to your Commandments.\n\nSpend Tradition at any time to temper the wrath of the Authority, or to take +1 forward to follow your Commandments or **Call on a Toxic Power**.\n\n**Convictions**\n\nWhen you break a Commandment and repudiate it forever, cross it off and mark XP. Write a Conviction expressing your new beliefs, something that contradicts the Commandment.\n\nEach time you live up to a Conviction despite temptation or cost, reduce your Tradition by 1 and ask an onlooker if they agree with that Conviction. If they say yes, take a String on them and learn what holds them back from living up to it, if anything. If they say no, mark a Condition.\n\nConvictions should be bold statements that stand in contrast to the Commandments. For instance:\n- I will care for myself as I would my dearest friend\n- Fear will not stop me from speaking the truth of my heart\n- I will fight for the well-being of those targeted by the Authority, if they wish it\n- I will atone for the harm I've done by liberating others from the Authority\n- When I see something unjust, I will educate those who can learn to do better and challenge those who must be overcome",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace +0, Heart -1, Wit +1, Spirit +0",
+        "Column 2": "Daring +0, Grace +1, Heart +0, Wit -1, Spirit +1",
+        "Aesthetics": "- Guarded demeanor, curious demeanor, uptight demeanor\n- Foreigner's clothes, old-fashioned clothes, elaborate getup\n- An ancient sword, a brand-new sword, 'That's not a sword!'",
+        "Starting move": "People Are People",
+        "Feature": "Commandments, Tradition, Convictions"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Spooky Witch",
+   "description": "The Spooky Witch is a weirdo who does their own thing while craving connection. They've found that many monsters are quite friendly if you give them a chance, but befriending them brands you a monster, as well.\n\nTheir central conflict lies in navigating pressures to conform versus their own desires or those of their monstrous friends.\n\n**Example archetypes:** Spell Dancer, Nerdy Alchemist, Speaker for the Unseen\n\n**The Unseen**\n\nThe Unseen are mysterious beings most cannot perceive. Their very existence may be debated, but you know the truth, because they have spoken to you. You know that some are kind and some are dangerous, that they have abilities and limitations that differ from 'normal' people, and that you find yourself in between.\n\nWork with your GM to define what the Unseen are - or what your Spooky Witch thinks they are. They could be friendly spirits, phase-shifted aliens, psychic remnants, glitched-out nanites, angry poltergeists, or something totally other. When did you first interact with them? What do you think they want?\n\nOther playbooks cannot take this move as an Advance.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +0, Grace +0, Heart -1, Wit +1, Spirit +1",
+        "Column 2": "Daring -1, Grace +1, Heart +0, Wit +0, Spirit +1",
+        "Aesthetics": "- Focused demeanor, playful demeanor, distant demeanor\n- Wispy clothes, darker-than-black clothes, specialized clothes\n- An eldritch sword, a bone sword, a thirsty sword",
+        "Starting move": "I Like Snails!",
+        "Feature": "The Unseen"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "type": "Playbooks",
+   "name": "The Trickster",
+   "description": "The Trickster is devious and calculating. They fear closeness, sincerity, and vulnerability. If they show you the truth of their heart, they'll be wearing a mask to do it.\n\nTheir central conflict lies in desiring closeness while fearing vulnerability.\n\n**Example archetypes:** Business-like Spy, Endearing Charlatan, Cold Mastermind\n\n**Too Many Feelings**\n\nYour heart is as passionate as any other, but you bury it beneath layers of deception - until you can't keep your feelings in any longer.\n\n**Feelings:** 0 1 2 3 4\n\nStart at 1 and increase your Feelings by 1 each time you gain a String, someone gains a String on you, or you mark a Condition. You may also choose to increase your Feelings any time you find yourself gasping or swooning over someone. Strings assigned during character creation don't increase your Feelings.\n\nWhen you open up to someone whose regard matters to you, reduce your Feelings by 2. When you secretly perform a loving act for someone, reduce your Feelings by 1.\n\nIf your Feelings track reaches 4, you can't hold it in anymore. Tear off the mask and scream what you've been holding in, do what you've been afraid to do, and damn the consequences. You can give anyone present a String on you to gain a String on them. Stop when the consequences catch up with you, for good or ill.\n\nAfterwards, reduce your Feelings to 0 and clear a Condition. It feels good to get it out, at least in the moment.",
+   "images": {},
+   "rulesets": [
+    {
+     "system": "ThirstySwordLesbians",
+     "implementation": {
+      "playbookStats": {
+       "Stats": {
+        "Column 1": "Daring +1, Grace +0, Heart -1, Wit +1, Spirit +0",
+        "Column 2": "Daring +0, Grace +1, Heart -1, Wit +1, Spirit +0",
+        "Aesthetics": "- Harmless demeanor, suspicious demeanor, mercurial demeanor\n- Hooded clothes, nondescript clothes, clothes to play a role\n- A concealed sword, a venomous sword, a surprising sword",
+        "Starting move": "Ew, Feelings, The Mask",
+        "Feature": "Too Many Feelings"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

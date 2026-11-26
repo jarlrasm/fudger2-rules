@@ -1,0 +1,417 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+spireBand (best) =
+    if best >= 10 then 4
+    else if best >= 8 then 3
+    else if best >= 6 then 2
+    else if best >= 2 then 1
+    else 0
+
+spireOutcome (band) =
+    if band == 4 then "Critical success"
+    else if band == 3 then "Success"
+    else if band == 2 then "Success at a cost"
+    else if band == 1 then "Failure"
+    else "Critical failure"
+
+spireEffect (band, tens) =
+    if band == 4 then ": no stress, +" + toString (tens) + " stress if you deal it"
+    else if band == 3 then ""
+    else if band == 2 then ": take stress"
+    else if band == 1 then ": take stress"
+    else ": take double stress"
+
+difficultyName (d) = if d >= 3 then "Very dangerous" else if d == 2 then "Dangerous" else if d == 1 then "Risky" else "Standard"
+
+stepsText (steps) = if steps == 1 then ", one step worse" else if steps > 1 then ", " + toString (steps) + " steps worse" else ""
+
+missingDice (pool, difficulty) = max (0, difficulty - (pool - 1))
+
+spireLabel (difficulty, steps) = if difficulty > 0 or steps > 0 then " (" + difficultyName (difficulty) + stepsText (steps) + ")" else ""
+
+spireResult (rolls, pool, difficulty) =
+{
+    Text = toString (max (rolls)) + spireLabel (difficulty, missingDice (pool, difficulty)) + ": " + spireOutcome (max (0, spireBand (max (rolls)) - missingDice (pool, difficulty))) + spireEffect (max (0, spireBand (max (rolls)) - missingDice (pool, difficulty)), count (filter ((r)->r == 10, rolls)))
+    Value = max (rolls)
+    Outcome = spireOutcome (max (0, spireBand (max (rolls)) - missingDice (pool, difficulty)))
+}
+
+spireRoll (pool, difficulty) = ([dice { number = min (10, max (1, pool - difficulty))  sides = 10 }], ((baseline, throws)->spireResult (first (throws).rolls, pool, difficulty)))
+
+spireTest (pool) = ask ("Extra dice (domain, mastery, help)", 0, (n)->ask ("Difficulty", ["Standard", "Risky", "Dangerous"], 0, (d)->spireRoll (pool + n, d)))
+
+dieSides (text) = bonusWithValue ([[text]], "[dD]([0-9]+)")
+
+dieText (dieSize) = if dieSize > 1 then "D" + toString (dieSize) else "1"
+
+stressResult (raw, brutal, armour, given) =
+{
+    Text = toString (max (0, raw - armour)) + " stress" + (if brutal then " (Brutal: the higher of two)" else "") + (if given and armour > 0 then " after Armour " + toString (armour) else "")
+    Value = max (0, raw - armour)
+}
+
+stressRoll (dieSize, brutal) = ([dice { number = if dieSize > 1 then (if brutal then 2 else 1) else 0  sides = max (2, dieSize) }], ((baseline, throws)->stressResult (if count (first (throws).rolls) == 0 then 1 else max (first (throws).rolls), brutal, asked, answered)))
+
+weaponStress (dieSize, brutal, piercing) = if piercing then stressRoll (dieSize, brutal) else ask ("Target's armour", 0, stressRoll (dieSize, brutal))
+
+tagText (brutal, piercing) = (if brutal then " Brutal" else "") + (if piercing then " Piercing" else "")
+
+falloutLevel (total) = if total >= 9 then "Severe" else if total >= 5 then "Moderate" else "Minor"
+
+falloutClears (total) = if total >= 9 then 7 else if total >= 5 then 5 else 3
+
+falloutResult (roll, total) =
+{
+    Text = toString (roll) + " vs " + toString (total) + " stress: " + (if roll < total then falloutLevel (total) + " fallout, clear " + toString (falloutClears (total)) + " stress" else "No fallout")
+    Value = roll
+    Outcome = if roll < total then "Failure" else "Success"
+}
+
+falloutRoll = ([1d10], ((baseline, throws)->falloutResult (first (first (throws).rolls), baseline)))
+
+refreshSides (k) = if k >= 2 then 8 else if k == 1 then 6 else 3
+
+refreshRoll = ask ("How fully did you refresh", ["Partly (D3)", "Mostly (D6)", "Fully (D8)"], 0, (k)->([dice { number = 1  sides = refreshSides (k) }], ((baseline, throws)->{ Text = "Remove " + toString (sum (first (throws).rolls)) + " stress"  Value = sum (first (throws).rolls) })))
+
+flag (b) = if b then 1 else 0
+
+skill = custom
+{
+    Has = bool { description = "Ticked if you have the skill: +1 die." default = false }
+    Mastery = bool { description = "Mastery from an advance: +1 die. Mastery only counts once per roll." default = false }
+    Roll = integer { value = 1 + flag (Has) + flag (Mastery)  valuedice = spireTest (1 + flag (Has) + flag (Mastery))  render = toString (1 + flag (Has) + flag (Mastery)) + "D10"  editable = none }
+}
+
+domain = custom
+{
+    Has = bool { description = "Ticked if you have the domain: +1 die when acting in that part of the city or with its people." default = false }
+    Mastery = bool { description = "Mastery from an advance: +1 die. Mastery only counts once per roll." default = false }
+}
+
+counted (stress, free) = max (0, stress - free)
+
+totalStress (char) =
+    counted (char.Resistances.Blood.realvalue, char.Resistances.'Blood slots')
+    + counted (char.Resistances.Mind.realvalue, char.Resistances.'Mind slots')
+    + counted (char.Resistances.Silver.realvalue, char.Resistances.'Silver slots')
+    + counted (char.Resistances.Shadow.realvalue, char.Resistances.'Shadow slots')
+    + counted (char.Resistances.Reputation.realvalue, char.Resistances.'Reputation slots')
+
+falloutState (list) =
+    if count (filter ((f)->f.Severity == "Severe", list)) > 0 then "Severe fallout"
+    else if count (filter ((f)->f.Severity == "Moderate", list)) > 0 then "Moderate fallout"
+    else if count (filter ((f)->f.Severity == "Minor", list)) > 0 then "Minor fallout"
+    else ""
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, field) = valueOr (valueOr (valueOr (item.data, "equipmentStats", noStats), "Stats", noStats.Stats), field, "")
+
+hasTag (item, tag) = contains (toLower (itemStat (item, "Tags")), tag)
+
+skillDice (char, name) = 1 + (if valueOr (valueOr (char.Skills, name, { Has = false }), "Has", false) then 1 else 0) + (if valueOr (valueOr (char.Skills, name, { Mastery = false }), "Mastery", false) then 1 else 0)
+
+weaponAttack (name, pool, dieSize, kind, reachM, rangeM, brutal, piercing) = custom
+{
+    Name = name
+    Attack = integer { description = "A Fight test with the weapon." value = pool  valuedice = spireTest (pool)  render = toString (pool) + "D10"  action = kind  reach = reachM  range = rangeM  editable = none }
+    Stress = integer { description = "Brutal rolls the stress die twice and keeps the higher; Piercing ignores armour." value = dieSize  valuedice = weaponStress (dieSize, brutal, piercing)  render = dieText (dieSize) + tagText (brutal, piercing)  editable = none }
+}
+
+attackFor (char, item) =
+    if hasTag (item, "ranged") or hasTag (item, "extreme") then weaponAttack (item.Name, skillDice (char, "Fight"), dieSides (itemStat (item, "Damage")), "ranged", 2, if hasTag (item, "extreme") then 300 else 40, hasTag (item, "brutal"), hasTag (item, "piercing"))
+    else weaponAttack (item.Name, skillDice (char, "Fight"), dieSides (itemStat (item, "Damage")), "melee", 2, 2, hasTag (item, "brutal"), hasTag (item, "piercing"))
+
+weapons (char) = filter ((x)->dieSides (itemStat (x, "Damage")) > 0, char.Equipment)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Resistances, Fallout, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Class = string { description = "Your calling in the revolution: it gives skills, domains, resistance slots, a refresh and core abilities." keys = ["Azurite", "Bound", "Carrion-Priest", "Firebrand", "Idol", "Knight", "Lajhan", "Masked", "Midwife", "Vermissian Sage"] }
+        Durance = string { description = "The four years of service you gave the aelfir, or how you dodged it: one more skill, domain or +2 resistance slots." keys = ["Acolyte", "Agent", "Builder", "Dealer", "Duellist", "Enlisted", "Guard", "Human Emissary", "Hunter", "Information Broker", "Killer", "Labourer", "Occultist", "Personal Assistant", "Pet", "Sage", "Spy", "No durance"] }
+        Refresh = string { description = "What your class does to shake off stress. Doing it removes D3, D6 or D8 stress." }
+        'Refresh roll' = integer { description = "Roll the refresh die: D3 partly, D6 mostly, D8 fully done." value = 0  valuedice = refreshRoll  render = "D3 to D8"  editable = none }
+        Look = string {}
+        Cell = string { description = "Your cell of the resistance and who you answer to." }
+    }
+
+    Skills = table
+    {
+        description = "Roll one D10, one more for a fitting skill, one for a domain and one for mastery, and keep the highest. 8 or more succeeds; 6 or 7 succeeds at a cost."
+        tableLayout = layout { columns = 1 }
+        Compel = skill { description = "Persuade, threaten, haggle or charm." }
+        Deceive = skill { description = "Lie, disguise, forge and misdirect." }
+        Fight = skill { description = "Hurt people up close or at range." }
+        Fix = skill { description = "Build, repair, sabotage and heal." }
+        Investigate = skill { description = "Notice, research and work out what is going on." }
+        Pursue = skill { description = "Chase, track, climb and get away." }
+        Resist = skill { description = "Endure pain, hunger, poison and questioning." }
+        Sneak = skill { description = "Move unseen and hide." }
+        Steal = skill { description = "Pick pockets and locks, take what is not yours." }
+    }
+
+    Domains = table
+    {
+        description = "Parts of the city and its people you know: +1 die when acting there or with them."
+        tableLayout = layout { columns = 1 }
+        Academia = domain { description = "Universities, libraries, scholars and science." }
+        Commerce = domain { description = "Markets, trade, money and merchants." }
+        Crime = domain { description = "Gangs, smugglers, the black market and the law's blind spots." }
+        'High Society' = domain { description = "Aelfir nobility, balls, duels and etiquette." }
+        'Low Society' = domain { description = "Workers, servants, slums and the poor." }
+        Occult = domain { description = "Forbidden magic, cults and the things below." }
+        Order = domain { description = "The guard, bureaucracy and the law." }
+        Religion = domain { description = "Temples, gods, priests and the faithful." }
+        Technology = domain { description = "Machines, human imports and engineering." }
+    }
+
+    Resistances = table
+    {
+        description = "Mark stress here. Extra slots from your class, durance and advances take stress first and are left out of fallout checks."
+        tableLayout = layout { columns = 2 }
+        Blood = slots { description = "Your body: wounds, exhaustion, poison." number = 10  editable = live }
+        'Blood slots' = integer { description = "Extra Blood slots." default = 0  minvalue = 0  maxvalue = 10 }
+        Mind = slots { description = "Your sanity and nerve." number = 10  editable = live }
+        'Mind slots' = integer { description = "Extra Mind slots." default = 0  minvalue = 0  maxvalue = 10 }
+        Silver = slots { description = "Your money and possessions." number = 10  editable = live }
+        'Silver slots' = integer { description = "Extra Silver slots." default = 0  minvalue = 0  maxvalue = 10 }
+        Shadow = slots { description = "Your cover and secrecy from the authorities." number = 10  editable = live }
+        'Shadow slots' = integer { description = "Extra Shadow slots." default = 0  minvalue = 0  maxvalue = 10 }
+        Reputation = slots { description = "Your standing with the people and factions of the city." number = 10  editable = live }
+        'Reputation slots' = integer { description = "Extra Reputation slots." default = 0  minvalue = 0  maxvalue = 10 }
+    }
+
+    Fallout = table
+    {
+        description = "After you take stress the GM rolls a D10: under your total stress, you suffer fallout."
+        tableLayout = layout { columns = 2 }
+        'Total stress' = integer { description = "Stress beyond your extra slots, in all five resistances." value = totalStress (characterTable)  editable = none  indicator = "#d64545" }
+        'Fallout check' = integer { description = "D10 under total stress: fallout. 2 to 4 is minor (clear 3 stress), 5 to 8 moderate (clear 5), 9 or more severe (clear 7)." value = totalStress (characterTable)  valuedice = falloutRoll  render = "D10"  editable = none }
+        Armour = integer { description = "Slots that take Blood stress from attacks; Piercing weapons get past them." default = 0  minvalue = 0  maxvalue = 5 }
+        'Armour stress' = slots { description = "Stress marked on your armour. It clears at the end of the situation." number = 5  editable = live }
+        'End of situation' = button { description = "Clears the stress marked on armour." editable = live  onClick = updates
+            {
+                (root.Fallout.'Armour stress'.realvalue) = 0
+            }
+        }
+        'Lay low' = button { description = "Hide away and clear all stress, while the city moves on without you." editable = live  onClick = updates
+            {
+                (root.Resistances.Blood.realvalue) = 0
+                (root.Resistances.Mind.realvalue) = 0
+                (root.Resistances.Silver.realvalue) = 0
+                (root.Resistances.Shadow.realvalue) = 0
+                (root.Resistances.Reputation.realvalue) = 0
+                (root.Fallout.'Armour stress'.realvalue) = 0
+            }
+        }
+        State = string { value = falloutState ('Fallout taken')  visible = none  indicator = "#8e5cc4" }
+    }
+
+    'Fallout taken' = list
+    {
+        description = "Lasting trouble from fallout. Minor fallout can be put right quickly; moderate and severe can only be steadied."
+        tableLayout = layout { size = wide }
+        singular = "Fallout"
+        editable = live
+        valueType = custom
+        {
+            Severity = string { keys = ["Minor", "Moderate", "Severe"] }
+            Resistance = string { keys = ["Blood", "Mind", "Silver", "Shadow", "Reputation"] }
+            Fallout = string {}
+        }
+    }
+
+    Abilities = list
+    {
+        description = "Core abilities and the Low, Medium and High advances you have taken."
+        tableLayout = layout { size = wide }
+        source = secondary.Abilities
+        singular = "Ability"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Fight tests with your weapons; the stress die goes to the target, less its armour."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", skillDice (characterTable, "Fight"), 1, "melee", 2, 2, false, false)], map ((item)->attackFor (characterTable, item), weapons (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Bonds = list
+    {
+        description = "People and groups who will help you, at a cost: each favour marks stress on the bond."
+        tableLayout = layout { size = wide }
+        singular = "Bond"
+        editable = live
+        valueType = custom
+        {
+            Bond = string {}
+            Level = string { keys = ["Individual", "Street", "City"] }
+            Stress = integer { default = 0  minvalue = 0 }
+            Notes = string {}
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Background = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+stressDie (dieSize, brutal) = stressRoll (dieSize, brutal)
+
+adversaryTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/spire/adversary.svg"  important = [Stats] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Difficulty = integer { description = "Dice taken off every roll against it." default = 0  minvalue = 0  maxvalue = 3 }
+        Resistance = integer { description = "Stress it takes before it is at the characters' mercy." default = 6  minvalue = 0 }
+        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armour = integer { description = "Taken off stress from weapons that are not Piercing." default = 0  minvalue = 0 }
+        Attack = integer { description = "The stress die it deals: 1, 3, 6 or 8." default = 6  valuedice = stressDie (Attack, Brutal)  render = dieText (Attack) + (if Brutal then " Brutal" else "")  action = melee  reach = 2 }
+        Brutal = bool { description = "Rolls two stress dice and keeps the higher." default = false }
+        Down = string { value = if Stress >= Resistance then "At your mercy" else ""  visible = none  indicator = "#555555" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Equipment = string { description = "Weapons with stress dice and tags, armour and anything worth taking." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+organisationTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/spire/organisation.svg"
+        important = [Organisation]
+        filters = [filter { name = "Level" prefix = "" filter = Organisation.Level }]
+    }
+    Organisation = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Level = string { description = "Individual, Street or City: a bond or group can only act against its own level or lower." keys = ["Individual", "Street", "City"] }
+        Difficulty = integer { description = "Dice taken off rolls against it." default = 1  minvalue = 0  maxvalue = 3 }
+        Resistance = integer { default = 10  minvalue = 0 }
+        Stress = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Domains = string {}
+        Down = string { value = if Stress >= Resistance then "Broken" else ""  visible = none  indicator = "#555555" }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Agenda = string { multiline = true }
+        Assets = string { multiline = true }
+        Members = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+equipmentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Weapon", "Armour", "Tool", "Clothing", "Holy symbol", "Other"] }
+        Damage = string { description = "Stress die for weapons: 1, D3, D6 or D8." }
+        Armour = integer { description = "Armour slots it gives." default = 0  minvalue = 0 }
+        Tags = string { description = "Such as Ranged, Brutal, Piercing, Concealable, Reload, Spread D3, Tiring, Unreliable." }
+    }
+}
+
+abilityLevels = ["Core", "Low", "Medium", "High"]
+
+abilityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Level" prefix = "" filter = Stats.Level }, filter { name = "Class" prefix = "" filter = Stats.Class }]
+        sortedBy = sort { prefix = "" sort = intValueFromEnumString (abilityLevels, Stats.Level) }
+    }
+    Stats = table
+    {
+        Level = string { keys = abilityLevels }
+        Class = string { keys = ["Azurite", "Bound", "Carrion-Priest", "Firebrand", "Idol", "Knight", "Lajhan", "Masked", "Midwife", "Vermissian Sage", "Any"] }
+        Cost = string { description = "Stress marked to use it, such as D3 Mind." }
+        Tags = string { description = "Such as Divine or Occult." }
+    }
+}
+
+towerCityNameSetting = nameSetting
+{
+    name = "Tower city"
+    characters = [generator { library = "Tower city" variant = "Dark elf" }, generator { library = "Tower city" variant = "Foreigner" }]
+    creatures = [generator { library = "Tower city" variant = "High elf" }, generator { library = "Tower city" variant = "Dark elf" }, generator { library = "Tower city" variant = "Foreigner" }]
+    Location = [generator { library = "Tower city" variant = "District" }, generator { library = "Tower city" variant = "Tavern" }]
+    Organisations = generator { library = "Tower city" variant = "Society" }
+}
+
+Spire = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll one D10, plus one for a fitting skill, one for a fitting domain and one for mastery (once), and keep the highest. Difficulty takes dice away before you roll; below one die you roll one and the result drops a step for each missing die. 10 is a critical success, 8 or 9 a success, 6 or 7 a success at a cost, 2 to 5 a failure and 1 a critical failure with double stress."]
+        },
+        hint
+        {
+            title = "Stress and fallout"
+            topic = "Combat"
+            text = ["Stress goes to Blood, Mind, Silver, Shadow or Reputation, to the extra slots first, and Blood stress from attacks to armour. After stress the GM rolls a D10 for fallout: under the total stress, the character suffers it, minor up to 4, moderate up to 8 and severe from 9, which clears 3, 5 or 7 stress. Refresh and laying low clear stress too."]
+        },
+        hint
+        {
+            title = "Organisations"
+            topic = "Getting started"
+            text = ["Organisations are their own entity type: the factions, gangs and churches of the city at Individual, Street or City level, with difficulty, resistance and stress. Bonds on the sheet link characters to people and groups."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["There is no initiative: the GM moves the spotlight, and enemies hit back when the players fail or succeed at a cost."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = adversaryTable
+    Organisations = organisationTable
+    Equipment = equipmentStats
+    Abilities = abilityStats
+    secondaryTypes = ["Equipment", "Abilities"]
+    extraEntityTypes = [entityTypeDescription ("Organisations", "organisation", false, "/systems/spire/organisation.svg", [])]
+    description = "Spire: The City Must Fall: dark elf revolutionaries in a vertical city, rolling D10s and keeping the highest, with stress on five resistances, fallout, bonds and advances"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10, 2d10, 3d10, 4d10, 1d3, 1d6, 1d8]
+    cssFiles = ["/systems/spire/spire.css"]
+    libraries = ["/systems/names/towercity.json", "/systems/names/victorian.json", "/systems/names/gothic.json"]
+    nameSettings = [towerCityNameSetting, gaslightNameSetting, gothicHorrorNameSetting]
+}

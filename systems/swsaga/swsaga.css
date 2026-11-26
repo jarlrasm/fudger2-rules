@@ -1,0 +1,168 @@
+@import url("/systems/sheet.css");
+
+/* Star Wars Saga Edition: the character sheet from the core rulebook. White
+   paper with grey fills, black title tabs with rounded corners and white
+   capitals, the six abilities in a column of boxes, the three defenses with
+   their parts beside them, hit points and damage threshold, the condition
+   track as a row of steps across the page, then attacks and the long skill
+   list with trained and Skill Focus boxes, and feats, talents and gear. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9ccd1;
+    --surface: #ffffff;
+    --surface-alt: #eef0f2;
+    --surface-sunken: #dfe2e6;
+    --surface-muted: #c3c8ce;
+    --text: #121417;
+    --text-muted: #33373d;
+    --text-faint: #6a7079;
+    --on-accent: #ffffff;
+    --border: #8d939b;
+    --border-strong: #121417;
+    --accent: #121417;
+    --accent-hover: #2f343a;
+    --accent-soft: #e3e6ea;
+    --link: #1d4e89;
+    --danger: #a3271c;
+    --danger-hover: #7d1d15;
+    --danger-soft: #f3d7d3;
+    --success: #2e6b3a;
+    --paper: #ffffff;
+    --card-bg: #f3f4f6;
+    --dice-bg: #121417;
+    --dice-text: #ffffff;
+    --steel: #1d4e89;
+}
+
+.entityView {
+    --sheet-font: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 12px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.85em;
+    border-bottom: 3px solid var(--steel);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}
+
+/* ---- Top: hero line, abilities, defenses, hit points ---- */
+
+.entityView .table-abilities { --block: 24%; }
+.entityView .table-defenses { --block: 42%; }
+.entityView .table-health { --block: 34%; }
+
+.entityView .table-abilities > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-abilities > table > tbody > tr > td:first-child {
+    background: var(--accent);
+    color: #ffffff;
+    text-transform: uppercase;
+    text-align: center;
+    width: 3em;
+    border-radius: 6px;
+}
+.entityView .table-abilities .customtype > div:nth-child(2)::before {
+    content: "mod ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+.entityView .table-abilities button.dicethrow {
+    border-radius: 50%;
+    min-width: 2.4em;
+    height: 2.4em;
+    border: 3px solid var(--surface-muted);
+}
+
+.entityView .table-defenses > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-defenses .customtype > div:nth-child(1)::before {
+    content: "class ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+.entityView .table-defenses .customtype > div:nth-child(2)::before {
+    content: "misc ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+.entityView .table-defenses .customtype > div:nth-child(3) {
+    display: inline-block;
+    min-width: 2.2em;
+    padding: 2px 6px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 1.2em;
+    background: var(--surface-sunken);
+    border: 2px solid var(--border-strong);
+    border-radius: 50%;
+}
+
+.entityView .table-health > table > tbody > tr:nth-child(-n+3) > td:last-child {
+    font-weight: 900;
+    font-size: 1.15em;
+}
+
+/* ---- Condition track: steps across the sheet ---- */
+
+.entityView .table-condition-track { clear: left; }
+.entityView .table-condition-track > table > tbody {
+    grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
+}
+.entityView .table-condition-track .slots .slot-labelled {
+    margin: 0 6px;
+    font-size: 0.85em;
+    font-weight: 700;
+}
+
+/* ---- Combat and the Force ---- */
+
+.entityView .table-combat,
+.entityView .table-force { --block: 50%; }
+.entityView .table-combat { clear: left; }
+
+/* ---- Skills: trained and focus boxes, then the total ---- */
+
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-skills .customtype > div:nth-child(1)::before {
+    content: "trained ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+.entityView .table-skills .customtype > div:nth-child(2)::before {
+    content: "focus ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+.entityView .table-skills .customtype > div:nth-child(3)::before {
+    content: "misc ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+
+/* ---- Second page: feats, talents, gear ---- */
+
+.entityView .table-armor,
+.entityView .table-feats,
+.entityView .table-talents { --block: 33.333%; }
+.entityView .table-armor,
+.entityView .table-feats { clear: left; }
+.entityView .table-armor + .table-feats { clear: none; }
+.entityView .table-spent-powers { --block: 50%; clear: left; }
+.entityView .table-equipment,
+.entityView .table-possessions { --block: 50%; }
+.entityView .table-equipment { clear: left; }
+.entityView:not(:has(> .table-armor)) > .table-feats,
+.entityView:not(:has(> .table-armor)) > .table-talents { --block: 50%; }

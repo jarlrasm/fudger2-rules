@@ -1,0 +1,172 @@
+@import url("/systems/sheet.css");
+
+/* Mausritter: the mouse's record. Plain white paper with heavy black ink
+   rules and a hand-printed serif, small red-brown titles; the mouse's
+   details across the top, STR, DEX and WIL with Max and Current beside Hit
+   Protection and pips, then the inventory as a row of square cards: two
+   paw slots, two body slots and six pack slots, each with its usage dots. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9e4d8;
+    --surface: #fffdf8;
+    --surface-alt: #f6f2e8;
+    --surface-sunken: #ece6d8;
+    --surface-muted: #d6cfbd;
+    --text: #1a1816;
+    --text-muted: #3d3a35;
+    --text-faint: #75706a;
+    --on-accent: #fffdf8;
+    --border: #8c867c;
+    --border-strong: #1a1816;
+    --accent: #9a3324;
+    --accent-hover: #b4412f;
+    --accent-soft: #f3ddd6;
+    --link: #9a3324;
+    --danger: #9a3324;
+    --danger-hover: #7c281c;
+    --danger-soft: #f3ddd6;
+    --success: #3f6b3a;
+    --paper: #fffdf8;
+    --card-bg: #f6f2e8;
+    --dice-bg: #1a1816;
+    --dice-text: #fffdf8;
+}
+
+.entityView {
+    --sheet-font: "IM Fell English", "Iowan Old Style", Georgia, serif;
+    --title-font: "IM Fell English SC", "Iowan Old Style", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    --title-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    font-variant: small-caps;
+    letter-spacing: 0.06em;
+    font-size: 1.1em;
+}
+
+/* ---- Top: the mouse ---- */
+
+.entityView .table-mouse > table > tbody { grid-template-columns: 1.4fr 1fr 1.4fr 1fr 1.6fr; }
+
+/* ---- Attributes and Hit Protection ---- */
+
+.entityView .table-attributes { --block: 60%; }
+.entityView .table-hit-protection { --block: 40%; }
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+    border: 2px solid var(--border-strong);
+    border-radius: 2px;
+    margin: 4px 0;
+    padding: 2px 4px 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    font-size: 1.5em;
+    font-weight: 700;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+}
+.entityView .table-attributes .customtype {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 6px;
+    width: 100%;
+}
+.entityView .table-attributes .customtype > div:nth-child(3) { grid-column: 1 / span 2; }
+.entityView .table-attributes .customtype > div:nth-child(1)::before { content: "Max "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attributes .customtype > div:nth-child(2)::before { content: "Current "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attributes .customtype > div:nth-child(3)::before { content: "Save "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-hit-protection > table > tbody > tr:nth-child(-n+2) > td:first-child { font-weight: 700; }
+
+/* ---- Inventory: square cards ---- */
+
+.entityView .table-paw,
+.entityView .table-body { --block: 24%; clear: none; }
+.entityView .table-paw { clear: left; }
+.entityView .table-pack { --block: 52%; }
+.entityView .table-paw > table > tbody,
+.entityView .table-body > table > tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+.entityView .table-pack > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+}
+.entityView .table-paw > table > tbody > tr,
+.entityView .table-body > table > tbody > tr,
+.entityView .table-pack > table > tbody > tr {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 5.2em;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    padding: 2px 4px;
+    box-sizing: border-box;
+}
+.entityView .table-paw > table > tbody > tr > td,
+.entityView .table-body > table > tbody > tr > td,
+.entityView .table-pack > table > tbody > tr > td {
+    display: block;
+    padding: 1px 0;
+    border: none;
+    text-align: left;
+}
+.entityView .table-paw > table > tbody > tr > td:first-child,
+.entityView .table-body > table > tbody > tr > td:first-child,
+.entityView .table-pack > table > tbody > tr > td:first-child {
+    font-size: 0.75em;
+    font-variant: small-caps;
+    color: var(--text-faint);
+}
+.entityView .table-paw .customtype,
+.entityView .table-body .customtype,
+.entityView .table-pack .customtype {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+}
+.entityView .table-paw .customtype > div:first-child,
+.entityView .table-body .customtype > div:first-child,
+.entityView .table-pack .customtype > div:first-child {
+    font-weight: 700;
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+.entityView .table-paw .slots input[type="checkbox"],
+.entityView .table-body .slots input[type="checkbox"],
+.entityView .table-pack .slots input[type="checkbox"] {
+    border-radius: 50%;
+    accent-color: var(--text);
+}
+
+/* ---- Lower half ---- */
+
+.entityView .table-advancement,
+.entityView .table-grit,
+.entityView .table-banked-items-and-pips { --block: 33.333%; }
+.entityView .table-advancement { clear: left; }
+.entityView .table-item-cards,
+.entityView .table-spells { --block: 50%; }
+.entityView .table-item-cards { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-over-the-limit { --block: 100%; border-style: dashed; }
+.entityView .table-spell-casting > table > tbody > tr > td:nth-child(2)::before { content: "Usage left "; color: var(--text-faint); font-size: 0.8em; }

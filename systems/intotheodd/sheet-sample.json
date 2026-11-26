@@ -1,0 +1,23 @@
+{
+  "values": {
+    "Character": { "Background": "Discharged sapper of the Lower Docks battery", "Level": "Professional", "Expeditions": 2 },
+    "Abilities": { "STR": { "Score": 9, "Max": 12 }, "DEX": { "Score": 14, "Max": 14 }, "WIL": { "Score": 8, "Max": 8 } },
+    "Protection": { "Max HP": 6, "HP": 2, "Armour": 1 },
+    "Purse": { "Guilders": 0, "Shillings": 14, "Pennies": 30 },
+    "Notes": { "Description": "Soot under the fingernails that never washes out, a burn scar along the jaw, a voice gone hoarse from shouting over cannon. Owes money to people who do not forget, and wants to be rich enough to stop flinching at knocks on the door.", "Companions": "Pell, a lighter boy: STR 7, lantern and club, paid 1s a day and owed for three.", "Notes": "Second dive under the Brassworks. The flooded gallery past the pump hall hums at night; something down there answered when we knocked. Lost 3 STR to a drowned clerk's teeth." }
+  },
+  "secondary": {
+    "Equipment": [
+      { "name": "Musket", "values": { "Stats": { "Kind": "Weapon", "Damage": "d8", "Ranged": true, "Bulky": true, "Cost": "10s" } } },
+      { "name": "Cleaver", "values": { "Stats": { "Kind": "Weapon", "Damage": "d6", "Cost": "2s" } } },
+      { "name": "Bomb", "values": { "Stats": { "Kind": "Explosive", "Damage": "d10", "Blast": true, "Cost": "20s" } } },
+      { "name": "Breastplate and helm", "values": { "Stats": { "Kind": "Armour", "Armour": 1, "Cost": "50s" } } },
+      { "name": "Lockpicks", "values": { "Stats": { "Kind": "Tool", "Cost": "1s" } } },
+      { "name": "Antitoxin", "values": { "Stats": { "Kind": "Consumable", "Cost": "10s" } } }
+    ],
+    "Arcana": [
+      { "name": "Thrumming Lantern", "description": "A brass lantern that hums when lit. Its light shows the last person who stood where it shines, as a faint shape, for a minute.", "values": { "Stats": { "Kind": "Arcanum", "Uses": "3 a day", "Price": "Whoever holds it forgets one face each time it is lit." } } },
+      { "name": "Stranger's Glass Eye", "description": "Turns cold in the hand whenever someone nearby tells a lie.", "values": { "Stats": { "Kind": "Oddity" } } }
+    ]
+  }
+}

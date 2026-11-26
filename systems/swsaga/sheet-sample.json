@@ -1,0 +1,46 @@
+{
+  "values": {
+    "Hero": { "Class": "Scoundrel", "Classes": "Scoundrel 4", "Level": 4, "Species": "Human", "Size": "Medium", "Age": "31", "Gender": "Female", "Height": "1.68 m", "Weight": "58 kg", "Experience": 7400 },
+    "Abilities": { "Str.Score": 10, "Dex.Score": 16, "Con.Score": 12, "Int.Score": 13, "Wis.Score": 10, "Cha.Score": 14 },
+    "Defenses": { "Reflex.Class": 2, "Fortitude.Class": 0, "Will.Class": 1 },
+    "Health": { "Max HP": 33, "HP": 24, "Second Winds": 1, "Second Winds used": 0 },
+    "Condition Track": { "Track.realvalue": 1 },
+    "Combat": { "Speed": 6, "BAB": 3 },
+    "Force": { "Force Points": 5, "Destiny Points": 1, "Dark Side Score": 1, "Destiny": "Redemption" },
+    "Skills": {
+      "Deception.Trained": true, "Gather Information.Trained": true, "Initiative.Trained": true,
+      "Mechanics.Trained": true, "Perception.Trained": true, "Pilot.Trained": true, "Pilot.Focus": true
+    },
+    "Possessions": { "Credits": 2350, "Languages": "Basic, Huttese, Binary (understood)", "Ships": "The Rusted Kestrel, a battered light freighter with a temperamental hyperdrive" },
+    "Story": {
+      "Background": "Grew up running cargo between the moons of Dorvalla for whoever paid. Walked away from the Vosk syndicate with one of their ships and a price on her head, and now flies for the people the syndicate squeezes.",
+      "Notes": "Owes 4,000 credits to Old Marrek on Dorvalla Station. The Kestrel's port engine still pulls left. Knows a back way into the Imperial depot at Tal Ruun."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Blaster pistol", "values": { "Stats": { "Group": "Pistols", "Damage": "3d6", "Damage Type": "Energy", "Stun Setting": "Yes", "Rate of Fire": "S", "Size": "Small", "Cost": "500", "Weight": "1 kg" } } },
+      { "name": "Hold-out blaster pistol", "values": { "Stats": { "Group": "Pistols", "Damage": "3d4", "Damage Type": "Energy", "Stun Setting": "Yes", "Rate of Fire": "S", "Size": "Tiny", "Cost": "300", "Weight": "0.5 kg" } } },
+      { "name": "Knife", "values": { "Stats": { "Group": "Simple melee", "Damage": "1d4", "Damage Type": "Piercing", "Stun Setting": "No", "Rate of Fire": "", "Size": "Tiny", "Cost": "25", "Weight": "1 kg" } } }
+    ],
+    "Feats": [
+      { "name": "Weapon Proficiency (Pistols)", "values": { "Stats": { "Bonus Feat For": "Noble, Scoundrel, Scout, Soldier" } } },
+      { "name": "Weapon Proficiency (Simple Weapons)" },
+      { "name": "Point Blank Shot", "values": { "Stats": { "Bonus Feat For": "Scoundrel, Scout, Soldier" } } },
+      { "name": "Precise Shot", "values": { "Stats": { "Prerequisites": "Point Blank Shot" } } },
+      { "name": "Skill Focus (Pilot)", "values": { "Stats": { "Prerequisites": "Trained in Pilot" } } },
+      { "name": "Quick Draw" }
+    ],
+    "Talents": [
+      { "name": "Knack", "values": { "Stats": { "Class": "Scoundrel", "Talent Tree": "Fortune" } } },
+      { "name": "Lucky Shot", "values": { "Stats": { "Class": "Scoundrel", "Talent Tree": "Fortune" } } }
+    ],
+    "Equipment": [
+      { "name": "Comlink", "values": { "Stats": { "Kind": "Communications", "Cost": "25" } } },
+      { "name": "Datapad", "values": { "Stats": { "Kind": "Computers", "Cost": "1,000" } } },
+      { "name": "Medpac", "values": { "Stats": { "Kind": "Medical", "Cost": "100" } } },
+      { "name": "Tool kit", "values": { "Stats": { "Kind": "Tools", "Cost": "250" } } },
+      { "name": "Glow rod", "values": { "Stats": { "Kind": "Survival", "Cost": "10" } } }
+    ]
+  }
+}

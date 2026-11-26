@@ -1,0 +1,32 @@
+{
+  "values": {
+    "Character": { "Career": "Void-master", "Rank": 2, "Home World": "Void Born", "Birthright": "Scapegrace", "Lure of the Void": "Duty Bound", "Trials and Travails": "Ship-Lorn", "Motivation": "Endurance", "Experience to spend": 250, "Total experience": 5500, "Age": "41 standard years", "Build": "Gaunt, long-limbed", "Complexion": "Pallid", "Hair": "Shaved, augur jack", "Quirks": "Never turns his back to a viewport" },
+    "Characteristics": {
+      "Weapon Skill.Value": 29, "Ballistic Skill.Value": 41, "Ballistic Skill.Advances": 1, "Strength.Value": 26, "Toughness.Value": 31, "Agility.Value": 39, "Agility.Advances": 1,
+      "Intelligence.Value": 38, "Perception.Value": 36, "Willpower.Value": 35, "Fellowship.Value": 30
+    },
+    "Skills": {
+      "Awareness.Level": "Trained", "Pilot.Level": "+10", "Navigation.Level": "Trained", "Common Lore.Level": "Trained", "Scholastic Lore.Level": "Trained", "Literacy.Level": "Trained",
+      "Speak Language.Level": "Trained", "Dodge.Level": "Trained", "Tech Use.Level": "Trained", "Command.Level": "Trained",
+      "Specialities": "Pilot (Space Craft, Flyers); Navigation (Stellar); Common Lore (Imperial Navy, War); Scholastic Lore (Astromancy); Speak Language (Low Gothic, Ship Dialect)"
+    },
+    "Status": { "Max Wounds": 11, "Wounds": 7, "Fate threshold": 3, "Fate": 2 },
+    "Armour": { "Head": 0, "Body": 3, "Right Arm": 3, "Left Arm": 3, "Right Leg": 3, "Left Leg": 3 },
+    "Traits": [ { "Name": "Void Accustomed", "Description": "Immune to space sickness; zero gravity is no hindrance." }, { "Name": "Charmed", "Description": "On a 9 when spending Fate, the point is not lost." } ],
+    "Ammunition": [ { "Name": "Laspistol charge packs", "Shots": 22, "Clips": 3 } ],
+    "Profit Factor": { "Starting Profit Factor": 40, "Current": 42, "Misfortunes": "A creditor house on Port Vessel holds a grudge" },
+    "Endeavours": [ { "Name": "Chart the Vethis Reach", "Size": "Endeavour", "Objectives": "Find a stable warp route; survey two worlds", "Achievement points": 450, "Required": 1000, "Reward": "+2 Profit Factor" } ],
+    "Acquisitions": [ { "Name": "Hired void-pilot cadre", "Description": "Six veteran helmsmen, loyal while paid." } ],
+    "Mental state": { "Insanity": 8, "Corruption": 2, "Disorders": "Night terrors of the warp (minor)", "Critical injuries": "Two fingers of the left hand replaced with bionics" },
+    "Notes": { "Background": "Born in the bilges of the Emperor's Fortune, he climbed from rating to master of the bridge. When the old dynasty fell he kept the ship alive through a decade adrift, and swore to the new Rogue Trader that she would never be lost again." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Best laspistol", "values": { "Stats": { "Class": "Pistol", "Range": "30m", "RoF": "S/2/-", "Damage": "1d10+2", "Type": "E", "Pen": "0", "Clip": "30", "Reload": "Full", "Special": "Reliable", "Craftsmanship": "Best" } } },
+      { "name": "Mono-knife", "values": { "Stats": { "Class": "Melee", "Damage": "1d5", "Type": "R", "Pen": "2", "Special": "Mono" } } }
+    ],
+    "Armour": [ { "name": "Flak cloak", "values": { "Stats": { "Locations": "Body, Arms, Legs", "AP": 3, "Availability": "Common" } } } ],
+    "Talents": [ { "name": "Pistol Weapon Training (Universal)", "values": { "Stats": { "Kind": "Talent" } } }, { "name": "Nerves of Steel", "values": { "Stats": { "Kind": "Talent" } } }, { "name": "Master Helmsman", "values": { "Stats": { "Kind": "Talent", "Careers": "Void-master" } } } ],
+    "Gear": [ { "name": "Void suit" }, { "name": "Micro-bead" }, { "name": "Auspex" }, { "name": "Rejuvenat tincture" } ]
+  }
+}

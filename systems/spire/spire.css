@@ -1,0 +1,99 @@
+@import url("/systems/sheet.css");
+
+/* Spire: The City Must Fall: the character sheet in the book's stark ink look.
+   Grey-white paper, black ink, black title bars with spaced serif capitals and
+   a violet rule; skills and domains as two tick lists beside the five
+   resistances with their stress boxes, fallout below, then abilities,
+   equipment, attacks and bonds. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1a1720;
+    --surface: #f1efeb;
+    --surface-alt: #e6e2dc;
+    --surface-sunken: #d8d3cb;
+    --surface-muted: #bfb8ae;
+    --text: #111014;
+    --text-muted: #35313b;
+    --text-faint: #6a6470;
+    --on-accent: #f1efeb;
+    --border: #8d8794;
+    --border-strong: #111014;
+    --accent: #5b2d82;
+    --accent-hover: #74409f;
+    --accent-soft: #e3d7ee;
+    --link: #5b2d82;
+    --danger: #8f1d2c;
+    --danger-hover: #6f1521;
+    --danger-soft: #f0d3d7;
+    --success: #3c6640;
+    --paper: #f1efeb;
+    --card-bg: #e6e2dc;
+    --dice-bg: #111014;
+    --dice-text: #f1efeb;
+}
+
+.entityView {
+    --sheet-font: "Book Antiqua", Palatino, Georgia, serif;
+    --title-font: "Trajan Pro", "Book Antiqua", Palatino, Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 1.05em;
+    border-bottom: 3px solid var(--accent);
+}
+
+/* ---- Skills, domains and resistances side by side ---- */
+
+.entityView .table-skills { --block: 25%; clear: left; }
+.entityView .table-domains { --block: 25%; }
+.entityView .table-resistances { --block: 50%; }
+
+.entityView .table-skills > table > tbody > tr > td:first-child,
+.entityView .table-domains > table > tbody > tr > td:first-child {
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.9em;
+}
+
+.entityView .table-resistances > table > tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    column-gap: 8px;
+}
+.entityView .table-resistances > table > tbody > tr:nth-child(odd) > td:first-child {
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+}
+.entityView .table-resistances > table > tbody > tr:nth-child(even) > td:first-child {
+    color: var(--text-faint);
+    font-size: 0.85em;
+}
+.entityView .table-resistances .slots input[type="checkbox"] {
+    width: 1.2em;
+    height: 1.2em;
+    accent-color: var(--border-strong);
+}
+
+/* ---- Fallout under the resistances ---- */
+
+.entityView .table-fallout { --block: 50%; }
+.entityView .table-fallout-taken { clear: both; }
+
+.entityView .table-fallout-taken > table > tbody > tr > td:nth-child(1),
+.entityView .table-fallout-taken > table > tbody > tr > td:nth-child(2) {
+    width: 8em;
+    font-weight: bold;
+}
+.entityView .table-fallout .slots input[type="checkbox"] {
+    accent-color: var(--accent);
+}

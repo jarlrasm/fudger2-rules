@@ -1,0 +1,394 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+saveOutcome (roll, score) =
+    if roll == 1 then "Success"
+    else if roll == 20 then "Failure"
+    else if roll <= score then "Success"
+    else "Failure"
+
+saveResult (roll, score) =
+{
+    Text = toString (roll) + " vs " + toString (score) + ": " + saveOutcome (roll, score)
+    Value = roll
+    Outcome = saveOutcome (roll, score)
+}
+
+oddSave = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline)))
+
+surpriseText (roll, score) =
+    toString (roll) + " vs DEX " + toString (score) + ": "
+    + (if saveOutcome (roll, score) == "Success" then "acts before the enemy" else "surprised, loses the first turn")
+
+surpriseResult (roll, score) =
+{
+    Text = surpriseText (roll, score)
+    Value = if saveOutcome (roll, score) == "Success" then 2 else 0
+    Outcome = saveOutcome (roll, score)
+}
+
+oddInitiative = ([1d20], ((baseline, throws)->surpriseResult (first (first (throws).rolls), baseline)))
+
+enemyInitiative = ([1d6], ((baseline, throws)->{ Text = "acts after the players"  Value = 1 }))
+
+oddInitiativeRank (text) =
+    if contains (text, "acts before") then 3
+    else if contains (text, "acts after") then 2
+    else if contains (text, "surprised") then 1
+    else 0
+
+attackSides (mode, die) = if mode < 0 then 4 else if mode == 1 then 12 else die
+
+attackDice (mode) = if mode == 2 then 2 else 1
+
+modeText (mode) =
+    if mode < 0 then " (impaired)"
+    else if mode == 1 then " (enhanced)"
+    else if mode == 2 then " (best of two)"
+    else ""
+
+damageText (roll, armour, answered, mode, blast) =
+    toString (max (0, roll - armour)) + " damage" + modeText (mode)
+    + (if answered and armour > 0 then " after " + toString (armour) + " Armour" else "")
+    + (if blast then ", Blast: roll for each target" else "")
+
+damageResult (roll, armour, answered, mode, blast) =
+{
+    Text = damageText (roll, armour, answered, mode, blast)
+    Value = max (0, roll - armour)
+}
+
+oddDamage (dieSides, howMany, mode, blast) = ([dice { number = howMany  sides = dieSides }], ((baseline, throws)->damageResult (max (first (throws).rolls) + baseline, asked, answered, mode, blast)))
+
+oddAttack (die, blast) = ask ("Attack", ["Impaired d4", "Normal", "Enhanced d12", "Two weapons, best of two"], -1, (mode)->ask ("Target's Armour", 0, oddDamage (attackSides (mode, die), attackDice (mode), mode, blast)))
+
+advanceLine (name, roll, score) = if roll > score then name + " +1" else name + " stays"
+
+advanceText (throws, str, dex, wil) =
+    advanceLine ("STR", first (first (throws).rolls), str) + ", "
+    + advanceLine ("DEX", first (item (1, throws).rolls), dex) + ", "
+    + advanceLine ("WIL", first (item (2, throws).rolls), wil) + ", +"
+    + toString (first (item (3, throws).rolls)) + " max HP"
+
+advanceRoll (str, dex, wil) = ([dice { number = 1  sides = 20  label = "STR" }, dice { number = 1  sides = 20  label = "DEX" }, dice { number = 1  sides = 20  label = "WIL" }, dice { number = 1  sides = 6  label = "HP" }],
+    ((baseline, throws)->{ Text = advanceText (throws, str, dex, wil) }))
+
+dieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+noStats = { Stats = { Kind = "" } }
+
+itemStat (item, field) = valueOr (valueOr (valueOr (item.data, "oddItem", noStats), "Stats", noStats.Stats), field, "")
+
+isBulky (item) = itemStat (item, "Bulky") == true
+
+bulkyCount (char) = count (filter ((item)->isBulky (item), char.Equipment)) + count (filter ((arc)->valueOr (valueOr (valueOr (arc.data, "oddArcanum", noStats), "Stats", noStats.Stats), "Bulky", false) == true, char.Arcana))
+
+downState (str, dex, wil, crit, hp, bulky) =
+    if str == 0 then "Dead"
+    else if crit then "Critical Damage"
+    else if dex == 0 then "Paralysed"
+    else if wil == 0 then "Broken"
+    else if bulky >= 3 then "Overburdened"
+    else if hp == 0 then "0 HP"
+    else ""
+
+actionKind (kind) = if kind == "Ranged" then "ranged" else "melee"
+
+weaponAttack (name, die, kind, blast) = custom
+{
+    Name = name
+    Damage = integer { value = 0  valuedice = oddAttack (die, blast)  action = kind  reach = 2  render = "d" + toString (die)  editable = none }
+}
+
+weaponsOf (char) = filter ((item)->itemStat (item, "Kind") == "Weapon" or itemStat (item, "Kind") == "Explosive", char.Equipment)
+
+attackFor (item) = weaponAttack (item.Name, max (4, dieSize (itemStat (item, "Damage"))), if itemStat (item, "Ranged") == true then "ranged" else "melee", itemStat (item, "Blast") == true)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Abilities, Protection, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Background = string { description = "Where the character comes from, or the starting package they took." }
+        Level = string { description = "Novice to start; rises with the expeditions survived." keys = ["Novice", "Professional", "Expert", "Veteran", "Master"] default = "Novice" }
+        Expeditions = integer { description = "Expeditions survived, counted for advancement." default = 0  minvalue = 0  editable = live }
+        Advance = integer { description = "On reaching a new level: a d20 for each ability, +1 where it beats the score, and a d6 more max HP." value = 0  valuedice = advanceRoll (Abilities.STR.Max, Abilities.DEX.Max, Abilities.WIL.Max)  render = "Level up"  editable = none }
+    }
+
+    Abilities = keyvalues
+    {
+        description = "Saves: roll d20 equal to or under the score. 1 always succeeds, 20 always fails."
+        keys = ["STR", "DEX", "WIL"]
+        descriptions = { STR = "Strength: muscle, toughness, resisting poison. Damage past HP comes off it; at 0 you are dead." DEX = "Dexterity: speed, stealth, aim and reflexes. At 0 you are paralysed." WIL = "Willpower: nerve, charm, wits and resisting strange forces. At 0 you are broken." }
+        valueType = custom
+        {
+            Score = integer { default = 10  minvalue = 0  maxvalue = 20  editable = live }
+            Max = integer { default = 10  minvalue = 1  maxvalue = 20 }
+            Save = integer { value = Score  valuedice = oddSave  editable = none }
+        }
+    }
+
+    Protection = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max HP' = integer { description = "Hit Protection: how well you avoid harm, not your health." default = 3  minvalue = 1 }
+        HP = integer { description = "Lost first. At 0 HP further damage comes off STR, and you save STR against Critical Damage." default = 'Max HP'  minvalue = 0  editable = live }
+        Armour = integer { description = "Taken off every hit. Modern or crude armour is 1, a shield adds 1." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        'Critical Damage' = bool { description = "Failed the STR save: cannot act until an ally tends you and you rest. Dies within the hour if left alone." default = false  editable = live  indicator = "#555555" }
+        Tended = bool { description = "An ally has tended the Critical Damage; the next short rest ends it." default = false  editable = live }
+        Deprived = bool { description = "Lacking food, water or warmth: rests do nothing." default = false  editable = live  indicator = "#e8913a" }
+        'Bulky items' = integer { description = "Bulky items need two hands or real storage. Three or more drop you to 0 HP." value = bulkyCount (characterTable)  editable = none }
+        State = string { value = downState (Abilities.STR.Score, Abilities.DEX.Score, Abilities.WIL.Score, 'Critical Damage', HP, 'Bulky items')  visible = none  indicator = "#d64545" }
+        Initiative = integer { description = "When surprise is possible: a DEX save to act before the enemy." value = Abilities.DEX.Score  valuedice = oddInitiative  editable = none }
+        'Short rest' = button
+        {
+            description = "A few minutes and a drink of water restore all HP and, once tended, end Critical Damage. Not while deprived."
+            editable = live
+            onClick = updates
+            {
+                (root.Protection.HP) = if Deprived then HP else 'Max HP'
+                (root.Protection.'Critical Damage') = if Deprived or not (Tended) then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
+            }
+        }
+        'Full rest' = button
+        {
+            description = "A week of downtime somewhere comfortable restores every ability score. Not while deprived."
+            editable = live
+            onClick = updates
+            {
+                (root.Abilities.STR.Score) = if Deprived then Abilities.STR.Score else Abilities.STR.Max
+                (root.Abilities.DEX.Score) = if Deprived then Abilities.DEX.Score else Abilities.DEX.Max
+                (root.Abilities.WIL.Score) = if Deprived then Abilities.WIL.Score else Abilities.WIL.Max
+                (root.Protection.HP) = if Deprived then HP else 'Max HP'
+                (root.Protection.'Critical Damage') = if Deprived then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
+            }
+        }
+    }
+
+    Purse = table
+    {
+        description = "100 pennies make a shilling, 100 shillings a guilder."
+        tableLayout = layout { columns = 1 }
+        Guilders = integer { default = 0  minvalue = 0  editable = live }
+        Shillings = integer { default = 0  minvalue = 0  editable = live }
+        Pennies = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks always hit: roll the weapon die, minus the target's Armour. Unarmed is d4."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", 4, "melee", false)], map ((item)->attackFor (item), weaponsOf (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Equipment = list
+    {
+        description = "Weapons, armour, tools and supplies. Every expedition also has lanterns, rope, maps, camping gear and rations."
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Arcana = list
+    {
+        description = "Strange devices of the Underground. Using one is an action, and some want something back."
+        tableLayout = layout { size = wide }
+        source = secondary.Arcana
+        singular = "Arcanum"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Description = string { description = "Looks, manner and what drives them into the Underground." multiline = true }
+        Companions = string { description = "Hirelings, companions and beasts." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Stats, Attack]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        HP = integer { default = 4  minvalue = 0  editable = live }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        'Critical Damage' = bool { description = "Failed its STR save after damage past HP: out of the fight, or dead." default = false  editable = live  indicator = "#555555" }
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        WIL = integer { default = 10  minvalue = 0  editable = live }
+        'STR save' = integer { value = STR  valuedice = oddSave  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = oddSave  editable = none }
+        'WIL save' = integer { description = "Also morale: at half its group lost, or alone at 0 HP, fail and it flees." value = WIL  valuedice = oddSave  editable = none }
+        State = string { value = downState (STR, DEX, WIL, 'Critical Damage', HP, 0)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = 0  valuedice = enemyInitiative  editable = none  visible = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Attacks = string { description = "What it attacks with, such as claws (d6)." default = "claws (d6)" }
+        Damage = string { description = "The die of its main attack." default = "d6" }
+        Kind = string { keys = ["Melee", "Ranged"] default = "Melee" }
+        Strike = integer { value = 0  valuedice = oddAttack (max (4, dieSize (Damage)), false)  action = actionKind (Kind)  reach = 2  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Special = string { description = "Odd abilities, weaknesses and what it wants." multiline = true }
+    }
+}
+
+detachmentTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/intotheodd/detachment.svg"
+        important = [Detachment, Attack]
+    }
+    Detachment = table
+    {
+        description = "A body of twenty or more fighting as one. Its attacks on individuals are enhanced; individuals' attacks on it are impaired, except Blast."
+        tableLayout = layout { columns = 3  size = wide }
+        Size = integer { description = "How many fight in it." default = 20  minvalue = 1  editable = live }
+        HP = integer { default = 8  minvalue = 0  editable = live }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        WIL = integer { default = 10  minvalue = 0  editable = live }
+        'STR save' = integer { value = STR  valuedice = oddSave  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = oddSave  editable = none }
+        Morale = integer { description = "A WIL save, or its leader's, when it has lost half its strength. Fail and it routs." value = WIL  valuedice = oddSave  editable = none }
+        'Critical Damage' = bool { description = "The detachment is broken and scatters." default = false  editable = live  indicator = "#555555" }
+        Routed = bool { description = "Failed morale and fled." default = false  editable = live  indicator = "#8e5cc4" }
+        State = string { value = downState (STR, DEX, WIL, 'Critical Damage', HP, 0)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = 0  valuedice = enemyInitiative  editable = none  visible = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Weapons = string { default = "muskets (d8)" }
+        Damage = string { default = "d8" }
+        Kind = string { keys = ["Melee", "Ranged"] default = "Ranged" }
+        Volley = integer { description = "Against an individual, pick Enhanced." value = 0  valuedice = oddAttack (max (4, dieSize (Damage)), false)  action = actionKind (Kind)  reach = 2  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Leader = string { description = "Who leads it; the leader's WIL can stand for its morale." }
+        Notes = string { multiline = true }
+    }
+}
+
+oddItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armour", "Explosive", "Consumable", "Tool", "Luxury", "Beast", "Service"] }
+        Damage = string { description = "Weapon die, such as d6." }
+        Armour = integer { description = "Armour it gives." default = 0  minvalue = 0  maxvalue = 3 }
+        Bulky = bool { description = "Needs two hands or real storage." default = false }
+        Ranged = bool { description = "A missile or firearm; useless in melee." default = false }
+        Blast = bool { description = "Hits everything in an area, each target rolled separately." default = false }
+        Cost = string { description = "In pennies (p), shillings (s) or guilders (g)." }
+    }
+}
+
+oddArcanum = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/intotheodd/arcanum.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Arcanum", "Oddity"] default = "Arcanum" }
+        Uses = string { description = "Charges or how often it works, if it is limited." }
+        Bulky = bool { default = false }
+        Price = string { description = "What it asks of its user, if anything." multiline = true }
+    }
+}
+
+oddNameSetting = nameSetting
+{
+    name = "Bastion"
+    characters = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    creatures = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    Detachments = generator { library = "Gaslight" variant = "Club" }
+    Location = [generator { library = "Gaslight" variant = "Street" }, generator { library = "Gaslight" variant = "Club" }]
+    Arcana = generator { library = "Gaslight" variant = "Invention" }
+    Equipment = generator { library = "Gaslight" variant = "Invention" }
+}
+
+IntoTheOdd = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a character"
+            topic = "Getting started"
+            text = ["Roll 3d6 for STR, DEX and WIL in order (you may swap two), and a d6 for HP. Your highest score and your HP pick a starting package of gear, sometimes an Arcanum. Add the items to Equipment and Arcana."]
+        },
+        hint
+        {
+            title = "Saves"
+            topic = "Play"
+            text = ["No skills and no checks for ordinary actions: a save only when there is risk. Roll d20 equal to or under STR, DEX or WIL. 1 always succeeds, 20 always fails."]
+        },
+        hint
+        {
+            title = "Attacks always hit"
+            topic = "Combat"
+            text = ["Roll the weapon die and take off the target's Armour. The roll asks whether the attack is impaired (d4: cover, grappled), enhanced (d12: helpless target, daring stunt) or made with two weapons (best of two), and the target's Armour. Damage past 0 HP comes off STR and calls for a STR save against Critical Damage."]
+        },
+        hint
+        {
+            title = "Who acts first"
+            topic = "Initiative"
+            text = ["Players act before enemies. When surprise is possible, Call for initiative: each character saves DEX, and those who fail act after the enemy in the first round."]
+        },
+        hint
+        {
+            title = "Rest"
+            topic = "Play"
+            text = ["A short rest of a few minutes restores all HP. A week of downtime restores ability scores. Deprived characters get nothing from rest."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Detachments = detachmentTable
+    Equipment = oddItem
+    Arcana = oddArcanum
+    secondaryTypes = ["Equipment", "Arcana"]
+    extraEntityTypes = [entityTypeDescription ("Detachments", "detachment", true, "/systems/intotheodd/detachment.svg", [])]
+    description = "Into the Odd Remastered: explorers in an industrial city of weird science, d20 roll-under saves, attacks that always hit, and Arcana"
+    initiativeCompare (item1, item2) = compare (oddInitiativeRank (item1), oddInitiativeRank (item2))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
+    cssFiles = ["/systems/intotheodd/intotheodd.css"]
+    libraries = ["/systems/names/victorian.json"]
+    nameSettings = [oddNameSetting, gaslightNameSetting]
+}

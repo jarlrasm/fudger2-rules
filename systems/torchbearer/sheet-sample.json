@@ -1,0 +1,32 @@
+{
+  "values": {
+    "Adventurer": { "Stock": "Elf", "Class": "Ranger", "Age": 61, "Home": "Hollowmere", "Raiment": "Grey-green cloak, mended twice", "Parents": "Ilwen the bowyer and Corath", "Mentor": "Old Saethir of the border watch", "Friend": "Brannoc, a dwarf gravedigger", "Enemy": "The goblin chief Skarrow", "Epithet": "the Quiet" },
+    "Beliefs": { "Belief": "The old roads belong to no one; I will keep them open.", "Creed": "Law is a wall that keeps the dark at bay, even when it chafes.", "Goal": "Find the lost bell of the Cinder Shrine and bring it to the surface.", "Instinct": "Always douse the light before opening a door." },
+    "Abilities": { "Nature.Rating": 3, "Nature.Pass": 1, "Max Nature": 3, "Descriptors": "Singing, Remembering, Hiding", "Will.Rating": 4, "Will.Pass": 2, "Health.Rating": 4, "Health.Pass": 3, "Health.Fail": 1, "Resources.Rating": 1, "Circles.Rating": 2, "Circles.Fail": 1 },
+    "Skills": { "Fighter.Rating": 3, "Fighter.Pass": 1, "Pathfinder.Rating": 3, "Scout.Rating": 3, "Scout.Pass": 2, "Scout.Fail": 1, "Survivalist.Rating": 2, "Healer.Rating": 2, "Lore Master.Rating": 2, "Hunter.Rating": 2, "Cartographer.Pass": 1, "Cartographer.Fail": 1 },
+    "Standing": { "Might": 3, "Precedence": 1, "Lifestyle": 1 },
+    "Conditions": { "Fresh": false, "Hungry and Thirsty": true, "Light": "Dim light" },
+    "Traits": [ { "Trait": "First Born", "Level": 1 }, { "Trait": "Quiet", "Level": 2, "Used": 1 }, { "Trait": "Cold", "Level": 1 } ],
+    "Wises": [ { "Wise": "Goblin-wise", "Pass": true, "Persona": true }, { "Wise": "Old Roads-wise", "Fail": true } ],
+    "Rewards": { "Level": 2, "Fate": 1, "Fate Spent": 4, "Checks": 1, "Persona": 1, "Persona Spent": 3 },
+    "Level Benefits": [ { "Level": 1, "Benefit": "Ranger: elven bow and the Wilderness Trait" }, { "Level": 2, "Benefit": "Wanderer: +1D to Pathfinder in the wild" } ],
+    "Conflict": { "Disposition": 4 },
+    "Load": { "Pack Type": "Backpack" },
+    "Head": [],
+    "Neck": [ { "Item": "Cloak clasp of river jade", "Size": 1 } ],
+    "Hands Worn": [ { "Item": "Archer's bracer", "Size": 1 } ],
+    "Hands Carried": [ { "Item": "Longbow", "Size": 2 } ],
+    "Torso": [ { "Item": "Leather armor", "Size": 1 }, { "Item": "Travelling cloak", "Size": 1 } ],
+    "Belt": [ { "Item": "Quiver", "Size": 1 }, { "Item": "Dagger", "Size": 1 }, { "Item": "Torch", "Size": 1 } ],
+    "Feet": [ { "Item": "Soft boots", "Size": 1 } ],
+    "Pack": [ { "Item": "Preserved rations (2 portions)", "Size": 2 }, { "Item": "Waterskin (3 drinks)", "Size": 1 }, { "Item": "Rope, 50 ft", "Size": 1 }, { "Item": "Torches (2)", "Size": 2 } ],
+    "Ground": [ { "Item": "Iron-bound chest, empty", "Size": 4 } ],
+    "Stash": [ { "Item": "Spare arrows", "Size": 1 }, { "Item": "Silver candlesticks (loot)", "Size": 2 } ],
+    "Notes": { "Allies and Enemies": "Brannoc owes me for the crypt. Skarrow knows my face.", "Notes": "Cinder Shrine: second stair is trapped. The bell room lies under the ash pool." }
+  },
+  "secondary": {
+    "Weapons": [ { "name": "Longbow", "values": { "Stats": { "Range": "Missile", "Hands": 2, "Conflicts": "Kill, Drive Off", "Attack Dice": "1", "Attack": "+1D at range", "Maneuver": "+1D to gain position", "Slot": "Hands carried" } } }, { "name": "Dagger", "values": { "Stats": { "Range": "Melee", "Hands": 1, "Attack Dice": "0", "Attack": "+1s in close quarters", "Slot": "Belt" } } } ],
+    "Armor": [ { "name": "Leather armor", "values": { "Stats": { "Kind": "Leather", "Slot": "Torso", "Size": 1, "Protection": "-1s from a hit, then roll a die: on a 1 it is damaged" } } } ],
+    "Gear": [ { "name": "Torch", "values": { "Stats": { "Kind": "Light", "Slot": "Belt", "Size": 1, "Uses": "2 turns", "Use": "Full light for two" } } }, { "name": "Preserved rations", "values": { "Stats": { "Kind": "Food", "Slot": "Pack", "Size": 1, "Uses": "4 portions", "Use": "Clears Hungry and Thirsty" } } } ]
+  }
+}

@@ -1,0 +1,72 @@
+@import url("/systems/sheet.css");
+
+/* Into the Odd: a stark printed card on warm off-white, heavy black rules
+   and condensed capitals, one vermilion accent; the three abilities as a
+   column of boxes with score, max and save, Hit Protection and the purse
+   beside them, then attacks, equipment and Arcana in full-width bands. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #1c1a18;
+    --surface: #f3efe6;
+    --surface-alt: #e9e3d6;
+    --surface-sunken: #ddd6c6;
+    --surface-muted: #c9c1ae;
+    --text: #141311;
+    --text-muted: #3d3a35;
+    --text-faint: #75706a;
+    --on-accent: #f3efe6;
+    --border: #9b958a;
+    --border-strong: #141311;
+    --accent: #c8402a;
+    --accent-hover: #a83420;
+    --accent-soft: #f2d6cd;
+    --link: #a83420;
+    --danger: #a83420;
+    --danger-hover: #86291a;
+    --danger-soft: #f2d6cd;
+    --success: #3e6b3a;
+    --paper: #f3efe6;
+    --card-bg: #e9e3d6;
+    --dice-bg: #141311;
+    --dice-text: #f3efe6;
+}
+
+.entityView {
+    --sheet-font: "Helvetica Neue", "Arial", sans-serif;
+    --title-font: "Oswald", "Bebas Neue", "Arial Narrow", Impact, sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 1.25em;
+    background: var(--border-strong);
+    color: var(--surface);
+    border-bottom: 3px solid var(--accent);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.entityView .table-abilities { --block: 36%; clear: left; }
+.entityView .table-protection { --block: 40%; }
+.entityView .table-purse { --block: 24%; }
+.entityView .table-abilities > table > tbody > tr { font-size: 1.15em; }
+.entityView .table-abilities > table > tbody > tr > td { white-space: nowrap; }
+.entityView .table-abilities > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    font-size: 1.4em;
+    color: var(--accent);
+}
+.entityView .table-abilities > table > tbody > tr > td:nth-child(2)::before { content: "SCORE "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-abilities > table > tbody > tr > td:nth-child(3)::before { content: "MAX "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-abilities > table > tbody > tr > td:nth-child(4)::before { content: "SAVE "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-attacks { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

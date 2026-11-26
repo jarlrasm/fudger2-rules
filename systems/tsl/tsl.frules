@@ -1,0 +1,443 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+beatOutcome (total) =
+    if total > 9 then "Up beat"
+    else if total > 6 then "Mixed beat"
+    else "Down beat"
+
+beatText (total) =
+    if total > 9 then "10+ up beat: you do it, and well"
+    else if total > 6 then "7-9 mixed beat: you do it, at a cost or with a complication"
+    else "6- down beat: mark XP, and the GM makes a move"
+
+beatColor (total) =
+    if total > 9 then "green"
+    else if total > 6 then "yellow"
+    else "red"
+
+beatResult (total, note) =
+{
+    Text = toString (total) + note + ", " + beatText (total)
+    Value = total
+    Outcome = beatOutcome (total)
+    Color = beatColor (total)
+}
+
+stringNote (spent) = if spent > 0 then " (String spent, +3)" else ""
+
+tslRoll (extra) = ([2d6], ((baseline, throws)->beatResult (baseline + extra + sum (first (throws).rolls), "")))
+
+tslStringRoll (extra) = ([2d6], ((baseline, throws)->beatResult (baseline + extra + 3 * asked + sum (first (throws).rolls), stringNote (asked))))
+
+rollBonus (char) = char.Character.Forward + char.Character.Ongoing
+
+tslDice (char) = tslRoll (rollBonus (char))
+
+stringDice (char) = ask ("Spend a String on them?", ["No", "Spend a String +3"], 0, tslStringRoll (rollBonus (char)))
+
+flag (b) = if b then 1 else 0
+
+conditionsMarked (char) =
+    flag (char.Conditions.Angry) + flag (char.Conditions.Frightened) + flag (char.Conditions.Guilty)
+    + flag (char.Conditions.Hopeless) + flag (char.Conditions.Insecure)
+
+penalty (marked) = if marked then 2 else 0
+
+staggerText (marked) =
+    if marked > 3 then "4-5 Conditions: rendered helpless for the scene, or utterly humiliated and news spreads, or two of the 0-3 options"
+    else "0-3 Conditions: lash out at someone whose regard matters, or hesitate and give the opposition an opening, or grin and bear it and mark two Conditions"
+
+forPlaybook (chosen, wanted) = if chosen == wanted then visible else none
+
+trackState (value, full, word) = if value >= full then word else ""
+
+npcDefeated (marked, needed, beaten) = if beaten or marked >= needed then "Defeated" else ""
+
+statFor (char, stat) =
+    if stat == "Daring" then char.Stats.Daring
+    else if stat == "Grace" then char.Stats.Grace
+    else if stat == "Heart" then char.Stats.Heart
+    else if stat == "Wit" then char.Stats.Wit
+    else if stat == "Spirit" then char.Stats.Spirit
+    else if stat == "Conditions" then conditionsMarked (char)
+    else 0
+
+moveStat (move) = first (split (", ", valueOr (move.data.moveStats.Stats, "Stat", "")))
+
+moveRoll (char, move) = custom
+{
+    Name = move.Name
+    Stat = moveStat (move)
+    Roll = modifier { value = statFor (char, moveStat (move))  valuedice = tslDice (char)  editable = none }
+}
+
+rolledMoves (char) = filter ((move)->moveStat (move) != "", char.Moves)
+
+sessionXP (char) =
+    flag (char.'End of Session'.'Confessed love') + flag (char.'End of Session'.'Struck oppression') + flag (char.'End of Session'.'Leapt into danger') + flag (char.'End of Session'.'Used a safety tool')
+
+xpTrack (oneShot) = if oneShot then 3 else 5
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/tsl/heart-sword.svg"  important = [Stats, Conditions, 'Basic Moves', Strings, Character.Forward] }
+
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Playbook = string { description = "Your playbook: an archetype and the emotional conflict at its heart." keys = ["The Beast", "The Chosen", "The Devoted", "The Infamous", "The Nature Witch", "The Scoundrel", "The Seeker", "The Spooky Witch", "The Trickster"] }
+        Pronouns = string {}
+        Archetype = string { description = "An example archetype from the playbook, or your own." }
+        Demeanor = string { description = "Aesthetics: pick or invent a demeanor." }
+        Clothes = string { description = "Aesthetics: pick or invent your clothes." }
+        Sword = string { description = "Aesthetics: what kind of sword you carry." }
+        Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
+        Ongoing = modifier { description = "Bonus to every roll while its effect lasts, such as after Finally Kissing in a dangerous situation." default = 0  editable = live }
+    }
+
+    Stats = table
+    {
+        description = "Added to 2d6 when you make a move: 10+ up beat, 7-9 mixed beat, 6- down beat."
+        tableLayout = layout { columns = 1 }
+        Daring = modifier { description = "Daring: skill at arms and forcefulness, of muscle and of personality." default = 0  minvalue = -1  maxvalue = 3  valuedice = tslDice (characterTable) }
+        Grace = modifier { description = "Grace: elegance, poise and agility." default = 0  minvalue = -1  maxvalue = 3  valuedice = tslDice (characterTable) }
+        Heart = modifier { description = "Heart: emotional awareness and expression." default = 0  minvalue = -1  maxvalue = 3  valuedice = tslDice (characterTable) }
+        Wit = modifier { description = "Wit: cleverness and knowledge." default = 0  minvalue = -1  maxvalue = 3  valuedice = tslDice (characterTable) }
+        Spirit = modifier { description = "Spirit: metaphysical power and integrity." default = 0  minvalue = -1  maxvalue = 3  valuedice = tslDice (characterTable) }
+    }
+
+    'Basic Moves' = table
+    {
+        description = "The moves every character has, with the stat each rolls and the Condition that gives -2 already taken off."
+        tableLayout = layout { columns = 2 }
+        'Fight with Daring' = modifier { description = "Fight: seek to incapacitate someone with violence. Roll +Daring, -2 if Frightened." value = Stats.Daring - penalty (Conditions.Frightened)  valuedice = tslDice (characterTable)  editable = none  action = melee  reach = 2 }
+        'Fight with Grace' = modifier { description = "Fight: seek to incapacitate someone with violence. Roll +Grace, -2 if Frightened." value = Stats.Grace - penalty (Conditions.Frightened)  valuedice = tslDice (characterTable)  editable = none  action = melee  reach = 2 }
+        'Defy with Daring' = modifier { description = "Defy Disaster with might, endurance or courage. -2 if Hopeless." value = Stats.Daring - penalty (Conditions.Hopeless)  valuedice = tslDice (characterTable)  editable = none }
+        'Defy with Grace' = modifier { description = "Defy Disaster with swiftness or elegance. -2 if Hopeless." value = Stats.Grace - penalty (Conditions.Hopeless)  valuedice = tslDice (characterTable)  editable = none }
+        'Defy with Heart' = modifier { description = "Defy Disaster with charm or social insight. -2 if Hopeless." value = Stats.Heart - penalty (Conditions.Hopeless)  valuedice = tslDice (characterTable)  editable = none }
+        'Defy with Wit' = modifier { description = "Defy Disaster with cleverness or knowledge. -2 if Hopeless." value = Stats.Wit - penalty (Conditions.Hopeless)  valuedice = tslDice (characterTable)  editable = none }
+        'Defy with Spirit' = modifier { description = "Defy Disaster with willpower or metaphysical skill. -2 if Hopeless." value = Stats.Spirit - penalty (Conditions.Hopeless)  valuedice = tslDice (characterTable)  editable = none }
+        Entice = modifier { description = "Appeal to someone's physical or emotional sensibilities. Roll +Heart, -2 if Insecure." value = Stats.Heart - penalty (Conditions.Insecure)  valuedice = tslDice (characterTable)  editable = none }
+        'Figure Out a Person' = modifier { description = "Try to understand a person. Roll +Wit, -2 if Angry; the roll asks whether you spend a String on them for +3." value = Stats.Wit - penalty (Conditions.Angry)  valuedice = stringDice (characterTable)  editable = none }
+        'Support with Heart' = modifier { description = "Emotional Support with +Heart, -2 if Guilty; the roll asks whether you spend a String on them for +3." value = Stats.Heart - penalty (Conditions.Guilty)  valuedice = stringDice (characterTable)  editable = none }
+        'Support with Spirit' = modifier { description = "Emotional Support with +Spirit, -2 if Guilty; the roll asks whether you spend a String on them for +3." value = Stats.Spirit - penalty (Conditions.Guilty)  valuedice = stringDice (characterTable)  editable = none }
+        'Call on a Toxic Power' = modifier { description = "Parley with a Toxic Power: ask your question and roll +Spirit." value = Stats.Spirit  valuedice = tslDice (characterTable)  editable = none }
+    }
+
+    Conditions = table
+    {
+        description = "Hard emotional states, each -2 to one basic move. A sixth Condition leaves you Defeated for the scene."
+        tableLayout = layout { columns = 1 }
+        Angry = bool { description = "Angry: -2 to Figure Out a Person. Clear it by breaking something important to you or someone you care about." default = false  editable = live  indicator = "#d64545" }
+        Frightened = bool { description = "Frightened: -2 to Fight. Clear it by running away and leaving something important behind." default = false  editable = live  indicator = "#8e5cc4" }
+        Guilty = bool { description = "Guilty: -2 to Emotional Support. Clear it by sacrificing something important just to hurt yourself." default = false  editable = live  indicator = "#555555" }
+        Hopeless = bool { description = "Hopeless: -2 to Defy Disaster. Clear it by losing yourself in escapism when you should be doing something important." default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { description = "Insecure: -2 to Entice. Clear it by rash action to confront the object of your jealousy or prove your worth." default = false  editable = live  indicator = "#d4b106" }
+        Defeated = bool { description = "Marked a sixth Condition: taken out of the action until the next scene, which starts with all five still marked." default = false  editable = live  indicator = "#d64545" }
+        Stagger = string { description = "The Stagger move: what you choose from when you suffer a staggering blow, by the Conditions you have marked." value = staggerText (conditionsMarked (characterTable))  editable = none }
+        'Next scene' = button { description = "A new scene: you are no longer Defeated. Your Conditions stay marked."  editable = live  onClick = updates { (root.Conditions.Defeated) = false } }
+    }
+
+    'Playbook Feature' = table
+    {
+        description = "The special rules of your playbook."
+        tableLayout = layout { columns = 2 }
+        Feral = integer { description = "The Beast: starts at 1. At 4 you Transform; at 0 you lose your Beast moves until it rises." default = 1  minvalue = 0  maxvalue = 4  editable = live  visible = forPlaybook (Character.Playbook, "The Beast") }
+        Transformed = string { value = trackState (Feral, 4, "Transformed")  visible = none  indicator = "#e8913a" }
+        Destiny = string { description = "The Chosen: the Destiny they keep telling you about, which is not what your heart desires." multiline = true  visible = forPlaybook (Character.Playbook, "The Chosen") }
+        Devotion = string { description = "The Devoted: the cause, person or higher power you are devoted to." visible = forPlaybook (Character.Playbook, "The Devoted") }
+        Tenets = string { description = "The Devoted: three tenets of your Devotion you have been tempted to violate." multiline = true  visible = forPlaybook (Character.Playbook, "The Devoted") }
+        'Last Stand' = modifier { description = "The Devoted: against a superior foe on behalf of your Devotion, Fight or Defy Disaster for someone else with +Conditions marked." value = conditionsMarked (characterTable)  valuedice = tslDice (characterTable)  editable = none  visible = forPlaybook (Character.Playbook, "The Devoted") }
+        'Wicked Past' = string { description = "The Infamous: the villainous past you are trying to atone for, and what could make it forgivable." multiline = true  visible = forPlaybook (Character.Playbook, "The Infamous") }
+        Vows = string { description = "The Infamous: what you swore never to do again. Breaking a vow makes you Stagger." multiline = true  visible = forPlaybook (Character.Playbook, "The Infamous") }
+        Curiosity = string { description = "The Nature Witch: what dealing with people feels like to you." multiline = true  visible = forPlaybook (Character.Playbook, "The Nature Witch") }
+        'Living in the Moment' = string { description = "The Scoundrel: why you are so fickle, and what you will grow past." multiline = true  visible = forPlaybook (Character.Playbook, "The Scoundrel") }
+        Authority = string { description = "The Seeker: the Authority that governed your upbringing." visible = forPlaybook (Character.Playbook, "The Seeker") }
+        Tradition = integer { description = "The Seeker: starts at 1, up to 4. Spend it to temper the Authority's wrath or take +1 forward." default = 1  minvalue = 0  maxvalue = 4  editable = live  visible = forPlaybook (Character.Playbook, "The Seeker") }
+        Commandments = string { description = "The Seeker: at least six Commandments of the Authority. Cross one off when you repudiate it." multiline = true  editable = live  visible = forPlaybook (Character.Playbook, "The Seeker") }
+        Convictions = string { description = "The Seeker: the beliefs you wrote in place of broken Commandments." multiline = true  editable = live  visible = forPlaybook (Character.Playbook, "The Seeker") }
+        'The Unseen' = string { description = "The Spooky Witch: what the Unseen are, when you first met them and what they want." multiline = true  visible = forPlaybook (Character.Playbook, "The Spooky Witch") }
+        Feelings = integer { description = "The Trickster: starts at 1. At 4 the mask comes off; afterwards drop to 0 and clear a Condition." default = 1  minvalue = 0  maxvalue = 4  editable = live  visible = forPlaybook (Character.Playbook, "The Trickster") }
+        'Mask off' = string { value = trackState (Feelings, 4, "Mask off")  visible = none  indicator = "#e8913a" }
+    }
+
+    'Destiny Aspects' = keyvalues
+    {
+        description = "The Chosen: two Heroic and two Tragic Aspects. Check one when you act on it and take +1 forward (and XP if Tragic)."
+        visible = forPlaybook (Character.Playbook, "The Chosen")
+        keys = ["Heroic 1", "Heroic 2", "Tragic 1", "Tragic 2"]
+        valueType = custom
+        {
+            Aspect = string {}
+            Checked = bool { default = false  editable = live }
+        }
+    }
+
+    Trials = keyvalues
+    {
+        description = "The Nature Witch: four Trials. When you complete one, mark XP, clear a Condition or take a String."
+        visible = forPlaybook (Character.Playbook, "The Nature Witch")
+        keys = ["Trial 1", "Trial 2", "Trial 3", "Trial 4"]
+        valueType = custom
+        {
+            Trial = string {}
+            Done = bool { default = false  editable = live }
+        }
+    }
+
+    Experience = table
+    {
+        tableLayout = layout { columns = 2 }
+        XP = slots { description = "Marked on every down beat and when moves say so. Fill it to take an Advance." number = xpTrack ('One shot')  editable = live  allowedchange = increaseAndClear }
+        'One shot' = bool { description = "A single-session game: an Advance comes every 3 XP." default = false }
+    }
+
+    Strings = list
+    {
+        description = "Emotional influence. Spend a String to tempt with XP, add 1 to your roll against them, or add or take 1 from theirs. A fourth String on someone is a String Advance: learn a profound truth, keep one String and gain 2 XP."
+        singular = "String"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            'On them' = integer { description = "Strings you hold on them." default = 0  minvalue = 0  editable = live }
+            'On me' = integer { description = "Strings they hold on you." default = 0  minvalue = 0  editable = live }
+            Smitten = bool { description = "You are Smitten with them." default = false  editable = live }
+        }
+    }
+
+    'End of Session' = table
+    {
+        description = "At the end of a session every PC marks one XP for each of these that anyone in the group did."
+        tableLayout = layout { columns = 1 }
+        'Confessed love' = bool { description = "Any PC confessed their love." default = false  editable = live }
+        'Struck oppression' = bool { description = "Any PC struck a blow against oppression or de-escalated a violent situation." default = false  editable = live }
+        'Leapt into danger' = bool { description = "Any PC leapt into danger with daring and panache." default = false  editable = live }
+        'Used a safety tool' = bool { description = "Any player used a safety practice such as adding to the palette or checking in." default = false  editable = live }
+        'End session' = button { description = "Mark one XP for each ticked box, then clear them."  editable = live  onClick = updates {
+            (root.Experience.XP.realvalue) = min (xpTrack (Experience.'One shot'), Experience.XP.realvalue + sessionXP (characterTable))
+            (root.'End of Session'.'Confessed love') = false
+            (root.'End of Session'.'Struck oppression') = false
+            (root.'End of Session'.'Leapt into danger') = false
+            (root.'End of Session'.'Used a safety tool') = false
+        } }
+    }
+
+    Moves = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Moves
+        singular = "Move"
+        editable = character
+    }
+
+    'Move Rolls' = list
+    {
+        description = "A roll for each of your moves that names a stat, with Forward and Ongoing added."
+        tableLayout = layout { size = wide }
+        source = map ((move)->moveRoll (characterTable, move), rolledMoves (characterTable))
+        singular = "Move roll"
+        editable = none
+        valueType = moveRoll
+    }
+
+    Advances = table
+    {
+        description = "Spend a full XP track on an Advance. The first five come from the top six."
+        tableLayout = layout { columns = 2 }
+        'Playbook move' = bool { default = false }
+        'Another playbook move' = bool { default = false }
+        'Move from any playbook' = bool { default = false }
+        'Another move from any playbook' = bool { default = false }
+        'Add 1 to a stat' = bool { description = "Max stat of 3." default = false }
+        'Add 1 to another stat' = bool { description = "Max stat of 3." default = false }
+        'Switch playbook' = bool { description = "Keep one playbook move, your Strings and Conditions." default = false }
+        'Live happily ever after' = bool { description = "Retire the character and narrate their epilogue." default = false }
+    }
+
+    Story = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Look = string { multiline = true }
+        Relationships = string { description = "Shared history with the other PCs from the relationship prompts." multiline = true }
+        'Smitten with' = string { description = "Who you are Smitten with, and your answer to your playbook's Truth of Heart and Blade." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+npcTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/tsl/mask.svg"  important = [NPC, Conditions] }
+    NPC = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { default = "Adversary"  keys = ["Adversary", "Formidable adversary", "Minion", "Ally", "Love interest", "Bystander"] }
+        Wants = string { description = "What they want, and what they would do to get it." }
+        'Defeated after' = integer { description = "How many Conditions they take before they are Defeated, from 1 to 5 by how formidable they are." default = 1  minvalue = 1  maxvalue = 5 }
+        Look = string { multiline = true }
+    }
+    Conditions = table
+    {
+        description = "NPCs take Conditions like PCs. A formidable NPC who takes one triggers a GM move."
+        tableLayout = layout { columns = 3  size = wide }
+        Angry = bool { default = false  editable = live  indicator = "#d64545" }
+        Frightened = bool { default = false  editable = live  indicator = "#8e5cc4" }
+        Guilty = bool { default = false  editable = live  indicator = "#555555" }
+        Hopeless = bool { default = false  editable = live  indicator = "#555555" }
+        Insecure = bool { default = false  editable = live  indicator = "#d4b106" }
+        'Taken out' = bool { description = "Defeated some other way, or surrendered." default = false  editable = live }
+        Down = string { value = npcDefeated (conditionsMarked (npcTable), NPC.'Defeated after', 'Taken out')  visible = none  indicator = "#d64545" }
+    }
+    Strings = list
+    {
+        description = "Strings this NPC holds on PCs. NPCs can hold any number and earn no String Advances."
+        singular = "String"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            'On them' = integer { default = 1  minvalue = 0  editable = live }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'When they take a Condition' = string { description = "The GM move a formidable NPC makes when hurt, such as lashing out, calling for backup or offering a deal." multiline = true }
+        Moves = string { multiline = true }
+    }
+}
+
+toxicPowerTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/tsl/toxic-power.svg"  important = [Power, Countdowns] }
+    Power = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { keys = ["Conqueror", "Corrupter", "Affliction", "Tyrannical Authority", "Complacent Privileged Population", "Well-Meaning Liabilities", "Other"] }
+        Goal = string { description = "What the Toxic Power wants to change, or to keep as it is." }
+        Agents = string { description = "The NPCs who act for it." multiline = true }
+        'GM moves' = string { description = "Custom GM moves for this power, used on down beats." multiline = true }
+        Offers = string { description = "What it gives those who Call on it, and what it takes." multiline = true }
+    }
+    Countdowns = list
+    {
+        description = "Threats that advance a step on down beats or when ignored. Show the players the steps."
+        tableLayout = layout { size = wide }
+        singular = "Countdown"
+        editable = live
+        valueType = custom
+        {
+            Threat = string {}
+            Steps = integer { default = 3  minvalue = 2  maxvalue = 8 }
+            Progress = clock { segments = Steps  editable = live }
+        }
+    }
+    Strings = list
+    {
+        description = "Strings the power holds on PCs who called on it."
+        singular = "String"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            'On them' = integer { default = 1  minvalue = 0  editable = live }
+        }
+    }
+}
+
+moveStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/tsl/heart-sword.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Playbook }
+        filters = [
+            filter { name = "Playbook" prefix = "" filter = Stats.Playbook },
+            filter { name = "Kind" prefix = "" filter = Stats.Kind },
+            filter { name = "Stat" prefix = "" filter = split (", ", Stats.Stat) }
+        ]
+    }
+    Stats = table
+    {
+        Playbook = string { keys = ["Basic", "The Beast", "The Chosen", "The Devoted", "The Infamous", "The Nature Witch", "The Scoundrel", "The Seeker", "The Spooky Witch", "The Trickster"] }
+        Kind = string { description = "Basic and special moves for everyone, playbook moves to choose, feature moves only the playbook has, and Truths of Heart and Blade." keys = ["Basic", "Special", "Playbook", "Feature", "Truth"] }
+        Stat = string { description = "The stats the move can roll, first one used for its roll on the sheet." }
+        Starting = bool { description = "Every character of the playbook starts with this move." default = false }
+    }
+}
+
+playbookStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/tsl/mask.svg" }
+    Stats = table
+    {
+        'Column 1' = string { description = "The first stat column. Add 1 to two different stats." }
+        'Column 2' = string { description = "The second stat column. Add 1 to two different stats." }
+        Aesthetics = string { multiline = true }
+        'Starting move' = string {}
+        Feature = string {}
+    }
+}
+
+tslNameSetting = nameSetting
+{
+    name = "Swashbuckling romance"
+    characters = [generator { library = "Swashbuckling romance" variant = "Swordswoman" }, generator { library = "Swashbuckling romance" variant = "Noble" }, generator { library = "Swashbuckling romance" variant = "Witch" }]
+    creatures = [generator { library = "Swashbuckling romance" variant = "Villain" }, generator { library = "Swashbuckling romance" variant = "Noble" }, generator { library = "Swashbuckling romance" variant = "Swordswoman" }]
+    Location = [generator { library = "Swashbuckling romance" variant = "Realm" }, generator { library = "Swashbuckling romance" variant = "Tavern" }]
+    'Toxic Powers' = generator { library = "Swashbuckling romance" variant = "Toxic Power" }
+    Moves = generator { library = "Swashbuckling romance" variant = "Sword" }
+}
+
+ThirstySwordLesbians = system
+{
+    hints = [
+        hint
+        {
+            title = "Playbooks"
+            topic = "Getting started"
+            text = ["Each player picks a different playbook, chooses one of its two stat columns and adds 1 to two stats, picks aesthetics and moves, then the group sets up relationships and gives each other Strings.", "Talk about the palette first: what the table wants more of, and what stays out."]
+        },
+        hint
+        {
+            title = "Moves"
+            topic = "Play"
+            text = ["Roll 2d6 + stat when a move triggers: 10+ up beat, 7-9 mixed beat, 6- down beat, mark XP and the GM makes a move. Forward and Ongoing are added for you, and each Condition's -2 is taken off its basic move."]
+        },
+        hint
+        {
+            title = "Strings"
+            topic = "Play"
+            text = ["Strings are emotional influence over someone. Spend one to offer XP, add 1 to your roll against them or add or take 1 from theirs. Figure Out a Person and Emotional Support ask whether you spend one for +3."]
+        },
+        hint
+        {
+            title = "Conditions and Defeat"
+            topic = "Combat"
+            text = ["There are no hit points: Fight and hard blows inflict Conditions. A PC who has to mark a sixth is Defeated for the scene. NPCs are Defeated after one to five Conditions, set on their sheet."]
+        },
+        hint
+        {
+            title = "No initiative"
+            topic = "Initiative"
+            text = ["There is no initiative and the GM never rolls. Move the spotlight between characters as the drama asks."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = npcTable
+    entityTypeNames = [entityTypeName ("Creature", "NPC", "NPCs")]
+    extraEntityTypes = [entityTypeDescription ("Toxic Powers", "toxic power", false, "/systems/tsl/toxic-power.svg", [])]
+    'Toxic Powers' = toxicPowerTable
+    Moves = moveStats
+    Playbooks = playbookStats
+    secondaryTypes = ["Moves"]
+    otherLibararyTypes = ["Playbooks"]
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    description = "Thirsty Sword Lesbians: Powered by the Apocalypse swashbuckling romance, with Conditions, Strings and playbooks"
+    quickdice = [2d6]
+    cssFiles = ["/systems/tsl/tsl.css"]
+    libraries = ["/systems/tsl/tsl.json", "/systems/names/swashbuckling.json", "/systems/names/scifi.json", "/systems/names/pirates.json", "/systems/names/faerie.json"]
+    nameSettings = [tslNameSetting, spaceNameSetting, highSeasNameSetting, faerieCourtsNameSetting]
+}

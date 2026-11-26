@@ -1,0 +1,50 @@
+{
+  "values": {
+    "Hero": { "Kin": "Man", "Culture": "Weald", "Vocation": "Champion", "Level": 3, "Heroic Path": 34, "Wealth Level": 2, "Age": "26", "Languages": "Common Mannish, Woad cant, a little Elvish" },
+    "Stats": { "Brawn.Base": 15, "Swiftness.Base": 10, "Fortitude.Base": 10, "Fortitude.Kin": 5, "Wits.Base": 0, "Wisdom.Base": 5, "Bearing.Base": 10 },
+    "Passions": { "Nature": "Slow to anger, impossible to stop once roused", "Allegiance": "The folk of Hollin Ford, who raised me", "Motivation": "Find the raiders who burned my father's mill" },
+    "Condition": { "Kin Health": 30, "Health Cap": 150, "Health": 58, "Bleed": 1, "Activity Penalty": -10, "Drive": 2, "Max Magic Points": 3, "Magic Points": 1, "Taint": 0 },
+    "Combat": { "Movement": 15, "Kin Toughness": 10, "Other Toughness": 5, "Kin Willpower": 5, "Other Willpower": 5, "Phase": "Melee long reach" },
+    "Combat Skills": {
+      "Armor.Ranks": 3, "Armor.Voc": 10,
+      "Body.Ranks": 5, "Body.Voc": 10,
+      "Blades.Ranks": 6, "Blades.Voc": 15,
+      "Blunt.Ranks": 1, "Blunt.Voc": 15,
+      "Brawl.Ranks": 1, "Brawl.Voc": 15,
+      "Polearms.Ranks": 2, "Polearms.Voc": 15,
+      "Ranged.Ranks": 2, "Ranged.Voc": 10
+    },
+    "Adventuring Skills": { "Athletics.Ranks": 3, "Athletics.Voc": 5, "Ride.Ranks": 2, "Ride.Voc": 5, "Hunting.Ranks": 1, "Hunting.Spec": 5, "Nature.Ranks": 1, "Nature.Spec": 5, "Wandering.Ranks": 2, "Wandering.Spec": 5 },
+    "Roguery Skills": { "Acrobatics.Ranks": 0, "Stealth.Ranks": 1, "Stealth.Spec": 5, "Locks and Traps.Ranks": 0, "Perception.Ranks": 3, "Deceive.Ranks": 0 },
+    "Lore Skills": { "Arcana.Ranks": 0, "Charisma.Ranks": 3, "Charisma.Voc": 10, "Cultures.Ranks": 1, "Healer.Ranks": 2, "Healer.Voc": 5, "Songs and Tales.Ranks": 2, "Songs and Tales.Spec": 5 },
+    "Spell Lores": [ { "Name": "Hands of Mending", "Stat": "Bearing", "Ranks": 2, "Voc": 10, "Spec": 0 }, { "Name": "Oathbound Courage", "Stat": "Bearing", "Ranks": 1, "Voc": 10, "Spec": 0 } ],
+    "Other Skills": [ { "Name": "Warfare", "Stat": "Wits", "Ranks": 1, "Spec": 0 }, { "Name": "Stewardship", "Stat": "Wisdom", "Ranks": 1, "Spec": 5 } ],
+    "Background": {
+      "Background Options": "Heirloom blade (+5 arming sword), extra rank in Charisma, Woad cant.",
+      "Story": "Raised at the mill of Hollin Ford, Aedan swore his oath at the standing stone the night the Ashen Riders came. He has hunted their trail through the Grey Weald since the thaw.",
+      "Treasure": "Silver ring of the ford-wardens, 3 pearls taken from a bandit chief",
+      "Notes": "Owes the herbwife Maelis for two cordials. Last saw the riders crossing the Teme at dusk."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Arming sword", "values": { "Stats": { "Skill": "Blades", "Attack Table": "Edged", "Critical": "Cut", "Reach": "Long", "Max Result": 150, "Bonus": 5, "Hands": "One", "Notes": "Heirloom, +5" } } },
+      { "name": "Spear", "values": { "Stats": { "Skill": "Polearms", "Attack Table": "Edged", "Critical": "Pierce", "Reach": "Longest", "Max Result": 140, "Bonus": 0, "Hands": "Two", "Range": "10 m thrown" } } },
+      { "name": "Short bow", "values": { "Stats": { "Skill": "Ranged", "Attack Table": "Missile", "Critical": "Pierce", "Reach": "Missile", "Max Result": 130, "Bonus": 0, "Hands": "Two", "Range": "60 m" } } }
+    ],
+    "Armour": [
+      { "name": "Rigid leather coat", "values": { "Stats": { "Kind": "Armour", "Type": "Medium", "Defence Bonus": 0, "Penalty": "-10 moving, eased by Armor" } } },
+      { "name": "Round shield", "values": { "Stats": { "Kind": "Shield", "Type": "None", "Defence Bonus": 15 } } }
+    ],
+    "Spells": [
+      { "name": "Close the Wound", "values": { "Stats": { "Lore": "Hands of Mending", "Weave": 1, "MP Cost": 1, "Range": "Touch", "Duration": "Instant", "Area": "One", "Save": "None", "Kind": "Healing" } } },
+      { "name": "Stay the Bleeding", "values": { "Stats": { "Lore": "Hands of Mending", "Weave": 2, "MP Cost": 1, "Range": "Touch", "Duration": "1 hour", "Area": "One", "Save": "None", "Kind": "Healing" } } },
+      { "name": "Unbowed", "values": { "Stats": { "Lore": "Oathbound Courage", "Weave": 1, "MP Cost": 1, "Range": "Self", "Duration": "1 minute", "Area": "Self", "Save": "None", "Kind": "Utility" } } }
+    ],
+    "Gear": [
+      { "name": "Reviving cordial", "values": { "Stats": { "Weight": "0.2 kg", "Cost": "Wealth 1", "Notes": "Two left" } } },
+      { "name": "Hemp rope, 15 m", "values": { "Stats": { "Weight": "2 kg", "Cost": "Wealth 0" } } },
+      { "name": "Travel rations", "values": { "Stats": { "Weight": "1 kg", "Cost": "Wealth 0", "Notes": "Four days" } } }
+    ]
+  }
+}

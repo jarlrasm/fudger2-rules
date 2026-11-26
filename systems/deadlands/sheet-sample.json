@@ -1,0 +1,56 @@
+{
+  "values": {
+    "Character": { "Occupation": "Gunslinger, late of the Texas Rangers", "Arcane Background": "None", "Worst Nightmare": "Buried alive in a pine box while the town sings hymns above", "Grit": 1, "Size": 6, "Bounty Points": 7, "Money": 38 },
+    "Corporeal": {
+      "Deftness.Trait.Dice": 4, "Deftness.Trait.Die": "d10",
+      "Deftness.Aptitudes": { "Shootin'": { "Level": 4 }, "Speed-load": { "Level": 2 }, "Throwin'": { "Level": 1 } },
+      "Nimbleness.Trait.Dice": 3, "Nimbleness.Trait.Die": "d8",
+      "Nimbleness.Aptitudes": { "Climbin'": { "Level": 1 }, "Dodge": { "Level": 2 }, "Fightin'": { "Level": 2 }, "Horse ridin'": { "Level": 3 }, "Sneak": { "Level": 2 } },
+      "Quickness.Trait.Dice": 3, "Quickness.Trait.Die": "d10",
+      "Quickness.Aptitudes": { "Quick draw": { "Level": 3 } },
+      "Strength.Trait.Dice": 2, "Strength.Trait.Die": "d8",
+      "Vigor.Trait.Dice": 3, "Vigor.Trait.Die": "d8"
+    },
+    "Mental": {
+      "Cognition.Trait.Dice": 2, "Cognition.Trait.Die": "d10",
+      "Cognition.Aptitudes": { "Scrutinize": { "Level": 1 }, "Search": { "Level": 2 }, "Trackin'": { "Level": 2 } },
+      "Knowledge.Trait.Dice": 1, "Knowledge.Trait.Die": "d6",
+      "Knowledge.Aptitudes": { "Area knowledge": { "Level": 2 }, "Language": { "Level": 2 } },
+      "Mien.Trait.Dice": 2, "Mien.Trait.Die": "d8",
+      "Mien.Aptitudes": { "Overawe": { "Level": 2 } },
+      "Smarts.Trait.Dice": 2, "Smarts.Trait.Die": "d6",
+      "Smarts.Aptitudes": { "Gamblin'": { "Level": 2 }, "Survival": { "Level": 1 } },
+      "Spirit.Trait.Dice": 3, "Spirit.Trait.Die": "d6",
+      "Spirit.Aptitudes": { "Guts": { "Level": 3 } }
+    },
+    "Wounds": { "Left Arm": 1, "Guts": 0, "Wind": 10 },
+    "Fate Chips": { "White": 1, "Red": 1, "Blue": 0 },
+    "Combat": { "Up the Sleeve": "Jack of Spades" },
+    "Background": {
+      "History": "Rode with the Rangers until the night his whole company was found hanging from one cottonwood with not a rope among them. He has been hunting what did it ever since, and he has learned not to say so in polite company.",
+      "Notes": "Owes Doc Larkin in Gallows Creek for the stitches in his arm. The bounty on the Crowley brothers is $200 a head."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Colt Peacemaker", "values": { "Stats": { "Aptitude": "Shootin' pistol", "Damage": "3d6", "Range": "10", "Shots": "6", "ROF": "1", "Speed": "1", "Price": "$15" } } },
+      { "name": "Winchester '73", "values": { "Stats": { "Aptitude": "Shootin' rifle", "Damage": "4d8", "Range": "20", "Shots": "15", "ROF": "1", "Speed": "1", "Price": "$25" } } },
+      { "name": "Bowie knife", "values": { "Stats": { "Aptitude": "Fightin' knife", "Damage": "STR+1d6", "Defense": "+1", "Price": "$4" } } }
+    ],
+    "Edges": [
+      { "name": "Nerves o' steel", "values": { "Stats": { "Points": "1", "Notes": "Never runs from a failed Guts check." } } },
+      { "name": "The stare", "values": { "Stats": { "Points": "1", "Notes": "Bonus to overawe when he locks eyes." } } }
+    ],
+    "Hindrances": [
+      { "name": "Enemy", "values": { "Stats": { "Points": "2", "Notes": "The Crowley gang wants him dead." } } },
+      { "name": "Oath", "values": { "Stats": { "Points": "3", "Notes": "Find what killed his company." } } },
+      { "name": "Loyal", "values": { "Stats": { "Points": "3", "Notes": "Never leaves a friend behind." } } }
+    ],
+    "Gear": [
+      { "name": "Duster and Stetson", "values": { "Stats": { "Price": "$12" } } },
+      { "name": "Horse and saddle", "values": { "Stats": { "Price": "$150", "Notes": "A grey mare named Widow." } } },
+      { "name": ".45 cartridges (50)", "values": { "Stats": { "Price": "$2", "Weight": "2 lb" } } },
+      { "name": "Bedroll and canteen" }
+    ]
+  }
+}
