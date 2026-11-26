@@ -157,7 +157,7 @@ characterTable = ruleset
         'Willpower Aggravated' = slots { description = "Aggravated willpower damage." number = Attributes.Composure + Attributes.Resolve  editable = live }
         Impaired = string { value = if healthFull (characterTable) or willpowerFull (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
         'New session' = button { description = "Each session, superficial willpower damage heals by the higher of Composure or Resolve."  editable = live  onClick = updates { (root.Trackers.'Willpower Superficial'.realvalue) = max (0, 'Willpower Superficial'.realvalue - max (Attributes.Composure, Attributes.Resolve)) } }
-        'Day of rest' = button { description = "A day of rest heals one superficial health damage. Aggravated damage needs medical care and weeks."  editable = live  onClick = updates { (root.Trackers.'Health Superficial'.realvalue) = max (0, 'Health Superficial'.realvalue - 1) } }
+        'Day of rest' = button { description = "A day of rest heals superficial health damage equal to Stamina. Aggravated damage needs medical care and weeks."  editable = live  onClick = updates { (root.Trackers.'Health Superficial'.realvalue) = max (0, 'Health Superficial'.realvalue - Attributes.Stamina) } }
     }
 
     Skills = table
