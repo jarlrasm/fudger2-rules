@@ -19,26 +19,34 @@ paranoiaText (successes, difficulty, answered, computer) =
     + (if answered then " vs " + toString (difficulty) + ": " + paranoiaOutcome (successes, difficulty, answered) else "")
     + (if computer == 6 then ". The Computer die: Friend Computer takes an interest" else "")
 
-paranoiaResult (rolls, node, computer, difficulty, answered) =
+paranoiaResult (rolls, node, computer, difficulty, answered, reroll, spend) =
 {
     Text = paranoiaText (nodeSuccesses (rolls, node, computer), difficulty, answered, computer)
     Value = nodeSuccesses (rolls, node, computer)
     Outcome = paranoiaOutcome (nodeSuccesses (rolls, node, computer), difficulty, answered)
     Color = if computer == 6 then "red" else ""
+    Push = if count (spend) > 0 and paranoiaOutcome (nodeSuccesses (rolls, node, computer), difficulty, answered) != "Success" then reroll else 0
+    PushLabel = "Spend Moxie: reroll"
+    PushSets = spend
 }
 
 nodeRoll (node, difficulty) = ([dice { number = abs (node)  sides = 6  label = if node < 0 then "Negative NODE" else "" }, dice { number = 1  sides = 6  color = "red"  label = "Computer"  faces = ["1", "2", "3", "4", "5", "C"] }],
-    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), difficulty, difficulty > 0)))
+    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), difficulty, difficulty > 0, 0, [])))
 
-nodeAsked (node) = ([dice { number = abs (node)  sides = 6  label = if node < 0 then "Negative NODE" else "" }, dice { number = 1  sides = 6  color = "red"  label = "Computer"  faces = ["1", "2", "3", "4", "5", "C"] }],
-    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), asked, answered)))
+nodeAsked (node, spend) = ([dice { number = abs (node)  sides = 6  label = if node < 0 then "Negative NODE" else "" }, dice { number = 1  sides = 6  color = "red"  label = "Computer"  faces = ["1", "2", "3", "4", "5", "C"] }],
+    ((baseline, throws)->paranoiaResult (first (throws).rolls, node, first (item (1, throws).rolls), asked, answered, nodeAsked (node, []), spend)))
 
 woundPenalty (char) =
     if char.Health.Wounds >= 3 then 2
     else if char.Health.Wounds >= 2 then 1
     else 0
 
-nodeDice (char, node) = ask ("Equipment bonus or penalty", 0, (n)->ask ("Difficulty", nodeAsked (node + n - woundPenalty (char))))
+moxieSpend (char) =
+    if char.Status.Moxie > 1 then [{ Field = "characterTable.Status.Moxie"  Value = char.Status.Moxie - 1 }]
+    else if char.Status.Moxie == 1 then [{ Field = "characterTable.Status.Moxie"  Value = 0 }, { Field = "characterTable.Status.Losing it"  Value = true }]
+    else []
+
+nodeDice (char, node) = ask ("Equipment bonus or penalty", 0, (n)->ask ("Difficulty", nodeAsked (node + n - woundPenalty (char), moxieSpend (char))))
 
 statValue (char, name) =
     switch name
@@ -77,6 +85,8 @@ weaponAttack (name, node, damage, kind, distance) = custom
 attackFor (char, weapon) =
     if weaponStat (weapon, "Skill") == "Melee" then
         weaponAttack (weapon.Name, char.Stats.Violence + skillRating (char, char.Violence, "Melee"), weaponStat (weapon, "Damage"), "melee", 0)
+    else if weaponStat (weapon, "Skill") == "Demolitions" then
+        weaponAttack (weapon.Name, char.Stats.Mechanics + skillRating (char, char.Mechanics, "Demolitions"), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else if weaponStat (weapon, "Skill") == "Throw" then
         weaponAttack (weapon.Name, char.Stats.Violence + skillRating (char, char.Violence, "Throw"), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
@@ -248,7 +258,7 @@ creatureTable = ruleset
         keys = ["Laser pistol", "Truncheon"]
         valueType = custom
         {
-            NODE = modifier { default = 3  valuedice = ask ("Difficulty", nodeAsked (NODE))  action = if contains (toLower (Key), "pistol") or contains (toLower (Key), "laser") or contains (toLower (Key), "gun") or contains (toLower (Key), "rifle") then "ranged" else "melee"  reach = 2 }
+            NODE = modifier { default = 3  valuedice = ask ("Difficulty", nodeAsked (NODE, []))  action = if contains (toLower (Key), "pistol") or contains (toLower (Key), "laser") or contains (toLower (Key), "gun") or contains (toLower (Key), "rifle") then "ranged" else "melee"  reach = 2 }
             Damage = string { default = "Injured" }
         }
     }
@@ -319,7 +329,7 @@ Paranoia = system
         {
             title = "NODE rolls"
             topic = "Play"
-            text = ["Roll stat + skill d6s plus the red Computer die. Each 5 or 6 is a success; with a negative NODE each die under 5 takes one away. The prompt asks for equipment bonuses and the Difficulty. A C on the Computer die means Friend Computer takes an interest."]
+            text = ["Roll stat + skill d6s plus the red Computer die. Each 5 or 6 is a success; with a negative NODE each die under 5 takes one away. The prompt asks for equipment bonuses and the Difficulty. A C on the Computer die means Friend Computer takes an interest.", "After a roll that didn't succeed, the roll window offers to spend a Moxie point for a reroll."]
         },
         hint
         {

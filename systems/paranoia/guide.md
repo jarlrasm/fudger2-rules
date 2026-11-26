@@ -12,13 +12,13 @@ The **NODE** is **stat + skill** (Violence, Brains, Chutzpah, Mechanics; skills 
 - A **negative NODE**: roll that many dice and each die **under 5 takes a success away**.
 - The GM sets a Difficulty (successes needed); the prompt asks for it and for equipment bonuses.
 - A **C** on the Computer die means Friend Computer takes an interest: an announcement, an inspection, a malfunction or a reward, at the GM's whim.
-- **Moxie** (0-8): spend it to reroll or to power a mutant power. At 0 the citizen **loses it** and acts on their worst instinct.
+- **Moxie** (0-8): spend it to reroll or to power a mutant power. After a roll that didn't succeed, the roll window offers the reroll (same NODE and Difficulty) and takes the point off. At 0 the citizen **loses it** and acts on their worst instinct.
 
 ## Treason and XP
 Accusations, overheard opinions and failed orders earn **Treason Stars**. At five, Internal Security terminates the citizen on sight. **XP points** come from pleasing the Computer and buy gear, clearance and replacement clones.
 
 ## Combat
-No initiative: the GM decides, usually whoever speaks first. Attack with Violence + Guns, Melee or Throw. A hit wounds by the weapon's damage: **Hurt**, **Injured** (-1 NODE), **Maimed** (-2 NODE), **Dead**. A dead clone is replaced (Next clone on the sheet). Armor and cover raise the Difficulty.
+No initiative: the GM decides, usually whoever speaks first. Attack with Violence + Guns, Melee or Throw, or Mechanics + Demolitions for explosives. A hit wounds by the weapon's damage: **Hurt**, **Injured** (-1 NODE), **Maimed** (-2 NODE), **Dead**. A dead clone is replaced (Next clone on the sheet). Armor and cover raise the Difficulty.
 
 ## Secrets
 Secret society, mutant power and secret orders stay in the editor view and private notes; never say them aloud unless it's funny.
