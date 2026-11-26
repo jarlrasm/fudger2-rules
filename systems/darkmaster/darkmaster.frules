@@ -1,0 +1,642 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+statNames = ["Brawn", "Swiftness", "Fortitude", "Wits", "Wisdom", "Bearing"]
+
+kinNames = ["Dwarf", "Halfling", "Man", "Wildfolk", "High Man", "Half-Elf", "Dusk Elf", "Silver Elf", "Star Elf", "Half-Orc", "Orc", "Stone Troll", "Firbolg"]
+
+cultureNames = ["Arctic", "City", "Deep", "Desert", "Fey", "Hill", "Marauding", "Noble", "Pastoral", "Plains", "Seafaring", "Weald", "Woad"]
+
+vocationNames = ["Warrior", "Rogue", "Wizard", "Animist", "Champion", "Dabbler", "Sage"]
+
+difficultyNames = ["Routine +30", "Easy +20", "Light +10", "Standard +0", "Challenging -10", "Hard -20", "Very Hard -30", "Extremely Hard -40", "Heroic -50", "Sheer Folly -60", "Insane -70"]
+
+phaseNames = ["Spell A", "Ranged A", "Melee longest reach", "Melee long reach", "Melee short reach", "Melee hand reach", "Ranged B", "Spell B", "Other actions"]
+
+armourTypes = ["None", "Light", "Medium", "Heavy"]
+
+attackTables = ["Edged", "Blunt", "Missile", "Grappling", "Beast", "Bolt", "Area"]
+
+criticalTypes = ["Cut", "Impact", "Pierce", "Grapple", "Beast Strike", "Fire", "Frost", "Lightning", "Dark Magic"]
+
+kinVariant (kin) =
+    switch kin
+        case "Dwarf" then "Dwarf"
+        case "Halfling" then "Halfling"
+        case "Half-Elf" then "Elf"
+        case "Dusk Elf" then "Elf"
+        case "Silver Elf" then "Elf"
+        case "Star Elf" then "Elf"
+        case "Half-Orc" then "Orc"
+        case "Orc" then "Orc"
+        case "Stone Troll" then "Monster"
+        case "Firbolg" then "Monster"
+        else "Human"
+
+vsdBand (total) =
+    if total <= 4 then "Critical failure"
+    else if total < 75 then "Failure"
+    else if total < 100 then "Partial success"
+    else if total < 175 then "Success"
+    else "Outstanding success"
+
+difficultyMod (ans, level) = if ans then 30 - 10 * level else 0
+
+difficultyText (ans, level) = if ans then " (" + item (level, difficultyNames) + ")" else ""
+
+defenceText (ans, defence) = if ans then " vs Defence " + toString (defence) else ""
+
+saveTarget (ans, level) = if ans then 50 + 5 * level else -1
+
+saveLevelText (ans, level) = if ans then " vs level " + toString (level) + " (" + toString (50 + 5 * level) + ")" else ""
+
+resonance (rolls) = if first (rolls) == 100 or mod (first (rolls), 11) == 0 then ", Magical Resonance" else ""
+
+attackText (total, info, cap, tbl) =
+    if total <= 4 then toString (total) + info + ": Fumble, roll on the fumble table"
+    else toString (min (total, cap)) + info + (if total > cap then " (capped at " + toString (cap) + ")" else "") + ": read the " + tbl + " attack table"
+
+saveText (total, info, target) =
+    if target < 0 then toString (total)
+    else if total >= target then toString (total) + info + ": Saved by " + toString (total - target)
+    else toString (total) + info + ": Failed by " + toString (target - total)
+
+resultText (kind, total, info, target, cap, tbl, rolls) =
+    switch kind
+        case "attack" then attackText (total, info, cap, tbl)
+        case "save" then saveText (total, info, target)
+        case "spell" then toString (total) + info + ": " + vsdBand (total) + resonance (rolls)
+        else toString (total) + info + ": " + vsdBand (total)
+
+resultOutcome (kind, total, target) =
+    switch kind
+        case "attack" then (if total <= 4 then "Fumble" else "")
+        case "save" then (if target < 0 then "" else if total >= target then "Success" else "Failure")
+        else vsdBand (total)
+
+canReroll (kind, total, target, spend) =
+    count (spend) > 0 and (if kind == "save" then target >= 0 and total < target else if kind == "attack" then false else total < 75)
+
+judged (kind, total, info, target, cap, tbl, spend, bon, rolls) =
+{
+    Text = resultText (kind, total, info, target, cap, tbl, rolls)
+    Value = total
+    Outcome = resultOutcome (kind, total, target)
+    Push = if canReroll (kind, total, target, spend) then driveReroll (kind, bon + 10, info, target, cap, tbl) else 0
+    PushLabel = "Spend Drive: reroll at +10"
+    PushSets = spend
+}
+
+lowStart (kind, bon, nat, info, target, cap, tbl, spend) =
+{
+    Text = toString (bon + nat) + info + " so far: open-ended low, roll again and subtract"
+    Value = bon + nat
+    Outcome = ""
+    Push = lowRoll (kind, bon, nat, info, target, cap, tbl, spend)
+    PushLabel = "Roll again and subtract"
+}
+
+lowRoll (kind, bon, nat, info, target, cap, tbl, spend) = ([dice { number = 1  sides = 100  explode = 96  label = "Subtract" }],
+    ((baseline, throws)->judged (kind, bon + nat - sum (first (throws).rolls), info, target, cap, tbl, spend, bon, [nat])))
+
+vsdResult (kind, bon, rolls, info, target, cap, tbl, spend) =
+    if first (rolls) <= 5 then lowStart (kind, bon, first (rolls), info, target, cap, tbl, spend)
+    else judged (kind, bon + sum (rolls), info, target, cap, tbl, spend, bon, rolls)
+
+driveReroll (kind, bon, info, target, cap, tbl) = ([dice { number = 1  sides = 100  explode = 96 }],
+    ((baseline, throws)->vsdResult (kind, bon, first (throws).rolls, info, target, cap, tbl, [])))
+
+skillRoll (kind, extra, spend) = ([dice { number = 1  sides = 100  explode = 96 }],
+    ((baseline, throws)->vsdResult (kind, baseline + extra + difficultyMod (answered, asked), first (throws).rolls, difficultyText (answered, asked), -1, 0, "", spend)))
+
+attackRoll (extra, cap, tbl) = ([dice { number = 1  sides = 100  explode = 96 }],
+    ((baseline, throws)->vsdResult ("attack", baseline + extra - asked, first (throws).rolls, defenceText (answered, asked), -1, cap, tbl, [])))
+
+saveRoll (extra, spend) = ([dice { number = 1  sides = 100  explode = 96 }],
+    ((baseline, throws)->vsdResult ("save", baseline + extra, first (throws).rolls, saveLevelText (answered, asked), saveTarget (answered, asked), 0, "", spend)))
+
+critResult (bon, roll) =
+{
+    Text = "Critical " + toString (roll) + (if bon == 0 then "" else (if bon > 0 then " +" else " ") + toString (bon)) + " = " + toString (bon + roll) + ": read the critical table"
+    Value = bon + roll
+}
+
+criticalRoll = ([1d100], ((baseline, throws)->critResult (baseline, first (first (throws).rolls))))
+
+staticInitiative = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+phaseOrder (phase) = 9 - intValueFromEnumString (phaseNames, phase)
+
+driveSpend (char) = if char.Condition.Drive > 0 then [{ Field = "characterTable.Condition.Drive"  Value = char.Condition.Drive - 1 }] else []
+
+vsdCheckAs (kind, penalty, spend) = ask ("Modifier", 0, (n)->ask ("Difficulty", difficultyNames, 0, skillRoll (kind, n + penalty, spend)))
+
+vsdCheckFor (char) = vsdCheckAs ("skill", char.Condition.'Activity Penalty', driveSpend (char))
+
+vsdSpellFor (char) = vsdCheckAs ("spell", char.Condition.'Activity Penalty', driveSpend (char))
+
+vsdSaveAs (penalty, spend) = ask ("Modifier", 0, (n)->ask ("Attack level", saveRoll (n + penalty, spend)))
+
+vsdSaveFor (char) = vsdSaveAs (0, driveSpend (char))
+
+vsdAttackAs (penalty, cap, tbl) = ask ("Modifier", 0, (n)->ask ("Target's Defence", attackRoll (n + penalty, cap, tbl)))
+
+statOf (char, name) =
+    switch name
+        case "Brawn" then char.Stats.Brawn.Total
+        case "Swiftness" then char.Stats.Swiftness.Total
+        case "Fortitude" then char.Stats.Fortitude.Total
+        case "Wits" then char.Stats.Wits.Total
+        case "Wisdom" then char.Stats.Wisdom.Total
+        case "Bearing" then char.Stats.Bearing.Total
+        else 0
+
+stat (start) = custom
+{
+    Base = modifier { description = "The bonus bought or rolled at creation, from -20 to +35." default = start  step = 5 }
+    Kin = modifier { description = "The kin's bonus or penalty to this stat." default = 0 }
+    Total = modifier { description = "Base plus kin: added to every skill tied to this stat." value = Base + Kin  valuedice = vsdCheckFor (characterTable)  editable = none }
+}
+
+skill (statBonus) = custom
+{
+    Ranks = integer { description = "Ranks bought with development points; each is worth +5." default = 0  minvalue = 0 }
+    Stat = modifier { value = statBonus  editable = none }
+    Voc = modifier { description = "The vocation's bonus to this skill." default = 0 }
+    Spec = modifier { description = "Kin, culture, background and item bonuses." default = 0 }
+    Total = modifier { description = "Open-ended d100 plus this; 100 or more succeeds, 75 to 99 is a partial success." value = 5 * Ranks + Stat + Voc + Spec  valuedice = vsdCheckFor (characterTable)  editable = none }
+}
+
+skillTotal (char, name) =
+    switch name
+        case "Blades" then char.'Combat Skills'.Blades.Total
+        case "Blunt" then char.'Combat Skills'.Blunt.Total
+        case "Brawl" then char.'Combat Skills'.Brawl.Total
+        case "Polearms" then char.'Combat Skills'.Polearms.Total
+        case "Ranged" then char.'Combat Skills'.Ranged.Total
+        else char.'Combat Skills'.Brawl.Total
+
+noStats = { Stats = { Skill = "" } }
+
+weaponStat (weapon, field, fallback) = valueOr (valueOr (valueOr (weapon.data, "vsdWeapon", noStats), "Stats", noStats.Stats), field, fallback)
+
+armourStat (armour, field, fallback) = valueOr (valueOr (valueOr (armour.data, "vsdArmour", noStats), "Stats", noStats.Stats), field, fallback)
+
+isRanged (weapon) = weaponStat (weapon, "Skill", "") == "Ranged"
+
+weaponAttack (name, cb, cap, tbl, kind, rangeMetres, reachText) = custom
+{
+    Name = name
+    CB = modifier { description = "Combat bonus: the skill plus the weapon's bonus, less any Parry this round." value = cb  valuedice = vsdAttackAs (characterTable.Condition.'Activity Penalty', cap, tbl)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Table = tbl
+    Max = cap
+    Reach = reachText
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        skillTotal (char, weaponStat (weapon, "Skill", "Brawl")) + weaponStat (weapon, "Bonus", 0) - char.Combat.Parry,
+        max (1, weaponStat (weapon, "Max Result", 150)),
+        weaponStat (weapon, "Attack Table", "Edged"),
+        if isRanged (weapon) then "ranged" else "melee",
+        if isRanged (weapon) then max (1, firstNumber (weaponStat (weapon, "Range", "30"))) else 0,
+        weaponStat (weapon, "Reach", ""))
+
+shieldBonus (char) = sum (map ((a)->armourStat (a, "Defence Bonus", 0), char.Armour))
+
+armourOf (char) = if count (filter ((a)->armourStat (a, "Kind", "") == "Armour", char.Armour)) > 0 then armourStat (first (filter ((a)->armourStat (a, "Kind", "") == "Armour", char.Armour)), "Type", "None") else "None"
+
+downState (health) = if health <= 0 then "Down" else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/darkmaster/hero.svg"  important = [Condition, Combat, Attacks] }
+    Hero = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kin = string { description = "Dwarf, Elf, Man, Orc and the rest: sets stat bonuses, Health, saves and starting wealth." keys = kinNames  default = "Man" }
+        Culture = string { description = "Where the hero grew up: skill ranks, spell lores and wealth." keys = cultureNames }
+        Vocation = string { description = "Warrior, Rogue, Wizard, Animist, Champion or Dabbler: skill bonuses and development points." keys = vocationNames }
+        Level = integer { description = "Rises with every ten points on the Heroic Path." default = 1  minvalue = 1 }
+        'Heroic Path' = integer { description = "Experience: a point for each yes to the end-of-session questions, ten to a level." default = 0  minvalue = 0  editable = live }
+        'Wealth Level' = integer { description = "Wealth from 0 (destitute) to 5; buying is done by level, not coins." default = 1  minvalue = 0  maxvalue = 5  editable = live }
+        Age = string {}
+        Languages = string {}
+    }
+
+    Stats = table
+    {
+        description = "Six stats, kept as bonuses that add straight to skills."
+        tableLayout = layout { columns = 2  size = wide }
+        Brawn = stat (0)
+        Swiftness = stat (0)
+        Fortitude = stat (0)
+        Wits = stat (0)
+        Wisdom = stat (0)
+        Bearing = stat (0)
+    }
+
+    Passions = table
+    {
+        description = "Acting on a Passion at a cost earns a Drive point."
+        tableLayout = layout { columns = 3  size = wide }
+        Nature = string { description = "Who the hero is deep down." }
+        Allegiance = string { description = "Whom or what the hero is loyal to." }
+        Motivation = string { description = "What the hero wants to achieve." }
+    }
+
+    Condition = table
+    {
+        description = "Health, Magic Points, Drive and the hero's state in play."
+        tableLayout = layout { columns = 4  size = wide }
+        'Kin Health' = integer { description = "The base Health the kin gives, from 20 for Halflings to 75 for the largest kins." default = 30  minvalue = 1 }
+        'Health Cap' = integer { description = "The most Health the kin can ever have." default = 150  minvalue = 1 }
+        'Max Health' = integer { description = "Kin Health plus the Body skill, up to the cap." value = min ('Health Cap', 'Kin Health' + 'Combat Skills'.Body.Total)  editable = none }
+        Health = integer { description = "Hits taken come off here. At 0 or less the hero is down and dying." default = 'Max Health'  editable = live }
+        Bleed = integer { description = "Health lost at the end of every round until the wound is bound." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Stun = integer { description = "Rounds left Stunned: no actions, only defence." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Activity Penalty' = modifier { description = "Penalties from critical strikes, wounds and weariness, taken off every roll." default = 0  maxvalue = 0  editable = live  indicator = "#d64545" }
+        Weary = bool { description = "Worn down by cold, hunger or march; the GM applies the penalty." default = false  editable = live  indicator = "#d4b106" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Held = bool { description = "Grappled, entangled or mesmerised: cannot move or act freely." default = false  editable = live  indicator = "#e8913a" }
+        Down = string { value = downState (Health)  visible = none  indicator = "#555555" }
+        Drive = integer { description = "0 to 5. Spend one for +10 to a roll, to reroll a failed roll at +10, or to lessen a critical; spend all five to set a roll to 100." default = 1  minvalue = 0  maxvalue = 5  editable = live }
+        'Max Magic Points' = integer { description = "From kin, vocation and level." default = 0  minvalue = 0 }
+        'Magic Points' = integer { description = "Spent to cast spells." default = 'Max Magic Points'  minvalue = 0  editable = live }
+        Taint = integer { description = "Corruption from dark lores and tainted things; a fallen hero turns to the Darkmaster." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        'Night of rest' = button
+        {
+            description = "A full night's sleep restores Magic Points and lifts weariness. Health returns by natural healing over days; mark it off by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Condition.'Magic Points') = 'Max Magic Points'
+                (root.Condition.Weary) = false
+            }
+        }
+        'Bind wounds' = button
+        {
+            description = "A Healer roll or bandages stop the bleeding."
+            editable = live
+            onClick = updates
+            {
+                (root.Condition.Bleed) = 0
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Defence = modifier { description = "Swiftness (never below 0) plus shield and Parry, taken off every attack against the hero." value = max (0, Stats.Swiftness.Total) + shieldBonus (characterTable) + Parry  editable = none }
+        Parry = integer { description = "Combat bonus moved into Defence this round; it comes off this round's attacks." default = 0  minvalue = 0  editable = live }
+        'Armour Type' = string { description = "None, Light, Medium or Heavy: the column attackers read on their attack table." value = armourOf (characterTable)  editable = none }
+        Movement = integer { description = "Metres moved in a round at a normal pace." default = 15 }
+        'Toughness Save' = modifier { description = "Against poison, disease and physical effects: roll against 50 plus five times the attack level." value = Stats.Fortitude.Total + 'Kin Toughness' + 'Other Toughness'  valuedice = vsdSaveFor (characterTable)  editable = none }
+        'Kin Toughness' = modifier { default = 0 }
+        'Other Toughness' = modifier { default = 0 }
+        Phase = string { description = "When the hero acts this round: spells and ranged attacks readied last round go first, then melee by weapon reach." keys = phaseNames  default = "Melee long reach"  editable = live }
+        'Willpower Save' = modifier { description = "Against fear, illusion and mind control: roll against 50 plus five times the attack level." value = Stats.Wisdom.Total + 'Kin Willpower' + 'Other Willpower'  valuedice = vsdSaveFor (characterTable)  editable = none }
+        'Kin Willpower' = modifier { default = 0 }
+        'Other Willpower' = modifier { default = 0 }
+        Initiative = integer { description = "Phase order, with Swiftness breaking ties within a phase." value = phaseOrder (Phase) * 100 + Stats.Swiftness.Total  valuedice = staticInitiative  editable = none }
+        'Critical Strike' = modifier { description = "Roll d100 plus the severity bonus of the critical (Superficial to Lethal) and read the critical table." value = 0  valuedice = ask ("Severity bonus", 0, criticalRoll)  editable = none }
+    }
+
+    'Combat Skills' = table
+    {
+        description = "Armour, Body and the five weapon skills."
+        tableLayout = layout { columns = 1 }
+        Armor = skill (0)
+        Body = skill (Stats.Fortitude.Total)
+        Blades = skill (Stats.Swiftness.Total)
+        Blunt = skill (Stats.Brawn.Total)
+        Brawl = skill (Stats.Brawn.Total)
+        Polearms = skill (Stats.Brawn.Total)
+        Ranged = skill (Stats.Swiftness.Total)
+    }
+
+    'Adventuring Skills' = table
+    {
+        tableLayout = layout { columns = 1 }
+        Athletics = skill (Stats.Brawn.Total)
+        Ride = skill (Stats.Swiftness.Total)
+        Hunting = skill (Stats.Wits.Total)
+        Nature = skill (Stats.Wisdom.Total)
+        Wandering = skill (Stats.Wisdom.Total)
+    }
+
+    'Roguery Skills' = table
+    {
+        tableLayout = layout { columns = 1 }
+        Acrobatics = skill (Stats.Swiftness.Total)
+        Stealth = skill (Stats.Swiftness.Total)
+        'Locks and Traps' = skill (Stats.Wits.Total)
+        Perception = skill (Stats.Wisdom.Total)
+        Deceive = skill (Stats.Wits.Total)
+    }
+
+    'Lore Skills' = table
+    {
+        tableLayout = layout { columns = 1 }
+        Arcana = skill (Stats.Wits.Total)
+        Charisma = skill (Stats.Bearing.Total)
+        Cultures = skill (Stats.Wits.Total)
+        Healer = skill (Stats.Wisdom.Total)
+        'Songs and Tales' = skill (Stats.Bearing.Total)
+    }
+
+    'Spell Lores' = list
+    {
+        description = "Each rank in a lore opens its next weave, up to ten. Casting is an open-ended roll on the lore; doubles call for a Magical Resonance roll."
+        singular = "Spell lore"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Stat = string { keys = statNames  default = "Wisdom" }
+            Ranks = integer { default = 1  minvalue = 0  maxvalue = 10 }
+            Voc = modifier { default = 0 }
+            Spec = modifier { default = 0 }
+            Total = modifier { value = 5 * Ranks + statOf (characterTable, Stat) + Voc + Spec  valuedice = vsdSpellFor (characterTable)  editable = none }
+        }
+    }
+
+    'Other Skills' = list
+    {
+        description = "Background and special skills, such as Battle Frenzy, Craftsmanship or Warfare."
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Stat = string { keys = statNames }
+            Ranks = integer { default = 0  minvalue = 0 }
+            Spec = modifier { default = 0 }
+            Total = modifier { value = 5 * Ranks + statOf (characterTable, Stat) + Spec  valuedice = vsdCheckFor (characterTable)  editable = none }
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Open-ended d100 plus the combat bonus, less the target's Defence, read on the weapon's attack table under the target's armour."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", characterTable.'Combat Skills'.Brawl.Total - characterTable.Combat.Parry, 60, "Grappling", "melee", 0, "Hand")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armour = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Spells = list
+    {
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Background Options' = string { description = "What the background points bought: extra stats, ranks, items, languages." multiline = true }
+        Story = string { multiline = true }
+        Treasure = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureAttackKind (key) = if contains (toLower (key), "ran") or contains (toLower (key), "bow") or contains (toLower (key), "bolt") or contains (toLower (key), "throw") then "ranged" else "melee"
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        description = "The book's stat block line: level, movement, armour, defence, saves and hits."
+        tableLayout = layout { columns = 6  size = wide }
+        Level = integer { default = 1  minvalue = 0 }
+        MR = string { description = "Movement rate in metres, with a size letter." default = "15M" }
+        AT = string { description = "Armour type: None, Light, Medium or Heavy." keys = ["NA", "LA", "MA", "HA"]  default = "NA" }
+        DEF = modifier { description = "Defence, taken off attacks against it." default = 10 }
+        TSR = modifier { description = "Toughness save." default = 20  valuedice = vsdSaveAs (Penalty, []) }
+        WSR = modifier { description = "Willpower save." default = 20  valuedice = vsdSaveAs (Penalty, []) }
+        'Max HP' = integer { default = 40  minvalue = 1 }
+        HP = integer { default = 'Max HP'  editable = live }
+        Bleed = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Stun = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Penalty = modifier { description = "Activity penalty from criticals." default = 0  maxvalue = 0  editable = live  indicator = "#d64545" }
+        Crit = string { description = "How it takes criticals: normal, large or huge creature." default = "NH" }
+        Rog = modifier { description = "Roguery bonus." default = 0  valuedice = vsdCheckAs ("skill", Penalty, []) }
+        Adv = modifier { description = "Adventuring bonus." default = 0  valuedice = vsdCheckAs ("skill", Penalty, []) }
+        Lor = modifier { description = "Lore bonus, also used for spell casting." default = 0  valuedice = vsdCheckAs ("spell", Penalty, []) }
+        Phase = string { keys = phaseNames  default = "Melee long reach"  editable = live }
+        Initiative = integer { value = phaseOrder (Phase) * 100  valuedice = staticInitiative  editable = none }
+        Down = string { value = downState (HP)  visible = none  indicator = "#555555" }
+        'Critical Strike' = modifier { description = "Roll d100 plus the severity bonus and read the critical table." value = 0  valuedice = ask ("Severity bonus", 0, criticalRoll)  editable = none }
+    }
+    Attacks = keyvalues
+    {
+        description = "Each attack's bonus, size and kind, as in the stat block (+70 MCl, +50 Wpn)."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Weapon"]
+        valueType = custom
+        {
+            Bonus = modifier { default = 50  valuedice = vsdAttackAs (creatureTable.Stats.Penalty, Max, Table)  action = creatureAttackKind (Key)  reach = 2  range = 60 }
+            Size = string { keys = ["Small", "Medium", "Large", "Huge"]  default = "Medium" }
+            Table = string { keys = attackTables  default = "Edged" }
+            Max = integer { default = 150 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Special = string { description = "Special abilities, immunities and weaknesses." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+darkmasterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/darkmaster/darkmaster.svg"  important = [Darkmaster, Shadow] }
+    Darkmaster = table
+    {
+        description = "The campaign's great enemy, made before play."
+        tableLayout = layout { columns = 2  size = wide }
+        Epithet = string { description = "The name the free peoples whisper, such as the Pale King." }
+        Nature = string { description = "What the Darkmaster is: a fallen wizard, a demon, an undying king." }
+        Domain = string { description = "The dark land or fortress it rules." }
+        Artifact = string { description = "The object of power its strength is bound to." }
+        Goal = string { multiline = true }
+        Weakness = string { multiline = true }
+    }
+    Shadow = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Attention = integer { description = "How closely the Darkmaster watches the heroes; strong magic draws its eye and its servants." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Hordes = string { description = "The armies it can send." multiline = true }
+        Plans = string { description = "What it is doing now, step by step." multiline = true }
+    }
+    Servants = list
+    {
+        description = "Lieutenants, spies and monsters that act for it."
+        singular = "Servant"
+        editable = character
+        valueType = nameAndDescription
+    }
+}
+
+vsdWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }, filter { name = "Table" prefix = "" filter = Stats.'Attack Table' }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { description = "The combat skill it uses." keys = ["Blades", "Blunt", "Brawl", "Polearms", "Ranged"] }
+        'Attack Table' = string { keys = attackTables }
+        Critical = string { description = "The critical table its strikes use." keys = criticalTypes }
+        Reach = string { description = "Hand, short, long or longest: sets when it strikes in the melee phase." keys = ["Hand", "Short", "Long", "Longest", "Missile"] }
+        'Max Result' = integer { description = "The highest attack result it can reach on its table." default = 150 }
+        Bonus = integer { description = "Magic or quality bonus to the combat bonus." default = 0 }
+        Range = string { description = "Range in metres for missile and thrown weapons." }
+        Hands = string { keys = ["One", "Two"] }
+        Notes = string {}
+    }
+}
+
+vsdArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Armour", "Shield", "Helm"]  default = "Armour" }
+        Type = string { description = "The armour column attacks are read under." keys = armourTypes }
+        'Defence Bonus' = integer { description = "Added to Defence, as for a shield." default = 0 }
+        Penalty = string { description = "Penalty to moving maneuvers and spell casting, eased by the Armor skill." }
+        Notes = string {}
+    }
+}
+
+vsdGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Cost = string { description = "The wealth level needed to buy it." }
+        Notes = string {}
+    }
+}
+
+vsdSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Weave" sort = Stats.Weave }
+        filters = [filter { name = "Lore" prefix = "" filter = Stats.Lore }, filter { name = "Weave" prefix = "Weave" filter = Stats.Weave }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Lore = string { description = "The spell lore it belongs to." }
+        Weave = integer { description = "Its rank in the lore, 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
+        'MP Cost' = integer { default = 1 }
+        Range = string {}
+        Duration = string {}
+        Area = string {}
+        Save = string { keys = ["None", "Toughness", "Willpower"] }
+        Kind = string { keys = ["Utility", "Bolt", "Area", "Healing", "Dark"] }
+    }
+}
+
+darkmasterNameSetting = nameSetting
+{
+    name = "Lands of the Darkmaster"
+    characters = [generator { library = "Fantasy folk" variant = kinVariant (Hero.Kin) }, generator { library = "Arthurian" variant = "Knight" }, generator { library = "Arthurian" variant = "Lady" }]
+    creatures = [generator { library = "Fantasy folk" variant = "Orc" }, generator { library = "Fantasy folk" variant = "Monster" }]
+    Darkmasters = [generator { library = "Sword and sorcery" variant = "Sorcerer" }, generator { library = "Sword and sorcery" variant = "Demon" }]
+    Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Wilds" }, generator { library = "Fantasy places" variant = "Castle" }, generator { library = "Sword and sorcery" variant = "Ruin" }, generator { library = "Fantasy places" variant = "Dungeon" }]
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Armour = generator { library = "Fantasy things" variant = "Armour" }
+    Gear = [generator { library = "Fantasy things" variant = "Artifact" }, generator { library = "Fantasy things" variant = "Potion" }]
+}
+
+AgainstTheDarkmaster = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a hero"
+            topic = "Getting started"
+            text = ["Buy the six stats as bonuses, pick a kin, a culture and a vocation, and spend development points on skill ranks (+5 each). Write down three Passions: Nature, Allegiance and Motivation. Heroes start with 1 Drive."]
+        },
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll d100 and add the skill. 96 to 100 rolls again and adds; 01 to 05 rolls again and subtracts. 100 or more succeeds, 75 to 99 is a partial success, 175 or more is outstanding, 4 or less a critical failure.", "Rolls ask for a modifier and a difficulty, from Routine +30 to Insane -70. After a failure the roll window offers to spend a Drive point to reroll at +10."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["An attack is d100 plus the combat bonus, less the target's Defence, read on the weapon's attack table under the target's armour. The table gives hits and a critical from Superficial to Lethal; roll the Critical Strike and add the severity bonus.", "Saves are open-ended rolls against 50 plus five times the attack level."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["There is no initiative roll. Pick a phase each round: readied spells, readied missiles, melee by reach from longest to hand, then the rest. Initiative orders the phases, with Swiftness breaking ties."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Darkmasters = darkmasterTable
+    extraEntityTypes = [entityTypeDescription ("Darkmasters", "Darkmaster", false, "/systems/darkmaster/darkmaster.svg", [])]
+    Weapons = vsdWeapon
+    Armour = vsdArmour
+    Gear = vsdGear
+    Spells = vsdSpell
+    secondaryTypes = ["Weapons", "Armour", "Gear", "Spells"]
+    description = "Against the Darkmaster: epic fantasy with open-ended d100 rolls, attack tables and critical strikes, Passions and Drive against an ultimate evil"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d100, 1d10]
+    cssFiles = ["/systems/darkmaster/darkmaster.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/arthurian.json", "/systems/names/barbarian.json", "/systems/names/viking.json", "/systems/names/norwegian.json"]
+    nameSettings = [darkmasterNameSetting, arthurianNameSetting, norseNameSetting]
+}

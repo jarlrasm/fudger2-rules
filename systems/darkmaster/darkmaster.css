@@ -1,0 +1,113 @@
+@import url("/systems/sheet.css");
+
+/* Against the Darkmaster: a parchment sheet with black banner headings
+   and a blood-red accent, in heavy capitals. The hero's line across the
+   top, the six stats as boxes beside the three Passions, the health and
+   combat strips, then the four skill groups as ledgers with a column each
+   for ranks, stat, vocation, special and total; weapons, attacks and
+   spell lores below, background last. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2a2522;
+    --surface: #f2e9d6;
+    --surface-alt: #e8dcc2;
+    --surface-sunken: #dccdae;
+    --surface-muted: #c6b28c;
+    --text: #1b1714;
+    --text-muted: #3d342c;
+    --text-faint: #7a6c5c;
+    --on-accent: #f2e9d6;
+    --border: #9d8a6c;
+    --border-strong: #1b1714;
+    --accent: #8a1c14;
+    --accent-hover: #a5261b;
+    --accent-soft: #efd2c9;
+    --link: #8a1c14;
+    --danger: #8a1c14;
+    --danger-hover: #6d150f;
+    --danger-soft: #efd2c9;
+    --success: #3c5a2a;
+    --paper: #f2e9d6;
+    --card-bg: #e8dcc2;
+    --dice-bg: #1b1714;
+    --dice-text: #f2e9d6;
+}
+
+.entityView {
+    --sheet-font: "Crimson Text", "Book Antiqua", Georgia, serif;
+    --title-font: "Cinzel", "Trajan Pro", "Book Antiqua", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    background: var(--border-strong);
+    color: var(--surface);
+    border-bottom: 3px double var(--accent);
+}
+
+.entityView .table-stats,
+.entityView .table-passions { --block: 50%; }
+.entityView .table-stats > table > tbody > tr { text-align: center; border: 1px solid var(--border); }
+.entityView .table-stats > table > tbody { grid-template-columns: repeat(2, 1fr); }
+.entityView .table-stats td > div { display: grid; grid-template-columns: repeat(3, 3.4em); justify-content: end; gap: 2px; }
+.entityView .table-stats td > div > div { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.entityView .table-stats td > div > div:nth-child(1)::before { content: "Base"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-stats td > div > div:nth-child(2)::before { content: "Kin"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-stats td > div > div:nth-child(3)::before { content: "Total"; color: var(--accent); font-size: 0.8em; font-weight: 700; }
+.entityView .table-passions > table > tbody { grid-template-columns: 1fr; }
+
+.entityView .table-condition { clear: left; }
+.entityView .table-condition > table > tbody > tr,
+.entityView .table-combat > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+
+.entityView .table-combat-skills,
+.entityView .table-adventuring-skills,
+.entityView .table-roguery-skills,
+.entityView .table-lore-skills { --block: 50%; }
+.entityView .table-combat-skills { clear: left; }
+.entityView .table-adventuring-skills,
+.entityView .table-roguery-skills { float: right; }
+.entityView .table-combat-skills > table > tbody > tr,
+.entityView .table-adventuring-skills > table > tbody > tr,
+.entityView .table-roguery-skills > table > tbody > tr,
+.entityView .table-lore-skills > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div::before { color: var(--text-faint); font-size: 0.75em; margin-right: 2px; }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div:nth-child(1)::before { content: "R"; }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div:nth-child(2)::before { content: "Stat"; }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div:nth-child(3)::before { content: "Voc"; }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div:nth-child(4)::before { content: "Spec"; }
+.entityView :is(.table-combat-skills, .table-adventuring-skills, .table-roguery-skills, .table-lore-skills) td > div > div:nth-child(5) { font-weight: 700; color: var(--accent); }
+
+.entityView .table-spell-lores,
+.entityView .table-other-skills { --block: 50%; }
+.entityView .table-spell-lores { clear: both; }
+.entityView :is(.table-spell-lores, .table-other-skills) > table > tbody > tr > td::before { color: var(--text-faint); font-size: 0.75em; margin-right: 2px; }
+.entityView .table-spell-lores > table > tbody > tr > td:nth-child(3)::before { content: "R"; }
+.entityView .table-spell-lores > table > tbody > tr > td:nth-child(4)::before { content: "Voc"; }
+.entityView .table-spell-lores > table > tbody > tr > td:nth-child(5)::before { content: "Spec"; }
+.entityView .table-other-skills > table > tbody > tr > td:nth-child(3)::before { content: "R"; }
+.entityView .table-other-skills > table > tbody > tr > td:nth-child(4)::before { content: "Spec"; }
+
+.entityView .table-armour { clear: left; }
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "CB "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Table "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "Max "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(5)::before { content: "Reach "; color: var(--text-faint); font-size: 0.8em; }
+
+.entityView .table-background { clear: left; }
+
+.entityView .table-darkmaster > table > thead th,
+.entityView .table-shadow > table > thead th { background: var(--accent); }
