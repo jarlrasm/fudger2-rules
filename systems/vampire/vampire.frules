@@ -49,7 +49,15 @@ v5AskedPool (pool, hunger, spend) = ([dice { number = max (0, pool - hunger)  si
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-v5Dice (char, pool) = ask ("Difficulty", v5AskedPool (pool + char.Character.Modifier, char.Character.Hunger, willpowerSpend (char)))
+healthFull (char) = char.Trackers.'Health Superficial'.realvalue + char.Trackers.'Health Aggravated'.realvalue >= char.Attributes.Stamina + 3
+
+willpowerFull (char) = char.Trackers.'Willpower Superficial'.realvalue + char.Trackers.'Willpower Aggravated'.realvalue >= char.Attributes.Composure + char.Attributes.Resolve
+
+impairment (char, physical) = if (physical and healthFull (char)) or (not (physical) and willpowerFull (char)) then 2 else 0
+
+isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
+
+v5Dice (char, pool, physical) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", v5AskedPool (pool + n - impairment (char, physical), char.Character.Hunger, willpowerSpend (char))))
 
 rouseCheck = ([1d10], ((baseline, throws)->if first (first (throws).rolls) > 5 then { Text = toString (first (first (throws).rolls)) + ": no Hunger"  Outcome = "Success" } else { Text = toString (first (first (throws).rolls)) + ": Hunger rises"  Outcome = "Failure" }))
 
@@ -71,7 +79,7 @@ skill (usual) = custom
 {
     Dots = integer { description = "Skill dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
     With = string { description = "The attribute this skill rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
-    Pool = integer { description = "Dice pool: attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = v5Dice (characterTable, Dots + attributeValue (characterTable, With))  editable = none }
+    Pool = integer { description = "Dice pool: attribute plus skill. Each 6 or higher is a success, two 10s a critical." value = Dots + attributeValue (characterTable, With)  valuedice = v5Dice (characterTable, Dots + attributeValue (characterTable, With), isPhysical (With))  editable = none }
     Specialty = string { description = "A specialty adds a die when it applies." }
 }
 
@@ -81,16 +89,18 @@ poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
 weaponAttack (name, pool, damage, kind, distance) = custom
 {
     Name = name
-    Pool = integer { value = pool  valuedice = v5Dice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Pool = integer { value = pool  valuedice = v5Dice (characterTable, pool, true)  action = kind  reach = 2  range = distance }
     Damage = damage
 }
 
 attackFor (char, weapon) =
-    if toInt (weaponStat (weapon, "Range")) > 0 then
-        weaponAttack (weapon.Name, char.Attributes.Composure + valueOr (valueOr (char.Skills, "Firearms", noSkill), "Dots", 0), weaponStat (weapon, "Damage"), "ranged", toInt (weaponStat (weapon, "Range")))
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Composure + valueOr (valueOr (char.Skills, "Firearms", noSkill), "Dots", 0), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
         weaponAttack (weapon.Name, char.Attributes.Strength + valueOr (valueOr (char.Skills, "Melee", noSkill), "Dots", 0), weaponStat (weapon, "Damage"), "melee", 2)
 
@@ -109,7 +119,6 @@ characterTable = ruleset
         Generation = integer { description = "Distance from Caine. Lower generations have stronger blood." default = 13 }
         Sire = string { description = "The vampire who made this one." }
         Hunger = integer { description = "Hunger dice replace normal dice in pools. Messy criticals and bestial failures come from them." default = 1  minvalue = 0  maxvalue = 5  editable = live  indicator = "#d64545" }
-        Modifier = modifier { description = "Extra dice added to or taken from the next pool." default = 0  editable = live }
         'Rouse Check' = integer { description = "Roll a d10 to use the blood. Below 6 and Hunger rises by one." default = 0  valuedice = rouseCheck  editable = none }
     }
 
@@ -117,26 +126,27 @@ characterTable = ruleset
     {
         description = "The nine attributes: physical, social and mental, for power, finesse and resistance."
         tableLayout = layout { columns = 3  size = wide }
-        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Strength) }
-        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Charisma) }
-        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Intelligence) }
-        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Dexterity) }
-        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Manipulation) }
-        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Wits) }
-        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Stamina) }
-        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Composure) }
-        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Resolve) }
+        Strength = integer { description = "Physical power: lifting, hitting hard." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Strength, true) }
+        Charisma = integer { description = "Social power: charm and presence." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Charisma, false) }
+        Intelligence = integer { description = "Mental power: reasoning and knowledge." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Intelligence, false) }
+        Dexterity = integer { description = "Physical finesse: agility and aim." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Dexterity, true) }
+        Manipulation = integer { description = "Social finesse: getting others to do what you want." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Manipulation, false) }
+        Wits = integer { description = "Mental finesse: quick thinking and perception." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Wits, false) }
+        Stamina = integer { description = "Physical resistance: toughness. Sets health." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Stamina, true) }
+        Composure = integer { description = "Social resistance: keeping calm. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Composure, false) }
+        Resolve = integer { description = "Mental resistance: focus and determination. Adds to willpower." default = 1  minvalue = 1  maxvalue = 5  valuedice = v5Dice (characterTable, Resolve, false) }
     }
 
     Trackers = table
     {
-        description = "Health, willpower and humanity."
+        description = "Health, willpower and humanity. A full track leaves the vampire impaired: -2 dice to physical pools for health, to social and mental pools for willpower."
         tableLayout = layout { columns = 2  size = wide }
         'Health Superficial' = slots { description = "Superficial health damage, halved and healed with blood." number = Attributes.Stamina + 3  editable = live  indicator = "#e8913a"  indicatorLabel = "Superficial" }
         'Health Aggravated' = slots { description = "Aggravated health damage, from fire, sunlight and claws." number = Attributes.Stamina + 3  editable = live  indicator = "#d64545"  indicatorLabel = "Aggravated" }
         'Willpower Superficial' = slots { description = "Superficial willpower damage, from stress and pressure." number = Attributes.Composure + Attributes.Resolve  editable = live }
         'Willpower Aggravated' = slots { description = "Aggravated willpower damage." number = Attributes.Composure + Attributes.Resolve  editable = live }
-        Impaired = string { value = if 'Health Superficial'.realvalue + 'Health Aggravated'.realvalue > Attributes.Stamina + 2 then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        Impaired = string { value = if healthFull (characterTable) or willpowerFull (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        Torpor = string { value = if 'Health Aggravated'.realvalue >= Attributes.Stamina + 3 then "Torpor" else ""  visible = none  indicator = "#555555" }
         Humanity = integer { description = "How human the vampire still is. Lower humanity means a stronger beast." default = 7  minvalue = 0  maxvalue = 10  editable = live }
         Stains = integer { description = "Stains from breaking your convictions. At the end of the session they may cost humanity." default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#8e5cc4" }
         'Blood Potency' = integer { description = "Strength of the vampire's blood. Raises discipline power and blood surges." default = 1  minvalue = 0  maxvalue = 10 }
@@ -259,7 +269,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats] }
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats] }
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -334,7 +344,7 @@ Vampire = system
         {
             title = "Pools and hunger"
             topic = "Play"
-            text = ["Roll Attribute + Skill d10s; 6+ succeeds. Each roll asks for the Difficulty; leave it blank when only the GM knows it. Hunger dice are red and bring messy criticals and bestial failures."]
+            text = ["Roll Attribute + Skill d10s; 6+ succeeds. Each roll asks for bonus or penalty dice and the Difficulty; leave the Difficulty blank when only the GM knows it. Hunger dice are red and bring messy criticals and bestial failures. A full Health or Willpower track takes 2 dice off the pools it impairs."]
         },
         hint
         {
