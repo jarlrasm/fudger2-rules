@@ -50,7 +50,7 @@ swShow (dieSize, wildCard, modifier, target, bennies, total, crit, keptEarlier) 
     Text = toString (total) + (if keptEarlier then " (earlier roll kept)" else "") + (if target == 0 then (if crit then ": Critical failure" else "") else " vs " + toString (target) + ": " + (if crit then "Critical failure" else raisesText (total, target)))
     Value = total
     Outcome = if crit then "Critical failure" else if target == 0 then "" else if total < target then "Failure" else if total < target + 4 then "Success" else "Raise"
-    Push = if bennies > 0 and not (crit) then swBennyRoll (dieSize, wildCard, modifier, target, bennies - 1, total) else 0
+    Push = if bennies > 0 and not (crit) then swBennyKeep (dieSize, wildCard, modifier, target, bennies - 1, total) else 0
     PushLabel = "Spend a Benny"
     PushSets = [{ Field = "characterTable.Character.Bennies"  Value = bennies - 1 }]
 }
@@ -58,7 +58,9 @@ swShow (dieSize, wildCard, modifier, target, bennies, total, crit, keptEarlier) 
 swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, 0)))
 
-swBennyRoll (dieSize, wildCard, modifier, target, bennies, best) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
+swBennyRoll (dieSize, wildCard, modifier, target, bennies) = swBennyKeep (dieSize, wildCard, modifier, target, bennies, -100)
+
+swBennyKeep (dieSize, wildCard, modifier, target, bennies, best) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swKept (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, bennies, best)))
 
 swAskedRoll (dieSize, wildCard, modifier, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
