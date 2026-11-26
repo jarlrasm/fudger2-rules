@@ -163,6 +163,7 @@ characterTable = ruleset
                 (root.Abilities.WIL.Score) = if Deprived then Abilities.WIL.Score else Abilities.WIL.Max
                 (root.Protection.HP) = if Deprived then HP else 'Max HP'
                 (root.Protection.'Critical Damage') = if Deprived then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
             }
         }
     }
