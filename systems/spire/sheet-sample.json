@@ -1,0 +1,35 @@
+{
+  "values": {
+    "Character": { "Class": "Bound", "Durance": "Labourer", "Refresh": "Bring a criminal to justice.", "Look": "Rope-scarred hands, soot-grey hood, a knot of charms on every buckle", "Cell": "The Sparrows of Kettle Row, under Old Ashenne" },
+    "Skills": { "Fight.Has": true, "Sneak.Has": true, "Pursue.Has": true, "Pursue.Mastery": true, "Resist.Has": true },
+    "Domains": { "Low Society.Has": true, "Crime.Has": true },
+    "Resistances": { "Blood.realvalue": 4, "Blood slots": 3, "Mind.realvalue": 2, "Shadow.realvalue": 3, "Shadow slots": 2, "Silver.realvalue": 1, "Reputation.realvalue": 0 },
+    "Fallout": {
+      "Armour": 2,
+      "Armour stress.realvalue": 1
+    },
+    "Fallout taken": [ { "Severity": "Minor", "Resistance": "Blood", "Fallout": "Cracked ribs from the drop at Ninth Landing" } ],
+    "Bonds": [
+      { "Bond": "Vesh Ninefingers, soot-sweep on the Low Stair", "Level": "Individual", "Stress": 1, "Notes": "Hid me from the watch; wants her brother out of the debtors' cells" },
+      { "Bond": "Ilmarra, our cell's forger", "Level": "Individual", "Stress": 0, "Notes": "I pulled her out of the furnace yards" }
+    ],
+    "Notes": {
+      "Background": "Four years hauling coal in the Works taught me to climb before I could read. Now the rope-gods carry me over the rooftops, and the slumlords of Kettle Row have learned to fear the dark above their windows.",
+      "Notes": "The foreman Teskar sold three of us to the Ministry. He drinks at the Drowned Lantern on rest-days."
+    }
+  },
+  "secondary": {
+    "Abilities": [
+      { "name": "Knot-spirit's grip", "values": { "Stats": { "Level": "Core", "Class": "Bound", "Tags": "Divine" } } },
+      { "name": "Rooftop justice", "values": { "Stats": { "Level": "Core", "Class": "Bound" } } },
+      { "name": "Swing from the gantry", "values": { "Stats": { "Level": "Low", "Class": "Bound", "Cost": "D3 Blood" } } },
+      { "name": "Gutter sense", "values": { "Stats": { "Level": "Low", "Class": "Bound" } } }
+    ],
+    "Equipment": [
+      { "name": "Hooked knife", "values": { "Stats": { "Kind": "Weapon", "Damage": "D3", "Tags": "Concealable" } } },
+      { "name": "Hand axe", "values": { "Stats": { "Kind": "Weapon", "Damage": "D6", "Tags": "Brutal" } } },
+      { "name": "Leather harness", "values": { "Stats": { "Kind": "Armour", "Armour": 2 } } },
+      { "name": "Ropes and grapnel", "values": { "Stats": { "Kind": "Tool", "Tags": "Climbing" } } }
+    ]
+  }
+}
