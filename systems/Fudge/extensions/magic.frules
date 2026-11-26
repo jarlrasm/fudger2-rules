@@ -37,7 +37,7 @@ spellStats = ruleset
     {
         defaultImage = "/images/spell.svg"
         filters = [
-            filter { name = "Specialization" prefix = "" filter = split (",", Stats.Specialization) },
+            filter { name = "Specialization" prefix = "" filter = split (", ", Stats.Specialization) },
             filter { name = "Potency" prefix = "" filter = Stats.Potency }
         ]
     }
@@ -58,10 +58,10 @@ characterTable = ruleset
         description = "Spell casting by the Fudge Magic rules." reference = ["srd", 114]
         'Spell casting' = modifier
         {
-            description = "The skill to cast spells. It starts at Terrible when learned and can't go above Fair; modifiers can raise a casting to Great." reference = ["srd", 118]
+            description = "The skill to cast spells. It starts at Terrible when learned and can't go above Fair, or Good for a gift if the GM allows; modifiers can raise a casting to Great." reference = ["srd", 118]
             default = 0
             minvalue = 0
-            maxvalue = 3
+            maxvalue = 4
             render = ladderWord ('Spell casting')
             valuedice = castRoll
         }

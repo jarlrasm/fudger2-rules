@@ -63,9 +63,9 @@ psiStats = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/spell.svg"
+        defaultImage = "/systems/Fudge/extensions/psi.svg"
         filters = [
-            filter { name = "Group" prefix = "" filter = split (",", Stats.Group) }
+            filter { name = "Group" prefix = "" filter = split (", ", Stats.Group) }
         ]
     }
     Stats = table
@@ -108,7 +108,7 @@ characterTable = ruleset
     'Psi rolls' = list
     {
         description = "Roll a psi power's control skill."
-        visible = if count (psiUsesFor (characterTable)) > 0 then visible else none
+        visible = if count ('Psi powers') > 0 then visible else none
         source = psiUsesFor (characterTable)
         singular = "Psi roll"
         editable = none

@@ -38,7 +38,7 @@ superStats = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/spell.svg"
+        defaultImage = "/systems/Fudge/extensions/power.svg"
         filters = [
             filter { name = "Kind" prefix = "" filter = Stats.Kind }
         ]
@@ -57,7 +57,7 @@ implantStats = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/Fudge/extensions/implant.svg"
     }
     Stats = table
     {
@@ -112,7 +112,7 @@ characterTable = ruleset
     'Power rolls' = list
     {
         description = "Roll a power or implant at its level."
-        visible = if count (superUsesFor (characterTable)) > 0 then visible else none
+        visible = if count (Powers) + count (Implants) > 0 then visible else none
         source = superUsesFor (characterTable)
         singular = "Power roll"
         editable = none

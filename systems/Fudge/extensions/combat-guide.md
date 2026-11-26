@@ -11,8 +11,8 @@ Work it out once per fight.
 
 ## Damage rolls
 Pick one roll for the campaign. Each asks for the **relative degree** (how much the attack won by) and the **damage factor**.
-- **Situational** adds 4dF to relative degree + damage factor. It never more than doubles positive damage and never drops it below 1. When the damage is 0 or less, the roll can raise it to 1 at most. The result is read on the usual track: 1-3 Scratch, 4-6 Hurt, 7-9 Very hurt, 10-12 Incapacitated, 13+ Near death.
-- **Min-Mid-Max** rolls 3d6. A higher damage factor (3+, 6+) and relative degree (4+, 6+) read a higher die: lowest, middle, highest, highest + lowest, or all three. A negative factor reads one lower. The result is read on its own track: 1-2 Scratch, 3-4 Hurt, 5-6 Very hurt, 7-8 Incapacitated, 9+ Near death.
+- **Situational** takes twice the relative degree plus the damage factor, the SRD's recommended reading for the sheet's 1-3, 4-6 wound track, and adds 4dF. The die never more than doubles positive damage and never drops it below 1. When the damage is 0 or less, the roll can raise it to 1 at most. The result is read on the usual track: 1-3 Scratch, 4-6 Hurt, 7-9 Very hurt, 10-12 Incapacitated, 13+ Near death.
+- **Min-Mid-Max** rolls 3d6 and doesn't add the relative degree. A higher damage factor (3+, 6+) and relative degree (4+, 6+) read a higher die: lowest, middle, highest, highest + lowest, or all three. A negative factor reads one lower. The result is read on its own track: 1-2 Scratch, 3-4 Hurt, 5-6 Very hurt, 7-8 Incapacitated, 9+ Near death.
 
 A relative degree of +1 is a **graze**: no damage with a negative factor, a Scratch up to factor 4, and Hurt from 5.
 

@@ -11,7 +11,7 @@ Roll 4dF (four Fudge dice, each -1, 0 or +1) and move that many steps along the 
 
 ## Combat
 1. Each side rolls its fighting skill, opposed. The winner hits if they beat the loser by at least one step.
-2. Damage is the relative degree, plus the attacker's offensive factors (weapon, strength), minus the defender's defensive factors (armour, toughness).
+2. Damage is twice the relative degree, plus the attacker's offensive factors (weapon, strength), minus the defender's defensive factors (armour, toughness). A relative degree of +1 is only a graze: at most a Scratch, or Hurt against a weak defence.
 3. Compare the damage to the Injury Levels on the sheet: 1-3 Scratch, 4-6 Hurt, 7-9 Very hurt, 10-12 Incapacitated, 13+ Near death.
 4. Mark the box in Damage. A full box spills into the next level. Hurt gives -1 to actions, Very hurt -2.
 

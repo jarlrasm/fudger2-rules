@@ -33,19 +33,22 @@ limitedDamage (calculated, rolled) =
     else if calculated + rolled >= 1 then 1
     else 0
 
-damageText (degree, factor, rolled, stun) =
-    if degree <= 0 then "No hit"
-    else if degree == 1 then "Graze, factor " + toString (factor) + ": " + stunOrWound (grazeWound (factor), stun)
-    else if limitedDamage (degree + factor, rolled) <= 0 then "No damage"
-    else pointsWord (limitedDamage (degree + factor, rolled)) + ": " + stunOrWound (woundFromPoints (limitedDamage (degree + factor, rolled)), stun)
-
 pointsWord (n) = if n == 1 then "1 point" else toString (n) + " points"
 
 stunOrWound (wound, stun) = if stun then stunFromWound (wound) else wound
 
-damageDice (degree, stun) = ([4df], ((baseline, throws)->{ Text = damageText (degree, asked, sum (first (throws).rolls), stun)  Value = limitedDamage (degree + asked, sum (first (throws).rolls)) }))
+hitText (points, stun) = if points <= 0 then "No damage" else pointsWord (points) + ": " + stunOrWound (woundFromPoints (points), stun)
 
-damageRoll (stun) = ask ("Relative degree", 1, (n)->ask ("Damage factor", 0, damageDice (n, stun)))
+damageText (degree, factor, rolled, stun) =
+    if degree <= 0 then "No hit"
+    else if degree == 1 then "Graze, factor " + toString (factor) + ": " + stunOrWound (grazeWound (factor), stun)
+    else hitText (limitedDamage (2 * degree + factor, rolled), stun)
+
+damagePoints (degree, factor, rolled) = if degree >= 2 then limitedDamage (2 * degree + factor, rolled) else 0
+
+damageDice (degree, stun) = ([4df], ((baseline, throws)->{ Text = damageText (degree, asked, sum (first (throws).rolls), stun)  Value = damagePoints (degree, asked, sum (first (throws).rolls)) }))
+
+damageRoll (stun) = ask ("Relative degree", 2, (n)->ask ("Damage factor", 0, damageDice (n, stun)))
 
 factorBonus (factor) =
     if factor <= -5 then -2
@@ -59,18 +62,18 @@ degreeBonus (degree) =
     else if degree >= 4 then 1
     else 0
 
-minMidMaxPoints (bonus, dice) =
-    if bonus <= 0 then item (0, sort (dice))
-    else if bonus == 1 then item (1, sort (dice))
-    else if bonus == 2 then item (2, sort (dice))
-    else if bonus == 3 then item (0, sort (dice)) + item (2, sort (dice))
-    else sum (dice)
+minMidMaxPoints (bonus, sorted) =
+    if bonus <= 2 then item (max (0, bonus), sorted)
+    else if bonus == 3 then item (0, sorted) + item (2, sorted)
+    else sum (sorted)
+
+minMidMaxHit (points) = pointsWord (points) + ": " + minMidMaxWound (points)
 
 minMidMaxText (degree, factor, dice) =
     if degree <= 0 then "No hit"
     else if degree == 1 then "Graze, factor " + toString (factor) + ": " + grazeWound (factor)
     else if factorBonus (factor) + degreeBonus (degree) < 0 then "No damage possible"
-    else pointsWord (minMidMaxPoints (factorBonus (factor) + degreeBonus (degree), dice)) + ": " + minMidMaxWound (minMidMaxPoints (factorBonus (factor) + degreeBonus (degree), dice))
+    else minMidMaxHit (minMidMaxPoints (factorBonus (factor) + degreeBonus (degree), sort (dice)))
 
 minMidMaxDice (degree) = ([3d6], ((baseline, throws)->minMidMaxText (degree, asked, first (throws).rolls)))
 
@@ -101,7 +104,7 @@ characterTable = ruleset
         description = "Optional damage rolls for a hit. Each asks for the relative degree and the damage factor." reference = ["srd", 62]
         Situational = modifier
         {
-            description = "Adds 4dF to the damage, but never more than doubles it, and a hit that does damage does at least 1." reference = ["srd", 62]
+            description = "Twice the relative degree plus the damage factor, plus 4dF that never more than doubles it; a hit that does damage does at least 1." reference = ["srd", 62]
             value = 0
             valuedice = damageRoll (false)
         }

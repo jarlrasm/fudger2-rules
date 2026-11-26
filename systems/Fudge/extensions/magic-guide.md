@@ -5,7 +5,7 @@ Based on the sample magic system in the Fudge SRD (section 7.1). It replaces the
 ## Who can cast
 Only magicians, characters with at least one level of **Magic Potential**, can cast. Each level is bought for one specialization, such as Healing Magic, Illusion or Combat Magic. A spell must be governed by at least one specialization the magician has at +1 or more on the sheet. Broad specializations make strong magicians, so agree with the players how broad they may be.
 
-**Spell casting** is a skill. It starts at Terrible when learned and can't be raised above Fair.
+**Spell casting** is a skill. It starts at Terrible when learned and can't be raised above Fair (the GM may allow Good for a gift).
 
 ## Casting
 1. The player describes the effect. The GM names its **potency**: Trivial (Mediocre or Poor), Average (Fair), Potent (Good) or more (Great, Superb). It assumes three levels of fitting Potential: make the spell a step easier for each level above three, and a step harder for each below.
