@@ -38,12 +38,19 @@ swOutcome (trait, wild, wildCard, total, target) =
 swTotal (trait, wild, wildCard, modifier) =
     max (sum (trait), if wildCard then sum (wild) else 0) + modifier
 
-swResult (dieSize, trait, wild, wildCard, modifier, target, bennies) =
+swCrit (trait, wild) = first (trait) == 1 and first (wild) == 1
+
+swResult (dieSize, trait, wild, wildCard, modifier, target, bennies) = swKept (dieSize, trait, wild, wildCard, modifier, target, bennies, -100)
+
+swKept (dieSize, trait, wild, wildCard, modifier, target, bennies, best) =
+    swShow (dieSize, wildCard, modifier, target, bennies, max (best, swTotal (trait, wild, wildCard, modifier)), swCrit (trait, wild) and swTotal (trait, wild, wildCard, modifier) >= best, best > swTotal (trait, wild, wildCard, modifier))
+
+swShow (dieSize, wildCard, modifier, target, bennies, total, crit, keptEarlier) =
 {
-    Text = toString (swTotal (trait, wild, wildCard, modifier)) + (if target == 0 then (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then ": Critical failure" else "") else " vs " + toString (target) + ": " + (if swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) == "Critical failure" then "Critical failure" else raisesText (swTotal (trait, wild, wildCard, modifier), target)))
-    Value = swTotal (trait, wild, wildCard, modifier)
-    Outcome = swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target)
-    Push = if (target == 0 or swTotal (trait, wild, wildCard, modifier) < target) and bennies > 0 and swOutcome (trait, wild, wildCard, swTotal (trait, wild, wildCard, modifier), target) != "Critical failure" then swBennyRoll (dieSize, wildCard, modifier, target, bennies - 1) else 0
+    Text = toString (total) + (if keptEarlier then " (earlier roll kept)" else "") + (if target == 0 then (if crit then ": Critical failure" else "") else " vs " + toString (target) + ": " + (if crit then "Critical failure" else raisesText (total, target)))
+    Value = total
+    Outcome = if crit then "Critical failure" else if target == 0 then "" else if total < target then "Failure" else if total < target + 4 then "Success" else "Raise"
+    Push = if bennies > 0 and not (crit) then swBennyRoll (dieSize, wildCard, modifier, target, bennies - 1, total) else 0
     PushLabel = "Spend a Benny"
     PushSets = [{ Field = "characterTable.Character.Bennies"  Value = bennies - 1 }]
 }
@@ -51,15 +58,43 @@ swResult (dieSize, trait, wild, wildCard, modifier, target, bennies) =
 swRoll (dieSize, wildCard, modifier, target) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, 0)))
 
-swBennyRoll (dieSize, wildCard, modifier, target, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
-    ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, bennies)))
+swBennyRoll (dieSize, wildCard, modifier, target, bennies, best) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
+    ((baseline, throws)->swKept (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, target, bennies, best)))
 
 swAskedRoll (dieSize, wildCard, modifier, bennies) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Trait" }, dice { number = 1  sides = 6  explode = if wildCard then 6 else 0  label = if wildCard then "Wild" else "Fumble check"  color = if wildCard then "green" else "black" }],
     ((baseline, throws)->swResult (dieSize, first (throws).rolls, item (1, throws).rolls, wildCard, modifier, asked, bennies)))
 
 creatureRoll (die, wildCard, wounds) = ask ("Target number", swAskedRoll (dieSides (die), wildCard, dieBonus (die) - min (3, wounds), 0))
 
-penaltyOf (char) = min (3, char.Status.Wounds) + char.Status.Fatigue
+penaltyOf (char) = min (3, char.Status.Wounds) + char.Status.Fatigue + (if char.Status.Distracted then 2 else 0)
+
+damageText (damage) = toLower (replace (" ", "", damage))
+
+hasStrength (damage) = contains (damageText (damage), "str")
+
+weaponPart (damage) = replace ("str", "", damageText (damage))
+
+weaponDiceParts (damage) = split ("d", weaponPart (damage))
+
+weaponDiceCount (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else max (1, toInt (replace ("+", "", first (weaponDiceParts (damage)))))
+
+weaponDieSides (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else toInt (first (split ("-", first (split ("+", item (1, weaponDiceParts (damage)))))))
+
+flatAfter (text) =
+    if count (split ("+", text)) > 1 then toInt (item (1, split ("+", text)))
+    else if count (split ("-", text)) > 1 then 0 - toInt (item (1, split ("-", text)))
+    else 0
+
+weaponFlat (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else flatAfter (item (1, weaponDiceParts (damage)))
+
+damageResult (total, raised) =
+{
+    Text = toString (total) + " damage" + (if raised then " with a raise" else "")
+    Value = total
+}
+
+swDamage (strDie, damage) = ask ("Raises on the attack", 0, (raises)->([dice { number = if hasStrength (damage) then 1 else 0  sides = dieSides (strDie)  explode = dieSides (strDie)  label = if hasStrength (damage) then "Strength" else "" }, dice { number = weaponDiceCount (damage)  sides = max (4, weaponDieSides (damage))  explode = max (4, weaponDieSides (damage))  label = if weaponDiceCount (damage) > 0 then "Weapon" else "" }, dice { number = if raises > 0 then 1 else 0  sides = 6  explode = 6  label = if raises > 0 then "Raise" else "" }],
+    ((baseline, throws)->damageResult (sum (first (throws).rolls) + sum (item (1, throws).rolls) + sum (item (2, throws).rolls) + (if hasStrength (damage) then dieBonus (strDie) else 0) + weaponFlat (damage), raises > 0))))
 
 traitRoll (char, die) = ask ("Target number", swAskedRoll (dieSides (die), char.Character.'Wild Card', dieBonus (die) + char.Character.Modifier - penaltyOf (char), char.Character.Bennies))
 
@@ -91,7 +126,7 @@ weaponAttack (name, die, damage, kind, distance) = custom
 {
     Name = name
     Attack = integer { value = dieSides (die)  valuedice = traitRoll (characterTable, die)  render = die  action = kind  reach = distance  range = distance }
-    Damage = damage
+    Damage = integer { description = "Roll the damage: dice ace, and a raise on the attack adds a d6." value = 0  valuedice = swDamage (characterTable.Attributes.Strength.Die, damage)  render = damage  editable = none }
 }
 
 longRange (text) = toInt (first (reverse (split ("/", text))))
@@ -175,7 +210,7 @@ characterTable = ruleset
         Armor = integer { description = "Armor worn, added to Toughness." default = 0 }
         Toughness = integer { description = "Damage needed to shake you: 2 plus half Vigor, plus armor." value = 2 + dieSides (Attributes.Vigor.Die) / 2 + dieBonus (Attributes.Vigor.Die) / 2 + Armor + 'Toughness Bonus'  editable = none }
         'Toughness Bonus' = integer { default = 0 }
-        Running = integer { description = "Extra movement when running: add a d6 to Pace." default = 6  valuedice = 1d6 }
+        Running = integer { description = "Running adds the running die, a d6, to Pace." value = Pace  valuedice = 1d6  editable = none }
         Initiative = integer { description = "Action card drawn each round. Highest card acts first." default = 0  valuedice = actionCard }
     }
 
@@ -191,7 +226,7 @@ characterTable = ruleset
         Vulnerable = bool { description = "Vulnerable: attacks against you get +2." default = false  editable = live  indicator = "#e8913a" }
         Stunned = bool { description = "Stunned: you are prone, can't act, and become distracted and vulnerable." default = false  editable = live  indicator = "#d4b106" }
         Entangled = bool { description = "Entangled: you can't move and are distracted." default = false  editable = live  indicator = "#e8913a" }
-        Penalty = integer { description = "Total penalty to rolls from wounds and fatigue." value = penaltyOf (characterTable)  editable = none }
+        Penalty = integer { description = "Total penalty to trait rolls from wounds, fatigue and being distracted." value = penaltyOf (characterTable)  editable = none }
         'End of combat' = button
         {
             description = "When the fight is over: no longer shaken, distracted, vulnerable, stunned or entangled. Wounds and fatigue stay."
@@ -455,7 +490,7 @@ SavageWorlds = system
         {
             title = "Bennies"
             topic = "Play"
-            text = ["Spend a Benny to reroll a failed trait roll; the sheet takes it off. Hand them out for good play."]
+            text = ["Spend a Benny to reroll a trait roll and keep the better total; the sheet takes it off. Hand them out for good play."]
         }
     ]
     distanceUnit = "yd"
