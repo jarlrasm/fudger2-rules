@@ -1,0 +1,933 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+abilityModifier (score) = score / 2 - 5
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+signed (n) = if n >= 0 then "+" + toString (n) else toString (n)
+
+conditionSteps = ["Normal", "-1", "-2", "-5", "-10", "Helpless"]
+
+conditionName (step) = item (max (0, min (5, step)), conditionSteps)
+
+conditionPenaltyOf (step) =
+    switch step
+        case 1 then 1
+        case 2 then 2
+        case 3 then 5
+        case 4 then 10
+        case 5 then 10
+        else 0
+
+conditionState (step, persistent) =
+    if step >= 5 then "Helpless"
+    else if step > 0 then "Condition " + conditionName (step) + (if persistent then " (persistent)" else "")
+    else ""
+
+conditionPenalty (char) = conditionPenaltyOf (char.'Condition Track'.Track.realvalue)
+
+downState (hp) = if hp <= 0 then "Unconscious" else ""
+
+forcePointDice (level) = if level >= 15 then 3 else if level >= 8 then 2 else 1
+
+forcePointText (level) = if forcePointDice (level) == 1 then "1d6" else toString (forcePointDice (level)) + "d6, keep the highest"
+
+naturalNote (natural, kind) =
+    if natural == 20 and kind == "force" then " (natural 20: regain your spent Force powers)"
+    else if natural == 20 then " (natural 20)"
+    else if natural == 1 then " (natural 1)"
+    else ""
+
+againstText (kind) = if kind == "grapple" then " vs Grapple " else " vs DC "
+
+checkOutcome (total, dc) = if dc > 0 then (if total >= dc then "Success" else "Failure") else ""
+
+checkText (total, natural, dc, kind, note) =
+    toString (total)
+    + (if dc > 0 then againstText (kind) + toString (dc) + ": " + checkOutcome (total, dc) else "")
+    + naturalNote (natural, kind)
+    + note
+
+checkResult (total, natural, dc, kind, fp, fpd, note) =
+{
+    Text = checkText (total, natural, dc, kind, note)
+    Value = total
+    Outcome = checkOutcome (total, dc)
+    Push = if fp > 0 and (dc == 0 or total < dc) then forcePointCheck (total, natural, kind, fp, fpd) else 0
+    PushLabel = "Spend a Force Point"
+    PushSets = [{ Field = "characterTable.Force.Force Points"  Value = fp - 1 }]
+}
+
+forcePointCheck (total, natural, kind, fp, fpd) = ([dice { number = fpd  sides = 6  color = "blue"  label = "Force Point" }],
+    ((baseline, throws)->checkResult (total + max (first (throws).rolls), natural, asked, kind, 0, fpd, " (Force Point +" + toString (max (first (throws).rolls)) + ")")))
+
+checkDice (kind, fp, fpd) = ([1d20], ((baseline, throws)->checkResult (baseline + first (first (throws).rolls), first (first (throws).rolls), asked, kind, fp, fpd, "")))
+
+sagaPlain = checkDice ("plain", 0, 1)
+
+sagaCheckWith (fp, fpd) = ask ("DC", checkDice ("skill", fp, fpd))
+
+sagaForceWith (fp, fpd) = ask ("DC or target's Defense", checkDice ("force", fp, fpd))
+
+sagaGrappleWith (fp, fpd) = ask ("Opponent's Grapple check", checkDice ("grapple", fp, fpd))
+
+sagaCheck (char) = sagaCheckWith (char.Force.'Force Points', forcePointDice (char.Hero.Level))
+
+sagaForce (char) = sagaForceWith (char.Force.'Force Points', forcePointDice (char.Hero.Level))
+
+sagaGrapple (char) = sagaGrappleWith (char.Force.'Force Points', forcePointDice (char.Hero.Level))
+
+attackOutcome (total, natural, defense) =
+    if natural == 20 then "Critical hit"
+    else if natural == 1 then "Miss"
+    else if defense == 0 then ""
+    else if total >= defense then "Hit"
+    else "Miss"
+
+attackNote (natural) =
+    if natural == 20 then " (natural 20, double damage)"
+    else if natural == 1 then " (natural 1)"
+    else ""
+
+attackText (total, natural, defense, note) =
+    toString (total)
+    + (if defense > 0 then " vs Reflex " + toString (defense) else "")
+    + (if attackOutcome (total, natural, defense) == "" then "" else ": " + attackOutcome (total, natural, defense))
+    + attackNote (natural)
+    + note
+
+attackResult (total, natural, defense, fp, fpd, note) =
+{
+    Text = attackText (total, natural, defense, note)
+    Value = total
+    Outcome = attackOutcome (total, natural, defense)
+    Push = if fp > 0 and natural != 20 and natural != 1 and (defense == 0 or total < defense) then forcePointAttack (total, natural, fp, fpd) else 0
+    PushLabel = "Spend a Force Point"
+    PushSets = [{ Field = "characterTable.Force.Force Points"  Value = fp - 1 }]
+}
+
+forcePointAttack (total, natural, fp, fpd) = ([dice { number = fpd  sides = 6  color = "blue"  label = "Force Point" }],
+    ((baseline, throws)->attackResult (total + max (first (throws).rolls), natural, asked, 0, fpd, " (Force Point +" + toString (max (first (throws).rolls)) + ")")))
+
+attackDice (n, fp, fpd) = ([dice { number = 1  sides = 20 }],
+    ((baseline, throws)->attackResult (baseline + n + first (first (throws).rolls), first (first (throws).rolls), asked, fp, fpd, "")))
+
+sagaAttackWith (fp, fpd) = ask ("Attack modifier (range, cover, aiming)", 0, (n)->ask ("Target's Reflex Defense", attackDice (n, fp, fpd)))
+
+sizeNames = ["Fine", "Diminutive", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", "Colossal"]
+
+reflexSize (size) =
+    switch size
+        case "Fine" then 10
+        case "Diminutive" then 5
+        case "Tiny" then 2
+        case "Small" then 1
+        case "Large" then -1
+        case "Huge" then -2
+        case "Gargantuan" then -5
+        case "Colossal" then -10
+        else 0
+
+thresholdSize (size) =
+    switch size
+        case "Large" then 5
+        case "Huge" then 10
+        case "Gargantuan" then 20
+        case "Colossal" then 50
+        else 0
+
+classNames = ["Jedi", "Noble", "Scoundrel", "Scout", "Soldier", "Ace Pilot", "Bounty Hunter", "Crime Lord", "Elite Trooper", "Force Adept", "Force Disciple", "Gunslinger", "Jedi Knight", "Jedi Master", "Officer", "Sith Apprentice", "Sith Lord"]
+
+classReflex (class) =
+    switch class
+        case "Scoundrel" then 2
+        case "Scout" then 2
+        else 1
+
+classFortitude (class) =
+    switch class
+        case "Jedi" then 1
+        case "Scout" then 1
+        case "Soldier" then 2
+        else 0
+
+classWill (class) =
+    switch class
+        case "Jedi" then 1
+        case "Noble" then 2
+        case "Scoundrel" then 1
+        else 0
+
+classHitPoints (class) =
+    switch class
+        case "Jedi" then 30
+        case "Soldier" then 30
+        case "Scout" then 24
+        else 18
+
+classBab (class, level) =
+    if class == "Jedi" or class == "Soldier" then level else level * 3 / 4
+
+noStats = { Stats = { Group = "" } }
+
+itemStat (item, ruleset, field) = valueOr (valueOr (valueOr (item.data, ruleset, noStats), "Stats", noStats.Stats), field, "")
+
+itemNumber (item, ruleset, field, fallback) = valueOr (valueOr (valueOr (item.data, ruleset, noStats), "Stats", noStats.Stats), field, fallback)
+
+wearingArmor (char) = count (char.Armor) > 0
+
+armorReflex (char) = max (map ((x)->itemNumber (x, "sagaArmor", "Reflex Bonus", 0), char.Armor))
+
+armorFortitude (char) = max (map ((x)->itemNumber (x, "sagaArmor", "Fortitude Bonus", 0), char.Armor))
+
+armorMaxDex (char, dex) =
+    if wearingArmor (char) then min (dex, min (map ((x)->itemNumber (x, "sagaArmor", "Max Dex", 99), char.Armor)))
+    else dex
+
+armorType (char) = if wearingArmor (char) then itemStat (first (char.Armor), "sagaArmor", "Type") else ""
+
+armorPenalty (char) =
+    if char.Defenses.'Armor Proficient' or not (wearingArmor (char)) then 0
+    else switch armorType (char)
+        case "Heavy" then 10
+        case "Medium" then 5
+        else 2
+
+reflexBase (char) =
+    if wearingArmor (char) then (if char.Defenses.'Armored Defense' then max (char.Hero.Level, armorReflex (char)) else armorReflex (char))
+    else char.Hero.Level
+
+defense (base, ability, classDefault) = custom
+{
+    Class = integer { description = "Class bonus: the best one among your classes." default = classDefault }
+    Misc = integer { description = "Other bonuses, such as feats, talents and cover." default = 0 }
+    Total = integer { description = "10 plus level or armor, class bonus, ability, misc, minus the condition penalty." value = 10 + base + ability + Class + Misc - conditionPenalty (characterTable)  editable = none }
+}
+
+skill (ability, armorCheck) = custom
+{
+    Trained = bool { description = "Trained skills get +5." default = false }
+    Focus = bool { description = "Skill Focus gives another +5." default = false }
+    Misc = integer { description = "Species, feat, talent, size or gear bonuses." default = 0 }
+    Total = modifier { description = "Half your heroic level, plus ability, +5 trained, +5 Skill Focus and misc, minus armor and condition penalties." value = characterTable.Hero.Level / 2 + ability + (if Trained then 5 else 0) + (if Focus then 5 else 0) + Misc - armorCheck - conditionPenalty (characterTable)  valuedice = sagaCheck (characterTable)  editable = none }
+}
+
+forceSkill (ability) = custom
+{
+    Trained = bool { description = "Use the Force can only be used trained, and only by the Force Sensitive." default = false }
+    Focus = bool { description = "Skill Focus gives another +5." default = false }
+    Misc = integer { description = "Bonuses from talents, feats or a Force talisman." default = 0 }
+    Total = modifier { description = "Half your heroic level, plus Charisma, +5 trained, +5 Skill Focus and misc, minus the condition penalty. A natural 20 brings back your spent Force powers." value = characterTable.Hero.Level / 2 + ability + (if Trained then 5 else 0) + (if Focus then 5 else 0) + Misc - conditionPenalty (characterTable)  valuedice = sagaForce (characterTable)  editable = none }
+}
+
+proficiencyFor (group) =
+    switch group
+        case "Simple melee" then "simple weapons"
+        case "Simple ranged" then "simple weapons"
+        case "Grenades" then "simple weapons"
+        case "Advanced melee" then "advanced melee"
+        case "Lightsabers" then "lightsabers"
+        case "Pistols" then "pistols"
+        case "Rifles" then "rifles"
+        case "Heavy weapons" then "heavy weapons"
+        else "exotic"
+
+isProficient (char, weapon) =
+    count (filter ((f)->contains (toLower (f.Name), proficiencyFor (itemStat (weapon, "sagaWeapon", "Group"))), char.Feats)) > 0
+
+proficiencyPenalty (char, weapon) = if isProficient (char, weapon) then 0 else 5
+
+isMelee (weapon) =
+    switch itemStat (weapon, "sagaWeapon", "Group")
+        case "Simple melee" then true
+        case "Advanced melee" then true
+        case "Lightsabers" then true
+        case "Exotic melee" then true
+        else false
+
+rangeSquares (group) =
+    switch group
+        case "Pistols" then 80
+        case "Rifles" then 300
+        case "Heavy weapons" then 500
+        case "Exotic ranged" then 80
+        else 12
+
+meleeBonus (char) = char.Combat.BAB + char.Abilities.Str.Modifier + char.Combat.'Attack misc' - armorPenalty (char) - conditionPenalty (char)
+
+rangedBonus (char) = char.Combat.BAB + char.Abilities.Dex.Modifier + char.Combat.'Attack misc' - armorPenalty (char) - conditionPenalty (char)
+
+damageText (dice, bonus) = dice + (if bonus > 0 then "+" + toString (bonus) else if bonus < 0 then toString (bonus) else "")
+
+strengthDamage (char, weapon) = if itemNumber (weapon, "sagaWeapon", "Two Handed", false) then 2 * char.Abilities.Str.Modifier else char.Abilities.Str.Modifier
+
+weaponAttack (name, bonus, damage, kind, reachFeet, rangeFeet, fp, fpd, notes) = custom
+{
+    Name = name
+    Attack = modifier { value = bonus  valuedice = sagaAttackWith (fp, fpd)  action = kind  reach = reachFeet  range = rangeFeet  editable = none }
+    Damage = damage
+    Notes = notes
+}
+
+weaponNotes (char, weapon) =
+    (if isProficient (char, weapon) then "" else "Not proficient -5. ")
+    + itemStat (weapon, "sagaWeapon", "Damage Type")
+    + (if itemStat (weapon, "sagaWeapon", "Stun Setting") == "Yes" then ", stun setting" else "")
+    + (if itemStat (weapon, "sagaWeapon", "Rate of Fire") == "" then "" else ", RoF " + itemStat (weapon, "sagaWeapon", "Rate of Fire"))
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, meleeBonus (char) - proficiencyPenalty (char, weapon), damageText (itemStat (weapon, "sagaWeapon", "Damage"), char.Hero.Level / 2 + strengthDamage (char, weapon)), "melee", 5, 0, char.Force.'Force Points', forcePointDice (char.Hero.Level), weaponNotes (char, weapon))
+    else
+        weaponAttack (weapon.Name, rangedBonus (char) - proficiencyPenalty (char, weapon), damageText (itemStat (weapon, "sagaWeapon", "Damage"), char.Hero.Level / 2 + (if itemStat (weapon, "sagaWeapon", "Group") == "Simple ranged" then char.Abilities.Str.Modifier else 0)), "ranged", 5, rangeSquares (itemStat (weapon, "sagaWeapon", "Group")) * 5, char.Force.'Force Points', forcePointDice (char.Hero.Level), weaponNotes (char, weapon))
+
+unarmedFor (char) =
+    weaponAttack ("Unarmed", meleeBonus (char), damageText ("1d4", char.Hero.Level / 2 + char.Abilities.Str.Modifier), "melee", 5, 0, char.Force.'Force Points', forcePointDice (char.Hero.Level), "Bludgeoning")
+
+forcePowerUse (name, bonus, rangeFeet, fp, fpd, checks) = custom
+{
+    Name = name
+    'Use the Force' = modifier { value = bonus  valuedice = sagaForceWith (fp, fpd)  action = "ranged"  range = rangeFeet  editable = none }
+    Check = checks
+}
+
+forceUsesFor (char) =
+    map ((power)->forcePowerUse (power.Name, char.Skills.'Use the Force'.Total, firstNumber (itemStat (power, "sagaForcePower", "Range")) * 5, char.Force.'Force Points', forcePointDice (char.Hero.Level), itemStat (power, "sagaForcePower", "Target")), char.'Force Powers')
+
+forceOnly (sensitive) = if sensitive then visible else editor
+
+shownWhen (flag) = if flag then visible else editor
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = [Health, 'Condition Track', Defenses, Attacks, Force] }
+
+    Hero = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Class = string { description = "Your first or main class. It sets the default class bonuses, hit points and base attack." default = "Scoundrel"  keys = classNames }
+        Classes = string { description = "All your classes and levels, such as Scout 3 / Soldier 2." }
+        Level = integer { description = "Heroic level: the total of all your class levels. Half of it adds to skills, defenses and damage." default = 1  minvalue = 1  maxvalue = 20 }
+        Species = string { default = "Human" }
+        Size = string { description = "Size changes Reflex Defense and damage threshold." default = "Medium"  keys = sizeNames }
+        Age = string {}
+        Gender = string {}
+        Height = string {}
+        Weight = string {}
+        Experience = integer { description = "Experience points. Each level needs a thousand times the level reached." default = 0  editable = live }
+    }
+
+    Abilities = table
+    {
+        description = "The six abilities. The modifier is half the score minus 5."
+        Str = custom { Score = integer { description = "Strength: melee attacks and damage, Climb, Jump and Swim." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+        Dex = custom { Score = integer { description = "Dexterity: ranged attacks, Reflex Defense, Initiative, Pilot and Stealth." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+        Con = custom { Score = integer { description = "Constitution: hit points, Fortitude Defense and Endurance." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+        Int = custom { Score = integer { description = "Intelligence: trained skills, Knowledge, Mechanics and Use Computer." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+        Wis = custom { Score = integer { description = "Wisdom: Will Defense, Perception, Survival and Treat Injury." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+        Cha = custom { Score = integer { description = "Charisma: Deception, Persuasion, Gather Information and Use the Force." default = 10  minvalue = 1  maxvalue = 40 }  Modifier = modifier { value = abilityModifier (Score)  valuedice = sagaCheck (characterTable)  editable = none } }
+    }
+
+    Defenses = table
+    {
+        description = "Attacks roll against these. Reflex uses your heroic level, or your armor's bonus while you wear armor."
+        Reflex = defense (reflexBase (characterTable) + reflexSize (Hero.Size), armorMaxDex (characterTable, Abilities.Dex.Modifier), classReflex (Hero.Class))
+        Fortitude = defense (Hero.Level + armorFortitude (characterTable), Abilities.Con.Modifier, classFortitude (Hero.Class))
+        Will = defense (Hero.Level, Abilities.Wis.Modifier, classWill (Hero.Class))
+        'Flat Footed' = integer { description = "Reflex Defense without your Dexterity bonus, when you are caught unaware." value = Reflex.Total - max (0, armorMaxDex (characterTable, Abilities.Dex.Modifier))  editable = none }
+        'Armor Proficient' = bool { description = "Without the armor's proficiency feat you take its check penalty on attacks and some skills." default = true }
+        'Armored Defense' = bool { description = "Armored Defense talent: use the better of your heroic level and your armor bonus for Reflex." default = false }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max HP' = integer { description = "Full hit points: your class's first-level hit points plus Con, then a hit die plus Con for each level." default = classHitPoints (Hero.Class) + Abilities.Con.Modifier }
+        HP = integer { description = "Current hit points. At 0 you fall unconscious, or die if the hit also beat your damage threshold." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Damage Threshold' = integer { description = "Fortitude Defense plus size. A single hit that deals this much or more moves you one step down the condition track." value = Defenses.Fortitude.Total + thresholdSize (Hero.Size) + 'Threshold misc'  editable = none }
+        'Threshold misc' = integer { description = "Bonus from Improved Damage Threshold and similar feats." default = 0 }
+        'Second Winds' = integer { description = "Second Winds a day: one for heroes, more with Extra Second Wind." default = 1  minvalue = 0 }
+        'Second Winds used' = integer { description = "Second Winds caught today." default = 0  minvalue = 0  editable = live }
+        Down = string { value = downState (HP)  visible = none  indicator = "#555555" }
+        'Catch a Second Wind' = button
+        {
+            description = "At half hit points or less, a swift action heals a quarter of your full hit points or your Con score, whichever is more. Once a day."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.HP) = if HP * 2 <= 'Max HP' and 'Second Winds used' < 'Second Winds' then min ('Max HP', HP + max ('Max HP' / 4, Abilities.Con.Score)) else HP
+                (root.Health.'Second Winds used') = if HP * 2 <= 'Max HP' and 'Second Winds used' < 'Second Winds' then 'Second Winds used' + 1 else 'Second Winds used'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "Eight hours of rest heal hit points equal to your level, give back your Second Winds and clear the condition track unless the condition is persistent."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.HP) = min ('Max HP', HP + Hero.Level)
+                (root.Health.'Second Winds used') = 0
+                (root.'Condition Track'.Track.realvalue) = if 'Condition Track'.Persistent then 'Condition Track'.Track.realvalue else 0
+            }
+        }
+    }
+
+    'Condition Track' = table
+    {
+        description = "Each step down gives the penalty under it on attacks, defenses, skill and ability checks. At the end you are helpless."
+        tableLayout = layout { columns = 5  size = wide }
+        Track = slots { description = "Move down a step when a hit beats your damage threshold, or from poison, disease or the Force." number = 5  labels = ["-1", "-2", "-5", "-10", "Helpless"]  editable = live }
+        Penalty = modifier { description = "The penalty from your step on the track." value = 0 - conditionPenaltyOf (Track.realvalue)  editable = none }
+        Persistent = bool { description = "A persistent condition, such as a disease, can't be recovered by resting or the Recover action until it is cured." default = false  editable = live }
+        State = string { value = conditionState (Track.realvalue, Persistent)  visible = none  indicator = "#d4b106" }
+        Recover = button
+        {
+            description = "Three swift actions move you one step up the track, unless the condition is persistent."
+            editable = live
+            onClick = updates
+            {
+                (root.'Condition Track'.Track.realvalue) = if Persistent then Track.realvalue else max (0, Track.realvalue - 1)
+            }
+        }
+        'Step down' = button
+        {
+            description = "A hit beat your damage threshold: one step down the track."
+            editable = live
+            onClick = updates
+            {
+                (root.'Condition Track'.Track.realvalue) = min (5, Track.realvalue + 1)
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 2 }
+        Speed = integer { description = "Squares moved with one move action. A square is 1.5 m." default = 6  minvalue = 0  render = toString (Speed) + " squares (" + distance (Speed * 5) + ")" }
+        Initiative = modifier { description = "Initiative: d20 plus your Initiative skill." value = Skills.Initiative.Total  valuedice = sagaPlain  editable = none }
+        BAB = integer { description = "Base attack bonus: your level for Jedi and Soldiers, three quarters of it for the other classes." default = classBab (Hero.Class, Hero.Level) }
+        'Attack misc' = integer { description = "Bonuses to every attack, such as from a talent." default = 0 }
+        Melee = modifier { description = "Melee attack bonus: BAB plus Str, minus penalties." value = meleeBonus (characterTable)  editable = none }
+        Ranged = modifier { description = "Ranged attack bonus: BAB plus Dex, minus penalties." value = rangedBonus (characterTable)  editable = none }
+        Grapple = modifier { description = "Grapple: BAB plus the better of Str and Dex, opposed by the other's Grapple." value = BAB + max (Abilities.Str.Modifier, Abilities.Dex.Modifier) - conditionPenalty (characterTable)  valuedice = sagaGrapple (characterTable)  editable = none }
+    }
+
+    Force = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Force Points' = integer { description = "Spend one to add a Force Point die to an attack, skill or ability check, to move up the condition track, or to power some talents. You get 5 plus half your level each level." default = 5 + Hero.Level / 2  minvalue = 0  editable = live }
+        'Force Point die' = forcePointText (Hero.Level)
+        'Destiny Points' = integer { description = "Spent at a dramatic moment for an automatic critical, a miss against you, or triple Force Point dice." default = 1  minvalue = 0  editable = live }
+        'Dark Side Score' = integer { description = "Rises when you use dark side powers or act with evil. When it equals your Wisdom, you have fallen." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Destiny = string { description = "The destiny that drives the hero, if any." }
+        'Force Sensitive' = bool { description = "Tick when the character has the Force Sensitivity feat and can learn Force powers." default = false }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks roll d20 plus the bonus against the target's Reflex Defense. A natural 20 always hits and deals double damage, a natural 1 always misses."
+        tableLayout = layout { size = wide }
+        source = concat ([unarmedFor (characterTable)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Skills = table
+    {
+        description = "Roll d20 plus the total against a DC. Untrained skills still get half your level and the ability."
+        tableLayout = layout { columns = 2  size = wide }
+        Acrobatics = skill (Abilities.Dex.Modifier, armorPenalty (characterTable))
+        Climb = skill (Abilities.Str.Modifier, armorPenalty (characterTable))
+        Deception = skill (Abilities.Cha.Modifier, 0)
+        Endurance = skill (Abilities.Con.Modifier, armorPenalty (characterTable))
+        'Gather Information' = skill (Abilities.Cha.Modifier, 0)
+        Initiative = skill (Abilities.Dex.Modifier, armorPenalty (characterTable))
+        Jump = skill (Abilities.Str.Modifier, armorPenalty (characterTable))
+        'Knowledge Bureaucracy' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Galactic Lore' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Life Sciences' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Physical Sciences' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Social Sciences' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Tactics' = skill (Abilities.Int.Modifier, 0)
+        'Knowledge Technology' = skill (Abilities.Int.Modifier, 0)
+        Mechanics = skill (Abilities.Int.Modifier, 0)
+        Perception = skill (Abilities.Wis.Modifier, 0)
+        Persuasion = skill (Abilities.Cha.Modifier, 0)
+        Pilot = skill (Abilities.Dex.Modifier, 0)
+        Ride = skill (Abilities.Dex.Modifier, 0)
+        Stealth = skill (Abilities.Dex.Modifier, armorPenalty (characterTable))
+        Survival = skill (Abilities.Wis.Modifier, 0)
+        Swim = skill (Abilities.Str.Modifier, armorPenalty (characterTable))
+        'Treat Injury' = skill (Abilities.Wis.Modifier, 0)
+        'Use Computer' = skill (Abilities.Int.Modifier, 0)
+        'Use the Force' = forceSkill (Abilities.Cha.Modifier)
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Armor = list
+    {
+        description = "Worn armor. Its bonus replaces your heroic level in Reflex Defense, and it may add to Fortitude."
+        visible = shownWhen (count (secondary.Armor) > 0)
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Feats = list
+    {
+        description = "Feats, including the weapon and armor proficiencies your attacks check for."
+        source = secondary.Feats
+        singular = "Feat"
+        editable = character
+    }
+
+    Talents = list
+    {
+        description = "Talents from your classes' talent trees."
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    'Force Powers' = list
+    {
+        description = "Force powers in your suite. Each is used once, then needs a rest or a natural 20 on Use the Force to come back."
+        tableLayout = layout { size = wide }
+        visible = forceOnly (Force.'Force Sensitive')
+        source = secondary.'Force Powers'
+        singular = "Force power"
+        editable = character
+    }
+
+    'Force Power Uses' = list
+    {
+        description = "Each Force power as a Use the Force check against a DC or the target's Defense."
+        tableLayout = layout { size = wide }
+        visible = forceOnly (Force.'Force Sensitive')
+        source = forceUsesFor (characterTable)
+        singular = "Force power use"
+        editable = none
+        valueType = forcePowerUse
+    }
+
+    'Spent Powers' = table
+    {
+        tableLayout = layout { columns = 2 }
+        visible = forceOnly (Force.'Force Sensitive')
+        Spent = string { description = "Force powers used and not yet regained." editable = live  multiline = true }
+        'Regain powers' = button
+        {
+            description = "After a rest, or on a natural 20 with Use the Force, all spent Force powers come back."
+            editable = live
+            onClick = updates
+            {
+                (root.'Spent Powers'.Spent) = ""
+            }
+        }
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Possessions = table
+    {
+        tableLayout = layout { columns = 2 }
+        Credits = integer { default = 1000  editable = live }
+        Languages = string { default = "Basic" }
+        Ships = string { description = "Ships and vehicles the hero owns or flies." }
+    }
+
+    Story = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Background = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Statistics, Defenses, Melee, Ranged]
+        defaultImage = "/systems/swsaga/nonheroic.svg"
+        sortedBy = sort { prefix = "CL" sort = Statistics.CL }
+        filters = [
+            filter { name = "CL" prefix = "CL" filter = Statistics.CL },
+            filter { name = "Type" prefix = "" filter = Statistics.Type }
+        ]
+    }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        CL = integer { description = "Challenge level: about the heroic level of a fair match for it." default = 1  minvalue = 0 }
+        Type = string { default = "Nonheroic"  keys = ["Nonheroic", "Heroic", "Beast", "Droid"] }
+        Size = string { default = "Medium"  keys = sizeNames }
+        Initiative = modifier { default = 0  valuedice = sagaPlain }
+        Perception = modifier { default = 0  valuedice = sagaCheckWith (0, 1) }
+        Senses = string {}
+        Languages = string {}
+        Speed = integer { description = "Squares per move action." default = 6  minvalue = 0  render = toString (Speed) + " squares" }
+    }
+    Defenses = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Reflex = integer { description = "Reflex Defense." default = 10 }
+        'Flat Footed' = integer { default = 10 }
+        Fortitude = integer { description = "Fortitude Defense." default = 10 }
+        Will = integer { description = "Will Defense." default = 10 }
+        'Max HP' = integer { default = 10 }
+        HP = integer { default = 'Max HP'  editable = live  indicator = "#d64545" }
+        Threshold = integer { description = "Damage threshold. A hit this big moves it a step down the condition track." default = 10 }
+        Condition = slots { description = "Condition track: -1, -2, -5, -10, helpless." number = 5  labels = ["-1", "-2", "-5", "-10", "Helpless"]  editable = live }
+        State = string { value = conditionState (Condition.realvalue, false)  visible = none  indicator = "#d4b106" }
+        Down = string { value = downState (HP)  visible = none  indicator = "#555555" }
+        Immune = string {}
+        DR = string { description = "Damage reduction." }
+    }
+    Melee = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Melee attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = sagaAttackWith (0, 1)  action = melee  reach = 5 }
+            Damage = string {}
+        }
+    }
+    Ranged = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = sagaAttackWith (0, 1)  action = ranged }
+            Damage = string {}
+        }
+    }
+    Offense = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Base Atk' = integer { default = 0 }
+        Grp = modifier { description = "Grapple." default = 0  valuedice = sagaGrappleWith (0, 1) }
+        'Use the Force' = modifier { default = 0  valuedice = sagaForceWith (0, 1) }
+        'Attack Options' = string {}
+        'Special Actions' = string {}
+        'Force Powers' = string {}
+    }
+    Abilities = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Str = integer { default = 10 }
+        Dex = integer { default = 10 }
+        Con = integer { default = 10 }
+        Int = integer { default = 10 }
+        Wis = integer { default = 10 }
+        Cha = integer { default = 10 }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Talents = string { multiline = true }
+        Feats = string { multiline = true }
+        Skills = string { multiline = true }
+        Possessions = string { multiline = true }
+        'Special Qualities' = string { multiline = true }
+    }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Vehicle, Defenses, Weapons]
+        defaultImage = "/systems/swsaga/spaceship.svg"
+    }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Model = string {}
+        CL = integer { description = "Challenge level." default = 5  minvalue = 0 }
+        Size = string { default = "Gargantuan"  keys = ["Large", "Huge", "Gargantuan", "Colossal", "Colossal (frigate)", "Colossal (cruiser)", "Colossal (station)"] }
+        Type = string { description = "Speeder, walker, starfighter, space transport, capital ship..." }
+        Initiative = modifier { description = "The pilot's Initiative with the vehicle's size modifier." default = 0  valuedice = sagaPlain }
+        Perception = modifier { default = 0  valuedice = sagaCheckWith (0, 1) }
+        Pilot = modifier { description = "The pilot's Pilot check with the vehicle's Dex." default = 0  valuedice = sagaCheckWith (0, 1) }
+        Speed = string { description = "Squares per move at character scale, and at starship scale." default = "12 squares (starship scale 4)" }
+    }
+    Defenses = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Reflex = integer { default = 15 }
+        'Flat Footed' = integer { default = 10 }
+        Fortitude = integer { default = 20 }
+        'Damage Threshold' = integer { description = "A hit this big moves the vehicle a step down its condition track." default = 25 }
+        'Max HP' = integer { default = 60 }
+        HP = integer { description = "Hull hit points. At 0 the vehicle is destroyed if the hit beat its threshold, or else disabled." default = 'Max HP'  editable = live  indicator = "#d64545" }
+        'Max SR' = integer { description = "Shield rating when fully charged." default = 0  minvalue = 0 }
+        SR = integer { description = "Shield rating: damage from each hit is reduced by it, and a hit that beats it drops it by 5." default = 'Max SR'  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        DR = integer { description = "Damage reduction from armor plating." default = 10  minvalue = 0 }
+        Condition = slots { description = "Condition track: -1, -2, -5, -10, disabled." number = 5  labels = ["-1", "-2", "-5", "-10", "Disabled"]  editable = live }
+        State = string { value = conditionState (Condition.realvalue, false)  visible = none  indicator = "#d4b106" }
+        Down = string { value = if HP <= 0 then "Disabled" else ""  visible = none  indicator = "#555555" }
+        'Recharge shields' = button
+        {
+            description = "Three swift actions by a crew member bring the shields 5 points back up, to their full rating at most."
+            editable = live
+            onClick = updates
+            {
+                (root.Defenses.SR) = min ('Max SR', SR + 5)
+            }
+        }
+        'Full repair' = button
+        {
+            description = "Time in a repair bay: full hull, full shields and a clean condition track."
+            editable = live
+            onClick = updates
+            {
+                (root.Defenses.HP) = 'Max HP'
+                (root.Defenses.SR) = 'Max SR'
+                (root.Defenses.Condition.realvalue) = 0
+            }
+        }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = modifier { default = 0  valuedice = sagaAttackWith (0, 1)  action = ranged }
+            Damage = string {}
+            Crew = string { description = "Who fires it: pilot, copilot or a gunner." }
+            Notes = string {}
+        }
+    }
+    Statistics = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Fighting Space' = string {}
+        Cover = string {}
+        'Base Atk' = integer { default = 0 }
+        Grp = integer { default = 0 }
+        Str = integer { default = 30 }
+        Dex = integer { default = 14 }
+        Int = integer { default = 12 }
+        Skills = string {}
+    }
+    Complement = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Crew = string {}
+        Passengers = string {}
+        Cargo = string {}
+        Consumables = string {}
+        Hyperdrive = string {}
+        'Carried Craft' = string {}
+        Availability = string {}
+        Cost = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+sagaWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Group }
+        filters = [
+            filter { name = "Group" prefix = "" filter = Stats.Group },
+            filter { name = "Damage type" prefix = "" filter = Stats.'Damage Type' }
+        ]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Group = string { description = "The proficiency group, which also sets melee or ranged and the range bands." default = "Pistols"  keys = ["Simple melee", "Simple ranged", "Grenades", "Advanced melee", "Lightsabers", "Pistols", "Rifles", "Heavy weapons", "Exotic melee", "Exotic ranged"] }
+        Damage = string { default = "3d6" }
+        'Damage Type' = string { keys = ["Energy", "Slashing", "Piercing", "Bludgeoning", "Energy and slashing", "Ion", "Fire"] }
+        'Stun Setting' = string { keys = ["Yes", "No"]  default = "No" }
+        'Rate of Fire' = string { keys = ["S", "A", "S, A", ""] }
+        'Two Handed' = bool { description = "Wielded in two hands: melee damage adds twice the Strength modifier." default = false }
+        Size = string { keys = ["Tiny", "Small", "Medium", "Large", "Huge"] }
+        Cost = string {}
+        Weight = string {}
+        Availability = string {}
+    }
+}
+
+sagaArmor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { default = "Light"  keys = ["Light", "Medium", "Heavy"] }
+        'Reflex Bonus' = integer { description = "Armor bonus to Reflex Defense, used instead of your heroic level." default = 2 }
+        'Fortitude Bonus' = integer { description = "Equipment bonus to Fortitude Defense." default = 0 }
+        'Max Dex' = integer { description = "The highest Dexterity bonus to Reflex Defense this armor allows." default = 5 }
+        Speed = string { description = "Speed in medium and heavy armor." }
+        Cost = string {}
+        Weight = string {}
+        Availability = string {}
+    }
+}
+
+sagaEquipment = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Communications", "Computers", "Detection", "Life support", "Medical", "Survival", "Tools", "Droid", "Other"] }
+        Cost = string {}
+        Weight = string {}
+        Availability = string {}
+    }
+}
+
+sagaFeat = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Bonus feat for" prefix = "" filter = split (", ", Stats.'Bonus Feat For') }]
+    }
+    Stats = table
+    {
+        Prerequisites = string {}
+        'Bonus Feat For' = string { description = "Classes that may take it as a class bonus feat." }
+    }
+}
+
+sagaTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/swsaga/talent.svg"
+        sortedBy = sort { prefix = "" sort = Stats.'Talent Tree' }
+        filters = [
+            filter { name = "Class" prefix = "" filter = Stats.Class },
+            filter { name = "Tree" prefix = "" filter = Stats.'Talent Tree' }
+        ]
+    }
+    Stats = table
+    {
+        Class = string { keys = classNames }
+        'Talent Tree' = string {}
+        Prerequisites = string {}
+    }
+}
+
+sagaForcePower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/swsaga/force.svg"
+        filters = [filter { name = "Descriptor" prefix = "" filter = split (", ", Stats.Descriptors) }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Descriptors = string { description = "Such as Dark Side, Mind-Affecting or Telekinetic." }
+        Time = string { default = "Standard action" }
+        Range = string { description = "In squares, or line of sight." default = "12 squares" }
+        Target = string { description = "What the Use the Force check is against: a DC or the target's Defense." }
+        Effects = string { description = "The effect at each DC beaten." multiline = true }
+        Special = string { multiline = true }
+    }
+}
+
+StarWarsSaga = system
+{
+    hints = [
+        hint
+        {
+            title = "Building a hero"
+            topic = "Getting started"
+            text = ["Pick a class (Jedi, Noble, Scoundrel, Scout or Soldier), species and level, then the six ability scores. Class sets the defense bonuses, starting hit points and base attack bonus as defaults you can change.", "Tick Trained on the skills your class lets you train and Focus for Skill Focus. Add feats, talents and gear in the library; weapon attacks check your feats for the matching Weapon Proficiency."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll d20 plus half your heroic level, the ability and +5 trained, +5 Skill Focus, against a DC. Leave the DC blank when only the GM knows it. Natural 20s and 1s mean nothing special on skill checks.", "With Force Points left, a roll that fails or has no DC offers Spend a Force Point, which adds 1d6 (2d6 or 3d6 keep the highest at higher levels) and takes the point off the sheet."]
+        },
+        hint
+        {
+            title = "Attacks and damage"
+            topic = "Combat"
+            text = ["Attacks ask for a modifier (range penalty -2, -5 or -10, aiming) and the target's Reflex Defense. A natural 20 always hits and doubles the damage; a natural 1 always misses.", "Damage adds half the heroic level, and Strength in melee. A single hit that meets the target's damage threshold also moves it one step down the condition track."]
+        },
+        hint
+        {
+            title = "Condition track"
+            topic = "Combat"
+            text = ["Steps down the track give -1, -2, -5 and -10 to attacks, defenses and checks, and the last step leaves the hero helpless. Recover moves one step up for three swift actions; Catch a Second Wind heals once a day at half hit points or less."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Everyone rolls Initiative, a d20 plus the Initiative skill. Highest goes first."]
+        },
+        hint
+        {
+            title = "Vehicles and ships"
+            topic = "Vehicles"
+            text = ["Spaceships and Vehicles are their own entity types with defenses, hull hit points, shields, damage threshold and a condition track. Ship weapons attack the target's Reflex like any other attack."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    distanceUnits = ["m", "ft"]
+    characters = characterTable
+    creatures = creatureTable
+    Spaceships = vehicleTable
+    Vehicles = vehicleTable
+    Weapons = sagaWeapon
+    Armor = sagaArmor
+    Equipment = sagaEquipment
+    Feats = sagaFeat
+    Talents = sagaTalent
+    'Force Powers' = sagaForcePower
+    secondaryTypes = ["Weapons", "Armor", "Equipment", "Feats", "Talents", "Force Powers"]
+    extraEntityTypes = [
+        entityTypeDescription ("Spaceships", "spaceship", true, "/systems/swsaga/spaceship.svg", []),
+        entityTypeDescription ("Vehicles", "vehicle", true, "/systems/swsaga/vehicle.svg", [])
+    ]
+    description = "Star Wars Saga Edition: d20 with half-level bonuses, three defenses, the condition track, Force Points and talents"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d6, 1d8, 2d6, 3d6]
+    cssFiles = ["/systems/swsaga/swsaga.css"]
+    libraries = ["/systems/names/scifi.json"]
+    nameSettings = [spaceNameSetting]
+}
