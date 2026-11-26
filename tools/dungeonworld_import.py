@@ -134,6 +134,22 @@ def classes():
     return result
 
 
+def monster_stats(m):
+    stats = {"Tags": ", ".join(t for t in m.get("tags", []) if t), "Instinct": m.get("instinct", "")}
+    if "hp" in m:
+        stats["Max HP"] = m["hp"]
+        stats["HP"] = m["hp"]
+    if "armor" in m:
+        stats["Armor"] = m["armor"]
+    attacks = m.get("attacks", [])
+    if attacks:
+        attack = attacks[0]
+        stats["Damage"] = attack.get("damage", "")
+        tags = ", ".join(str(t) for t in attack.get("tags", []) if t)
+        stats["Attack"] = f"{attack.get('name', '')} ({tags})" if tags else attack.get("name", "")
+    return stats
+
+
 def monsters():
     return [
         entity(
@@ -142,7 +158,7 @@ def monsters():
             m.get("description", ""),
             {
                 "creatureTable": {
-                    "Monster": {"Tags": ", ".join(t for t in m.get("tags", []) if t), "Instinct": m.get("instinct", "")},
+                    "Monster": monster_stats(m),
                     "Notes": {"Moves": "\n".join(f"- {x}" for x in m.get("moves", []) if x), "Description": m.get("description", "")},
                 }
             },
@@ -154,7 +170,7 @@ def monsters():
 
 library = {
     "name": "Dungeon World",
-    "description": "Moves, classes, equipment and monsters from Dungeon World by Sage LaTorra and Adam Koebel, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from the Dungeon World Data project (https://github.com/Vindexus/DungeonWorldData). Monster stats other than tags, instinct and moves are not included in that data.",
+    "description": "Moves, classes, equipment and monsters from Dungeon World by Sage LaTorra and Adam Koebel, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from the Dungeon World Data project (https://github.com/Vindexus/DungeonWorldData). Monsters that data gives no HP, armor or attack for keep the sheet defaults.",
     "url": URL,
     "gamemaster": "",
     "entities": moves() + equipment() + classes() + monsters(),

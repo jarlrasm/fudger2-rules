@@ -1,6 +1,6 @@
 {
  "name": "Dungeon World",
- "description": "Moves, classes, equipment and monsters from Dungeon World by Sage LaTorra and Adam Koebel, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from the Dungeon World Data project (https://github.com/Vindexus/DungeonWorldData). Monster stats other than tags, instinct and moves are not included in that data.",
+ "description": "Moves, classes, equipment and monsters from Dungeon World by Sage LaTorra and Adam Koebel, licensed under the Creative Commons Attribution 3.0 Unported licence (https://creativecommons.org/licenses/by/3.0/). Converted from the Dungeon World Data project (https://github.com/Vindexus/DungeonWorldData). Monsters that data gives no HP, armor or attack for keep the sheet defaults.",
  "url": "/systems/dungeonworld/dungeonworld.json",
  "gamemaster": "",
  "entities": [
@@ -6880,7 +6880,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent",
-        "Instinct": "To adventure or die trying"
+        "Instinct": "To adventure or die trying",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Sword (close)"
        },
        "Notes": {
         "Moves": "- Go on a fool’s errand\n- Act impulsively\n- Share tales of past exploits",
@@ -6903,7 +6908,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To rob"
+        "Instinct": "To rob",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Dirk (close)"
        },
        "Notes": {
         "Moves": "- Steal something\n- Demand tribute",
@@ -6926,7 +6936,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized",
-        "Instinct": "To lead"
+        "Instinct": "To lead",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 1,
+        "Damage": "b[2d10]",
+        "Attack": "Trusty knife (close)"
        },
        "Notes": {
         "Moves": "- Make a demand\n- Extort\n- Topple power",
@@ -6972,7 +6987,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, intelligent, organized",
-        "Instinct": "To do as ordered"
+        "Instinct": "To do as ordered",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Spear (close, reach)"
        },
        "Notes": {
         "Moves": "- Uphold the law\n- Make a profit",
@@ -6995,7 +7015,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, small, intelligent, stealthy, devious",
-        "Instinct": "To live a life of stolen luxury"
+        "Instinct": "To live a life of stolen luxury",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 1,
+        "Damage": "w[2d8]",
+        "Attack": "Dagger (close)"
        },
        "Notes": {
         "Moves": "- Steal\n- Put on the appearance of friendship",
@@ -7064,7 +7089,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, intelligent",
-        "Instinct": "To survive"
+        "Instinct": "To survive",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Ragged bow (near, far)"
        },
        "Notes": {
         "Moves": "- Bring back news from the wilds\n- Slay a beast",
@@ -7087,7 +7117,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized, cautious",
-        "Instinct": "To live by a code"
+        "Instinct": "To live by a code",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 4,
+        "Damage": "b[2d10]",
+        "Attack": "Sword (close)"
        },
        "Notes": {
         "Moves": "- Make a moral stand\n- Lead soldiers into battle",
@@ -7179,7 +7214,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To upset order"
+        "Instinct": "To upset order",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Axe (close)"
        },
        "Notes": {
         "Moves": "- Die for a cause\n- Inspire others",
@@ -7202,7 +7242,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To fight"
+        "Instinct": "To fight",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Spear (close, reach)"
        },
        "Notes": {
         "Moves": "- March into battle\n- Fight as one",
@@ -7271,7 +7316,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, huge, intelligent",
-        "Instinct": "To command"
+        "Instinct": "To command",
+        "Max HP": 18,
+        "HP": 18,
+        "Armor": 0,
+        "Damage": "d10+3",
+        "Attack": "Tentacle (reach)"
        },
        "Notes": {
         "Moves": "- Invade a mind\n- Turn minions on them\n- Put a plan in motion",
@@ -7294,7 +7344,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge, magical, divine",
-        "Instinct": "To end the world"
+        "Instinct": "To end the world",
+        "Max HP": 26,
+        "HP": 26,
+        "Armor": 5,
+        "Damage": "b[2d12]+9",
+        "Attack": "Bite (reach, forceful, messy, 4 piercing)"
        },
        "Notes": {
         "Moves": "- Set a disaster in motion\n- Breathe forth the elements\n- Act with perfect foresight",
@@ -7317,7 +7372,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, amorphous",
-        "Instinct": "To undermine the established order"
+        "Instinct": "To undermine the established order",
+        "Max HP": 19,
+        "HP": 19,
+        "Armor": 1,
+        "Damage": "d10",
+        "Attack": "Chaotic touch (close, reach)"
        },
        "Notes": {
         "Moves": "- Rewrite reality\n- Unleash chaos from containment",
@@ -7340,7 +7400,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, cautious",
-        "Instinct": "To split"
+        "Instinct": "To split",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 4,
+        "Damage": "d8+1",
+        "Attack": "Claws (close, reach, messy, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Split something in two with mighty claws\n- Retreat into water",
@@ -7363,7 +7428,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, intelligent, organized",
-        "Instinct": "To spite the surface races"
+        "Instinct": "To spite the surface races",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Poisoned blade (close, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Poison them\n- Unleash an ancient spell\n- Call reinforcements",
@@ -7386,7 +7456,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, intelligent, organized",
-        "Instinct": "To punish unbelievers"
+        "Instinct": "To punish unbelievers",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 2,
+        "Damage": "b[2d8]+2",
+        "Attack": "Barbed blade (close, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Inflict pain beyond measure\n- Use the dark to advantage",
@@ -7409,7 +7484,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, divine, intelligent, organized",
-        "Instinct": "To pass on divine vengeance"
+        "Instinct": "To pass on divine vengeance",
+        "Max HP": 14,
+        "HP": 14,
+        "Armor": 0,
+        "Damage": "d10+2",
+        "Attack": "Smite (close, reach)"
        },
        "Notes": {
         "Moves": "- Weave spells of hatred and malice\n- Rally the deep elves\n- Pass on divine knowledge",
@@ -7432,7 +7512,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge, terrifying, cautious, hoarder",
-        "Instinct": "To rule"
+        "Instinct": "To rule",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 5,
+        "Damage": "b[2d12]+5",
+        "Attack": "Bite (reach, messy, 4 piercing)"
        },
        "Notes": {
         "Moves": "- Bend an element to its will\n- Demand tribute\n- Act with disdain",
@@ -7455,7 +7540,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To serve"
+        "Instinct": "To serve",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Rending claws (close, reach, forceful, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Tear something apart",
@@ -7478,7 +7568,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized, hoarder",
-        "Instinct": "To craft"
+        "Instinct": "To craft",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 4,
+        "Damage": "d6+2",
+        "Attack": "Flaming hammer (close, reach)"
        },
        "Notes": {
         "Moves": "- Offer a trade or deal\n- Strike with fire or magic\n- Provide just the right item, at a price",
@@ -7501,7 +7596,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To contain"
+        "Instinct": "To contain",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+1",
+        "Attack": "Axe (close, reach)"
        },
        "Notes": {
         "Moves": "- Confuse them\n- Make them lost",
@@ -7524,7 +7624,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized, hoarder, magical",
-        "Instinct": "To lead"
+        "Instinct": "To lead",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "d10",
+        "Attack": "Bite (close, reach)"
        },
        "Notes": {
         "Moves": "- Send a follower to their death\n- Use old magic\n- Offer a deal or bargain",
@@ -7547,7 +7652,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, large, intelligent, organized, planar",
-        "Instinct": "To consume in flame"
+        "Instinct": "To consume in flame",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 3,
+        "Damage": "b[2d6]+3",
+        "Attack": "Flaming spear (close, reach, near)"
        },
        "Notes": {
         "Moves": "- Summon elemental fire\n- Melt away deception",
@@ -7570,7 +7680,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge, construct",
-        "Instinct": "To devour"
+        "Instinct": "To devour",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 3,
+        "Damage": "d10+5",
+        "Attack": "Bite (close, forceful, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Drag prey into rough tunnels\n- Burst from the earth\n- Swallow whole",
@@ -7593,7 +7708,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct",
-        "Instinct": "To do as commanded"
+        "Instinct": "To do as commanded",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+1",
+        "Attack": "Bite (reach)"
        },
        "Notes": {
         "Moves": "- Belch forth flame\n- Run them over\n- Poison them",
@@ -7616,7 +7736,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, devious, intelligent, organized",
-        "Instinct": "To replace dwarves"
+        "Instinct": "To replace dwarves",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 2,
+        "Damage": "d6",
+        "Attack": "Pickaxe (close)"
        },
        "Notes": {
         "Moves": "- Fill a mind with foreign thoughts\n- Take control of a beast’s mind",
@@ -7639,7 +7764,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct",
-        "Instinct": "To digest"
+        "Instinct": "To digest",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+1 ignores armor",
+        "Attack": "Acid (close, reach)"
        },
        "Notes": {
         "Moves": "- Eat away at something\n- Draw sustenance",
@@ -7662,7 +7792,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, devious, planar",
-        "Instinct": "To steal"
+        "Instinct": "To steal",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 1,
+        "Damage": "w[2d8]",
+        "Attack": "Stolen dagger (close, reach)"
        },
        "Notes": {
         "Moves": "- Take something important to its planar lair\n- Retreat to the Ethereal plane\n- Use an item from its lair",
@@ -7685,7 +7820,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct",
-        "Instinct": "To smash"
+        "Instinct": "To smash",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Club (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Attack two enemies at once\n- Defend its creator",
@@ -7708,7 +7848,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge",
-        "Instinct": "To rule"
+        "Instinct": "To rule",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 1,
+        "Damage": "d10+5",
+        "Attack": "Rending hands (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Answer the call of sacrifice\n- Drive them from the jungle\n- Throw someone",
@@ -7731,7 +7876,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, construct",
-        "Instinct": "To serve"
+        "Instinct": "To serve",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 3,
+        "Damage": "d8+5",
+        "Attack": "Metal fists (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Follow orders implacably\n- Use a special tool or adaptation, built-in",
@@ -7754,7 +7904,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde",
-        "Instinct": "To live"
+        "Instinct": "To live",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "d6+2",
+        "Attack": "Miscellaneous Claws and Teeth (close, forceful)"
        },
        "Notes": {
         "Moves": "- Follow orders\n- Detach a body part",
@@ -7777,7 +7932,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge",
-        "Instinct": "To rule the ocean"
+        "Instinct": "To rule the ocean",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 2,
+        "Damage": "d10+5",
+        "Attack": "Giant tentacles (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Drag a person or ship to a watery grave\n- Wrap them in tentacles",
@@ -7800,7 +7960,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct",
-        "Instinct": "To kill"
+        "Instinct": "To kill",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 3,
+        "Damage": "d10+1",
+        "Attack": "Stinger (close, reach, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Poison them\n- Rip something apart",
@@ -7823,7 +7988,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, construct",
-        "Instinct": "To hunt"
+        "Instinct": "To hunt",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "d10",
+        "Attack": "Claws (close)"
        },
        "Notes": {
         "Moves": "- Strike from darkness",
@@ -7846,7 +8016,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, construct",
-        "Instinct": "To carry aloft"
+        "Instinct": "To carry aloft",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Sharp hooves (close)"
        },
        "Notes": {
         "Moves": "- Carry a rider into the air\n- Give their rider an advantage",
@@ -7869,7 +8044,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, construct",
-        "Instinct": "To decay"
+        "Instinct": "To decay",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 3,
+        "Damage": "d8",
+        "Attack": "Corrosive touch (close, ignores armor)"
        },
        "Notes": {
         "Moves": "- Turn metal to rust\n- Gain strength from consuming metal",
@@ -7892,7 +8072,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct",
-        "Instinct": "To eat"
+        "Instinct": "To eat",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "d10",
+        "Attack": "Maw (close, reach)"
        },
        "Notes": {
         "Moves": "- Consume stone\n- Give off a burst of light and heat",
@@ -7915,7 +8100,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, organized, cautious",
-        "Instinct": "To follow orders"
+        "Instinct": "To follow orders",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 4,
+        "Damage": "d6",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Raise the alarm\n- Create value for the hive\n- Assimilate",
@@ -7938,7 +8128,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, organized, intelligent",
-        "Instinct": "To command"
+        "Instinct": "To command",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 3,
+        "Damage": "d8",
+        "Attack": "Spiked whip (close, reach)"
        },
        "Notes": {
         "Moves": "- Order drones into battle\n- Set great numbers in motion",
@@ -7961,7 +8156,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To fight as ordered"
+        "Instinct": "To fight as ordered",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 3,
+        "Damage": "b[2d6]+2",
+        "Attack": "Barbed spear (close, reach)"
        },
        "Notes": {
         "Moves": "- Advance as one\n- Summon reinforcements\n- Give a life for the hive",
@@ -7984,7 +8184,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge, organized, intelligent, hoarder",
-        "Instinct": "To spread formians"
+        "Instinct": "To spread formians",
+        "Max HP": 24,
+        "HP": 24,
+        "Armor": 3,
+        "Damage": "d10+5",
+        "Attack": "Crushing mandibles (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Call every formian it spawned\n- Release a half-formed larval mutation\n- Organize and issue orders",
@@ -8007,7 +8212,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, organized, intelligent",
-        "Instinct": "To prey on weakness"
+        "Instinct": "To prey on weakness",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Bow (near, far)"
        },
        "Notes": {
         "Moves": "- Doggedly track prey\n- Strike at a moment of weakness",
@@ -8030,7 +8240,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, divine, intelligent, organized",
-        "Instinct": "To share divine insight"
+        "Instinct": "To share divine insight",
+        "Max HP": 18,
+        "HP": 18,
+        "Armor": 1,
+        "Damage": "d10+2",
+        "Attack": "Ceremonial dagger (close, reach)"
        },
        "Notes": {
         "Moves": "- Pass on demonic influence\n- Drive the pack into a fervor",
@@ -8053,7 +8268,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized",
-        "Instinct": "To drive the pack"
+        "Instinct": "To drive the pack",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "b[2d10]",
+        "Attack": "Sword (close, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Demand obedience\n- Send the pack to hunt",
@@ -8076,7 +8296,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To fight"
+        "Instinct": "To fight",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "d6+2",
+        "Attack": "Jagged blade (close, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Fight with abandon\n- Revel in destruction",
@@ -8099,7 +8324,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, divine, intelligent, organized",
-        "Instinct": "To rage"
+        "Instinct": "To rage",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 0,
+        "Damage": "d10+5",
+        "Attack": "Cleaver (close, reach)"
        },
        "Notes": {
         "Moves": "- Fly into a frenzy\n- Unleash chaos",
@@ -8122,7 +8352,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To smash"
+        "Instinct": "To smash",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 0,
+        "Damage": "d10+3 ignores armor",
+        "Attack": "Hammer (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Destroy armor or protection\n- Lay low the mighty",
@@ -8145,7 +8380,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, divine, magical, intelligent, organized",
-        "Instinct": "To hate"
+        "Instinct": "To hate",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 0,
+        "Damage": "d8+2 ignores armor",
+        "Attack": "Inflict Wounds (close, reach, near, far)"
        },
        "Notes": {
         "Moves": "- Rend flesh with divine magic\n- Take an eye\n- Make a sacrifice and grow in power",
@@ -8168,7 +8408,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized",
-        "Instinct": "To strengthen orc-kind"
+        "Instinct": "To strengthen orc-kind",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d10 ignores armor",
+        "Attack": "Elemental blast (close, reach, near, far)"
        },
        "Notes": {
         "Moves": "- Give protection of earth\n- Give power of fire\n- Give swiftness of water\n- Give clarity of air",
@@ -8191,7 +8436,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, stealthy, intelligent, organized",
-        "Instinct": "To take"
+        "Instinct": "To take",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "d6",
+        "Attack": "Whip (close, reach)"
        },
        "Notes": {
         "Moves": "- Take a captive\n- Pin someone under a net\n- Drug them",
@@ -8214,7 +8464,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, stealthy, magical, intelligent",
-        "Instinct": "To kill in darkness"
+        "Instinct": "To kill in darkness",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 0,
+        "Damage": "d10",
+        "Attack": "Poisoned dagger (close, reach, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Poison them\n- Melt into the shadows\n- Cloak them in darkness",
@@ -8237,7 +8492,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent, organized",
-        "Instinct": "To lead"
+        "Instinct": "To lead",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 0,
+        "Damage": "b[2d10]+2",
+        "Attack": "Iron Sword of Ages (close, reach)"
        },
        "Notes": {
         "Moves": "- Start a war\n- Make a show of power\n- Enrage the tribes",
@@ -8260,7 +8520,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, stealthy, intelligent, organized",
-        "Instinct": "To spy on the surface world"
+        "Instinct": "To spy on the surface world",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "w[2d10]",
+        "Attack": "Trident (close, near)"
        },
        "Notes": {
         "Moves": "- Reveal their secrets\n- Strike at weakness",
@@ -8283,7 +8548,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, divine, magical, intelligent",
-        "Instinct": "To bring on The Flood"
+        "Instinct": "To bring on The Flood",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 2,
+        "Damage": "d8+2",
+        "Attack": "Waves (near, far, ignores armor)"
        },
        "Notes": {
         "Moves": "- Cast a spell of water and destruction\n- Command beasts of the sea\n- Reveal divine proclamation",
@@ -8306,7 +8576,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, organized, intelligent",
-        "Instinct": "To wage war"
+        "Instinct": "To wage war",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 3,
+        "Damage": "b[2d8]",
+        "Attack": "Harpoon (close, near, far)"
        },
        "Notes": {
         "Moves": "- Lead tritons to battle\n- Pull them beneath the waves",
@@ -8329,7 +8604,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, organized, intelligent",
-        "Instinct": "To lead"
+        "Instinct": "To lead",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 2,
+        "Damage": "d8",
+        "Attack": "Trident (close, near, far)"
        },
        "Notes": {
         "Moves": "- Stir tritons to war\n- Call reinforcements",
@@ -8352,7 +8632,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, stealthy, amorphous",
-        "Instinct": "To grow"
+        "Instinct": "To grow",
+        "Max HP": 15,
+        "HP": 15,
+        "Armor": 1,
+        "Damage": "d10",
+        "Attack": "Thorns (close, reach, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Shoot forth new growth\n- Attack the unwary",
@@ -8375,7 +8660,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, small, magical, organized",
-        "Instinct": "To hunt"
+        "Instinct": "To hunt",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 4,
+        "Damage": "d8",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Give the appearance of being somewhere they’re not\n- Summon the pack\n- Move with amazing speed",
@@ -8398,7 +8688,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, large, organized, intelligent",
-        "Instinct": "To rage"
+        "Instinct": "To rage",
+        "Max HP": 11,
+        "HP": 11,
+        "Armor": 1,
+        "Damage": "d6+2",
+        "Attack": "Bow (close, reach, near, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Overrun them\n- Fire a perfect bullseye\n- Move with unrelenting speed",
@@ -8421,7 +8716,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, planar, terrifying, amorphous",
-        "Instinct": "To change"
+        "Instinct": "To change",
+        "Max HP": 23,
+        "HP": 23,
+        "Armor": 1,
+        "Damage": "d10 ignores armor",
+        "Attack": "Warping touch (close)"
        },
        "Notes": {
         "Moves": "- Cause a change in appearance or substance\n- Briefly bridge the planes",
@@ -8444,7 +8744,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, small, hoarder",
-        "Instinct": "To defend the nest"
+        "Instinct": "To defend the nest",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Beak (close)"
        },
        "Notes": {
         "Moves": "- Start a slow transformation to stone",
@@ -8467,7 +8772,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, magical, intelligent, devious,",
-        "Instinct": "To love nature passionately"
+        "Instinct": "To love nature passionately",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "w[2d8]damage",
+        "Attack": "Crushing vines (close)"
        },
        "Notes": {
         "Moves": "- Entice a mortal\n- Merge into a tree\n- Turn nature against them",
@@ -8490,7 +8800,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, organized, intelligent",
-        "Instinct": "To rule the heights"
+        "Instinct": "To rule the heights",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "b[2d8]+1",
+        "Attack": "Talons (close, reach, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Attack from the sky\n- Pull someone into the air\n- Call on ancient oaths",
@@ -8513,7 +8828,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent, organized",
-        "Instinct": "To seek perfection"
+        "Instinct": "To seek perfection",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 2,
+        "Damage": "b[2d6]",
+        "Attack": "Sword (close)"
        },
        "Notes": {
         "Moves": "- Strike at a weak point\n- Set ancient plans in motion\n- Use the woods to advantage",
@@ -8536,7 +8856,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, magical, intelligent, organized",
-        "Instinct": "To unleash power"
+        "Instinct": "To unleash power",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d10 ignores armor",
+        "Attack": "Arcane fire (near, far)"
        },
        "Notes": {
         "Moves": "- Work the magic that nature demands\n- Cast forth the elements",
@@ -8559,7 +8884,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, organized",
-        "Instinct": "To serve allies"
+        "Instinct": "To serve allies",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8+3",
+        "Attack": "Talons (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Judge someone’s worthiness\n- Carry an ally aloft\n- Strike from above",
@@ -8582,7 +8912,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, huge, intelligent, organized",
-        "Instinct": "Ruin everything."
+        "Instinct": "Ruin everything.",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8+3",
+        "Attack": "Thrown rocks (reach, near, far, forceful)"
        },
        "Notes": {
         "Moves": "- Throw something\n- Do something stupid\n- Shake the earth",
@@ -8605,7 +8940,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, intelligent",
-        "Instinct": "To return the world to darker days"
+        "Instinct": "To return the world to darker days",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8+5",
+        "Attack": "Club (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Destroy something\n- Fly into a rage\n- Take something by force",
@@ -8628,7 +8968,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary",
-        "Instinct": "To shred"
+        "Instinct": "To shred",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10",
+        "Attack": "Tusks (close, messy, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Rip them apart\n- Rend armor and weapons",
@@ -8651,7 +8996,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, devious, magical, hoarder",
-        "Instinct": "To enjoy"
+        "Instinct": "To enjoy",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "w[2d8]",
+        "Attack": "Charge (close)"
        },
        "Notes": {
         "Moves": "- Pull others into revelry through magic\n- Force gifts upon them\n- Play jokes with illusions and tricks",
@@ -8674,7 +9024,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, tiny, stealthy, magical, devious, intelligent",
-        "Instinct": "To play tricks"
+        "Instinct": "To play tricks",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "w[2d4]",
+        "Attack": "Dagger (hand)"
        },
        "Notes": {
         "Moves": "- Play a trick to expose someone’s true nature\n- Confuse their senses\n- Craft an illusion",
@@ -8697,7 +9052,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, huge, intelligent, amorphous",
-        "Instinct": "To protect nature"
+        "Instinct": "To protect nature",
+        "Max HP": 21,
+        "HP": 21,
+        "Armor": 4,
+        "Damage": "d10+5",
+        "Attack": "Walloping branches (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Move with implacable strength\n- Set down roots\n- Spread old magic",
@@ -8720,7 +9080,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent",
-        "Instinct": "To shed the appearance of civilization"
+        "Instinct": "To shed the appearance of civilization",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 1,
+        "Damage": "d10+2",
+        "Attack": "Bite (close, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Transform to pass unnoticed as beast or man\n- Strike from within\n- Hunt like man and beast",
@@ -8743,7 +9108,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, organized",
-        "Instinct": "To serve"
+        "Instinct": "To serve",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Carry a rider into battle\n- Give its rider an advantage",
@@ -8766,7 +9136,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, construct, terrifying",
-        "Instinct": "To end life"
+        "Instinct": "To end life",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Slam (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Tear flesh apart\n- Spill forth putrid guts",
@@ -8789,7 +9164,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, magical, intelligent",
-        "Instinct": "To get revenge"
+        "Instinct": "To get revenge",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 0,
+        "Damage": "d10",
+        "Attack": "Scream (near)"
        },
        "Notes": {
         "Moves": "- Drown out all other sound with a ceaseless scream\n- Unleash a skull-splitting noise\n- Disappear into the mists",
@@ -8812,7 +9192,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, intelligent, hoarder",
-        "Instinct": "To feast on souls"
+        "Instinct": "To feast on souls",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Smash (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Devour or trap dying soul\n- Bargain for a soul’s return",
@@ -8835,7 +9220,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge",
-        "Instinct": "To serve"
+        "Instinct": "To serve",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 2,
+        "Damage": "d10+3",
+        "Attack": "Bite (reach, messy, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Attack unrelentingly",
@@ -8858,7 +9248,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, organized",
-        "Instinct": "To take from the living"
+        "Instinct": "To take from the living",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 2,
+        "Damage": "d6+1",
+        "Attack": "Rusty sword (close, reach)"
        },
        "Notes": {
         "Moves": "- Freeze flesh\n- Call on the unworthy dead",
@@ -8881,7 +9276,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, devious, terrifying",
-        "Instinct": "To haunt"
+        "Instinct": "To haunt",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 0,
+        "Damage": "d6",
+        "Attack": "Phantom touch (close, reach)"
        },
        "Notes": {
         "Moves": "- Reveal the terrifying nature of death\n- Haunt a place of importance\n- Offer information from the other side, at a price",
@@ -8904,7 +9304,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group",
-        "Instinct": "To eat"
+        "Instinct": "To eat",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Talons (close, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Gnaw off a body part\n- Gain the memories of their meal",
@@ -8927,7 +9332,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, magical, intelligent, cautious, hoarder, construct",
-        "Instinct": "To un-live"
+        "Instinct": "To un-live",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 5,
+        "Damage": "d10+3",
+        "Attack": "Magical Force (near, far, ignores armor)"
        },
        "Notes": {
         "Moves": "- Cast a perfected spell of death or destruction\n- Set a ritual or great working into motion\n- Reveal a preparation or plan already completed",
@@ -8950,7 +9360,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group",
-        "Instinct": "To wreak havoc"
+        "Instinct": "To wreak havoc",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 0,
+        "Damage": "d8",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Rage\n- Add to their collection of guts",
@@ -8973,7 +9388,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, divine, hoarder",
-        "Instinct": "To enjoy eternal rest"
+        "Instinct": "To enjoy eternal rest",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+2",
+        "Attack": "Smash (close)"
        },
        "Notes": {
         "Moves": "- Curse them\n- Wrap them up\n- Rise again",
@@ -8996,7 +9416,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, stealthy",
-        "Instinct": "To hunt"
+        "Instinct": "To hunt",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Rend (close)"
        },
        "Notes": {
         "Moves": "- Attack from the night sky\n- Fly away with prey",
@@ -9019,7 +9444,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, large, magical, construct",
-        "Instinct": "To darken"
+        "Instinct": "To darken",
+        "Max HP": 11,
+        "HP": 11,
+        "Armor": 4,
+        "Damage": "d6+1",
+        "Attack": "Shadow touch (close, reach)"
        },
        "Notes": {
         "Moves": "- Snuff out light\n- Spawn another shadow from the dead",
@@ -9042,7 +9472,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, large, construct",
-        "Instinct": "To disturb"
+        "Instinct": "To disturb",
+        "Max HP": 11,
+        "HP": 11,
+        "Armor": 2,
+        "Damage": "d6+1",
+        "Attack": "Tail whip (close, reach)"
        },
        "Notes": {
         "Moves": "- Poison them\n- Do a vampire’s bidding",
@@ -9065,7 +9500,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde",
-        "Instinct": "To take the semblance of life"
+        "Instinct": "To take the semblance of life",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Slam (close)"
        },
        "Notes": {
         "Moves": "- Act out what it did in life\n- Snuff out the warmth of life\n- Reconstruct from miscellaneous bones",
@@ -9088,7 +9528,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, hoarder",
-        "Instinct": "To drive life from a place"
+        "Instinct": "To drive life from a place",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d10",
+        "Attack": "Withering touch (close)"
        },
        "Notes": {
         "Moves": "- Turn their haunt against a creature\n- Bring the environment to life",
@@ -9111,7 +9556,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, stealthy, organized, intelligent",
-        "Instinct": "To manipulate"
+        "Instinct": "To manipulate",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 2,
+        "Damage": "d8+5",
+        "Attack": "Supernatural force (close, forceful, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Charm someone\n- Feed on their blood\n- Retreat to plan again",
@@ -9134,7 +9584,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, organized, intelligent",
-        "Instinct": "To hunt"
+        "Instinct": "To hunt",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6+1 1 piercing",
+        "Attack": "Pounce (close)"
        },
        "Notes": {
         "Moves": "- Encircle prey\n- Summon the pack",
@@ -9157,7 +9612,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde",
-        "Instinct": "Braaaaaains"
+        "Instinct": "Braaaaaains",
+        "Max HP": 11,
+        "HP": 11,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Attack with overwhelming numbers\n- Corner them\n- Gain strength from the dead, spawn more zombies",
@@ -9180,7 +9640,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, intelligent, messy, forceful",
-        "Instinct": "To devour"
+        "Instinct": "To devour",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 2,
+        "Damage": "d10+3",
+        "Attack": "Bite (close, reach, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Lure prey with lies and illusions\n- Lash out at light\n- Devour",
@@ -9203,7 +9668,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, hoarder",
-        "Instinct": "To create new statuary"
+        "Instinct": "To create new statuary",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "d10",
+        "Attack": "Bite (close)"
        },
        "Notes": {
         "Moves": "- Turn flesh to stone with a gaze\n- Retreat into a maze of stone",
@@ -9226,7 +9696,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, amorphous",
-        "Instinct": "To dissolve"
+        "Instinct": "To dissolve",
+        "Max HP": 15,
+        "HP": 15,
+        "Armor": 1,
+        "Damage": "d10",
+        "Attack": "Corrosive touch (close, ignores armor)"
        },
        "Notes": {
         "Moves": "- Eat away metal, flesh, or wood\n- Ooze into a troubling place: food, armor, stomach",
@@ -9249,7 +9724,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, intelligent devious",
-        "Instinct": "To cleanse"
+        "Instinct": "To cleanse",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 2,
+        "Damage": "d8",
+        "Attack": "Light ray (close, ignores armor)"
        },
        "Notes": {
         "Moves": "- Pass judgment on a person or place\n- Summon divine forces to cleanse\n- Offer information in exchange for service",
@@ -9272,7 +9752,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large",
-        "Instinct": "To eat"
+        "Instinct": "To eat",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 2,
+        "Damage": "d8+3",
+        "Attack": "Bite (close, reach)"
        },
        "Notes": {
         "Moves": "- Attack an unsuspecting victim\n- Escape into the water\n- Hold something tight in its jaws",
@@ -9295,7 +9780,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, devious, intelligent",
-        "Instinct": "To infiltrate"
+        "Instinct": "To infiltrate",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d6",
+        "Attack": "Dagger (close)"
        },
        "Notes": {
         "Moves": "- Assume the shape of a person whose flesh it’s tasted\n- Use another’s identity to advantage\n- Leave someone’s reputation shattered",
@@ -9318,7 +9808,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge, cautious",
-        "Instinct": "To resist change"
+        "Instinct": "To resist change",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 4,
+        "Damage": "d10+3",
+        "Attack": "Bite (reach)"
        },
        "Notes": {
         "Moves": "- Move forward implacably\n- Bring its full bulk to bear\n- Destroy structures and buildings",
@@ -9341,7 +9836,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, small, intelligent, cautious, hoarder",
-        "Instinct": "To grow in power"
+        "Instinct": "To grow in power",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 3,
+        "Damage": "d10+2",
+        "Attack": "Elemental breath (close, near)"
        },
        "Notes": {
         "Moves": "- Start a lair, form a base of power\n- Call on family ties\n- Demand oaths of servitude",
@@ -9364,7 +9864,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde",
-        "Instinct": "To lash out"
+        "Instinct": "To lash out",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Talons (close)"
        },
        "Notes": {
         "Moves": "- Attack from the air\n- Carry out the bidding of a more powerful creature",
@@ -9387,7 +9892,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, tiny",
-        "Instinct": "To ignite"
+        "Instinct": "To ignite",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "d6-2",
+        "Attack": "Burning touch (hand, ignores armor)"
        },
        "Notes": {
         "Moves": "- Catch someone or something on fire (even underwater)\n- Consume burning prey",
@@ -9410,7 +9920,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small, intelligent",
-        "Instinct": "To wage war"
+        "Instinct": "To wage war",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Spear (close)"
        },
        "Notes": {
         "Moves": "- Launch an amphibious assault\n- Heal at a prodigious rate",
@@ -9433,7 +9948,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To grow"
+        "Instinct": "To grow",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 2,
+        "Damage": "d10+3",
+        "Attack": "Bite (close, reach)"
        },
        "Notes": {
         "Moves": "- Attack many enemies at once\n- Regenerate a body part (especially a head)",
@@ -9456,7 +9976,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small, stealthy, intelligent, organized",
-        "Instinct": "To serve dragons"
+        "Instinct": "To serve dragons",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Spear (close, reach)"
        },
        "Notes": {
         "Moves": "- Lay a trap\n- Call on dragons or draconic allies\n- Retreat and regroup",
@@ -9479,7 +10004,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, stealthy, intelligent, organized",
-        "Instinct": "To destroy civilization"
+        "Instinct": "To destroy civilization",
+        "Max HP": 6,
+        "HP": 6,
+        "Armor": 2,
+        "Damage": "d8",
+        "Attack": "Spear (close, reach)"
        },
        "Notes": {
         "Moves": "- Ambush the unsuspecting\n- Launch an amphibious assault",
@@ -9502,7 +10032,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, devious, intelligent, hoarder",
-        "Instinct": "To collect"
+        "Instinct": "To collect",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d6",
+        "Attack": "Claws (close)"
        },
        "Notes": {
         "Moves": "- Turn a body part to stone with a look\n- Draw someone’s gaze\n- Show hidden terrible beauty",
@@ -9525,7 +10060,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, intelligent",
-        "Instinct": "To spill blood"
+        "Instinct": "To spill blood",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 2,
+        "Damage": "d6+4",
+        "Attack": "Endless teeth (close, forceful, messy, 1 piercing)"
        },
        "Notes": {
         "Moves": "- Bite off a limb\n- Hurl a poisoned spear\n- Frenzy at the sight of blood",
@@ -9548,7 +10088,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, huge, cautious",
-        "Instinct": "To endure"
+        "Instinct": "To endure",
+        "Max HP": 18,
+        "HP": 18,
+        "Armor": 4,
+        "Damage": "d10+5",
+        "Attack": "Trample (reach)"
        },
        "Notes": {
         "Moves": "- Stampede\n- Knock something down\n- Unleash a deafening bellow",
@@ -9571,7 +10116,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, magical",
-        "Instinct": "To preserve and create swamps"
+        "Instinct": "To preserve and create swamps",
+        "Max HP": 23,
+        "HP": 23,
+        "Armor": 1,
+        "Damage": "d10+1",
+        "Attack": "Lash (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Call on the swamp itself for aid\n- Meld into the swamp\n- Reassemble into a new form",
@@ -9594,7 +10144,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To smash"
+        "Instinct": "To smash",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Club (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Undo the effects of an attack (unless caused by a weakness, your call)\n- Hurl something or someone",
@@ -9617,7 +10172,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, tiny, magical",
-        "Instinct": "To misguide"
+        "Instinct": "To misguide",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "w[2d8-2]",
+        "Attack": "Ray (near)"
        },
        "Notes": {
         "Moves": "- Lead someone astray\n- Clear a path to the worst place possible",
@@ -9640,7 +10200,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large",
-        "Instinct": "To undermine"
+        "Instinct": "To undermine",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 3,
+        "Damage": "d8+1",
+        "Attack": "Bite (close, reach)"
        },
        "Notes": {
         "Moves": "- Undermine the ground\n- Burst from the earth\n- Spray forth acid, eating away at metal and flesh",
@@ -9663,7 +10228,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small",
-        "Instinct": "To devour"
+        "Instinct": "To devour",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6 1 piercing",
+        "Attack": "Gnaw (close, messy)"
        },
        "Notes": {
         "Moves": "- Swarm\n- Rip something (or someone) apart",
@@ -9686,7 +10256,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, stealthy, intelligent",
-        "Instinct": "To deny light"
+        "Instinct": "To deny light",
+        "Max HP": 15,
+        "HP": 15,
+        "Armor": 2,
+        "Damage": "d10",
+        "Attack": "Choke (close, reach)"
        },
        "Notes": {
         "Moves": "- Hold someone, wringing the breath from them\n- Fling a held creature",
@@ -9709,7 +10284,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, stealthy",
-        "Instinct": "To engulf"
+        "Instinct": "To engulf",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 1,
+        "Damage": "d10 ignores armor",
+        "Attack": "Constrict (close)"
        },
        "Notes": {
         "Moves": "- Engulf the unsuspecting",
@@ -9732,7 +10312,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, organized",
-        "Instinct": "To defend"
+        "Instinct": "To defend",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 2,
+        "Damage": "d6",
+        "Attack": "Axe (close)"
        },
        "Notes": {
         "Moves": "- Drive them back\n- Call up reinforcements",
@@ -9755,7 +10340,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge",
-        "Instinct": "To show the strength of earth"
+        "Instinct": "To show the strength of earth",
+        "Max HP": 27,
+        "HP": 27,
+        "Armor": 4,
+        "Damage": "d10+5",
+        "Attack": "Smash (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Turn the ground into a weapon\n- Meld into stone",
@@ -9778,7 +10368,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small",
-        "Instinct": "To enflame"
+        "Instinct": "To enflame",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 3,
+        "Damage": "d6 ignores armor",
+        "Attack": "Flames (near)"
        },
        "Notes": {
         "Moves": "- Undermine the ground\n- Burst from the earth\n- Spray forth flames",
@@ -9801,7 +10396,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, stealthy, hoarder",
-        "Instinct": "To guard"
+        "Instinct": "To guard",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 2,
+        "Damage": "d6",
+        "Attack": "Claw (close)"
        },
        "Notes": {
         "Moves": "- Attack with the element of surprise\n- Take to the air\n- Blend into stonework",
@@ -9824,7 +10424,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, stealthy, amorphous",
-        "Instinct": "To clean"
+        "Instinct": "To clean",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 1,
+        "Damage": "d10+1 ignores armor",
+        "Attack": "Engulf (hand)"
        },
        "Notes": {
         "Moves": "- Fill an apparently empty space\n- Dissolve",
@@ -9847,7 +10452,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small, intelligent, organized",
-        "Instinct": "To multiply"
+        "Instinct": "To multiply",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Spear (close, reach)"
        },
        "Notes": {
         "Moves": "- Charge!\n- Call more goblins\n- Retreat and return with (many) more",
@@ -9870,7 +10480,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, small, magical, intelligent, organized",
-        "Instinct": "To tap power beyond their stature"
+        "Instinct": "To tap power beyond their stature",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "d10+1 ignores armor",
+        "Attack": "Acid orb (near, far)"
        },
        "Notes": {
         "Moves": "- Unleash a poorly understood spell\n- Pour forth magical chaos\n- Use other goblins for shields",
@@ -9893,7 +10508,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, huge, organized, intelligent",
-        "Instinct": "To retake"
+        "Instinct": "To retake",
+        "Max HP": 14,
+        "HP": 14,
+        "Armor": 1,
+        "Damage": "d8+7",
+        "Attack": "Mace (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Shake the earth\n- Retreat, only to come back stronger",
@@ -9916,7 +10536,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large",
-        "Instinct": "To befoul"
+        "Instinct": "To befoul",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 1,
+        "Damage": "d10+3",
+        "Attack": "Tentacles (close, reach, forceful)"
        },
        "Notes": {
         "Moves": "- Infect someone with filth fever\n- Fling someone or something",
@@ -9939,7 +10564,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, small",
-        "Instinct": "To eat"
+        "Instinct": "To eat",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Chew (close)"
        },
        "Notes": {
         "Moves": "- Paralyze with a touch",
@@ -9962,7 +10592,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, huge",
-        "Instinct": "To consume"
+        "Instinct": "To consume",
+        "Max HP": 20,
+        "HP": 20,
+        "Armor": 2,
+        "Damage": "d10+5",
+        "Attack": "Bite (reach, forceful)"
        },
        "Notes": {
         "Moves": "- Swallow whole\n- Tunnel through stone and earth",
@@ -9985,7 +10620,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, stealthy, intelligent",
-        "Instinct": "To ambush"
+        "Instinct": "To ambush",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 1,
+        "Damage": "d10+1",
+        "Attack": "Bite (close, reach)"
        },
        "Notes": {
         "Moves": "- Ensnare the unsuspecting\n- Disarm a foe\n- Chew on someone",
@@ -10008,7 +10648,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, tiny",
-        "Instinct": "To infect"
+        "Instinct": "To infect",
+        "Max HP": 3,
+        "HP": 3,
+        "Armor": 0,
+        "Damage": "d6-2",
+        "Attack": "Burrow (hand)"
        },
        "Notes": {
         "Moves": "- Burrow under flesh\n- Lay eggs\n- Burst forth from an infected creature",
@@ -10031,7 +10676,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, devious, intelligent",
-        "Instinct": "To weave webs (literal and metaphorical)"
+        "Instinct": "To weave webs (literal and metaphorical)",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 3,
+        "Damage": "d8+4",
+        "Attack": "Mandibles (close, reach)"
        },
        "Notes": {
         "Moves": "- Enmesh in webbing\n- Put a plot into motion",
@@ -10054,7 +10704,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, organized",
-        "Instinct": "To prey on civilization"
+        "Instinct": "To prey on civilization",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Club (close)"
        },
        "Notes": {
         "Moves": "- Raid and retreat\n- Use scavenged weapons or magic",
@@ -10077,7 +10732,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, terrifying, divine, intelligent, organized",
-        "Instinct": "To share divine will"
+        "Instinct": "To share divine will",
+        "Max HP": 18,
+        "HP": 18,
+        "Armor": 4,
+        "Damage": "b[2d10]+4",
+        "Attack": "Sword of Flames (close, forceful, ignores armor)"
        },
        "Notes": {
         "Moves": "- Deliver visions and prophecy\n- Stir mortals to action\n- Expose sin and injustice",
@@ -10100,7 +10760,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, large, planar, terrifying",
-        "Instinct": "To rend flesh and spill blood"
+        "Instinct": "To rend flesh and spill blood",
+        "Max HP": 16,
+        "HP": 16,
+        "Armor": 3,
+        "Damage": "d10+3",
+        "Attack": "Spines (close, reach, messy, 3 piercing)"
        },
        "Notes": {
         "Moves": "- Impale someone\n- Kill indiscriminately",
@@ -10123,7 +10788,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, planar",
-        "Instinct": "To capture"
+        "Instinct": "To capture",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 3,
+        "Damage": "d10",
+        "Attack": "Crush (close, reach, ignores armor)"
        },
        "Notes": {
         "Moves": "- Take a captive\n- Return to whence it came\n- Torture with glee",
@@ -10169,7 +10839,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "solitary, devious, planar, hoarder",
-        "Instinct": "To bargain"
+        "Instinct": "To bargain",
+        "Max HP": 12,
+        "HP": 12,
+        "Armor": 0,
+        "Damage": "w[2d8]",
+        "Attack": "Secret dagger (close)"
        },
        "Notes": {
         "Moves": "- Offer a deal with horrible consequences\n- Plumb the vaults of hell for a bargaining chip\n- Make a show of power",
@@ -10192,7 +10867,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, magical",
-        "Instinct": "To burn eternally"
+        "Instinct": "To burn eternally",
+        "Max HP": 14,
+        "HP": 14,
+        "Armor": 4,
+        "Damage": "d8+1",
+        "Attack": "Flame (close, reach, ignores armor)"
        },
        "Notes": {
         "Moves": "- Grant power for a price\n- Summon the forces of the City of Brass",
@@ -10215,7 +10895,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, planar, organized",
-        "Instinct": "To pursue"
+        "Instinct": "To pursue",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 1,
+        "Damage": "d8",
+        "Attack": "Fiery Bite (close)"
        },
        "Notes": {
         "Moves": "- Follow despite all obstacles\n- Spew fire\n- Summon the forces of hell on their target",
@@ -10238,7 +10923,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, planar, intelligent, organized",
-        "Instinct": "To harass"
+        "Instinct": "To harass",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 1,
+        "Damage": "d6",
+        "Attack": "Flame gout (close, near, far, ignores armor)"
        },
        "Notes": {
         "Moves": "- Send information back to hell\n- Cause mischief",
@@ -10261,7 +10951,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "group, large, magical, cautious, amorphous, planar",
-        "Instinct": "To preserve order"
+        "Instinct": "To preserve order",
+        "Max HP": 21,
+        "HP": 21,
+        "Armor": 5,
+        "Damage": "d10+1",
+        "Attack": "Hammer (close, reach)"
        },
        "Notes": {
         "Moves": "- End a spell or effect\n- Enforce a law of nature or man\n- Give a glimpse of destiny",
@@ -10284,7 +10979,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, devious, planar, intelligent",
-        "Instinct": "To suffer"
+        "Instinct": "To suffer",
+        "Max HP": 10,
+        "HP": 10,
+        "Armor": 0,
+        "Damage": "w[2d4]",
+        "Attack": "Slime (close)"
        },
        "Notes": {
         "Moves": "- Fill them with despair\n- Beg for mercy\n- Draw evil attention",
@@ -10307,7 +11007,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, large, magical, terrifying, planar",
-        "Instinct": "To ride rampant"
+        "Instinct": "To ride rampant",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 4,
+        "Damage": "d6+1",
+        "Attack": "Trample (close, reach)"
        },
        "Notes": {
         "Moves": "- Sheath a rider in hellish flame\n- Drive them away",
@@ -10330,7 +11035,12 @@
       "creatureTable": {
        "Monster": {
         "Tags": "horde, planar",
-        "Instinct": "To serve"
+        "Instinct": "To serve",
+        "Max HP": 7,
+        "HP": 7,
+        "Armor": 2,
+        "Damage": "d6",
+        "Attack": "Hellish weaponry (close)"
        },
        "Notes": {
         "Moves": "- Attack with abandon\n- Inflict pain",
