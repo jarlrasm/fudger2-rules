@@ -1,0 +1,804 @@
+#include "/systems/common.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+clampTarget (target) = max (5, min (95, target))
+
+hmCode (target, roll) =
+    if roll <= clampTarget (target) then (if mod (roll, 5) == 0 then "CS" else "MS")
+    else (if mod (roll, 5) == 0 then "CF" else "MF")
+
+hmLevel (target, roll) =
+    switch hmCode (target, roll)
+    case "CS" then "Critical success"
+    case "MS" then "Marginal success"
+    case "MF" then "Marginal failure"
+    else "Critical failure"
+
+hmText (target, roll) = toString (roll) + " vs " + toString (clampTarget (target)) + ": " + hmLevel (target, roll)
+
+hmResult (target, roll) =
+{
+    Text = hmText (target, roll)
+    Value = roll
+    Outcome = hmLevel (target, roll)
+}
+
+hmRoll = ([1d100], ((baseline, throws)->hmResult (baseline + asked, first (first (throws).rolls))))
+
+hmCheck = ask ("Modifier", 0, hmRoll)
+
+hmFixedRoll (modifier) = ([1d100], ((baseline, throws)->hmResult (baseline + modifier, first (first (throws).rolls))))
+
+sb3 (a, b, c) = (a + b + c + 1) / 3
+
+abilityText (target, total, count) =
+    toString (total) + " on " + toString (count) + "d6 vs " + toString (target) + (if total <= target then ": Success" else ": Failure")
+
+abilityRoll (count, penalty) = ([dice { number = count  sides = 6 }],
+    ((baseline, throws)->{
+        Text = abilityText (baseline - penalty, sum (first (throws).rolls), count)
+        Value = sum (first (throws).rolls)
+        Outcome = if sum (first (throws).rolls) <= baseline - penalty then "Success" else "Failure"
+    }))
+
+abilityDice (penalty) = ask ("Dice (3 normal, 4 hard, 5 very hard)", 3, (n)->abilityRoll (max (1, n), penalty))
+
+shockText (total, endurance, count) =
+    if count == 0 then "No injuries: no shock roll"
+    else toString (total) + " on " + toString (count) + "d6 vs Endurance " + toString (endurance) + (if total <= endurance then ": stays up" else ": Shock, out of the fight")
+
+shockRoll (penalty) = ([dice { number = penalty  sides = 6 }],
+    ((baseline, throws)->{
+        Text = shockText (sum (first (throws).rolls), baseline, penalty)
+        Value = sum (first (throws).rolls)
+        Outcome = if penalty == 0 or sum (first (throws).rolls) <= baseline then "Success" else "Failure: shock"
+    }))
+
+killRoll (count) = ([dice { number = count  sides = 6 }],
+    ((baseline, throws)->{
+        Text = toString (sum (first (throws).rolls)) + " on " + toString (count) + "d6 vs Endurance " + toString (baseline) + (if sum (first (throws).rolls) <= baseline then ": survives" else ": killed")
+        Value = sum (first (throws).rolls)
+        Outcome = if sum (first (throws).rolls) <= baseline then "Success" else "Failure: killed"
+    }))
+
+killDice = ask ("Kill level (4 for K4, 5 for K5)", 4, (n)->killRoll (max (1, n)))
+
+initiativeOrder = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
+
+pairedLocation (name, roll) = (if mod (roll, 2) == 1 then "left " else "right ") + name
+
+midLocation (roll) =
+    if roll <= 5 then "skull"
+    else if roll <= 10 then "face"
+    else if roll <= 15 then "neck"
+    else if roll <= 27 then pairedLocation ("shoulder", roll)
+    else if roll <= 33 then pairedLocation ("upper arm", roll)
+    else if roll <= 35 then pairedLocation ("elbow", roll)
+    else if roll <= 39 then pairedLocation ("forearm", roll)
+    else if roll <= 43 then pairedLocation ("hand", roll)
+    else if roll <= 60 then "thorax"
+    else if roll <= 70 then "abdomen"
+    else if roll <= 74 then "groin"
+    else if roll <= 80 then pairedLocation ("hip", roll)
+    else if roll <= 88 then pairedLocation ("thigh", roll)
+    else if roll <= 90 then pairedLocation ("knee", roll)
+    else if roll <= 96 then pairedLocation ("calf", roll)
+    else pairedLocation ("foot", roll)
+
+meleeDefences = ["Ignore", "Block CF", "Block MF", "Block MS", "Block CS", "Counterstrike CF", "Counterstrike MF", "Counterstrike MS", "Counterstrike CS", "Dodge CF", "Dodge MF", "Dodge MS", "Dodge CS"]
+
+missileDefences = ["Ignore", "Block CF", "Block MF", "Block MS", "Block CS", "Dodge CF", "Dodge MF", "Dodge MS", "Dodge CS"]
+
+defenceCodes = ["CF", "MF", "MS", "CS"]
+
+defenceCode (defence) = item (mod (defence - 1, 4), defenceCodes)
+
+meleeMode (defence) = if defence == 0 then "Ignore" else item ((defence - 1) / 4, ["Block", "Counterstrike", "Dodge"])
+
+missileMode (defence) = if defence == 0 then "Ignore" else item ((defence - 1) / 4, ["Block", "Dodge"])
+
+meleeIgnore (code) = switch code case "CS" then "A*4" case "MS" then "A*3" case "MF" then "A*1" else "DTA"
+
+meleeTable (mode, attack, defence) =
+    if mode == "Ignore" then meleeIgnore (attack)
+    else switch mode + " " + attack + " " + defence
+    case "Block CF CF" then "AF DF"
+    case "Block MF CF" then "DF"
+    case "Block MS CF" then "A*2"
+    case "Block CS CF" then "A*3"
+    case "Block CF MF" then "AF"
+    case "Block MF MF" then "Block"
+    case "Block MS MF" then "A*1"
+    case "Block CS MF" then "A*2"
+    case "Block CF MS" then "DTA"
+    case "Block MF MS" then "DTA"
+    case "Block MS MS" then "Block"
+    case "Block CS MS" then "A*1"
+    case "Block CF CS" then "DTA"
+    case "Block MF CS" then "DTA"
+    case "Block MS CS" then "DTA"
+    case "Block CS CS" then "Block"
+    case "Counterstrike CF CF" then "AF DF"
+    case "Counterstrike MF CF" then "DF"
+    case "Counterstrike MS CF" then "A*3"
+    case "Counterstrike CS CF" then "A*4"
+    case "Counterstrike CF MF" then "AF"
+    case "Counterstrike MF MF" then "Block"
+    case "Counterstrike MS MF" then "A*2"
+    case "Counterstrike CS MF" then "A*3"
+    case "Counterstrike CF MS" then "D*2"
+    case "Counterstrike MF MS" then "D*1"
+    case "Counterstrike MS MS" then "A*1 D*1"
+    case "Counterstrike CS MS" then "A*1"
+    case "Counterstrike CF CS" then "D*3"
+    case "Counterstrike MF CS" then "D*2"
+    case "Counterstrike MS CS" then "D*1"
+    case "Counterstrike CS CS" then "A*2 D*2"
+    case "Dodge CF CF" then "AS DS"
+    case "Dodge MF CF" then "DS"
+    case "Dodge MS CF" then "A*2"
+    case "Dodge CS CF" then "A*3"
+    case "Dodge CF MF" then "AS"
+    case "Dodge MF MF" then "Miss"
+    case "Dodge MS MF" then "A*1"
+    case "Dodge CS MF" then "A*2"
+    case "Dodge CF MS" then "DTA"
+    case "Dodge MF MS" then "Miss"
+    case "Dodge MS MS" then "Miss"
+    case "Dodge CS MS" then "A*1"
+    case "Dodge CF CS" then "DTA"
+    case "Dodge MF CS" then "DTA"
+    case "Dodge MS CS" then "Miss"
+    else "Miss"
+
+missileTable (mode, attack, defence) =
+    if attack == "CF" then "Wild"
+    else if attack == "MF" then "Miss"
+    else if mode == "Ignore" then (if attack == "CS" then "A*3" else "A*2")
+    else switch mode + " " + attack + " " + defence
+    case "Block MS CF" then "A*2"
+    case "Block CS CF" then "A*3"
+    case "Block MS MF" then "A*1"
+    case "Block CS MF" then "A*2"
+    case "Block MS MS" then "Block"
+    case "Block CS MS" then "A*1"
+    case "Block MS CS" then "Block"
+    case "Block CS CS" then "Block"
+    case "Dodge MS CF" then "A*2"
+    case "Dodge CS CF" then "A*3"
+    case "Dodge MS MF" then "A*1"
+    case "Dodge CS MF" then "A*2"
+    case "Dodge CS MS" then "A*1"
+    else "Miss"
+
+attackerDice (cell) =
+    if contains (cell, "A*4") then 4 else if contains (cell, "A*3") then 3 else if contains (cell, "A*2") then 2 else if contains (cell, "A*1") then 1 else 0
+
+defenderDice (cell) =
+    if contains (cell, "D*3") then 3 else if contains (cell, "D*2") then 2 else if contains (cell, "D*1") then 1 else 0
+
+sumFirst (rolls, n) =
+    (if n >= 1 then item (0, rolls) else 0) + (if n >= 2 then item (1, rolls) else 0)
+    + (if n >= 3 then item (2, rolls) else 0) + (if n >= 4 then item (3, rolls) else 0)
+
+cellText (cell) =
+    switch cell
+    case "AF DF" then "both fumble"
+    case "AF" then "the attacker fumbles"
+    case "DF" then "the defender fumbles"
+    case "AS DS" then "both stumble"
+    case "AS" then "the attacker stumbles"
+    case "DS" then "the defender stumbles"
+    case "DTA" then "the defender gains a tactical advantage"
+    case "Block" then "blocked"
+    case "Wild" then "a wild shot"
+    else "a miss"
+
+hitText (cell, impactRolls, locationRoll, impactValue, aspect) =
+    if attackerDice (cell) > 0 then
+        "A*" + toString (attackerDice (cell)) + ", hits the " + midLocation (locationRoll) + " for "
+        + toString (sumFirst (impactRolls, attackerDice (cell)) + impactValue) + " " + aspect + " impact"
+        + (if defenderDice (cell) > 0 then "; the defender strikes back with D*" + toString (defenderDice (cell)) else "")
+    else if defenderDice (cell) > 0 then "the defender strikes back with D*" + toString (defenderDice (cell))
+    else cellText (cell)
+
+cellOutcome (cell) =
+    if attackerDice (cell) > 0 then "Hit"
+    else if contains (cell, "AF") then "Fumble"
+    else if contains (cell, "AS") then "Stumble: miss"
+    else if defenderDice (cell) > 0 then "Counterstruck: miss"
+    else if cell == "Block" then "Blocked: miss"
+    else "Miss"
+
+combatResult (target, roll, cell, defenceName, impactRolls, locationRoll, impactValue, aspect, isAnswered) =
+{
+    Text = if isAnswered then hmText (target, roll) + "; " + defenceName + ": " + hitText (cell, impactRolls, locationRoll, impactValue, aspect)
+        else hmText (target, roll) + ": read the combat table with the defender's roll"
+    Value = roll
+    Outcome = if isAnswered then cellOutcome (cell) else hmLevel (target, roll)
+}
+
+meleeRoll (modifier, impactValue, aspect) = ([dice { number = 1  sides = 100 }, dice { number = 4  sides = 6  label = "Impact" }, dice { number = 1  sides = 100  label = "Location" }],
+    ((baseline, throws)->combatResult (baseline + modifier, first (first (throws).rolls),
+        meleeTable (meleeMode (asked), hmCode (baseline + modifier, first (first (throws).rolls)), defenceCode (asked)),
+        item (asked, meleeDefences), item (1, throws).rolls, first (item (2, throws).rolls), impactValue, aspect, answered)))
+
+missileRoll (modifier, impactValue, aspect) = ([dice { number = 1  sides = 100 }, dice { number = 4  sides = 6  label = "Impact" }, dice { number = 1  sides = 100  label = "Location" }],
+    ((baseline, throws)->combatResult (baseline + modifier, first (first (throws).rolls),
+        missileTable (missileMode (asked), hmCode (baseline + modifier, first (first (throws).rolls)), defenceCode (asked)),
+        item (asked, missileDefences), item (1, throws).rolls, first (item (2, throws).rolls), impactValue, aspect, answered)))
+
+meleeAttack (impactValue, aspect) = ask ("Modifier", 0, (n)->ask ("Defender's roll", meleeDefences, 0, meleeRoll (n, impactValue, aspect)))
+
+missileAttack (impactValue, aspect) = ask ("Modifier", 0, (n)->ask ("Defender's roll", missileDefences, 0, missileRoll (n, impactValue, aspect)))
+
+healingResult (target, roll) =
+{
+    Text = hmText (target, roll) + (switch hmCode (target, roll)
+        case "CS" then ": heals 2 injury levels"
+        case "MS" then ": heals 1 injury level"
+        case "MF" then ": no change"
+        else ": worse, infection or a new injury level")
+    Value = roll
+    Outcome = hmLevel (target, roll)
+}
+
+healingRoll = ([1d100], ((baseline, throws)->healingResult (baseline, first (first (throws).rolls))))
+
+severity (level) = if level <= 0 then "" else if level == 1 then "M1" else if level <= 3 then "S" + toString (level) else "G" + toString (level)
+
+hmSkill (sb, mult, penalty) = custom
+{
+    SB = integer { description = "Skill base: the average of the skill's three attributes, plus any sunsign bonus." default = sb  minvalue = 0 }
+    ML = integer { description = "Mastery level. A skill opens at its SB times its multiplier and grows with use." default = SB * mult  minvalue = 0 }
+    EML = integer { description = "Effective mastery level: ML less 5 for each point of penalty. Roll d100 at or under it; a roll ending in 0 or 5 is critical." value = max (0, ML - 5 * penalty)  valuedice = hmCheck  editable = none }
+}
+
+noStats = { Stats = { Skill = "" } }
+
+itemStat (thing, rulesetName, field) = valueOr (valueOr (valueOr (thing.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+statNumber (value) = if toString (value) == "" then 0 else toInt (toString (value))
+
+armourAt (char, where, aspect) =
+    sum (map ((piece)->if contains (toLower (itemStat (piece, "hmArmour", "Coverage")), toLower (where)) then statNumber (itemStat (piece, "hmArmour", aspect)) else 0, char.Armour))
+
+noSkill = { EML = 0 }
+
+skillEml (char, name) =
+    valueOr (valueOr (char.'Combat skills', name, valueOr (char.'Physical skills', name, noSkill)), "EML", 0)
+
+weaponAttack (name, aml, dml, impactValue, aspect, kind, reachFeet, rangeFeet) = custom
+{
+    Name = name
+    AML = integer { description = "Attack mastery level: skill EML plus the weapon's attack bonus." value = aml  valuedice = (if kind == "ranged" then missileAttack (impactValue, aspect) else meleeAttack (impactValue, aspect))  action = kind  reach = reachFeet  range = rangeFeet  editable = none }
+    DML = integer { description = "Defence mastery level when blocking with this weapon." value = dml  valuedice = hmCheck  editable = none }
+    Impact = toString (impactValue) + " " + aspect
+}
+
+aspectWord (aspect) = switch aspect case "Blunt" then "blunt" case "Edge" then "edged" else "piercing"
+
+attackRow (char, weapon, aspect) =
+    weaponAttack (weapon.Name + " (" + aspectWord (aspect) + ")",
+        skillEml (char, itemStat (weapon, "hmWeapon", "Skill")) + statNumber (itemStat (weapon, "hmWeapon", "AB")),
+        skillEml (char, itemStat (weapon, "hmWeapon", "Skill")) + statNumber (itemStat (weapon, "hmWeapon", "DB")),
+        statNumber (itemStat (weapon, "hmWeapon", aspect)), aspectWord (aspect),
+        if itemStat (weapon, "hmWeapon", "Kind") == "Missile" then "ranged" else "melee",
+        max (5, firstNumber (toString (itemStat (weapon, "hmWeapon", "Reach")))),
+        firstNumber (toString (itemStat (weapon, "hmWeapon", "Range"))))
+
+attacksFor (char, weapon) =
+    map ((aspect)->attackRow (char, weapon, aspect),
+        filter ((aspect)->statNumber (itemStat (weapon, "hmWeapon", aspect)) > 0, ["Blunt", "Edge", "Point"]))
+
+spellRow (name, eml) = custom
+{
+    Name = name
+    EML = integer { description = "Convocation EML less 5 per spell level." value = eml  valuedice = hmCheck  editable = none }
+}
+
+healingRow (name, target) = custom
+{
+    Name = name
+    Healing = integer { description = "Endurance times the healing rate." value = target  valuedice = healingRoll  editable = none }
+}
+
+totalInjuryLevels (char) = sum (map ((injury)->injury.Level, char.Injuries))
+
+bleeders (char) = count (filter ((injury)->injury.Bleeding, char.Injuries))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Health, Attacks, Injuries, 'Combat skills'] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Species = string { default = "Human"  keys = ["Human", "Sindarin", "Khuzdul"] }
+        Sex = string { keys = ["Male", "Female"] }
+        Birthdate = string { description = "Day, month and year of birth, which give the sunsign." }
+        Sunsign = string { description = "The sign of birth. It adds to the skill base of skills it favours." keys = ["Ulandus", "Aralius", "Feniri", "Ahnu", "Angberelius", "Nadai", "Hirin", "Tarael", "Tai", "Skorus", "Masara", "Lado"] }
+        Birthplace = string {}
+        Culture = string { keys = ["Feudal", "Imperial", "Viking", "Tribal"] }
+        'Social class' = string { keys = ["Slave", "Serf", "Unguilded", "Guilded", "Noble", "Priest"] }
+        'Sibling rank' = string {}
+        Parent = string { description = "The parent's occupation, which sets social class and early skills." }
+        Occupation = string {}
+        Height = string {}
+        Frame = string { keys = ["Scant", "Light", "Medium", "Heavy", "Massive"] }
+        Weight = string {}
+        Complexion = string {}
+        'Hair colour' = string {}
+        'Eye colour' = string {}
+        Age = integer { default = 20 }
+        Piety = integer { description = "Standing with your deity, spent on invocations and miracles." default = 0  minvalue = 0  editable = live }
+        Morality = integer { description = "3 to 18: how principled you are." default = 10 }
+        Medical = string { description = "Medical traits such as scars or poor sight." }
+        Psyche = string { description = "Psychological traits such as phobias or greed." }
+    }
+
+    Attributes = table
+    {
+        description = "Attributes, mostly 3 to 18 for humans. An attribute roll is 3d6 (4d6 or 5d6 when hard) at or under it, less the penalty."
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { description = "Strength: physical power." default = 10  valuedice = abilityDice (Health.'Physical penalty') }
+        STA = integer { description = "Stamina: endurance and health." default = 10  valuedice = abilityDice (Health.'Physical penalty') }
+        DEX = integer { description = "Dexterity: skill of the hands." default = 10  valuedice = abilityDice (Health.'Physical penalty') }
+        AGL = integer { description = "Agility: balance and quickness of the body." default = 10  valuedice = abilityDice (Health.'Physical penalty') }
+        EYE = integer { description = "Eyesight." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        HRG = integer { description = "Hearing." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        SML = integer { description = "Smell and taste." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        VOI = integer { description = "Voice: range and quality of speech and song." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        INT = integer { description = "Intelligence: reason and memory." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        AUR = integer { description = "Aura: talent for magic and psionics." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        WIL = integer { description = "Will: mental strength and resolve." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+        CML = integer { description = "Comeliness: looks and bearing." default = 10  valuedice = abilityDice (Health.'Universal penalty') }
+    }
+
+    Health = table
+    {
+        description = "Endurance and the penalties from injury, fatigue and load. Each penalty point takes 5 from skills."
+        tableLayout = layout { columns = 4  size = wide }
+        Endurance = integer { description = "END: the average of STR, STA and WIL. Shock and kill rolls are made against it." value = sb3 (Attributes.STR, Attributes.STA, Attributes.WIL)  editable = none }
+        Fatigue = integer { description = "Fatigue levels from exertion and spellcasting. Each adds 1 to the universal penalty." default = 0  minvalue = 0  editable = live }
+        'Blood loss' = integer { description = "Blood loss levels from bleeding wounds. Each adds 1 to the universal penalty." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Injury levels' = integer { description = "The sum of the levels of all injuries." value = totalInjuryLevels (characterTable)  editable = none }
+        'Universal penalty' = integer { description = "UP: injury levels, blood loss and fatigue. Every skill loses 5 per point." value = totalInjuryLevels (characterTable) + 'Blood loss' + Fatigue  editable = none  indicator = "#d64545"  indicatorLabel = "UP" }
+        Load = integer { description = "Weight carried, in pounds." default = 0  minvalue = 0  editable = live }
+        Encumbrance = integer { description = "Load divided by Endurance, rounded down." value = Load / max (1, sb3 (Attributes.STR, Attributes.STA, Attributes.WIL))  editable = none }
+        'Physical penalty' = integer { description = "PP: universal penalty plus encumbrance. Physical and combat skills lose 5 per point." value = totalInjuryLevels (characterTable) + 'Blood loss' + Fatigue + Load / max (1, sb3 (Attributes.STR, Attributes.STA, Attributes.WIL))  editable = none }
+        Initiative = integer { description = "Initiative EML. The highest acts first in each round." value = 'Combat skills'.Initiative.EML  valuedice = initiativeOrder  editable = none }
+        'Shock roll' = integer { description = "After an injury roll 1d6 per point of universal penalty; over Endurance is shock." value = sb3 (Attributes.STR, Attributes.STA, Attributes.WIL)  valuedice = shockRoll (totalInjuryLevels (characterTable) + 'Blood loss' + Fatigue)  editable = none }
+        'Kill roll' = integer { description = "A K4 or K5 injury rolls 4d6 or 5d6 against Endurance; over it is death." value = sb3 (Attributes.STR, Attributes.STA, Attributes.WIL)  valuedice = killDice  editable = none }
+        Shock = bool { description = "In shock: helpless until recovered." default = false  editable = live  indicator = "#d4b106" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        Bleeding = string { value = if bleeders (characterTable) > 0 then "Bleeding" else ""  visible = none  indicator = "#d64545" }
+        Rest = button
+        {
+            description = "A night of rest clears fatigue."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.Fatigue) = 0
+            }
+        }
+    }
+
+    'Physical skills' = table
+    {
+        description = "Physical skills take the physical penalty."
+        tableLayout = layout { columns = 2 }
+        Climbing = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.AGL), 4, Health.'Physical penalty')
+        Condition = hmSkill (sb3 (Attributes.STR, Attributes.STA, Attributes.WIL), 5, Health.'Physical penalty')
+        Jumping = hmSkill (sb3 (Attributes.STR, Attributes.AGL, Attributes.AGL), 4, Health.'Physical penalty')
+        Stealth = hmSkill (sb3 (Attributes.AGL, Attributes.HRG, Attributes.WIL), 3, Health.'Physical penalty')
+        Throwing = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.EYE), 4, Health.'Physical penalty')
+        Swimming = hmSkill (sb3 (Attributes.STA, Attributes.DEX, Attributes.AGL), 1, Health.'Physical penalty')
+        Acrobatics = hmSkill (sb3 (Attributes.STR, Attributes.AGL, Attributes.AGL), 0, Health.'Physical penalty')
+        Legerdemain = hmSkill (sb3 (Attributes.DEX, Attributes.DEX, Attributes.WIL), 0, Health.'Physical penalty')
+    }
+
+    'Communication skills' = table
+    {
+        description = "Communication skills take the universal penalty."
+        tableLayout = layout { columns = 2 }
+        Awareness = hmSkill (sb3 (Attributes.EYE, Attributes.HRG, Attributes.SML), 4, Health.'Universal penalty')
+        Intrigue = hmSkill (sb3 (Attributes.INT, Attributes.AUR, Attributes.WIL), 3, Health.'Universal penalty')
+        Oratory = hmSkill (sb3 (Attributes.CML, Attributes.VOI, Attributes.INT), 2, Health.'Universal penalty')
+        Rhetoric = hmSkill (sb3 (Attributes.VOI, Attributes.INT, Attributes.WIL), 3, Health.'Universal penalty')
+        Singing = hmSkill (sb3 (Attributes.HRG, Attributes.VOI, Attributes.VOI), 3, Health.'Universal penalty')
+        'Native language' = hmSkill (sb3 (Attributes.VOI, Attributes.INT, Attributes.WIL), 5, Health.'Universal penalty')
+    }
+
+    'Combat skills' = table
+    {
+        description = "Combat skills take the physical penalty. Weapon skills you have not opened stay at 0."
+        tableLayout = layout { columns = 2 }
+        Initiative = hmSkill (sb3 (Attributes.AGL, Attributes.WIL, Attributes.WIL), 4, Health.'Physical penalty')
+        Unarmed = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.AGL), 4, Health.'Physical penalty')
+        Dodge = hmSkill (sb3 (Attributes.AGL, Attributes.AGL, Attributes.AGL), 5, Health.'Physical penalty')
+        Riding = hmSkill (sb3 (Attributes.DEX, Attributes.AGL, Attributes.WIL), 0, Health.'Physical penalty')
+        Sword = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.DEX), 0, Health.'Physical penalty')
+        Dagger = hmSkill (sb3 (Attributes.DEX, Attributes.DEX, Attributes.EYE), 0, Health.'Physical penalty')
+        Axe = hmSkill (sb3 (Attributes.STR, Attributes.STR, Attributes.DEX), 0, Health.'Physical penalty')
+        Club = hmSkill (sb3 (Attributes.STR, Attributes.STR, Attributes.DEX), 0, Health.'Physical penalty')
+        Flail = hmSkill (sb3 (Attributes.DEX, Attributes.DEX, Attributes.DEX), 0, Health.'Physical penalty')
+        Spear = hmSkill (sb3 (Attributes.STR, Attributes.STR, Attributes.DEX), 0, Health.'Physical penalty')
+        Polearm = hmSkill (sb3 (Attributes.STR, Attributes.STR, Attributes.DEX), 0, Health.'Physical penalty')
+        Shield = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.DEX), 0, Health.'Physical penalty')
+        Bow = hmSkill (sb3 (Attributes.STR, Attributes.DEX, Attributes.EYE), 0, Health.'Physical penalty')
+        Sling = hmSkill (sb3 (Attributes.DEX, Attributes.DEX, Attributes.EYE), 0, Health.'Physical penalty')
+    }
+
+    'Other skills' = list
+    {
+        description = "Crafts, lores, languages and any other skills you open. Write the SB from the skill's three attributes."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Skill = string {}
+            SB = integer { default = 10 }
+            ML = integer { default = 30 }
+            EML = integer { value = ML - 5 * characterTable.Health.'Universal penalty'  valuedice = hmCheck  editable = none }
+        }
+    }
+
+    'Armour locations' = keyvalues
+    {
+        description = "Protection on each location by aspect, added up from every piece of armour whose coverage names it."
+        tableLayout = layout { size = wide }
+        keys = ["Skull", "Face", "Neck", "Shoulder", "Upper arm", "Elbow", "Forearm", "Hand", "Thorax", "Abdomen", "Groin", "Hip", "Thigh", "Knee", "Calf", "Foot"]
+        valueType = custom
+        {
+            Blunt = integer { description = "Protection against blunt blows, from all layers of armour on this location." value = armourAt (characterTable, Key, "Blunt")  editable = none }
+            Edge = integer { description = "Protection against edged blows." value = armourAt (characterTable, Key, "Edge")  editable = none }
+            Point = integer { description = "Protection against piercing blows." value = armourAt (characterTable, Key, "Point")  editable = none }
+            Fire = integer { description = "Protection against fire." value = armourAt (characterTable, Key, "Fire")  editable = none }
+        }
+    }
+
+    Armour = list
+    {
+        description = "Armour worn, in layers. Its Coverage lists the locations it protects."
+        tableLayout = layout { size = wide }
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "One row per weapon and aspect: AML, DML and impact. Roll AML and pick the defender's result to read the combat table."
+        tableLayout = layout { size = wide }
+        source = fold ([], (acc, weapon)->concat (acc, attacksFor (characterTable, weapon)), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Injuries = list
+    {
+        description = "Each injury: where, its level (1 minor, 2-3 serious, 4-5 grievous), and whether it bleeds. Roll Healing every few days."
+        tableLayout = layout { size = wide }
+        singular = "Injury"
+        editable = live
+        valueType = custom
+        {
+            Location = string {}
+            Aspect = string { keys = ["Blunt", "Edge", "Point", "Fire"] }
+            Level = integer { default = 1  minvalue = 1  maxvalue = 5 }
+            Bleeding = bool { default = false }
+        }
+    }
+
+    'Healing rolls' = list
+    {
+        description = "Healing roll for each injury: d100 under Endurance times the healing rate, which is 6 less the injury level."
+        tableLayout = layout { size = wide }
+        source = map ((injury)->healingRow (injury.Location + " " + severity (injury.Level), characterTable.Health.Endurance * max (1, 6 - injury.Level)), characterTable.Injuries)
+        singular = "Injury"
+        editable = none
+        valueType = healingRow
+    }
+
+    Magic = table
+    {
+        description = "Shek-Pvar convocation and religious ritual skills. Spells and invocations take 5 per level or circle off their skill."
+        tableLayout = layout { columns = 3  size = wide }
+        Convocation = string { keys = ["Lyahvi", "Peleahn", "Jmorvi", "Fyvria", "Odivshe", "Savorya", "Neutral"] }
+        'Convocation ML' = integer { default = 0  minvalue = 0 }
+        'Convocation EML' = integer { value = max (0, 'Convocation ML' - 5 * Health.'Universal penalty')  valuedice = hmCheck  editable = none }
+        Religion = string { keys = ["Agrik", "Halea", "Ilvir", "Larani", "Morgath", "Naveh", "Peoni", "Sarajin", "Save K'nor", "Siem"] }
+        'Ritual ML' = integer { default = 0  minvalue = 0 }
+        'Ritual EML' = integer { value = max (0, 'Ritual ML' - 5 * Health.'Universal penalty')  valuedice = hmCheck  editable = none }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    'Spell casting' = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((spell)->spellRow (spell.Name, characterTable.Magic.'Convocation EML' - 5 * statNumber (itemStat (spell, "hmSpell", "Level"))), characterTable.Spells)
+        singular = "Spell"
+        editable = none
+        valueType = spellRow
+    }
+
+    Invocations = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Invocations
+        singular = "Invocation"
+        editable = character
+    }
+
+    'Invocation rolls' = list
+    {
+        tableLayout = layout { size = wide }
+        source = map ((ritual)->spellRow (ritual.Name, characterTable.Magic.'Ritual EML' - 5 * statNumber (itemStat (ritual, "hmInvocation", "Circle"))), characterTable.Invocations)
+        singular = "Invocation"
+        editable = none
+        valueType = spellRow
+    }
+
+    Psionics = list
+    {
+        description = "Psionic talents, each with its own mastery level."
+        singular = "Talent"
+        editable = character
+        valueType = custom
+        {
+            Talent = string {}
+            ML = integer { default = 10 }
+            EML = integer { value = ML - 5 * characterTable.Health.'Universal penalty'  valuedice = hmCheck  editable = none }
+        }
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Family = string { multiline = true }
+        History = string { multiline = true }
+        Money = string { description = "Pence and shillings." }
+        Allies = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Armour, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        STR = integer { default = 12 }
+        END = integer { description = "Endurance, for shock and kill rolls." default = 12 }
+        Move = integer { description = "Move in feet per turn." default = 25 }
+        Initiative = integer { description = "Initiative EML. The highest acts first." default = 50  valuedice = initiativeOrder }
+        Awareness = integer { default = 50  valuedice = hmCheck }
+        Dodge = integer { default = 50  valuedice = hmCheck }
+        'Universal penalty' = integer { description = "Injury levels, blood loss and fatigue." default = 0  minvalue = 0  editable = live  indicator = "#d64545"  indicatorLabel = "UP" }
+        'Shock roll' = integer { value = END  valuedice = shockRoll ('Universal penalty')  editable = none }
+        Shock = bool { default = false  editable = live  indicator = "#d4b106" }
+        Down = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Armour = table
+    {
+        description = "Natural armour against each aspect."
+        tableLayout = layout { columns = 4  size = wide }
+        Blunt = integer { default = 0 }
+        Edge = integer { default = 0 }
+        Point = integer { default = 0 }
+        Fire = integer { default = 0 }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            AML = integer { default = 50  valuedice = meleeAttack (Impact, Aspect)  action = melee  reach = 5 }
+            Impact = integer { default = 4 }
+            Aspect = string { default = "blunt"  keys = ["blunt", "edged", "piercing"] }
+        }
+    }
+    'Missile attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Missile attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            AML = integer { default = 50  valuedice = missileAttack (Impact, Aspect)  action = ranged  range = 'Max range' }
+            Impact = integer { default = 4 }
+            Aspect = string { default = "piercing"  keys = ["blunt", "edged", "piercing"] }
+            'Max range' = integer { description = "Longest range in feet." default = 150 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+hmWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Kind = string { default = "Melee"  keys = ["Melee", "Missile", "Shield"] }
+        Skill = string { description = "The combat skill used, as named on the sheet." default = "Sword"  keys = ["Sword", "Dagger", "Axe", "Club", "Flail", "Spear", "Polearm", "Shield", "Bow", "Sling", "Unarmed", "Throwing"] }
+        AB = integer { description = "Attack bonus (attack class)." default = 0 }
+        DB = integer { description = "Defence bonus (defence class)." default = 0 }
+        Blunt = integer { description = "Impact bonus when striking blunt; 0 if the weapon has no blunt aspect." default = 0 }
+        Edge = integer { description = "Impact bonus when striking edged." default = 0 }
+        Point = integer { description = "Impact bonus when striking with the point." default = 0 }
+        Reach = string { description = "Melee reach in feet." default = "5" }
+        Range = string { description = "Missile range in feet (the longest band)." }
+        Weight = string {}
+        Quality = string { description = "Weapon quality, for breakage." }
+        Price = string {}
+    }
+}
+
+hmArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Material }
+        filters = [filter { name = "Material" prefix = "" filter = Stats.Material }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Material = string { keys = ["Cloth", "Quilt", "Leather", "Kurbul", "Ring", "Mail", "Scale", "Plate"] }
+        Blunt = integer { default = 0 }
+        Edge = integer { default = 0 }
+        Point = integer { default = 0 }
+        Fire = integer { default = 0 }
+        Coverage = string { description = "The locations protected, such as Thorax, Abdomen, Shoulder, Upper arm." multiline = true }
+        Weight = string {}
+        Price = string {}
+    }
+}
+
+hmSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Convocation" prefix = "" filter = Stats.Convocation }, filter { name = "Level" prefix = "Level" filter = Stats.Level }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Convocation = string { keys = ["Lyahvi", "Peleahn", "Jmorvi", "Fyvria", "Odivshe", "Savorya", "Neutral"] }
+        Level = integer { default = 1  minvalue = 1 }
+        Time = string {}
+        Range = string {}
+        Duration = string {}
+        Fatigue = string {}
+    }
+}
+
+hmInvocation = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Circle" sort = Stats.Circle }
+        filters = [filter { name = "Religion" prefix = "" filter = Stats.Religion }, filter { name = "Circle" prefix = "Circle" filter = Stats.Circle }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Religion = string { keys = ["Agrik", "Halea", "Ilvir", "Larani", "Morgath", "Naveh", "Peoni", "Sarajin", "Save K'nor", "Siem"] }
+        Circle = integer { default = 1  minvalue = 1 }
+        Time = string {}
+        Range = string {}
+        Duration = string {}
+        Piety = string { description = "Piety spent." }
+    }
+}
+
+hmItem = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Weight = string {}
+        Price = string {}
+    }
+}
+
+feudalHarnNameSetting = nameSetting
+{
+    name = "Feudal Hârn"
+    characters = [generator { library = "Arthurian" variant = "Knight" }, generator { library = "Arthurian" variant = "Lady" }, generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }]
+    creatures = [generator { library = "Old world" variant = "Rogue" }, generator { library = "Fantasy folk" variant = "Elf" }, generator { library = "Fantasy folk" variant = "Dwarf" }, generator { library = "Fantasy folk" variant = "Orc" }]
+    Location = [generator { library = "Arthurian" variant = "Manor" }, generator { library = "Arthurian" variant = "Castle" }, generator { library = "Old world" variant = "Town" }, generator { library = "Old world" variant = "Inn" }]
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Armour = generator { library = "Fantasy things" variant = "Armour" }
+}
+
+HarnMaster = system
+{
+    hints = [
+        hint
+        {
+            title = "Attributes and skill bases"
+            topic = "Getting started"
+            text = ["Roll the twelve attributes (3d6 for most) and a birthdate for the sunsign. A skill's base (SB) is the average of three attributes plus sunsign bonuses; it opens at SB times its multiplier, and the sheet works the starting ML out."]
+        },
+        hint
+        {
+            title = "d100 rolls"
+            topic = "Play"
+            text = ["Roll d100 at or under the effective mastery level (EML). A roll ending in 0 or 5 is critical, so every roll is a critical or marginal success or failure. EML is held between 5 and 95.", "Each point of universal penalty (injury levels, blood loss, fatigue) takes 5 off every skill; physical and combat skills also lose 5 per point of encumbrance."]
+        },
+        hint
+        {
+            title = "Melee and missile combat"
+            topic = "Combat"
+            text = ["The attacker rolls AML, the defender rolls Block (DML), Counterstrike (AML), Dodge or ignores. Roll the attack and pick the defender's result: the roll reads the combat table, rolls the location and the impact dice (A*2 means 2d6 plus the weapon's impact).", "Take the location's armour for the aspect off the impact; the rest gives a minor, serious or grievous injury from the location's table. Every injury calls for a shock roll."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Fighters act in order of Initiative EML, highest first. The tracker posts each fighter's Initiative EML."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = hmWeapon
+    Armour = hmArmour
+    Spells = hmSpell
+    Invocations = hmInvocation
+    Equipment = hmItem
+    secondaryTypes = ["Weapons", "Armour", "Spells", "Invocations", "Equipment"]
+    description = "HarnMaster 3: d100 skills with critical and marginal results, combat tables, hit locations with armour by aspect, and injuries"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 3d6, 1d6, 2d6, 4d6]
+    cssFiles = ["/systems/harnmaster/harnmaster.css"]
+    libraries = ["/systems/names/arthurian.json", "/systems/names/oldworld.json", "/systems/names/fantasy.json"]
+    nameSettings = [feudalHarnNameSetting]
+}
