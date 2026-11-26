@@ -32,45 +32,62 @@ dhText (target, roll) =
     + (if dhSuccess (target, roll) then "Success" else "Failure")
     + ", " + toString (dhDegrees (target, roll)) + (if dhDegrees (target, roll) == 1 then " degree" else " degrees")
 
-dhResult (target, roll) =
+dhResult (target, roll, reroll, spend) =
 {
     Text = dhText (target, roll)
     Value = roll
     Outcome = if dhSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (dhSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
 }
 
 jams (roll, kind) = kind == "ranged" and roll >= 96
 
-dhAttackResult (target, roll, kind) =
+dhAttackResult (target, roll, kind, reroll, spend) =
 {
     Text = (if jams (roll, kind) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the shot misses"
             else dhText (target, roll) + (if dhSuccess (target, roll) then ", hits the " + hitLocation (roll) else ""))
     Value = roll
     Outcome = if dhSuccess (target, roll) and not (jams (roll, kind)) then "Hit" else if jams (roll, kind) then "Jam" else "Miss"
+    Push = if count (spend) > 0 and not (dhSuccess (target, roll) and not (jams (roll, kind))) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
 }
 
-dhPowerResult (target, roll) =
+dhPowerResult (target, roll, reroll, spend) =
 {
     Text = dhText (target, roll) + (if isDouble (roll) then ", doubles: Psychic Phenomena if unfettered or pushed" else "")
     Value = roll
     Outcome = if dhSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (dhSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
 }
 
-dhRoll (modifier) = ([1d100], ((baseline, throws)->dhResult (baseline + modifier, first (first (throws).rolls))))
+fateSpend (char) = if char.Status.Fate > 0 then [{ Field = "characterTable.Status.Fate"  Value = char.Status.Fate - 1 }] else []
 
-dhAskedRoll = ([1d100], ((baseline, throws)->dhResult (baseline + asked * 10, first (first (throws).rolls))))
+dhRoll (modifier) = ([1d100], ((baseline, throws)->dhResult (baseline + modifier, first (first (throws).rolls), 0, [])))
 
-dhTest = ask ("Difficulty", difficulties, -6, dhAskedRoll)
+dhAskedRoll (spend) = ([1d100], ((baseline, throws)->dhResult (baseline + asked * 10, first (first (throws).rolls), dhAskedRoll ([]), spend)))
 
-dhAttackRoll (modifier, kind) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + modifier, first (first (throws).rolls), kind)))
+dhTest = ask ("Difficulty", difficulties, -6, dhAskedRoll ([]))
 
-dhAskedAttack (kind) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + asked * 10, first (first (throws).rolls), kind)))
+dhFateTest (char) = ask ("Difficulty", difficulties, -6, dhAskedRoll (fateSpend (char)))
 
-dhAttack (kind) = ask ("Difficulty", difficulties, -6, dhAskedAttack (kind))
+dhAttackRoll (modifier, kind) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + modifier, first (first (throws).rolls), kind, 0, [])))
 
-dhAskedPower = ([1d100], ((baseline, throws)->dhPowerResult (baseline + asked * 10, first (first (throws).rolls))))
+dhAskedAttack (kind, spend) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + asked * 10, first (first (throws).rolls), kind, dhAskedAttack (kind, []), spend)))
 
-dhPower = ask ("Difficulty", difficulties, -6, dhAskedPower)
+dhAttack (kind) = ask ("Difficulty", difficulties, -6, dhAskedAttack (kind, []))
+
+dhFateAttack (char, kind) = ask ("Difficulty", difficulties, -6, dhAskedAttack (kind, fateSpend (char)))
+
+dhAskedPower (spend) = ([1d100], ((baseline, throws)->dhPowerResult (baseline + asked * 10, first (first (throws).rolls), dhAskedPower ([]), spend)))
+
+dhPower = ask ("Difficulty", difficulties, -6, dhAskedPower ([]))
+
+dhFatePower (char) = ask ("Difficulty", difficulties, -6, dhAskedPower (fateSpend (char)))
 
 damageResult (rolls, bonus) =
 {
@@ -79,7 +96,7 @@ damageResult (rolls, bonus) =
     Outcome = if count (filter ((x)->x == 10, rolls)) > 0 then "Critical" else ""
 }
 
-damageRoll (diceCount, bonus) = ([dice { number = diceCount  sides = 10 }], ((baseline, throws)->damageResult (first (throws).rolls, baseline + bonus)))
+damageRoll (diceCount, dieSize, bonus) = ([dice { number = diceCount  sides = dieSize }], ((baseline, throws)->damageResult (first (throws).rolls, baseline + bonus)))
 
 initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
 
@@ -87,7 +104,7 @@ characteristic = custom
 {
     Value = integer { description = "The characteristic, usually 25 to 45 at the start." default = 30  minvalue = 0  maxvalue = 100 }
     Advances = integer { description = "Characteristic advances bought with experience, each +5." default = 0  minvalue = 0  maxvalue = 5 }
-    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = dhTest  editable = none }
+    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = dhFateTest (characterTable)  editable = none }
     Bonus = integer { description = "The tens digit of the total." value = (Value + Advances * 5) / 10  editable = none }
 }
 
@@ -103,7 +120,7 @@ skill (base) = custom
 {
     Rank = string { description = "Untrained is -20, Known +0, Trained +10, Experienced +20, Veteran +30." default = "Untrained"  keys = ["Untrained", "Known", "Trained", "Experienced", "Veteran"] }
     Misc = integer { default = 0 }
-    Target = integer { description = "Characteristic plus the rank's bonus. Roll d100 at or under it." value = base + rankBonus (Rank) + Misc  valuedice = dhTest  editable = none }
+    Target = integer { description = "Characteristic plus the rank's bonus. Roll d100 at or under it." value = base + rankBonus (Rank) + Misc  valuedice = dhFateTest (characterTable)  editable = none }
 }
 
 fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
@@ -116,13 +133,15 @@ isMelee (weapon) = itemStat (weapon, "dhWeapon", "Class") == "Melee" or itemStat
 
 damageDice (text) = max (1, firstNumber (text))
 
+damageSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
 damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
 
 weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, special) = custom
 {
     Name = name
-    Test = integer { value = target  valuedice = dhAttack (kind)  action = kind  reach = 2  range = rangeMetres  editable = none }
-    Damage = integer { value = damageBase  valuedice = damageRoll (damageDice (damage), 0)  editable = none }
+    Test = integer { value = target  valuedice = dhFateAttack (characterTable, kind)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = damageRoll (damageDice (damage), damageSides (damage), 0)  editable = none }
     Pen = pen
     Special = special
 }
@@ -266,7 +285,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, "0", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -289,7 +308,7 @@ characterTable = ruleset
         description = "Psykers only: psy rating and the Focus Power test."
         tableLayout = layout { columns = 3 }
         'Psy rating' = integer { default = 0 }
-        'Focus Power' = integer { description = "Willpower test to manifest a power. Doubles bring Psychic Phenomena when unfettered or pushed." value = Characteristics.Willpower.Total  valuedice = dhPower  editable = none }
+        'Focus Power' = integer { description = "Willpower test to manifest a power. Doubles bring Psychic Phenomena when unfettered or pushed." value = Characteristics.Willpower.Total  valuedice = dhFatePower (characterTable)  editable = none }
         'Sustained powers' = string { editable = live }
     }
 
@@ -507,7 +526,7 @@ DarkHeresy2e = system
         {
             title = "Tests"
             topic = "Play"
-            text = ["Roll d100 at or under the target, after the difficulty (Challenging is +0, Hard -20, Easy +30). Each tens digit you beat by is another degree of success. 01 always succeeds, 100 always fails."]
+            text = ["Roll d100 at or under the target, after the difficulty (Challenging is +0, Hard -20, Easy +30). Each tens digit you beat by is another degree of success. 01 always succeeds, 100 always fails.", "After a failed test the roll window offers to spend a Fate point for a reroll, and lowers Fate."]
         },
         hint
         {

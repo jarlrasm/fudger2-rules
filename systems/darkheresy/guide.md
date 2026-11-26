@@ -25,12 +25,12 @@ A characteristic's **bonus** is its tens digit; Strength bonus adds to melee dam
 ## Combat
 - **Initiative**: 1d10 + Agility bonus, highest first. Each turn has a full action or two half actions.
 - **Attacks**: Weapon Skill for melee, Ballistic Skill for shooting. The **hit location** is the attack roll's digits reversed (34 hits location 43): 1-10 head, 11-20 right arm, 21-30 left arm, 31-70 body, 71-85 right leg, 86-100 left leg. Semi-auto bursts score an extra hit per two degrees, full auto one per degree.
-- **Damage**: roll the weapon's damage (add Strength bonus in melee), subtract the location's armour (less the weapon's penetration) and the Toughness bonus. What is left comes off **Wounds**. A natural 10 on a damage die is **Righteous Fury**: confirm with another attack test, then deal critical damage.
+- **Damage**: roll the weapon's damage (add Strength bonus in melee; unarmed is 1d5-3 plus Strength bonus, Primitive), subtract the location's armour (less the weapon's penetration) and the Toughness bonus. What is left comes off **Wounds**. A natural 10 on a damage die is **Righteous Fury**: confirm with another attack test, then deal critical damage.
 - Damage past 0 wounds is **critical damage**, read on the critical tables by location and damage type.
 - Targets may **Dodge** (Agility) or **Parry** (Weapon Skill) once per turn.
 
 ## Fate, corruption and insanity
-- **Fate points** return each session. Spend one to reroll a test, add a degree of success, heal 1d5 wounds or act first; burn one permanently to survive certain death.
+- **Fate points** return each session. Spend one to reroll a test (a failed test's roll window offers *Spend Fate: reroll* and takes the point off the sheet), add a degree of success, heal 1d5 wounds or act first; burn one permanently to survive certain death.
 - **Corruption** comes from the Warp and the daemonic; it brings malignancies and mutations.
 - **Insanity** comes from horror; it brings trauma and disorders.
 
