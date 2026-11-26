@@ -1,0 +1,41 @@
+{
+  "values": {
+    "Heretic": { "Race": "Chaos Space Marine", "Archetype": "Sorcerer", "Pride": "Witness to the Siege of Terra", "Disgrace": "Cast out by his own warband", "Motivation": "Knowledge: every secret the Warp keeps", "Total XP": 1700, "XP to spend": 150, "Description": "Ancient ceramite, its old colours burned away, a rune-carved helm that whispers back" },
+    "Characteristics": {
+      "Weapon Skill.Value": 42, "Ballistic Skill.Value": 38, "Strength.Value": 40, "Strength.Unnatural": 2, "Toughness.Value": 44, "Toughness.Unnatural": 2, "Agility.Value": 36,
+      "Intelligence.Value": 47, "Perception.Value": 39, "Willpower.Value": 51, "Willpower.Advances": 1, "Fellowship.Value": 33
+    },
+    "Skills": {
+      "Awareness.Level": "Known", "Command.Level": "Known", "Common Lore.Level": "Trained", "Deceive.Level": "Known", "Dodge.Level": "Known", "Forbidden Lore.Level": "Trained",
+      "Intimidate.Level": "Known", "Linguistics.Level": "Known", "Logic.Level": "Known", "Parry.Level": "Known", "Psyniscience.Level": "Trained", "Scholastic Lore.Level": "Known",
+      "Scrutiny.Level": "Known", "Tech Use.Level": "Known",
+      "Specialities": "Common Lore (Legiones Astartes, Screaming Vortex); Forbidden Lore (Daemonology, the Warp, Psykers); Linguistics (Chaos Marks, Low Gothic); Scholastic Lore (Occult)"
+    },
+    "Status": { "Max Wounds": 18, "Wounds": 13, "Fatigue": 0 },
+    "Infamy": { "Infamy": 27, "Infamy points": 1, "Daemon Prince at": 90 },
+    "Corruption": { "Corruption": 17 },
+    "Chaos Alignment": { "Alignment": "Unaligned", "Last check": 10 },
+    "Advances by god": {
+      "Khorne": { "Advances": 1, "XP spent": 250 },
+      "Tzeentch": { "Advances": 4, "XP spent": 650 },
+      "Unaligned": { "Advances": 3, "XP spent": 650 }
+    },
+    "Armour": { "Head": 8, "Body": 10, "Right Arm": 8, "Left Arm": 8, "Right Leg": 8, "Left Leg": 8, "Strength boost": 20, "Size": "Hulking" },
+    "Traits": [ { "Name": "Astartes", "Description": "Unnatural Strength and Toughness (x2), the black carapace and the gifts of the gene-seed." }, { "Name": "Psyker", "Description": "Psy rating 2, an unbound mind open to the Warp." } ],
+    "Ammunition": [ { "Name": "Bolt pistol magazines", "Shots": 5, "Magazines": 2 } ],
+    "Psychic": { "Psy rating": 2, "Sustained powers": 1 },
+    "Notes": { "Background": "Once a Librarian of a Legion that no longer speaks his name, Xarvos fled the Eye with a stolen grimoire and a debt to something that does not forget. In the Screaming Vortex he trades prophecy for followers, and keeps a careful count of which god's whispers he has answered." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Bolt pistol", "values": { "Stats": { "Class": "Pistol", "Range": "30m", "RoF": "S/2/-", "Damage": "1d10+5", "Type": "X", "Pen": "4", "Clip": "8", "Reload": "Full", "Special": "Tearing", "Availability": "Average" } } },
+      { "name": "Force staff", "values": { "Stats": { "Class": "Melee", "Damage": "1d10+1", "Type": "I", "Pen": "0", "Special": "Force, Balanced", "Availability": "Very Rare" } } },
+      { "name": "Frag grenade", "values": { "Stats": { "Class": "Thrown", "Range": "12m", "RoF": "S/-/-", "Damage": "2d10", "Type": "X", "Pen": "0", "Special": "Blast (4)", "Availability": "Common" } } }
+    ],
+    "Armour": [ { "name": "Chaos power armour", "values": { "Stats": { "Locations": "All", "AP": "Head 8, Body 10, Arms 8, Legs 8", "Availability": "Very Rare", "Effect": "+20 Strength, Size Hulking, auto-senses" } } } ],
+    "Talents": [ { "name": "Warp Sense", "values": { "Stats": { "Tier": 1, "Alignment": "Tzeentch" } } }, { "name": "Strong Minded", "values": { "Stats": { "Tier": 1, "Alignment": "Unaligned" } } }, { "name": "Favoured by the Warp", "values": { "Stats": { "Tier": 2, "Alignment": "Tzeentch" } } } ],
+    "Psychic Powers": [ { "name": "Smite", "values": { "Stats": { "Discipline": "Minor", "Value": "100", "Action": "Half", "Focus Power": "Challenging (+0) Willpower", "Range": "30m" } } }, { "name": "Dark Foresight", "values": { "Stats": { "Discipline": "Divination", "Value": "200", "Action": "Reaction", "Focus Power": "Difficult (-10) Willpower", "Range": "Self", "Sustained": "Yes" } } } ],
+    "Gear": [ { "name": "Stolen grimoire", "values": { "Stats": { "Availability": "Near Unique", "Craftsmanship": "Best" } } }, { "name": "Bone charms", "values": { "Stats": { "Availability": "Plentiful" } } } ],
+    "Gifts": [ { "name": "Flickering shadow", "values": { "Stats": { "Kind": "Gift of the Gods", "God": "Tzeentch", "Gained at": 10 } } } ]
+  }
+}
