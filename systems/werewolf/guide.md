@@ -16,7 +16,7 @@ Build a pool of d10s from **attribute + skill**. Each 6 or more is a success; ea
 - **Crinos**, the war form, adds four dice to physical pools and extra health, and its claws deal aggravated damage. It also brings the Delirium on mortals who see it, and frenzy is close.
 
 ## Damage
-Health boxes are Stamina + 3 (more in war forms); Willpower boxes are Composure + Resolve. Damage is **superficial** (halved) or **aggravated** (silver, claws, fire). When the track fills with damage the character is impaired, and aggravated damage past it can kill. Garou regenerate superficial damage quickly in shifted forms.
+Health boxes are Stamina + 3 (more in war forms); Willpower boxes are Composure + Resolve. Damage is **superficial** (halved) or **aggravated** (silver, claws, fire). When the Health track fills the character is **impaired**, -2 dice to physical pools; a full Willpower track does the same to social and mental pools. The sheet takes the dice off. Aggravated damage past a full track can kill. Garou regenerate superficial damage quickly in shifted forms.
 
 ## Harano and Hauglosk
 Two trackers of spiritual decline: **Harano** is despair at the world's death, **Hauglosk** is fanatic zeal. Both can end a Garou's story at 5.
