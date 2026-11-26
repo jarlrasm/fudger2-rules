@@ -68,6 +68,8 @@ jams (roll, kind, mode) = kind == "ranged" and roll >= (if isBurst (kind, mode) 
 
 rofCap (rof, mode) = if count (split ("/", rof)) > mode then toInt (item (mode, split ("/", rof))) else 0
 
+lacksMode (kind, mode, rof) = isBurst (kind, mode) and rof != "" and rofCap (rof, mode) == 0
+
 capHits (n, cap) = if cap > 0 then min (n, cap) else n
 
 hitsFor (kind, mode, rof, degrees) =
@@ -87,11 +89,12 @@ hordeText (hits, special) = ", " + toString (hits + blastOf (special)) + " Magni
 
 dwAttackResult (target, roll, kind, mode, rof, special, reroll, spend) =
 {
-    Text = if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+    Text = if lacksMode (kind, mode, rof) then "The weapon can't fire " + (if mode == 1 then "semi-auto bursts" else "full auto bursts") + " (RoF " + rof + ")"
+           else if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
            else dwText (target, roll) + (if dwHit (target, roll, kind, mode) then ": " + hitText (hitsFor (kind, mode, rof, dwDegrees (target, roll)), roll) + hordeText (hitsFor (kind, mode, rof, dwDegrees (target, roll)), special) else "")
     Value = roll
-    Outcome = if jams (roll, kind, mode) then "Jam" else if dwHit (target, roll, kind, mode) then "Hit" else "Miss"
-    Push = if count (spend) > 0 and not (dwHit (target, roll, kind, mode)) then reroll else 0
+    Outcome = if lacksMode (kind, mode, rof) then "Miss" else if jams (roll, kind, mode) then "Jam" else if dwHit (target, roll, kind, mode) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (lacksMode (kind, mode, rof)) and not (dwHit (target, roll, kind, mode)) then reroll else 0
     PushLabel = "Spend Fate: reroll"
     PushSets = spend
 }

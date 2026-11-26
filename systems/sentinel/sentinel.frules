@@ -81,6 +81,7 @@ actionText (action, effect) =
         case "Defend" then "defend " + toString (max (0, effect))
         case "Boost" then "boost +" + toString (boostSize (effect))
         case "Hinder" then "hinder -" + toString (boostSize (effect))
+        case "None" then "no basic action, use the ability's text"
         else "recover " + toString (max (0, effect)) + " health"
 
 actionOutcome (action, effect) =
@@ -138,6 +139,8 @@ singleResult (roll, action, modifier, dieLabel) =
 
 singleRoll (dieSides, action, dieLabel, start) = ask ("Boosts and hinders", start, ([dice { number = 1  sides = dieSides  label = dieLabel  color = "red" }],
     ((baseline, throws)->singleResult (first (first (throws).rolls), action, asked, dieLabel))))
+
+defeatedRoll = ([dice { number = 0  sides = 4 }], ((baseline, throws)->{ Text = "Defeated: it no longer acts"  Outcome = "Defeated" }))
 
 shrinkText (dieSides) = if dieSides <= 4 then "defeated, a d4 has no smaller die" else "reduced to d" + toString (dieSides - 2)
 
@@ -271,6 +274,15 @@ characterTable = ruleset
         tableLayout = layout { size = wide }
         source = secondary.Principles
         singular = "Principle"
+        editable = character
+    }
+
+    Personalities = list
+    {
+        description = "The hero's personality: its status dice, roleplaying quality and Out ability. Copy its dice into Status."
+        tableLayout = layout { size = wide }
+        source = secondary.Personalities
+        singular = "Personality"
         editable = character
     }
 
@@ -547,8 +559,8 @@ minionTable = ruleset
         Kind = string { description = "A minion that fails a save is gone and one that saves shrinks a size. A lieutenant that fails shrinks a size and one that saves is unharmed." default = "Minion"  keys = ["Minion", "Lieutenant"] }
         Die = string { default = "d6"  keys = minionDieKeys  editable = live }
         Action = selector { options = actionKeys  labels = ["Overcome", "Attack", "Defend", "Boost", "Hinder", "Recover"]  colors = ["", "red", "blue", "green", "red", "green"]  default = "Attack"  editable = live  save = nosave }
-        Roll = integer { description = "Roll the die for the chosen action: the number is the effect." value = sidesOf (Die)  valuedice = singleRoll (sidesOf (Die), Action, "Die", Bonus)  action = ranged  editable = none  render = Die }
-        Save = integer { description = "When attacked, roll the die against the damage." value = sidesOf (Die)  valuedice = minionSave (sidesOf (Die), Kind)  editable = none  render = Die }
+        Roll = integer { description = "Roll the die for the chosen action: the number is the effect." value = sidesOf (Die)  valuedice = if Die == "Defeated" then defeatedRoll else singleRoll (sidesOf (Die), Action, "Die", Bonus)  action = ranged  editable = none  render = Die }
+        Save = integer { description = "When attacked, roll the die against the damage." value = sidesOf (Die)  valuedice = if Die == "Defeated" then defeatedRoll else minionSave (sidesOf (Die), Kind)  editable = none  render = Die }
         'Step down' = button { description = "The die shrinks one size; below d4 it is defeated."  editable = live  onClick = updates { (root.Minion.Die) = stepDown (Die) } }
         Bonus = integer { description = "A boost or hinder on the minion or its group, added to its rolls." default = 0  editable = live }
         Defeated = string { value = if Die == "Defeated" then "Defeated" else ""  visible = none  indicator = "#555555" }

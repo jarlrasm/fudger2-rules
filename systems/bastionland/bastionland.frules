@@ -51,7 +51,7 @@ ebDamageText (roll, armour, answered, mode, blast) =
     toString (max (0, roll - armour)) + " damage" + ebModeText (mode)
     + (if answered and armour > 0 then " after " + toString (armour) + " Armour" else "")
     + (if blast then ", Blast: roll for each target" else "")
-    + (if max (0, roll - armour) > 0 then ". Leaves exactly 0 HP: Scar " + toString (max (0, roll - armour)) else "")
+    + (if max (0, roll - armour) > 0 then ". If it leaves exactly 0 HP: Scar " + toString (max (0, roll - armour)) else "")
 
 ebDamageResult (roll, armour, answered, mode, blast) =
 {
