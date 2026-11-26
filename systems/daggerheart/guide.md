@@ -13,7 +13,7 @@ An action roll is **two d12s, Hope (yellow) and Fear (purple), plus a trait** (a
 There is no initiative. The spotlight moves to whoever the fiction points at. It moves to the GM when a player rolls with Fear, fails, or hands it over; the GM spends Fear to take extra moves or use adversary features.
 
 ## Damage
-Attacks roll the weapon trait against the target's Evasion (adversaries roll d20 + ATK against the player's Evasion). Damage is the weapon die times Proficiency, plus modifiers.
+Attacks roll the weapon trait against the adversary's Difficulty (adversaries roll d20 + ATK against the player's Evasion; their ATK roll asks for it, and a natural 20 is a critical hit). Damage is the weapon die times Proficiency, plus modifiers.
 
 - Compare damage to the **thresholds**: below Major marks 1 HP, Major marks 2, Severe marks 3.
 - **Armor slots** can each reduce the HP marked by one.
