@@ -22,9 +22,11 @@ masksRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + 
 
 masksDice (char) = masksRoll (char.Hero.Forward)
 
+rejectDice (char) = ask ("Label they want to raise", 0, (n)->masksRoll (char.Hero.Forward + n))
+
 blowText (total) =
-    if total > 9 then "10+: choose one: remove yourself from the situation, lose control in a terrible way, or take two from the 7-9 list"
-    else if total > 6 then "7-9: choose one: lose your footing, lose your grip, lose track of someone you protect, or someone gains influence over you"
+    if total > 9 then "10+: choose one: remove yourself from the situation, lose control of yourself or your powers in a terrible way, or take two from the 7-9 list"
+    else if total > 6 then "7-9: choose one: lose your footing, lose your grip, lose track of someone or something you are attending to, or someone gets an opportunity on you"
     else "6-: you stand strong, mark potential and say how you weather it"
 
 blowResult (total) =
@@ -92,6 +94,7 @@ characterTable = ruleset
         'Provoke Someone' = modifier { value = Labels.Superior - penalty (Conditions.Guilty)  valuedice = masksDice (characterTable)  editable = none }
         'Comfort or Support' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
         'Pierce the Mask' = modifier { value = Labels.Mundane - penalty (Conditions.Angry)  valuedice = masksDice (characterTable)  editable = none }
+        'Reject Influence' = modifier { description = "Roll when you reject what someone with influence says about you, plus the label they want to raise, which the roll asks." value = 0 - penalty (Conditions.Insecure)  valuedice = rejectDice (characterTable)  editable = none }
         'Take a Powerful Blow' = modifier { description = "Roll when hit hard, plus the conditions you have marked. Higher is worse." value = conditionsMarked (characterTable)  valuedice = powerfulBlow  editable = none }
     }
 

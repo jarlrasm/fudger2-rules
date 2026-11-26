@@ -20,4 +20,4 @@ Three tracks, usually four boxes each: **Injury**, **Exhaustion** and **Depletio
 Each faction tracks the vagabond's **prestige** (help) and **notoriety** (harm). Enough of either moves their **reputation** from -3 to +3, which adds to dealings with that faction, or brings hunters.
 
 ## NPCs
-NPCs and groups have injury, exhaustion, wear and **morale**; a broken group flees. Their attacks list the harm they deal. The GM never rolls; NPC actions happen as GM moves.
+NPCs and groups have injury, exhaustion, wear and **morale**; a broken group flees. Their attacks list the harm they deal, and using one on the battlemap rolls nothing. The GM never rolls; NPC actions happen as GM moves.

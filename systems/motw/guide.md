@@ -16,7 +16,7 @@ Each session the Keeper prepares a monster, its minions, bystanders and location
 ## Fighting
 There is no initiative: move the spotlight. **Kick Some Ass** (Tough) is an exchange of harm: on a hit both sides deal harm, on a 10+ the hunter picks an extra effect.
 
-- Harm is the attack's harm minus armour. A hunter's track runs to 8: at 4 or more they are **unstable** and get worse unless treated; at 8 they die.
+- Harm is the attack's harm minus armour. A hunter's track runs to 8: at 4 or more they are **unstable** and get worse unless treated; at 8 they die. Tick the sheet's Unstable box when that happens and clear it once someone stabilises the injury; a day of rest heals one harm only while the box is clear.
 - Monsters have a harm capacity; when their harm reaches it, they die (if the weakness was used, where needed).
 
 ## Luck

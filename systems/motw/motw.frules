@@ -23,10 +23,7 @@ motwRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + s
 
 motwDice (char) = motwRoll (char.Status.Forward)
 
-harmState (harm) =
-    if harm > 7 then "Dead"
-    else if harm > 3 then "Unstable"
-    else ""
+harmState (harm) = if harm > 7 then "Dead" else ""
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
@@ -75,9 +72,10 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2 }
         Luck = slots { description = "Spend luck to turn any roll into a 12 or avoid harm. Seven spent and you are doomed." number = 7  editable = live  labels = ["", "", "", "", "", "", "Doomed"] }
-        Harm = slots { description = "Harm taken. At 4 or more you are unstable and get worse; at 8 you die." number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
+        Harm = slots { description = "Harm taken. At 4 or more you become unstable; at 8 you die." number = 8  editable = live  labels = ["", "", "", "Unstable", "", "", "", "Dead"]  indicator = "#d64545" }
+        Unstable = bool { description = "Tick when harm reaches 4 or the injury is unstable: it gets worse until someone stabilises it, which clears this box." default = false  editable = live  indicator = "#d64545" }
         Down = string { value = harmState (Harm.realvalue)  visible = none  indicator = "#d64545" }
-        'Day of rest' = button { description = "A day of rest heals one harm, unless you are unstable and need medical help first."  editable = live  onClick = updates { (root.Status.Harm.realvalue) = if Harm.realvalue >= 4 then Harm.realvalue else max (0, Harm.realvalue - 1) } }
+        'Day of rest' = button { description = "A day of rest heals one harm, unless the injury is unstable and needs stabilising first."  editable = live  onClick = updates { (root.Status.Harm.realvalue) = if Unstable then Harm.realvalue else max (0, Harm.realvalue - 1) } }
         Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
         Armour = integer { description = "Armour reduces harm from each hit." default = 0 }
     }

@@ -31,6 +31,25 @@ dwRoll (extra) = ([2d6], ((baseline, throws)->moveResult (baseline + extra + sum
 
 dwDice (char) = dwRoll (char.Status.Forward + char.Status.Ongoing)
 
+damageDice (damageText) = if contains (damageText, "[") then max (1, bonusWithValue ([[damageText]], "\[([0-9]+)d")) else 1
+
+damageSides (damageText) = max (4, bonusWithValue ([[damageText]], "^[^0-9]*?[0-9]*d([0-9]+)"))
+
+damageBonus (damageText) = bonusWithValue ([[damageText]], "[+]([0-9]+)") - bonusWithValue ([[damageText]], "-([0-9]+)")
+
+damagePick (damageText, rolls) =
+    if contains (damageText, "b[") then max (rolls)
+    else if contains (damageText, "w[") then min (rolls)
+    else sum (rolls)
+
+damageResult (total, damageText) =
+{
+    Text = toString (total) + " damage" + (if contains (damageText, "ignores armor") then ", ignores armor" else "")
+    Value = total
+}
+
+dwDamage (damageText) = ([dice { number = damageDice (damageText)  sides = damageSides (damageText) }], ((baseline, throws)->damageResult (max (0, baseline + damagePick (damageText, first (throws).rolls) + damageBonus (damageText)), damageText)))
+
 stat (debility) = custom
 {
     Score = integer { description = "Ability score from 3 to 18." default = 10  minvalue = 1  maxvalue = 18 }
@@ -52,11 +71,21 @@ weaponMove (name, statMod, damage, kind, distance) = custom
     Damage = damage
 }
 
-moveFor (char, weapon) =
-    if rangeOf (toLower (weaponStat (weapon, "Tags"))) > 0 then
-        weaponMove (weapon.Name + " (Volley)", char.Stats.DEX.Modifier, char.Status.Damage, "ranged", rangeOf (toLower (weaponStat (weapon, "Tags"))))
-    else
-        weaponMove (weapon.Name + " (Hack and Slash)", char.Stats.STR.Modifier, char.Status.Damage, "melee", if contains (toLower (weaponStat (weapon, "Tags")), "reach") then 10 else 5)
+weaponTags (weapon) = toLower (weaponStat (weapon, "Tags"))
+
+isMelee (tags) = contains (tags, "close") or contains (tags, "reach") or contains (replace ("two_handed", "", tags), "hand") or rangeOf (tags) == 0
+
+weaponDamage (char, tags) =
+    if bonusWithValue ([[tags]], "damage [+]([0-9]+)") > 0 then char.Status.Damage + "+" + toString (bonusWithValue ([[tags]], "damage [+]([0-9]+)"))
+    else char.Status.Damage
+
+meleeMove (char, weapon) =
+    weaponMove (weapon.Name + " (Hack and Slash)", if contains (weaponTags (weapon), "precise") then char.Stats.DEX.Modifier else char.Stats.STR.Modifier, weaponDamage (char, weaponTags (weapon)), "melee", if contains (weaponTags (weapon), "reach") then 10 else 5)
+
+volleyMove (char, weapon) =
+    weaponMove (weapon.Name + " (Volley)", char.Stats.DEX.Modifier, weaponDamage (char, weaponTags (weapon)), "ranged", rangeOf (weaponTags (weapon)))
+
+monsterKind (attack) = if rangeOf (toLower (attack)) > 0 then "ranged" else "melee"
 
 characterTable = ruleset
 {
@@ -95,7 +124,7 @@ characterTable = ruleset
         'Make camp' = button { description = "Make Camp: after a few hours of sleep, heal damage equal to half your max HP."  editable = live  onClick = updates { (root.Status.HP) = min ('Max HP', HP + 'Max HP' / 2) } }
         Recover = button { description = "Recover: a few days of bed rest heals all damage."  editable = live  onClick = updates { (root.Status.HP) = 'Max HP' } }
         Damage = string { description = "Your class damage die, rolled when you deal damage." default = "d8" }
-        'Damage Roll' = integer { default = 0  valuedice = 1d8 }
+        'Damage Roll' = integer { description = "Rolls the damage die in Damage." default = 0  valuedice = dwDamage (Damage) }
         Armor = integer { description = "Armor reduces the damage of each hit." default = 0 }
         Forward = modifier { description = "Bonus for your next roll only." default = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Forward" }
         Ongoing = modifier { description = "Bonus to every roll until the situation changes." default = 0  editable = live }
@@ -150,7 +179,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = map ((weapon)->moveFor (characterTable, weapon), characterTable.Weapons)
+        source = concat (map ((weapon)->meleeMove (characterTable, weapon), filter ((weapon)->isMelee (weaponTags (weapon)), characterTable.Weapons)), map ((weapon)->volleyMove (characterTable, weapon), filter ((weapon)->rangeOf (weaponTags (weapon)) > 0, characterTable.Weapons)))
         singular = "Attack"
         editable = none
         valueType = weaponMove
@@ -185,8 +214,9 @@ creatureTable = ruleset
         'Max HP' = integer { default = 10 }
         HP = integer { default = 'Max HP'  editable = live }
         Armor = integer { description = "Armor reduces the damage of each hit." default = 1 }
-        Damage = string { description = "The monster's damage die." default = "d8" }
-        'Damage Roll' = integer { default = 0  valuedice = 1d8  action = melee  reach = 5 }
+        Damage = string { description = "The monster's damage die, such as d8+2, b[2d10] for the best of two or w[2d6] for the worst." default = "d8" }
+        Attack = string { description = "The monster's attack and its range tags, such as Bite (close, reach)." }
+        'Damage Roll' = integer { default = 0  valuedice = dwDamage (Damage)  action = monsterKind (Attack)  reach = if contains (toLower (Attack), "reach") then 10 else 5  range = rangeOf (toLower (Attack)) }
         Instinct = string { description = "What the monster wants most, which guides how it acts." }
         Dead = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
     }

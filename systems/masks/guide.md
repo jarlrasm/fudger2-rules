@@ -11,6 +11,7 @@ When a hero does something that triggers a move, roll **2d6 + label**:
 
 Forward on the sheet adds to the next roll. The basic moves:
 - **Directly Engage a Threat** (Danger), **Unleash Your Powers** (Freak), **Defend Someone** (Savior), **Assess the Situation** and **Provoke Someone** (Superior), **Comfort or Support** and **Pierce the Mask** (Mundane).
+- **Reject Influence**: when someone with influence tells the hero who they are and the hero rejects it, roll plus the label they want to raise (the sheet asks for it), with -2 if Insecure.
 - **Take a Powerful Blow**: roll 2d6 **plus** the conditions marked. Here a high roll is bad: on a miss the hero stands strong.
 
 ## Conditions

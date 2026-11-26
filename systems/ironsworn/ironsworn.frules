@@ -66,7 +66,7 @@ oddsThreshold (level) =
 
 askResult (roll, level) =
 {
-    Text = toString (roll) + (if roll > oddsThreshold (level) then ": yes" else ": no") + (if mod (roll, 11) == 0 then ", an extreme result or a twist" else "")
+    Text = toString (roll) + (if roll > oddsThreshold (level) then ": yes" else ": no") + (if mod (roll, 11) == 0 or roll == 100 then ", an extreme result or a twist" else "")
     Value = roll
     Outcome = if roll > oddsThreshold (level) then "Success" else "Failure"
 }
