@@ -272,7 +272,7 @@ Torch = bool { default = false  editable = live  aura = "#e8913a"  auraSize = 20
 
 Systems that use it: D&D Aura of Protection.
 
-A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list.
+A rolled field named `Initiative` (any case) feeds the encounter initiative tracker. A system that sets `initiativeRolls` (currently only Fudge) makes this a per-campaign list instead: the GM edits it in the campaign settings, starting from the system's list, and any attribute or skill whose name matches (any case) counts. The Call for initiative button then rolls the first enum `keyvalues` entry the character has from that list. Initiative never asks: a roll made with `ask`, such as Fudge's trait roll, rolls there with `asked` 0 and `answered` false.
 
 ## The system
 
