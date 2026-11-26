@@ -1,0 +1,1089 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+inList (x, things) = count (filter ((y)->y == x, things)) > 0
+
+hitsOf (rolls) = count (filter ((x)->x > 4, rolls))
+
+missesOf (rolls) = filter ((x)->x < 5, rolls)
+
+glitched (rolls) = count (rolls) > 0 and count (filter ((x)->x == 1, rolls)) * 2 > count (rolls)
+
+cappedHits (rolls, cap) = if cap > 0 then min (hitsOf (rolls), cap) else hitsOf (rolls)
+
+hitWord (n) = if n == 1 then " hit" else " hits"
+
+glitchText (hits, glitch) = if glitch and hits == 0 then ", critical glitch" else if glitch then ", glitch" else ""
+
+sr5Outcome (hits, threshold, glitch) =
+    if glitch and hits == 0 then "Critical glitch"
+    else if glitch then "Glitch"
+    else if threshold > 0 and hits >= threshold then "Success"
+    else if threshold > 0 then "Failure"
+    else if hits > 0 then "Hit"
+    else "Miss"
+
+sr5Text (rolls, cap, threshold, glitch) =
+    toString (cappedHits (rolls, cap)) + hitWord (cappedHits (rolls, cap))
+    + (if cap > 0 and hitsOf (rolls) > cap then " (limit " + toString (cap) + ")" else "")
+    + (if threshold > 0 then " vs " + toString (threshold) + (if cappedHits (rolls, cap) >= threshold then ", net " + toString (cappedHits (rolls, cap) - threshold) else "") else "")
+    + glitchText (cappedHits (rolls, cap), glitch)
+
+sr5Result (rolls, cap, threshold, glitch, canReroll, spend) =
+{
+    Text = sr5Text (rolls, cap, threshold, glitch)
+    Value = cappedHits (rolls, cap)
+    Outcome = sr5Outcome (cappedHits (rolls, cap), threshold, glitch)
+    Push = if canReroll and count (spend) > 0 and count (missesOf (rolls)) > 0 then secondChance (filter ((x)->x > 4, rolls), count (missesOf (rolls)), cap, threshold, glitch) else 0
+    PushLabel = "Second Chance (1 Edge)"
+    PushSets = spend
+}
+
+secondChance (kept, misses, cap, threshold, glitch) = ([dice { number = misses  sides = 6  label = "Second Chance" }],
+    ((baseline, throws)->sr5Result (concat (kept, first (throws).rolls), cap, threshold, glitch, false, [])))
+
+sr5Pool (pool, edge, pushed, cap, spend) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = if pushed then edge else 0  sides = 6  explode = 6  color = "purple"  label = if pushed then "Push the Limit" else "" }],
+    ((baseline, throws)->sr5Result (concat (first (throws).rolls, item (1, throws).rolls), if pushed then 0 else cap, asked, glitched (concat (first (throws).rolls, item (1, throws).rolls)), not (pushed), spend)))
+
+sr5Fixed (pool, cap) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->sr5Result (first (throws).rolls, cap, asked, glitched (first (throws).rolls), false, [])))
+
+pushing (char) = char.Attributes.'Push the Limit' == "Push"
+
+edgeSpend (char) = if char.Attributes.'Edge Points' > 0 then [{ Field = "characterTable.Attributes.Edge Points"  Value = char.Attributes.'Edge Points' - 1 }] else []
+
+woundOf (char) = char.'Condition Monitor'.'Wound Modifier'
+
+sr5Dice (char, pool, cap) =
+    ask ("Dice bonus or penalty", 0, (n)->ask ("Threshold", sr5Pool (pool + n - woundOf (char), char.Attributes.Edge, pushing (char), cap, edgeSpend (char))))
+
+forceDice (char, pool, startForce, label) =
+    ask (label, startForce, (f)->ask ("Threshold", sr5Pool (pool - woundOf (char), char.Attributes.Edge, pushing (char), f, edgeSpend (char))))
+
+npcDice (pool, cap) = ask ("Dice bonus or penalty", 0, (n)->ask ("Threshold", sr5Fixed (pool + n, cap)))
+
+soakText (rolls, armorLeft, dv, glitch) =
+    toString (hitsOf (rolls)) + hitWord (hitsOf (rolls))
+    + (if dv > 0 then ": take " + toString (max (0, dv - hitsOf (rolls))) + " of " + toString (dv) + " DV" + (if dv < armorLeft and dv > hitsOf (rolls) then " as Stun (DV below armor)" else "") else "")
+    + glitchText (hitsOf (rolls), glitch)
+
+soakResult (rolls, armorLeft, dv, glitch, canReroll, spend) =
+{
+    Text = soakText (rolls, armorLeft, dv, glitch)
+    Value = hitsOf (rolls)
+    Outcome = if glitch and hitsOf (rolls) == 0 then "Critical glitch" else if glitch then "Glitch" else if dv > 0 and hitsOf (rolls) >= dv then "Success" else if dv > 0 then "Damage" else if hitsOf (rolls) > 0 then "Hit" else "Miss"
+    Push = if canReroll and count (spend) > 0 and count (missesOf (rolls)) > 0 then soakAgain (filter ((x)->x > 4, rolls), count (missesOf (rolls)), armorLeft, dv, glitch) else 0
+    PushLabel = "Second Chance (1 Edge)"
+    PushSets = spend
+}
+
+soakAgain (kept, misses, armorLeft, dv, glitch) = ([dice { number = misses  sides = 6  label = "Second Chance" }],
+    ((baseline, throws)->soakResult (concat (kept, first (throws).rolls), armorLeft, dv, glitch, false, [])))
+
+soakPool (pool, edge, pushed, armorLeft, spend) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = if pushed then edge else 0  sides = 6  explode = 6  color = "purple"  label = if pushed then "Push the Limit" else "" }],
+    ((baseline, throws)->soakResult (concat (first (throws).rolls, item (1, throws).rolls), armorLeft, asked, glitched (concat (first (throws).rolls, item (1, throws).rolls)), not (pushed), spend)))
+
+soakRoll (body, armor, edge, pushed, spend) =
+    ask ("Weapon AP", 0, (ap)->ask ("Modified DV", soakPool (body + max (0, armor + ap), edge, pushed, armor + ap, spend)))
+
+attributeNames = ["Body", "Agility", "Reaction", "Strength", "Willpower", "Logic", "Intuition", "Charisma", "Edge", "Magic", "Resonance"]
+
+attributeValue (char, name) =
+    switch name
+        case "Body" then char.Attributes.Body
+        case "Agility" then char.Attributes.Agility
+        case "Reaction" then char.Attributes.Reaction
+        case "Strength" then char.Attributes.Strength
+        case "Willpower" then char.Attributes.Willpower
+        case "Logic" then char.Attributes.Logic
+        case "Intuition" then char.Attributes.Intuition
+        case "Charisma" then char.Attributes.Charisma
+        case "Edge" then char.Attributes.Edge
+        case "Magic" then char.Attributes.Magic
+        case "Resonance" then char.Attributes.Resonance
+        else 0
+
+agilitySkills = ["Archery", "Automatics", "Blades", "Clubs", "Exotic Melee Weapon", "Exotic Ranged Weapon", "Heavy Weapons", "Longarms", "Pistols", "Throwing Weapons", "Unarmed Combat", "Escape Artist", "Gymnastics", "Palming", "Sneaking", "Locksmith", "Gunnery", "Flight"]
+bodySkills = ["Diving", "Free-Fall"]
+strengthSkills = ["Running", "Swimming"]
+intuitionSkills = ["Disguise", "Perception", "Tracking", "Assensing", "Artisan", "Navigation"]
+willpowerSkills = ["Survival", "Astral Combat"]
+charismaSkills = ["Con", "Etiquette", "Impersonation", "Instruction", "Intimidation", "Leadership", "Negotiation", "Performance", "Animal Handling"]
+magicSkills = ["Alchemy", "Artificing", "Banishing", "Binding", "Counterspelling", "Disenchanting", "Ritual Spellcasting", "Spellcasting", "Summoning"]
+resonanceSkills = ["Compiling", "Decompiling", "Registering"]
+vehicleSkills = ["Pilot Aerospace", "Pilot Aircraft", "Pilot Walker", "Pilot Exotic Vehicle", "Pilot Ground Craft", "Pilot Watercraft"]
+
+skillAttr (name) =
+    if inList (name, agilitySkills) or contains (name, "Exotic") then "Agility"
+    else if inList (name, bodySkills) then "Body"
+    else if inList (name, strengthSkills) then "Strength"
+    else if inList (name, intuitionSkills) then "Intuition"
+    else if inList (name, willpowerSkills) then "Willpower"
+    else if inList (name, charismaSkills) then "Charisma"
+    else if inList (name, magicSkills) then "Magic"
+    else if inList (name, resonanceSkills) then "Resonance"
+    else if inList (name, vehicleSkills) or contains (name, "Pilot") then "Reaction"
+    else "Logic"
+
+skillGroup (name) =
+    if inList (name, ["Con", "Impersonation", "Performance"]) then "Acting"
+    else if inList (name, ["Gymnastics", "Running", "Swimming"]) then "Athletics"
+    else if inList (name, ["Biotechnology", "Cybertechnology", "First Aid", "Medicine"]) then "Biotech"
+    else if inList (name, ["Blades", "Clubs", "Unarmed Combat"]) then "Close Combat"
+    else if inList (name, ["Banishing", "Binding", "Summoning"]) then "Conjuring"
+    else if inList (name, ["Cybercombat", "Electronic Warfare", "Hacking"]) then "Cracking"
+    else if inList (name, ["Computer", "Hardware", "Software"]) then "Electronics"
+    else if inList (name, ["Alchemy", "Artificing", "Disenchanting"]) then "Enchanting"
+    else if inList (name, ["Aeronautics Mechanic", "Automotive Mechanic", "Industrial Mechanic", "Nautical Mechanic"]) then "Engineering"
+    else if inList (name, ["Automatics", "Longarms", "Pistols"]) then "Firearms"
+    else if inList (name, ["Etiquette", "Leadership", "Negotiation"]) then "Influence"
+    else if inList (name, ["Navigation", "Survival", "Tracking"]) then "Outdoors"
+    else if inList (name, ["Counterspelling", "Ritual Spellcasting", "Spellcasting"]) then "Sorcery"
+    else if inList (name, ["Disguise", "Palming", "Sneaking"]) then "Stealth"
+    else if inList (name, resonanceSkills) then "Tasking"
+    else ""
+
+groupRating (char, group) =
+    switch group
+        case "Acting" then char.'Skill Groups'.Acting
+        case "Athletics" then char.'Skill Groups'.Athletics
+        case "Biotech" then char.'Skill Groups'.Biotech
+        case "Close Combat" then char.'Skill Groups'.'Close Combat'
+        case "Conjuring" then char.'Skill Groups'.Conjuring
+        case "Cracking" then char.'Skill Groups'.Cracking
+        case "Electronics" then char.'Skill Groups'.Electronics
+        case "Enchanting" then char.'Skill Groups'.Enchanting
+        case "Engineering" then char.'Skill Groups'.Engineering
+        case "Firearms" then char.'Skill Groups'.Firearms
+        case "Influence" then char.'Skill Groups'.Influence
+        case "Outdoors" then char.'Skill Groups'.Outdoors
+        case "Sorcery" then char.'Skill Groups'.Sorcery
+        case "Stealth" then char.'Skill Groups'.Stealth
+        case "Tasking" then char.'Skill Groups'.Tasking
+        else 0
+
+noDefault = ["Alchemy", "Arcana", "Artificing", "Artisan", "Assensing", "Astral Combat", "Banishing", "Binding", "Biotechnology", "Chemistry", "Compiling", "Counterspelling", "Cybertechnology", "Decompiling", "Disenchanting", "Electronic Warfare", "Exotic Melee Weapon", "Exotic Ranged Weapon", "Hardware", "Locksmith", "Medicine", "Pilot Aerospace", "Pilot Exotic Vehicle", "Registering", "Ritual Spellcasting", "Software", "Spellcasting", "Summoning", "Aeronautics Mechanic", "Automotive Mechanic", "Industrial Mechanic", "Nautical Mechanic"]
+
+effectiveRating (char, name, rating) = max (rating, groupRating (char, skillGroup (name)))
+
+poolFor (char, name, rating, attr) =
+    if effectiveRating (char, name, rating) > 0 then effectiveRating (char, name, rating) + attributeValue (char, attr)
+    else if inList (name, noDefault) then 0
+    else max (0, attributeValue (char, attr) - 1)
+
+noSkill = { Rating = 0 }
+
+skillRow (char, name) = valueOr (char.Skills, name, noSkill)
+
+poolOf (char, name) = poolFor (char, name, valueOr (skillRow (char, name), "Rating", 0), skillAttr (name))
+
+limitKind (name) =
+    if inList (name, ["Perception", "Arcana", "Artisan", "Navigation", "Tracking", "Aeronautics Mechanic", "Armorer", "Automotive Mechanic", "Biotechnology", "Chemistry", "Cybertechnology", "Demolitions", "First Aid", "Forgery", "Hardware", "Industrial Mechanic", "Medicine", "Nautical Mechanic"]) then "Mental"
+    else if inList (name, charismaSkills) then "Social"
+    else if inList (name, magicSkills) then "Force"
+    else if inList (name, ["Assensing", "Astral Combat"]) then "Astral"
+    else if inList (name, resonanceSkills) then "Level"
+    else if name == "Cybercombat" then "Attack"
+    else if name == "Hacking" then "Sleaze"
+    else if inList (name, ["Computer", "Software", "Electronic Warfare"]) then "Data Processing"
+    else if inList (name, vehicleSkills) then "Handling"
+    else if inList (name, ["Gunnery", "Archery", "Automatics", "Blades", "Clubs", "Exotic Melee Weapon", "Exotic Ranged Weapon", "Heavy Weapons", "Longarms", "Pistols", "Throwing Weapons"]) then "Accuracy"
+    else if inList (name, agilitySkills) or inList (name, bodySkills) or inList (name, strengthSkills) or inList (name, ["Disguise", "Survival"]) then "Physical"
+    else "Mental"
+
+limitValue (char, kind) =
+    switch kind
+        case "Physical" then char.Limits.Physical
+        case "Mental" then char.Limits.Mental
+        case "Social" then char.Limits.Social
+        case "Astral" then char.Limits.Astral
+        case "Attack" then char.Matrix.Attack
+        case "Sleaze" then char.Matrix.Sleaze
+        case "Data Processing" then char.Matrix.'Data Processing'
+        else 0
+
+limitLabel (char, kind) = if limitValue (char, kind) > 0 then kind + " " + toString (limitValue (char, kind)) else kind
+
+physicalLimitOf (str, body, rea) = (str * 2 + body + rea + 2) / 3
+mentalLimitOf (log, intu, wil) = (log * 2 + intu + wil + 2) / 3
+socialLimitOf (cha, wil, ess100) = ((cha * 2 + wil) * 100 + ess100 + 299) / 300
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+essence100 (text) = bonusWithValue ([[text]], "^([0-9]+)") * 100 + bonusWithValue ([[text]], "\.([0-9])") * 10 + bonusWithValue ([[text]], "\.[0-9]([0-9])")
+
+essenceText (e) = toString (e / 100) + "." + (if mod (e, 100) < 10 then "0" else "") + toString (mod (e, 100))
+
+noStats = { Stats = { Name = "" } }
+
+statOf (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+augmentationLoss (char) = sum (map ((a)->essence100 (statOf (a, "augmentationStats", "Essence")), char.Augmentations))
+
+essenceOf (char) = max (0, 600 - augmentationLoss (char) - essence100 (char.Attributes.'Other Essence Loss'))
+
+armorText (a) = statOf (a, "armorStats", "Armor")
+
+armorTotal (char) =
+    max (0, max (map ((a)->firstNumber (armorText (a)), filter ((a)->not (contains (armorText (a), "+")), char.Armor))))
+    + sum (map ((a)->firstNumber (armorText (a)), filter ((a)->contains (armorText (a), "+"), char.Armor)))
+    + char.'Defense and Resistance'.'Other Armor'
+
+woundValue (physical, physicalMax, stun) = min (max (0, physical), physicalMax) / 3 + max (0, stun) / 3
+
+woundText (w) = if w > 0 then "-" + toString (w) else "0"
+
+monitorBoxes (base, attr) = base + (attr + 1) / 2
+
+downState (physical, physicalMax, stun, stunMax) =
+    if max (0, physical) > physicalMax then "Dying"
+    else if max (0, physical) >= physicalMax then "Down"
+    else if max (0, stun) >= stunMax then "Unconscious"
+    else ""
+
+initBase (char, mode) =
+    switch mode
+        case "Astral" then char.Attributes.Intuition * 2
+        case "Matrix cold sim" then char.Matrix.'Data Processing' + char.Attributes.Intuition
+        case "Matrix hot sim" then char.Matrix.'Data Processing' + char.Attributes.Intuition
+        else char.Attributes.Reaction + char.Attributes.Intuition + char.Combat.'Initiative Bonus'
+
+initDice (char, mode) =
+    if pushing (char) then 5
+    else
+        switch mode
+            case "Astral" then 2
+            case "Matrix cold sim" then 3
+            case "Matrix hot sim" then 4
+            else min (5, 1 + char.Combat.'Extra Initiative Dice')
+
+initRoll (diceCount) = ([dice { number = diceCount  sides = 6 }], ((baseline, throws)->baseline + sum (first (throws).rolls)))
+
+meleeSkills = ["Blades", "Clubs", "Unarmed Combat", "Exotic Melee Weapon", "Astral Combat"]
+
+skillRange (name) =
+    switch name
+        case "Pistols" then 60
+        case "Automatics" then 550
+        case "Longarms" then 1000
+        case "Heavy Weapons" then 1500
+        case "Gunnery" then 1500
+        case "Archery" then 300
+        case "Throwing Weapons" then 30
+        else 100
+
+dvText (str, dv) =
+    if contains (dv, "STR") then
+        toString (str + bonusWithValue ([[dv]], "STR *\+ *([0-9]+)") - bonusWithValue ([[dv]], "STR *- *([0-9]+)")) + (if contains (dv, ")S") then "S" else "P")
+    else dv
+
+weaponAttack (title, dicePool, accuracy, damageValue, armorPen, kind, meleeReach, maxRange) = custom
+{
+    Name = title
+    Pool = integer { description = "Weapon skill plus Agility. Hits are capped by the weapon's Accuracy." value = dicePool  valuedice = sr5Dice (characterTable, dicePool, accuracy)  action = kind  reach = meleeReach  range = maxRange  editable = none }
+    Accuracy = accuracy
+    DV = damageValue
+    AP = armorPen
+}
+
+weaponSkill (w) = if statOf (w, "weaponStats", "Skill") == "" then "Pistols" else statOf (w, "weaponStats", "Skill")
+
+weaponLimit (char, w) = if firstNumber (statOf (w, "weaponStats", "Accuracy")) > 0 then firstNumber (statOf (w, "weaponStats", "Accuracy")) else char.Limits.Physical
+
+weaponRange (w) = if firstNumber (statOf (w, "weaponStats", "Range")) > 0 then firstNumber (statOf (w, "weaponStats", "Range")) else skillRange (weaponSkill (w))
+
+attackFor (char, w) =
+    weaponAttack (w.Name, poolOf (char, weaponSkill (w)), weaponLimit (char, w), dvText (char.Attributes.Strength, statOf (w, "weaponStats", "DV")), statOf (w, "weaponStats", "AP"),
+        if inList (weaponSkill (w), meleeSkills) then "melee" else "ranged",
+        2 + firstNumber (statOf (w, "weaponStats", "Reach")),
+        if inList (weaponSkill (w), meleeSkills) then 2 else weaponRange (w))
+
+spellUse (title, dicePool, startForce, drain, kind, magicRange) = custom
+{
+    Name = title
+    Cast = integer { description = "Spellcasting plus Magic. Asks the Force, which is the limit on hits." value = dicePool  valuedice = forceDice (characterTable, dicePool, startForce, "Force")  action = kind  reach = 2  range = magicRange  editable = none }
+    Drain = drain
+}
+
+spellKind (s) =
+    if statOf (s, "spellStats", "Category") == "Combat" then (if statOf (s, "spellStats", "Range") == "T" then "melee" else "ranged") else ""
+
+formUse (title, dicePool, startLevel, fading) = custom
+{
+    Name = title
+    Thread = integer { description = "Software plus Resonance. Asks the Level, which is the limit on hits." value = dicePool  valuedice = forceDice (characterTable, dicePool, startLevel, "Level")  editable = none }
+    Fading = fading
+}
+
+knowledgeAttr (kind) = if kind == "Academic" or kind == "Professional" then "Logic" else "Intuition"
+
+shownIf (flag) = if flag then visible else editor
+
+skillDescriptions =
+{
+    Automatics = "Submachine guns, assault rifles and machine pistols. Firearms group."
+    Blades = "Knives, swords and other edged melee weapons. Close Combat group."
+    Con = "Lying, fast talk and acting a part. Acting group."
+    Etiquette = "Fitting in and knowing the right thing to say. Influence group."
+    'First Aid' = "Patching up wounds; heals 1 box per hit, up to the skill rating. Biotech group."
+    Gymnastics = "Balance, climbing, jumping and dodging. Athletics group."
+    Intimidation = "Getting your way through threats and fear."
+    Negotiation = "Haggling and striking deals. Influence group."
+    Perception = "Noticing things. The most rolled skill in the game."
+    'Pilot Ground Craft' = "Driving cars, bikes and trucks; limited by Handling."
+    Pistols = "Holdouts, light and heavy pistols, tasers. Firearms group."
+    Running = "Sprinting and running long distances. Athletics group."
+    Sneaking = "Moving unseen and unheard. Stealth group."
+    'Unarmed Combat' = "Fists, kicks and martial arts; damage (STR)S. Close Combat group."
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, 'Condition Monitor', Limits, Attacks] }
+
+    'Personal Data' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Metatype = string { keys = ["Human", "Elf", "Dwarf", "Ork", "Troll"] }
+        Ethnicity = string {}
+        Age = integer { default = 25 }
+        Sex = string {}
+        Height = string {}
+        Weight = string {}
+        'Street Cred' = integer { description = "Earned reputation among runners." default = 0 }
+        Notoriety = integer { description = "Bad reputation: how much the shadows distrust the runner." default = 0 }
+        'Public Awareness' = integer { description = "How well known the runner is to the public." default = 0 }
+        Karma = integer { description = "Karma not yet spent." default = 0  editable = live }
+        'Total Karma' = integer { description = "All karma earned since creation." default = 0 }
+        Nuyen = integer { description = "Money, in nuyen." default = 0  editable = live }
+        Lifestyle = string { description = "Street, Squatter, Low, Middle, High or Luxury, and where." }
+        Concept = string {}
+    }
+
+    Attributes = table
+    {
+        description = "Rated 1 to 6 for humans; metatypes shift the ranges. An attribute plus a skill makes most dice pools."
+        tableLayout = layout { columns = 2 }
+        Body = integer { description = "Toughness: resists damage and sets the Physical monitor." default = 3  minvalue = 1  maxvalue = 12 }
+        Agility = integer { description = "Coordination; used for most weapons and stealth." default = 3  minvalue = 1  maxvalue = 12 }
+        Reaction = integer { description = "Reflexes: initiative, defense and driving." default = 3  minvalue = 1  maxvalue = 12 }
+        Strength = integer { description = "Muscle: melee damage, running and swimming." default = 3  minvalue = 1  maxvalue = 12 }
+        Willpower = integer { description = "Mental grit: sets the Stun monitor and resists Drain." default = 3  minvalue = 1  maxvalue = 12 }
+        Logic = integer { description = "Reasoning and memory; technical skills." default = 3  minvalue = 1  maxvalue = 12 }
+        Intuition = integer { description = "Gut instinct and awareness: initiative, perception." default = 3  minvalue = 1  maxvalue = 12 }
+        Charisma = integer { description = "Presence and charm; social skills." default = 3  minvalue = 1  maxvalue = 12 }
+        Edge = integer { description = "Luck. Spend Edge points to push the limit, reroll misses, act first or survive." default = 2  minvalue = 1  maxvalue = 8 }
+        'Edge Points' = integer { description = "Edge points left; they come back to the Edge rating at the GM's call." default = Edge  minvalue = 0  maxvalue = 8  editable = live }
+        'Push the Limit' = selector { description = "Hold Shift or switch on before rolling: adds Edge dice that explode on 6 and ignores the limit. Lower Edge Points by 1 yourself. Initiative then rolls 5D6 (Blitz)." options = ["Off", "Push"]  labels = ["Off", "Push"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "Off"  editable = live  save = nosave }
+        'Refresh Edge' = button { description = "Edge points back to the Edge rating, for a new session or a reward."  editable = live  onClick = updates { (root.Attributes.'Edge Points') = Edge } }
+        Essence = integer { description = "6 less the essence cost of cyberware and bioware. Lost Essence lowers Magic and Resonance." value = essenceOf (characterTable)  render = essenceText (essenceOf (characterTable))  editable = none }
+        'Other Essence Loss' = string { description = "Essence lost to anything not on the augmentation list, such as 0.5." default = "0" }
+        Magic = integer { description = "Magic rating; 0 for the mundane." default = 0  minvalue = 0  maxvalue = 12 }
+        Resonance = integer { description = "Resonance rating for technomancers; 0 for everyone else." default = 0  minvalue = 0  maxvalue = 12 }
+    }
+
+    Limits = table
+    {
+        description = "Inherent limits: no test can keep more hits than its limit, unless Edge pushes it."
+        tableLayout = layout { columns = 2 }
+        Physical = integer { description = "(Strength x 2 + Body + Reaction) / 3, rounded up." value = physicalLimitOf (Attributes.Strength, Attributes.Body, Attributes.Reaction)  editable = none }
+        Mental = integer { description = "(Logic x 2 + Intuition + Willpower) / 3, rounded up." value = mentalLimitOf (Attributes.Logic, Attributes.Intuition, Attributes.Willpower)  editable = none }
+        Social = integer { description = "(Charisma x 2 + Willpower + Essence) / 3, rounded up." value = socialLimitOf (Attributes.Charisma, Attributes.Willpower, essenceOf (characterTable))  editable = none }
+        Astral = integer { description = "The higher of Mental and Social, for astral tests." value = max (Mental, Social)  editable = none }
+    }
+
+    'Condition Monitor' = table
+    {
+        description = "Each row of three boxes filled is -1 die to every test but damage resistance."
+        tableLayout = layout { columns = 2  size = wide }
+        Physical = slots { description = "8 plus half Body, rounded up. Past it, overflow boxes up to Body; more is death." number = monitorBoxes (8, Attributes.Body) + Attributes.Body  editable = live  overflow = allow  indicator = "#d64545" }
+        Stun = slots { description = "8 plus half Willpower, rounded up. Full means unconscious; more spills into Physical." number = monitorBoxes (8, Attributes.Willpower)  editable = live  indicator = "#d4b106" }
+        'Physical Boxes' = integer { value = monitorBoxes (8, Attributes.Body)  editable = none }
+        Overflow = integer { description = "Boxes past the Physical monitor; Body boxes of overflow kill." value = max (0, Physical.realvalue - monitorBoxes (8, Attributes.Body))  editable = none }
+        'Wound Modifier' = integer { description = "-1 die for every 3 boxes on each monitor, taken off every pool and initiative." value = woundValue (Physical.realvalue, monitorBoxes (8, Attributes.Body), Stun.realvalue)  render = woundText (woundValue (Physical.realvalue, monitorBoxes (8, Attributes.Body), Stun.realvalue))  editable = none  indicator = "#d64545"  indicatorLabel = "Wounded" }
+        Down = string { value = downState (Physical.realvalue, monitorBoxes (8, Attributes.Body), Stun.realvalue, monitorBoxes (8, Attributes.Willpower))  visible = none  indicator = "#555555" }
+        'Stun healed' = button { description = "Clears the Stun monitor after rest (Body + Willpower per hour of rest heals it)."  editable = live  onClick = updates { (root.'Condition Monitor'.Stun.realvalue) = 0 } }
+        'Fully healed' = button { description = "Clears both monitors once days of rest or medical care have healed them."  editable = live  onClick = updates
+            {
+                (root.'Condition Monitor'.Physical.realvalue) = 0
+                (root.'Condition Monitor'.Stun.realvalue) = 0
+            }
+        }
+    }
+
+    'Defense and Resistance' = table
+    {
+        description = "Rolls made against attacks and other pressure."
+        tableLayout = layout { columns = 2 }
+        Defense = integer { description = "Reaction + Intuition. Give the attacker's hits as the threshold: matching them avoids the attack." value = Attributes.Reaction + Attributes.Intuition  valuedice = sr5Dice (characterTable, Attributes.Reaction + Attributes.Intuition, 0)  editable = none }
+        'Full Defense' = integer { description = "Defense plus Willpower, for a character who spends the turn on defense." value = Attributes.Reaction + Attributes.Intuition + Attributes.Willpower  valuedice = sr5Dice (characterTable, Attributes.Reaction + Attributes.Intuition + Attributes.Willpower, 0)  editable = none }
+        Armor = integer { description = "Highest worn armor plus accessories marked +, plus Other Armor." value = armorTotal (characterTable)  editable = none }
+        'Other Armor' = integer { description = "Armor from cyberware, spells or anything not on the armor list." default = 0 }
+        'Damage Resistance' = integer { description = "Body + Armor. Asks the weapon's AP (taken off armor) and the modified DV. Wound modifiers don't apply." value = Attributes.Body + Armor  valuedice = soakRoll (Attributes.Body, Armor, Attributes.Edge, pushing (characterTable), edgeSpend (characterTable))  editable = none }
+        Composure = integer { description = "Charisma + Willpower, to keep cool under fear and pressure." value = Attributes.Charisma + Attributes.Willpower  valuedice = sr5Dice (characterTable, Attributes.Charisma + Attributes.Willpower, 0)  editable = none }
+        'Judge Intentions' = integer { description = "Charisma + Intuition, to read someone." value = Attributes.Charisma + Attributes.Intuition  valuedice = sr5Dice (characterTable, Attributes.Charisma + Attributes.Intuition, 0)  editable = none }
+        Memory = integer { description = "Logic + Willpower, to recall something." value = Attributes.Logic + Attributes.Willpower  valuedice = sr5Dice (characterTable, Attributes.Logic + Attributes.Willpower, 0)  editable = none }
+        'Lift and Carry' = integer { description = "Body + Strength, to lift or carry more than the usual load." value = Attributes.Body + Attributes.Strength  valuedice = sr5Dice (characterTable, Attributes.Body + Attributes.Strength, 0)  editable = none }
+    }
+
+    Combat = table
+    {
+        description = "Initiative and movement."
+        tableLayout = layout { columns = 3  size = wide }
+        'Initiative Mode' = string { description = "Physical: Reaction + Intuition + 1D6 and implant dice. Astral: Intuition x 2 + 2D6. Matrix VR: Data Processing + Intuition + 3D6 cold, 4D6 hot." default = "Physical"  keys = ["Physical", "Astral", "Matrix cold sim", "Matrix hot sim"]  editable = live }
+        Initiative = integer { description = "Initiative score, less the wound modifier. Roll it to join the tracker." value = initBase (characterTable, 'Initiative Mode') - woundOf (characterTable)  valuedice = initRoll (initDice (characterTable, 'Initiative Mode'))  render = toString (initBase (characterTable, 'Initiative Mode') - woundOf (characterTable)) + " + " + toString (initDice (characterTable, 'Initiative Mode')) + "D6"  editable = none }
+        'Initiative Bonus' = integer { description = "Flat bonus to physical initiative from augmentations or spells." default = 0 }
+        'Extra Initiative Dice' = integer { description = "Extra physical initiative dice from wired reflexes, adept powers or spells (5D6 at most)." default = 0  minvalue = 0  maxvalue = 4 }
+        Walk = string { value = toString (Attributes.Agility * 2) + " m" }
+        Run = string { value = toString (Attributes.Agility * 4) + " m" }
+    }
+
+    Skills = keyvalues
+    {
+        description = "Active skills. Rating plus the linked attribute is the pool, capped by the skill's limit. Unrated skills default to the attribute - 1 where allowed. A specialization adds 2 dice."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Automatics", "Blades", "Con", "Etiquette", "First Aid", "Gymnastics", "Intimidation", "Negotiation", "Perception", "Pilot Ground Craft", "Pistols", "Running", "Sneaking", "Unarmed Combat"]
+        descriptions = skillDescriptions
+        valueType = custom
+        {
+            Group = skillGroup (Key)
+            Attribute = skillAttr (Key)
+            Rating = integer { description = "Skill rating, 0 to 6 (7 with Aptitude). A skill group rating counts for every skill in it." default = 0  minvalue = 0  maxvalue = 12 }
+            Specialization = string { description = "+2 dice when it applies." }
+            Limit = limitLabel (characterTable, limitKind (Key))
+            Pool = integer { description = "Rating + attribute, less wound modifiers. Asks bonus dice and a threshold." value = poolFor (characterTable, Key, Rating, skillAttr (Key))  valuedice = sr5Dice (characterTable, poolFor (characterTable, Key, Rating, skillAttr (Key)), limitValue (characterTable, limitKind (Key)))  editable = none }
+        }
+    }
+
+    'Skill Groups' = table
+    {
+        description = "A group rating counts as the rating of every skill in the group."
+        tableLayout = layout { columns = 3  size = wide }
+        Acting = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Athletics = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Biotech = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        'Close Combat' = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Conjuring = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Cracking = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Electronics = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Enchanting = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Engineering = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Firearms = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Influence = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Outdoors = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Sorcery = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Stealth = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Tasking = integer { default = 0  minvalue = 0  maxvalue = 12 }
+    }
+
+    'Knowledge and Languages' = list
+    {
+        description = "Academic and Professional knowledge use Logic; Interests, Street and languages use Intuition. Limit Mental."
+        tableLayout = layout { size = wide }
+        singular = "Knowledge skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Kind = string { default = "Street"  keys = ["Academic", "Interests", "Professional", "Street", "Language"] }
+            Rating = integer { description = "N for a native language: write 0 and note it." default = 1  minvalue = 0  maxvalue = 12 }
+            Pool = integer { value = Rating + attributeValue (characterTable, knowledgeAttr (Kind))  valuedice = sr5Dice (characterTable, Rating + attributeValue (characterTable, knowledgeAttr (Kind)), characterTable.Limits.Mental)  editable = none }
+        }
+    }
+
+    Qualities = list
+    {
+        description = "Positive and negative qualities."
+        tableLayout = layout { size = wide }
+        source = secondary.Qualities
+        singular = "Quality"
+        editable = character
+    }
+
+    Contacts = list
+    {
+        description = "People the runner can call on."
+        tableLayout = layout { size = wide }
+        singular = "Contact"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Type = string {}
+            Connection = integer { description = "How much pull the contact has, 1 to 12." default = 1  minvalue = 1  maxvalue = 12 }
+            Loyalty = integer { description = "How much the contact cares about the runner, 1 to 6." default = 1  minvalue = 1  maxvalue = 6 }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Each weapon's attack, rolled with its skill and capped by Accuracy. Net hits add to the DV."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Unarmed Combat"), characterTable.Limits.Physical, toString (characterTable.Attributes.Strength) + "S", "0", "melee", 2, 2)], map ((w)->attackFor (characterTable, w), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Armor = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Augmentations = list
+    {
+        description = "Cyberware and bioware, with their Essence cost."
+        tableLayout = layout { size = wide }
+        source = secondary.Augmentations
+        singular = "Augmentation"
+        editable = character
+    }
+
+    Matrix = table
+    {
+        description = "The cyberdeck, commlink or living persona. Its attributes are the limits of matrix skills."
+        tableLayout = layout { columns = 3  size = wide }
+        Device = string { description = "Deck or commlink model." }
+        'Device Rating' = integer { default = 0  minvalue = 0  maxvalue = 12 }
+        Attack = integer { description = "Limit for Cybercombat." default = 0  minvalue = 0  maxvalue = 12 }
+        Sleaze = integer { description = "Limit for Hacking." default = 0  minvalue = 0  maxvalue = 12 }
+        'Data Processing' = integer { description = "Limit for Computer, Software and Electronic Warfare; adds to matrix initiative." default = 0  minvalue = 0  maxvalue = 12 }
+        Firewall = integer { description = "Adds to matrix defense." default = 0  minvalue = 0  maxvalue = 12 }
+        'Matrix Damage' = slots { description = "8 plus half the Device Rating, rounded up. Full bricks the device." number = if 'Device Rating' > 0 then monitorBoxes (8, 'Device Rating') else 0  editable = live  indicator = "#3a7bd5" }
+        'Overwatch Score' = integer { description = "Grows with illegal actions; at 40 GOD converges." default = 0  minvalue = 0  maxvalue = 40  editable = live }
+        Programs = string { multiline = true }
+    }
+
+    Magic = table
+    {
+        description = "For awakened characters."
+        visible = shownIf (Attributes.Magic > 0)
+        tableLayout = layout { columns = 3  size = wide }
+        Tradition = string { default = "Hermetic"  keys = ["Hermetic", "Shamanic", "Other"] }
+        'Drain Attribute' = string { description = "Logic for hermetics, Charisma for shamans." default = if Tradition == "Shamanic" then "Charisma" else "Logic"  keys = ["Logic", "Charisma", "Intuition", "Willpower"] }
+        'Drain Resistance' = integer { description = "Willpower plus the drain attribute. Unresisted Drain is Stun, or Physical when the hits beat Magic." value = Attributes.Willpower + attributeValue (characterTable, 'Drain Attribute')  valuedice = sr5Dice (characterTable, Attributes.Willpower + attributeValue (characterTable, 'Drain Attribute'), 0)  editable = none }
+        'Initiate Grade' = integer { default = 0  minvalue = 0 }
+        'Power Points' = string { description = "Adepts: power points spent and total." }
+        Mentor = string { description = "Mentor spirit, if any." }
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+        visible = shownIf (Attributes.Magic > 0)
+    }
+
+    Spellcasting = list
+    {
+        description = "Cast each spell with Spellcasting + Magic; the Force asked is the limit. Combat spells are battlemap actions."
+        tableLayout = layout { size = wide }
+        source = map ((s)->spellUse (s.Name, poolOf (characterTable, "Spellcasting"), characterTable.Attributes.Magic, statOf (s, "spellStats", "Drain"), spellKind (s), 10000), characterTable.Spells)
+        singular = "Spell"
+        editable = none
+        valueType = spellUse
+        visible = shownIf (Attributes.Magic > 0)
+    }
+
+    'Adept Powers' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Adept Powers'
+        singular = "Power"
+        editable = character
+        visible = shownIf (Attributes.Magic > 0)
+    }
+
+    Resonance = table
+    {
+        description = "For technomancers."
+        visible = shownIf (Attributes.Resonance > 0)
+        tableLayout = layout { columns = 3  size = wide }
+        'Fading Resistance' = integer { description = "Willpower + Resonance." value = Attributes.Willpower + Attributes.Resonance  valuedice = sr5Dice (characterTable, Attributes.Willpower + Attributes.Resonance, 0)  editable = none }
+        Submersion = integer { default = 0  minvalue = 0 }
+        Sprites = string { multiline = true }
+    }
+
+    'Complex Forms' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Complex Forms'
+        singular = "Complex form"
+        editable = character
+        visible = shownIf (Attributes.Resonance > 0)
+    }
+
+    Threading = list
+    {
+        description = "Thread each complex form with Software + Resonance; the Level asked is the limit."
+        tableLayout = layout { size = wide }
+        source = map ((c)->formUse (c.Name, poolFor (characterTable, "Software", valueOr (skillRow (characterTable, "Software"), "Rating", 0), "Resonance"), characterTable.Attributes.Resonance, statOf (c, "complexFormStats", "Fading")), characterTable.'Complex Forms')
+        singular = "Complex form"
+        editable = none
+        valueType = formUse
+        visible = shownIf (Attributes.Resonance > 0)
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'IDs and Lifestyles' = list
+    {
+        description = "Fake SINs and licences."
+        tableLayout = layout { size = wide }
+        singular = "SIN or licence"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Rating = integer { description = "How well it holds up when checked, 1 to 6." default = 1  minvalue = 1  maxvalue = 6 }
+            Notes = string {}
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats, 'Dice Pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        'Professional Rating' = integer { description = "0 for gangers up to 6 for elite teams. Grunt groups of rating 3 or more have a lieutenant." default = 2  minvalue = 0  maxvalue = 6 }
+        B = integer { default = 3 }
+        A = integer { default = 3 }
+        R = integer { default = 3 }
+        S = integer { default = 3 }
+        W = integer { default = 3 }
+        L = integer { default = 3 }
+        I = integer { default = 3 }
+        C = integer { default = 3 }
+        Edge = integer { default = 1 }
+        Essence = string { default = "6" }
+        Magic = integer { default = 0 }
+        'Initiative Dice' = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Initiative = integer { value = R + I - 'Wound Modifier'  valuedice = initRoll ('Initiative Dice')  render = toString (R + I - 'Wound Modifier') + " + " + toString ('Initiative Dice') + "D6"  editable = none }
+        Armor = integer { default = 9 }
+        Physical = integer { description = "Physical limit." value = physicalLimitOf (S, B, R)  editable = none }
+        Mental = integer { description = "Mental limit." value = mentalLimitOf (L, I, W)  editable = none }
+        Social = integer { description = "Social limit." value = socialLimitOf (C, W, essence100 (Essence))  editable = none }
+        'Condition Monitor' = slots { description = "8 plus half Body; grunts track all damage here." number = monitorBoxes (8, B)  editable = live  indicator = "#d64545" }
+        'Wound Modifier' = integer { value = 'Condition Monitor'.realvalue / 3  editable = none }
+        Defense = integer { description = "Reaction + Intuition." value = R + I  valuedice = npcDice (R + I - 'Wound Modifier', 0)  editable = none }
+        'Damage Resistance' = integer { description = "Body + Armor; asks AP and the modified DV." value = B + Armor  valuedice = soakRoll (B, Armor, 0, false, [])  editable = none }
+        Down = string { value = if 'Condition Monitor'.realvalue >= monitorBoxes (8, B) then "Down" else ""  visible = none  indicator = "#555555" }
+    }
+    'Dice Pools' = keyvalues
+    {
+        description = "Ready dice pools, as in the book's stat blocks. Limit 0 means none."
+        tableLayout = layout { size = wide }
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Firearms", "Close Combat", "Perception"]
+        valueType = custom
+        {
+            Dice = integer { default = 8  valuedice = npcDice (Dice - creatureTable.Stats.'Wound Modifier', Limit)  action = if Key == "Close Combat" or Key == "Unarmed Combat" or Key == "Blades" or Key == "Clubs" then "melee" else if Key == "Perception" then "" else "ranged"  reach = 2  range = 550 }
+            Limit = integer { description = "Weapon Accuracy or inherent limit." default = 5 }
+            DV = string {}
+            AP = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Skills = string { multiline = true }
+        Gear = string { multiline = true }
+        Powers = string { multiline = true }
+    }
+}
+
+spiritTypes = ["Air", "Beasts", "Earth", "Fire", "Man", "Water", "Guardian", "Guidance", "Plant", "Task"]
+
+spiritMod (kind, attr) =
+    switch kind + " " + attr
+        case "Air Body" then -2
+        case "Air Agility" then 3
+        case "Air Reaction" then 4
+        case "Air Strength" then -3
+        case "Beasts Body" then 2
+        case "Beasts Agility" then 1
+        case "Beasts Strength" then 2
+        case "Earth Body" then 4
+        case "Earth Agility" then -2
+        case "Earth Reaction" then -1
+        case "Earth Strength" then 4
+        case "Earth Logic" then -1
+        case "Fire Body" then 1
+        case "Fire Agility" then 2
+        case "Fire Reaction" then 3
+        case "Fire Strength" then -2
+        case "Fire Intuition" then 1
+        case "Man Body" then 1
+        case "Man Reaction" then 2
+        case "Man Strength" then -2
+        case "Man Intuition" then 1
+        case "Water Agility" then 1
+        case "Water Reaction" then 2
+        case "Guardian Body" then 1
+        case "Guardian Agility" then 2
+        case "Guardian Reaction" then 3
+        case "Guardian Strength" then 2
+        case "Guidance Body" then 3
+        case "Guidance Agility" then -1
+        case "Guidance Reaction" then 2
+        case "Guidance Strength" then 1
+        case "Plant Body" then 2
+        case "Plant Agility" then -1
+        case "Plant Strength" then 1
+        case "Plant Logic" then -1
+        case "Task Reaction" then 2
+        case "Task Strength" then 2
+        else 0
+
+spiritAttr (kind, force, attr) = max (1, force + spiritMod (kind, attr))
+
+spiritTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/sr5/spirit-entity.svg"  important = [Spirit, 'Condition Monitor', Skills] }
+    Spirit = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { default = "Air"  keys = spiritTypes }
+        Force = integer { description = "The spirit's power. Its attributes are Force plus the type's modifiers." default = 3  minvalue = 1  maxvalue = 12 }
+        Services = integer { description = "Services owed: net hits on the Summoning test." default = 1  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        Bound = bool { description = "Bound spirits stay until their services are used." default = false }
+        Summoner = string {}
+        Plane = string { description = "Materialized spirits use physical initiative; on the astral plane Intuition x 2 + 3D6." default = "Physical"  keys = ["Physical", "Astral"]  editable = live }
+        Initiative = integer { value = if Plane == "Astral" then Attributes.Intuition * 2 else Attributes.Reaction + Attributes.Intuition  valuedice = initRoll (if Plane == "Astral" then 3 else 2)  render = toString (if Plane == "Astral" then Attributes.Intuition * 2 else Attributes.Reaction + Attributes.Intuition) + " + " + (if Plane == "Astral" then "3" else "2") + "D6"  editable = none }
+        'Immunity Armor' = integer { description = "Immunity to Normal Weapons: hardened armor of Force x 2." value = Force * 2  editable = none }
+    }
+    Attributes = table
+    {
+        tableLayout = layout { columns = 6  size = wide }
+        Body = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Body")  editable = none }
+        Agility = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Agility")  editable = none }
+        Reaction = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Reaction")  editable = none }
+        Strength = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Strength")  editable = none }
+        Willpower = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Willpower")  editable = none }
+        Logic = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Logic")  editable = none }
+        Intuition = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Intuition")  editable = none }
+        Charisma = integer { value = spiritAttr (Spirit.Type, Spirit.Force, "Charisma")  editable = none }
+        Edge = integer { value = max (1, Spirit.Force / 2)  editable = none }
+        Essence = integer { value = Spirit.Force  editable = none }
+        Magic = integer { value = Spirit.Force  editable = none }
+        Resonance = 0
+    }
+    'Condition Monitor' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Physical = slots { number = monitorBoxes (8, Attributes.Body)  editable = live  indicator = "#d64545" }
+        Stun = slots { number = monitorBoxes (8, Attributes.Willpower)  editable = live  indicator = "#d4b106" }
+        'Damage Resistance' = integer { description = "Body + Force x 2 hardened armor: DV at or below the armor does nothing. Asks AP and the modified DV." value = Attributes.Body + Spirit.Force * 2  valuedice = soakRoll (Attributes.Body, Spirit.Force * 2, 0, false, [])  editable = none }
+        Defense = integer { description = "Reaction + Intuition." value = Attributes.Reaction + Attributes.Intuition  valuedice = npcDice (Attributes.Reaction + Attributes.Intuition, 0)  editable = none }
+        Disrupted = string { value = if Physical.realvalue >= monitorBoxes (8, Attributes.Body) or Stun.realvalue >= monitorBoxes (8, Attributes.Willpower) then "Disrupted" else ""  visible = none  indicator = "#555555" }
+    }
+    Skills = keyvalues
+    {
+        description = "Spirit skills are rated at its Force."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Assensing", "Astral Combat", "Exotic Ranged Weapon", "Perception", "Unarmed Combat"]
+        valueType = custom
+        {
+            Attribute = skillAttr (Key)
+            Dice = integer { value = spiritTable.Spirit.Force + attributeValue (spiritTable, skillAttr (Key))  valuedice = npcDice (spiritTable.Spirit.Force + attributeValue (spiritTable, skillAttr (Key)), 0)  action = if Key == "Unarmed Combat" or Key == "Astral Combat" then "melee" else if Key == "Exotic Ranged Weapon" then "ranged" else ""  reach = 2  range = 100  editable = none }
+        }
+    }
+    Powers = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true  default = "Astral Form, Materialization, Sapience, Immunity to Normal Weapons" }
+        'Optional Powers' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+vehicleBoxes (kind, body) = (if contains (kind, "Drone") then 6 else 12) + (body + 1) / 2
+
+vehicleWeapon = custom
+{
+    Name = string {}
+    Accuracy = integer { default = 5 }
+    DV = string {}
+    AP = string {}
+    Mode = string {}
+    Ammo = string { editable = live }
+    Range = integer { description = "Longest range in metres." default = 550 }
+    Attack = integer { description = "Pilot + Targeting autosoft, capped by Accuracy. A rigger rolls Gunnery + Logic instead." value = vehicleTable.Vehicle.Pilot + vehicleTable.Autosofts.Targeting  valuedice = npcDice (vehicleTable.Vehicle.Pilot + vehicleTable.Autosofts.Targeting, Accuracy)  action = ranged  range = Range  editable = none }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/sr5/drone-entity.svg"  important = [Vehicle, Tests, Weapons] }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Car"  keys = ["Bike", "Car", "Truck", "Boat", "Aircraft", "Rotorcraft", "Drone (micro)", "Drone (mini)", "Drone (small)", "Drone (medium)", "Drone (large)", "Other"] }
+        Model = string {}
+        Handling = integer { description = "On-road handling: the limit on driving tests." default = 4 }
+        'Offroad Handling' = integer { default = 3 }
+        Speed = integer { description = "Speed rating, the limit on speed tests." default = 3 }
+        Accel = integer { description = "Acceleration rating." default = 2 }
+        Body = integer { description = "Structure; resists damage and sets the monitor." default = 10 }
+        Armor = integer { default = 6 }
+        Pilot = integer { description = "The autopilot's rating, rolled with autosofts when nobody drives." default = 1 }
+        Sensor = integer { description = "Sensor rating, the limit on sensor tests." default = 2 }
+        Seats = integer { default = 4 }
+        'Device Rating' = integer { description = "Matrix device rating, normally the Pilot rating." default = Pilot }
+        Damage = slots { description = "12 plus half Body for vehicles, 6 plus half Body for drones." number = vehicleBoxes (Kind, Body)  editable = live  indicator = "#d64545" }
+        State = string { value = if Damage.realvalue >= vehicleBoxes (Kind, Body) then "Wrecked" else ""  visible = none  indicator = "#555555" }
+        'Matrix Damage' = slots { number = monitorBoxes (8, 'Device Rating')  editable = live  indicator = "#3a7bd5" }
+    }
+    Autosofts = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Maneuvering = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Targeting = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Clearsight = integer { default = 0  minvalue = 0  maxvalue = 6 }
+        Evasion = integer { default = 0  minvalue = 0  maxvalue = 6 }
+    }
+    Tests = table
+    {
+        description = "Autopilot tests. A rigger jumped in uses their own skills instead."
+        tableLayout = layout { columns = 3  size = wide }
+        Initiative = integer { description = "Autopilot: Pilot x 2 + 4D6." value = Vehicle.Pilot * 2  valuedice = initRoll (4)  render = toString (Vehicle.Pilot * 2) + " + 4D6"  editable = none }
+        Maneuver = integer { description = "Pilot + Maneuvering, capped by Handling." value = Vehicle.Pilot + Autosofts.Maneuvering  valuedice = npcDice (Vehicle.Pilot + Autosofts.Maneuvering, Vehicle.Handling)  editable = none }
+        Sensors = integer { description = "Pilot + Clearsight, capped by Sensor." value = Vehicle.Pilot + Autosofts.Clearsight  valuedice = npcDice (Vehicle.Pilot + Autosofts.Clearsight, Vehicle.Sensor)  editable = none }
+        Defense = integer { description = "Pilot + Evasion." value = Vehicle.Pilot + Autosofts.Evasion  valuedice = npcDice (Vehicle.Pilot + Autosofts.Evasion, 0)  editable = none }
+        'Damage Resistance' = integer { description = "Body + Armor; asks AP and the modified DV." value = Vehicle.Body + Vehicle.Armor  valuedice = soakRoll (Vehicle.Body, Vehicle.Armor, 0, false, [])  editable = none }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Mounted weapon"
+        editable = character
+        valueType = vehicleWeapon
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Modifications = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+    }
+    Stats = table
+    {
+        Skill = string { default = "Pistols"  keys = ["Pistols", "Automatics", "Longarms", "Heavy Weapons", "Archery", "Throwing Weapons", "Exotic Ranged Weapon", "Blades", "Clubs", "Unarmed Combat", "Exotic Melee Weapon", "Gunnery"] }
+        Accuracy = string { description = "Limit on attack hits." }
+        Reach = string { description = "Melee reach; each point is a die off the defender." }
+        DV = string { description = "Damage Value, such as 8P or (STR+3)P." }
+        AP = string { description = "Armor Penetration, taken off the target's armor." }
+        Mode = string { description = "SS, SA, BF or FA." }
+        RC = string { description = "Recoil compensation." }
+        Ammo = string {}
+        Range = string { description = "Longest range in metres; blank uses a default for the skill." }
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg"  sortedBy = sort { prefix = "" sort = Stats.Armor } }
+    Stats = table
+    {
+        Armor = string { description = "Armor value; write +2 for accessories that add to worn armor." }
+        Capacity = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+augmentationStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/sr5/augmentation.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Grade" prefix = "" filter = Stats.Grade }]
+    }
+    Stats = table
+    {
+        Kind = string { default = "Cyberware"  keys = ["Cyberware", "Bioware", "Cultured bioware", "Other"] }
+        Grade = string { default = "Standard"  keys = ["Used", "Standard", "Alphaware", "Betaware", "Deltaware"] }
+        Rating = string {}
+        Essence = string { description = "Essence cost, such as 0.2." }
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Category }
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }, filter { name = "Type" prefix = "" filter = Stats.Type }]
+    }
+    Stats = table
+    {
+        Category = string { default = "Combat"  keys = ["Combat", "Detection", "Health", "Illusion", "Manipulation"] }
+        Type = string { keys = ["P", "M"] }
+        Range = string { description = "T, LOS or LOS (A)." }
+        Damage = string { description = "P or S for combat spells." }
+        Duration = string { description = "I, S or P." }
+        Drain = string { description = "Drain value, such as F-3." }
+    }
+}
+
+adeptPowerStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg"  sortedBy = sort { prefix = "" sort = Stats.Cost } }
+    Stats = table
+    {
+        Cost = string { description = "Power points, per level where it has levels." }
+        Level = string {}
+        Activation = string { keys = ["Passive", "Free", "Simple", "Complex"] }
+    }
+}
+
+complexFormStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Target = string {}
+        Duration = string {}
+        Fading = string { description = "Fading value, such as L+1." }
+    }
+}
+
+qualityStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { default = "Positive"  keys = ["Positive", "Negative"] }
+        Karma = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Rating = string {}
+        Availability = string {}
+        Cost = string {}
+    }
+}
+
+sixthWorldNameSetting = nameSetting
+{
+    name = "Sixth World"
+    characters = [generator { library = "Neon streets" variant = "Runner" }, generator { library = "Neon streets" variant = "Citizen" }, generator { library = "Neon streets" variant = "Exec" }]
+    creatures = [generator { library = "Neon streets" variant = "Gang" }, generator { library = "Neon streets" variant = "Runner" }, generator { library = "Spy thriller" variant = "Agent" }]
+    Location = [generator { library = "Neon streets" variant = "District" }, generator { library = "Neon streets" variant = "Club" }, generator { library = "Neon streets" variant = "Corporation" }]
+    Vehicles = generator { library = "Spy thriller" variant = "Codename" }
+    Spirits = generator { library = "Fantasy folk" variant = "Monster" }
+}
+
+ShadowrunFifth = system
+{
+    hints = [
+        hint
+        {
+            title = "The run"
+            topic = "Getting started"
+            text = ["A Johnson offers a job, the team does the legwork, the run goes sideways, and someone tries not to pay. Build runners with priorities or karma, then fill in the sheet: attributes, skills and skill groups, qualities, gear and contacts."]
+        },
+        hint
+        {
+            title = "Hits, limits and glitches"
+            topic = "Play"
+            text = ["Roll attribute + skill in d6s; each 5 or 6 is a hit. Hits above the test's limit (Physical, Mental, Social, a weapon's Accuracy or a spell's Force) don't count. Each test asks bonus or penalty dice, then a threshold: Easy 1, Average 2, Hard 4, Extreme 6. Leave it blank when only the GM knows.", "More than half the dice showing 1 is a glitch; a glitch with no hits is a critical glitch."]
+        },
+        hint
+        {
+            title = "Edge"
+            topic = "Play"
+            text = ["Push the Limit (hold Shift or switch it on in Attributes) adds Edge dice that explode on 6 and ignores the limit; take the Edge point off by hand. After a roll, Second Chance (1 Edge) rerolls the misses and spends the point. Seize the Initiative, Close Call and Dead Man's Trigger are handled by hand."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: Reaction + Intuition + 1D6, more dice from augmentations, or the astral or matrix scores chosen in Initiative Mode. Highest goes first; every 10 points is another pass, so subtract 10 after each round of actions."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["The attacker's net hits over the defender's Defense add to the weapon's DV. The defender rolls Damage Resistance, Body + Armor less the AP, and each hit takes a box off. Every 3 boxes on a monitor is -1 die to everything."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Vehicles = vehicleTable
+    Spirits = spiritTable
+    entityTypeNames = [entityTypeName ("Character", "Runner", "Runners")]
+    Weapons = weaponStats
+    Armor = armorStats
+    Augmentations = augmentationStats
+    Spells = spellStats
+    'Adept Powers' = adeptPowerStats
+    'Complex Forms' = complexFormStats
+    Qualities = qualityStats
+    Gear = gearStats
+    secondaryTypes = ["Weapons", "Armor", "Augmentations", "Spells", "Adept Powers", "Complex Forms", "Qualities", "Gear"]
+    extraEntityTypes = [entityTypeDescription ("Vehicles", "vehicle", true, "/systems/sr5/drone-entity.svg", []), entityTypeDescription ("Spirits", "spirit", true, "/systems/sr5/spirit-entity.svg", [])]
+    description = "Shadowrun 5th edition: d6 hits capped by limits, Edge, two condition monitors, magic, the Matrix and rigging"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d6, 2d6, 3d6]
+    cssFiles = ["/systems/sr5/sr5.css"]
+    libraries = ["/systems/names/cyberpunk.json", "/systems/names/spies.json", "/systems/names/fantasy.json"]
+    nameSettings = [sixthWorldNameSetting, neonStreetsNameSetting, spyThrillerNameSetting]
+}
