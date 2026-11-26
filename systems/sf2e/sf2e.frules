@@ -1,10 +1,13 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 #include "/systems/pf2e/core.frules"
+#include "/systems/pf2e/encounters.frules"
+
+shipRange (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
 characterTable = ruleset
 {
-    rulesetConfiguration = { important = [Defenses, Saves, Conditions, Strikes] }
+    rulesetConfiguration = { important = [Defenses, Saves, Conditions, Strikes]  encounterStats = { Level = Character.Level } }
     Character = pf2Character {}
 
     Attributes = pf2Attributes {}
@@ -227,9 +230,9 @@ shipStats = ruleset
         valueType = custom
         {
             Name = string {}
-            Attack = modifier { default = 0  valuedice = plainPf2  action = ranged }
+            Attack = modifier { default = 0  valuedice = ask ("Target AC", pf2AskedRoll ("Normal"))  action = ranged  range = shipRange (Range) }
             Damage = string {}
-            Range = string {}
+            Range = string { description = "Range of the weapon. The first number is used as the range on the map." }
         }
     }
 }
@@ -279,6 +282,7 @@ Starfinder2e = system
     extraEntityTypes = [entityTypeDescription ("Spaceships", "starship", true, "/systems/starwars/spaceship-entity.svg", [])]
     description = "Starfinder 2nd edition: Pathfinder's rules among the stars"
     initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    encounterDifficulty (party, foes) = pf2EncounterDifficulty (party, foes)
     quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12]
     cssFiles = ["/systems/sf2e/sf2e.css"]
     libraries = ["/systems/sf2e/sf2e.json", "/systems/names/scifi.json", "/systems/names/bluecollar.json", "/systems/names/cyberpunk.json"]
