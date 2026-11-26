@@ -1,3 +1,5 @@
+psiShown (n) = if n > 0 then visible else none
+
 reservoirModifier (reservoir) = if reservoir >= 3 then 0 else reservoir - 3
 
 psiAugmentResult (augment, level) =
@@ -108,7 +110,7 @@ characterTable = ruleset
     'Psi rolls' = list
     {
         description = "Roll a psi power's control skill."
-        visible = if count ('Psi powers') > 0 then visible else none
+        visible = psiShown (count ('Psi powers'))
         source = psiUsesFor (characterTable)
         singular = "Psi roll"
         editable = none

@@ -1,3 +1,5 @@
+superShown (n) = if n > 0 then visible else none
+
 superUse (name, level) = custom
 {
     Name = name
@@ -112,7 +114,7 @@ characterTable = ruleset
     'Power rolls' = list
     {
         description = "Roll a power or implant at its level."
-        visible = if count (Powers) + count (Implants) > 0 then visible else none
+        visible = superShown (count (Powers) + count (Implants))
         source = superUsesFor (characterTable)
         singular = "Power roll"
         editable = none
@@ -121,7 +123,7 @@ characterTable = ruleset
     'Trait bonuses' = list
     {
         description = "Bonuses that powers and implants give to attributes and skills. Add them when rolling those traits."
-        visible = if count (traitBonusesFor (characterTable)) > 0 then visible else none
+        visible = superShown (count (traitBonusesFor (characterTable)))
         source = traitBonusesFor (characterTable)
         singular = "Bonus"
         editable = none
