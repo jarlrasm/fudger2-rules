@@ -4,13 +4,13 @@
 Rifts Earth, three centuries after the apocalypse: ley lines crackle with magic, dimensional rifts spill monsters and aliens (D-Bees) onto the land, and humans in power armor fight dragons with rail guns. Characters have an **O.C.C.** (occupational class) or **R.C.C.** (racial class), such as Cyber-Knight, Ley Line Walker, Juicer or Glitter Boy pilot.
 
 ## Rolling
-- **Skills** are percentages: roll 1d100 at or under.
+- **Skills** are percentages: roll 1d100 at or under. An IQ of 16 or more adds its bonus (2% at 16, 1% more per point), and the sheet adds it to the roll, up to 98%.
 - **Combat** uses 1d20 plus bonuses. **Saving throws** use 1d20 plus bonuses against a target: 12 vs magic, 15 vs psionics (12 for psychics), 14 vs lethal poison, 12 vs insanity, and a monster's **Horror Factor** (the roll asks for it).
 - Attributes of 16 or more give bonuses: PP to strike, parry and dodge; PS to hand-to-hand damage; PE and ME to saves.
 
 ## Combat
 - A **melee round** is 15 seconds. Roll 1d20 + initiative bonus; characters act in turn, one attack at a time, until everyone has used their **attacks per melee**.
-- **Strike**: 1d20 + strike bonus; 5 or more hits. A natural 20 is a **critical** (double damage); a natural 1 misses.
+- **Strike**: 1d20 + strike bonus; 5 or more hits. A natural 20 is a **critical** (double damage), or a natural roll in the character's Critical range (18-20 or 19-20 for some hand-to-hand skills); a natural 1 misses.
 - The defender can **parry** (free for trained fighters) or **dodge** (costs an attack). Ties go to the defender.
 - **Roll with impact** halves damage from explosions and falls; **pull punch** controls damage.
 
