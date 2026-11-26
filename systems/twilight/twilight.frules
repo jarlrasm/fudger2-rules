@@ -13,6 +13,19 @@ dieOf (rating) =
 
 stepped (die, steps) = if die == 0 then 0 else max (6, min (12, die + 2 * steps))
 
+stepLevel (die) = if die == 0 then 0 else (die - 4) / 2
+
+levelDie (level) = if level < 1 then 0 else level * 2 + 4
+
+skillStepped (skillD, steps) = levelDie (max (0, min (4, stepLevel (skillD) + steps)))
+
+spillSteps (skillD, steps) =
+    if stepLevel (skillD) + steps > 4 then stepLevel (skillD) + steps - 4
+    else if stepLevel (skillD) + steps < 0 then stepLevel (skillD) + steps
+    else 0
+
+attrStepped (attrDie, skillD, steps) = stepped (attrDie, spillSteps (skillD, steps))
+
 dieName (die) = if die == 0 then "-" else "d" + toString (die)
 
 poolName (attrDie, skillDieSize) = dieName (attrDie) + (if skillDieSize > 0 then " + " + dieName (skillDieSize) else "")
@@ -27,22 +40,25 @@ baseOnes (throws) = onesIn (first (throws).rolls) + onesIn (item (1, throws).rol
 
 t2kText (successes, pushed, ones, ammoOnes, ammoSixes, ammoCount) =
     toString (successes) + (if successes == 1 then " success" else " successes")
-    + (if ammoCount > 0 then ", ammo: " + toString (ammoSixes) + " extra hits, " + toString (ammoCount) + " rounds" else "")
+    + (if ammoCount > 0 and successes > 0 then ", ammo: " + toString (ammoSixes) + " extra hits, " + toString (ammoCount) + " rounds"
+        else if ammoCount > 0 then ", ammo: " + toString (ammoCount) + " rounds"
+        else "")
     + (if pushed and ones > 0 then ", pushed: " + toString (ones) + " damage or stress from the 1s" else "")
     + (if ammoOnes > 0 then ", " + toString (ammoOnes) + " ammo dice at 1: roll for reliability" else "")
 
 t2kResult (attrRolls, skillRolls, ammoRolls, attrDie, skillDie, kept, pushed) =
 {
-    Text = t2kText (kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) + count (filter ((x)->x == 6, ammoRolls)), pushed, onesIn (attrRolls) + onesIn (skillRolls), onesIn (ammoRolls), count (filter ((x)->x == 6, ammoRolls)), count (ammoRolls))
+    Text = t2kText (kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie), pushed, onesIn (attrRolls) + onesIn (skillRolls), onesIn (ammoRolls), count (filter ((x)->x == 6, ammoRolls)), count (ammoRolls))
     Value = kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie)
     Outcome = if kept + successesIn (attrRolls, attrDie) + successesIn (skillRolls, skillDie) > 0 then "Success" else "Failure"
-    Push = if not (pushed) and (successesIn (attrRolls, attrDie) == 0 or (skillDie > 0 and successesIn (skillRolls, skillDie) == 0)) then t2kPush (attrDie, skillDie, successesIn (attrRolls, attrDie), successesIn (skillRolls, skillDie)) else 0
+    Push = if not (pushed) and (successesIn (attrRolls, attrDie) == 0 or (skillDie > 0 and successesIn (skillRolls, skillDie) == 0)) then t2kAmmoPush (attrDie, skillDie, successesIn (attrRolls, attrDie), successesIn (skillRolls, skillDie), ammoRolls) else 0
     PushLabel = "Push (1s cost damage or stress)"
 }
 
+t2kPush (attrDie, skillDie, attrKept, skillKept) = t2kAmmoPush (attrDie, skillDie, attrKept, skillKept, [])
 
-t2kPush (attrDie, skillDie, attrKept, skillKept) = ([dice { number = if attrKept > 0 then 0 else 1  sides = max (6, attrDie) }, dice { number = if skillKept > 0 or skillDie == 0 then 0 else 1  sides = max (6, skillDie)  color = "blue"  label = if skillKept > 0 or skillDie == 0 then "" else "Skill" }],
-    ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, [], attrDie, skillDie, attrKept + skillKept, true)))
+t2kAmmoPush (attrDie, skillDie, attrKept, skillKept, ammoRolls) = ([dice { number = if attrKept > 0 then 0 else 1  sides = max (6, attrDie) }, dice { number = if skillKept > 0 or skillDie == 0 then 0 else 1  sides = max (6, skillDie)  color = "blue"  label = if skillKept > 0 or skillDie == 0 then "" else "Skill" }],
+    ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, ammoRolls, attrDie, skillDie, attrKept + skillKept, true)))
 
 t2kRoll (attrDie, skillDie, ammo) = ([dice { number = if attrDie > 0 then 1 else 0  sides = max (6, attrDie) }, dice { number = if skillDie > 0 then 1 else 0  sides = max (6, skillDie)  color = "blue"  label = if skillDie > 0 then "Skill" else "" }, dice { number = max (0, ammo)  sides = 6  color = "yellow"  label = if ammo > 0 then "Ammo" else "" }],
     ((baseline, throws)->t2kResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, attrDie, skillDie, 0, false)))
@@ -61,13 +77,13 @@ modifierOf (char) = char.Character.Modifier
 skill (attribute) = custom
 {
     Rating = string { description = "Skill level A (d12) to D (d6), or F for untrained." default = "F"  keys = ratings }
-    Roll = integer { description = "Attribute die plus skill die. 6+ is a success, 10+ on a d10 or d12 two." value = 0  render = poolName (stepped (attribute, modifierOf (characterTable)), dieOf (Rating))  valuedice = t2kRoll (stepped (attribute, modifierOf (characterTable)), dieOf (Rating), 0)  editable = none }
+    Roll = integer { description = "Attribute die plus skill die. 6+ is a success, 10+ on a d10 or d12 two." value = 0  render = poolName (attrStepped (attribute, dieOf (Rating), modifierOf (characterTable)), skillStepped (dieOf (Rating), modifierOf (characterTable)))  valuedice = t2kRoll (attrStepped (attribute, dieOf (Rating), modifierOf (characterTable)), skillStepped (dieOf (Rating), modifierOf (characterTable)), 0)  editable = none }
 }
 
 attribute = custom
 {
     Rating = string { description = "Attribute level A (d12) to D (d6)." default = "C"  keys = ["A", "B", "C", "D"] }
-    Die = integer { value = dieOf (Rating)  render = dieName (dieOf (Rating))  valuedice = t2kRoll (stepped (dieOf (Rating), modifierOf (characterTable)), 0, 0)  editable = none }
+    Die = integer { value = dieOf (Rating)  render = dieName (dieOf (Rating))  valuedice = t2kRoll (attrStepped (dieOf (Rating), 0, modifierOf (characterTable)), skillStepped (0, modifierOf (characterTable)), 0)  editable = none }
 }
 
 noStats = { Stats = { Damage = "" } }
@@ -87,13 +103,17 @@ weaponAttack (name, attrDie, skillDieSize, ammo, damage, kind, rangeMetres) = cu
     Damage = damage
 }
 
+modAttr (char, rating, skillName) = attrStepped (dieOf (rating), skillDie (char, skillName), modifierOf (char))
+
+modSkill (char, skillName) = skillStepped (skillDie (char, skillName), modifierOf (char))
+
 attackFor (char, weapon) =
     if weaponStat (weapon, "Kind") == "Melee" then
-        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.STR.Rating), modifierOf (char)), skillDie (char, "Close Combat"), 0, weaponStat (weapon, "Damage"), "melee", 0)
+        weaponAttack (weapon.Name, modAttr (char, char.Attributes.STR.Rating, "Close Combat"), modSkill (char, "Close Combat"), 0, weaponStat (weapon, "Damage"), "melee", 0)
     else if weaponStat (weapon, "Kind") == "Heavy" then
-        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.STR.Rating), modifierOf (char)), skillDie (char, "Heavy Weapons"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
+        weaponAttack (weapon.Name, modAttr (char, char.Attributes.STR.Rating, "Heavy Weapons"), modSkill (char, "Heavy Weapons"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
     else
-        weaponAttack (weapon.Name, stepped (dieOf (char.Attributes.AGL.Rating), modifierOf (char)), skillDie (char, "Ranged Combat"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
+        weaponAttack (weapon.Name, modAttr (char, char.Attributes.AGL.Rating, "Ranged Combat"), modSkill (char, "Ranged Combat"), char.Character.'Ammo dice', weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Range")) * 2)
 
 capacity (a, b) = (dieOf (a) + dieOf (b) + 3) / 4
 
@@ -113,7 +133,7 @@ characterTable = ruleset
         'Big dream' = string {}
         Buddy = string {}
         Appearance = string {}
-        Modifier = integer { description = "Steps up (+) or down (-) the attribute die for the next roll." default = 0  minvalue = -3  maxvalue = 3  editable = live }
+        Modifier = integer { description = "Steps the dice of the next roll: the skill die first (an untrained skill gains a D), then the attribute die once the skill die is A or gone." default = 0  minvalue = -3  maxvalue = 3  editable = live }
         'Ammo dice' = integer { description = "Ammo dice to fire with a ranged attack: each 6 is an extra hit, each die a round." default = 0  minvalue = 0  maxvalue = 10  editable = live }
     }
 
@@ -188,7 +208,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", stepped (dieOf (Attributes.STR.Rating), Character.Modifier), skillDie (characterTable, "Close Combat"), 0, "1", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", modAttr (characterTable, Attributes.STR.Rating, "Close Combat"), modSkill (characterTable, "Close Combat"), 0, "1", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -385,7 +405,7 @@ Twilight2000 = system
         {
             title = "Firing"
             topic = "Combat"
-            text = ["Set Ammo dice before firing an automatic weapon: each 6 on them is an extra hit, and each die is a round spent. Roll d6 for the hit location; armor there stops damage."]
+            text = ["Set Ammo dice before firing an automatic weapon: each 6 on them is an extra hit when the attack hits, and each die is a round spent. Roll d6 for the hit location; armor there stops damage."]
         },
         hint
         {

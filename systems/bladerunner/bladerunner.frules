@@ -27,7 +27,7 @@ keptSuccesses (counts, mode) =
 onesIn (a, s, e, skillDie, mode) =
     (if a == 1 then 1 else 0) + (if skillDie > 0 and s == 1 then 1 else 0) + (if mode != 0 and e == 1 then 1 else 0)
 
-canReroll (x, die, exists) = exists and x != 1 and successOf (x, die) == 0
+canReroll (x, die, exists) = exists and successOf (x, die) == 0
 
 modeText (mode) = if mode > 0 then ", advantage" else if mode < 0 then ", disadvantage" else ""
 
@@ -81,6 +81,7 @@ rangeMetres (text) =
         case "Short" then 10
         case "Medium" then 30
         case "Long" then 100
+        case "Extreme" then 1000
         else 0
 
 noStats = { Stats = { Damage = "" } }
@@ -305,7 +306,7 @@ BladeRunner = system
         {
             title = "Rolling"
             topic = "Play"
-            text = ["Roll the attribute die and the skill die. 6 or more is a success, 10 or more on a d10 or d12 two. The roll asks first: advantage adds a die and keeps the best two, disadvantage keeps the worst two. Push to reroll failed dice that are not 1s; every 1 is a point of damage or stress. Humans push once, replicants twice."]
+            text = ["Roll the attribute die and the skill die. 6 or more is a success, 10 or more on a d10 or d12 two. The roll asks first: advantage adds a die and keeps the best two, disadvantage keeps the worst two. Push to reroll every die without a success; every 1 showing after the push is a point of damage or stress. Humans push once, replicants twice."]
         },
         hint
         {

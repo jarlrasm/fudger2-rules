@@ -171,7 +171,7 @@ characterTable = ruleset
         {
             Name = string {}
             Ranged = bool { default = false }
-            Attack = modifier { default = 0  valuedice = attackDice  action = if Ranged then "ranged" else "melee"  reach = 5 }
+            Attack = modifier { default = 0  valuedice = attackDice  action = if Ranged then "ranged" else "melee"  reach = 5  range = if Ranged then Rank * 100 else 0 }
             Effect = string { default = "Damage" }
             Rank = integer { default = 0 }
         }
@@ -220,6 +220,7 @@ pointsSpent (char) =
     + char.Defenses.Dodge.Ranks + char.Defenses.Parry.Ranks + char.Defenses.Fortitude.Ranks + char.Defenses.Will.Ranks
     + (skillRanks (char.Skills) + 1) / 2
     + char.'Advantage Ranks'.'Advantage Points'
+    + char.'Advantage Ranks'.'Equipment Points'
     + sum (map ((p)->p.Cost, char.Powers))
 
 creatureTable = ruleset

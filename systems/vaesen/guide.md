@@ -24,6 +24,7 @@ A character with all three of a kind marked who takes more is **broken** physica
 ## Combat and fear
 - **Initiative**: deal a card from 1 to 10 to every character and vaesen; act in order.
 - A hit deals damage (marks conditions) equal to the weapon's damage plus extra successes.
+- Without a weapon, fight unarmed with Close combat for 1 damage; the sheet always lists an Unarmed attack.
 - Vaesen are not fought like people: most can only be defeated by finding their **weakness** in the investigation. They act by drawing from their own list of attacks and use **Might** for rolls. Encountering one forces a fear roll (Logic + Vigilance or Empathy) or a mental condition.
 
 ## Between mysteries

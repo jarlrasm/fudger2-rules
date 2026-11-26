@@ -9,7 +9,7 @@ Roll **d20 + bonus** against a **Difficulty Class (DC)**: 10 is easy, 15 average
 ## Combat
 Roll **d20 + Initiative** at the start of a conflict; act from highest to lowest.
 
-1. **Attack:** d20 + attack bonus against **10 + the target's Dodge** (ranged) or **Parry** (close). The sheet asks for it. A natural 20 is a critical hit: +5 to the effect, or an extra effect.
+1. **Attack:** d20 + attack bonus against **10 + the target's Dodge** (ranged) or **Parry** (close). The sheet asks for it. A ranged attack reaches its long range, rank x 100 ft, on the battlemap (short is rank x 25 ft and medium x 50 ft; attacks beyond short range take -2, beyond medium -5). A natural 20 is a critical hit: +5 to the effect, or an extra effect.
 2. **Damage:** the target makes a **Toughness** check against **15 + damage rank**. The sheet asks for the rank.
    - Success: no effect.
    - 1 degree of failure: **bruised** (−1 to further Toughness checks; it stacks).

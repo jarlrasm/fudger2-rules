@@ -3,7 +3,7 @@
 ## Rolling
 Roll a pool of **d6s**: attribute + skill (+ gear bonus), plus one yellow **stress die** for each point of Stress. Every **6** is a success; one is enough, and extra successes buy stunts.
 
-- **Push:** after a failed (or not good enough) roll, a character can push once: reroll every die that isn't a 6 (stress dice showing 1 stay), and add a stress die. The roll window offers *Push (+1 Stress)*, which also raises Stress on the sheet. Synthetics never push stress.
+- **Push:** after a failed (or not good enough) roll, a character can push once: reroll every die that isn't a 6 (stress dice showing 1 stay), and add a stress die. The roll window offers *Push (+1 Stress)*, which also raises Stress on the sheet. Synthetics roll no stress dice, never panic and push without gaining Stress; the sheet does this when the Career is Synthetic.
 - **Panic:** if any stress die shows **1**, the character must make a **Panic Roll**: 1d6 + Stress. 7 or more means they lose control; the higher the roll, the worse the effect. A panicking character can't push.
 - Stress rises from pushing, firing full auto, seeing horrors, and other characters' panic. It goes down by one each Turn of rest in a safe place.
 
