@@ -10,15 +10,27 @@ pointsToSkill(points)=
 withActions(points, actions)=
   max(min(points, 3), points - 3 * max(0, toInt(actions) - 1))
 
-starResult (total, difficulty) =
-    if difficulty > 0 then { Text = toString (total) + " vs " + toString (difficulty) + ": " + (if total >= difficulty then "Success" else "Failure")  Value = total  Outcome = if total >= difficulty then "Success" else "Failure" }
-    else total
+starResult (total, difficulty) = starResultWith (total, difficulty, 0)
 
-rethrow (extra) = ([dice { number = 1  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
+starResultWith (total, difficulty, cp) = {
+    Text = toString (total) + (if difficulty > 0 then " vs " + toString (difficulty) + ": " + (if total >= difficulty then "Success" else "Failure") else "")
+    Value = total
+    Outcome = if difficulty > 0 then (if total >= difficulty then "Success" else "Failure") else ""
+    Push = if cp > 0 then characterPointDie (total, cp) else 0
+    PushLabel = "Spend a Character Point"
+    PushSets = [{ Field = "characterTable.General.Character Points"  Value = cp - 1 }]
+}
+
+characterPointDie (total, cp) = ([dice { number = 1  sides = 6  explode = 6  label = "Character Point" }],((baseline,throws)->
+    starResultWith (total + sum (first (throws).rolls), asked, cp - 1)))
+
+rethrow (extra) = rethrowWith (extra, 0)
+
+rethrowWith (extra, cp) = ([dice { number = 1  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
   if first (first (throws).rolls) == 6 then
-    rethrow (extra + 6)
+    rethrowWith (extra + 6, cp)
   else
-    starResult (extra + sum (first (throws).rolls), asked)
+    starResultWith (extra + sum (first (throws).rolls), asked, cp)
   ))
 
 oneOnWild (rolls) =
@@ -27,17 +39,25 @@ oneOnWild (rolls) =
   else
     sum (rolls) - max (rolls)
 
-starDice (points) = ([dice { number = max (0, points / 3 - 1)  sides = 6  bonus = points - points / 3 * 3 }, dice { number = min (1, points / 3)  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
+starDice (points) = starDiceWith (points, 0)
+
+starDiceWith (points, cp) = ([dice { number = max (0, points / 3 - 1)  sides = 6  bonus = points - points / 3 * 3 }, dice { number = min (1, points / 3)  sides = 6  color = "red"  label = "Wild" }],((baseline,throws)->
   if count (item (1, throws).rolls) == 0 then
-    starResult (first (throws).bonus, asked)
+    starResultWith (first (throws).bonus, asked, cp)
   else
     switch first (item (1, throws).rolls)
-      case 6 then rethrow (sum (first (throws).rolls) + 6 + first (throws).bonus)
-      case 1 then starResult (oneOnWild (first (throws).rolls) + first (throws).bonus, asked)
-      else starResult (sum (first (throws).rolls) + sum (item (1, throws).rolls) + first (throws).bonus, asked)
+      case 6 then rethrowWith (sum (first (throws).rolls) + 6 + first (throws).bonus, cp)
+      case 1 then starResultWith (oneOnWild (first (throws).rolls) + first (throws).bonus, asked, cp)
+      else starResultWith (sum (first (throws).rolls) + sum (item (1, throws).rolls) + first (throws).bonus, asked, cp)
   ))
 
 starCheck (points) = ask ("Difficulty", starDice (points))
+
+charCheck (char, points) = ask ("Difficulty", starDiceWith (points, char.General.'Character Points'))
+
+injuryPips (char) = if char.Injuries.'Wounded twice' then 6 else if char.Injuries.'Wounded' or char.Injuries.'Stunned' then 3 else 0
+
+injured (char, points) = max (0, points - injuryPips (char))
 
 noSkill = { Points = 0 }
 
@@ -61,13 +81,13 @@ rangedSkill (weapon) =
 
 longRange (text) = toInt (first (reverse (split ("/", text))))
 
-weaponAttack (name, points, damage, kind, distance) = custom
+weaponAttack (name, points, damage, kind, distance, cp) = custom
 {
     Name = name
     Attack = integer
     {
         value = points
-        valuedice = starCheck (points)
+        valuedice = ask ("Difficulty", starDiceWith (points, cp))
         render = pointsToSkill (points)
         action = kind
         range = distance
@@ -79,7 +99,7 @@ weaponAttack (name, points, damage, kind, distance) = custom
 }
 
 attackPoints (char, skill) =
-    withActions (dexterityPoints (char, skill), valueOr (char.General, "Actions", "1"))
+    withActions (injured (char, dexterityPoints (char, skill)), valueOr (char.General, "Actions", "1"))
 
 notUsed = { Used = false  Difficulty = "" }
 
@@ -88,15 +108,15 @@ noPoints = { Points = 0 }
 forcePowerSkill (power, skill) = valueOr (power.data.forcePowerStats.Power, skill, notUsed)
 
 jediPoints (char, skill) =
-    withActions (valueOr (valueOr (char.'Jedi skills', skill, noPoints), "Points", 0), valueOr (char.General, "Actions", "1"))
+    withActions (injured (char, valueOr (valueOr (char.'Jedi skills', skill, noPoints), "Points", 0)), valueOr (char.General, "Actions", "1"))
 
-forcePowerUse (name, points, difficulty) = custom
+forcePowerUse (name, points, difficulty, cp) = custom
 {
     Name = name
     Roll = integer
     {
         value = points
-        valuedice = starCheck (points)
+        valuedice = ask ("Difficulty", starDiceWith (points, cp))
         render = pointsToSkill (points)
         action = "ranged"
     }
@@ -104,7 +124,7 @@ forcePowerUse (name, points, difficulty) = custom
 }
 
 forceUsesWith (char, skill) =
-    map ((power)->forcePowerUse (power.Name + " (" + skill + ")", jediPoints (char, skill), valueOr (forcePowerSkill (power, skill), "Difficulty", "")),
+    map ((power)->forcePowerUse (power.Name + " (" + skill + ")", jediPoints (char, skill), valueOr (forcePowerSkill (power, skill), "Difficulty", ""), valueOr (char.General, "Character Points", 0)),
         filter ((power)->valueOr (forcePowerSkill (power, skill), "Used", false), char.'Force powers'))
 
 forceUsesFor (char) =
@@ -112,8 +132,8 @@ forceUsesFor (char) =
 
 attacksFor (char) =
     concat (
-        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0), char.'Melee weapons'),
-        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, rangedSkill (weapon)), valueOr (weapon.data.rangedWeaponStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedWeaponStats.Stats, "Range", ""))), char.'Ranged weapons'))
+        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, meleeSkill (weapon)), valueOr (weapon.data.meleeWeaponStats.Stats, "Damage", ""), "melee", 0, valueOr (char.General, "Character Points", 0)), char.'Melee weapons'),
+        map ((weapon)->weaponAttack (weapon.Name, attackPoints (char, rangedSkill (weapon)), valueOr (weapon.data.rangedWeaponStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedWeaponStats.Stats, "Range", "")), valueOr (char.General, "Character Points", 0)), char.'Ranged weapons'))
 
 characterTable = ruleset
 {
@@ -148,8 +168,8 @@ characterTable = ruleset
                 default=9
                 minvalue=1
                 maxvalue=25
-                valuedice=starCheck (withActions(Points, General.Actions))
-                render=pointsToSkill(withActions(Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points), General.Actions))
               }
 
           }
@@ -165,8 +185,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Dexterity'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Dexterity'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Dexterity'.Points), General.Actions))
                 default=0
                 minvalue=0
                 maxvalue=25
@@ -185,8 +205,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Knowledge'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Knowledge'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Knowledge'.Points), General.Actions))
                 
                 default=0
                 minvalue=0
@@ -206,8 +226,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Mechanical'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Mechanical'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Mechanical'.Points), General.Actions))
                 
                 default=0
                 minvalue=0
@@ -227,8 +247,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Perception'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Perception'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Perception'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Perception'.Points), General.Actions))
                 
                 default=0
                 minvalue=0
@@ -247,8 +267,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Strength'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Strength'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Strength'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Strength'.Points), General.Actions))
                 
                 default=0
                 minvalue=0
@@ -268,8 +288,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Skill in pips, shown as dice. Untrained skills use the attribute."
-                valuedice=starCheck (withActions(Points + Attributes.'Technical'.Points, General.Actions))
-                render=pointsToSkill(withActions(Points + Attributes.'Technical'.Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points + Attributes.'Technical'.Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points + Attributes.'Technical'.Points), General.Actions))
                 
                 default=0
                 minvalue=0
@@ -285,18 +305,21 @@ characterTable = ruleset
                 description = "Spend a Force Point to double all your dice for one round."
                 default=0
                 minvalue=0
+                editable=live
               }
               'Dark Side Points'=integer
               {
                 description = "Gained for using the Force in anger. Enough of them turn you to the dark side."
                 default=0
                 minvalue=0
+                editable=live
               }
               'Character Points'=integer
               {
-                description = "Spend before a roll to add a die, or save them to improve skills."
+                description = "Spend after a roll to add a die that rerolls on a 6, or save them to improve skills."
                 default=0
                 minvalue=0
+                editable=live
               }
               'Force sensitive' = bool
               {
@@ -307,8 +330,8 @@ characterTable = ruleset
               {
                 description = "Initiative: roll Perception."
                 value=Attributes.'Perception'.Points
-                valuedice=starDice (Attributes.'Perception'.Points)
-                render=pointsToSkill(Attributes.'Perception'.Points)
+                valuedice=starDice (injured (characterTable, Attributes.'Perception'.Points))
+                render=pointsToSkill(injured (characterTable, Attributes.'Perception'.Points))
                 editable=none
               }
               Actions = selector
@@ -415,8 +438,8 @@ characterTable = ruleset
               Points=integer
               {
                 description = "Jedi skill in pips, shown as dice."
-                valuedice=starCheck (withActions(Points, General.Actions))
-                render=pointsToSkill(withActions(Points, General.Actions))
+                valuedice=charCheck (characterTable, withActions(injured (characterTable, Points), General.Actions))
+                render=pointsToSkill(withActions(injured (characterTable, Points), General.Actions))
                 default=0
                 minvalue=0
                 maxvalue=25

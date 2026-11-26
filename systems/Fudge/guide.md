@@ -12,8 +12,8 @@ Roll 4dF (four Fudge dice, each -1, 0 or +1) and move that many steps along the 
 ## Combat
 1. Each side rolls its fighting skill, opposed. The winner hits if they beat the loser by at least one step.
 2. Damage is the relative degree, plus the attacker's offensive factors (weapon, strength), minus the defender's defensive factors (armour, toughness).
-3. Compare the damage to the Injury Levels on the sheet: 1-3 Scratch, 4-6 Hurt, 7-9 Very hurt, 10-12 Incapacitated, 13+ Near death.
-4. Mark the box in Damage. A full box spills into the next level. Hurt gives -1 to actions, Very hurt -2.
+3. Compare the damage to the Injury Levels on the sheet: 1-2 Scratch, 3-4 Hurt, 5-6 Very hurt, 7-8 Incapacitated, 9+ Near death.
+4. Mark the box in Damage. A full box spills into the next level. Hurt gives -1 to actions, Very hurt -2; only the worst wound counts, and the sheet takes it off every trait roll.
 
 The Heal button moves every wound one level down.
 
@@ -24,5 +24,5 @@ Fudge has no fixed distance. A combat round is a few seconds. As a rule of thumb
 The campaign settings list which traits roll initiative (by default the first one the character has). Call initiative and everyone rolls.
 
 ## Other
-- **Fudge points** let a player change a result, avoid a wound or bring in a lucky break.
+- **Fudge points** (changed on the sheet in play) let a player change a result, avoid a wound or bring in a lucky break.
 - **Gifts and Faults** are short descriptions. Let them matter in play: a gift may give a +1 or let something happen at all, and a fault should bring trouble.

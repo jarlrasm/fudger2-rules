@@ -1,7 +1,7 @@
 # Playing Torg Eternity
 
 ## Rolling
-Roll a d20 and look up the bonus on the bonus chart, then add it to the attribute or skill. The sheet does this. A 10 or 20 rolls again and adds, so results can climb high. A natural 1 is a mishap.
+Roll a d20 and look up the bonus on the bonus chart, then add it to the attribute or skill. The sheet does this. A 10 or 20 rolls again and adds, so results can climb high. A natural 1 reads -10 on the chart, and is a mishap only when the action is a contradiction. Wounds (-1 each, at most -3), Stymied (-2, very -4) and Weakened (-2, very -4) are taken off every roll.
 
 Compare the total with a Difficulty Number (DN). 10 is standard, 12 challenging, 14 hard, 16 very hard, 18 heroic. Meeting the DN succeeds. Beating it by 5 or more is a good success, and by 10 or more an outstanding success. Each roll asks for the DN. Leave it blank when only the GM knows it, and the roll shows just the total.
 
@@ -9,7 +9,7 @@ Compare the total with a Difficulty Number (DN). 10 is standard, 12 challenging,
 There is no initiative roll. Each round, flip a Drama card: it says which side acts first, and its conditions and approved actions apply to the round. Within a side, the players choose their order. Drag tokens into that order in the initiative list.
 
 1. Roll the attack skill against the target's defence (usually Dodge or a melee skill, and at least 8).
-2. A hit deals the weapon's damage plus bonus. Compare it with the target's Toughness:
+2. A hit deals the weapon's damage plus bonus. Compare it with the target's Toughness (Strength plus the best armor bonus, worked out on the sheet):
    - below Toughness: no effect, or one Shock with a strong hit
    - equal or more: a Shock
    - 5 or more over: a wound and two Shock, and every further 5 adds a wound
@@ -23,4 +23,4 @@ There is no initiative roll. Each round, flip a Drama card: it says which side a
 Spell uses lists each one under Magic Miracles Psionics, rolling the skill in its Skill field against its DN, and can be used on a token within its Range.
 
 ## Possibilities
-Possibilities let a hero reroll and add, or soak damage. Heroes are meant to be bold, so give them chances to spend them.
+Possibilities let a hero reroll and add, or soak damage. After a roll, the Spend a Possibility button rolls again and adds the dice before the chart is read; a second roll under 10 counts as 10, and the sheet takes the Possibility off. Heroes are meant to be bold, so give them chances to spend them.

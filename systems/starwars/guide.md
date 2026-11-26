@@ -10,7 +10,7 @@ Roll against a difficulty number: Very Easy 1-5, Easy 6-10, Moderate 11-15, Diff
 1. Call initiative. It rolls Initiative (under General), which is the character's Perception code. Highest goes first. The Actions penalty doesn't apply to it.
 2. Attacks roll the weapon skill (Blaster, Melee and so on) against the range difficulty, or against the target's Dodge or parry roll if they use one.
 3. Damage rolls the weapon's damage against the target's Strength (plus armour). The amount by which damage beats Strength gives the injury level on the sheet: 0-3 Stunned, 4-8 Wounded, 9-12 Incapacitated, 13-15 Mortally wounded, 16+ Killed.
-4. Mark the injury in Injuries. Wounds lower every roll by one die.
+4. Mark the injury in Injuries. Stunned and Wounded take 1D off every roll, Wounded twice 2D, and the sheet's rolls (initiative too) do this.
 
 Doing several things in a round costs 1D per extra action on every roll. Set Actions (under General) to how many actions the character takes this round, and every attribute and skill roll on the sheet drops by 1D per extra action, down to at least 1D. It isn't saved, so it resets when the sheet is reloaded.
 
@@ -21,4 +21,4 @@ Humans move about 10 metres a round at a walk and still act (the Move value on t
 Force power uses has a row for each Jedi skill a power needs, rolling that skill against the difficulty shown. A power that needs several skills needs every roll to succeed. Use a row on a token to target it.
 
 ## Points
-Force Points double all dice for one round. Character Points add a die to a roll after it is made. A Dark Side Point comes from using the Force in anger or doing evil.
+Force Points double all dice for one round. Character Points add a die to a roll after it is made: the roll window's Spend a Character Point button rolls a d6 that rerolls and adds on a 6, and takes the point off the sheet. A Dark Side Point comes from using the Force in anger or doing evil.

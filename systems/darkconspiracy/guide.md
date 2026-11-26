@@ -1,7 +1,7 @@
 # Playing Dark Conspiracy
 
 ## Checks
-Roll 2D6, add the skill level and the DM of the characteristic that fits the task (the Check column on a skill uses the characteristic picked in its row). 8 or more succeeds. How far above or below 8 the roll lands is the Effect: 6 or more is a great success, -6 or worse a disaster. Make easy tasks +2 or more and hard ones -2 or worse.
+Roll 2D6, add the skill level and the DM of the characteristic that fits the task (the Check column on a skill uses the characteristic picked in its row). 8 or more succeeds. How far above or below 8 the roll lands is the Effect: 6 or more is a great success, -6 or worse a disaster. Difficulty is a DM on the roll: Simple +6, Easy +4, Routine +2, Average +0, Difficult -2, Very Difficult -4, Formidable -6. Each check asks for that Difficulty DM (leave it at 0 for an average task), adds it, and shows the success and Effect with it.
 
 A skill the character doesn't have rolls at -3 (Unskilled under Checks), less with Jack of All Trades. Untick Trained on a skill to mark it as one they lack.
 

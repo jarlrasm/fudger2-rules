@@ -4,11 +4,13 @@
 effectiveLevel (level, eases) = max (0, level - eases)
 
 specialRoll (natural) =
-    if natural == 20 then ", major effect, no pool cost"
-    else if natural == 19 then ", minor or major effect"
-    else if natural > 16 then ", +" + toString (natural - 16) + " damage or minor effect"
+    if natural == 20 then ", major effect (or +4 damage), no pool cost"
+    else if natural == 19 then ", minor effect (or +3 damage)"
+    else if natural > 16 then ", +" + toString (natural - 16) + " damage in combat"
     else if natural == 1 then ", GM intrusion"
     else ""
+
+specialFor (natural, impaired) = if impaired and natural > 16 then "" else specialRoll (natural)
 
 cypherOutcome (natural, target) =
     if natural == 1 then "Fumble"
@@ -16,18 +18,27 @@ cypherOutcome (natural, target) =
     else if natural >= target then "Success"
     else "Failure"
 
-cypherResult (level, eases, natural, known) =
+cypherFull (level, eases, natural, known, xp, impaired) =
 {
-    Text = if not (known) then toString (natural) + specialRoll (natural) else toString (natural) + " vs " + toString (effectiveLevel (level, eases) * 3) + " (level " + toString (effectiveLevel (level, eases)) + "): " + (if natural >= effectiveLevel (level, eases) * 3 then "Success" else "Failure") + specialRoll (natural)
+    Text = if not (known) then toString (natural) + specialFor (natural, impaired) else toString (natural) + " vs " + toString (effectiveLevel (level, eases) * 3) + " (level " + toString (effectiveLevel (level, eases)) + "): " + (if natural >= effectiveLevel (level, eases) * 3 then "Success" else "Failure") + specialFor (natural, impaired)
     Value = natural
     Outcome = if known then cypherOutcome (natural, effectiveLevel (level, eases) * 3) else if natural == 1 then "Fumble" else if natural > 18 then "Critical" else ""
+    Push = if xp > 0 then cypherReroll (level, eases, natural, known, xp - 1, impaired) else 0
+    PushLabel = "Spend 1 XP to reroll"
+    PushSets = [{ Field = "characterTable.Character.XP"  Value = xp - 1 }]
 }
+
+cypherReroll (level, eases, natural, known, left, impaired) = ([1d20], ((baseline, throws)->cypherFull (level, eases, max (natural, first (first (throws).rolls)), known, left, impaired)))
+
+cypherResult (level, eases, natural, known) = cypherFull (level, eases, natural, known, 0, false)
 
 cypherRoll (level, effort) = ([1d20], ((baseline, throws)->cypherResult (level, baseline + effort, first (first (throws).rolls), true)))
 
-cypherAskedRoll (effort) = ([1d20], ((baseline, throws)->cypherResult (asked, baseline + effort, first (first (throws).rolls), answered)))
+cypherCharRoll (effort, xp, impaired) = ([1d20], ((baseline, throws)->cypherFull (asked, baseline + effort, first (first (throws).rolls), answered, xp, impaired)))
 
-cypherDice (char) = ask ("Task level", cypherAskedRoll (char.Character.Effort))
+cypherAskedRoll (effort) = cypherCharRoll (effort, 0, false)
+
+cypherDice (char) = ask ("Task level", cypherCharRoll (char.Character.Effort, char.Character.XP, char.'Damage Track'.Impaired))
 
 plainTask = cypherRoll (0, 0)
 
@@ -56,9 +67,9 @@ characterTable = ruleset
         Focus = string { description = "The verb in your sentence: what makes the character unique." reference = ["csrd", 8] }
         Flavor = string {}
         Tier = integer { description = "How far the character has advanced, from 1 to 6." reference = ["csrd", 8] default = 1  minvalue = 1  maxvalue = 6 }
-        XP = integer { description = "Experience points. Spend 4 to advance, or use them to reroll." reference = ["csrd", 4] default = 0  editable = live }
-        Effort = integer { description = "Levels of Effort to apply to the next roll. Each eases the task one step." reference = ["csrd", 6] default = 0  minvalue = 0  maxvalue = 6  editable = live }
-        'Max Effort' = integer { description = "The most Effort you can apply to one task: equal to your tier." reference = ["csrd", 8] value = Tier  editable = none }
+        XP = integer { description = "Experience points. Spend 4 to advance, or 1 to reroll and keep the better roll." reference = ["csrd", 4] default = 0  minvalue = 0  editable = live }
+        Effort = integer { description = "Levels of Effort to apply to the next roll. Each eases the task one step." reference = ["csrd", 6] default = 0  minvalue = 0  maxvalue = 'Max Effort'  editable = live }
+        'Max Effort' = integer { description = "The most Effort you can apply to one task: 1, plus 1 for each Extra Effort advancement." reference = ["csrd", 8] default = 1  minvalue = 1  maxvalue = 6 }
         Armor = integer { description = "Reduces damage from each hit." reference = ["csrd", 249] default = 0 }
         Cypher = integer { description = "How many cyphers you can carry at once." reference = ["csrd", 4] default = 2 }
         Shins = integer { description = "Money." default = 0  editable = live }
@@ -135,8 +146,10 @@ characterTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Eases = integer { default = 0  valuedice = cypherDice (characterTable)  action = melee  reach = 2 }
+            Eases = integer { default = 0  valuedice = cypherDice (characterTable)  action = Kind  reach = 5  range = Range }
             Damage = integer { default = 4 }
+            Kind = string { description = "Melee attacks reach the next square; ranged ones reach out to Range." default = "melee"  keys = ["melee", "ranged"] }
+            Range = integer { description = "How far a ranged attack reaches, in feet: 10 immediate, 50 short, 100 long." default = 50  minvalue = 0 }
         }
     }
 
@@ -273,7 +286,7 @@ CypherSystem = system
         {
             title = "Task levels"
             topic = "Play"
-            text = ["Every roll asks for the task's level. Skills, assets and Effort ease it, and the target is level times 3. Leave it blank when only the GM knows it.", "The GM never rolls: players roll to attack and to defend."]
+            text = ["Every roll asks for the task's level. Skills, assets and Effort ease it, and the target is level times 3. Leave it blank when only the GM knows it.", "The GM never rolls: players roll to attack and to defend.", "After a roll, a player can spend 1 XP to reroll and keep the better result."]
         },
         hint
         {

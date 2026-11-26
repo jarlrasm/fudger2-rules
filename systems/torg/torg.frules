@@ -1,7 +1,17 @@
 #include "/systems/common.frules"
 #include "/systems/names/settings.frules"
 
-D20Roll  = ask ("DN", D20RollImpl (0))
+D20Roll  = torgDice (0, 0)
+
+torgDice (penalty, poss) = ask ("DN", torgRollImpl (0, penalty, poss))
+
+torgPenalty (char) = min (3, char.Damage.Wounds.realvalue) + 2 * char.Damage.Stymied.realvalue + 2 * char.Damage.Weakened.realvalue
+
+creaturePenalty (creature) = min (3, creature.Basics.'Wounds taken'.realvalue) + 2 * creature.Basics.Stymied.realvalue + 2 * creature.Basics.Weakened.realvalue
+
+charRoll (char) = torgDice (torgPenalty (char), char.Possibilities.Possibilities)
+
+creatureRoll (creature) = torgDice (creaturePenalty (creature), 0)
 
 torgLevel (total, dn) =
     if total < dn then "Failure"
@@ -9,21 +19,38 @@ torgLevel (total, dn) =
     else if total < dn + 10 then "Good success"
     else "Outstanding success"
 
-torgResult (total, dn) =
-    if dn > 0 then { Text = toString (total) + " vs DN " + toString (dn) + ": " + torgLevel (total, dn)  Value = total  Outcome = if total < dn then "Failure" else "Success" }
-    else total
+torgText (total, dn) =
+    if dn > 0 then toString (total) + " vs DN " + toString (dn) + ": " + torgLevel (total, dn)
+    else toString (total)
 
-D20RollImpl (extra) = ([1d20],((baseline,throws)->
+torgFinal (base, dieTotal, dn, poss) = {
+    Text = torgText (base + calculate (dieTotal), dn) + (if dieTotal == 1 then " (1: mishap if contradiction)" else "")
+    Value = base + calculate (dieTotal)
+    Outcome = if dn > 0 then (if base + calculate (dieTotal) < dn then "Failure" else "Success") else (if dieTotal == 1 then "Mishap" else "")
+    Push = if poss > 0 then torgPushRoll (base, dieTotal, 10) else 0
+    PushLabel = "Spend a Possibility"
+    PushSets = [{ Field = "characterTable.Possibilities.Possibilities"  Value = poss - 1 }]
+}
+
+D20RollImpl (extra) = torgRollImpl (extra, 0, 0)
+
+torgRollImpl (extra, penalty, poss) = ([1d20],((baseline,throws)->
   switch first(first (throws).rolls)
-    case 10 then D20RollImpl (extra + 10)
-    case 20 then D20RollImpl (extra + 20)
-    else if extra + first(first (throws).rolls) == 1 then "Mishap"
-    else torgResult (baseline + calculate (extra + first(first (throws).rolls)), asked)
+    case 10 then torgRollImpl (extra + 10, penalty, poss)
+    case 20 then torgRollImpl (extra + 20, penalty, poss)
+    else torgFinal (baseline - penalty, extra + first(first (throws).rolls), asked, poss)
           ))
-          
-          
+
+torgPushRoll (base, extra, dieFloor) = ([1d20],((baseline,throws)->
+  switch first(first (throws).rolls)
+    case 10 then torgPushRoll (base, extra + 10, 0)
+    case 20 then torgPushRoll (base, extra + 20, 0)
+    else torgFinal (base, extra + max (dieFloor, first(first (throws).rolls)), asked, 0)
+          ))
+
+
 calculate(n)=
- if n == 1 then "Mishap" else
+ if n == 1 then -10 else
  if n < 3 then -8 else
  if n < 5 then -6 else
  if n < 7 then -4 else
@@ -67,13 +94,13 @@ calculate(n)=
 
 flatten (lists) = fold ([], (acc, x)->concat (acc, x), lists)
 
-weaponAttack (name, skill, damage, kind, distance) = custom
+weaponAttack (name, skill, damage, kind, distance, rollWith) = custom
 {
     Name = name
     Attack = integer
     {
         value = skill
-        valuedice = D20Roll
+        valuedice = rollWith
         action = kind
         range = distance
     }
@@ -90,7 +117,7 @@ creatureSkill (creature, skill) =
 
 creatureAttack (creature, skill, kind) =
     if creatureSkill (creature, skill) > 0 then
-        [weaponAttack (skill, creatureSkill (creature, skill), "", kind, 0)]
+        [weaponAttack (skill, creatureSkill (creature, skill), "", kind, 0, creatureRoll (creature))]
     else
         []
 
@@ -146,13 +173,13 @@ spellKind (spell) = if toLower (spellRangeText (spell)) == "touch" then "melee" 
 
 spellMetres (spell) = toInt (first (split (" ", replace ("m", " ", spellRangeText (spell)))))
 
-spellUse (name, skill, dn, kind, distance, rangeText) = custom
+spellUse (name, skill, dn, kind, distance, rangeText, rollWith) = custom
 {
     Name = name
     Roll = integer
     {
         value = skill
-        valuedice = D20Roll
+        valuedice = rollWith
         action = kind
         range = distance
     }
@@ -160,16 +187,18 @@ spellUse (name, skill, dn, kind, distance, rangeText) = custom
     Range = rangeText
 }
 
+armourBonus (armour) = bonusWithValue ([[valueOr (armour.data.armourStats.Stats, "Bonus", "")]], "^[^0-9]*([0-9]+)")
+
 listVisible (items) = if count (items) > 0 then visible else none
 
 spellUsesFor (char) =
-    map ((spell)->spellUse (spell.Name, spellSkillValue (char, spell), valueOr (spell.data.spellStats.Stats, "DN", ""), spellKind (spell), spellMetres (spell), spellRangeText (spell)), char.'Magic Miracles Psionics')
+    map ((spell)->spellUse (spell.Name, spellSkillValue (char, spell), valueOr (spell.data.spellStats.Stats, "DN", ""), spellKind (spell), spellMetres (spell), spellRangeText (spell), charRoll (char)), char.'Magic Miracles Psionics')
 
 attacksFor (char) =
     flatten ([
-        [weaponAttack ("Unarmed", char.'Combat Skills'.'Unarmed Combat'.'Skill value', "STR", "melee", 0)],
-        map ((weapon)->weaponAttack (weapon.Name, char.'Combat Skills'.'Melee Weapons'.'Skill value', valueOr (weapon.data.meleeStats.Stats, "Damage", ""), "melee", 0), char.'Melee Weapons'),
-        map ((weapon)->weaponAttack (weapon.Name, rangedSkillValue (char, rangedSkill (weapon)), valueOr (weapon.data.rangedStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedStats.Stats, "Range", ""))), char.'Ranged Weapons')])
+        [weaponAttack ("Unarmed", char.'Combat Skills'.'Unarmed Combat'.'Skill value', "STR", "melee", 0, charRoll (char))],
+        map ((weapon)->weaponAttack (weapon.Name, char.'Combat Skills'.'Melee Weapons'.'Skill value', valueOr (weapon.data.meleeStats.Stats, "Damage", ""), "melee", 0, charRoll (char)), char.'Melee Weapons'),
+        map ((weapon)->weaponAttack (weapon.Name, rangedSkillValue (char, rangedSkill (weapon)), valueOr (weapon.data.rangedStats.Stats, "Damage", ""), "ranged", longRange (valueOr (weapon.data.rangedStats.Stats, "Range", "")), charRoll (char)), char.'Ranged Weapons')])
 
 creatureTable = ruleset
 {
@@ -185,7 +214,7 @@ creatureTable = ruleset
       {
         description = "Attribute value, usually from 5 to 13."
         default=8
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
   }
@@ -236,7 +265,7 @@ creatureTable = ruleset
       description = "Firing lasers, blasters and other energy guns."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Fire Combat' = custom
@@ -244,7 +273,7 @@ creatureTable = ruleset
       description = "Shooting guns and other firearms."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Heavy Weapons' = custom
@@ -252,7 +281,7 @@ creatureTable = ruleset
       description = "Firing cannons, rockets and mounted guns."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Melee Weapons' = custom
@@ -260,7 +289,7 @@ creatureTable = ruleset
       description = "Fighting with swords, clubs and other hand weapons."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Missile Weapons' = custom
@@ -268,7 +297,7 @@ creatureTable = ruleset
       description = "Shooting bows, crossbows and thrown weapons."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Unarmed Combat' = custom
@@ -276,7 +305,7 @@ creatureTable = ruleset
       description = "Fighting with fists, feet and grapples."
       Modifier=modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
   }
@@ -288,7 +317,7 @@ creatureTable = ruleset
       description = "Scaring someone into backing down. An interaction attack against Spirit."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Maneuver = custom
@@ -296,7 +325,7 @@ creatureTable = ruleset
       description = "Outmoving a foe to leave them off balance. An interaction attack against Dexterity."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Taunt = custom
@@ -304,7 +333,7 @@ creatureTable = ruleset
       description = "Goading a foe into a mistake. An interaction attack against Charisma."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Trick = custom
@@ -312,7 +341,7 @@ creatureTable = ruleset
       description = "Fooling a foe with a ruse. An interaction attack against Mind."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
   }
@@ -328,7 +357,7 @@ creatureTable = ruleset
       description = "Flying planes, helicopters and other aircraft."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Alteration = custom
@@ -336,7 +365,7 @@ creatureTable = ruleset
       description = "Magic that changes the form or nature of things."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Apportation = custom
@@ -344,7 +373,7 @@ creatureTable = ruleset
       description = "Magic that moves things, or moves you."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Beast Riding' = custom
@@ -352,7 +381,7 @@ creatureTable = ruleset
       description = "Riding and controlling mounts."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Computers = custom
@@ -360,7 +389,7 @@ creatureTable = ruleset
       description = "Using, programming and hacking computers."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Conjuration = custom
@@ -368,7 +397,7 @@ creatureTable = ruleset
       description = "Magic that creates things out of nothing."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Divination = custom
@@ -376,7 +405,7 @@ creatureTable = ruleset
       description = "Magic that reveals hidden knowledge."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Dodge = custom
@@ -384,7 +413,7 @@ creatureTable = ruleset
       description = "Getting out of the way of ranged attacks."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Evidence Analysis' = custom
@@ -392,7 +421,7 @@ creatureTable = ruleset
       description = "Studying clues and working out what happened."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Faith = custom
@@ -400,7 +429,7 @@ creatureTable = ruleset
       description = "Calling on your god for miracles."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Find = custom
@@ -408,7 +437,7 @@ creatureTable = ruleset
       description = "Searching for hidden things and noticing details."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'First Aid' = custom
@@ -416,7 +445,7 @@ creatureTable = ruleset
       description = "Patching up wounds and reviving the shocked."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Kinesis = custom
@@ -424,7 +453,7 @@ creatureTable = ruleset
       description = "Psionics that move things with the mind."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Land Vehicles' = custom
@@ -432,7 +461,7 @@ creatureTable = ruleset
       description = "Driving cars, trucks and tanks."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Language = custom
@@ -440,7 +469,7 @@ creatureTable = ruleset
       description = "Speaking and understanding other languages."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Lockpicking = custom
@@ -448,7 +477,7 @@ creatureTable = ruleset
       description = "Opening locks without the key."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Medicine = custom
@@ -456,7 +485,7 @@ creatureTable = ruleset
       description = "Treating wounds and illness with real medical care."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Persuasion = custom
@@ -464,7 +493,7 @@ creatureTable = ruleset
       description = "Convincing people to agree or help."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Precognition = custom
@@ -472,7 +501,7 @@ creatureTable = ruleset
       description = "Psionics that sense what is about to happen."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Profession = custom
@@ -480,7 +509,7 @@ creatureTable = ruleset
       description = "Know-how from a trade or job."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Reality = custom
@@ -488,7 +517,7 @@ creatureTable = ruleset
       description = "Holding on to your own reality and using possibilities against others."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Scholar = custom
@@ -496,7 +525,7 @@ creatureTable = ruleset
       description = "Knowledge of a field of study."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Science = custom
@@ -504,7 +533,7 @@ creatureTable = ruleset
       description = "Understanding and using the sciences."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Stealth = custom
@@ -512,7 +541,7 @@ creatureTable = ruleset
       description = "Sneaking, hiding and staying unseen."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Streetwise = custom
@@ -520,7 +549,7 @@ creatureTable = ruleset
       description = "Finding contacts and getting by in the underworld."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Survival = custom
@@ -528,7 +557,7 @@ creatureTable = ruleset
       description = "Living off the land in the wilds."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Telepathy = custom
@@ -536,7 +565,7 @@ creatureTable = ruleset
       description = "Psionics that read or touch other minds."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Tracking = custom
@@ -544,7 +573,7 @@ creatureTable = ruleset
       description = "Following trails and finding where someone went."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     'Water Vehicles' = custom
@@ -552,7 +581,7 @@ creatureTable = ruleset
       description = "Piloting boats and ships."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
     Willpower = custom
@@ -560,7 +589,7 @@ creatureTable = ruleset
       description = "Mental strength to resist fear, tricks and mind powers."
       Modifier = modifier
       {
-        valuedice=D20Roll
+        valuedice = creatureRoll (creatureTable)
       }
     }
   }
@@ -627,7 +656,7 @@ characterTable = ruleset
             {
               description = "Attribute value, usually from 5 to 13."
               default=8
-              valuedice=D20Roll
+              valuedice = charRoll (characterTable)
             }
           }
       }
@@ -643,8 +672,8 @@ characterTable = ruleset
             editable = live
             indicator = "#d64545"
            }
-          Toughness = string
-          { description = "Damage needed to hurt you: Strength plus armor." }
+          Toughness = integer
+          { description = "Damage needed to hurt you: Strength plus the best armor bonus."  value = 'Attributes'.'Strength'.'Score' + max (map ((armour)->armourBonus (armour), 'Armour'))  editable = none }
           Stymied = slots
           {
             description = "Stymied: -2 on your next action, or -4 when very stymied."
@@ -660,11 +689,6 @@ characterTable = ruleset
             allowedchange = increaseAndClear
             editable = live
             indicator = "#8e5cc4"
-          }
-          'Smack that' = integer
-          {
-            value = 0
-            valuedice = 1d6
           }
           'End of scene' = button
           {
@@ -710,7 +734,7 @@ characterTable = ruleset
           'Skill value' = integer
             {
               value = 'Attributes'.'Dexterity'.'Score' + Adds
-              valuedice = D20Roll
+              valuedice = charRoll (characterTable)
             }
             
             
@@ -723,7 +747,7 @@ characterTable = ruleset
           'Skill value' = integer
             {
               value = 'Attributes'.'Dexterity'.'Score' + Adds
-              valuedice = D20Roll
+              valuedice = charRoll (characterTable)
             }
         }
         'Heavy Weapons' = custom
@@ -733,7 +757,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Dexterity'.'Score' + Adds
-              valuedice = D20Roll
+              valuedice = charRoll (characterTable)
             }
         }
         'Melee Weapons' = custom
@@ -743,7 +767,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-              valuedice = D20Roll
+              valuedice = charRoll (characterTable)
               }
         }
         'Missile Weapons' = custom
@@ -753,7 +777,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Dexterity'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
         }
         'Unarmed Combat' = custom
         {
@@ -762,7 +786,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Dexterity'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
         }
     }
   'Interaction Skills' = table
@@ -776,7 +800,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Spirit'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
           }
       Maneuver = custom
         {
@@ -785,7 +809,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Dexterity'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
         }
       Taunt = custom
         {
@@ -794,7 +818,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Charisma'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
         }
       Trick = custom
         {
@@ -803,7 +827,7 @@ characterTable = ruleset
           { default = 0 }
           'Skill value' = integer
             { value = 'Attributes'.'Mind'.'Score' + Adds
-            valuedice = D20Roll}
+            valuedice = charRoll (characterTable)}
         }
       
     }
@@ -823,7 +847,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Alteration' = custom
     {
@@ -832,7 +856,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Apportation' = custom
     {
@@ -841,7 +865,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Beast Riding' = custom
     {
@@ -850,7 +874,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Computers' = custom
     {
@@ -859,7 +883,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Conjuration' = custom
     {
@@ -868,7 +892,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Divination' = custom
     {
@@ -877,7 +901,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Dodge' = custom
     {
@@ -886,7 +910,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Evidence Analysis' = custom
     {
@@ -895,7 +919,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Faith' = custom
     {
@@ -904,7 +928,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Find' = custom
     {
@@ -913,7 +937,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'First Aid' = custom
     {
@@ -922,7 +946,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Kinesis' = custom
     {
@@ -931,7 +955,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Land Vehicles' = custom
     {
@@ -940,7 +964,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll }
+        valuedice = charRoll (characterTable) }
     }
     'Language' = custom
     {
@@ -949,7 +973,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Lockpicking' = custom
     {
@@ -958,7 +982,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Medicine' = custom
     {
@@ -967,7 +991,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Persuasion' = custom
     {
@@ -976,7 +1000,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Charisma'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Precognition' = custom
     {
@@ -985,7 +1009,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Profession' = custom
     {
@@ -994,7 +1018,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Reality' = custom
     {
@@ -1003,7 +1027,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Scholar' = custom
     {
@@ -1012,7 +1036,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Science' = custom
     {
@@ -1021,7 +1045,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Stealth' = custom
     {
@@ -1030,7 +1054,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Streetwise' = custom
     {
@@ -1039,7 +1063,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Charisma'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Survival' = custom
     {
@@ -1048,7 +1072,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll }
+        valuedice = charRoll (characterTable) }
     }
     'Telepathy' = custom
     {
@@ -1057,7 +1081,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Charisma'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Tracking' = custom
     {
@@ -1066,7 +1090,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Mind'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Water Vehicles' = custom
     {
@@ -1075,7 +1099,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Dexterity'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     'Willpower' = custom
     {
@@ -1084,7 +1108,7 @@ characterTable = ruleset
           { default = 0 }
       'Skill value' = integer
         { value = 'Attributes'.'Spirit'.'Score'+ Adds
-        valuedice = D20Roll}
+        valuedice = charRoll (characterTable)}
     }
     
   }
@@ -1198,7 +1222,7 @@ characterTable = ruleset
       
     'Die roll' = string { value = "Bonus"
     editable = none}
-    '1' = string { value = "Mishap"
+    '1' = string { value = "-10"
     editable = none}
     '2' = string { value = "-8" editable = none}
     '3 4' = string { value = "-6" editable = none}
@@ -1409,7 +1433,7 @@ TORG = system
         {
             title = "Possibilities"
             topic = "Play"
-            text = ["Heroes spend Possibilities to reroll and add, or to soak damage. Give them chances to be bold."]
+            text = ["Heroes spend Possibilities to reroll and add, or to soak damage. Give them chances to be bold.", "After a roll, Spend a Possibility rolls again and adds, counting a second roll under 10 as 10, and takes the Possibility off the sheet."]
         }
     ]
     distanceUnit = "m"
