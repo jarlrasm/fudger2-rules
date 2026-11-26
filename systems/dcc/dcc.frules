@@ -16,28 +16,41 @@ dieText (sides) = if sides > 0 then "d" + toString (sides) else "none"
 
 deedOf (throws) = if count (item (1, throws).rolls) == 0 then 0 else first (item (1, throws).rolls)
 
-dccAttackOutcome (total, natural, deed, critRange, ac) =
-    if natural == 1 then "Fumble"
+dccAttackOutcome (total, natural, deed, critRange, ac, mode) =
+    if natural == 1 and mode == 2 then "Miss"
+    else if natural == 1 then "Fumble"
     else if natural >= critRange then "Critical hit"
     else if ac == 0 then ""
+    else if total >= ac and mode == 1 then "Critical hit"
     else if total >= ac then "Hit"
     else "Miss"
 
-dccAttackResult (total, natural, deed, critRange, ac, crit) =
+dccAttackResult (total, natural, deed, critRange, ac, crit, mode) =
 {
     Text = toString (total)
         + (if ac > 0 then " vs AC " + toString (ac) else "")
-        + (if dccAttackOutcome (total, natural, deed, critRange, ac) == "" then "" else ": " + dccAttackOutcome (total, natural, deed, critRange, ac))
+        + (if dccAttackOutcome (total, natural, deed, critRange, ac, mode) == "" then "" else ": " + dccAttackOutcome (total, natural, deed, critRange, ac, mode))
         + (if deed >= 3 and (natural >= critRange or (ac > 0 and total >= ac) or ac == 0) and natural != 1 then ", Mighty Deed (deed " + toString (deed) + ")" else if deed > 0 then " (deed " + toString (deed) + ")" else "")
-        + (if natural >= critRange and natural != 1 then ", roll " + crit else if natural == 1 then ", roll the fumble die" else "")
+        + (if dccAttackOutcome (total, natural, deed, critRange, ac, mode) == "Critical hit" then ", roll " + crit
+           else if natural == 1 and mode != 2 then ", roll the fumble die"
+           else if mode == 1 and ac == 0 and natural != 1 then ", a hit is a critical: roll " + crit
+           else "")
     Value = total
-    Outcome = dccAttackOutcome (total, natural, deed, critRange, ac)
+    Outcome = dccAttackOutcome (total, natural, deed, critRange, ac, mode)
 }
 
-dccAttackRoll (die, deedDie, critRange, crit, ac) = ([dice { number = 1  sides = die }, dice { number = if deedDie > 0 then 1 else 0  sides = max (deedDie, 3)  color = "red"  label = if deedDie > 0 then "Deed" else "" }],
-    ((baseline, throws)->dccAttackResult (baseline + first (first (throws).rolls) + deedOf (throws), first (first (throws).rolls), deedOf (throws), critRange, if ac > 0 then ac else asked, crit)))
+dccAttackRollMode (die, deedDie, critRange, crit, ac, mode) = ([dice { number = 1  sides = die }, dice { number = if deedDie > 0 then 1 else 0  sides = max (deedDie, 3)  color = "red"  label = if deedDie > 0 then "Deed" else "" }],
+    ((baseline, throws)->dccAttackResult (baseline + first (first (throws).rolls) + deedOf (throws), first (first (throws).rolls), deedOf (throws), critRange, if ac > 0 then ac else asked, crit, mode)))
 
-dccAttack (die, deedDie, critRange, crit) = ask ("Target AC", dccAttackRoll (die, deedDie, critRange, crit, 0))
+dccAttackRoll (die, deedDie, critRange, crit, ac) = dccAttackRollMode (die, deedDie, critRange, crit, ac, 0)
+
+dccAttack (die, deedDie, critRange, crit) = ask ("Target AC", dccAttackRollMode (die, deedDie, critRange, crit, 0, 0))
+
+dccBackstab (die, deedDie, critRange, crit) = ask ("Target AC", dccAttackRollMode (die, deedDie, critRange, crit, 0, 1))
+
+dccMonsterAttack (die) = ask ("Target AC", dccAttackRollMode (die, 0, 20, "the monster crit table", 0, 2))
+
+actionDie (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 20
 
 dccCheckResult (total, natural, dc) =
 {
@@ -173,7 +186,7 @@ characterTable = ruleset
         Down = string { value = hitState (HP, Character.Level)  visible = none  indicator = "#d64545" }
         AC = integer { description = "Armor Class: 10 plus armor and shield plus Agility modifier." value = 10 + armorBonus (characterTable) + Abilities.Agility.Modifier + 'AC misc'  editable = none }
         'AC misc' = integer { default = 0 }
-        Initiative = modifier { description = "d20 + Agility modifier, plus level for warriors." value = Abilities.Agility.Modifier + 'Initiative misc'  valuedice = initiativeRoll ('Initiative die')  editable = none }
+        Initiative = modifier { description = "d20 + Agility modifier, plus level for warriors." value = Abilities.Agility.Modifier + (if Character.Class == "Warrior" then Character.Level else 0) + 'Initiative misc'  valuedice = initiativeRoll ('Initiative die')  editable = none }
         'Initiative misc' = integer { default = 0 }
         'Initiative die' = integer { description = "Usually d20; a two-handed weapon gives d16." default = 20  render = dieText ('Initiative die') }
         'Action die' = integer { description = "The die you roll for attacks and checks, d20 for most, more dice at higher levels." default = 20  render = dieText ('Action die') }
@@ -186,11 +199,14 @@ characterTable = ruleset
         'Fumble die' = string { description = "Rolled on a natural 1, set by the heaviest armor." value = fumbleDie (characterTable)  editable = none }
         'Night of rest' = button
         {
-            description = "A night's rest heals 1 hit point, the cleric's disapproval range resets to 1, and wizards get back spells lost that day."
+            description = "A night's rest heals 1 hit point and 1 point each of lost Strength, Agility and Stamina (such as spellburn), the cleric's disapproval range resets to 1, and wizards get back spells lost that day."
             editable = live
             onClick = updates
             {
                 (root.Combat.HP) = if HP > 0 then min ('Max HP', HP + 1) else HP
+                (root.Abilities.Strength.Score) = min (Abilities.Strength.Max, Abilities.Strength.Score + 1)
+                (root.Abilities.Agility.Score) = min (Abilities.Agility.Max, Abilities.Agility.Score + 1)
+                (root.Abilities.Stamina.Score) = min (Abilities.Stamina.Max, Abilities.Stamina.Score + 1)
                 (root.Spellcasting.Disapproval) = 1
                 (root.Spellcasting.'Spells lost') = ""
             }
@@ -253,9 +269,10 @@ characterTable = ruleset
 
     Thief = table
     {
-        description = "Thief skills, rolled d20 + bonus against a DC."
+        description = "Thief skills, rolled d20 + bonus against a DC. Backstab is an attack bonus, and casting from a scroll rolls its own die."
         tableLayout = layout { columns = 3  size = wide }
-        'Backstab' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Backstab' = integer { description = "Attack bonus from the thief table when attacking from behind or unseen. A backstab that hits is a critical hit." default = 0 }
+        'Backstab attack' = modifier { description = "Melee attack from behind: action die + attack bonus + Strength + Backstab. A hit is a critical." value = Combat.'Attack bonus' + Abilities.Strength.Modifier + Backstab  valuedice = dccBackstab (Combat.'Action die', Combat.'Deed die', Combat.'Crit range', critText (characterTable))  action = melee  reach = 5  editable = none }
         'Sneak silently' = modifier { default = 0  valuedice = dccCheck (20) }
         'Hide in shadows' = modifier { default = 0  valuedice = dccCheck (20) }
         'Pick pocket' = modifier { default = 0  valuedice = dccCheck (20) }
@@ -267,7 +284,8 @@ characterTable = ruleset
         'Disguise self' = modifier { default = 0  valuedice = dccCheck (20) }
         'Read languages' = modifier { default = 0  valuedice = dccCheck (20) }
         'Handle poison' = modifier { default = 0  valuedice = dccCheck (20) }
-        'Cast spell from scroll' = modifier { default = 0  valuedice = dccCheck (20) }
+        'Scroll die' = integer { description = "The die from the thief table for casting from a scroll: d10 at level 1, rising to d20." default = 10  render = dieText ('Scroll die') }
+        'Cast spell from scroll' = modifier { description = "Spell check with the scroll die + Intelligence. A natural 1 misfires." value = Abilities.Intelligence.Modifier  valuedice = dccSpell ('Scroll die', 1, false)  editable = none }
     }
 
     'Class features' = list
@@ -301,7 +319,7 @@ creatureTable = ruleset
     rulesetConfiguration =
     {
         important = [Stats, Attacks]
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/adnd2e/monster.svg"
         filters = [filter { name = "HD" prefix = "HD" filter = Stats.HD }]
     }
     Stats = table
@@ -329,7 +347,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Atk = modifier { default = 0  valuedice = dccAttack (20, 0, 20, "the monster crit table")  action = melee  reach = 5 }
+            Atk = modifier { default = 0  valuedice = dccMonsterAttack (actionDie (creatureTable.Stats.Act))  action = melee  reach = 5 }
             Damage = string {}
         }
     }
@@ -341,7 +359,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Atk = modifier { default = 0  valuedice = dccAttack (20, 0, 20, "the monster crit table")  action = ranged }
+            Atk = modifier { default = 0  valuedice = dccMonsterAttack (actionDie (creatureTable.Stats.Act))  action = ranged }
             Damage = string {}
         }
     }

@@ -13,7 +13,8 @@ Play usually starts with each player running three or four **level-0** peasants.
 
 ## Combat
 - **Initiative**: d20 + Agility modifier (warriors add their level). Highest first.
-- **Attacks**: action die + attack bonus + Strength (melee) or Agility (missile) against AC. A **natural 20** is a critical hit: roll the crit die on the class's crit table and add Luck. A **natural 1** is a fumble: roll the armor's fumble die on the fumble table.
+- **Attacks**: action die + attack bonus + Strength (melee) or Agility (missile) against AC. A **natural 20** is a critical hit: roll the crit die on the class's crit table and add Luck. A **natural 1** is a fumble: roll the armor's fumble die on the fumble table. Monsters roll their own action die (Act) and simply miss on a natural 1.
+- **Thieves**: Backstab adds its bonus to a melee attack from behind or against an unaware target, and a hit is a critical hit. Casting from a scroll is a spell check with the scroll die from the thief table (d10 at level 1) plus Intelligence.
 - **Mighty Deeds**: warriors and dwarves roll a **deed die** instead of a fixed attack bonus. The player declares a stunt before rolling; if the deed die shows 3 or more and the attack hits, the deed happens.
 - **Hit points**: a level-0 character at 0 HP dies. Higher levels bleed out over as many rounds as their level and can be saved by an ally; after the fight, someone may roll Luck to find the body still breathing.
 
@@ -22,4 +23,4 @@ Play usually starts with each player running three or four **level-0** peasants.
 - **Clerics** roll d20 + caster level + Personality. A natural roll inside the **disapproval range** angers their god (roll on the disapproval table), and each failure widens the range by 1. It resets to 1 each day.
 
 ## Healing
-A night's rest heals 1 hit point (2 with a full day of bed rest). Clerics heal by laying on hands.
+A night's rest heals 1 hit point (2 with a full day of bed rest) and 1 point each of lost Strength, Agility and Stamina, such as spellburn. Clerics heal by laying on hands.
