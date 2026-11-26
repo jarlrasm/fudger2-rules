@@ -161,7 +161,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close combat"), "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
