@@ -1,0 +1,118 @@
+@import url("/systems/sheet.css");
+
+/* Deathwatch: the black armour of the Watch with its silver arm. Black title
+   bars with silver lettering over a blood-red rule, gunmetal panels with
+   pale bone fields, the nine characteristics as a row of riveted plates,
+   the skill list beside wounds, fate, modes and power armour, then weapons,
+   requisition and the Librarian's powers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #141517;
+    --surface: #e4e2dc;
+    --surface-alt: #d3d1ca;
+    --surface-sunken: #c1beb5;
+    --surface-muted: #a9a69d;
+    --text: #111214;
+    --text-muted: #34363b;
+    --text-faint: #6a6c71;
+    --on-accent: #d9dce1;
+    --border: #7d8088;
+    --border-strong: #1b1c1f;
+    --accent: #1b1c1f;
+    --accent-hover: #34363b;
+    --accent-soft: #cfd1d5;
+    --link: #7a1416;
+    --danger: #8c1416;
+    --danger-hover: #6a0f10;
+    --danger-soft: #ecccc9;
+    --success: #34502e;
+    --paper: #e4e2dc;
+    --card-bg: #d3d1ca;
+    --dice-bg: #1b1c1f;
+    --dice-text: #d9dce1;
+    --silver: #a7abb3;
+    --blood: #8c1416;
+}
+
+.entityView {
+    --sheet-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Cinzel", "Trajan Pro", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    box-shadow: inset 0 0 0 1px var(--silver);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #2a2c30, var(--accent));
+    color: var(--on-accent);
+    padding: 3px 10px;
+    border-bottom: 3px solid var(--blood);
+}
+
+/* ---- Characteristics: nine riveted plates ---- */
+
+.entityView .table-characteristics > table > tbody,
+.entityView .table-profile > table > tbody { grid-template-columns: repeat(9, minmax(0, 1fr)); column-gap: 6px; padding: 6px; }
+.entityView .table-characteristics > table > tbody > tr,
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    outline: 1px solid var(--silver);
+    outline-offset: -4px;
+    padding: 6px 4px;
+    background: radial-gradient(circle at 6px 6px, var(--border) 1.5px, transparent 2px), radial-gradient(circle at calc(100% - 6px) 6px, var(--border) 1.5px, transparent 2px), var(--surface-alt);
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child,
+.entityView .table-profile > table > tbody > tr > td:first-child { font-weight: 700; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.06em; }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "\00D7"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(5)::before { content: "bonus "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Skills beside the status column ---- */
+
+.entityView .table-skills { --block: 66.666%; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-status,
+.entityView .table-modes,
+.entityView .table-squad-mode-abilities,
+.entityView .table-renown,
+.entityView .table-movement,
+.entityView .table-armour { --block: 33.333%; }
+.entityView .table-modes > table > thead th,
+.entityView .table-squad-mode-abilities > table > thead th { border-bottom-color: var(--silver); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-talents,
+.entityView .table-traits { --block: 50%; }
+.entityView .table-talents { clear: left; }
+.entityView .table-ammunition,
+.entityView .table-gear,
+.entityView .table-armour-worn { --block: 33.333%; }
+.entityView .table-ammunition { clear: left; }
+.entityView .table-requisition,
+.entityView .table-psychic,
+.entityView .table-psychic-powers { --block: 33.333%; }
+.entityView .table-requisition { clear: left; }
+
+/* ---- Labels for list columns ---- */
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "test "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "pen "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(5)::before { content: "RoF "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Hordes and kill teams ---- */
+
+.entityView .table-horde > table > thead th,
+.entityView .table-cohesion > table > thead th { border-bottom-color: var(--silver); }

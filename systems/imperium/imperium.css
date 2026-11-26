@@ -1,0 +1,130 @@
+@import url("/systems/sheet.css");
+
+/* Imperium Maledictum: a dossier of the Inquisitorial archive. Pale grey
+   vellum ruled in black, crimson title bars in a gothic capital, the nine
+   characteristics as a row of seals, the skill list beside wounds, fate and
+   the hit locations, then wargear, influence and the warp. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2a2224;
+    --surface: #ebe7df;
+    --surface-alt: #dcd6cb;
+    --surface-sunken: #cfc8bb;
+    --surface-muted: #b9b1a3;
+    --text: #17120f;
+    --text-muted: #3d3530;
+    --text-faint: #75695f;
+    --on-accent: #f1e9da;
+    --border: #8b8073;
+    --border-strong: #17120f;
+    --accent: #7b1518;
+    --accent-hover: #961d21;
+    --accent-soft: #ecd3cf;
+    --link: #7b1518;
+    --danger: #7b1518;
+    --danger-hover: #5c0f11;
+    --danger-soft: #ecd3cf;
+    --success: #3a5231;
+    --paper: #ebe7df;
+    --card-bg: #dcd6cb;
+    --dice-bg: #17120f;
+    --dice-text: #f1e9da;
+    --gilt: #b39250;
+}
+
+.entityView {
+    --sheet-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Cinzel", "Trajan Pro", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    box-shadow: inset 0 0 0 1px var(--gilt);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+    color: var(--on-accent);
+    padding: 3px 10px;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+/* ---- Characteristics: nine seals in a row ---- */
+
+.entityView .table-characteristics > table > tbody,
+.entityView .table-profile > table > tbody { grid-template-columns: repeat(9, minmax(0, 1fr)); column-gap: 5px; padding: 6px; }
+.entityView .table-characteristics > table > tbody > tr,
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 0 0 14px 14px;
+    padding: 5px 3px 7px;
+    background: var(--surface-alt);
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child,
+.entityView .table-profile > table > tbody > tr > td:first-child { font-family: var(--title-font); font-weight: 700; text-transform: uppercase; font-size: 0.78em; letter-spacing: 0.04em; color: var(--accent); }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 6px; }
+.entityView .table-characteristics .customtype > div:nth-child(1)::before { content: "start "; color: var(--text-faint); font-size: 0.78em; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "mod "; color: var(--text-faint); font-size: 0.78em; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "adv "; color: var(--text-faint); font-size: 0.78em; }
+.entityView .table-characteristics .customtype > div:nth-child(4) { flex-basis: 100%; display: flex; justify-content: center; font-size: 1.25em; font-weight: 700; }
+.entityView .table-characteristics .customtype > div:nth-child(5)::before { content: "bonus "; color: var(--text-faint); font-size: 0.78em; }
+
+/* ---- Skills beside the combat column ---- */
+
+.entityView .table-skills { --block: 66.666%; clear: left; }
+.entityView .table-skills .customtype > div:nth-child(1)::before,
+.entityView .table-specialisations .customtype > div:nth-child(1)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-combat,
+.entityView .table-armour,
+.entityView .table-critical-injuries { --block: 33.333%; }
+.entityView .table-specialisations,
+.entityView .table-conditions { --block: 66.666%; }
+.entityView .table-specialisations,
+.entityView .table-conditions { clear: left; }
+
+/* ---- Wargear ---- */
+
+.entityView .table-weapons { clear: left; }
+.entityView .table-ammunition,
+.entityView .table-protection,
+.entityView .table-talents { --block: 33.333%; }
+.entityView .table-ammunition { clear: left; }
+.entityView .table-equipment,
+.entityView .table-augmetics,
+.entityView .table-encumbrance { --block: 33.333%; }
+.entityView .table-equipment { clear: left; }
+
+/* ---- The soul: corruption, the warp, influence ---- */
+
+.entityView .table-corruption,
+.entityView .table-warp,
+.entityView .table-powers { --block: 33.333%; }
+.entityView .table-corruption { clear: left; }
+.entityView .table-warp > table > thead th,
+.entityView .table-corruption > table > thead th { background: linear-gradient(180deg, #3b2b45, #241a2c); }
+.entityView .table-influence { --block: 66.666%; clear: left; }
+.entityView .table-experience { --block: 33.333%; }
+
+/* ---- Labels for list columns ---- */
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before,
+.entityView .table-power-uses > table > tbody > tr > td:nth-child(2)::before { content: "test "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-power-uses > table > tbody > tr > td:nth-child(3)::before { content: "WR "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- NPCs, patrons and vehicles ---- */
+
+.entityView .table-patron > table > thead th,
+.entityView .table-vehicle > table > thead th,
+.entityView .table-npc > table > thead th { border-bottom: 3px solid var(--gilt); }
+.entityView .table-boons,
+.entityView .table-liabilities { --block: 50%; }
+.entityView .table-boons { clear: left; }

@@ -1,0 +1,134 @@
+@import url("/systems/sheet.css");
+
+/* Shadowrun 5th edition: the runner sheet. White paper, black title bars with
+   white condensed capitals and a teal edge, attributes beside limits, two
+   condition monitors in rows of three boxes, skills as a ruled table. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #d7dad8;
+    --surface: #ffffff;
+    --surface-alt: #f1f3f2;
+    --surface-sunken: #e6e9e8;
+    --surface-muted: #c9cecc;
+    --text: #111413;
+    --text-muted: #39403e;
+    --text-faint: #6b7471;
+    --on-accent: #ffffff;
+    --border: #8e9794;
+    --border-strong: #111413;
+    --accent: #12806f;
+    --accent-hover: #0c5e52;
+    --accent-soft: #cfe8e3;
+    --link: #0c5e52;
+    --danger: #b3261e;
+    --danger-hover: #8c1d17;
+    --danger-soft: #f3d6d4;
+    --success: #12806f;
+    --paper: #ffffff;
+    --card-bg: #f4f6f5;
+    --dice-bg: #111413;
+    --dice-text: #ffffff;
+}
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --block-radius: 6px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    border-bottom: 3px solid var(--accent);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Attributes beside limits, monitors and combat ---- */
+
+.entityView .table-attributes { --block: 50%; }
+.entityView .table-limits,
+.entityView .table-defense-and-resistance { --block: 50%; }
+.entityView .table-combat { --block: 50%; }
+.entityView .table-combat > table > tbody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.entityView .table-skills { clear: both; }
+.entityView .table-attributes > table > tbody > tr > td + td {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+.entityView .table-limits > table > tbody > tr > td + td {
+    font-weight: 700;
+    font-size: 1.2em;
+    color: var(--accent-hover);
+}
+
+/* ---- Condition monitors: columns of three boxes, as on the paper sheet ---- */
+
+.entityView .table-condition-monitor { --block: 50%; }
+.entityView .table-condition-monitor > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+}
+.entityView .table-condition-monitor > table > tbody > tr:nth-child(-n+2) {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.entityView .table-condition-monitor > table > tbody > tr:nth-child(-n+2) > td + td {
+    border-bottom: none;
+    text-align: left;
+    align-self: flex-start;
+    margin-left: 0;
+}
+.entityView .table-condition-monitor > table > tbody > tr:nth-child(-n+2) {
+    justify-content: flex-start;
+}
+.entityView .table-condition-monitor .slots {
+    display: inline-block;
+    max-width: 4.6em;
+    line-height: 1;
+}
+.entityView .table-condition-monitor .slots .used,
+.entityView .table-condition-monitor .slots .unused {
+    display: inline;
+}
+.entityView .table-condition-monitor .slots input[type="checkbox"] {
+    width: 1.4em;
+    height: 1.4em;
+    margin: 1px;
+    accent-color: var(--danger);
+}
+.entityView .table-condition-monitor .slot-buttons {
+    display: block;
+    margin-top: 4px;
+}
+
+/* ---- Skills: a ruled table ---- */
+
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px solid var(--surface-muted);
+}
+.entityView .table-skills > table > tbody > tr:nth-child(even) {
+    background: var(--surface-alt);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-qualities,
+.entityView .table-contacts,
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-augmentations,
+.entityView .table-gear,
+.entityView .table-ids-and-lifestyles,
+.entityView .table-knowledge-and-languages,
+.entityView .table-spells,
+.entityView .table-adept-powers,
+.entityView .table-complex-forms { --block: 50%; }

@@ -1,0 +1,674 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+targetOf (difficulty) = min (10, max (2, difficulty))
+
+hitsIn (rolls, difficulty) = count (filter ((x)->x >= targetOf (difficulty), rolls))
+
+onesIn (rolls) = count (filter ((x)->x == 1, rolls))
+
+tensIn (rolls) = count (filter ((x)->x == 10, rolls))
+
+extraTens (rolls, special) = if special then tensIn (rolls) else 0
+
+netSuccesses (rolls, difficulty, willpower, special) = max (0, hitsIn (rolls, difficulty) + extraTens (rolls, special) - onesIn (rolls)) + willpower
+
+isBotch (rolls, difficulty, willpower) = willpower == 0 and hitsIn (rolls, difficulty) == 0 and onesIn (rolls) > 0
+
+degreeOf (n) =
+    switch n
+        case 1 then "Marginal success"
+        case 2 then "Moderate success"
+        case 3 then "Complete success"
+        case 4 then "Exceptional success"
+        else "Phenomenal success"
+
+v20Outcome (rolls, difficulty, willpower, special) =
+    if isBotch (rolls, difficulty, willpower) then "Botch"
+    else if netSuccesses (rolls, difficulty, willpower, special) > 0 then "Success"
+    else "Failure"
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+v20Text (rolls, difficulty, willpower, special) =
+    (if count (rolls) == 0 and willpower == 0 then "No dice to roll"
+     else if isBotch (rolls, difficulty, willpower) then "Botch at difficulty " + toString (targetOf (difficulty))
+     else if netSuccesses (rolls, difficulty, willpower, special) == 0 then "0 successes at difficulty " + toString (targetOf (difficulty)) + ": Failure"
+     else plural (netSuccesses (rolls, difficulty, willpower, special), "success", "successes") + " at difficulty " + toString (targetOf (difficulty)) + ": " + degreeOf (netSuccesses (rolls, difficulty, willpower, special)))
+    + (if extraTens (rolls, special) > 0 then " (specialty: 10s count twice)" else "")
+    + (if willpower > 0 then " (1 from Willpower)" else "")
+
+v20Result (rolls, difficulty, willpower, special) =
+{
+    Text = v20Text (rolls, difficulty, willpower, special)
+    Value = netSuccesses (rolls, difficulty, willpower, special)
+    Outcome = v20Outcome (rolls, difficulty, willpower, special)
+}
+
+v20Roll (pool, difficulty, special) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->v20Result (first (throws).rolls, difficulty, 0, special)))
+
+v20Asked (pool, willpower, special, fallback) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->v20Result (first (throws).rolls, if answered then asked else fallback, willpower, special)))
+
+willpowerSuccess (char) = if char.Willpower.'Spend Willpower' == "Spend" and char.Willpower.Pool > 0 then 1 else 0
+
+specialtyOn (char) = char.Willpower.Specialty == "Yes"
+
+v20DiceAt (char, pool, difficulty) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", difficulty, v20Asked (pool + n - woundPenalty (char), willpowerSuccess (char), specialtyOn (char), difficulty)))
+
+v20Dice (char, pool) = v20DiceAt (char, pool, 6)
+
+v20Plain (pool) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", 6, v20Asked (pool + n, 0, false, 6)))
+
+traitRoll (pool) = ask ("Difficulty", 6, v20Asked (pool, 0, false, 6))
+
+untrainedRoll = ([dice { number = 0  sides = 10 }], ((baseline, throws)->{ Text = "Can't be rolled untrained"  Outcome = "Failure" }))
+
+abilityDice (char, abilityKind, dots, pool) =
+    if abilityKind == "Knowledge" and dots == 0 then untrainedRoll
+    else if abilityKind == "Skill" and dots == 0 then v20DiceAt (char, pool, 7)
+    else v20DiceAt (char, pool, 6)
+
+frenzyLevels = ["3: smell of blood when hungry", "4: sight of blood when hungry, taunts, harassment, mortal danger", "5: a sharper provocation (Storyteller's call)", "6: taste of blood when hungry, physical provocation", "7: a loved one in danger", "8: public humiliation", "9: an outrage beyond bearing"]
+
+fearLevels = ["3: lighting a cigarette", "4: an open fire across the room", "5: a torch or small flame close by", "6: a bonfire", "7: obscured sunlight, being burned", "8: direct sunlight", "9: trapped in a burning building"]
+
+clanFrenzyBonus (clan) = if clan == "Brujah" then 2 else 0
+
+resistText (net, kind) =
+    if net >= 5 then plural (net, "success", "successes") + ": fully resisted"
+    else if net > 0 then plural (net, "success", "successes") + ": holds for " + plural (net, "turn", "turns") + ", then rolls again"
+    else if kind == "Frenzy" then "0 successes: frenzy"
+    else "0 successes: flees in Rötschreck"
+
+resistResult (rolls, difficulty, kind) =
+{
+    Text = if count (rolls) == 0 then "No dice to roll"
+        else if isBotch (rolls, difficulty, 0) then "Botch at difficulty " + toString (targetOf (difficulty)) + (if kind == "Frenzy" then ": a long frenzy, maybe a derangement" else ": frenzy at once, may turn on friends")
+        else resistText (max (0, hitsIn (rolls, difficulty) - onesIn (rolls)), kind) + " at difficulty " + toString (targetOf (difficulty))
+    Value = max (0, hitsIn (rolls, difficulty) - onesIn (rolls))
+    Outcome = if isBotch (rolls, difficulty, 0) then "Botch"
+        else if hitsIn (rolls, difficulty) - onesIn (rolls) >= 5 then "Success"
+        else if hitsIn (rolls, difficulty) - onesIn (rolls) > 0 then "Holding"
+        else "Failure"
+}
+
+resistRoll (rating, difficulty, kind) = ([dice { number = max (0, rating)  sides = 10 }], ((baseline, throws)->resistResult (first (throws).rolls, difficulty, kind)))
+
+frenzyAsked (rating, clan) = ([dice { number = max (0, rating)  sides = 10 }], ((baseline, throws)->resistResult (first (throws).rolls, (if answered then asked else 6) + clanFrenzyBonus (clan), "Frenzy")))
+
+frenzyDice (rating, clan) = ask ("Trigger", frenzyLevels, 3, frenzyAsked (rating, clan))
+
+fearAsked (rating) = ([dice { number = max (0, rating)  sides = 10 }], ((baseline, throws)->resistResult (first (throws).rolls, if answered then asked else 6, "Rötschreck")))
+
+fearDice (rating) = ask ("Fire or sunlight", fearLevels, 3, fearAsked (rating))
+
+damageResult (rolls, automatic) =
+{
+    Text = plural (count (filter ((x)->x >= 6, rolls)) + automatic, "health level", "health levels") + " of damage" + (if automatic > 0 then " (" + toString (automatic) + " from Potence)" else "")
+    Value = count (filter ((x)->x >= 6, rolls)) + automatic
+}
+
+damageRoll (pool, automatic) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->damageResult (first (throws).rolls, automatic)))
+
+damageDice (pool, automatic) = ask ("Extra successes on the attack", 0, (n)->damageRoll (pool + n, automatic))
+
+soakResult (rolls, difficulty) =
+{
+    Text = plural (hitsIn (rolls, difficulty), "level", "levels") + " soaked at difficulty " + toString (targetOf (difficulty))
+    Value = hitsIn (rolls, difficulty)
+}
+
+soakAsked (pool) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->soakResult (first (throws).rolls, if answered then asked else 6)))
+
+soakDice (pool) = ask ("Difficulty", 6, soakAsked (pool))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+woundPenaltyAt (levels) =
+    if levels >= 6 then 5
+    else if levels >= 4 then 2
+    else if levels >= 2 then 1
+    else 0
+
+woundPenalty (char) = woundPenaltyAt (char.Health.Damage.realvalue)
+
+healthStateAt (levels, aggravated) =
+    if aggravated >= 7 then "Final Death"
+    else if levels >= 7 then "Incapacitated"
+    else if woundPenaltyAt (levels) > 0 then "Wounded -" + toString (woundPenaltyAt (levels))
+    else ""
+
+bloodMax (generation) =
+    switch generation
+        case 3 then 100
+        case 4 then 50
+        case 5 then 40
+        case 6 then 30
+        case 7 then 20
+        case 8 then 15
+        case 9 then 14
+        case 10 then 13
+        case 11 then 12
+        case 12 then 11
+        else 10
+
+bloodPerTurn (generation) =
+    switch generation
+        case 3 then 10
+        case 4 then 8
+        case 5 then 6
+        case 6 then 5
+        case 7 then 4
+        case 8 then 3
+        case 9 then 2
+        else 1
+
+traitMax (generation) =
+    switch generation
+        case 3 then 10
+        case 4 then 9
+        case 5 then 8
+        case 6 then 7
+        case 7 then 7
+        case 8 then 6
+        else 5
+
+hungerState (blood, selfControl) = if blood < 7 - selfControl then "Hungry" else ""
+
+attributeNames = ["Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Appearance", "Perception", "Intelligence", "Wits"]
+
+attributeValue (char, name) =
+    switch name
+        case "Strength" then char.Attributes.Strength
+        case "Dexterity" then char.Attributes.Dexterity
+        case "Stamina" then char.Attributes.Stamina
+        case "Charisma" then char.Attributes.Charisma
+        case "Manipulation" then char.Attributes.Manipulation
+        case "Appearance" then char.Attributes.Appearance
+        case "Perception" then char.Attributes.Perception
+        case "Intelligence" then char.Attributes.Intelligence
+        else char.Attributes.Wits
+
+ability (usual, abilityKind) = custom
+{
+    Dots = integer { description = "Ability dots from 0 to 5." default = 0  minvalue = 0  maxvalue = 5 }
+    Specialty = string { description = "A specialty, usually taken at 4 dots. Switch on Specialty when it fits the roll and each 10 counts twice." }
+    With = string { description = "The attribute it rolls with, picked to suit the task." default = usual  keys = attributeNames  editable = live }
+    Pool = integer { description = "Attribute plus ability, rolled against the difficulty. Untrained, a Skill rolls at +1 difficulty and a Knowledge can't be rolled." value = if abilityKind == "Knowledge" and Dots == 0 then 0 else Dots + attributeValue (characterTable, With)  valuedice = abilityDice (characterTable, abilityKind, Dots, Dots + attributeValue (characterTable, With))  editable = none }
+}
+
+noDots = { Dots = 0 }
+
+abilityDots (char, group, name) = valueOr (valueOr (group, name, noDots), "Dots", 0)
+
+anyAbilityDots (char, name) = abilityDots (char, char.Talents, name) + abilityDots (char, char.Skills, name) + abilityDots (char, char.Knowledges, name)
+
+disciplineDots (char, name) = sum (map ((d)->d.Dots, filter ((d)->d.Discipline == name, char.Disciplines)))
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Damage = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "v20Weapon", noStats), "Stats", noStats.Stats), field, "")
+
+weaponAttack (name, pool, difficulty, damagePool, automatic, damageKind, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = pool  valuedice = v20DiceAt (characterTable, pool, difficulty)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = damagePool  valuedice = damageDice (damagePool, automatic)  editable = none }
+    Kind = damageKind
+}
+
+weaponDifficulty (weapon) = if toInt (weaponStat (weapon, "Difficulty")) > 0 then toInt (weaponStat (weapon, "Difficulty")) else 6
+
+meleeDamage (char, weapon) = if contains (weaponStat (weapon, "Damage"), "Str") then char.Attributes.Strength + firstNumber (weaponStat (weapon, "Damage")) else firstNumber (weaponStat (weapon, "Damage"))
+
+attackFor (char, weapon) =
+    if firstNumber (weaponStat (weapon, "Range")) > 0 then
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + anyAbilityDots (char, "Firearms"), weaponDifficulty (weapon), firstNumber (weaponStat (weapon, "Damage")), 0, weaponStat (weapon, "Kind"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+    else
+        weaponAttack (weapon.Name, char.Attributes.Dexterity + anyAbilityDots (char, "Melee"), weaponDifficulty (weapon), meleeDamage (char, weapon), disciplineDots (char, "Potence"), weaponStat (weapon, "Kind"), "melee", 2)
+
+unarmedAttacks (char) = [
+    weaponAttack ("Punch", char.Attributes.Dexterity + anyAbilityDots (char, "Brawl"), 6, char.Attributes.Strength, disciplineDots (char, "Potence"), "Bashing", "melee", 2),
+    weaponAttack ("Bite", char.Attributes.Dexterity + anyAbilityDots (char, "Brawl"), 6, char.Attributes.Strength + 1, disciplineDots (char, "Potence"), "Aggravated", "melee", 2)
+]
+
+powerStat (power, field) = valueOr (valueOr (valueOr (power.data, "v20Power", noStats), "Stats", noStats.Stats), field, "")
+
+powerAttribute (char, name) =
+    if name == "" or name == "None" then 0
+    else if name == "Willpower" then char.Willpower.Permanent
+    else attributeValue (char, name)
+
+powerAbility (char, name) = if name == "" or name == "None" then 0 else anyAbilityDots (char, name)
+
+powerPool (char, power) = powerAttribute (char, powerStat (power, "Attribute")) + powerAbility (char, powerStat (power, "Ability"))
+
+powerDifficulty (power) = if toInt (powerStat (power, "Difficulty")) > 0 then toInt (powerStat (power, "Difficulty")) else 6
+
+powerKind (power, pool) =
+    if pool == 0 then ""
+    else if powerStat (power, "Target") == "Touch" then "melee"
+    else if powerStat (power, "Target") == "Other" then "ranged"
+    else ""
+
+powerUse (name, discipline, pool, difficulty, cost, kind) = custom
+{
+    Name = name
+    Discipline = discipline
+    Roll = integer { value = pool  valuedice = v20DiceAt (characterTable, pool, difficulty)  action = kind  reach = 2  editable = none }
+    Cost = cost
+}
+
+powerFor (char, power) = powerUse (power.Name, powerStat (power, "Discipline") + " " + toString (powerStat (power, "Level")), powerPool (char, power), powerDifficulty (power), powerStat (power, "Cost"), powerKind (power, powerPool (char, power)))
+
+clanNames = ["Assamite", "Brujah", "Followers of Set", "Gangrel", "Giovanni", "Lasombra", "Malkavian", "Nosferatu", "Ravnos", "Toreador", "Tremere", "Tzimisce", "Ventrue", "Caitiff", "Baali", "Cappadocian", "Daughters of Cacophony", "Gargoyle", "Kiasyd", "Salubri", "Samedi", "True Brujah", "Other"]
+
+disciplineNames = ["Animalism", "Auspex", "Celerity", "Chimerstry", "Dementation", "Dominate", "Fortitude", "Necromancy", "Obfuscate", "Obtenebration", "Potence", "Presence", "Protean", "Quietus", "Serpentis", "Thaumaturgy", "Vicissitude", "Daimoinon", "Melpominee", "Mytherceria", "Obeah", "Temporis", "Valeren", "Visceratika", "Other"]
+
+abilityNames = ["None", "Alertness", "Athletics", "Awareness", "Brawl", "Empathy", "Expression", "Intimidation", "Leadership", "Streetwise", "Subterfuge", "Animal Ken", "Crafts", "Drive", "Etiquette", "Firearms", "Larceny", "Melee", "Performance", "Stealth", "Survival", "Academics", "Computer", "Finance", "Investigation", "Law", "Medicine", "Occult", "Politics", "Science", "Technology"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Willpower, 'Blood Pool', Health, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Player = string {}
+        Nature = string { description = "Who the vampire really is; acting on it restores Willpower." }
+        Clan = string { description = "The vampire's bloodline, with its Disciplines and weakness." keys = clanNames }
+        Chronicle = string {}
+        Demeanor = string { description = "The face the vampire shows the world." }
+        Generation = integer { description = "Steps from Caine. It sets the Blood Pool, blood spent per turn and the highest trait rating." default = 13  minvalue = 3  maxvalue = 15 }
+        Sect = string { keys = ["Camarilla", "Sabbat", "Anarch", "Independent", "Autarkis"] }
+        Concept = string {}
+        Sire = string { description = "The vampire who made this one." }
+    }
+
+    Attributes = table
+    {
+        description = "Physical, Social and Mental attributes from 1 to 5."
+        tableLayout = layout { columns = 3  size = wide }
+        Strength = integer { description = "Raw physical power; the dice of melee damage." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Strength) }
+        Charisma = integer { description = "Charm and the pull of personality." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Charisma) }
+        Perception = integer { description = "Awareness of the surroundings." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Perception) }
+        Dexterity = integer { description = "Agility, speed and coordination; the base of attacks." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Dexterity) }
+        Manipulation = integer { description = "Getting people to do what you want." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Manipulation) }
+        Intelligence = integer { description = "Memory, reasoning and learning." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Intelligence) }
+        Stamina = integer { description = "Toughness; the dice that soak damage." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Stamina) }
+        Appearance = integer { description = "Looks and first impressions. Nosferatu have none." default = 1  minvalue = 0  maxvalue = 10  valuedice = v20Dice (characterTable, Appearance) }
+        Wits = integer { description = "Quick thinking and reactions." default = 1  minvalue = 1  maxvalue = 10  valuedice = v20Dice (characterTable, Wits) }
+    }
+
+    Talents = table
+    {
+        description = "Talents: an untrained Talent rolls the attribute alone."
+        tableLayout = layout { columns = 1 }
+        Alertness = ability ("Perception", "Talent")
+        Athletics = ability ("Dexterity", "Talent")
+        Awareness = ability ("Perception", "Talent")
+        Brawl = ability ("Dexterity", "Talent")
+        Empathy = ability ("Perception", "Talent")
+        Expression = ability ("Charisma", "Talent")
+        Intimidation = ability ("Manipulation", "Talent")
+        Leadership = ability ("Charisma", "Talent")
+        Streetwise = ability ("Charisma", "Talent")
+        Subterfuge = ability ("Manipulation", "Talent")
+    }
+
+    Skills = table
+    {
+        description = "Skills: an untrained Skill rolls the attribute at +1 difficulty."
+        tableLayout = layout { columns = 1 }
+        'Animal Ken' = ability ("Manipulation", "Skill")
+        Crafts = ability ("Dexterity", "Skill")
+        Drive = ability ("Dexterity", "Skill")
+        Etiquette = ability ("Charisma", "Skill")
+        Firearms = ability ("Dexterity", "Skill")
+        Larceny = ability ("Dexterity", "Skill")
+        Melee = ability ("Dexterity", "Skill")
+        Performance = ability ("Charisma", "Skill")
+        Stealth = ability ("Dexterity", "Skill")
+        Survival = ability ("Perception", "Skill")
+    }
+
+    Knowledges = table
+    {
+        description = "Knowledges: an untrained Knowledge can't be rolled."
+        tableLayout = layout { columns = 1 }
+        Academics = ability ("Intelligence", "Knowledge")
+        Computer = ability ("Intelligence", "Knowledge")
+        Finance = ability ("Intelligence", "Knowledge")
+        Investigation = ability ("Perception", "Knowledge")
+        Law = ability ("Intelligence", "Knowledge")
+        Medicine = ability ("Intelligence", "Knowledge")
+        Occult = ability ("Intelligence", "Knowledge")
+        Politics = ability ("Intelligence", "Knowledge")
+        Science = ability ("Intelligence", "Knowledge")
+        Technology = ability ("Intelligence", "Knowledge")
+    }
+
+    Disciplines = list
+    {
+        description = "The powers of the Blood, in dots. Fortitude adds to soak, Potence adds automatic successes to Strength damage."
+        singular = "Discipline"
+        editable = character
+        valueType = custom
+        {
+            Discipline = string { keys = disciplineNames }
+            Dots = integer { default = 1  minvalue = 0  maxvalue = 10 }
+        }
+    }
+
+    Backgrounds = list
+    {
+        description = "Allies, Contacts, Fame, Generation, Herd, Influence, Mentor, Resources, Retainers and Status, each in dots."
+        singular = "Background"
+        editable = character
+        valueType = custom
+        {
+            Name = string { autocomplete = ["Allies", "Alternate Identity", "Black Hand Membership", "Contacts", "Domain", "Fame", "Generation", "Herd", "Influence", "Mentor", "Resources", "Retainers", "Rituals", "Status"] }
+            Dots = integer { default = 1  minvalue = 0  maxvalue = 5 }
+        }
+    }
+
+    Virtues = table
+    {
+        description = "Conscience, Self-Control and Courage. Vampires on a Path use Conviction and Instinct instead; put those ratings here."
+        tableLayout = layout { columns = 1 }
+        Conscience = integer { description = "Conscience or Conviction: rolled to keep Humanity or Path after a sin." default = 1  minvalue = 0  maxvalue = 5  valuedice = traitRoll (Conscience) }
+        'Self Control' = integer { description = "Self-Control or Instinct: rolled to hold off frenzy. Five successes end it, fewer buy a turn each. Brujah add 2 to the difficulty." default = 1  minvalue = 0  maxvalue = 5  valuedice = frenzyDice ('Self Control', Character.Clan) }
+        Courage = integer { description = "Rolled against Rötschreck, the Red Fear of fire and sunlight." default = 1  minvalue = 0  maxvalue = 5  valuedice = fearDice (Courage) }
+    }
+
+    'Merits and Flaws' = list
+    {
+        source = secondary.'Merits and Flaws'
+        singular = "Merit or Flaw"
+        editable = character
+    }
+
+    Humanity = table
+    {
+        tableLayout = layout { columns = 1 }
+        Path = string { description = "Humanity, or the Path of Enlightenment the vampire follows." default = "Humanity"  keys = ["Humanity", "Path of Caine", "Path of Cathari", "Path of Death and the Soul", "Path of Evil Revelations", "Path of Feral Heart", "Path of Honorable Accord", "Path of Lilith", "Path of Night", "Path of Power and the Inner Voice", "Path of Typhon", "Other"] }
+        Rating = integer { description = "Humanity or Path from 0 to 10. It adds to dice pools to stay awake by day and sets how long torpor lasts." default = 7  minvalue = 0  maxvalue = 10  editable = live }
+        Bearing = string { description = "The aura the rating gives, and the dice it adds or takes from social rolls." }
+    }
+
+    Willpower = table
+    {
+        tableLayout = layout { columns = 1 }
+        Permanent = integer { description = "Permanent Willpower, rolled alone to resist mind control and temptation." default = 1  minvalue = 1  maxvalue = 10  valuedice = traitRoll (Permanent) }
+        Pool = integer { description = "Willpower points to spend: one gives an automatic success." default = Permanent  minvalue = 0  maxvalue = 10  editable = live }
+        'Spend Willpower' = selector { description = "Hold Shift while rolling, or switch it on, for one automatic success; then lower the pool." options = ["No", "Spend"]  labels = ["No", "Spend"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
+        Specialty = selector { description = "Hold Ctrl while rolling, or switch it on, when a specialty fits the roll: each 10 counts as two successes." options = ["No", "Yes"]  labels = ["No", "Yes"]  colors = ["", "green"]  hold = ["", "Ctrl"]  default = "No"  editable = live  save = nosave }
+        'End of story' = button
+        {
+            description = "The end of a story restores the Willpower pool. Acting on the Nature restores points as they are earned; add those by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Willpower.Pool) = Willpower.Permanent
+            }
+        }
+    }
+
+    'Blood Pool' = table
+    {
+        tableLayout = layout { columns = 2 }
+        Current = integer { description = "Blood points in the body. One is spent each night on rising; others heal, raise Physical attributes or power Disciplines." default = bloodMax (Character.Generation)  minvalue = 0  maxvalue = 100  editable = live }
+        Maximum = integer { description = "The most blood the vampire can hold, set by Generation." value = bloodMax (Character.Generation)  editable = none }
+        'Per turn' = integer { description = "The most blood the vampire can spend in one turn." value = bloodPerTurn (Character.Generation)  editable = none }
+        'Trait maximum' = integer { description = "The highest rating Generation allows for Attributes and Disciplines." value = traitMax (Character.Generation)  editable = none }
+        Hunger = string { description = "Hungry below 7 minus Self-Control: frenzy comes easier at the sight of blood." value = hungerState (Current, Virtues.'Self Control')  editable = none  indicator = "#e8913a" }
+        'Rise at dusk' = button
+        {
+            description = "Waking each night costs one blood point."
+            editable = live
+            onClick = updates
+            {
+                (root.'Blood Pool'.Current) = max (0, 'Blood Pool'.Current - 1)
+            }
+        }
+    }
+
+    Health = table
+    {
+        tableLayout = layout { columns = 1 }
+        Damage = slots { description = "Health levels lost: Bruised, Hurt -1, Injured -1, Wounded -2, Mauled -2, Crippled -5, Incapacitated. Past that, torpor, or Final Death from aggravated damage." number = 7  labels = ["Bruised", "Hurt", "Injured", "Wounded", "Mauled", "Crippled", "Incap."]  editable = live  indicator = "#d64545"  indicatorLabel = "Damage" }
+        Aggravated = integer { description = "How many of those levels are aggravated: fire, sunlight, claws and fangs." default = 0  minvalue = 0  maxvalue = 7  editable = live  indicator = "#555555" }
+        'Wound penalty' = integer { description = "Dice taken off every pool." value = woundPenalty (characterTable)  editable = none }
+        Armor = integer { description = "The armor's rating, added to the soak of bashing and lethal damage." default = 0  minvalue = 0  maxvalue = 5 }
+        Soak = integer { description = "Stamina + Fortitude + armor against bashing and lethal damage, difficulty 6. Bashing damage left after soaking is halved for vampires." value = Attributes.Stamina + disciplineDots (characterTable, "Fortitude") + Armor  valuedice = soakDice (Attributes.Stamina + disciplineDots (characterTable, "Fortitude") + Armor)  editable = none }
+        'Aggravated soak' = integer { description = "Only Fortitude soaks aggravated damage; fire and sunlight set the difficulty." value = disciplineDots (characterTable, "Fortitude")  valuedice = soakDice (disciplineDots (characterTable, "Fortitude"))  editable = none }
+        State = string { value = healthStateAt (Damage.realvalue, Aggravated)  visible = none  indicator = "#d64545" }
+        'Heal with blood' = button
+        {
+            description = "Spend a blood point to heal one level of bashing or lethal damage. Aggravated damage takes five points and a day's rest a level; take those off by hand."
+            editable = live
+            onClick = updates
+            {
+                (root.Health.Damage.realvalue) = if Health.Damage.realvalue > Health.Aggravated and 'Blood Pool'.Current > 0 then Health.Damage.realvalue - 1 else Health.Damage.realvalue
+                (root.'Blood Pool'.Current) = if Health.Damage.realvalue > Health.Aggravated and 'Blood Pool'.Current > 0 then 'Blood Pool'.Current - 1 else 'Blood Pool'.Current
+            }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 1 }
+        Initiative = modifier { description = "Dexterity plus Wits, less wound penalties, plus a d10. Highest acts first." value = Attributes.Dexterity + Attributes.Wits - woundPenalty (characterTable)  valuedice = initiativeRoll  editable = none }
+        Weakness = string { description = "The clan's curse." multiline = true }
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat (unarmedAttacks (characterTable), map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    'Discipline Powers' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Discipline Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Power rolls' = list
+    {
+        description = "The dice pool each power rolls, from its attribute and ability."
+        tableLayout = layout { size = wide }
+        source = map ((power)->powerFor (characterTable, power), characterTable.'Discipline Powers')
+        singular = "Power roll"
+        editable = none
+        valueType = powerUse
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Haven = string { multiline = true }
+        Appearance = string { multiline = true }
+        History = string { multiline = true }
+        Derangements = string { multiline = true }
+        'Total Experience' = integer { default = 0 }
+        'Spent Experience' = integer { default = 0  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, 'Dice pools'] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Mortal", "Ghoul", "Vampire", "Lupine", "Wraith", "Animal", "Other"]  default = "Mortal" }
+        Clan = string { keys = clanNames }
+        Generation = integer { default = 13  minvalue = 3  maxvalue = 15 }
+        Willpower = integer { default = 3  minvalue = 0  maxvalue = 10  editable = live }
+        'Blood Pool' = integer { description = "Ghouls hold a few points of vitae; vampires as their Generation allows." default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        Humanity = integer { default = 7  minvalue = 0  maxvalue = 10 }
+        'Self Control' = integer { description = "Rolled to hold off frenzy." default = 3  minvalue = 0  maxvalue = 5  valuedice = frenzyDice ('Self Control', Clan) }
+        Courage = integer { description = "Rolled against Rötschreck." default = 3  minvalue = 0  maxvalue = 5  valuedice = fearDice (Courage) }
+        Soak = integer { description = "Stamina, plus Fortitude for vampires and ghouls, plus armor." default = 2  valuedice = soakDice (Soak) }
+        Initiative = modifier { description = "Dexterity plus Wits." default = 4  valuedice = initiativeRoll }
+        Damage = slots { number = 7  labels = ["Bruised", "Hurt", "Injured", "Wounded", "Mauled", "Crippled", "Incap."]  editable = live  indicator = "#d64545" }
+        Aggravated = integer { default = 0  minvalue = 0  maxvalue = 7  editable = live  indicator = "#555555" }
+    }
+    'Dice pools' = keyvalues
+    {
+        description = "Attribute plus ability pools the character rolls, at difficulty 6 unless asked otherwise; wound penalties come off."
+        singular = "Pool"
+        editablekeys = character
+        keys = ["Brawl", "Melee", "Firearms", "Alertness", "Athletics"]
+        valueType = custom
+        {
+            Dice = integer { default = 5  valuedice = v20Plain (Dice - woundPenaltyAt (creatureTable.Stats.Damage.realvalue))  action = if Key == "Firearms" then "ranged" else if Key == "Brawl" or Key == "Melee" or Key == "Bite" or Key == "Claws" then "melee" else ""  reach = 2  range = 50 }
+            'Damage dice' = integer { default = 0  valuedice = damageDice ('Damage dice', 0) }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Disciplines = string { multiline = true }
+        Abilities = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+v20Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        sortedBy = sort { prefix = "Kind" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Range" prefix = "" filter = if firstNumber (Stats.Range) > 0 then "Ranged" else "Melee" }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Difficulty = string { default = "6" }
+        Damage = string { description = "Damage dice, such as Str+2 for a blade or 5 for a pistol." default = "Str+1" }
+        Kind = string { keys = ["Bashing", "Lethal", "Aggravated"]  default = "Lethal" }
+        Range = string { description = "Range in yards or metres; blank for melee." }
+        Rate = string {}
+        Clip = string {}
+        Conceal = string { keys = ["P", "J", "T", "N"] }
+    }
+}
+
+v20Power = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/v20/blood.svg"
+        sortedBy = sort { prefix = "Level" sort = Stats.Level }
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }, filter { name = "Level" prefix = "Level" filter = Stats.Level }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = disciplineNames }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        Attribute = string { description = "The attribute the power rolls, or Willpower, or None." keys = ["None", "Strength", "Dexterity", "Stamina", "Charisma", "Manipulation", "Appearance", "Perception", "Intelligence", "Wits", "Willpower"]  default = "None" }
+        Ability = string { keys = abilityNames  default = "None" }
+        Difficulty = string { description = "A number, or a note such as the target's Willpower." default = "6" }
+        Cost = string { description = "Blood or Willpower it costs, if any." }
+        Target = string { description = "Who it works on: the user, someone touched, or someone in sight." keys = ["Self", "Touch", "Other"]  default = "Self" }
+        Duration = string {}
+    }
+}
+
+v20Merit = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/v20/merit.svg"
+        sortedBy = sort { prefix = "Points" sort = Stats.Points }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Category" prefix = "" filter = Stats.Category }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Merit", "Flaw"]  default = "Merit" }
+        Category = string { keys = ["Physical", "Mental", "Social", "Supernatural"] }
+        Points = integer { description = "Freebie points it costs, or gives back for a flaw." default = 1  minvalue = 1  maxvalue = 7 }
+    }
+}
+
+kindredNameSetting = nameSetting
+{
+    name = "Kindred by night"
+    characters = [generator { library = "Night world" variant = "Undying" }, generator { library = "Gothic horror" variant = "Noble" }, generator { library = "Night world" variant = "Mortal" }]
+    creatures = [generator { library = "Night world" variant = "Mortal" }, generator { library = "Night world" variant = "Undying" }]
+    Location = [generator { library = "Night world" variant = "Club" }, generator { library = "Gothic horror" variant = "Manor" }, generator { library = "Night world" variant = "Coterie" }]
+}
+
+VampireTheMasquerade20 = system
+{
+    hints = [
+        hint
+        {
+            title = "The Embrace"
+            topic = "Getting started"
+            text = ["Pick a clan, Nature, Demeanor and concept, then attributes (7/5/3 dots), abilities (13/9/5), three Discipline dots from the clan, five Background dots and seven Virtue dots. Humanity is Conscience + Self-Control, Willpower is Courage, and 15 freebie points finish the sheet.", "Generation sets the Blood Pool, the blood spent per turn and the highest trait."]
+        },
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["Roll attribute + ability d10s against a difficulty, usually 6. Each die at or above it is a success; each 1 takes one away. No successes with a 1 showing is a botch. The prompt asks for dice added or taken off and the difficulty.", "Hold Shift to spend Willpower for an automatic success, and Ctrl when a specialty fits so 10s count twice. Wound penalties come off the pool."]
+        },
+        hint
+        {
+            title = "Blood"
+            topic = "Play"
+            text = ["Rising each night costs a blood point. Blood heals a level of bashing or lethal damage a point, raises a Physical attribute by one for the scene, and powers Disciplines. Below 7 minus Self-Control the vampire is hungry."]
+        },
+        hint
+        {
+            title = "The Beast"
+            topic = "Play"
+            text = ["Roll Self-Control against frenzy and Courage against Rötschreck, picking the trigger. Five successes overcome it; fewer hold it off a turn each."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Play"
+            text = ["Attack with Dexterity + Brawl, Melee or Firearms. Extra successes add damage dice, asked on the damage roll. Damage dice hit on 6 and 1s don't cancel. Soak with Stamina + Fortitude; only Fortitude soaks aggravated damage."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: Dexterity + Wits + a d10, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = v20Weapon
+    'Discipline Powers' = v20Power
+    'Merits and Flaws' = v20Merit
+    secondaryTypes = ["Weapons", "Discipline Powers", "Merits and Flaws"]
+    description = "Vampire: the Masquerade 20th anniversary edition: the Kindred hide among the living, d10 pools against a difficulty, Disciplines, Generation and the Blood Pool, Humanity and the Beast"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10]
+    cssFiles = ["/systems/v20/v20.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/gothic.json"]
+    nameSettings = [kindredNameSetting, nightWorldNameSetting, gothicHorrorNameSetting]
+}

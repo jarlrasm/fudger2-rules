@@ -1,0 +1,920 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+difficulties = ["Hellish -60", "Punishing -50", "Arduous -40", "Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Ordinary +10", "Routine +20", "Easy +30", "Simple +40", "Elementary +50", "Trivial +60"]
+
+dwSuccess (target, roll) = roll <= target and roll != 100
+
+dwDegrees (target, roll) = if dwSuccess (target, roll) then (target - roll) / 10 else (roll - target) / 10
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+dwText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if dwSuccess (target, roll) then "Success" else "Failure")
+    + (if dwDegrees (target, roll) > 0 then ", " + degreeWords (dwDegrees (target, roll), if dwSuccess (target, roll) then "success" else "failure") else "")
+
+dwResult (target, roll, reroll, spend) =
+{
+    Text = dwText (target, roll)
+    Value = roll
+    Outcome = if dwSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (dwSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+fateSpend (char) = if char.Status.Fate > 0 then [{ Field = "characterTable.Status.Fate"  Value = char.Status.Fate - 1 }] else []
+
+dwRoll (modifier) = ([1d100], ((baseline, throws)->dwResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+dwAskedRoll (spend) = ([1d100], ((baseline, throws)->dwResult (baseline + asked * 10, first (first (throws).rolls), dwAskedRoll ([]), spend)))
+
+dwTest = ask ("Difficulty", difficulties, -6, dwAskedRoll ([]))
+
+dwFateTest (char) = ask ("Difficulty", difficulties, -6, dwAskedRoll (fateSpend (char)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+locationOf (n) =
+    if n <= 10 then "Head"
+    else if n <= 20 then "Right Arm"
+    else if n <= 30 then "Left Arm"
+    else if n <= 70 then "Body"
+    else if n <= 85 then "Right Leg"
+    else "Left Leg"
+
+meleeModes = ["Standard attack +10", "All-out attack +20", "Charge +10", "Swift attack +0", "Lightning attack -10", "Called shot -20"]
+
+rangedModes = ["Standard attack +10", "Semi-auto burst +0", "Full auto burst -10", "Called shot -20"]
+
+attackModes (kind) = if kind == "melee" then meleeModes else rangedModes
+
+modeBonus (kind, mode) =
+    if kind == "melee" then (switch mode case 1 then 20 case 3 then 0 case 4 then -10 case 5 then -20 else 10)
+    else (switch mode case 1 then 0 case 2 then -10 case 3 then -20 else 10)
+
+isBurst (kind, mode) = kind == "ranged" and (mode == 1 or mode == 2)
+
+isFlurry (kind, mode) = kind == "melee" and (mode == 3 or mode == 4)
+
+halfRate (kind, mode) = (kind == "ranged" and mode == 1) or (kind == "melee" and mode == 3)
+
+jams (roll, kind, mode) = kind == "ranged" and roll >= (if isBurst (kind, mode) then 94 else 96)
+
+rofCap (rof, mode) = if count (split ("/", rof)) > mode then toInt (item (mode, split ("/", rof))) else 0
+
+lacksMode (kind, mode, rof) = isBurst (kind, mode) and rof != "" and rofCap (rof, mode) == 0
+
+capHits (n, cap) = if cap > 0 then min (n, cap) else n
+
+hitsFor (kind, mode, rof, degrees) =
+    if isBurst (kind, mode) then capHits (1 + (if mode == 1 then degrees / 2 else degrees), rofCap (rof, mode))
+    else if isFlurry (kind, mode) then 1 + (if halfRate (kind, mode) then degrees / 2 else degrees)
+    else 1
+
+dwHit (target, roll, kind, mode) = dwSuccess (target, roll) and not (jams (roll, kind, mode))
+
+blastOf (special) = bonusWithValue ([[special]], "[Bb]last *\(([0-9]+)\)")
+
+hitText (hits, roll) =
+    if hits == 1 then "1 hit on the " + hitLocation (roll)
+    else toString (hits) + " hits, the first on the " + hitLocation (roll)
+
+hordeText (hits, special) = ", " + toString (hits + blastOf (special)) + " Magnitude against a horde"
+
+dwAttackResult (target, roll, kind, mode, rof, special, reroll, spend) =
+{
+    Text = if lacksMode (kind, mode, rof) then "The weapon can't fire " + (if mode == 1 then "semi-auto bursts" else "full auto bursts") + " (RoF " + rof + ")"
+           else if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+           else dwText (target, roll) + (if dwHit (target, roll, kind, mode) then ": " + hitText (hitsFor (kind, mode, rof, dwDegrees (target, roll)), roll) + hordeText (hitsFor (kind, mode, rof, dwDegrees (target, roll)), special) else "")
+    Value = roll
+    Outcome = if lacksMode (kind, mode, rof) then "Miss" else if jams (roll, kind, mode) then "Jam" else if dwHit (target, roll, kind, mode) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (lacksMode (kind, mode, rof)) and not (dwHit (target, roll, kind, mode)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+dwAttackDice (kind, mode, rof, special, spend) = ([1d100], ((baseline, throws)->dwAttackResult (baseline + modeBonus (kind, mode) + asked * 10, first (first (throws).rolls), kind, mode, rof, special, dwAttackDice (kind, mode, rof, special, []), spend)))
+
+dwAttack (kind, rof, special, spend) = ask ("Attack", attackModes (kind), 0, (mode)->ask ("Difficulty", difficulties, -6, dwAttackDice (kind, mode, rof, special, spend)))
+
+dwFateAttack (char, kind, rof, special) = dwAttack (kind, rof, special, fateSpend (char))
+
+hasFury (rolls) = count (filter ((x)->x == 10, rolls)) > 0
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after armour and Toughness" else ""
+
+furyDice (total, soak) = ([1d10], ((baseline, throws)->furyResult (total + first (first (throws).rolls), soak, first (first (throws).rolls))))
+
+furyResult (total, soak, extra) =
+{
+    Text = "Righteous Fury adds " + toString (extra) + ": " + toString (total) + " damage" + afterSoak (total, soak) + (if extra == 10 then ", another 10: add 1d10 again" else "")
+    Value = total
+    Outcome = "Critical"
+    Push = if extra == 10 then furyDice (total, soak) else 0
+    PushLabel = "Righteous Fury: add 1d10"
+}
+
+damageResult (total, soak, fury) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + (if fury then ", Righteous Fury: add 1d10 (against xenos it is automatic, otherwise test the attack again); a horde loses 1 more Magnitude" else "")
+    Value = total
+    Outcome = if fury then "Critical" else ""
+    Push = if fury then furyDice (total, soak) else 0
+    PushLabel = "Righteous Fury: add 1d10"
+}
+
+keptSum (rolls, tearing) = sum (rolls) - (if tearing and count (rolls) > 1 then min (rolls) else 0)
+
+damageDice (diceCount, dieSize, armourLeft, tearing) = ([dice { number = diceCount + (if tearing then 1 else 0)  sides = dieSize }],
+    ((baseline, throws)->damageResult (baseline + keptSum (first (throws).rolls, tearing), armourLeft + asked, hasFury (first (throws).rolls))))
+
+dwDamage (diceCount, dieSize, pen, tearing) =
+    ask ("Target's armour", 0, (armour)->ask ("Target's Toughness bonus", 0, damageDice (diceCount, dieSize, max (0, armour - pen), tearing)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
+
+characteristic (unnat, boost) = custom
+{
+    Value = integer { description = "The characteristic as rolled at creation: 2d10 + 30 for a Space Marine, before the Chapter's changes." default = 40  minvalue = 0  maxvalue = 100 }
+    Advances = integer { description = "Advances bought with experience: Simple, Intermediate, Trained and Expert, each +5." default = 0  minvalue = 0  maxvalue = 4 }
+    Unnatural = integer { description = "The Unnatural multiplier of the bonus. Every Space Marine has Unnatural Strength and Toughness (x2)." default = unnat  minvalue = 1  maxvalue = 5 }
+    Total = integer { description = "Value plus 5 per advance, plus power armour's boost to Strength, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 + boost - fatiguePenalty (characterTable)  valuedice = dwFateTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, times the Unnatural multiplier." value = ((Value + Advances * 5 + boost) / 10) * Unnatural  editable = none }
+}
+
+skillTarget (base, level, basic) =
+    switch level
+        case "Trained" then base
+        case "+10" then base + 10
+        case "+20" then base + 20
+        else if basic then base / 2 else 0
+
+skill (base, basic) = custom
+{
+    Level = string { description = "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained." default = "Untrained"  keys = ["Untrained", "Trained", "+10", "+20"] }
+    Misc = integer { default = 0 }
+    Target = integer { description = "The characteristic, halved when untrained, plus 10 or 20 for mastery. Roll d100 at or under it." value = skillTarget (base, Level, basic) + Misc  valuedice = dwFateTest (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "dwWeapon", field)
+
+isMelee (weapon) = weaponStat (weapon, "Class") == "Melee" or weaponStat (weapon, "Class") == ""
+
+dieCount (text) = max (1, firstNumber (text))
+
+dieSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+isTearing (special) = contains (toLower (special), "tearing")
+
+weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, rof, special) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = dwFateAttack (characterTable, kind, rof, special)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = dwDamage (dieCount (damage), dieSides (damage), pen, isTearing (special))  editable = none }
+    Pen = pen
+    RoF = rof
+    Special = special
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total, "melee", 0, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + char.Characteristics.Strength.Bonus, toInt (weaponStat (weapon, "Pen")), "", weaponStat (weapon, "Special"))
+    else
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (weaponStat (weapon, "Range")) * 3, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + (if weaponStat (weapon, "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), toInt (weaponStat (weapon, "Pen")), weaponStat (weapon, "RoF"), weaponStat (weapon, "Special"))
+
+woundState (wounds, critical, fatigue, toughness) =
+    if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
+    else if fatigue > toughness then "Unconscious"
+    else if fatigue > 0 then "Fatigued"
+    else ""
+
+lightlyDamaged (wounds, maxWounds, toughness) = maxWounds - wounds <= toughness * 2
+
+restHeal (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then wounds
+    else if lightlyDamaged (wounds, maxWounds, toughness) then min (maxWounds, wounds + 1)
+    else wounds
+
+dwRank (xp) =
+    if xp < 17000 then 1
+    else if xp < 20000 then 2
+    else if xp < 25000 then 3
+    else if xp < 30000 then 4
+    else if xp < 35000 then 5
+    else if xp < 40000 then 6
+    else if xp < 45000 then 7
+    else 8
+
+renownRank (renown) =
+    if renown < 20 then "Initiated"
+    else if renown < 40 then "Respected"
+    else if renown < 60 then "Distinguished"
+    else if renown < 80 then "Famed"
+    else "Hero"
+
+reqOf (item, rulesetName) = toInt (itemStat (item, rulesetName, "Requisition"))
+
+requisitionSpent (char) = sum (map ((w)->reqOf (w, "dwWeapon"), char.Weapons)) + sum (map ((g)->reqOf (g, "dwGear"), char.Gear)) + sum (map ((a)->reqOf (a, "dwArmour"), char.'Armour worn'))
+
+isDouble (roll) = roll < 100 and mod (roll, 10) == mod (roll, 100) / 10
+
+powerResult (target, roll) =
+{
+    Text = dwText (target, roll) + (if isDouble (roll) then ", doubles: Psychic Phenomena if unfettered or pushed" else "")
+    Value = roll
+    Outcome = if dwSuccess (target, roll) then "Success" else "Failure"
+}
+
+powerDice = ([1d100], ((baseline, throws)->powerResult (baseline + asked * 10, first (first (throws).rolls))))
+
+dwPower = ask ("Difficulty", difficulties, -6, powerDice)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Status, Characteristics, Modes, Attacks] }
+    'Battle Brother' = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Chapter = string { description = "The Chapter the Battle-Brother was sent from to serve the Deathwatch." keys = ["Black Templars", "Blood Angels", "Dark Angels", "Space Wolves", "Storm Wardens", "Ultramarines", "Imperial Fists", "Iron Hands", "Raven Guard", "Salamanders", "White Scars", "Other"] }
+        Speciality = string { description = "The role in the kill-team, which sets the advances, talents and Solo Mode abilities on offer." keys = ["Apothecary", "Assault Marine", "Devastator Marine", "Librarian", "Tactical Marine", "Techmarine"] }
+        Rank = integer { description = "Rank from total experience: 1 below 17,000 XP, rising to 8 at 45,000." value = dwRank ('Total XP')  editable = none }
+        'Total XP' = integer { description = "Experience earned in all. A new Battle-Brother starts with 13,000." default = 13000  minvalue = 0 }
+        'XP to spend' = integer { default = 1000  minvalue = 0  editable = live }
+        'Chapter demeanour' = string { description = "A trait of the Chapter's character that earns Cohesion when played well." }
+        'Speciality demeanour' = string {}
+        'Personal demeanour' = string {}
+        'Past event' = string { description = "A mark of the Battle-Brother's history before the Deathwatch." }
+        'Power armour history' = string { description = "The quirks the armour's machine spirit has gathered over the centuries." }
+        Description = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total; the bonus is the tens digit, doubled for Unnatural Strength and Toughness."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic (1, 0)
+        'Ballistic Skill' = characteristic (1, 0)
+        Strength = characteristic (2, Armour.'Strength boost')
+        Toughness = characteristic (2, 0)
+        Agility = characteristic (1, 0)
+        Intelligence = characteristic (1, 0)
+        Perception = characteristic (1, 0)
+        Willpower = characteristic (1, 0)
+        Fellowship = characteristic (1, 0)
+    }
+
+    Skills = table
+    {
+        description = "Basic skills can be tried untrained at half the characteristic; advanced skills need training. Mastery adds +10 or +20."
+        tableLayout = layout { columns = 2 }
+        Acrobatics = skill (Characteristics.Agility.Total, false)
+        Awareness = skill (Characteristics.Perception.Total, true)
+        Barter = skill (Characteristics.Fellowship.Total, true)
+        Carouse = skill (Characteristics.Toughness.Total, true)
+        Charm = skill (Characteristics.Fellowship.Total, true)
+        'Chem Use' = skill (Characteristics.Intelligence.Total, false)
+        Climb = skill (Characteristics.Strength.Total, true)
+        Command = skill (Characteristics.Fellowship.Total, true)
+        'Common Lore' = skill (Characteristics.Intelligence.Total, false)
+        Concealment = skill (Characteristics.Agility.Total, true)
+        Contortionist = skill (Characteristics.Agility.Total, true)
+        Deceive = skill (Characteristics.Fellowship.Total, true)
+        Demolition = skill (Characteristics.Intelligence.Total, false)
+        Disguise = skill (Characteristics.Fellowship.Total, true)
+        Dodge = skill (Characteristics.Agility.Total, true)
+        Drive = skill (Characteristics.Agility.Total, false)
+        Evaluate = skill (Characteristics.Intelligence.Total, true)
+        'Forbidden Lore' = skill (Characteristics.Intelligence.Total, false)
+        Inquiry = skill (Characteristics.Fellowship.Total, true)
+        Interrogation = skill (Characteristics.Willpower.Total, false)
+        Intimidate = skill (Characteristics.Strength.Total, true)
+        Invocation = skill (Characteristics.Willpower.Total, false)
+        Literacy = skill (Characteristics.Intelligence.Total, false)
+        Logic = skill (Characteristics.Intelligence.Total, true)
+        Medicae = skill (Characteristics.Intelligence.Total, false)
+        Navigation = skill (Characteristics.Intelligence.Total, false)
+        Pilot = skill (Characteristics.Agility.Total, false)
+        Psyniscience = skill (Characteristics.Perception.Total, false)
+        'Scholastic Lore' = skill (Characteristics.Intelligence.Total, false)
+        Scrutiny = skill (Characteristics.Perception.Total, true)
+        Search = skill (Characteristics.Perception.Total, true)
+        'Secret Tongue' = skill (Characteristics.Intelligence.Total, false)
+        Security = skill (Characteristics.Agility.Total, false)
+        Shadowing = skill (Characteristics.Agility.Total, false)
+        'Silent Move' = skill (Characteristics.Agility.Total, true)
+        'Sleight of Hand' = skill (Characteristics.Agility.Total, false)
+        'Speak Language' = skill (Characteristics.Intelligence.Total, false)
+        Survival = skill (Characteristics.Intelligence.Total, false)
+        Swim = skill (Characteristics.Strength.Total, true)
+        Tactics = skill (Characteristics.Intelligence.Total, false)
+        'Tech Use' = skill (Characteristics.Intelligence.Total, false)
+        Tracking = skill (Characteristics.Intelligence.Total, false)
+        Trade = skill (Characteristics.Intelligence.Total, false)
+        Wrangling = skill (Characteristics.Intelligence.Total, false)
+        Specialities = string { description = "Which lores, languages, tactics, trades and pilot fields the skills above cover." multiline = true }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Wounds when unhurt." default = 20 }
+        Wounds = integer { description = "Wounds left. Damage past 0 is critical damage." default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage taken past 0 wounds, read on the critical tables by location and damage type." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Levels of fatigue: -10 on all tests. More than your Toughness bonus and you pass out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (Wounds, 'Critical damage', Fatigue, Characteristics.Toughness.Bonus)  visible = none  indicator = "#d64545" }
+        'Fate threshold' = integer { description = "Fate points the Battle-Brother has each session." default = 3 }
+        Fate = integer { description = "Spend one to reroll a test, add a degree of success, heal 1d5 wounds, shake off fatigue or act first. Burn one to cheat death." default = 'Fate threshold'  minvalue = 0  editable = live }
+        Initiative = modifier { description = "1d10 + Agility bonus, highest first." value = Characteristics.Agility.Bonus  valuedice = initiativeRoll  editable = none }
+        'New session' = button
+        {
+            description = "At the start of a session, fate points return to the threshold."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fate) = 'Fate threshold'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A night's rest clears fatigue, and a lightly damaged Battle-Brother heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = 0
+                (root.Status.Wounds) = restHeal (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)
+            }
+        }
+    }
+
+    Modes = table
+    {
+        description = "Solo Mode: the Battle-Brother's own Chapter and Speciality abilities. Squad Mode: Attack Patterns and Defensive Stances, paid with the kill-team's Cohesion."
+        tableLayout = layout { columns = 2 }
+        Mode = string { description = "Solo Mode by default. Joining Squad Mode needs the kill-team's Cohesion of 1 or more." keys = ["Solo Mode", "Squad Mode"] default = "Solo Mode"  editable = live }
+        'In Squad Mode' = string { value = if Mode == "Squad Mode" then "Squad Mode" else ""  visible = none  indicator = "#4a7fbf" }
+        'Chapter Solo Mode ability' = string { multiline = true }
+        'Speciality Solo Mode abilities' = string { multiline = true }
+    }
+
+    'Squad Mode abilities' = list
+    {
+        description = "Attack Patterns and Defensive Stances the Battle-Brother can start or join."
+        source = secondary.'Squad Abilities'
+        singular = "Ability"
+        editable = character
+    }
+
+    Renown = table
+    {
+        description = "Renown among the Deathwatch. Its rank opens better wargear and honours."
+        tableLayout = layout { columns = 2 }
+        Renown = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Renown rank' = string { description = "Initiated below 20, Respected, Distinguished, Famed, and Hero from 80." value = renownRank (Renown)  editable = none }
+        Honours = string { multiline = true }
+    }
+
+    Movement = table
+    {
+        description = "Metres moved per action, from the Agility bonus."
+        tableLayout = layout { columns = 2 }
+        'Half move' = integer { value = Characteristics.Agility.Bonus  render = distance (Characteristics.Agility.Bonus)  editable = none }
+        'Full move' = integer { value = Characteristics.Agility.Bonus * 2  render = distance (Characteristics.Agility.Bonus * 2)  editable = none }
+        Charge = integer { value = Characteristics.Agility.Bonus * 3  render = distance (Characteristics.Agility.Bonus * 3)  editable = none }
+        Run = integer { value = Characteristics.Agility.Bonus * 6  render = distance (Characteristics.Agility.Bonus * 6)  editable = none }
+    }
+
+    Armour = table
+    {
+        description = "Power armour points by hit location. The Toughness bonus also soaks damage."
+        tableLayout = layout { columns = 2 }
+        Head = integer { default = 8 }
+        Body = integer { default = 10 }
+        'Right Arm' = integer { default = 8 }
+        'Left Arm' = integer { default = 8 }
+        'Right Leg' = integer { default = 8 }
+        'Left Leg' = integer { default = 8 }
+        'Strength boost' = integer { description = "Power armour's servos add to Strength (before the Unnatural multiplier)." default = 20  minvalue = 0 }
+        Size = string { description = "Power armour makes a Space Marine Hulking: +10 for others to hit him." keys = ["Average", "Hulking", "Enormous"] default = "Hulking" }
+        'Toughness bonus' = integer { value = Characteristics.Toughness.Bonus  editable = none }
+        'Auto senses' = string { description = "Dark sight, protection from flash and sound, the vox and the armour's own senses." default = "Dark Sight, Heightened Senses (Sight, Sound), photon flash and sound dampers, vox" }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack tests and damage for each weapon. Attacks ask the kind of attack and the difficulty; damage asks the target's armour and Toughness bonus."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, 0, "", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Shots = integer { default = 28  minvalue = 0  editable = live }
+            Magazines = integer { default = 3  minvalue = 0  editable = live }
+        }
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Armour worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Requisition = table
+    {
+        description = "Requisition the Watch Captain grants for the mission, spent on wargear beyond the standard issue."
+        tableLayout = layout { columns = 3 }
+        'Mission requisition' = integer { default = 30  minvalue = 0  editable = live }
+        Spent = integer { description = "The Requisition cost of the weapons, armour and gear above." value = requisitionSpent (characterTable)  editable = none }
+        Left = integer { value = 'Mission requisition' - Spent  editable = none }
+    }
+
+    Psychic = table
+    {
+        description = "Librarians: psy rating and the Focus Power test."
+        tableLayout = layout { columns = 3 }
+        'Psy rating' = integer { default = 0  minvalue = 0 }
+        'Focus Power' = integer { description = "Willpower plus 5 per psy rating used. Doubles bring Psychic Phenomena when unfettered or pushed." value = Characteristics.Willpower.Total + 'Psy rating' * 5  valuedice = dwPower  editable = none }
+        'Sustained powers' = string { editable = live }
+    }
+
+    'Psychic powers' = list
+    {
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Mental state' = table
+    {
+        description = "Insanity from horror and Corruption from the Warp. Space Marines bear them better than men, but they still mark the soul."
+        tableLayout = layout { columns = 2  size = wide }
+        Insanity = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        Corruption = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Battle trauma' = string { multiline = true  editable = live }
+        Malignancies = string { multiline = true  editable = live }
+        'Critical injuries' = string { multiline = true  editable = live }
+        Mutations = string { multiline = true  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/deathwatch/xenos.svg"
+    }
+    Profile = table
+    {
+        description = "Characteristics. Unnatural characteristics multiply the bonus; note them under Traits."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 40  valuedice = dwTest }
+        BS = integer { default = 40  valuedice = dwTest }
+        S = integer { default = 40  valuedice = dwTest }
+        T = integer { default = 40  valuedice = dwTest }
+        Ag = integer { default = 40  valuedice = dwTest }
+        Int = integer { default = 30  valuedice = dwTest }
+        Per = integer { default = 40  valuedice = dwTest }
+        WP = integer { default = 40  valuedice = dwTest }
+        Fel = integer { default = 20  valuedice = dwTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Tier = string { description = "Troops fall fast, Elites stand up to a Battle-Brother, Masters lead and can spend Fate." keys = ["Troops", "Elite", "Master"] default = "Elite" }
+        'Max Wounds' = integer { default = 20 }
+        Wounds = integer { default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Armour = string { description = "Armour points by location, such as All 6 or Body 8, Head 4." default = "All 4" }
+        'Toughness bonus' = integer { description = "With any Unnatural multiplier." default = 4 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 4  valuedice = initiativeRoll }
+        Movement = string { description = "Half, full, charge and run in metres." default = "4/8/12/24" }
+        Size = string { keys = ["Miniscule", "Puny", "Scrawny", "Average", "Hulking", "Enormous", "Massive", "Immense"] default = "Average" }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 40  valuedice = dwAttack ("melee", "", Special, [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+4" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dwDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 40  valuedice = dwAttack ("ranged", RoF, Special, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 50 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+4" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dwDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+hordeDice (magnitude) = min (2, max (0, magnitude) / 10)
+
+hordeState (magnitude, maxMagnitude) =
+    if magnitude <= 0 then "Destroyed"
+    else if magnitude * 4 <= maxMagnitude * 3 then "Test morale"
+    else ""
+
+hordeTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Horde, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/deathwatch/horde.svg"
+    }
+    Profile = table
+    {
+        description = "The characteristics of a single member of the horde."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = dwTest }
+        BS = integer { default = 30  valuedice = dwTest }
+        S = integer { default = 30  valuedice = dwTest }
+        T = integer { default = 30  valuedice = dwTest }
+        Ag = integer { default = 30  valuedice = dwTest }
+        Int = integer { default = 20  valuedice = dwTest }
+        Per = integer { default = 30  valuedice = dwTest }
+        WP = integer { default = 30  valuedice = dwTest }
+        Fel = integer { default = 10  valuedice = dwTest }
+    }
+    Horde = table
+    {
+        description = "A horde has Magnitude instead of Wounds: each hit that gets past armour and Toughness takes 1 off, Blast adds hits, and Righteous Fury takes 1 more."
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Magnitude' = integer { default = 30  minvalue = 1 }
+        Magnitude = integer { default = 'Max Magnitude'  minvalue = 0  editable = live  indicator = "#d64545" }
+        State = string { value = hordeState (Magnitude, 'Max Magnitude')  visible = none  indicator = "#e8913a" }
+        'Extra damage dice' = integer { description = "A horde's attacks add 1d10 per 10 Magnitude, up to 2d10." value = hordeDice (Magnitude)  editable = none }
+        Armour = string { default = "All 3" }
+        'Toughness bonus' = integer { default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { default = "3/6/9/18" }
+        Fearless = bool { description = "A fearless horde never breaks; others test Willpower once they lose a quarter of their Magnitude." default = false }
+        Morale = integer { description = "Willpower test to hold when a quarter of the horde has fallen." value = Profile.WP  valuedice = dwTest  editable = none }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = dwAttack ("melee", "", Special, [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dwDamage (dieCount (Damage) + hordeDice (hordeTable.Horde.Magnitude), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = dwAttack ("ranged", RoF, Special, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 30 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dwDamage (dieCount (Damage) + hordeDice (hordeTable.Horde.Magnitude), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+cohesionResult (cohesion, roll) =
+{
+    Text = "Rolled " + toString (roll) + " vs Cohesion " + toString (cohesion) + ": " + (if roll <= cohesion then "the kill-team holds together" else "lose 1 Cohesion")
+    Value = roll
+    Outcome = if roll <= cohesion then "Success" else "Failure"
+}
+
+cohesionChallenge = ([1d10], ((baseline, throws)->cohesionResult (baseline, first (first (throws).rolls))))
+
+killTeamTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/deathwatch/killteam.svg"  important = [Cohesion, Mission] }
+    Cohesion = table
+    {
+        description = "The kill-team's shared Cohesion pays for Squad Mode. It starts each mission at its maximum: the leader's Fellowship bonus plus the leader's Rank and Command bonuses."
+        tableLayout = layout { columns = 4  size = wide }
+        'Squad leader' = string {}
+        'Max Cohesion' = integer { default = 6  minvalue = 0 }
+        Cohesion = integer { default = 'Max Cohesion'  minvalue = 0  editable = live  indicator = "#4a7fbf" }
+        Broken = string { value = if Cohesion <= 0 then "Cohesion lost" else ""  visible = none  indicator = "#d64545" }
+        Challenge = integer { description = "When the kill-team is shaken, roll 1d10: over the current Cohesion and it loses 1." value = Cohesion  valuedice = cohesionChallenge  editable = none }
+        'New mission' = button
+        {
+            description = "At the start of a mission Cohesion returns to its maximum."
+            editable = live
+            onClick = updates
+            {
+                (root.Cohesion.Cohesion) = 'Max Cohesion'
+            }
+        }
+    }
+    Mission = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Mission = string {}
+        'Primary objective' = string { multiline = true  editable = live }
+        'Secondary objectives' = string { multiline = true  editable = live }
+        'Squad Oath' = string { description = "The oath the kill-team swore before the mission, and its benefit." }
+        Requisition = integer { description = "Requisition granted for this mission to each Battle-Brother." default = 30  minvalue = 0 }
+        'Battle Brothers' = string { multiline = true }
+    }
+    'Squad Mode abilities' = list
+    {
+        source = secondary.'Squad Abilities'
+        singular = "Ability"
+        editable = character
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Mission log' = string { multiline = true  editable = live }
+    }
+}
+
+dwWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Renown" prefix = "" filter = Stats.Renown }]
+        sortedBy = sort { prefix = "" sort = Stats.Class }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Melee", "Pistol", "Basic", "Heavy", "Thrown"] }
+        Range = string { description = "Range in metres. Long range is double, extreme triple." }
+        RoF = string { description = "Rate of fire: single, semi-auto and full auto, such as S/3/-." default = "S/-/-" }
+        Damage = string { default = "1d10" }
+        Type = string { description = "Energy, Impact, Rending or Explosive." keys = ["E", "I", "R", "X"] }
+        Pen = string { default = "0" }
+        Clip = string {}
+        Reload = string {}
+        Special = string { description = "Weapon qualities such as Tearing, Blast (3), Reliable or Felling." }
+        Weight = string {}
+        Requisition = string { description = "Requisition cost to draw it for a mission." default = "0" }
+        Renown = string { keys = ["Initiated", "Respected", "Distinguished", "Famed", "Hero"] default = "Initiated" }
+    }
+}
+
+dwArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Renown" prefix = "" filter = Stats.Renown }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Locations = string { default = "All" }
+        AP = string { description = "Armour points by location, such as Head 8, Body 10, Arms 8, Legs 8." default = "8" }
+        Requisition = string { default = "0" }
+        Renown = string { keys = ["Initiated", "Respected", "Distinguished", "Famed", "Hero"] default = "Initiated" }
+        Effect = string {}
+    }
+}
+
+dwTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Talent", "Trait"] default = "Talent" }
+        Prerequisites = string {}
+        Speciality = string { description = "The Chapter or Speciality that offers it, or General." default = "General" }
+    }
+}
+
+dwPowerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "" sort = Stats.Discipline }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Codex", "Chapter", "Other"] default = "Codex" }
+        Chapter = string { description = "For Chapter powers, the Librarius it comes from." }
+        Action = string {}
+        Opposed = string {}
+        Range = string {}
+        Sustained = string {}
+    }
+}
+
+dwGear = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Renown" prefix = "" filter = Stats.Renown }]
+        sortedBy = sort { prefix = "" sort = Stats.Renown }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weight = string {}
+        Requisition = string { default = "0" }
+        Renown = string { keys = ["Initiated", "Respected", "Distinguished", "Famed", "Hero"] default = "Initiated" }
+    }
+}
+
+dwSquadAbility = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/deathwatch/killteam.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Source" prefix = "" filter = Stats.Source }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Attack Pattern", "Defensive Stance"] default = "Attack Pattern" }
+        Source = string { description = "Codex, or the Chapter that teaches it." default = "Codex" }
+        Cost = integer { description = "Cohesion spent to start it." default = 1  minvalue = 0 }
+        Sustained = string { keys = ["No", "Yes"] default = "No" }
+        'Rank improvements' = string { description = "What the ability gains at higher Ranks of the Battle-Brother who starts it." }
+    }
+}
+
+deathwatchNameSetting = nameSetting
+{
+    name = "Deathwatch"
+    characters = generator { library = "Grimdark imperium" variant = "Imperial" }
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    Hordes = generator { library = "Grimdark imperium" variant = "Heretic" }
+    'Kill Teams' = generator { library = "Grimdark imperium" variant = "Order" }
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Order" }]
+}
+
+Deathwatch = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Battle-Brothers"
+            topic = "Getting started"
+            text = ["Pick a Chapter and a Speciality (Apothecary, Assault, Devastator, Librarian, Tactical or Techmarine), roll the nine characteristics (2d10 + 30 each, adjusted by Chapter) and start at Rank 1 with 13,000 XP and 1,000 to spend.", "Every Space Marine has Unnatural Strength and Toughness (x2), and power armour adds +20 Strength. Make a Kill Team for the squad's Cohesion and Squad Mode abilities."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target, after the difficulty (Challenging +0, Hard -20, Easy +30). Every full 10 under the target is a degree of success; every full 10 over is a degree of failure.", "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained. A failed test offers to spend a Fate point for a reroll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask the kind of attack (standard, all-out, swift, lightning, burst, called shot) and the difficulty. Bursts and swift or lightning attacks add hits from degrees of success. The roll's digits reversed give the hit location; ranged attacks jam on 96 or more (94 for bursts).", "Damage asks the target's armour and Toughness bonus. A 10 on a damage die is Righteous Fury: add 1d10, automatically against xenos."]
+        },
+        hint
+        {
+            title = "Hordes"
+            topic = "Combat"
+            text = ["A Horde has Magnitude instead of Wounds. Every hit that gets through takes 1 Magnitude (the attack result counts them, with Blast), and Righteous Fury 1 more. Its attacks add 1d10 damage per 10 Magnitude, up to 2d10."]
+        },
+        hint
+        {
+            title = "Cohesion"
+            topic = "Play"
+            text = ["The Kill Team sheet holds the squad's Cohesion. Squad Mode abilities cost Cohesion; a Cohesion challenge rolls 1d10, and over the current Cohesion loses 1. New mission refills it."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: 1d10 + Agility bonus, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Hordes = hordeTable
+    'Kill Teams' = killTeamTable
+    Weapons = dwWeapon
+    Armour = dwArmour
+    Talents = dwTalent
+    'Psychic Powers' = dwPowerStats
+    Gear = dwGear
+    'Squad Abilities' = dwSquadAbility
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Psychic Powers", "Gear", "Squad Abilities"]
+    extraEntityTypes = [entityTypeDescription ("Hordes", "horde", true, "/systems/deathwatch/horde.svg", []), entityTypeDescription ("Kill Teams", "kill team", false, "/systems/deathwatch/killteam.svg", ["Squad Abilities"])]
+    description = "Warhammer 40,000 Deathwatch: Space Marine kill-teams against the xenos, with d100 tests, degrees of success, Cohesion and Squad Mode, Renown and Requisition, and hordes"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 1d5]
+    cssFiles = ["/systems/deathwatch/deathwatch.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [deathwatchNameSetting, grimdarkNameSetting]
+}

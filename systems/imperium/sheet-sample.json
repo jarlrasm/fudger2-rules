@@ -1,0 +1,49 @@
+{
+  "values": {
+    "Character": { "Origin": "Hive World", "Faction": "Adeptus Astra Telepathica", "Role": "Mystic", "Patron": "Lord-Seneschal Ilsabet Corvane", "Species": "Human", "Age": "27", "Height": "1.70 m", "Eyes": "Grey, one clouded", "Hair": "Shaved, with a sanctioning brand", "Feature": "Hands that never stop trembling", "Divination": "The Emperor's light is brightest in the darkest hive", "Handed": "Left", "Short term goal": "Find who sold the Tessaract shipment", "Long term goal": "Earn release from the Black Ships' debt" },
+    "Characteristics": {
+      "Weapon Skill.Starting": 28, "Ballistic Skill.Starting": 33, "Strength.Starting": 27, "Toughness.Starting": 34, "Agility.Starting": 36, "Agility.Modifier": 5,
+      "Intelligence.Starting": 38, "Perception.Starting": 41, "Perception.Advances": 3, "Willpower.Starting": 44, "Willpower.Modifier": 5, "Willpower.Advances": 4, "Fellowship.Starting": 31
+    },
+    "Skills": {
+      "Awareness.Advances": 2, "Discipline.Advances": 3, "Fortitude.Advances": 1, "Intuition.Advances": 2, "Lore.Advances": 1, "Psychic Mastery.Advances": 3,
+      "Ranged.Advances": 1, "Reflexes.Advances": 1, "Stealth.Advances": 1
+    },
+    "Specialisations": {
+      "Psychic Mastery (Divination)": { "Advances": 2 },
+      "Psychic Mastery (Telepathy)": { "Advances": 1 },
+      "Awareness (Psyniscience)": { "Advances": 2 },
+      "Lore (The Warp)": { "Advances": 1 },
+      "Ranged (Pistol)": { "Advances": 1 }
+    },
+    "Combat": { "Wounds": 4, "Critical Wounds": 0, "Max Fate": 3, "Fate": 2, "Speed": "Normal", "Size": "Medium", "Superiority": 1 },
+    "Armour": { "Force field": "" },
+    "Conditions": { "Fatigued": 1 },
+    "Critical Injuries": { "Injuries": "Old burn scars along the left arm from a fumbled pyromancy in the Scholastica Psykana" },
+    "Ammunition": [ { "Name": "Laspistol charge packs", "Mag": 11, "Spare": 2 } ],
+    "Corruption": { "Corruption": 2, "Mutations": "", "Malignancies": "Whispers at the edge of sleep" },
+    "Warp": { "Warp Charge": 2, "Sustaining": "" },
+    "Influence": {
+      "Adeptus Astra Telepathica": { "Influence": 2, "Contacts": "Adept Morrow of the Choir" },
+      "Inquisition": { "Influence": -1, "Contacts": "" },
+      "Adeptus Arbites": { "Influence": 1, "Contacts": "Proctor Hask, Rokarth precinct" }
+    },
+    "Experience": { "Total": 420, "Spent": 350, "Solars": 135 },
+    "Notes": { "Connections": "Sister Agathe of the Ministorum mission, who owes her a life. Old Frenn, a smuggler in the underhive.", "Background": "Taken from the lower stacks of Rokarth hive at nine and sanctioned on Terra, Veyra Lusk came back to the Macharian Sector with a brand on her scalp and a debt to the Astra Telepathica. She reads the dreams of the dying for her Patron, and tells him only half of what she sees." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Laspistol", "values": { "Stats": { "Type": "Ranged", "Specialisation": "Pistol", "Category": "Las", "Damage": "7", "Range": "Short", "Mag": "15", "Traits": "Reliable", "Encumbrance": "0", "Cost": "100", "Availability": "Common" } } },
+      { "name": "Ceremonial knife", "values": { "Stats": { "Type": "Melee", "Specialisation": "One-handed", "Category": "Mundane", "Damage": "1 + Str B", "Range": "Immediate", "Traits": "Subtle", "Encumbrance": "0", "Cost": "20", "Availability": "Common" } } }
+    ],
+    "Protection": [ { "name": "Flak coat", "values": { "Stats": { "Category": "Flak", "Armour": "2", "Locations": "Body, Arms, Legs", "Encumbrance": "2", "Cost": "150", "Availability": "Common" } } } ],
+    "Equipment": [ { "name": "Psy-focus rosary", "values": { "Stats": { "Encumbrance": "0", "Availability": "Scarce" } } }, { "name": "Sanction papers", "values": { "Stats": { "Encumbrance": "0" } } }, { "name": "Glow-globe", "values": { "Stats": { "Encumbrance": "1" } } } ],
+    "Augmetics": [ { "name": "Augmetic eye", "values": { "Stats": { "Replaces": "Left eye", "Cost": "300", "Availability": "Scarce" } } } ],
+    "Talents": [ { "name": "Sanctioned Psyker", "values": { "Stats": { "Source": "Mystic" } } }, { "name": "Hive Rat", "values": { "Stats": { "Source": "Hive World" } } } ],
+    "Powers": [
+      { "name": "Psychic Scream", "values": { "Stats": { "Discipline": "Telepathy", "Warp Rating": "3", "Difficulty": "Challenging", "Range": "Short", "Duration": "Instant", "Damage": "4" } } },
+      { "name": "Glimpse of Fate", "values": { "Stats": { "Discipline": "Divination", "Warp Rating": "2", "Difficulty": "Difficult", "Range": "Self", "Duration": "Instant" } } },
+      { "name": "Flash of Light", "values": { "Stats": { "Discipline": "Minor", "Warp Rating": "1", "Difficulty": "Routine", "Range": "Immediate", "Duration": "Instant" } } }
+    ]
+  }
+}

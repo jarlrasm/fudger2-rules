@@ -1,0 +1,76 @@
+@import url("/systems/sheet.css");
+
+/* Vampire: the Masquerade 20th: white paper with black rules and blood-red
+   section titles in a gothic serif, the three attribute columns, Talents,
+   Skills and Knowledges side by side as on the paper sheet, then
+   Disciplines, Backgrounds and Virtues, and below them Humanity,
+   Willpower, the Blood Pool and the health track. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #160a0c;
+    --surface: #faf7f2;
+    --surface-alt: #f0e9e0;
+    --surface-sunken: #e4d9cc;
+    --surface-muted: #c8b8a6;
+    --text: #140c0d;
+    --text-muted: #4b3a3c;
+    --text-faint: #7d6d6e;
+    --on-accent: #faf7f2;
+    --border: #b9a9a0;
+    --border-strong: #1d1112;
+    --accent: #8a0f16;
+    --accent-hover: #a5161f;
+    --accent-soft: #f2d9da;
+    --link: #8a0f16;
+    --danger: #8a0f16;
+    --danger-hover: #6c0b11;
+    --danger-soft: #f2d9da;
+    --success: #2f5a2b;
+    --paper: #faf7f2;
+    --card-bg: #f0e9e0;
+    --dice-bg: #5e0a10;
+    --dice-text: #faf7f2;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", "Garamond", "Palatino Linotype", Georgia, serif;
+    --title-font: "UnifrakturMaguntia", "Old English Text MT", "Cinzel", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-strong);
+    font-size: 1.15em;
+}
+.entityView .table-talents,
+.entityView .table-skills,
+.entityView .table-knowledges,
+.entityView .table-disciplines,
+.entityView .table-backgrounds,
+.entityView .table-virtues,
+.entityView .table-merits-and-flaws,
+.entityView .table-humanity,
+.entityView .table-willpower,
+.entityView .table-blood-pool,
+.entityView .table-health,
+.entityView .table-combat { --block: 33.333%; }
+.entityView .table-talents,
+.entityView .table-disciplines,
+.entityView .table-merits-and-flaws,
+.entityView .table-blood-pool { clear: left; }
+.entityView .table-attributes > table > tbody > tr,
+.entityView .table-talents > table > tbody > tr,
+.entityView .table-skills > table > tbody > tr,
+.entityView .table-knowledges > table > tbody > tr { border-bottom: 1px dotted var(--border); }
+.entityView .table-attacks,
+.entityView .table-weapons,
+.entityView .table-discipline-powers,
+.entityView .table-power-rolls,
+.entityView .table-notes { clear: left; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Attack "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

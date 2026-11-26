@@ -1,0 +1,428 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+pbOutcome (natural, total, dr) =
+    if natural == 20 then "Crit"
+    else if natural == 1 then "Fumble"
+    else if dr < 1 then ""
+    else if total >= dr then "Success"
+    else "Failure"
+
+pbWord (natural, total, dr, critText, fumbleText, failText) =
+    if natural == 20 then ": crit" + critText
+    else if natural == 1 then ": fumble" + fumbleText
+    else if dr < 1 then ""
+    else if total >= dr then ": success"
+    else ": failure" + failText
+
+pbText (natural, total, dr, critText, fumbleText, failText) =
+    toString (total)
+    + (if dr > 0 then " vs DR" + toString (dr) else "")
+    + pbWord (natural, total, dr, critText, fumbleText, failText)
+
+pbResult (natural, total, dr, reroll, luck, critText, fumbleText, failText) =
+{
+    Text = pbText (natural, total, dr, critText, fumbleText, failText)
+    Value = total
+    Outcome = pbOutcome (natural, total, dr)
+    Push = reroll
+    PushLabel = "Spend Devil's Luck"
+    PushSets = [{ Field = "characterTable.Status.Luck"  Value = luck - 1 }]
+}
+
+pbReroll (mod, dr, critText, fumbleText, failText) = ([1d20], ((baseline, throws)->pbResult (first (first (throws).rolls), mod + first (first (throws).rolls), if dr > 0 then dr else asked, 0, 0, critText, fumbleText, failText)))
+
+pbLuckTest (dr, luck, critText, fumbleText, failText) = ([1d20], ((baseline, throws)->pbResult (first (first (throws).rolls), baseline + first (first (throws).rolls), if dr > 0 then dr else asked, if luck > 0 then pbReroll (baseline, dr, critText, fumbleText, failText) else 0, luck, critText, fumbleText, failText)))
+
+pbTest (dr) = pbLuckTest (dr, 0, "", "", "")
+
+pbDice = ask ("DR", 12, pbTest (0))
+
+pbLuckDice (luck) = ask ("DR", 12, pbLuckTest (0, luck, "", "", ""))
+
+pbAttackDice (luck) = ask ("DR", 12, pbLuckTest (0, luck, ", double damage and the target's armour drops a tier", ", the weapon breaks or is dropped", ""))
+
+pbDefenceDice (luck) = ask ("DR", 12, pbLuckTest (0, luck, ", a free attack back", ", double damage and your armour drops a tier", ", take the damage"))
+
+pbRitualDice (luck) = ask ("DR", 12, pbLuckTest (0, luck, ", the ritual is doubled in effect", ", a mystical mishap and d2 damage", ", a mystical mishap, the ritual is lost until dawn"))
+
+pbRelicDice (luck) = ask ("DR", 12, pbLuckTest (0, luck, "", ", the relic is destroyed or spent and you lose d2 HP", ", stunned, the relic sleeps until dawn"))
+
+pbShipDice (critText, fumbleText) = ask ("DR", 12, pbLuckTest (0, 0, critText, fumbleText, ""))
+
+classHPDie (pirateClass) =
+    switch pirateClass
+    case "Brute" then 12
+    case "Swashbuckler" then 10
+    case "Buccaneer" then 10
+    case "Rapscallion" then 8
+    case "Zealot" then 8
+    case "Sorcerer" then 6
+    else 8
+
+classLuckDie (pirateClass) =
+    switch pirateClass
+    case "Rapscallion" then 4
+    case "Swashbuckler" then 4
+    case "Zealot" then 4
+    case "Sorcerer" then 4
+    else 2
+
+diceCount (text) = max (1, bonusWithValue ([[text]], "^([0-9]+)d"))
+
+dieSides (text) = max (2, bonusWithValue ([[text]], "d([0-9]+)"))
+
+dieAdd (text) = bonusWithValue ([[text]], "\+([0-9]+)")
+
+pbDamage (text) = ([dice { number = diceCount (text)  sides = dieSides (text)  bonus = dieAdd (text) }], ((baseline, throws)->sum (first (throws).rolls) + first (throws).bonus))
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, attackBonus, damage, kind, luck, special) = custom
+{
+    Name = name
+    Attack = modifier { value = attackBonus  valuedice = pbAttackDice (luck)  action = kind  reach = 5 }
+    Damage = integer { value = 0  valuedice = pbDamage (damage)  render = damage  editable = none }
+    Special = special
+}
+
+weaponNote (weapon) =
+    if weaponStat (weapon, "Kind") == "Black powder" then
+        "Ignores armour. Reload " + weaponStat (weapon, "Reload")
+    else
+        weaponStat (weapon, "Notes")
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Melee" then
+        weaponAttack (weapon.Name, char.Abilities.Strength, weaponStat (weapon, "Damage"), "melee", char.Status.Luck, weaponNote (weapon))
+    else
+        weaponAttack (weapon.Name, char.Abilities.Presence, weaponStat (weapon, "Damage"), "ranged", char.Status.Luck, weaponNote (weapon))
+
+armourText (tier) =
+    if tier == 1 then "-d2 damage, no penalty"
+    else if tier == 2 then "-d4 damage, Agility DR+2, Defence DR+2, no rituals or relics"
+    else if tier == 3 then "-d6 damage, Agility DR+4, Defence DR+2, sinks in water, no rituals or relics"
+    else "none"
+
+hullText (tier) =
+    if tier == 1 then "-d2 damage"
+    else if tier == 2 then "-d4 damage"
+    else if tier == 3 then "-d6 damage"
+    else "none"
+
+pbDownState (hp) = if hp < 0 then "Dead" else if hp < 1 then "Broken" else ""
+
+reactionText (total) =
+    if total <= 3 then "hostile, attacks"
+    else if total <= 6 then "angry"
+    else if total <= 8 then "indifferent"
+    else if total <= 10 then "almost friendly"
+    else "helpful"
+
+pbReaction = ([2d6], ((baseline, throws)->{ Text = toString (sum (first (throws).rolls)) + ": " + reactionText (sum (first (throws).rolls))  Value = sum (first (throws).rolls) }))
+
+pbMorale = ([2d6, 1d6], ((baseline, throws)->
+    if baseline < 1 then { Text = "No morale: fights to the end"  Outcome = "Success" }
+    else if sum (first (throws).rolls) > baseline then
+        { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + (if first (item (1, throws).rolls) <= 3 then ": flees" else ": surrenders")  Outcome = "Failure" }
+    else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": fights on"  Outcome = "Success" }))
+
+pbShipMorale = ([2d6], ((baseline, throws)->
+    if baseline + sum (first (throws).rolls) < 4 then { Text = toString (baseline + sum (first (throws).rolls)) + ": the crew surrenders or mutinies"  Outcome = "Failure" }
+    else { Text = toString (baseline + sum (first (throws).rolls)) + ": the crew holds"  Outcome = "Success" }))
+
+pbInitiative = ([1d6], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls))  Value = baseline + first (first (throws).rolls) }))
+
+pbSide = ([1d6], ((baseline, throws)->if first (first (throws).rolls) <= 3 then { Text = toString (first (first (throws).rolls)) + ": the enemies act first"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + ": the pirates act first"  Outcome = "Success" }))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Abilities, Status, Attacks] }
+    Pirate = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Class = string { description = "Your class. A Landlubber has no class and rolls 4d6, dropping the lowest, for each ability."  keys = ["Landlubber", "Brute", "Rapscallion", "Buccaneer", "Swashbuckler", "Zealot", "Sorcerer"]  default = "Landlubber" }
+        'Haunted Soul or Tall Tale' = string { description = "An optional second class laid over the first: a Haunted Soul (undead) or a Tall Tale (merfolk, sentient animal and the like)."  keys = ["None", "Haunted Soul", "Tall Tale"]  default = "None" }
+        Kind = string { description = "What kind of Haunted Soul or Tall Tale, if any." }
+        'Class Feature' = string { description = "What your class gives you at the start." multiline = true }
+        Character = string { description = "Personality traits." multiline = true }
+        'Distinctive Flaws' = string { description = "A flaw others notice." }
+        'Physical Trademark' = string { description = "A scar, tattoo or peg leg that marks you." }
+        Idiosyncrasy = string { description = "A strange habit." }
+        'Unfortunate Incident' = string { description = "Something that happened to you, or a condition you live with." }
+        'Thing of Importance' = string { description = "A small thing you would never give up." }
+        Background = string { multiline = true }
+    }
+
+    Abilities = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Strength = modifier { description = "Strength: melee attacks, lifting, climbing and grappling." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbLuckDice (Status.Luck) }
+        Agility = modifier { description = "Agility: dodging, balance, sneaking and swimming. Also your defence and initiative." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbLuckDice (Status.Luck) }
+        Presence = modifier { description = "Presence: ranged and black powder attacks, perception, charm and wits." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbLuckDice (Status.Luck) }
+        Toughness = modifier { description = "Toughness: resisting poison, drink, cold and staying conscious. Adds to HP." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbLuckDice (Status.Luck) }
+        Spirit = modifier { description = "Spirit: rituals, relics, the arcane and resisting the supernatural." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbLuckDice (Status.Luck) }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Max HP' = integer { description = "Hit points when unhurt: Toughness plus your class's die, at least 1." default = 6  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 you are broken, below 0 dead." default = 'Max HP'  editable = live }
+        Down = string { value = pbDownState (HP)  visible = none  indicator = "#d64545" }
+        'HP Die' = integer { description = "Roll your class's die for starting HP; add Toughness." default = 0  valuedice = ([dice { number = 1  sides = classHPDie (Pirate.Class) }], ((baseline, throws)->max (1, Abilities.Toughness + first (first (throws).rolls))))  editable = none }
+        Luck = integer { description = "Devil's Luck: spend one to reroll a die, deal maximum damage, take d6 less damage, cancel a crit or fumble, or lower a DR by 4." default = 1  minvalue = 0  editable = live  indicator = "#d4b106"  indicatorLabel = "Devil's Luck" }
+        'Luck Die' = integer { description = "Roll your class's Devil's Luck die after six hours of rest, if you had run out." default = 0  valuedice = ([dice { number = 1  sides = classLuckDie (Pirate.Class) }], ((baseline, throws)->first (first (throws).rolls)))  editable = none }
+        Defence = modifier { description = "Agility test when attacked, DR12 plus armour penalties." value = Abilities.Agility  valuedice = pbDefenceDice (Luck)  editable = none }
+        Initiative = integer { description = "Your place in your side's turn: d6 plus Agility." value = Abilities.Agility  valuedice = pbInitiative  editable = none }
+        'Which Side' = integer { description = "Roll d6 each round: 1-3 the enemies act first, 4-6 the pirates." default = 0  valuedice = pbSide  editable = none }
+        Rest = integer { description = "Roll d4 HP for a short rest with food and drink, d6 for six hours of sleep."  default = 0  valuedice = 1d6  editable = none }
+        Silver = integer { description = "Silver coins carried." default = 0  minvalue = 0  editable = live }
+        Dawn = button
+        {
+            description = "A new day: rituals and relics that failed wake again. Roll Ritual Uses for today."
+            editable = live
+            onClick = updates
+            {
+                (root.Rituals.'Rituals Lost') = false
+                (root.Rituals.'Relics Asleep') = false
+            }
+        }
+    }
+
+    Armour = table
+    {
+        description = "Armour tier 0 to 3 takes a die off each hit, but does nothing against black powder."
+        tableLayout = layout { columns = 2 }
+        Tier = integer { description = "Armour tier from 0 to 3." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        Effect = string { description = "What the armour tier does." value = armourText (Tier)  editable = none }
+        Hat = string { description = "A metal lined hat or morion takes 1 off each hit; a morion can be broken to stop one attack."  keys = ["None", "Hat", "Metal Lined Hat", "Morion"]  default = "None"  editable = live }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Abilities.Strength, "d2", "melee", Status.Luck, "")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Rituals = table
+    {
+        description = "Rituals and relics fail in tier 2 or 3 armour, or while you hold cold iron."
+        tableLayout = layout { columns = 3  size = wide }
+        'Ritual Uses' = integer { description = "Roll d4 plus Spirit each dawn: how many rituals you can cast today." default = 0  valuedice = ([1d4], ((baseline, throws)->{ Text = toString (max (0, Abilities.Spirit + first (first (throws).rolls))) + " ritual uses today"  Value = max (0, Abilities.Spirit + first (first (throws).rolls)) }))  editable = none }
+        'Uses Left' = integer { description = "Ritual uses left today." default = 0  minvalue = 0  editable = live }
+        'Ritual Test' = modifier { description = "Spirit test DR12 to cast. A failure is a mystical mishap and the ritual is lost until dawn." value = Abilities.Spirit  valuedice = pbRitualDice (Status.Luck)  editable = none  action = ranged }
+        'Relic Test' = modifier { description = "Spirit test DR12 after using a relic. A failure stuns you and the relic sleeps until dawn." value = Abilities.Spirit  valuedice = pbRelicDice (Status.Luck)  editable = none }
+        'Rituals Lost' = bool { description = "A failed casting: no more rituals until dawn." default = false  editable = live  indicator = "#8e5cc4" }
+        'Relics Asleep' = bool { description = "A failed relic test: stunned, and the relic does nothing until dawn." default = false  editable = live  indicator = "#d4b106" }
+    }
+
+    'Arcane Rituals' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Rituals
+        singular = "Ritual"
+        editable = character
+    }
+
+    Relics = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Relics
+        singular = "Relic"
+        editable = character
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Equipment = string { multiline = true }
+        'Carrying Capacity' = integer { description = "Items you can carry without trouble: Strength plus 8." value = Abilities.Strength + 8  editable = none }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Creature] }
+    Creature = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        'Max HP' = integer { description = "Hit points when unhurt." default = 6 }
+        HP = integer { description = "Current hit points." default = 'Max HP'  editable = live }
+        Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
+        Morale = integer { description = "Roll 2d6 when the leader dies, half the group falls or it drops to a third of its HP. Above Morale it flees (1-3 on d6) or surrenders. 0 means it never breaks." default = 7  valuedice = pbMorale }
+        Armour = string { description = "Damage taken off each hit, such as -d2." default = "-d2" }
+        Attack = string { description = "The creature's attack and damage die, such as Cutlass d6." default = "d6" }
+        'Damage Roll' = integer { default = 0  valuedice = pbDamage (Attack)  render = Attack  action = melee  reach = 5  editable = none }
+        Reaction = integer { description = "Roll 2d6 when the pirates meet someone who isn't hostile yet." default = 0  valuedice = pbReaction  editable = none }
+        Special = string { multiline = true }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+shipTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/pirateborg/ship.svg"  important = [Ship, Guns] }
+    Ship = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { description = "The kind of vessel."  keys = ["Raft", "Longboat", "Tartane", "Sloop", "Brigantine", "Fluyt", "Frigate", "Galleon", "Man-of-War"]  default = "Sloop" }
+        'Max HP' = integer { description = "The ship's condition, crew health and morale together. Ship HP is five times a person's." default = 20  minvalue = 1 }
+        HP = integer { description = "Current HP. At 0 or less the ship is derelict." default = 'Max HP'  editable = live }
+        Derelict = string { value = if HP < 1 then "Derelict" else ""  visible = none  indicator = "#d64545" }
+        Hull = integer { description = "Hull tier 0 to 3 works like armour: it takes a die off each hit. A crit against the ship lowers it a tier." default = 1  minvalue = 0  maxvalue = 3  editable = live }
+        'Hull Effect' = string { value = hullText (Hull)  editable = none }
+        Agility = modifier { description = "How the ship handles: manoeuvres, ramming and initiative." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbShipDice ("", "") }
+        Skill = modifier { description = "The crew's skill and training: gunnery, repairs and morale." default = 0  minvalue = -3  maxvalue = 6  valuedice = pbShipDice ("", "") }
+        Speed = integer { description = "Hexes of about 50 ft the ship moves each turn." default = 3  minvalue = 0 }
+        Initiative = integer { description = "Ships roll d6 plus Agility each round, highest first; pirate ships win ties." value = Agility  valuedice = pbInitiative  editable = none }
+        Morale = integer { description = "Roll 2d6 plus Skill; under 4 the crew surrenders or mutinies." value = Skill  valuedice = pbShipMorale  editable = none }
+    }
+    Crew = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Crew = integer { description = "Hands aboard now." default = 10  minvalue = 0  editable = live }
+        'Min Crew' = integer { description = "Fewer hands than this and the ship sails short-handed." default = 4  minvalue = 0 }
+        'Max Crew' = integer { description = "The most hands the ship holds without penalty." default = 20  minvalue = 0 }
+        'Short Handed' = string { value = if Crew < 'Min Crew' then "Short-handed" else if Crew > 'Max Crew' then "Overcrowded" else ""  visible = none  indicator = "#e8913a" }
+        Cargo = integer { description = "Cargo slots." default = 4  minvalue = 0 }
+        'Cargo Carried' = string { description = "What fills the cargo slots." multiline = true  editable = live }
+    }
+    Guns = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Broadsides = string { description = "Damage of the main cannons, such as 2d6. Against a person it does five times as much." default = "2d6" }
+        'Fire Broadsides' = modifier { description = "Crew action: Skill test DR12. A crit doubles damage and lowers the target's hull a tier; a fumble misfires." value = Ship.Skill  valuedice = pbShipDice (", double damage and the target's hull drops a tier", ", a misfire")  action = ranged  editable = none }
+        'Broadsides Damage' = integer { value = 0  valuedice = pbDamage (Broadsides)  render = Broadsides  editable = none }
+        'Small Arms' = string { description = "Damage of swivel guns and muskets, such as d8." default = "d6" }
+        'Fire Small Arms' = modifier { description = "Crew action: Skill test DR12 with swivel guns and muskets." value = Ship.Skill  valuedice = pbShipDice (", double damage", ", a misfire")  action = ranged  editable = none }
+        'Small Arms Damage' = integer { value = 0  valuedice = pbDamage ('Small Arms')  render = 'Small Arms'  editable = none }
+        Ram = string { description = "Damage dealt by ramming, such as d6." default = "d6" }
+        Ramming = modifier { description = "Crew action: Agility test DR12 to ram a ship in the next hex." value = Ship.Agility  valuedice = pbShipDice (", double damage", ", the ship takes the damage itself")  action = melee  reach = 50  editable = none }
+        'Ram Damage' = integer { value = 0  valuedice = pbDamage (Ram)  render = Ram  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Upgrades = string { description = "Upgrades and special features." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged", "Black powder"]  default = "Melee" }
+        Damage = string { default = "d4" }
+        Reload = string { description = "Black powder: actions to reload." }
+        Notes = string {}
+    }
+}
+
+ritualStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Arcane Ritual", "Prayer", "Other"]  default = "Arcane Ritual" }
+        Effect = string { multiline = true }
+    }
+}
+
+relicStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/pirateborg/relic.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Ancient Relic", "Cursed", "Other"]  default = "Ancient Relic" }
+        Effect = string { multiline = true }
+    }
+}
+
+PirateBorg = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d20 + ability against a DR, usually 12. A natural 20 is a crit and a natural 1 a fumble. Devil's Luck rerolls a test."]
+        },
+        hint
+        {
+            title = "Defence"
+            topic = "Combat"
+            text = ["Enemies do not roll to hit. A pirate tests Agility DR12 to defend and takes the damage minus armour on a failure. Armour does nothing against black powder."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Which Side each round: 1-3 the enemies go first, 4-6 the pirates. Inside a side, each rolls d6 + Agility. Ships roll d6 + Agility."]
+        },
+        hint
+        {
+            title = "Ships"
+            topic = "Combat"
+            text = ["Make a Ship for each vessel. The captain moves it, every other pirate takes one crew action: fire broadsides or small arms, ram, repair or board. Ship damage to a person is five times as much."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Ships = shipTable
+    entityTypeNames = [entityTypeName ("Creature", "Enemy", "Enemies")]
+    extraEntityTypes = [entityTypeDescription ("Ships", "ship", true, "/systems/pirateborg/ship.svg", [])]
+    Weapons = weaponStats
+    Rituals = ritualStats
+    Relics = relicStats
+    secondaryTypes = ["Weapons", "Rituals", "Relics"]
+    description = "PIRATE BORG: a doom metal pirate game of black powder, sea monsters and the undead in the Dark Caribbean"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d20, 1d2, 1d4, 1d6, 1d8, 1d10, 1d12, 2d6]
+    cssFiles = ["/systems/pirateborg/pirateborg.css"]
+    libraries = ["/systems/names/pirates.json"]
+    nameSettings = [
+        nameSetting
+        {
+            name = "Dark Caribbean"
+            characters = [generator { library = "High seas" variant = "Pirate" }, generator { library = "High seas" variant = "Captain" }]
+            creatures = [generator { library = "High seas" variant = "Pirate" }, generator { library = "High seas" variant = "Captain" }]
+            Location = [generator { library = "High seas" variant = "Port" }, generator { library = "High seas" variant = "Island" }]
+            Ships = generator { library = "High seas" variant = "Ship" }
+        }
+    ]
+}

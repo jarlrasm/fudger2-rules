@@ -1,0 +1,41 @@
+{
+  "name": "Gamma Terra names",
+  "description": "Gonzo post-apocalypse names: tribal survivors, mutant animals, robots with serial designations, secret alliances, ruins and devices of the Ancients.",
+  "url": "/systems/names/gammaterra.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Gamma Terra",
+      "description": "Survivors who name themselves after what they found, mutant animals with clicking and growling names, robots known by their designation, cryptic alliances, ruined places and artifacts as the tribes call them.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Item", "Robots", "Cryptic Alliances"],
+        "variants": ["Survivor", "Mutant animal", "Robot", "Alliance", "Ruin", "Artifact"],
+        "parts": {
+          "first": ["Arn", "Bek", "Cora", "Dal", "Esk", "Fen", "Gil", "Hala", "Isk", "Jory", "Kael", "Lisa", "Mott", "Nara", "Orrin", "Pell", "Quill", "Rena", "Sorn", "Tova", "Ulf", "Vala", "Wyn", "Yara", "Zed", "Brun", "Corin", "Dessa", "Edda", "Harl", "Mira", "Teel"],
+          "found": ["Batterymaker", "Glassfinder", "Wirewalker", "Domar", "Clicker", "Bluelight", "Readsign", "Keycard", "Duralloy", "Hummer", "Sparkhand", "Lenseye", "Rubbertooth", "Plastic", "Chromefist", "Radwise", "Dialturner", "Codebreaker"],
+          "of": ["of the Glass Crater", "of Ninefalls", "of the Dead Highway", "of Tower Hollow", "of the Singing Wires", "of Rustmarsh", "of the Ashen Dome", "of Old Mall"],
+          "beast": {"markov": ["Krrrak", "Thessik", "Gruumh", "Shaaklor", "Viktik", "Hruunda", "Skreeth", "Barrumph", "Tchakka", "Orrgul", "Whiskra", "Snarrel", "Pikkit", "Grumbash", "Hissaru", "Klaktor"], "order": 2, "length": [4, 9]},
+          "robotKind": ["Sentry", "Medic", "Groundskeeper", "Warden", "Servitor", "Engineer", "Overseer", "Hunter", "Courier", "Custodian"],
+          "serial": {"pattern": "LL-DDD"},
+          "allianceStart": ["The Order of", "The Brotherhood of", "The Keepers of", "The Sons of", "The Circle of", "The Children of", "The Seekers of", "The Followers of", "The Guild of"],
+          "allianceEnd": ["the Bright Lens", "the Clean Gene", "the Ninth Circuit", "the Last Archive", "the Silent Reactor", "the Steel Mother", "the Open Sky", "the Unbroken Code", "the Green Return", "the Hidden Dial", "the First Spark"],
+          "ruinStart": ["Old", "Broken", "Glowing", "Sunken", "Burnt", "Hollow", "Rusted", "Shattered", "Silent", "Melted"],
+          "ruinEnd": ["Mall", "Port", "Spire", "Station", "Dome", "Plaza", "Overpass", "Silo", "Hospital", "Tower", "Depot", "Stadium"],
+          "artifactStart": ["Hum", "Glow", "Click", "Shine", "Buzz", "Spark", "Burn", "Sing", "Blink", "Whirr"],
+          "artifactEnd": ["stick", "box", "stone", "wand", "eye", "glove", "rod", "bell", "disc", "tube"]
+        },
+        "templates": {
+          "Survivor": ["{first} {found}:4", "{first} {of}:3", "{first}:1"],
+          "Mutant animal": ["{beast}:4", "{beast} {of}:1"],
+          "Robot": ["{robotKind} {serial}:3", "Unit {serial}:1"],
+          "Alliance": ["{allianceStart} {allianceEnd}"],
+          "Ruin": ["{ruinStart} {ruinEnd}"],
+          "Artifact": ["{artifactStart}{artifactEnd}"]
+        }
+      }
+    }
+  ]
+}

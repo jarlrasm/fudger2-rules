@@ -1,0 +1,36 @@
+{
+  "values": {
+    "Character": { "Type": "Humanoid", "Level": 2, "Experience Points": 3420, "Cryptic Alliance": "Seekers of the Last Archive", "Height": "1.9 m", "Weight": "80 kg" },
+    "Attributes": { "MS.Score": 14, "IN.Score": 16, "DX.Score": 12, "CH.Score": 9, "CN.Score": 13, "PS.Score": 11 },
+    "Combat": { "Armour Class": 6, "Max HP": 44, "HP": 31, "To Hit": 0, "Damage Bonus": 0, "Movement": "12 m" },
+    "Resistances": { "Mental Resistance": 14, "Radiation Resistance": 13, "Poison Resistance": 13 },
+    "Artifacts": { "Artifact Modifier": -1 },
+    "Possessions": { "Domars": 120, "Equipment": "Backpack, 15 m of rope, oil lantern, a week of dried meat, waterskin, three blue glass shards that hum" },
+    "Background": {
+      "Appearance": "Tall and grey-skinned, with a ridge of pale quills down the back of the neck and ears that turn toward every sound.",
+      "Notes": "Raised in the stilt village of Ninefalls. Hunts for the Archive's lost libraries and trusts no one who wears the Ancients' white uniforms."
+    }
+  },
+  "secondary": {
+    "Physical Mutations": [
+      { "name": "Heightened Hearing", "values": { "Stats": { "Effect": "Hears faint sounds far off; hard to surprise." } } },
+      { "name": "Quills or Spines", "values": { "Stats": { "Attack": "Yes", "Weapon Class": 2, "Damage": "1d4", "Range": "3 m", "Effect": "Quills along the neck and back that can be thrown at close range." } } }
+    ],
+    "Mental Mutations": [
+      { "name": "Mental Blast", "values": { "Stats": { "Attack": "Yes", "Damage": "3d6", "Range": "15 m", "Uses": "Every other turn", "Effect": "A stab of raw mental force against a target's mind." } } },
+      { "name": "Telekinesis", "values": { "Stats": { "Range": "15 m", "Uses": "Concentration", "Effect": "Moves objects by thought." } } },
+      { "name": "Fear Impulse", "values": { "Stats": { "Kind": "Defect", "Effect": "One kind of creature makes Tova freeze or flee: giant insects." } } }
+    ],
+    "Weapons": [
+      { "name": "Spear", "values": { "Stats": { "Kind": "Thrown", "Weapon Class": 1, "Damage": "1d6", "Damage Large": "1d8", "Range": "20 m", "Tech Level": "I" } } },
+      { "name": "Crossbow", "values": { "Stats": { "Kind": "Ranged", "Weapon Class": 3, "Damage": "1d4", "Damage Large": "1d4", "Range": "120 m", "Tech Level": "II", "Charges": "11 bolts" } } }
+    ],
+    "Armour": [
+      { "name": "Cured Hide Armour", "values": { "Stats": { "AC": 6, "Tech Level": "I" } } }
+    ],
+    "Artifacts": [
+      { "name": "Laser Pistol", "values": { "Stats": { "Chart": "B", "Tech Level": "III", "Charges": "Hydrogen energy cell, unknown charge", "Effect": "A black grip with a glass eye at the end. It clicks when squeezed." } } },
+      { "name": "Medi-kit", "values": { "Stats": { "Chart": "A", "Tech Level": "III", "Figured Out": "Yes", "Charges": "3 doses", "Effect": "Diagnoses and treats wounds; can do strange things to mutants." } } }
+    ]
+  }
+}

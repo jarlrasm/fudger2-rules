@@ -1,0 +1,87 @@
+@import url("/systems/sheet.css");
+
+/* HârnMaster: the plain, dense paper sheet. White paper, black ruled boxes,
+   a dark red for headings, a book serif; the twelve attributes in a row of
+   two by six, skills in side by side columns with SB, ML and EML, then the
+   armour location chart with its four aspects, weapons and injuries. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #5b1a14;
+    --surface: #fdfbf5;
+    --surface-alt: #f2eee2;
+    --surface-sunken: #e6e0cf;
+    --surface-muted: #cfc6ae;
+    --text: #141210;
+    --text-muted: #3d3832;
+    --text-faint: #7a7166;
+    --on-accent: #fdfbf5;
+    --border: #9c9282;
+    --border-strong: #141210;
+    --accent: #7a1d14;
+    --accent-hover: #962619;
+    --accent-soft: #f2dcd6;
+    --link: #7a1d14;
+    --danger: #8a1e12;
+    --danger-hover: #6a170e;
+    --danger-soft: #f0d0c6;
+    --success: #3d5e24;
+    --paper: #fdfbf5;
+    --card-bg: #f2eee2;
+    --dice-bg: #7a1d14;
+    --dice-text: #fdfbf5;
+}
+
+.entityView {
+    --sheet-font: "Garamond", "EB Garamond", "Book Antiqua", Georgia, serif;
+    --title-font: "Garamond", "EB Garamond", "Book Antiqua", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 1.5px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    color: var(--on-accent);
+    background: var(--accent);
+}
+.entityView .table-attributes > table > tbody { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 1.5px solid var(--border-strong);
+    padding: 3px;
+}
+.entityView .table-physical-skills,
+.entityView .table-communication-skills,
+.entityView .table-combat-skills { --block: 33.333%; }
+.entityView .table-physical-skills { clear: left; }
+.entityView .table-physical-skills > table > tbody,
+.entityView .table-communication-skills > table > tbody,
+.entityView .table-combat-skills > table > tbody { grid-template-columns: minmax(0, 1fr); }
+.entityView .table-physical-skills .customtype > div:nth-child(1)::before,
+.entityView .table-communication-skills .customtype > div:nth-child(1)::before,
+.entityView .table-combat-skills .customtype > div:nth-child(1)::before { content: "SB "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-physical-skills .customtype > div:nth-child(2)::before,
+.entityView .table-communication-skills .customtype > div:nth-child(2)::before,
+.entityView .table-combat-skills .customtype > div:nth-child(2)::before { content: "ML "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-physical-skills .customtype > div:nth-child(3)::before,
+.entityView .table-communication-skills .customtype > div:nth-child(3)::before,
+.entityView .table-combat-skills .customtype > div:nth-child(3)::before { content: "EML "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour-locations { --block: 50%; clear: left; }
+.entityView .table-armour-locations tr > td:nth-child(2)::before { content: "B "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour-locations tr > td:nth-child(3)::before { content: "E "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour-locations tr > td:nth-child(4)::before { content: "P "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour-locations tr > td:nth-child(5)::before { content: "F "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-armour,
+.entityView .table-weapons,
+.entityView .table-attacks,
+.entityView .table-injuries,
+.entityView .table-healing-rolls { --block: 50%; }
+.entityView .table-spells,
+.entityView .table-spell-casting,
+.entityView .table-invocations,
+.entityView .table-invocation-rolls,
+.entityView .table-psionics,
+.entityView .table-equipment { --block: 50%; }
