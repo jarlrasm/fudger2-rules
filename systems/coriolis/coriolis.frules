@@ -45,7 +45,11 @@ rangeMetres (text) =
         case "Short" then 10
         case "Medium" then 25
         case "Long" then 100
+        case "Extreme" then 1000
         else 0
+
+armorRoll (rating) = ([dice { number = max (0, rating)  sides = 6 }],
+    ((baseline, throws)->{ Text = toString (sixes (first (throws).rolls)) + " damage stopped"  Value = sixes (first (throws).rolls) }))
 
 noStats = { Stats = { Damage = "" } }
 
@@ -161,7 +165,7 @@ characterTable = ruleset
     Armor = table
     {
         tableLayout = layout { columns = 2 }
-        'Armor rating' = integer { description = "Each point has a 1 in 6 chance to stop a point of damage." default = 0 }
+        'Armor rating' = integer { description = "Roll a die per point when hit: each 6 stops a point of damage." default = 0  valuedice = armorRoll ('Armor rating') }
         'Blight protection' = integer { default = 0 }
         Suit = string { description = "The delving suit and its features." }
     }
@@ -202,7 +206,7 @@ creatureTable = ruleset
         Insight = integer { default = 3  valuedice = cgdAsked (Insight, 0) }
         Empathy = integer { default = 3  valuedice = cgdAsked (Empathy, 0) }
         Health = integer { default = 6  minvalue = 0  editable = live  indicator = "#d64545" }
-        Armor = integer { default = 0 }
+        Armor = integer { description = "Roll a die per point when hit: each 6 stops a point of damage." default = 0  valuedice = armorRoll (Armor) }
         Down = string { value = if Health <= 0 then "Down" else ""  visible = none  indicator = "#555555" }
     }
     Attacks = keyvalues
