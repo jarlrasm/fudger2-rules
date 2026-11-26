@@ -1,0 +1,100 @@
+@import url("/systems/sheet.css");
+
+/* Sentinel Comics: the hero folio. Off-white comic paper, heavy black
+   panel lines, blue title banners, and the abilities in Green, Yellow and
+   Red bands with the Out ability in grey, as on the printed sheet. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f1ece0;
+    --surface: #fffdf7;
+    --surface-alt: #f6f1e4;
+    --surface-sunken: #ece5d3;
+    --surface-muted: #ddd4bd;
+    --text: #141414;
+    --text-muted: #383838;
+    --text-faint: #6e6e6e;
+    --on-accent: #ffffff;
+    --border: #8a8577;
+    --border-strong: #141414;
+    --accent: #1d4f9c;
+    --accent-hover: #2a63bd;
+    --accent-soft: #dbe5f5;
+    --link: #1d4f9c;
+    --danger: #c62828;
+    --danger-hover: #9c1f1f;
+    --danger-soft: #f7dcdc;
+    --success: #2e7d32;
+    --paper: #fffdf7;
+    --card-bg: #f6f1e4;
+    --dice-bg: #1d4f9c;
+    --dice-text: #ffffff;
+    --zone-green: #3d9a3f;
+    --zone-yellow: #e3b417;
+    --zone-red: #c62828;
+    --zone-out: #555555;
+}
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    --title-font: "Bangers", "Bebas Neue", "Impact", "Arial Black", sans-serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 2px 10px;
+    font-size: 1.1em;
+    border-bottom: 3px solid var(--border-strong);
+}
+
+.entityView .table-hero,
+.entityView .table-villain,
+.entityView .table-dice-pool,
+.entityView .table-minion,
+.entityView .table-scene-tracker,
+.entityView .table-environment { --block: 100%; }
+
+.entityView .table-powers,
+.entityView .table-qualities { --block: 33.333%; clear: left; }
+.entityView .table-qualities { clear: none; }
+.entityView .table-status,
+.entityView .table-health { --block: 33.333%; }
+.entityView .table-powers .customtype > div:nth-child(2),
+.entityView .table-qualities .customtype > div:nth-child(2) { font-weight: 700; }
+
+.entityView .table-dice-pool > table > thead th { background: var(--border-strong); }
+
+.entityView .table-green-abilities,
+.entityView .table-yellow-abilities,
+.entityView .table-red-abilities,
+.entityView .table-green-actions,
+.entityView .table-yellow-actions,
+.entityView .table-red-actions,
+.entityView .table-out { --block: 100%; clear: left; }
+.entityView .table-green-abilities > table > thead th,
+.entityView .table-green-actions > table > thead th { background: var(--zone-green); }
+.entityView .table-yellow-abilities > table > thead th,
+.entityView .table-yellow-actions > table > thead th { background: var(--zone-yellow); color: var(--text); }
+.entityView .table-red-abilities > table > thead th,
+.entityView .table-red-actions > table > thead th { background: var(--zone-red); }
+.entityView .table-out > table > thead th { background: var(--zone-out); }
+.entityView .table-green-abilities { border-left: 10px solid var(--zone-green); }
+.entityView .table-yellow-abilities { border-left: 10px solid var(--zone-yellow); }
+.entityView .table-red-abilities { border-left: 10px solid var(--zone-red); }
+.entityView .table-out { border-left: 10px solid var(--zone-out); }
+
+.entityView .table-principles { --block: 100%; clear: left; }
+.entityView .table-boosts-and-hinders,
+.entityView .table-twists,
+.entityView .table-collections { --block: 33.333%; }
+.entityView .table-boosts-and-hinders { clear: left; }
+.entityView .table-minion-forms { --block: 50%; clear: left; }
+.entityView .table-challenges,
+.entityView .table-environment-minions { --block: 50%; clear: left; }
+.entityView .table-environment-minions { clear: none; }
+.entityView .table-notes { --block: 100%; clear: left; }
