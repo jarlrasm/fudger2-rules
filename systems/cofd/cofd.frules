@@ -35,7 +35,7 @@ againOf (char) =
 
 cofdAsked (pool, again, weapon) = ask ("Dice bonus or penalty", 0, (n)->cofdRoll (pool + n, again, weapon))
 
-cofdDefended (pool, again, weapon) = ask ("Target's Defense", (defense)->cofdRoll (pool - defense, again, weapon))
+cofdDefended (pool, again, weapon) = ask ("Dice bonus or penalty", 0, (n)->ask ("Target's Defense", 0, (defense)->cofdRoll (pool + n - defense, again, weapon)))
 
 cofdDice (char, pool) = cofdAsked (pool - woundPenalty (char), againOf (char), -1)
 
@@ -243,7 +243,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, 'Dice pools'] }
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, 'Dice pools'] }
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
@@ -341,7 +341,7 @@ ChroniclesOfDarkness = system
         {
             title = "Dice pools"
             topic = "Play"
-            text = ["Roll attribute + skill d10s; each 8 or more is a success, 10s roll again, five successes are exceptional. Before the roll, enter the dice bonus or penalty (equipment, Willpower +3, the GM's modifiers); a melee attack asks for the target's Defense instead. A pool of 0 or less rolls one chance die: only a 10 succeeds, a 1 is a dramatic failure."]
+            text = ["Roll attribute + skill d10s; each 8 or more is a success, 10s roll again, five successes are exceptional. Before the roll, enter the dice bonus or penalty (equipment, Willpower +3, the GM's modifiers); a melee attack also asks for the target's Defense. A pool of 0 or less rolls one chance die: only a 10 succeeds, a 1 is a dramatic failure."]
         },
         hint
         {
