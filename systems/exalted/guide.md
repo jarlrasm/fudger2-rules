@@ -13,13 +13,13 @@ Creation is a vast world of gods, elementals and empires. The players are **Exal
 Charms cost **motes**: personal motes quietly, peripheral motes with a flare of the **anima banner**, from Dim through Glowing and Burning to Bonfire. Committed motes stay spent while a Charm lasts. The *Night of rest* button restores motes, a point of Willpower and bashing damage, and dims the anima.
 
 ## Combat
-- **Join battle** (Wits + Awareness): successes + 3 is the starting **initiative**. Highest initiative acts first.
-- **Withering attacks** (Dexterity + Melee/Brawl/Archery + weapon accuracy) against the target's **Defense** (Parry or Evasion): extra successes add to damage dice (Strength + weapon damage, less soak); the damage is taken from the target's initiative and given to the attacker.
+- **Join battle** (Wits + Awareness, the sheet's *Initiative* roll): successes + 3 is the starting **initiative**, kept in *Current initiative*. Highest initiative acts first.
+- **Withering attacks** (Dexterity + Melee/Brawl/Archery + weapon accuracy) against the target's **Defense** (Parry or Evasion): extra successes add to damage dice (Strength + weapon damage, less soak, never fewer than the weapon's Overwhelming); the damage is taken from the target's initiative and given to the attacker. The Damage roll asks for the extra successes and the soak. **10s don't count twice on damage rolls**, withering or decisive.
 - **Decisive attacks** roll the attacker's **initiative** as damage dice against health levels and reset the attacker to 3. Hardness stops weak decisive attacks.
 - An attack row asks for the target's Defense and says how many extra successes hit.
 
 ## Health
-Seven health levels: -0, -1, -1, -2, -2, -4, Incapacitated. Bashing, lethal and aggravated damage fill them; the wound penalty comes off every pool and defense.
+Seven health levels: -0, -1, -1, -2, -2, -4, Incapacitated. Ox-Body Technique and the like add -1 and -2 levels (the sheet's *Extra 1 levels* and *Extra 2 levels*), which push the later penalties back. Bashing, lethal and aggravated damage fill them; the wound penalty comes off every pool and defense.
 
 ## The Great Curse
 Solars carry a **Limit** track. Their limit trigger adds to it; at 10 they suffer a **Limit Break**, acting out their flaw.

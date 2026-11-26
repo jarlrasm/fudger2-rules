@@ -33,19 +33,27 @@ strifeOf (code) = if mod (code, 10) == 0 then 1 else 0
 
 keptCount (codes, keep) = min (keep, count (codes))
 
-cutoff (codes, keep) = if keptCount (codes, keep) == 0 then 1000 else item (keptCount (codes, keep) - 1, reverse (sort (codes)))
+cutoff (codes, keep) = if keptCount (codes, keep) == 0 then 100000 else item (keptCount (codes, keep) - 1, reverse (sort (codes)))
 
-partOf (kind, code) =
+faceParts (kind, code) =
     switch kind
         case "S" then successesOf (code)
         case "O" then opportunitiesOf (code)
         else strifeOf (code)
 
+partOf (kind, code) = faceParts (kind, mod (code, 1000))
+
+keepPriority (mode, code) =
+    switch mode
+        case "Opportunities" then opportunitiesOf (code)
+        case "Avoid strife" then 1 - strifeOf (code)
+        else 0
+
 keptTotal (codes, keep, kind) =
     sum (map ((x)->partOf (kind, x), filter ((x)->x > cutoff (codes, keep), codes)))
     + (keptCount (codes, keep) - count (filter ((x)->x > cutoff (codes, keep), codes))) * partOf (kind, cutoff (codes, keep))
 
-allCodes (ringRolls, skillRolls) = concat (map ((x)->ringCode (x), ringRolls), map ((x)->skillCode (x), skillRolls))
+allCodes (ringRolls, skillRolls, mode) = map ((c)->keepPriority (mode, c) * 1000 + c, concat (map ((x)->ringCode (x), ringRolls), map ((x)->skillCode (x), skillRolls)))
 
 plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "s")
 
@@ -53,32 +61,39 @@ l5rText (s, o, t, tn) =
     plural (s, "success") + ", " + plural (o, "opportunity") + ", " + toString (t) + " strife"
     + (if tn > 0 then " vs TN " + toString (tn) + ": " + (if s >= tn then "success" + (if s > tn then ", " + plural (s - tn, "bonus success") else "") else "failure") else "")
 
-l5rResult (s, o, t, tn) =
+l5rResult (s, o, t, tn, note) =
 {
-    Text = replace ("opportunitys", "opportunities", replace ("successs", "successes", l5rText (s, o, t, tn)))
+    Text = replace ("opportunitys", "opportunities", replace ("successs", "successes", l5rText (s, o, t, tn))) + note
     Value = s
     Outcome = if tn > 0 then (if s >= tn then "Success" else "Failure") else ""
 }
 
 keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice) = ring + count (ringRolls) + count (skillRolls) - ringDice - skillDice
 
-l5rKept (ring, ringRolls, skillRolls, ringDice, skillDice, tn) =
+l5rKept (ring, ringRolls, skillRolls, ringDice, skillDice, tn, extra, mode) =
     l5rResult (
-        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "S"),
-        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "O"),
-        keptTotal (allCodes (ringRolls, skillRolls), keepLimit (ring, ringRolls, skillRolls, ringDice, skillDice), "T"),
-        tn)
+        keptTotal (allCodes (ringRolls, skillRolls, mode), keepLimit (ring + extra, ringRolls, skillRolls, ringDice, skillDice), "S"),
+        keptTotal (allCodes (ringRolls, skillRolls, mode), keepLimit (ring + extra, ringRolls, skillRolls, ringDice, skillDice), "O"),
+        keptTotal (allCodes (ringRolls, skillRolls, mode), keepLimit (ring + extra, ringRolls, skillRolls, ringDice, skillDice), "T"),
+        tn,
+        if extra > 0 then " (Void point spent: kept 1 more die)" else "")
 
-l5rPool (ring, rank, tn, initiative) = ([dice { number = max (1, ring)  sides = 6  color = "black"  label = "Ring"  explode = 6  faces = ["", "OT", "O", "ST", "S", "ET"] }, dice { number = max (0, rank)  sides = 12  color = "white"  label = "Skill"  explode = 11  faces = ["", "", "O", "O", "O", "ST", "ST", "S", "S", "SO", "ET", "E"] }],
+l5rPool (ring, rank, tn, initiative, extra, mode) = ([dice { number = max (1, ring)  sides = 6  color = "black"  label = "Ring"  explode = 6  faces = ["", "OT", "O", "ST", "S", "ET"] }, dice { number = max (0, rank)  sides = 12  color = "white"  label = "Skill"  explode = 11  faces = ["", "", "O", "O", "O", "ST", "ST", "S", "S", "SO", "ET", "E"] }],
     ((baseline, throws)->
-        if initiative then baseline + keptTotal (allCodes (first (throws).rolls, item (1, throws).rolls), keepLimit (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank)), "S")
-        else l5rKept (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank), if tn < 0 then asked else tn)))
+        if initiative then baseline + keptTotal (allCodes (first (throws).rolls, item (1, throws).rolls, "Successes"), keepLimit (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank)), "S")
+        else l5rKept (ring, first (throws).rolls, item (1, throws).rolls, max (1, ring), max (0, rank), if tn < 0 then asked else tn, extra, mode)))
 
-l5rRoll (ring, rank, tn) = l5rPool (ring, rank, tn, false)
+l5rRoll (ring, rank, tn) = l5rPool (ring, rank, tn, false, 0, "Successes")
 
-l5rCheck (ring, rank) = ask ("TN", l5rPool (ring, rank, -1, false))
+l5rKeptRoll (ring, rank, tn, extra, mode) = l5rPool (ring, rank, tn, false, extra, mode)
 
-initiativeRoll (ring, rank) = l5rPool (ring, rank, 0, true)
+l5rCheck (ring, rank) = ask ("TN", l5rPool (ring, rank, -1, false, 0, "Successes"))
+
+l5rCharCheck (char, rank) = ask ("TN", l5rPool (ringOf (char), rank, -1, false, voidKeep (char), char.Character.Keep))
+
+initiativeRoll (ring, rank) = l5rPool (ring, rank, 0, true, 0, "Successes")
+
+voidKeep (char) = if char.Character.'Spend Void' == "Spend" and char.Status.'Void points'.realvalue < char.Rings.Void then 1 else 0
 
 ringOf (char) =
     switch char.Character.Approach
@@ -91,7 +106,7 @@ ringOf (char) =
 skill = custom
 {
     Rank = integer { description = "Skill rank from 0 to 5: how many skill dice you roll with the ring dice." default = 0  minvalue = 0  maxvalue = 5 }
-    Check = integer { description = "Roll ring dice plus skill dice and keep as many as the ring." value = Rank  valuedice = l5rCheck (ringOf (characterTable), Rank)  editable = none }
+    Check = integer { description = "Roll ring dice plus skill dice and keep as many as the ring." value = Rank  valuedice = l5rCharCheck (characterTable, Rank)  editable = none }
 }
 
 noSkill = { Rank = 0 }
@@ -119,7 +134,7 @@ weaponSkill (weapon) = if weaponStat (weapon, "Skill") == "" then "Martial Arts 
 weaponAttack (name, rank, damage, deadliness, kind, reachMetres, rangeMetresValue) = custom
 {
     Name = name
-    Attack = integer { value = rank  valuedice = l5rCheck (ringOf (characterTable), rank)  action = kind  reach = reachMetres  range = rangeMetresValue  editable = none }
+    Attack = integer { value = rank  valuedice = l5rCharCheck (characterTable, rank)  action = kind  reach = reachMetres  range = rangeMetresValue  editable = none }
     Damage = damage
     Deadliness = deadliness
 }
@@ -132,7 +147,7 @@ attackFor (char, weapon) =
 
 downState (fatigue, endurance, strife, composure) =
     if fatigue > endurance then "Incapacitated"
-    else if strife > composure then "Unmasked"
+    else if strife > composure then "Compromised"
     else ""
 
 characterTable = ruleset
@@ -149,6 +164,8 @@ characterTable = ruleset
         Ninjo = string { description = "Your personal desire, which may clash with your duty." }
         Approach = selector { description = "Which ring you approach the task with. It sets the ring dice and what you keep." options = ["Air", "Earth", "Fire", "Water", "Void"]  labels = ["Air", "Earth", "Fire", "Water", "Void"]  colors = ["", "", "", "", ""]  default = "Air"  editable = live  save = nosave }
         Experience = integer { description = "Experience points to spend on rings, skills and techniques." default = 0  editable = live }
+        Keep = selector { description = "Which dice Fudger keeps first: successes, opportunities, or dice without strife." options = ["Successes", "Opportunities", "Avoid strife"]  labels = ["Successes", "Opportunities", "Avoid strife"]  colors = ["", "blue", "green"]  default = "Successes"  editable = live  save = nosave }
+        'Spend Void' = selector { description = "Hold Shift while rolling, or switch it on, to keep one extra die; then tick a spent Void point." options = ["No", "Spend"]  labels = ["No", "Spend"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
     }
 
     Rings = table
@@ -169,12 +186,21 @@ characterTable = ruleset
         Fatigue = integer { description = "Fatigue taken from wounds and exertion." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Composure = integer { description = "Strife you can take before you are compromised: (Earth + Water) x 2." value = (Rings.Earth + Rings.Water) * 2  editable = none }
         Strife = integer { description = "Strife taken from emotional strain and opportunities spent." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
-        Focus = integer { description = "Target number to hit you in a skirmish: Fire + Air." value = Rings.Fire + Rings.Air  editable = none }
-        Vigilance = integer { description = "Target number to hit you when unaware, and your initiative when surprised." value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
-        'Void points' = slots { description = "Spend a void point to keep an extra die or fuel some techniques." number = Rings.Void  editable = live }
+        Focus = integer { description = "Base initiative when prepared: Fire + Air." value = Rings.Fire + Rings.Air  editable = none }
+        Vigilance = integer { description = "Base initiative when unprepared, and resisting surprise: (Air + Water) / 2, rounded up." value = (Rings.Air + Rings.Water + 1) / 2  editable = none }
+        'Void points' = slots { description = "Void points spent, one box each: spend one to keep an extra die or fuel some techniques. A night of rest recovers one." number = Rings.Void  editable = live }
         Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
-        Unmasked = button { description = "When strife exceeds composure the character unmasks, shows their true feelings, and strife resets to 0."  editable = live  onClick = updates { (root.Status.Strife) = 0 } }
-        'Night of rest' = button { description = "A night's rest removes fatigue equal to twice your Water ring."  editable = live  onClick = updates { (root.Status.Fatigue) = max (0, Fatigue - 2 * Rings.Water) } }
+        Unmasked = button { description = "When strife exceeds composure the character is compromised, and may unmask: show their true feelings and reset strife to 0."  editable = live  onClick = updates { (root.Status.Strife) = 0 } }
+        'Night of rest' = button
+        {
+            description = "A night's rest removes fatigue equal to twice your Water ring and recovers one Void point."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = max (0, Fatigue - 2 * Rings.Water)
+                (root.Status.'Void points'.realvalue) = max (0, 'Void points'.realvalue - 1)
+            }
+        }
         Initiative = integer { description = "Turn order: roll Tactics with Air when ready, or use Vigilance when surprised." value = Focus  valuedice = initiativeRoll (Rings.Air, skillRank (characterTable, "Tactics"))  editable = none }
     }
 
@@ -317,7 +343,7 @@ npcSkill = custom
 
 npcTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Rings, Status, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Rings, Status, Attacks] }
     Character = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -342,8 +368,8 @@ npcTable = ruleset
         Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Composure = integer { description = "Strife the NPC can take before it is compromised." default = 8 }
         Strife = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
-        Focus = integer { description = "Target number to hit the NPC in a skirmish." default = 4 }
-        Vigilance = integer { description = "Target number to hit the NPC when it is unaware." default = 2 }
+        Focus = integer { description = "Base initiative when prepared: Fire + Air." default = 4 }
+        Vigilance = integer { description = "Base initiative when unprepared, and resisting surprise: (Air + Water) / 2, rounded up." default = 2 }
         Down = string { value = downState (Fatigue, Endurance, Strife, Composure)  visible = none  indicator = "#d64545" }
         Initiative = integer { value = Focus  valuedice = initiativeRoll (Rings.Air, 'Skill groups'.Martial.Rank)  editable = none }
     }
@@ -417,13 +443,13 @@ LegendOfTheFiveRings = system
         {
             title = "Keeping dice"
             topic = "Play"
-            text = ["Roll ring dice (d6) and skill dice (d12) and keep up to the ring's value. Fudger keeps the best dice for you: successes first, then opportunities, then less strife. Explosive successes roll again and their extra dice are kept free. Meet the TN in successes to succeed."]
+            text = ["Roll ring dice (d6) and skill dice (d12) and keep up to the ring's value. Fudger keeps the best dice for you: successes first, then opportunities, then less strife. Set Keep to put opportunities or strife-free dice first. Hold Shift (Spend Void) to keep one more die for a Void point. Explosive successes roll again and their extra dice are kept free. Meet the TN in successes to succeed."]
         },
         hint
         {
             title = "Strife and fatigue"
             topic = "Combat"
-            text = ["Kept strife symbols add strife. When strife passes composure the character is unmasked. When fatigue passes endurance they are incapacitated. A strike deals the weapon's damage plus bonus successes minus resistance as fatigue; spending two opportunities on a crit uses the deadliness."]
+            text = ["Kept strife symbols add strife. When strife passes composure the character is compromised and may unmask to clear it. When fatigue passes endurance they are incapacitated. A strike deals the weapon's damage plus bonus successes minus resistance as fatigue; spending two opportunities on a crit uses the deadliness."]
         },
         hint
         {

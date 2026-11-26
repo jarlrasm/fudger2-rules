@@ -51,7 +51,13 @@ w5AskedPool (pool, rageDice, spend) = ([dice { number = max (0, pool - rageDice)
 
 willpowerSpend (char) = [{ Field = "characterTable.Trackers.Willpower Superficial.realvalue"  Value = char.Trackers.'Willpower Superficial'.realvalue + 1 }]
 
-w5Dice (char, pool, physical) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", w5AskedPool (pool + n + (if physical then formBonus (char) else 0), char.Character.Rage, willpowerSpend (char))))
+healthFull (char) = char.Trackers.'Health Superficial'.realvalue + char.Trackers.'Health Aggravated'.realvalue >= healthBoxes (char)
+
+willpowerFull (char) = char.Trackers.'Willpower Superficial'.realvalue + char.Trackers.'Willpower Aggravated'.realvalue >= char.Attributes.Composure + char.Attributes.Resolve
+
+impairment (char, physical) = if (physical and healthFull (char)) or (not (physical) and willpowerFull (char)) then 2 else 0
+
+w5Dice (char, pool, physical) = ask ("Dice bonus or penalty", 0, (n)->ask ("Difficulty", w5AskedPool (pool + n + (if physical then formBonus (char) else 0) - impairment (char, physical), char.Character.Rage, willpowerSpend (char))))
 
 isPhysical (name) = name == "Strength" or name == "Dexterity" or name == "Stamina"
 
@@ -147,13 +153,13 @@ characterTable = ruleset
 
     Trackers = table
     {
-        description = "Health, willpower, Harano and Hauglosk."
+        description = "Health, willpower, Harano and Hauglosk. A full track leaves the werewolf impaired: -2 dice to physical pools for health, to social and mental pools for willpower."
         tableLayout = layout { columns = 2  size = wide }
         'Health Superficial' = slots { description = "Superficial damage. A werewolf heals one each turn while in a shifted form." number = healthBoxes (characterTable)  editable = live  indicator = "#e8913a"  indicatorLabel = "Superficial" }
         'Health Aggravated' = slots { description = "Aggravated damage, from silver, claws and fire." number = healthBoxes (characterTable)  editable = live  indicator = "#d64545"  indicatorLabel = "Aggravated" }
         'Willpower Superficial' = slots { description = "Superficial willpower damage, from stress and rerolls." number = Attributes.Composure + Attributes.Resolve  editable = live }
         'Willpower Aggravated' = slots { description = "Aggravated willpower damage." number = Attributes.Composure + Attributes.Resolve  editable = live }
-        Impaired = string { value = if 'Health Superficial'.realvalue + 'Health Aggravated'.realvalue >= healthBoxes (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
+        Impaired = string { value = if healthFull (characterTable) or willpowerFull (characterTable) then "Impaired" else ""  visible = none  indicator = "#d64545" }
         Harano = integer { description = "Despair at the dying world. At 5 the Garou may give up." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#555555" }
         Hauglosk = integer { description = "Fanatic zeal and the loss of reason. At 5 the Garou falls to it." default = 0  minvalue = 0  maxvalue = 5  editable = live  indicator = "#8e5cc4" }
         'New session' = button { description = "Each session, superficial willpower damage heals by the higher of Composure or Resolve."  editable = live  onClick = updates { (root.Trackers.'Willpower Superficial'.realvalue) = max (0, 'Willpower Superficial'.realvalue - max (Attributes.Composure, Attributes.Resolve)) } }
@@ -274,7 +280,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, 'Exceptional Pools'] }
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, 'Exceptional Pools'] }
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }

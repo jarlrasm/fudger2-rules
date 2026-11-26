@@ -30,20 +30,26 @@ attackRoll (pool) = ask ("Target's Defense", ([dice { number = max (0, pool)  si
 
 joinBattle (pool) = ([dice { number = max (0, pool)  sides = 10 }], ((baseline, throws)->{ Text = "Initiative " + toString (successesIn (first (throws).rolls) + 3)  Value = successesIn (first (throws).rolls) + 3 }))
 
-damageRoll (pool) = ([dice { number = max (1, pool)  sides = 10 }], ((baseline, throws)->{ Text = toString (successesIn (first (throws).rolls)) + " damage"  Value = successesIn (first (throws).rolls) }))
+damageSuccesses (rolls) = count (filter ((x)->x >= 7, rolls))
 
-woundPenalty (char) =
-    switch char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated - (char.Health.'Health levels' - 7)
-        case 1 then 0
-        case 2 then 1
-        case 3 then 1
-        case 4 then 2
-        case 5 then 2
-        case 6 then 4
-        else if char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated - (char.Health.'Health levels' - 7) <= 1 then 0 else 4
+damageRoll (pool) = ([dice { number = max (1, pool)  sides = 10 }], ((baseline, throws)->{ Text = toString (damageSuccesses (first (throws).rolls)) + " damage"  Value = damageSuccesses (first (throws).rolls) }))
+
+witheringDamage (damage, overwhelming) = ask ("Extra successes", 0, (extra)->ask ("Target's soak", 0, (soak)->damageRoll (max (overwhelming, damage + extra - soak))))
+
+damageTaken (char) = char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated
+
+healthLevels (char) = 7 + char.Health.'Extra 1 levels' + char.Health.'Extra 2 levels'
+
+penaltyFor (taken, extraOne, extraTwo) =
+    if taken <= 1 then 0
+    else if taken <= 3 + extraOne then 1
+    else if taken <= 5 + extraOne + extraTwo then 2
+    else 4
+
+woundPenalty (char) = penaltyFor (damageTaken (char), char.Health.'Extra 1 levels', char.Health.'Extra 2 levels')
 
 healthState (char) =
-    if char.Health.Bashing + char.Health.Lethal + char.Health.Aggravated >= char.Health.'Health levels' then "Incapacitated"
+    if damageTaken (char) >= healthLevels (char) then "Incapacitated"
     else if woundPenalty (char) > 0 then "Wounded -" + toString (woundPenalty (char))
     else ""
 
@@ -79,17 +85,17 @@ weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "exWeapon",
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
-attack (name, pool, damage, kind, distance) = custom
+attack (name, pool, damage, overwhelming, kind, distance) = custom
 {
     Name = name
     Attack = integer { value = pool  valuedice = attackRoll (pool)  action = kind  reach = 2  range = distance  editable = none }
-    Damage = integer { description = "Withering damage dice: Strength plus the weapon's damage, before soak." value = damage  valuedice = damageRoll (damage)  editable = none }
+    Damage = integer { description = "Withering damage: Strength plus the weapon's damage. The roll asks for the attack's extra successes and the target's soak, and rolls at least the weapon's Overwhelming. 10s don't count twice." value = damage  valuedice = witheringDamage (damage, overwhelming)  editable = none }
 }
 
 isRanged (weapon) = weaponStat (weapon, "Ability") == "Archery" or weaponStat (weapon, "Ability") == "Thrown"
 
 attackFor (char, weapon) =
-    attack (weapon.Name, char.Attributes.Dexterity + dotsOf (char, weaponStat (weapon, "Ability")) + toInt (weaponStat (weapon, "Accuracy")) - woundPenalty (char), char.Attributes.Strength + toInt (weaponStat (weapon, "Damage")), if isRanged (weapon) then "ranged" else "melee", if isRanged (weapon) then firstNumber (weaponStat (weapon, "Range")) else 2)
+    attack (weapon.Name, char.Attributes.Dexterity + dotsOf (char, weaponStat (weapon, "Ability")) + toInt (weaponStat (weapon, "Accuracy")) - woundPenalty (char), char.Attributes.Strength + toInt (weaponStat (weapon, "Damage")), max (1, toInt (weaponStat (weapon, "Overwhelming"))), if isRanged (weapon) then "ranged" else "melee", if isRanged (weapon) then firstNumber (weaponStat (weapon, "Range")) else 2)
 
 characterTable = ruleset
 {
@@ -171,7 +177,9 @@ characterTable = ruleset
     Health = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Health levels' = integer { description = "-0, -1, -1, -2, -2, -4 and Incapacitated; Ox-Body adds more, which the sheet counts as extra -0 levels." default = 7 }
+        'Health levels' = integer { description = "-0, -1, -1, -2, -2, -4 and Incapacitated, plus any extra -1 and -2 levels." value = healthLevels (characterTable)  editable = none }
+        'Extra 1 levels' = integer { description = "Extra -1 health levels, such as from Ox-Body Technique." default = 0  minvalue = 0 }
+        'Extra 2 levels' = integer { description = "Extra -2 health levels, such as from Ox-Body Technique." default = 0  minvalue = 0 }
         Bashing = integer { default = 0  minvalue = 0  editable = live  indicator = "#e8913a" }
         Lethal = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Aggravated = integer { default = 0  minvalue = 0  editable = live  indicator = "#555555" }
@@ -195,8 +203,8 @@ characterTable = ruleset
     Combat = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Join battle' = integer { description = "Wits plus Awareness; successes plus 3 are the starting initiative." value = Attributes.Wits + dotsOf (characterTable, "Awareness")  valuedice = joinBattle (Attributes.Wits + dotsOf (characterTable, "Awareness") - woundPenalty (characterTable))  editable = none }
-        Initiative = integer { description = "The current initiative. Withering attacks steal it; decisive attacks roll it as damage and reset it to 3." default = 3  editable = live  indicator = "#3a7bd5" }
+        Initiative = integer { description = "Join battle: Wits plus Awareness; successes plus 3 are the starting initiative." value = Attributes.Wits + dotsOf (characterTable, "Awareness")  valuedice = joinBattle (Attributes.Wits + dotsOf (characterTable, "Awareness") - woundPenalty (characterTable))  editable = none }
+        'Current initiative' = integer { description = "The current initiative. Withering attacks steal it; decisive attacks roll it as damage and reset it to 3." default = 3  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
         Parry = integer { description = "Half of Dexterity plus Melee (or Brawl), rounded up, plus the weapon's defense." value = (Attributes.Dexterity + max (dotsOf (characterTable, "Melee"), dotsOf (characterTable, "Brawl")) + 1) / 2 + 'Weapon defense' - woundPenalty (characterTable)  editable = none }
         'Weapon defense' = integer { default = 0 }
         Evasion = integer { description = "Half of Dexterity plus Dodge, rounded up, less mobility penalty." value = (Attributes.Dexterity + dotsOf (characterTable, "Dodge") + 1) / 2 - 'Mobility penalty' - woundPenalty (characterTable)  editable = none }
@@ -219,7 +227,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([attack ("Unarmed", Attributes.Dexterity + dotsOf (characterTable, "Brawl") + 4 - woundPenalty (characterTable), Attributes.Strength + 7, "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([attack ("Unarmed", Attributes.Dexterity + dotsOf (characterTable, "Brawl") + 4 - woundPenalty (characterTable), Attributes.Strength + 7, 1, "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = attack
@@ -273,14 +281,14 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Attacks] }
     Stats = table
     {
         tableLayout = layout { columns = 4  size = wide }
         Kind = string { keys = ["Mortal", "Exalt", "God", "Elemental", "Demon", "Fair Folk", "Undead", "Beast", "Other"] }
         Essence = integer { default = 1 }
-        'Join battle' = integer { default = 4  valuedice = joinBattle ('Join battle') }
-        Initiative = integer { default = 3  editable = live  indicator = "#3a7bd5" }
+        Initiative = integer { description = "The Join battle pool; successes plus 3 are the starting initiative." default = 4  valuedice = joinBattle (Initiative) }
+        'Current initiative' = integer { default = 3  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
         'Health levels' = integer { default = 7 }
         Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         Parry = integer { default = 2 }
@@ -301,7 +309,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Pool = integer { default = 6  valuedice = attackRoll (Pool)  action = if Ranged then "ranged" else "melee"  reach = 2  range = 50 }
-            Damage = integer { default = 10  valuedice = damageRoll (Damage) }
+            Damage = integer { default = 10  valuedice = witheringDamage (Damage, 1) }
             Ranged = bool { default = false }
         }
     }
@@ -395,13 +403,13 @@ Exalted = system
         {
             title = "Combat"
             topic = "Combat"
-            text = ["Join battle: Wits + Awareness, successes + 3 is the starting initiative. Withering attacks steal initiative; decisive attacks roll initiative as damage. An attack asks for the target's Defense (Parry or Evasion) and shows the extra successes."]
+            text = ["Join battle: Wits + Awareness, successes + 3 is the starting initiative. Withering attacks steal initiative; decisive attacks roll initiative as damage. An attack asks for the target's Defense (Parry or Evasion) and shows the extra successes; the Damage roll asks for those extra successes and the target's soak, and never rolls fewer dice than the weapon's Overwhelming. 10s don't count twice on damage."]
         },
         hint
         {
             title = "Initiative"
             topic = "Initiative"
-            text = ["Roll Join Battle; the highest initiative acts first each round, and the number changes as attacks land."]
+            text = ["Call for initiative rolls Join battle (the Initiative field); keep the number in Current initiative. The highest initiative acts first each round, and the number changes as attacks land."]
         }
     ]
     distanceUnit = "m"

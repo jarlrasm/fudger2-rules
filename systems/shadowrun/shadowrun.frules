@@ -40,7 +40,7 @@ srAskedRoll (pool, ruleOfSix, spend) = ([dice { number = max (0, pool)  sides = 
 edgeSpend (char) = if char.Attributes.'Current Edge' > 3 then [{ Field = "characterTable.Attributes.Current Edge"  Value = char.Attributes.'Current Edge' - 4 }] else []
 
 srDice (char, pool) =
-    ask ("Threshold", srAskedRoll (pool + char.Runner.Modifier - char.'Condition Monitors'.'Wound Modifier', false, edgeSpend (char)))
+    ask ("Dice bonus or penalty", 0, (n)->ask ("Threshold", srAskedRoll (pool + n - char.'Condition Monitors'.'Wound Modifier', false, edgeSpend (char))))
 
 attributeValue (char, name) =
     switch name
@@ -74,19 +74,37 @@ poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", ski
 
 weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
-weaponAttack (name, pool, damage, kind, distance) = custom
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+bandRated (ratings, band) = firstNumber (item (band, split ("/", ratings + "/-/-/-/-/-"))) > 0
+
+bandRange (ratings) =
+    if bandRated (ratings, 4) then 10000
+    else if bandRated (ratings, 3) then 500
+    else if bandRated (ratings, 2) then 250
+    else if bandRated (ratings, 1) then 50
+    else if bandRated (ratings, 0) then 3
+    else 50
+
+weaponRange (weapon) = if firstNumber (weaponStat (weapon, "Range")) > 0 then firstNumber (weaponStat (weapon, "Range")) else bandRange (weaponStat (weapon, "Attack Ratings"))
+
+noArmor = { Stats = { Capacity = "0" } }
+
+armorBonus (armor) = firstNumber (valueOr (valueOr (valueOr (armor.data, "armorStats", noArmor), "Stats", noArmor.Stats), "Defense Bonus", "0"))
+
+weaponAttack (name, pool, damage, rating, kind, distance) = custom
 {
     Name = name
     Pool = integer { value = pool  valuedice = srDice (characterTable, pool)  action = kind  reach = 2  range = distance }
     Damage = damage
-    'Attack Rating' = string {}
+    'Attack Rating' = rating
 }
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Skill") == "Close Combat" then
-        weaponAttack (weapon.Name, poolOf (char, "Close Combat"), weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, poolOf (char, "Close Combat"), weaponStat (weapon, "Damage"), weaponStat (weapon, "Attack Ratings"), "melee", 2)
     else
-        weaponAttack (weapon.Name, poolOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), "ranged", max (50, toInt (weaponStat (weapon, "Range"))))
+        weaponAttack (weapon.Name, poolOf (char, if weaponStat (weapon, "Skill") == "" then "Firearms" else weaponStat (weapon, "Skill")), weaponStat (weapon, "Damage"), weaponStat (weapon, "Attack Ratings"), "ranged", weaponRange (weapon))
 
 characterTable = ruleset
 {
@@ -103,7 +121,6 @@ characterTable = ruleset
         Karma = integer { description = "Karma earned in play, spent to improve the runner." default = 0  editable = live }
         Nuyen = integer { description = "Money, in nuyen." default = 0  editable = live }
         Lifestyle = string { description = "How and where the runner lives, and what it costs each month." }
-        Modifier = modifier { description = "Extra dice added to or taken from the next pool." default = 0  editable = live }
     }
 
     Attributes = table
@@ -132,7 +149,8 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         'Initiative Dice' = integer { description = "Extra initiative dice from wired reflexes, magic or the Matrix." default = 1  minvalue = 1  maxvalue = 5 }
         Initiative = integer { description = "Initiative score: Reaction plus Intuition plus initiative dice." value = Attributes.Reaction + Attributes.Intuition - 'Condition Monitors'.'Wound Modifier'  valuedice = ([dice { number = 'Initiative Dice'  sides = 6 }], ((baseline, throws)->baseline + sum (first (throws).rolls)))  editable = none }
-        'Defense Rating' = integer { description = "Rating compared to the attacker's attack rating to decide edge." default = Attributes.Body }
+        'Defense Rating' = integer { description = "Rating compared to the attacker's attack rating to decide edge: Body plus worn armor's Defense Bonus and Other DR." value = Attributes.Body + sum (map ((armor)->armorBonus (armor), characterTable.Armor)) + 'Other DR'  editable = none }
+        'Other DR' = integer { description = "Defense Rating from anything else, such as shields or cyberware." default = 0 }
         Composure = integer { description = "Pool to keep cool under pressure: Willpower plus Charisma." value = Attributes.Willpower + Attributes.Charisma  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Charisma)  editable = none }
         'Judge Intentions' = integer { description = "Pool to read someone's motives: Willpower plus Intuition." value = Attributes.Willpower + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Willpower + Attributes.Intuition)  editable = none }
         Memory = integer { description = "Pool to recall something: Logic plus Intuition." value = Attributes.Logic + Attributes.Intuition  valuedice = srDice (characterTable, Attributes.Logic + Attributes.Intuition)  editable = none }
@@ -205,7 +223,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), "2S", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", poolOf (characterTable, "Close Combat"), "2S", toString (characterTable.Attributes.Reaction + characterTable.Attributes.Strength), "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -276,7 +294,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats] }
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Stats] }
     Stats = table
     {
         tableLayout = layout { columns = 5  size = wide }
@@ -402,7 +420,7 @@ Shadowrun = system
         {
             title = "Hits and glitches"
             topic = "Play"
-            text = ["5s and 6s are hits. Each test asks for its threshold; leave it blank for none. More than half 1s is a glitch."]
+            text = ["5s and 6s are hits. Each test asks for bonus or penalty dice and its threshold; leave the threshold blank for none. More than half 1s is a glitch."]
         },
         hint
         {

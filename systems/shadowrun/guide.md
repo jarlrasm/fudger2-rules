@@ -1,7 +1,7 @@
 # Playing Shadowrun (6th World)
 
 ## Rolling
-Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Each test asks for its threshold (leave it blank for none, or when only the GM knows it); set Modifier on the sheet for situational dice.
+Roll a pool of **d6s**, usually skill rank + linked attribute (an untrained skill uses the attribute − 1; each skill row has an attribute picker). Every **5 or 6 is a hit**. Each test asks for situational **bonus or penalty dice** and its threshold (leave the threshold blank for none, or when only the GM knows it).
 
 - **Glitch:** more than half the dice show 1. A glitch with no hits is a **critical glitch**.
 - **Opposed tests:** both roll; the attacker needs more hits than the defender, and net hits add to damage.
@@ -16,7 +16,7 @@ Edge points (up to 7) are gained during play, for example from a better Attack R
 ## Combat
 Roll **Initiative** (Reaction + Intuition + initiative dice) to join the tracker. Each turn has one major and one minor action (more minor actions with more initiative dice).
 
-1. Attack: weapon skill + Agility, against the defender's Reaction + Intuition. Compare Attack Rating to Defense Rating for Edge.
+1. Attack: weapon skill + Agility, against the defender's Reaction + Intuition. Compare Attack Rating (the weapon's rating for the range band: Close, Near, Medium, Far, Extreme) to Defense Rating (Body + armor) for Edge.
 2. Damage = weapon damage + net hits. The defender resists with Body (+ armor where it applies). Each unresisted point fills a box on the Physical (P) or Stun (S) monitor.
 3. A full Stun monitor knocks the character out; more stun overflows to Physical. A full Physical monitor means dying, and overflow beyond Body kills.
 

@@ -16,7 +16,9 @@ kultResult (total) =
     Outcome = kultOutcome (total)
 }
 
-kultRoll (attribute) = ask ("Modifier", 0, ([2d10], ((baseline, throws)->kultResult (sum (first (throws).rolls) + attribute + asked))))
+kultRollWith (attribute, startModifier) = ask ("Modifier", startModifier, ([2d10], ((baseline, throws)->kultResult (sum (first (throws).rolls) + attribute + asked))))
+
+kultRoll (attribute) = kultRollWith (attribute, 0)
 
 kultHarm (attribute) = ask ("Harm", ([2d10], ((baseline, throws)->{
     Text = kultText (sum (first (throws).rolls) + attribute - asked) + (if answered then " (harm " + toString (asked) + ")" else "")
@@ -24,10 +26,35 @@ kultHarm (attribute) = ask ("Harm", ([2d10], ((baseline, throws)->{
     Outcome = kultOutcome (sum (first (throws).rolls) + attribute - asked)
 })))
 
-move (attribute, harm) = custom
+move (attribute, harm, startModifier) = custom
 {
-    Roll = integer { value = attribute  valuedice = if harm then kultHarm (attribute) else kultRoll (attribute)  editable = none }
+    Roll = integer { value = attribute  valuedice = if harm then kultHarm (attribute + startModifier) else kultRollWith (attribute, startModifier)  editable = none }
 }
+
+keepTogetherModifier (stability) =
+    switch min (stability, 8)
+        case 3 then -1
+        case 4 then -1
+        case 5 then -2
+        case 6 then -2
+        case 7 then -3
+        case 8 then -3
+        else 0
+
+illusionModifier (stability) =
+    switch min (stability, 8)
+        case 4 then 1
+        case 5 then 1
+        case 6 then 1
+        case 7 then 2
+        case 8 then 2
+        else 0
+
+disadvantageModifier (stability) = if stability >= 1 then -1 else 0
+
+woundModifier (char) =
+    if char.Wounds.Stabilized then 0
+    else (if char.Wounds.'Serious wounds'.realvalue > 0 then -1 else 0) + (if char.Wounds.'Critical wound'.realvalue > 0 then -1 else 0)
 
 attributeValue (char, name) =
     switch name
@@ -47,10 +74,10 @@ noMove = { Stats = { Attribute = "None" } }
 
 moveStat (item, field) = valueOr (valueOr (valueOr (item.data, "kultMove", noMove), "Stats", noMove.Stats), field, "None")
 
-moveRow (name, plus) = custom
+moveRow (name, plus, startModifier) = custom
 {
     Name = name
-    Roll = integer { value = plus  valuedice = kultRoll (plus)  editable = none }
+    Roll = integer { value = plus  valuedice = kultRollWith (plus, startModifier)  editable = none }
 }
 
 attributeNames = ["Fortitude", "Reflexes", "Willpower", "Reason", "Intuition", "Perception", "Coolness", "Violence", "Charisma", "Soul", "None"]
@@ -87,15 +114,15 @@ noStats = { Stats = { Harm = "" } }
 
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "kultWeapon", noStats), "Stats", noStats.Stats), field, "")
 
-attack (name, violence, harm, kind, distance) = custom
+attack (name, violence, harm, kind, distance, startModifier) = custom
 {
     Name = name
-    Roll = integer { value = violence  valuedice = kultRoll (violence)  action = kind  reach = 2  range = distance  editable = none }
+    Roll = integer { value = violence  valuedice = kultRollWith (violence, startModifier)  action = kind  reach = 2  range = distance  editable = none }
     Harm = harm
 }
 
 attackFor (char, weapon) =
-    attack (weapon.Name, char.Attributes.Violence, weaponStat (weapon, "Harm"), if weaponStat (weapon, "Distance") == "Arm" or weaponStat (weapon, "Distance") == "" then "melee" else "ranged", if weaponStat (weapon, "Distance") == "Room" then 10 else if weaponStat (weapon, "Distance") == "Field" then 100 else 2)
+    attack (weapon.Name, char.Attributes.Violence, weaponStat (weapon, "Harm"), if weaponStat (weapon, "Distance") == "Arm" or weaponStat (weapon, "Distance") == "" then "melee" else "ranged", if weaponStat (weapon, "Distance") == "Room" then 10 else if weaponStat (weapon, "Distance") == "Field" then 100 else 2, woundModifier (char))
 
 characterTable = ruleset
 {
@@ -113,32 +140,32 @@ characterTable = ruleset
     {
         description = "Passive attributes resist harm and stress; active attributes drive the basic moves. Values from -3 to +3."
         tableLayout = layout { columns = 5  size = wide }
-        Fortitude = integer { description = "Passive: endure injury." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Fortitude) }
-        Reflexes = integer { description = "Passive: avoid harm." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Reflexes) }
-        Willpower = integer { description = "Passive: keep it together." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Willpower) }
-        Reason = integer { description = "Active: investigate." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Reason) }
-        Intuition = integer { description = "Active: read a person." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Intuition) }
-        Perception = integer { description = "Active: observe a situation." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Perception) }
-        Coolness = integer { description = "Active: act under pressure." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Coolness) }
-        Violence = integer { description = "Active: engage in combat." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Violence) }
-        Charisma = integer { description = "Active: influence others." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Charisma) }
-        Soul = integer { description = "Active: see through the illusion." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRoll (Soul) }
+        Fortitude = integer { description = "Passive: endure injury." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Fortitude, woundModifier (characterTable)) }
+        Reflexes = integer { description = "Passive: avoid harm." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Reflexes, woundModifier (characterTable)) }
+        Willpower = integer { description = "Passive: keep it together." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Willpower, woundModifier (characterTable)) }
+        Reason = integer { description = "Active: investigate." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Reason, woundModifier (characterTable)) }
+        Intuition = integer { description = "Active: read a person." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Intuition, woundModifier (characterTable)) }
+        Perception = integer { description = "Active: observe a situation." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Perception, woundModifier (characterTable)) }
+        Coolness = integer { description = "Active: act under pressure." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Coolness, woundModifier (characterTable)) }
+        Violence = integer { description = "Active: engage in combat." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Violence, woundModifier (characterTable)) }
+        Charisma = integer { description = "Active: influence others." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Charisma, woundModifier (characterTable)) }
+        Soul = integer { description = "Active: see through the illusion." default = 0  minvalue = -3  maxvalue = 4  valuedice = kultRollWith (Soul, woundModifier (characterTable)) }
     }
 
     'Basic moves' = table
     {
-        description = "The moves every character has. Each rolls 2d10 plus its attribute and asks for a modifier; Endure Injury asks for the harm instead."
+        description = "The moves every character has. Each rolls 2d10 plus its attribute and asks for a modifier, filled in from unstabilized wounds and stress; Endure Injury asks for the harm instead."
         tableLayout = layout { columns = 3  size = wide }
-        'Endure Injury' = move (Attributes.Fortitude, true)
-        'Avoid Harm' = move (Attributes.Reflexes, false)
-        'Keep It Together' = move (Attributes.Willpower, false)
-        'See Through the Illusion' = move (Attributes.Soul, false)
-        'Engage in Combat' = move (Attributes.Violence, false)
-        'Act Under Pressure' = move (Attributes.Coolness, false)
-        Investigate = move (Attributes.Reason, false)
-        'Read a Person' = move (Attributes.Intuition, false)
-        'Observe a Situation' = move (Attributes.Perception, false)
-        'Influence Other' = move (Attributes.Charisma, false)
+        'Endure Injury' = move (Attributes.Fortitude, true, woundModifier (characterTable))
+        'Avoid Harm' = move (Attributes.Reflexes, false, woundModifier (characterTable))
+        'Keep It Together' = move (Attributes.Willpower, false, woundModifier (characterTable) + keepTogetherModifier (Stability.Stability))
+        'See Through the Illusion' = move (Attributes.Soul, false, woundModifier (characterTable) + illusionModifier (Stability.Stability))
+        'Engage in Combat' = move (Attributes.Violence, false, woundModifier (characterTable))
+        'Act Under Pressure' = move (Attributes.Coolness, false, woundModifier (characterTable))
+        Investigate = move (Attributes.Reason, false, woundModifier (characterTable))
+        'Read a Person' = move (Attributes.Intuition, false, woundModifier (characterTable))
+        'Observe a Situation' = move (Attributes.Perception, false, woundModifier (characterTable))
+        'Influence Other' = move (Attributes.Charisma, false, woundModifier (characterTable))
     }
 
     Wounds = table
@@ -146,7 +173,7 @@ characterTable = ruleset
         tableLayout = layout { columns = 3 }
         'Serious wounds' = slots { description = "Up to four serious wounds. A fifth becomes critical." number = 4  editable = live  indicator = "#d64545" }
         'Critical wound' = slots { description = "A critical wound kills unless it is stabilized soon." number = 1  editable = live  indicator = "#d64545" }
-        Stabilized = bool { description = "The wounds have been treated and no longer get worse." default = false  editable = live }
+        Stabilized = bool { description = "The wounds have been treated and no longer get worse. Unstabilized, a serious wound gives -1 to rolls and a critical wound -1 more." default = false  editable = live }
         State = string { value = woundState (characterTable)  visible = none  indicator = "#555555" }
         Notes = string { description = "What each wound is." multiline = true  editable = live }
     }
@@ -154,7 +181,7 @@ characterTable = ruleset
     Stability = table
     {
         tableLayout = layout { columns = 1 }
-        Stability = integer { description = "From Composed (0) through moderate, serious and critical stress to Broken (9)." default = 0  minvalue = 0  maxvalue = 9  render = stabilityLevel (Stability)  editable = live }
+        Stability = integer { description = "From Composed (0) through moderate, serious and critical stress to Broken (9). Stress gives -1 to disadvantage rolls, takes 1 to 3 off Keep It Together and adds 1 or 2 to See Through the Illusion." default = 0  minvalue = 0  maxvalue = 9  render = stabilityLevel (Stability)  editable = live }
         Stress = string { value = stressBand (Stability)  visible = live  indicator = "#8e5cc4"  editable = none }
         Conditions = string { description = "Temporary states such as Angry, Sad, Scared, Guilt-ridden or Obsessed." editable = live }
     }
@@ -177,7 +204,9 @@ characterTable = ruleset
     {
         description = "Advantages and disadvantages that are rolled: 2d10 plus their attribute, or 2d10 alone."
         tableLayout = layout { size = wide }
-        source = map ((item)->moveRow (item.Name, attributeValue (characterTable, moveStat (item, "Attribute"))), concat (characterTable.Advantages, characterTable.Disadvantages))
+        source = concat (
+            map ((item)->moveRow (item.Name, attributeValue (characterTable, moveStat (item, "Attribute")), woundModifier (characterTable)), characterTable.Advantages),
+            map ((item)->moveRow (item.Name, attributeValue (characterTable, moveStat (item, "Attribute")), woundModifier (characterTable) + disadvantageModifier (Stability.Stability)), characterTable.Disadvantages))
         singular = "Move"
         editable = none
         valueType = moveRow
@@ -214,7 +243,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([attack ("Unarmed", Attributes.Violence, "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([attack ("Unarmed", Attributes.Violence, "1", "melee", 2, woundModifier (characterTable))], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = attack
@@ -237,7 +266,7 @@ characterTable = ruleset
 
 creatureTable = ruleset
 {
-    rulesetConfiguration = { defaultImage = "/images/armour.svg"  important = [Stats, Attacks] }
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Attacks] }
     Stats = table
     {
         tableLayout = layout { columns = 3  size = wide }
@@ -317,7 +346,7 @@ KultDivinityLost = system
         {
             title = "Rolling"
             topic = "Play"
-            text = ["Roll 2d10 plus the attribute, plus any modifier the roll asks for. 15 or more is a complete success, 10 to 14 a success with a cost, 9 or less a failure and the GM makes a move. Endure Injury takes the harm off the roll."]
+            text = ["Roll 2d10 plus the attribute, plus any modifier the roll asks for; the sheet fills in the modifiers from unstabilized wounds and stress. 15 or more is a complete success, 10 to 14 a success with a cost, 9 or less a failure and the GM makes a move. Endure Injury takes the harm off the roll."]
         },
         hint
         {
