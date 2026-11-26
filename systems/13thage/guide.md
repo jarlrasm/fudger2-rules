@@ -16,10 +16,10 @@ Roll **d20 + ability modifier + level + background points** against a DC set by 
 - **Attacks**: d20 + ability + level (+ the **escalation die**) against AC, PD or MD. A natural 20 is a critical hit (double damage); a natural 1 misses. Many powers trigger on a **natural even** or **natural odd** roll. Fudger asks for the escalation die when a hero attacks.
 - The **escalation die** starts at 0, goes to 1 at the start of round 2 and up by 1 each round to a maximum of 6. Only heroes (and a few monsters) add it. It drops when the heroes stall.
 - **Damage** for weapon attacks is usually level × the weapon die + ability; misses often deal level as damage.
-- Monsters are **staggered** at half HP. Heroes at 0 HP are unconscious and make death saves (16+ on d20 to spend a recovery); at minus half max HP they die.
+- Heroes and monsters are **staggered** at half HP. Heroes at 0 HP are unconscious and make a death save at the start of each turn (16+ on d20 to spend a recovery and get up); the fourth failed save in a battle, or dropping to minus half max HP, kills them. The sheet has a Death save roll and a Failed death saves track.
 
 ## Recoveries
-Spending a recovery heals level × recovery die + Con. Heroes have 8 recoveries; a full heal-up restores them.
+Spending a recovery heals level × recovery die + Con (Con twice from 5th level, three times from 8th). Heroes have 8 recoveries; a full heal-up restores them.
 
 ## Icon relationships
 At the start of each session roll a d6 for each relationship point: a **6** gives a full benefit from that icon in this session, a **5** a benefit with a complication.

@@ -85,10 +85,21 @@ abilityMod (char, name) =
         case "Wis" then char.Abilities.Wis.Modifier
         else char.Abilities.Cha.Modifier
 
+conMultiplier (level) = if level >= 8 then 3 else if level >= 5 then 2 else 1
+
+deathSaveResult (natural) =
+{
+    Text = toString (natural) + " vs 16: " + (if natural >= 16 then "success, spend a recovery and get up" else "failure")
+    Value = natural
+    Outcome = if natural >= 16 then "Success" else "Failure"
+}
+
+deathSave = ([1d20], ((baseline, throws)->deathSaveResult (first (first (throws).rolls))))
+
 hpState (hp, maxHp) =
     if hp <= 0 - maxHp / 2 then "Dead"
     else if hp <= 0 then "Unconscious"
-    else if hp <= maxHp / 4 then "Staggered"
+    else if hp <= maxHp / 2 then "Staggered"
     else ""
 
 characterTable = ruleset
@@ -126,7 +137,7 @@ characterTable = ruleset
         'AC base' = integer { default = 12 }
         'PD base' = integer { default = 10 }
         'MD base' = integer { default = 10 }
-        Initiative = modifier { description = "Dex modifier plus level. Higher acts earlier in the round." reference = ["srd", 13] value = Abilities.Dex.Modifier + Character.Level + 'Initiative bonus'  valuedice = attackRoll (0, 0)  editable = none }
+        Initiative = modifier { description = "Dex modifier plus level. Higher acts earlier in the round." reference = ["srd", 13] value = Abilities.Dex.Modifier + Character.Level + 'Initiative bonus'  valuedice = 1d20  editable = none }
         'Initiative bonus' = integer { default = 0 }
     }
 
@@ -140,11 +151,14 @@ characterTable = ruleset
         'Max recoveries' = integer { description = "Recoveries you have after a full heal-up, usually 8." reference = ["srd", 13] default = 8  minvalue = 0 }
         Recoveries = integer { description = "How many times a day you can heal by rolling recovery dice." reference = ["srd", 13] default = 'Max recoveries'  minvalue = 0  editable = live }
         'Recovery die' = string { default = "d8"  keys = ["d6", "d8", "d10", "d12"] }
-        Recovery = string { description = "What one recovery heals: level times the recovery die, plus Con." reference = ["srd", 13] value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier)  editable = none }
+        Recovery = string { description = "What one recovery heals: level times the recovery die, plus Con (twice Con from 5th level, three times from 8th)." reference = ["srd", 13] value = toString (Character.Level) + 'Recovery die' + (if Abilities.Con.Modifier >= 0 then "+" else "") + toString (Abilities.Con.Modifier * conMultiplier (Character.Level))  editable = none }
+        'Death save' = integer { description = "At 0 HP or below, roll a d20 at the start of each turn: 16 or more spends a recovery and gets you up." value = 0  valuedice = deathSave  editable = none }
+        'Failed death saves' = slots { description = "The fourth failed death save in a battle kills you. Clear it after the battle." number = 4  editable = live  indicator = "#d64545" }
         'Full heal up' = button { description = "After about four battles: hit points back to full and every recovery regained. Untick your used powers too."  reference = ["srd", 338]  editable = live  onClick = updates
             {
                 (root.Health.HP) = 'Max HP'
                 (root.Health.Recoveries) = 'Max recoveries'
+                (root.Health.'Failed death saves'.realvalue) = 0
             }
         }
     }
@@ -263,7 +277,7 @@ monsterTable = ruleset
 {
     rulesetConfiguration =
     {
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/adnd2e/monster.svg"
         important = [Monster, Attacks]
         sortedBy = sort { prefix = "Level" sort = Monster.Level }
     }
@@ -274,7 +288,7 @@ monsterTable = ruleset
         Size = string { default = "Normal"  keys = ["Normal", "Large", "Huge"] }
         Role = string { default = "Troop"  keys = ["Archer", "Blocker", "Caster", "Leader", "Mook", "Spoiler", "Troop", "Wrecker"] }
         Type = string {}
-        Initiative = modifier { description = "Bonus to the monster's initiative roll." reference = ["srd", 328] default = 3  valuedice = attackRoll (0, 0) }
+        Initiative = modifier { description = "Bonus to the monster's initiative roll." reference = ["srd", 328] default = 3  valuedice = 1d20 }
         AC = integer { description = "Armor Class: the target number for weapon attacks." reference = ["srd", 329] default = 17 }
         PD = integer { description = "Physical Defense: the target number for physical effects." reference = ["srd", 329] default = 14 }
         MD = integer { description = "Mental Defense: the target number for mental effects." reference = ["srd", 329] default = 12 }
