@@ -114,10 +114,18 @@ criticalSeverity (total) =
     else if total > 40 then "Average"
     else "Easy"
 
+criticalNames = ["Minor Nick", "Slowed Down", "Sudden Jolt", "Distracted", "Off-Balance", "Discouraging Wound", "Stunned", "Stinger", "Bowled Over", "Head Ringer", "Fearsome Wound", "Agonizing Wound", "Slightly Dazed", "Scattered Senses", "Hamstrung", "Overpowered", "Winded", "Compromised", "At the Brink", "Crippled", "Maimed", "Horrific Injury", "Temporarily Lame", "Blinded", "Knocked Senseless", "Gruesome Injury"]
+
+criticalName (total) =
+    if total > 150 then "Dead"
+    else if total > 140 then "The End is Nigh"
+    else if total > 130 then "Bleeding Out"
+    else item ((max (1, total) - 1) / 5, criticalNames)
+
 criticalRoll = ([1d100], ((baseline, throws)->{
-    Text = toString (baseline + first (first (throws).rolls)) + ": " + (if baseline + first (first (throws).rolls) > 150 then "Dead" else criticalSeverity (baseline + first (first (throws).rolls)) + " critical injury, look it up on the table")
+    Text = toString (baseline + first (first (throws).rolls)) + ": " + criticalName (baseline + first (first (throws).rolls)) + (if baseline + first (first (throws).rolls) > 150 then "" else " (" + criticalSeverity (baseline + first (first (throws).rolls)) + ")")
     Value = baseline + first (first (throws).rolls)
-    Outcome = if baseline + first (first (throws).rolls) > 150 then "Fumble" else ""
+    Outcome = if baseline + first (first (throws).rolls) > 150 then "Dead" else ""
 }))
 
 forceOnly (rating) = if rating > 0 then visible else editor
@@ -244,7 +252,7 @@ characterTable = ruleset
     Force = table
     {
         tableLayout = layout { columns = 3 }
-        'Force Rating' = integer { description = "White Force dice rolled for Force powers. Light side pips power them for light side users." default = 0  minvalue = 0  valuedice = forceRoll ('Force Rating') }
+        'Force Rating' = integer { description = "White Force dice rolled for Force powers, less those committed. Light side pips power them for light side users." default = 0  minvalue = 0  valuedice = forceRoll (max (0, 'Force Rating' - Committed)) }
         'Committed' = integer { description = "Force dice committed to ongoing powers." default = 0  minvalue = 0  editable = live }
     }
 
@@ -346,6 +354,14 @@ characterTable = ruleset
     }
 }
 
+minionRanks (kind, size) = if kind == "Minion" then max (0, size - 1) else 0
+
+groupYellow (yellow, green, ranks) = yellow + min (green, ranks)
+
+groupGreen (green, ranks) = green - min (green, ranks) + max (0, ranks - green)
+
+groupRanks (kind, size, green) = max (0, minionRanks (kind, size) - green)
+
 adversaryKinds = ["Minion", "Rival", "Nemesis"]
 
 nemesisOnly (kind) = if kind == "Nemesis" then visible else none
@@ -383,7 +399,7 @@ creatureTable = ruleset
         {
             Yellow = integer { default = 1  minvalue = 0 }
             Green = integer { default = 1  minvalue = 0 }
-            Roll = integer { value = Yellow + Green  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (Yellow, Green, max (0, 0 - s), 0, max (0, d), max (0, s))))  render = toString (Yellow) + "Y " + toString (Green) + "G"  editable = none  action = if Key == "Melee" or Key == "Brawl" or Key == "Lightsaber" then "melee" else if contains (Key, "Ranged") or Key == "Gunnery" then "ranged" else ""  reach = 2 }
+            Roll = integer { value = Yellow + Green + groupRanks (Profile.Kind, Profile.'Group Size', Green)  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (groupYellow (Yellow, Green, minionRanks (Profile.Kind, Profile.'Group Size')), groupGreen (Green, minionRanks (Profile.Kind, Profile.'Group Size')), max (0, 0 - s), 0, max (0, d), max (0, s))))  render = toString (groupYellow (Yellow, Green, minionRanks (Profile.Kind, Profile.'Group Size'))) + "Y " + toString (groupGreen (Green, minionRanks (Profile.Kind, Profile.'Group Size'))) + "G"  editable = none  action = if Key == "Melee" or Key == "Brawl" or Key == "Lightsaber" then "melee" else if contains (Key, "Ranged") or Key == "Gunnery" then "ranged" else ""  reach = 2 }
         }
     }
     Notes = table
