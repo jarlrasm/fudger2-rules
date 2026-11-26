@@ -36,7 +36,23 @@ yzeRoll (pool, stress) = ([dice { number = max (0, pool)  sides = 6 }, dice { nu
 yzeCharacterRoll (pool, stress) = ([dice { number = max (0, pool)  sides = 6 }, dice { number = max (0, stress)  sides = 6  color = "yellow"  label = "Stress" }],
     ((baseline, throws)->yzeResult (first (throws).rolls, item (1, throws).rolls, true, [{ Field = "characterTable.Status.Stress"  Value = min (10, stress + 1) }])))
 
-yzeDice (char, pool) = yzeCharacterRoll (pool + char.Character.Modifier, char.Status.Stress)
+synthResult (base, canPush) =
+{
+    Text = yzeText (base, [])
+    Value = sixes (base)
+    Outcome = yzeOutcome (base, [])
+    Push = if canPush then synthPush (filter ((x)->x == 6, base), count (filter ((x)->x < 6, base))) else 0
+}
+
+synthPush (keptBase, baseCount) = ([dice { number = baseCount  sides = 6 }],
+    ((baseline, throws)->synthResult (concat (keptBase, first (throws).rolls), false)))
+
+synthRoll (pool) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->synthResult (first (throws).rolls, true)))
+
+yzeDice (char, pool) =
+    if char.Character.Career == "Synthetic" then synthRoll (pool + char.Character.Modifier)
+    else yzeCharacterRoll (pool + char.Character.Modifier, char.Status.Stress)
 
 panicRoll = ([1d6], ((baseline, throws)->panicResult (baseline + first (first (throws).rolls))))
 
@@ -48,7 +64,7 @@ panicResult (total) =
         else if total == 9 then "drop item"
         else if total == 10 then "freeze for a round"
         else if total == 11 then "seek cover"
-        else if total == 12 then "scream, everyone nearby gains Stress"
+        else if total == 12 then "scream, lose your next slow action and 1 Stress; every friend who hears it makes a Panic Roll"
         else if total == 13 then "flee"
         else if total == 14 then "frenzy, attack the nearest person"
         else "catatonic")
@@ -279,7 +295,7 @@ Alien = system
         {
             title = "Stress and panic"
             topic = "Play"
-            text = ["Stress adds yellow dice. A 1 on a stress die means a Panic Roll. Pushing a roll adds a Stress automatically."]
+            text = ["Stress adds yellow dice. A 1 on a stress die means a Panic Roll. Pushing a roll adds a Stress automatically. Synthetics roll no stress dice, never panic and push for free."]
         },
         hint
         {
