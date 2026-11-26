@@ -1,0 +1,48 @@
+{
+  "name": "Tower city names",
+  "description": "Downtrodden dark elves, haughty high elves, foreign traders, stacked districts, taverns and secret societies for a city built upwards.",
+  "url": "/systems/names/towercity.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "Tower city",
+      "description": "A vast vertical city of oppressed dark elves and their high-elf masters: street names and nicknames for the drow, long courtly names for their lords, foreign traders, districts stacked on districts, drinking dens and conspiracies.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place"],
+        "variants": ["Dark elf", "High elf", "Foreigner", "District", "Tavern", "Society"],
+        "parts": {
+          "drowStart": ["Ish", "Vey", "Ra", "Kel", "Sor", "Ny", "Zha", "Mor", "Tes", "Ul", "Ash", "Ve", "Dris", "Qua", "Ilm", "Sev", "Ky", "Ost", "Yr", "Nal", "Thes", "Vr", "Cael", "Ezh"],
+          "drowMid": ["a", "e", "i", "o", "ae", "y", "ri", "le", "sa", "ne"],
+          "drowEnd": ["th", "nn", "ssa", "rek", "lis", "zen", "mir", "vae", "dra", "sk", "rin", "les", "kha", "yl", "nett", "osh", "ari", "ven", "ith", "ux"],
+          "drowNick": ["Soot", "Quick", "Hook", "Ash", "Lamp", "Rag", "Ninefingers", "Pale", "Brass", "Coal", "Thimble", "Ladder", "Gutter", "Knot", "Moth", "Sparrow", "Whistle", "Tallow", "Spindle", "Rust", "Penny", "Cinder", "Wick", "Crow"],
+          "drowFamily": ["of the Low Stair", "of Kettle Row", "of the Rope Yards", "of Ninth Landing", "of the Dye Pits", "of Brokenbell", "of the Underspan", "of Tallow Court", "of the Sink"],
+          "aelfStart": ["Aur", "Cel", "Ith", "Lys", "Sael", "Vael", "Eld", "Ilu", "Thal", "Ser", "Ama", "Elo", "Fae", "Ori", "Quel", "Sil"],
+          "aelfMid": ["an", "en", "ith", "ar", "el", "ion", "ae", "or", "is", "ess"],
+          "aelfEnd": ["driel", "wyn", "thas", "orien", "iel", "lanor", "seth", "varis", "andel", "ithra", "elle", "ondas", "aris", "eon", "ymir", "essa"],
+          "aelfHouse": ["Brightspire", "Goldwind", "Highmere", "Sunhallow", "Dawnmantle", "Silverreach", "Starcrest", "Glasshaven", "Morningveil", "Lightfall", "Crowncloud", "Ambermere"],
+          "aelfTitle": ["Lord", "Lady", "Magister", "High Warden", "Archon", "Provost", "Templar", "Countess", "Viscount"],
+          "humanFirst": ["Jory", "Tamsin", "Oswin", "Bram", "Hester", "Corwin", "Dilys", "Ewan", "Merrit", "Pell", "Rosalind", "Silas", "Wenna", "Abner", "Cass", "Gideon", "Ottoline", "Piety", "Ruskin", "Temperance"],
+          "humanLast": ["Halloway", "Crake", "Penhallow", "Gristwood", "Marrow", "Tolliver", "Quarrie", "Ashdown", "Vantreight", "Pyle", "Stannard", "Breck", "Fenwick", "Oddie", "Treharne"],
+          "placeAdj": ["Low", "High", "Old", "Black", "Hanging", "Weeping", "Iron", "Hollow", "Crooked", "Gilded", "Rotten", "Ninth", "Sunken", "Burnt", "Silent", "Lantern"],
+          "placeNoun": ["Stair", "Row", "Landing", "Spur", "Gallery", "Shaft", "Terrace", "Market", "Gutter", "Buttress", "Span", "Warren", "Yard", "Cistern", "Ledge", "Gantry"],
+          "tavernThing": ["Rope", "Lantern", "Kettle", "Hook", "Pulley", "Gargoyle", "Ladder", "Moth", "Bell", "Crow", "Chain", "Candle", "Anchor", "Spider", "Brick"],
+          "tavernAdj": ["Drowned", "Upside-down", "Last", "Crooked", "Blind", "Laughing", "Frayed", "Rusted", "Sleeping", "Hungry", "Falling", "Patient"],
+          "societyAdj": ["Silent", "Unbowed", "Ashen", "Ninth", "Crimson", "Hidden", "Burning", "Patient", "Lowborn", "Shattered", "Hollow", "Whispering"],
+          "societyNoun": ["Hand", "Stair", "Lantern", "Thread", "Chorus", "Knife", "Bell", "Root", "Ledger", "Mask", "Rope", "Spark"],
+          "societyKind": ["Brotherhood", "Sisterhood", "Circle", "Guild", "Fellowship", "Covenant", "Cell", "Lodge", "Congregation", "Company"]
+        },
+        "templates": {
+          "Dark elf": ["{drowStart}{drowMid?}{drowEnd}:5", "{drowNick} {drowStart}{drowEnd}:3", "{drowStart}{drowEnd} {drowFamily}:2"],
+          "High elf": ["{aelfTitle} {aelfStart}{aelfMid}{aelfEnd} {aelfHouse}:4", "{aelfStart}{aelfMid}{aelfEnd} {aelfHouse}:4", "{aelfStart}{aelfEnd} {aelfMid|cap}{aelfEnd} {aelfHouse}:2"],
+          "Foreigner": ["{humanFirst} {humanLast}:5", "Captain {humanFirst} {humanLast}:1", "{humanFirst} {humanLast} the Younger:1"],
+          "District": ["{placeAdj} {placeNoun}:5", "The {placeAdj} {placeNoun}s:2", "{placeNoun} of {tavernThing}s:1"],
+          "Tavern": ["The {tavernAdj} {tavernThing}:5", "The {tavernThing} and {tavernThing}:3", "{humanLast}'s {tavernThing}:1"],
+          "Society": ["The {societyAdj} {societyNoun}:4", "{societyKind} of the {societyAdj} {societyNoun}:4", "The {societyNoun} {societyKind}:2"]
+        }
+      }
+    }
+  ]
+}
