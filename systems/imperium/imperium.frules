@@ -1,0 +1,967 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+difficulties = ["Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Routine +20", "Easy +40", "Very Easy +60"]
+
+difficultyModifier (level) =
+    switch level
+        case -3 then -30
+        case -2 then -20
+        case -1 then -10
+        case 1 then 20
+        case 2 then 40
+        case 3 then 60
+        else 0
+
+d100Value (tens, units) =
+    if mod (tens, 10) == 0 and mod (units, 10) == 0 then 100
+    else mod (tens, 10) * 10 + mod (units, 10)
+
+reversedRoll (roll) = if roll == 100 then 100 else mod (roll, 10) * 10 + roll / 10
+
+pickRoll (state, roll) =
+    if state == "Advantage" then min (roll, reversedRoll (roll))
+    else if state == "Disadvantage" then max (roll, reversedRoll (roll))
+    else roll
+
+tensOf (target) = if target < 0 then 0 - (0 - target) / 10 else target / 10
+
+imSL (target, roll, slBonus) = tensOf (target) - roll / 10 + slBonus
+
+imPass (target, roll, slBonus) =
+    if roll <= 5 then true
+    else if roll >= 96 then false
+    else imSL (target, roll, slBonus) > 0 or (imSL (target, roll, slBonus) == 0 and (roll <= target or slBonus != 0))
+
+shownSL (target, roll, slBonus) =
+    if imPass (target, roll, slBonus) then max (0, imSL (target, roll, slBonus))
+    else min (0, imSL (target, roll, slBonus))
+
+slText (target, roll, slBonus) =
+    if imPass (target, roll, slBonus) then "+" + toString (shownSL (target, roll, slBonus))
+    else if shownSL (target, roll, slBonus) == 0 then "-0"
+    else toString (shownSL (target, roll, slBonus))
+
+degreeWord (sl, pass) =
+    (if abs (sl) >= 5 then "Astounding " else if abs (sl) >= 3 then "Impressive " else if abs (sl) >= 1 then "" else "Marginal ")
+    + (if pass then "Success" else "Failure")
+
+isDoubles (roll) = roll == 100 or mod (roll, 11) == 0
+
+isCritical (target, roll, slBonus) = roll != 100 and isDoubles (roll) and imPass (target, roll, slBonus)
+
+isFumble (target, roll, slBonus) = roll == 100 or (isDoubles (roll) and not (imPass (target, roll, slBonus)))
+
+testText (target, roll, slBonus) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + degreeWord (shownSL (target, roll, slBonus), imPass (target, roll, slBonus))
+    + ", SL " + slText (target, roll, slBonus)
+
+fateSpend (char) = if char.Combat.Fate > 0 then [{ Field = "characterTable.Combat.Fate"  Value = char.Combat.Fate - 1 }] else []
+
+pushFor (pass, reroll, spend) = if count (spend) > 0 and not (pass) then reroll else 0
+
+testResult (target, roll, slBonus, reroll, spend) =
+{
+    Text = testText (target, roll, slBonus)
+    Value = shownSL (target, roll, slBonus)
+    Outcome = degreeWord (shownSL (target, roll, slBonus), imPass (target, roll, slBonus))
+    Push = pushFor (imPass (target, roll, slBonus), reroll, spend)
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+hitLocation (roll) =
+    switch mod (roll, 10)
+        case 1 then "Head"
+        case 2 then "Left Arm"
+        case 3 then "Right Arm"
+        case 4 then "Left Leg"
+        case 5 then "Right Leg"
+        else "Body"
+
+criticalTable (location) =
+    if contains (location, "Arm") then "Arm"
+    else if contains (location, "Leg") then "Leg"
+    else location
+
+damageText (damage, sl) = if damage > 0 then ", " + toString (damage + sl) + " damage (" + toString (damage) + " + SL " + toString (sl) + ")" else ""
+
+attackText (target, roll, slBonus, damage) =
+    testText (target, roll, slBonus)
+    + (if imPass (target, roll, slBonus) then ": hits the " + hitLocation (roll) + damageText (damage, shownSL (target, roll, slBonus)) else "")
+    + (if isCritical (target, roll, slBonus) then ", Critical: roll 1d10 on the " + criticalTable (hitLocation (roll)) + " critical table" else "")
+    + (if isFumble (target, roll, slBonus) then ", Fumble: roll on the fumble table" else "")
+
+attackOutcome (target, roll, slBonus) =
+    if isCritical (target, roll, slBonus) then "Critical"
+    else if isFumble (target, roll, slBonus) then "Fumble"
+    else degreeWord (shownSL (target, roll, slBonus), imPass (target, roll, slBonus))
+
+attackResult (target, roll, slBonus, damage, reroll, spend) =
+{
+    Text = attackText (target, roll, slBonus, damage)
+    Value = shownSL (target, roll, slBonus)
+    Outcome = attackOutcome (target, roll, slBonus)
+    Push = pushFor (imPass (target, roll, slBonus), reroll, spend)
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+baseWarp (target, roll, slBonus, rating, willBonus) =
+    if isCritical (target, roll, slBonus) then max (1, rating - willBonus)
+    else if imPass (target, roll, slBonus) then rating
+    else min (abs (shownSL (target, roll, slBonus)), rating)
+
+warpGained (target, roll, slBonus, rating, willBonus) =
+    if isFumble (target, roll, slBonus) then 2 * baseWarp (target, roll, slBonus, rating, willBonus)
+    else baseWarp (target, roll, slBonus, rating, willBonus)
+
+powerText (target, roll, slBonus, rating, willBonus) =
+    testText (target, roll, slBonus)
+    + (if imPass (target, roll, slBonus) then ", the power manifests" else "")
+    + ", Warp Charge +" + toString (warpGained (target, roll, slBonus, rating, willBonus))
+    + (if isCritical (target, roll, slBonus) then " (Critical: rating less Willpower Bonus)" else "")
+    + (if isFumble (target, roll, slBonus) then " (Fumble: doubled), roll on the psychic fumble table; Perils of the Warp if pushed" else "")
+
+powerResult (target, roll, slBonus, rating, willBonus, reroll, spend) =
+{
+    Text = powerText (target, roll, slBonus, rating, willBonus)
+    Value = warpGained (target, roll, slBonus, rating, willBonus)
+    Outcome = attackOutcome (target, roll, slBonus)
+    Push = pushFor (imPass (target, roll, slBonus), reroll, spend)
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+imJudge (kind, target, roll, slBonus, damage, rating, willBonus, reroll, spend) =
+    if kind == "attack" then attackResult (target, roll, slBonus, damage, reroll, spend)
+    else if kind == "power" then powerResult (target, roll, slBonus, rating, willBonus, reroll, spend)
+    else testResult (target, roll, slBonus, reroll, spend)
+
+imDice (state, slBonus, kind, damage, rating, willBonus, spend) = ([dice { number = 1  sides = 10  label = "Tens" }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->imJudge (kind, baseline + difficultyModifier (asked), pickRoll (state, d100Value (first (first (throws).rolls), first (item (1, throws).rolls))), slBonus, damage, rating, willBonus, imDice (state, slBonus, kind, damage, rating, willBonus, []), spend)))
+
+imAsk (state, kind, damage, rating, willBonus, spend) =
+    ask ("SL bonus", 0, (n)->ask ("Difficulty", difficulties, -3, imDice (state, n, kind, damage, rating, willBonus, spend)))
+
+plainTest (state) = imAsk (state, "test", 0, 0, 0, [])
+
+charTest (char) = imAsk (char.Combat.Roll, "test", 0, 0, 0, fateSpend (char))
+
+initiativeOrder = ([dice { number = 0  sides = 10 }], ((baseline, throws)->baseline))
+
+characteristic = custom
+{
+    Starting = integer { description = "The characteristic as rolled at creation, before Origin, Faction and Role." default = 30  minvalue = 0 }
+    Modifier = integer { description = "Changes from Origin, Faction, Role and other sources." default = 0 }
+    Advances = integer { description = "Advances bought with experience, each +1." default = 0  minvalue = 0 }
+    Total = integer { description = "Starting value plus modifiers and advances. Roll d100 at or under it." value = Starting + Modifier + Advances  valuedice = charTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the total, used for wounds, damage and thresholds." value = (Starting + Modifier + Advances) / 10  editable = none }
+}
+
+skill (base) = custom
+{
+    Advances = integer { description = "Advances in the skill, 0 to 4, each +5." default = 0  minvalue = 0  maxvalue = 4 }
+    Total = integer { description = "The characteristic plus 5 per advance. Roll d100 at or under it." value = base + Advances * 5  valuedice = charTest (characterTable)  editable = none }
+}
+
+skillTotal (char, name) =
+    switch name
+        case "Athletics" then char.Skills.Athletics.Total
+        case "Awareness" then char.Skills.Awareness.Total
+        case "Dexterity" then char.Skills.Dexterity.Total
+        case "Discipline" then char.Skills.Discipline.Total
+        case "Fortitude" then char.Skills.Fortitude.Total
+        case "Intuition" then char.Skills.Intuition.Total
+        case "Linguistics" then char.Skills.Linguistics.Total
+        case "Logic" then char.Skills.Logic.Total
+        case "Lore" then char.Skills.Lore.Total
+        case "Medicae" then char.Skills.Medicae.Total
+        case "Melee" then char.Skills.Melee.Total
+        case "Navigation" then char.Skills.Navigation.Total
+        case "Piloting" then char.Skills.Piloting.Total
+        case "Presence" then char.Skills.Presence.Total
+        case "Psychic Mastery" then char.Skills.'Psychic Mastery'.Total
+        case "Ranged" then char.Skills.Ranged.Total
+        case "Rapport" then char.Skills.Rapport.Total
+        case "Reflexes" then char.Skills.Reflexes.Total
+        case "Stealth" then char.Skills.Stealth.Total
+        case "Tech" then char.Skills.Tech.Total
+        else 0
+
+skillOf (key) = first (split (" (", key))
+
+specialisationTotal (char, skillName, spec) =
+    if valueOr (char.Specialisations, skillName + " (" + spec + ")", 0) == 0 then skillTotal (char, skillName)
+    else skillTotal (char, skillName) + 5 * valueOr (valueOr (char.Specialisations, skillName + " (" + spec + ")", 0), "Advances", 0)
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "imWeapon", field)
+
+bandMetres (band) =
+    if contains (band, "Immediate") then 2
+    else if contains (band, "Short") then 10
+    else if contains (band, "Medium") then 50
+    else if contains (band, "Long") then 100
+    else if contains (band, "Extreme") then 300
+    else 0
+
+usesStrength (text) = contains (toLower (text), "str")
+
+weaponDamage (char, text) = firstNumber (text) + (if usesStrength (text) then char.Characteristics.Strength.Bonus else 0)
+
+isMelee (weapon) = weaponStat (weapon, "Type") != "Ranged"
+
+weaponAttack (name, target, kind, metres, damage, band, traits) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = imAsk (characterTable.Combat.Roll, "attack", damage, 0, 0, fateSpend (characterTable))  action = kind  reach = 2  range = metres  editable = none }
+    Damage = damage
+    Range = band
+    Traits = traits
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, specialisationTotal (char, "Melee", weaponStat (weapon, "Specialisation")), "melee", 0, weaponDamage (char, weaponStat (weapon, "Damage")), "Immediate", weaponStat (weapon, "Traits"))
+    else
+        weaponAttack (weapon.Name, specialisationTotal (char, "Ranged", weaponStat (weapon, "Specialisation")), "ranged", bandMetres (weaponStat (weapon, "Range")), weaponDamage (char, weaponStat (weapon, "Damage")), weaponStat (weapon, "Range"), weaponStat (weapon, "Traits"))
+
+powerStat (power, field) = itemStat (power, "imPower", field)
+
+powerKind (band) = if contains (band, "Self") or contains (band, "Special") then "" else "ranged"
+
+powerDiscipline (power) = if powerStat (power, "Discipline") == "Minor" or powerStat (power, "Discipline") == "" then "" else powerStat (power, "Discipline")
+
+powerTarget (char, power) = if powerDiscipline (power) == "" then skillTotal (char, "Psychic Mastery") else specialisationTotal (char, "Psychic Mastery", powerDiscipline (power))
+
+powerUse (name, target, rating, willBonus, band, kind, damage) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = imAsk (characterTable.Combat.Roll, "power", 0, rating, willBonus, fateSpend (characterTable))  action = kind  range = bandMetres (band)  editable = none }
+    'Warp Rating' = rating
+    Range = band
+    Damage = damage
+}
+
+powerFor (char, power) = powerUse (power.Name, powerTarget (char, power), toInt (powerStat (power, "Warp Rating")), char.Characteristics.Willpower.Bonus, powerStat (power, "Range"), powerKind (powerStat (power, "Range")), powerStat (power, "Damage"))
+
+coversLocation (text, part) = contains (text, part) or contains (text, "All")
+
+protectionAt (char, part) = sum (map ((p)->if coversLocation (itemStat (p, "imProtection", "Locations"), part) then toInt (itemStat (p, "imProtection", "Armour")) else 0, char.Protection))
+
+encumbranceOf (item, rulesetName) = toInt (itemStat (item, rulesetName, "Encumbrance"))
+
+carried (char) = sum (map ((w)->encumbranceOf (w, "imWeapon"), char.Weapons)) + sum (map ((p)->encumbranceOf (p, "imProtection"), char.Protection)) + sum (map ((e)->encumbranceOf (e, "imEquipment"), char.Equipment))
+
+loadState (load, strength, toughness) =
+    if load > 2 * (strength + toughness) then "Restrained"
+    else if load > strength + toughness then "Overburdened"
+    else ""
+
+woundState (wounds, maxWounds, criticals, maxCriticals) =
+    if criticals > maxCriticals then "Dead"
+    else if criticals > 0 then "Critical Wounds " + toString (criticals)
+    else if wounds >= maxWounds then "Wounds full"
+    else ""
+
+restHeal (wounds, toughness) = max (0, wounds - max (1, toughness))
+
+attitude (n) =
+    switch n
+        case 5 then "Honoured"
+        case 4 then "Prized"
+        case 3 then "Trusted"
+        case 2 then "Liked"
+        case 1 then "Welcomed"
+        case -1 then "Unwelcome"
+        case -2 then "Distrusted"
+        case -3 then "Despised"
+        case -4 then "Vilified"
+        case -5 then "Hunted"
+        else "Neutral"
+
+warpState (charge, threshold) = if charge > threshold then "Warp Charge over threshold" else ""
+
+factions = ["Adeptus Administratum", "Adeptus Astra Telepathica", "Adeptus Mechanicus", "Adeptus Ministorum", "Astra Militarum", "Inquisition", "Infractionists", "Noble Houses", "Rogue Trader Dynasties", "Other"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, Characteristics, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Origin = string { description = "Where the character was born and raised. It gives a characteristic bonus, equipment and a starting talent." keys = ["Agri World", "Feral World", "Feudal World", "Forge World", "Hive World", "Schola Progenium", "Shrine World", "Voidborn", "Other"] }
+        Faction = string { description = "The Imperial organisation the character serves, which grants skills, talents, influence and a Duty." keys = factions }
+        Role = string { description = "What the character does for the Patron: Interlocutor, Mystic, Penumbra, Savant, Warrior or Zealot." keys = ["Interlocutor", "Mystic", "Penumbra", "Savant", "Warrior", "Zealot"] }
+        Patron = string { description = "The Imperial servant the character works for." }
+        Species = string { default = "Human" }
+        Age = string {}
+        Height = string {}
+        Eyes = string {}
+        Hair = string {}
+        Feature = string { description = "A notable mark of the character's looks." }
+        Divination = string { description = "The omen read at the character's birth." }
+        Handed = string { keys = ["Right", "Left"] default = "Right" }
+        'Short term goal' = string {}
+        'Long term goal' = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total; each tens digit below the target's is a Success Level."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic { description = "Weapon Skill (WS): fighting hand to hand." }
+        'Ballistic Skill' = characteristic { description = "Ballistic Skill (BS): shooting and throwing." }
+        Strength = characteristic { description = "Strength (Str): muscle, and the bonus that adds to many melee weapons' damage." }
+        Toughness = characteristic { description = "Toughness (Tgh): enduring harm, poison and the warp. Its bonus sets Critical Wounds and augmetics." }
+        Agility = characteristic { description = "Agility (Ag): speed, balance and fine control." }
+        Intelligence = characteristic { description = "Intelligence (Int): learning, reasoning and technical skill." }
+        Perception = characteristic { description = "Perception (Per): noticing things and reading people." }
+        Willpower = characteristic { description = "Willpower (Wil): courage, discipline and psychic strength. Its bonus is the Warp Charge threshold." }
+        Fellowship = characteristic { description = "Fellowship (Fel): dealing with people." }
+    }
+
+    Skills = table
+    {
+        description = "Each skill is its characteristic plus 5 per advance (up to 4). Specialisations add their own advances on top."
+        tableLayout = layout { columns = 2 }
+        Athletics = skill (Characteristics.Strength.Total)
+        Awareness = skill (Characteristics.Perception.Total)
+        Dexterity = skill (Characteristics.Agility.Total)
+        Discipline = skill (Characteristics.Willpower.Total)
+        Fortitude = skill (Characteristics.Toughness.Total)
+        Intuition = skill (Characteristics.Perception.Total)
+        Linguistics = skill (Characteristics.Intelligence.Total)
+        Logic = skill (Characteristics.Intelligence.Total)
+        Lore = skill (Characteristics.Intelligence.Total)
+        Medicae = skill (Characteristics.Intelligence.Total)
+        Melee = skill (Characteristics.'Weapon Skill'.Total)
+        Navigation = skill (Characteristics.Intelligence.Total)
+        Piloting = skill (Characteristics.Agility.Total)
+        Presence = skill (Characteristics.Willpower.Total)
+        'Psychic Mastery' = skill (Characteristics.Willpower.Total)
+        Ranged = skill (Characteristics.'Ballistic Skill'.Total)
+        Rapport = skill (Characteristics.Fellowship.Total)
+        Reflexes = skill (Characteristics.Agility.Total)
+        Stealth = skill (Characteristics.Agility.Total)
+        Tech = skill (Characteristics.Intelligence.Total)
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Strength Bonus, twice Toughness Bonus and Willpower Bonus." value = Characteristics.Strength.Bonus + 2 * Characteristics.Toughness.Bonus + Characteristics.Willpower.Bonus  editable = none }
+        Wounds = integer { description = "Wounds suffered. Damage past the maximum, or a critical hit, gives a Critical Wound." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Critical Wounds' = integer { description = "Toughness Bonus. More Critical Wounds than this and the character dies." value = Characteristics.Toughness.Bonus  editable = none }
+        'Critical Wounds' = integer { description = "Critical Wounds suffered. Note their effects below." default = 0  minvalue = 0  editable = live }
+        State = string { value = woundState (Wounds, 'Max Wounds', 'Critical Wounds', 'Max Critical Wounds')  visible = none  indicator = "#d64545" }
+        'Max Fate' = integer { description = "Fate points the character starts each session with." default = 3  minvalue = 0 }
+        Fate = integer { description = "Spend one to reroll a test or add +1 SL. Burn one to escape death." default = 'Max Fate'  minvalue = 0  editable = live }
+        Initiative = integer { description = "Agility Bonus plus Perception Bonus, highest first; ties go to the higher Reflexes." value = Characteristics.Agility.Bonus + Characteristics.Perception.Bonus  valuedice = initiativeOrder  editable = none }
+        Speed = string { description = "How far the character moves in a turn." keys = ["Slow", "Normal", "Fast", "Swift"] default = "Normal" }
+        Size = string { keys = ["Tiny", "Small", "Medium", "Large", "Enormous", "Monstrous"] default = "Medium" }
+        Superiority = integer { description = "The group's Superiority in this fight. Add it as an SL bonus to one test a turn." default = 0  minvalue = 0  editable = live }
+        Roll = selector { description = "Advantage swaps the dice's digits when that gives a lower roll; Disadvantage when it gives a higher one." options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        'New session' = button
+        {
+            description = "Fate returns to its maximum at the start of a session."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.Fate) = 'Max Fate'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A night's rest heals Wounds equal to the Toughness Bonus (at least 1)."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.Wounds) = restHeal (Wounds, Characteristics.Toughness.Bonus)
+            }
+        }
+        'End of combat' = button
+        {
+            description = "Superiority is lost when the fight ends."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.Superiority) = 0
+            }
+        }
+    }
+
+    Specialisations = keyvalues
+    {
+        description = "Specialisations, named as Skill (Specialisation), such as Melee (One-handed) or Lore (Theology). Each advance adds 5 to the skill."
+        singular = "Specialisation"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            Advances = integer { description = "Advances in the specialisation, 0 to 4, each +5 on top of the skill." default = 1  minvalue = 0  maxvalue = 4 }
+            Total = integer { description = "The skill plus 5 per advance in the specialisation." value = skillTotal (characterTable, skillOf (Key)) + Advances * 5  valuedice = charTest (characterTable)  editable = none }
+        }
+    }
+
+    Armour = table
+    {
+        description = "Armour by hit location, from the protection worn plus any bonus. The ones digit of an attack gives the location: 1 head, 2 left arm, 3 right arm, 4 left leg, 5 right leg, 6 to 0 body."
+        tableLayout = layout { columns = 2 }
+        Head = integer { value = protectionAt (characterTable, "Head") + Bonus  editable = none }
+        Body = integer { value = protectionAt (characterTable, "Body") + Bonus  editable = none }
+        'Left Arm' = integer { value = protectionAt (characterTable, "Arm") + Bonus  editable = none }
+        'Right Arm' = integer { value = protectionAt (characterTable, "Arm") + Bonus  editable = none }
+        'Left Leg' = integer { value = protectionAt (characterTable, "Leg") + Bonus  editable = none }
+        'Right Leg' = integer { value = protectionAt (characterTable, "Leg") + Bonus  editable = none }
+        Bonus = integer { description = "Armour from cover or other effects, on every location." default = 0  editable = live }
+        'Force field' = string { description = "A force field's rating and overload, if worn." }
+    }
+
+    Conditions = table
+    {
+        description = "Conditions. Tiered ones are 1 for Minor and 2 for Major."
+        tableLayout = layout { columns = 4  size = wide }
+        Ablaze = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#d64545" }
+        Bleeding = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#d64545" }
+        Fatigued = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#d4b106" }
+        Frightened = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#8e5cc4" }
+        Poisoned = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#3fa34d" }
+        Restrained = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#e8913a" }
+        Stunned = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#d4b106" }
+        Blinded = bool { default = false  editable = live  indicator = "#555555" }
+        Deafened = bool { default = false  editable = live  indicator = "#555555" }
+        Incapacitated = bool { default = false  editable = live  indicator = "#555555" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+    }
+
+    'Critical Injuries' = table
+    {
+        tableLayout = layout { size = wide }
+        Injuries = string { description = "Critical Wounds and lasting injuries, with their effects." multiline = true  editable = live }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Melee or Ranged tests with each weapon's specialisation. A hit lands where the ones digit says, for the weapon's damage plus SL (less the defender's SL when opposed)."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", specialisationTotal (characterTable, "Melee", "Brawling"), "melee", 0, Characteristics.Strength.Bonus, "Immediate", "Ineffective")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Ammunition"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Mag = integer { description = "Shots left in the loaded magazine." default = 0  minvalue = 0  editable = live }
+            Spare = integer { description = "Spare reloads." default = 0  minvalue = 0  editable = live }
+        }
+    }
+
+    Protection = list
+    {
+        source = secondary.Protection
+        singular = "Protection"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Augmetics = list
+    {
+        source = secondary.Augmetics
+        singular = "Augmetic"
+        editable = character
+    }
+
+    Encumbrance = table
+    {
+        description = "Carried encumbrance against Strength Bonus plus Toughness Bonus (Overburdened) and twice that (Restrained)."
+        tableLayout = layout { columns = 2 }
+        Carried = integer { value = carried (characterTable)  editable = none }
+        Overburdened = integer { value = Characteristics.Strength.Bonus + Characteristics.Toughness.Bonus  editable = none }
+        Restrained = integer { value = 2 * (Characteristics.Strength.Bonus + Characteristics.Toughness.Bonus)  editable = none }
+        Load = string { value = loadState (carried (characterTable), Characteristics.Strength.Bonus, Characteristics.Toughness.Bonus)  visible = none  indicator = "#e8913a" }
+        'Max Augmetics' = integer { description = "A body takes as many augmetics as the Toughness Bonus." value = Characteristics.Toughness.Bonus  editable = none }
+        'Augmetics fitted' = integer { value = count (characterTable.Augmetics)  editable = none }
+    }
+
+    Corruption = table
+    {
+        description = "Corruption from the warp and Chaos. Above the threshold the character succumbs and gains a mutation or malignancy."
+        tableLayout = layout { columns = 2 }
+        Corruption = integer { default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        Threshold = integer { description = "Toughness Bonus plus Willpower Bonus." value = Characteristics.Toughness.Bonus + Characteristics.Willpower.Bonus  editable = none }
+        Mutations = string { multiline = true  editable = live }
+        Malignancies = string { multiline = true  editable = live }
+    }
+
+    Warp = table
+    {
+        description = "Psykers gain Warp Charge when they manifest powers. Above the threshold every power is overt and the warp grows dangerous."
+        tableLayout = layout { columns = 2 }
+        'Warp Charge' = integer { default = 0  minvalue = 0  editable = live }
+        Threshold = integer { description = "The Willpower Bonus." value = Characteristics.Willpower.Bonus  editable = none }
+        Danger = string { value = warpState ('Warp Charge', Characteristics.Willpower.Bonus)  visible = none  indicator = "#8e5cc4" }
+        Sustaining = string { description = "Sustained powers, which keep their Warp Rating in the charge." editable = live }
+    }
+
+    Powers = list
+    {
+        source = secondary.Powers
+        singular = "Power"
+        editable = character
+    }
+
+    'Power uses' = list
+    {
+        description = "Psychic Mastery tests for each power, with the discipline's specialisation. Success adds the Warp Rating to the Warp Charge; failure adds SL, up to the rating."
+        tableLayout = layout { size = wide }
+        source = map ((power)->powerFor (characterTable, power), characterTable.Powers)
+        singular = "Power use"
+        editable = none
+        valueType = powerUse
+    }
+
+    Influence = keyvalues
+    {
+        description = "Influence with each faction, from -5 (Hunted) to +5 (Honoured)."
+        singular = "Faction"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            Influence = integer { default = 0  minvalue = -5  maxvalue = 5  editable = live }
+            Attitude = string { value = attitude (Influence)  editable = none }
+            Contacts = string {}
+        }
+    }
+
+    Experience = table
+    {
+        tableLayout = layout { columns = 3 }
+        Total = integer { description = "Experience earned in all." default = 0  minvalue = 0 }
+        Spent = integer { default = 0  minvalue = 0 }
+        Available = integer { value = Total - Spent  editable = none }
+        Solars = integer { description = "Money, in Imperial Solars." default = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Connections = string { multiline = true }
+        Background = string { multiline = true }
+    }
+}
+
+npcCriticals (role, toughness) = if role == "Troop" then 0 else if role == "Elite" then 1 else toughness
+
+npcState (wounds, maxWounds, criticals, maxCriticals) =
+    if criticals > maxCriticals then "Defeated"
+    else if wounds >= maxWounds then "Wounds full"
+    else ""
+
+npcTest = plainTest ("Normal")
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/images/monster.svg"
+    }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Role = string { description = "Troops fall to their first Critical Wound, Elites to their second, Leaders last as long as a character." keys = ["Troop", "Elite", "Leader"] default = "Troop" }
+        Species = string { default = "Human" }
+        Faction = string { keys = factions }
+        Size = string { keys = ["Tiny", "Small", "Medium", "Large", "Enormous", "Monstrous"] default = "Medium" }
+    }
+    Profile = table
+    {
+        description = "Characteristics. Tests roll d100 at or under them."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 35  valuedice = npcTest }
+        BS = integer { default = 35  valuedice = npcTest }
+        Str = integer { default = 35  valuedice = npcTest }
+        Tgh = integer { default = 35  valuedice = npcTest }
+        Ag = integer { default = 35  valuedice = npcTest }
+        Int = integer { default = 30  valuedice = npcTest }
+        Per = integer { default = 35  valuedice = npcTest }
+        Wil = integer { default = 35  valuedice = npcTest }
+        Fel = integer { default = 30  valuedice = npcTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Wounds' = integer { default = 10 }
+        Wounds = integer { description = "Wounds suffered." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Max Critical Wounds' = integer { value = npcCriticals (NPC.Role, Profile.Tgh / 10)  editable = none }
+        'Critical Wounds' = integer { default = 0  minvalue = 0  editable = live }
+        Down = string { value = npcState (Wounds, 'Max Wounds', 'Critical Wounds', 'Max Critical Wounds')  visible = none  indicator = "#d64545" }
+        Armour = integer { description = "Armour on every location." default = 2 }
+        Initiative = integer { description = "Agility Bonus plus Perception Bonus." value = Profile.Ag / 10 + Profile.Per / 10  valuedice = initiativeOrder  editable = none }
+        Speed = string { keys = ["Slow", "Normal", "Fast", "Swift"] default = "Normal" }
+        Resolve = integer { description = "When the group's Superiority reaches it, the foes grow desperate: they flee, surrender or make a last charge." default = 2 }
+        Roll = selector { options = ["Disadvantage", "Normal", "Advantage"]  labels = ["Dis", "Normal", "Adv"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Stunned = integer { default = 0  minvalue = 0  maxvalue = 2  editable = live  indicator = "#d4b106" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 40  valuedice = imAsk (creatureTable.Status.Roll, "attack", Damage, 0, 0, [])  action = melee  reach = 2 }
+            Damage = integer { default = 5 }
+            Traits = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 40  valuedice = imAsk (creatureTable.Status.Roll, "attack", Damage, 0, 0, [])  action = ranged  range = bandMetres (Range) }
+            Damage = integer { default = 7 }
+            Range = string { keys = ["Short", "Medium", "Long", "Extreme"] default = "Medium" }
+            Mag = integer { default = 0  minvalue = 0  editable = live }
+            Traits = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { description = "Skills and specialisations with their totals, such as Melee (One-handed) 45." multiline = true }
+        Traits = string { multiline = true }
+        Possessions = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+paymentFor (grade) =
+    switch grade
+        case "Poor" then 50
+        case "Good" then 200
+        case "Excellent" then 600
+        else 100
+
+patronTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/imperium/patron.svg"  important = [Patron, Influence] }
+    Patron = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Faction = string { keys = factions }
+        Duty = string { description = "The Patron's office within the faction, which shapes the work and the influence they bring." }
+        Motivation = string { description = "What the Patron wants, and why the group is useful to it." }
+        Demeanour = string { description = "How the Patron deals with servants." }
+        'Payment grade' = string { description = "What the Patron pays each character per assignment." keys = ["Poor", "Standard", "Good", "Excellent"] default = "Standard" }
+        Payment = integer { description = "Solars per assignment for the grade." value = paymentFor ('Payment grade')  editable = none }
+    }
+    Influence = keyvalues
+    {
+        description = "The Patron's influence with each faction, which the group can borrow."
+        singular = "Faction"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            Influence = integer { default = 0  minvalue = -5  maxvalue = 5  editable = live }
+            Attitude = string { value = attitude (Influence)  editable = none }
+            Notes = string {}
+        }
+    }
+    Boons = list
+    {
+        description = "Benefits the Patron brings the group."
+        singular = "Boon"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Liabilities = list
+    {
+        description = "Troubles that come with serving this Patron."
+        singular = "Liability"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Assignments = string { multiline = true  editable = live }
+    }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/imperium/vehicle.svg"  important = [Vehicle, Weapons] }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Category = string { keys = ["Wheeled", "Tracked", "Flyer", "Hovercraft", "Walker"] default = "Wheeled" }
+        Size = string { keys = ["Large", "Enormous", "Monstrous"] default = "Large" }
+        Speed = string { keys = ["Slow", "Normal", "Fast", "Swift"] default = "Fast" }
+        'Fly speed' = string { keys = ["None", "Slow", "Normal", "Fast", "Swift"] default = "None" }
+        'Front armour' = integer { default = 8 }
+        'Back armour' = integer { default = 6 }
+        Crew = integer { default = 1 }
+        Passengers = integer { default = 0 }
+        Cost = integer { description = "Price in Solars." default = 0 }
+        Pilot = integer { description = "The driver's Piloting total, for manoeuvres." default = 30  valuedice = npcTest }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { description = "The gunner's Ranged total." default = 35  valuedice = imAsk ("Normal", "attack", Damage, 0, 0, [])  action = ranged  range = bandMetres (Range) }
+            Damage = integer { default = 10 }
+            Range = string { keys = ["Short", "Medium", "Long", "Extreme"] default = "Long" }
+            Mag = integer { default = 0  minvalue = 0  editable = live }
+            Traits = string {}
+        }
+    }
+    State = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Damage = string { description = "Damage and breakdowns the vehicle has suffered." multiline = true  editable = live }
+        Traits = string { multiline = true }
+    }
+}
+
+imWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }, filter { name = "Specialisation" prefix = "" filter = Stats.Specialisation }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Specialisation }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { keys = ["Melee", "Ranged"] default = "Melee" }
+        Specialisation = string { description = "The Melee or Ranged specialisation that uses it." keys = ["One-handed", "Two-handed", "Brawling", "Pistol", "Long Gun", "Ordnance", "Thrown", "Engineering"] default = "One-handed" }
+        Category = string { keys = ["Mundane", "Chain", "Force", "Power", "Shock", "Bolt", "Flame", "Las", "Launcher", "Melta", "Plasma", "Solid", "Specialised", "Grenades and Explosives"] default = "Mundane" }
+        Damage = string { description = "Damage, such as 7, or 3 + Str B for weapons that add the Strength Bonus." default = "3 + Str B" }
+        Range = string { keys = ["Immediate", "Short", "Medium", "Long", "Extreme"] default = "Immediate" }
+        Mag = string {}
+        Traits = string { description = "Weapon traits such as Rapid Fire (3), Penetrating (2), Rend (2), Burst, Loud or Two-handed." }
+        Encumbrance = string { default = "1" }
+        Cost = string { description = "Price in Solars." }
+        Availability = string { keys = ["Common", "Scarce", "Rare", "Exotic"] default = "Common" }
+    }
+}
+
+imProtection = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "Armour" sort = Stats.Armour }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string { keys = ["Mundane", "Flak", "Mesh", "Carapace", "Power", "Shield"] default = "Flak" }
+        Armour = string { default = "2" }
+        Locations = string { description = "Where it protects: Head, Body, Arms, Legs, or All." default = "Body, Arms, Legs" }
+        Traits = string {}
+        Encumbrance = string { default = "1" }
+        Cost = string {}
+        Availability = string { keys = ["Common", "Scarce", "Rare", "Exotic"] default = "Common" }
+    }
+}
+
+imEquipment = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Encumbrance = string { default = "0" }
+        Cost = string {}
+        Availability = string { keys = ["Common", "Scarce", "Rare", "Exotic"] default = "Common" }
+        Traits = string {}
+    }
+}
+
+imAugmetic = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/imperium/augmetic.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Replaces = string { description = "The body part or organ it replaces or adds to." }
+        Cost = string {}
+        Availability = string { keys = ["Common", "Scarce", "Rare", "Exotic"] default = "Scarce" }
+        Traits = string {}
+    }
+}
+
+imTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Source" prefix = "" filter = Stats.Source }]
+        sortedBy = sort { prefix = "" sort = Stats.Source }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Requirement = string {}
+        Source = string { description = "The Origin, Faction or Role that grants it, or General." default = "General" }
+        Taken = integer { description = "Times taken, for talents that stack." default = 1  minvalue = 1 }
+    }
+}
+
+imPower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "WR" sort = Stats.'Warp Rating' }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Minor", "Biomancy", "Divination", "Pyromancy", "Telekinesis", "Telepathy"] default = "Minor" }
+        'Warp Rating' = string { description = "Warp Charge the power adds when it manifests." default = "1" }
+        Difficulty = string { keys = ["Very Easy", "Easy", "Routine", "Challenging", "Difficult", "Hard", "Very Hard"] default = "Challenging" }
+        Range = string { keys = ["Self", "Immediate", "Short", "Medium", "Long", "Special"] default = "Short" }
+        Target = string {}
+        Duration = string { keys = ["Instant", "Sustained", "Special", "Permanent"] default = "Instant" }
+        Damage = string {}
+        Overt = string { keys = ["No", "Yes"] default = "No" }
+    }
+}
+
+imperiumNameSetting = nameSetting
+{
+    name = "Imperium Maledictum"
+    characters = generator { library = "Grimdark imperium" variant = "Imperial" }
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    Patrons = generator { library = "Grimdark imperium" variant = "Imperial" }
+    Vehicles = generator { library = "Grimdark imperium" variant = "Voidship" }
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Order" }]
+}
+
+ImperiumMaledictum = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Acolytes of a Patron"
+            topic = "Getting started"
+            text = ["Each character has an Origin, a Faction and a Role (Interlocutor, Mystic, Penumbra, Savant, Warrior or Zealot), and serves a Patron. Make the Patron as its own sheet, with its influence, boons and liabilities.", "Roll the nine characteristics, add the Origin's bonus, and buy skill and specialisation advances. Name specialisations as Skill (Specialisation), such as Melee (One-handed)."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the skill after the difficulty (Challenging +0, Difficult -10, Hard -20, Routine +20, Easy +40). SL is the target's tens digit minus the roll's. 01 to 05 always succeeds and 96 to 00 always fails.", "Each test asks an SL bonus (from Superiority or Fate) and the difficulty. Set Adv or Dis on the sheet: Advantage swaps the dice's digits when that rolls lower, Disadvantage when that rolls higher. A failed test offers a Fate reroll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks are opposed: the defender tests Melee or Reflexes (Dodge), and the higher SL wins. The ones digit gives the hit location, and damage is the weapon's damage plus the SL by which the attacker won, less armour.", "Doubles on a successful attack are a critical hit; doubles on a failure, or 00, are a fumble. Wounds past the maximum also give a Critical Wound."]
+        },
+        hint
+        {
+            title = "Superiority"
+            topic = "Combat"
+            text = ["The group's Superiority grows from preparation and kills and falls with Critical Wounds and losses. Add it as an SL bonus to one test a turn. When it reaches the foes' Resolve, they grow desperate."]
+        },
+        hint
+        {
+            title = "The warp"
+            topic = "Play"
+            text = ["A power test adds its Warp Rating to the Warp Charge on success, or the SL up to the rating on failure, doubled on a fumble. Above the Willpower Bonus every power is overt and perils threaten."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["No dice: Initiative is the Agility Bonus plus the Perception Bonus, highest first. Roll the field to join the list."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Patrons = patronTable
+    Vehicles = vehicleTable
+    Weapons = imWeapon
+    Protection = imProtection
+    Equipment = imEquipment
+    Augmetics = imAugmetic
+    Talents = imTalent
+    Powers = imPower
+    secondaryTypes = ["Weapons", "Protection", "Equipment", "Augmetics", "Talents", "Powers"]
+    extraEntityTypes = [entityTypeDescription ("Patrons", "patron", false, "/systems/imperium/patron.svg", []), entityTypeDescription ("Vehicles", "vehicle", true, "/systems/imperium/vehicle.svg", [])]
+    description = "Warhammer 40,000 Roleplay: Imperium Maledictum: agents of an Imperial Patron in the Macharian Sector, with d100 tests and Success Levels, Superiority, influence and the warp"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d100, 1d10]
+    cssFiles = ["/systems/imperium/imperium.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [imperiumNameSetting, grimdarkNameSetting]
+}
