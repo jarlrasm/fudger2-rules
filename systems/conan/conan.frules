@@ -29,7 +29,7 @@ fortuneUsed (fortune) = min (3, max (0, fortune))
 conanRoll (extra, target, focus, spread, fortune) = ([dice { number = 2 + max (0, min (extra, 3 - fortuneUsed (fortune)))  sides = 20 }],
     ((baseline, throws)->testResult (first (throws).rolls, target, focus, spread, fortuneUsed (fortune), asked, answered)))
 
-conanTest (target, focus, spread, fortune) = ask ("Extra d20s (Momentum, Doom)", 0, (n)->ask ("Difficulty", 1, conanRoll (n, target, focus, spread, fortune)))
+conanTest (target, focus, spread, fortune) = ask ("Extra d20s (Momentum, Doom)", 0, (n)->ask ("Difficulty", conanRoll (n, target, focus, spread, fortune)))
 
 hitLocation (x) =
     if x <= 2 then "Head"
