@@ -20,24 +20,47 @@ bwText (successes, ob, answered) =
     plural (successes, "success", "successes")
     + (if answered then " vs Ob " + toString (ob) + ": " + bwOutcome (successes, ob, answered) + (if successes >= ob then ", margin " + toString (successes - ob) else ", short by " + toString (ob - successes)) else "")
 
-bwResult (rolls, shade, ob, answered) =
+traitorsIn (rolls, shade) = count (filter ((x)->x < shadeTarget (shade), rolls))
+
+keptIn (rolls, shade) = filter ((x)->x >= shadeTarget (shade), rolls)
+
+allButOne (traitors) = fold ({ Skip = true  List = [] }, (acc, x)->if acc.Skip then { Skip = false  List = acc.List } else { Skip = false  List = concat (acc.List, [x]) }, traitors).List
+
+canReroll (rolls, shade, ob, answered) = traitorsIn (rolls, shade) > 0 and (not (answered) or successesIn (rolls, shade) < ob)
+
+useFate (rolls, shade, ob, answered, openEnded, fate) = openEnded and fate > 0 and canReroll (rolls, shade, ob, answered)
+
+useDeeds (rolls, shade, ob, answered, deeds) = deeds > 0 and canReroll (rolls, shade, ob, answered)
+
+bwResult (rolls, shade, ob, answered, openEnded, fate, deeds) =
 {
     Text = bwText (successesIn (rolls, shade), ob, answered)
     Value = successesIn (rolls, shade)
     Outcome = bwOutcome (successesIn (rolls, shade), ob, answered)
+    Push = if useFate (rolls, shade, ob, answered, openEnded, fate) then bwFateReroll (rolls, shade, ob, answered, deeds)
+        else if useDeeds (rolls, shade, ob, answered, deeds) then bwDeedsReroll (rolls, shade, ob, answered, openEnded)
+        else 0
+    PushLabel = if useFate (rolls, shade, ob, answered, openEnded, fate) then "Luck: reroll a traitor (1 Fate)" else "Saving Grace: reroll traitors (1 Deeds)"
+    PushSets = if useFate (rolls, shade, ob, answered, openEnded, fate) then [{ Field = "characterTable.Artha.Fate"  Value = fate - 1 }] else [{ Field = "characterTable.Artha.Deeds"  Value = deeds - 1 }]
 }
 
-bwRoll (pool, shade, ob, openEnded) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
-    ((baseline, throws)->bwResult (first (throws).rolls, shade, ob, ob > 0)))
+bwFateReroll (rolls, shade, ob, answered, deeds) = ([dice { number = 1  sides = 6  explode = 6  label = "Luck" }],
+    ((baseline, throws)->bwResult (concat (concat (keptIn (rolls, shade), first (throws).rolls), allButOne (filter ((x)->x < shadeTarget (shade), rolls))), shade, ob, answered, true, 0, deeds)))
 
-bwAsked (pool, shade, superficial, openEnded, obFactor) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
-    ((baseline, throws)->bwResult (first (throws).rolls, shade, asked * obFactor + superficial, answered)))
+bwDeedsReroll (rolls, shade, ob, answered, openEnded) = ([dice { number = traitorsIn (rolls, shade)  sides = 6  explode = if openEnded then 6 else 7  label = "Saving Grace" }],
+    ((baseline, throws)->bwResult (concat (keptIn (rolls, shade), first (throws).rolls), shade, ob, answered, openEnded, 0, 0)))
+
+bwRoll (pool, shade, ob, openEnded) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
+    ((baseline, throws)->bwResult (first (throws).rolls, shade, ob, ob > 0, openEnded, 0, 0)))
+
+bwAsked (pool, shade, superficial, openEnded, obFactor, fate, deeds) = ([dice { number = max (0, pool)  sides = 6  explode = if openEnded then 6 else 7  label = if openEnded then "Open-ended" else "" }],
+    ((baseline, throws)->bwResult (first (throws).rolls, shade, asked * obFactor + superficial, answered, openEnded, fate, deeds)))
 
 reflexesRoll = ([dice { number = 0  sides = 6 }], ((baseline, throws)->baseline))
 
 woundDice (char) = char.Wounds.Light + 2 * char.Wounds.Midi + 3 * char.Wounds.Severe + 4 * char.Wounds.Traumatic
 
-bwObDice (char, pool, shade, obFactor) = ask ("Advantage dice or penalty", 0, (n)->ask ("Obstacle", bwAsked (pool + n - woundDice (char), shade, char.Wounds.Superficial, char.Artha.'Spend Fate' == "Open-ended", obFactor)))
+bwObDice (char, pool, shade, obFactor) = ask ("Advantage dice or penalty", 0, (n)->ask ("Obstacle", bwAsked (pool + n - woundDice (char), shade, char.Wounds.Superficial, char.Artha.'Spend Fate' == "Open-ended", obFactor, char.Artha.Fate, char.Artha.Deeds)))
 
 bwDice (char, pool, shade) = bwObDice (char, pool, shade, 1)
 
@@ -143,10 +166,10 @@ characterTable = ruleset
     Artha = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        Fate = integer { description = "Spend one to make a roll open-ended: 6s roll again." default = 0  minvalue = 0  editable = live }
+        Fate = integer { description = "Spend one to make a roll open-ended: 6s roll again. On a roll that is already open-ended, the roll's Luck button rerolls one failed die." default = 0  minvalue = 0  editable = live }
         'Spend Fate' = selector { description = "Hold Shift while rolling, or switch it on, to make the roll open-ended; then lower Fate." options = ["No", "Open-ended"]  labels = ["No", "Open-ended"]  colors = ["", "yellow"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
         Persona = integer { description = "Spend for +1D a point, up to three." default = 0  minvalue = 0  editable = live }
-        Deeds = integer { description = "Spend to double the base dice, or reroll every failed die." default = 0  minvalue = 0  editable = live }
+        Deeds = integer { description = "Spend to double the base dice, or after a roll to reroll every failed die (the roll's Saving Grace button)." default = 0  minvalue = 0  editable = live }
     }
 
     Wounds = table
@@ -247,7 +270,7 @@ creatureTable = ruleset
         keys = ["Sword", "Bow", "Brawling"]
         valueType = custom
         {
-            Exponent = integer { default = 4  valuedice = ask ("Obstacle", bwAsked (Exponent, Shade, 0, false, 1))  action = if Key == "Bow" or Key == "Crossbow" or Key == "Throwing" then "ranged" else if Key == "Sword" or Key == "Spear" or Key == "Axe" or Key == "Brawling" or Key == "Knives" or Key == "Hammer" then "melee" else ""  reach = 2 }
+            Exponent = integer { default = 4  valuedice = ask ("Obstacle", bwAsked (Exponent, Shade, 0, false, 1, 0, 0))  action = if Key == "Bow" or Key == "Crossbow" or Key == "Throwing" then "ranged" else if Key == "Sword" or Key == "Spear" or Key == "Axe" or Key == "Brawling" or Key == "Knives" or Key == "Hammer" then "melee" else ""  reach = 2 }
             Shade = string { default = "B"  keys = shadeKeys }
             'I M S' = string {}
         }
