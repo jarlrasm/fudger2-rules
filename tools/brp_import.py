@@ -102,7 +102,7 @@ def entity(kind, name, description, ruleset, values):
 
 COLUMNS = {"Skill": "Skill", "Base": "Base", "Dmg": "Damage", "Attk": "Attacks", "Special": "Special", "Range": "Range",
            "Rng": "Range", "Hands": "Hands", "HP": "Weapon HP", "Parry": "Parry", "STR/DEX": "STR and DEX",
-           "Mal": "Malfunction", "Value": "Value", "SIZ/Enc": "SIZ or ENC", "RF": "Rate of Fire", "ENC": "SIZ or ENC"}
+           "Mal": "Malfunction", "Ammo": "Ammo", "Value": "Value", "SIZ/Enc": "SIZ or ENC", "RF": "Rate of Fire", "ENC": "SIZ or ENC"}
 
 
 def weapons(lines):
@@ -192,6 +192,41 @@ def creatures(lines):
     return found
 
 
+ORDER = ["Category", "Skill", "Base", "Damage", "Attacks", "Special", "Range", "Hands", "Weapon HP", "Parry", "STR and DEX",
+         "Malfunction", "Ammo", "Value", "SIZ or ENC", "Rate of Fire"]
+
+BY_HAND = {
+    "Gun, Mini-Machine Gun": {"Skill": "Machine Gun", "Base": "15", "Damage": "2D6+4", "Attacks": "3", "Special": "Impaling",
+                              "Range": "400", "Hands": "2H", "Weapon HP": "14", "Parry": "No", "STR and DEX": "16/12",
+                              "Malfunction": "98–00", "Ammo": "4,000", "Value": "Expensive", "SIZ or ENC": "6.0"},
+    "Whip, ShockvOther": {"Skill": "Other", "Base": "05%", "Damage": "1D3+1+½dm+stun", "Attacks": "1", "Special": "Entangle",
+                          "Range": "Long", "Hands": "1H", "Weapon HP": "10", "Parry": "No", "STR and DEX": "7/9",
+                          "Malfunction": "97–00", "Value": "Average", "SIZ or ENC": "1.0"},
+}
+
+
+def fix_weapon(item):
+    """The firearm tables' cells come out one column early (ammo under Value, cost under ENC, ENC under RF); a few rows are scrambled."""
+    stats = item["rulesets"][0]["implementation"]["brpWeapon"]["Stats"]
+    if item["name"] in BY_HAND:
+        stats = dict(BY_HAND[item["name"]], Category=stats["Category"])
+        item["name"] = item["name"].replace("ShockvOther", "Shock")
+    elif item["name"] == "Whip" and "Malfunction" in stats:
+        stats["Value"], stats["SIZ or ENC"] = stats.pop("Malfunction"), stats.pop("Value")
+    elif stats["Category"] in ("Modern Missile Weapons", "Advanced Missile Weapons") and "Rate of Fire" in stats and "Ammo" not in stats:
+        stats["Ammo"], stats["Value"], stats["SIZ or ENC"] = stats["Value"], stats["SIZ or ENC"], stats.pop("Rate of Fire")
+    if item["name"] == "Pistol, Flechette" and stats.get("Damage") == "2D46":
+        stats["Damage"] = "2D4"
+    if item["name"] == "Rifle, Sniper" and stats.get("Base") == "204":
+        stats["Base"] = "20"
+    if item["name"] == "Molotov Cocktail" and stats.get("Damage") == "1+Fire7":
+        stats["Damage"] = "1+Fire"
+    if "Damage" in stats:
+        stats["Damage"] = stats["Damage"].replace("½db", "½dm")
+    item["rulesets"][0]["implementation"]["brpWeapon"]["Stats"] = {k: stats[k] for k in ORDER if k in stats}
+    return item
+
+
 lines = rtf_text(SOURCE.read_text(encoding="latin-1")).splitlines()
 chapter = next(i for i, l in enumerate(lines) if l.strip() == "11. Creatures")
 library = {
@@ -199,7 +234,7 @@ library = {
     "description": "Weapons and creatures from Basic Roleplaying: Universal Game Engine (Chaosium Inc.), from the Basic Roleplaying ORC Content Document, licensed under the ORC License. See LICENSE-brp.md.",
     "url": "/systems/brp/brp.json",
     "gamemaster": "",
-    "entities": weapons(lines[:chapter]) + creatures(lines[chapter:]),
+    "entities": [fix_weapon(w) for w in weapons(lines[:chapter])] + creatures(lines[chapter:]),
 }
 Path(OUT).write_text(json.dumps(library, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 counts = {}
