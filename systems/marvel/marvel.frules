@@ -10,7 +10,25 @@ keptPair (rolls, mode) =
 
 isFantastic (marvel) = marvel == 1
 
-isUltimate (rolls, marvel, mode) = marvel == 1 and keptPair (rolls, mode) == 12
+rerollsMarvel (rolls, marvel, mode) =
+    if count (rolls) < 3 then false
+    else if mode == "Edge" then marvelValue (marvel) <= min (item (0, rolls), item (1, rolls))
+    else marvelValue (marvel) >= max (item (0, rolls), item (1, rolls))
+
+edgeMarvel (marvel, reroll) = if marvelValue (reroll) > marvelValue (marvel) or (marvelValue (reroll) == marvelValue (marvel) and reroll == 1) then reroll else marvel
+
+troubleMarvel (marvel, reroll) = if marvelValue (reroll) < marvelValue (marvel) or (marvelValue (reroll) == marvelValue (marvel) and reroll != 1) then reroll else marvel
+
+keptMarvel (rolls, marvel, mode) =
+    if not (rerollsMarvel (rolls, marvel, mode)) then marvel
+    else if mode == "Edge" then edgeMarvel (marvel, item (2, rolls))
+    else troubleMarvel (marvel, item (2, rolls))
+
+keptNormal (rolls, marvel, mode) = if rerollsMarvel (rolls, marvel, mode) then item (0, rolls) + item (1, rolls) else keptPair (rolls, mode)
+
+isUltimate (rolls, marvel, mode) = keptMarvel (rolls, marvel, mode) == 1 and keptNormal (rolls, marvel, mode) == 12
+
+marvelRerollText (rolls, marvel, mode) = if rerollsMarvel (rolls, marvel, mode) then ", Marvel die rerolled" else ""
 
 d616Text (total, marvel, tn, damage, ultimate) =
     toString (total)
@@ -24,12 +42,15 @@ d616Outcome (total, marvel, tn, ultimate) =
     else if total >= tn then "Success"
     else "Failure"
 
-d616Result (bonus, rolls, marvel, tn, rank, damageBonus, mode) =
+d616Kept (bonus, normal, marvel, tn, rank, damageBonus, ultimate, note) =
 {
-    Text = d616Text (bonus + keptPair (rolls, mode) + marvelValue (marvel), marvel, tn, if rank > 0 then marvelValue (marvel) * rank + damageBonus else 0, isUltimate (rolls, marvel, mode))
-    Value = bonus + keptPair (rolls, mode) + marvelValue (marvel)
-    Outcome = d616Outcome (bonus + keptPair (rolls, mode) + marvelValue (marvel), marvel, tn, isUltimate (rolls, marvel, mode))
+    Text = d616Text (bonus + normal + marvelValue (marvel), marvel, tn, if rank > 0 then marvelValue (marvel) * rank + damageBonus else 0, ultimate) + note
+    Value = bonus + normal + marvelValue (marvel)
+    Outcome = d616Outcome (bonus + normal + marvelValue (marvel), marvel, tn, ultimate)
 }
+
+d616Result (bonus, rolls, marvel, tn, rank, damageBonus, mode) =
+    d616Kept (bonus, keptNormal (rolls, marvel, mode), keptMarvel (rolls, marvel, mode), tn, rank, damageBonus, isUltimate (rolls, marvel, mode), marvelRerollText (rolls, marvel, mode))
 
 d616 (tn, rank, damageBonus, mode) = ([dice { number = if mode == "Normal" then 2 else 3  sides = 6  color = if mode == "Edge" then "green" else if mode == "Trouble" then "red" else ""  label = if mode == "Normal" then "" else mode }, dice { number = 1  sides = 6  color = "red"  label = "Marvel"  faces = ["M", "2", "3", "4", "5", "6"] }],
     ((baseline, throws)->d616Result (baseline, first (throws).rolls, first (item (1, throws).rolls), if tn < 0 then asked else tn, rank, damageBonus, mode)))
@@ -44,7 +65,7 @@ ability (attack, kind) = custom
 {
     Score = integer { description = "Ability score, added to d616 rolls." default = 0  minvalue = -3  maxvalue = 20 }
     Defense = integer { description = "What attackers must roll to hit you with this ability: score plus 10." value = Score + 10  editable = none }
-    Check = modifier { description = "Roll d616 plus the score. A 6 on the Marvel die is a fantastic success." value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  action = kind  editable = none }
+    Check = modifier { description = "Roll d616 plus the score. A 6 on the Marvel die is a fantastic success." value = Score  valuedice = if attack then d616Attack (characterTable, Score) else d616Check (characterTable)  action = kind  reach = 1  range = if kind == "ranged" then 20 else 0  editable = none }
 }
 
 downState (health, focus) =
@@ -64,7 +85,7 @@ characterTable = ruleset
         Occupation = string {}
         Size = string { description = "Size changes reach, speed and how easy you are to hit." default = "Average"  keys = ["Microscopic", "Miniature", "Tiny", "Little", "Small", "Average", "Big", "Huge", "Giant", "Titanic", "Gigantic"] }
         Teams = string {}
-        Roll = selector { description = "Edge rerolls one die and keeps the better; trouble rerolls and keeps the worse." options = ["Trouble", "Normal", "Edge"]  labels = ["Trouble", "Normal", "Edge"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
+        Roll = selector { description = "Edge rerolls the lowest die and keeps the better; trouble rerolls the highest and keeps the worse. The Marvel die counts." options = ["Trouble", "Normal", "Edge"]  labels = ["Trouble", "Normal", "Edge"]  colors = ["red", "white", "green"]  hold = ["Ctrl", "", "Shift"]  default = "Normal"  editable = live  save = nosave }
     }
 
     Abilities = table
@@ -192,7 +213,7 @@ MarvelMultiverse = system
         {
             title = "The d616"
             topic = "Play"
-            text = ["Roll three d6, one of them the red Marvel die, and add the ability. A Marvel die showing M counts as 6 and makes a success Fantastic. Set Edge or Trouble on the sheet: Edge keeps the best two of three normal dice, Trouble the worst."]
+            text = ["Roll three d6, one of them the red Marvel die, and add the ability. A Marvel die showing M counts as 6 and makes a success Fantastic. Set Edge or Trouble on the sheet: Edge rerolls the lowest die and keeps the better, Trouble rerolls the highest and keeps the worse, the Marvel die included."]
         },
         hint
         {
@@ -208,6 +229,7 @@ MarvelMultiverse = system
         }
     ]
     distanceUnit = "m"
+    squareSize = 1
     characters = characterTable
     creatures = characterTable
     Powers = powerStats

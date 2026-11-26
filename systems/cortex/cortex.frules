@@ -225,6 +225,22 @@ gmcTable = ruleset
     }
 }
 
+sfxStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Trigger" prefix = "" filter = Stats.Trigger }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Trigger = string { description = "What the SFX costs or gives: spend a plot point, gain one for a hitch, or free." default = "Spend a plot point"  keys = ["Spend a plot point", "Gain a plot point", "Free"] }
+        Limit = string { description = "A limit that holds the SFX back, if it has one." }
+        Effect = string { multiline = true }
+    }
+}
+
 CortexPrime = system
 {
     hints = [
@@ -256,6 +272,7 @@ CortexPrime = system
     distanceUnit = "m"
     characters = characterTable
     creatures = gmcTable
+    SFX = sfxStats
     secondaryTypes = ["SFX"]
     entityTypeNames = [entityTypeName ("Creature", "GM character", "GM characters")]
     description = "Cortex Prime: dice pools of stepped dice, total plus an effect die, stress and complications"

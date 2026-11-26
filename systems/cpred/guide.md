@@ -13,7 +13,7 @@ Roll **Initiative** (REF + 1d10) to join the tracker; highest goes first. Each t
 
 1. Ranged attacks: Weapon skill + REF + 1d10 against a DV from the weapon's range band, or against the target's Evasion if their REF is 8 or more. Melee attacks are opposed by the target's Evasion.
 2. Damage dice from the weapon; subtract the SP of the armor where it hit (Head or Body), and the armor's SP drops by 1 each time it is penetrated. Headshots double the damage that gets through.
-3. Below half HP a character is **Seriously Wounded** (−2 to actions). At 0 HP they are **Mortally Wounded** and make a **Death Save** (roll under BODY) every turn; each later save gets harder.
+3. Below half HP a character is **Seriously Wounded** (−2 to actions). At 0 HP they are **Mortally Wounded** (−4 to actions) and make a **Death Save** (roll under BODY) every turn; each earlier save adds 1 to the roll. The sheet takes the wound penalty off skills and attacks, and adds **Death Saves made** to the Death Save.
 4. Rolling two or more 6s on damage dice is a Critical Injury.
 
 ## Netrunning and cyberware

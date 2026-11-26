@@ -11,19 +11,23 @@ meSave (me) = if me >= 16 then (me - 14) / 2 else 0
 
 iqSkill (iq) = if iq >= 16 then iq - 14 else 0
 
-strikeOutcome (roll) =
-    if roll == 20 then "Critical"
+strikeOutcome (roll, critAt) =
+    if roll >= critAt then "Critical"
     else if roll == 1 then "Miss"
     else ""
 
-strikeResult (roll, plus, kind) =
+strikeResult (roll, plus, kind, critAt) =
 {
-    Text = kind + " " + toString (roll + plus) + (if roll == 20 then ": natural 20, critical (double damage)" else if roll == 1 then ": natural 1, automatic miss" else if roll + plus <= 4 then ": misses" else "")
+    Text = kind + " " + toString (roll + plus) + (if roll >= critAt then ": natural " + toString (roll) + ", critical (double damage)" else if roll == 1 then ": natural 1, automatic miss" else if roll + plus <= 4 then ": misses" else "")
     Value = roll + plus
-    Outcome = if roll + plus <= 4 and roll != 20 then "Miss" else strikeOutcome (roll)
+    Outcome = if roll + plus <= 4 and roll < critAt then "Miss" else strikeOutcome (roll, critAt)
 }
 
-strikeRoll (plus) = ([1d20], ((baseline, throws)->strikeResult (first (first (throws).rolls), plus, "Strike")))
+strikeFrom (plus, critAt) = ([1d20], ((baseline, throws)->strikeResult (first (first (throws).rolls), plus, "Strike", critAt)))
+
+strikeRoll (plus) = strikeFrom (plus, 20)
+
+critFrom (text) = if firstNumber (text) >= 2 and firstNumber (text) <= 20 then firstNumber (text) else 20
 
 defenseRoll (plus, kind) = ([1d20], ((baseline, throws)->{ Text = kind + " " + toString (first (first (throws).rolls) + plus) + (if first (first (throws).rolls) == 20 then ": natural 20" else "") + ", beats a strike it equals or exceeds"  Value = first (first (throws).rolls) + plus  Outcome = if first (first (throws).rolls) == 20 then "Critical" else "" }))
 
@@ -59,10 +63,10 @@ noStats = { Stats = { Damage = "" } }
 
 weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "riftsWeapon", noStats), "Stats", noStats.Stats), field, "")
 
-attack (name, plus, damageText, extra, kind, distance) = custom
+attack (name, plus, damageText, extra, kind, distance, critAt) = custom
 {
     Name = name
-    Strike = modifier { value = plus  valuedice = strikeRoll (plus)  action = kind  reach = 5  range = distance  editable = none }
+    Strike = modifier { value = plus  valuedice = strikeFrom (plus, critAt)  action = kind  reach = 5  range = distance  editable = none }
     Damage = string { value = damageText + (if extra > 0 then " +" + toString (extra) else "")  editable = none }
     Roll = integer { value = 0  render = "Damage"  valuedice = damageRoll (damageText, extra)  editable = none }
 }
@@ -71,9 +75,9 @@ isRanged (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0
 
 attackFor (char, weapon) =
     if isRanged (weapon) then
-        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), 0, "ranged", firstNumber (weaponStat (weapon, "Range")))
+        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), 0, "ranged", firstNumber (weaponStat (weapon, "Range")), critFrom (char.Combat.'Critical range'))
     else
-        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), if isMega (weaponStat (weapon, "Damage")) then 0 else psDamage (char.Attributes.PS), "melee", 5)
+        attack (weapon.Name, char.Combat.Strike + toInt (weaponStat (weapon, "Strike bonus")), weaponStat (weapon, "Damage"), if isMega (weaponStat (weapon, "Damage")) then 0 else psDamage (char.Attributes.PS), "melee", 5, critFrom (char.Combat.'Critical range'))
 
 downState (char) =
     if char.Health.'Hit points' <= 0 then "Coma"
@@ -100,14 +104,14 @@ characterTable = ruleset
     {
         description = "The eight attributes, usually 3d6. 16 or more gives bonuses."
         tableLayout = layout { columns = 4  size = wide }
-        IQ = integer { description = "Intelligence quotient. 16+ adds to skill percentages." default = 10 }
+        IQ = integer { description = "Intelligence quotient. 16+ adds to skill percentages, 2% at 16 and 1% more for each point above." default = 10 }
         ME = integer { description = "Mental endurance. 16+ adds to saves against psionics and insanity." default = 10 }
         MA = integer { description = "Mental affinity: charm and trust." default = 10 }
         PS = integer { description = "Physical strength. 16+ adds to hand-to-hand damage." default = 10 }
         PP = integer { description = "Physical prowess. 16+ adds to strike, parry and dodge." default = 10 }
         PE = integer { description = "Physical endurance. 16+ adds to saves against magic, poison and coma." default = 10 }
         PB = integer { description = "Physical beauty." default = 10 }
-        Spd = integer { description = "Speed: yards a melee round is Spd x 20 feet." default = 10 }
+        Spd = integer { description = "Speed: Spd x 15 feet in a melee round, Spd x 20 yards a minute." default = 10 }
     }
 
     Health = table
@@ -144,13 +148,13 @@ characterTable = ruleset
         'Hand to hand' = string { keys = ["Basic", "Expert", "Martial Arts", "Assassin", "Commando"] }
         'Attacks per melee' = integer { description = "Actions in a 15-second melee round." default = 4 }
         Initiative = modifier { description = "Initiative bonus; roll 1d20 plus it." default = 0  valuedice = initiativeRoll }
-        Strike = modifier { description = "Strike bonus, PP included. A strike above 4 hits unless parried or dodged." default = ppBonus (Attributes.PP)  valuedice = strikeRoll (Strike) }
+        Strike = modifier { description = "Strike bonus, PP included. A strike above 4 hits unless parried or dodged." default = ppBonus (Attributes.PP)  valuedice = strikeFrom (Strike, critFrom ('Critical range')) }
         Parry = modifier { description = "Parry bonus. Equal to or above the strike parries." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Parry, "Parry") }
         Dodge = modifier { description = "Dodge bonus. Dodging uses up an attack." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Dodge, "Dodge") }
         'Roll with impact' = modifier { default = 0  valuedice = defenseRoll ('Roll with impact', "Roll with impact") }
         'Pull punch' = modifier { default = 0  valuedice = defenseRoll ('Pull punch', "Pull punch") }
         'Damage bonus' = modifier { description = "Hand-to-hand damage bonus from PS." value = psDamage (Attributes.PS)  editable = none }
-        'Critical range' = string { description = "Natural rolls that count as critical strikes." default = "20" }
+        'Critical range' = string { description = "Natural rolls that count as critical strikes, such as 20, 19-20 or 18-20. A strike from the lowest number up is a critical." default = "20" }
     }
 
     Saves = table
@@ -167,14 +171,14 @@ characterTable = ruleset
 
     Skills = keyvalues
     {
-        description = "O.C.C., related and secondary skills, rolled on 1d100 at or under the percentage."
+        description = "O.C.C., related and secondary skills, rolled on 1d100 at or under the percentage. The roll adds the IQ bonus, up to 98%."
         tableLayout = layout { columns = 3  size = wide }
         singular = "Skill"
         editablekeys = character
         keys = ["Climbing", "Computer Operation", "Land Navigation", "Literacy", "Math Basic", "Pilot Hover Craft", "Prowl", "Radio Basic", "Running", "Swimming", "Wilderness Survival"]
         valueType = custom
         {
-            Percent = integer { default = 30  minvalue = 0  maxvalue = 98  valuedice = percentRoll (Percent) }
+            Percent = integer { description = "The skill's percentage without the IQ bonus." default = 30  minvalue = 0  maxvalue = 98  valuedice = percentRoll (min (98, Percent + iqSkill (characterTable.Attributes.IQ))) }
         }
     }
 
@@ -196,7 +200,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([attack ("Punch", Combat.Strike, "1D4", psDamage (Attributes.PS), "melee", 5)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([attack ("Punch", Combat.Strike, "1D4", psDamage (Attributes.PS), "melee", 5, critFrom (Combat.'Critical range'))], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = attack
@@ -347,13 +351,13 @@ Rifts = system
         {
             title = "Skills"
             topic = "Play"
-            text = ["Skills are percentages: roll 1d100 at or under the value."]
+            text = ["Skills are percentages: roll 1d100 at or under the value. The sheet adds the IQ bonus to the roll."]
         },
         hint
         {
             title = "Combat"
             topic = "Combat"
-            text = ["Roll 1d20 for initiative. Each attack per melee is a strike: 1d20 plus bonuses, 5 or more hits; a natural 20 is a critical for double damage. The defender may parry or dodge on 1d20 and wins ties. Mega-damage (M.D.) weapons destroy S.D.C. things outright: 1 M.D. equals 100 S.D.C."]
+            text = ["Roll 1d20 for initiative. Each attack per melee is a strike: 1d20 plus bonuses, 5 or more hits; a natural 20, or a roll in the Critical range, is a critical for double damage. The defender may parry or dodge on 1d20 and wins ties. Mega-damage (M.D.) weapons destroy S.D.C. things outright: 1 M.D. equals 100 S.D.C."]
         },
         hint
         {
