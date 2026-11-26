@@ -5,24 +5,40 @@ sixes (rolls) = count (filter ((x)->x == 6, rolls))
 
 skulls (rolls) = count (filter ((x)->x == 1, rolls))
 
-flText (base, skill, gear, pushed) =
-    toString (sixes (base) + sixes (skill) + sixes (gear)) + (if sixes (base) + sixes (skill) + sixes (gear) == 1 then " success" else " successes")
-    + (if pushed and skulls (base) > 0 then ", " + toString (skulls (base)) + (if skulls (base) == 1 then " skull" else " skulls") + " on base dice: take that much damage to the attribute and gain that much Willpower" else "")
-    + (if pushed and skulls (gear) > 0 then ", " + toString (skulls (gear)) + (if skulls (gear) == 1 then " skull" else " skulls") + " on gear dice: the gear bonus drops by that much" else "")
+artifactHits (x) = if x > 11 then 4 else if x > 9 then 3 else if x > 7 then 2 else if x > 5 then 1 else 0
 
-flResult (base, skill, gear, pushed) =
+artifactSuccesses (rolls) = sum (map ((x)->artifactHits (x), rolls))
+
+artifactSize (text) = switch toLower (text)
+    case "d8" then 8
+    case "d10" then 10
+    case "d12" then 12
+    else 0
+
+flTotal (base, skill, gear, artifact) = sixes (base) + sixes (skill) + sixes (gear) + artifactSuccesses (artifact)
+
+flText (base, skill, gear, artifact, pushed) =
+    toString (flTotal (base, skill, gear, artifact)) + (if flTotal (base, skill, gear, artifact) == 1 then " success" else " successes")
+    + (if pushed and skulls (base) > 0 then ", " + toString (skulls (base)) + (if skulls (base) == 1 then " skull" else " skulls") + " on base dice: take that much damage to the attribute and gain that much Willpower" else "")
+    + (if pushed and skulls (gear) + skulls (artifact) > 0 then ", " + toString (skulls (gear) + skulls (artifact)) + (if skulls (gear) + skulls (artifact) == 1 then " skull" else " skulls") + " on gear dice: the gear bonus drops by that much" else "")
+
+flResult (base, skill, gear, artifact, artifactDie, pushed) =
 {
-    Text = flText (base, skill, gear, pushed)
-    Value = sixes (base) + sixes (skill) + sixes (gear)
-    Outcome = if sixes (base) + sixes (skill) + sixes (gear) > 0 then "Success" else "Failure"
-    Push = if pushed or count (filter ((x)->x > 1 and x < 6, concat (base, gear))) + count (filter ((x)->x < 6, skill)) == 0 then 0 else flPush (filter ((x)->x == 6 or x == 1, base), filter ((x)->x == 6, skill), filter ((x)->x == 6 or x == 1, gear), count (filter ((x)->x > 1 and x < 6, base)), count (filter ((x)->x < 6, skill)), count (filter ((x)->x > 1 and x < 6, gear)))
+    Text = flText (base, skill, gear, artifact, pushed)
+    Value = flTotal (base, skill, gear, artifact)
+    Outcome = if flTotal (base, skill, gear, artifact) > 0 then "Success" else "Failure"
+    Push = if pushed or count (filter ((x)->x > 1 and x < 6, concat (base, concat (gear, artifact)))) + count (filter ((x)->x < 6, skill)) == 0 then 0 else flPush (filter ((x)->x == 6 or x == 1, base), filter ((x)->x == 6, skill), filter ((x)->x == 6 or x == 1, gear), filter ((x)->x > 5 or x == 1, artifact), count (filter ((x)->x > 1 and x < 6, base)), count (filter ((x)->x < 6, skill)), count (filter ((x)->x > 1 and x < 6, gear)), count (filter ((x)->x > 1 and x < 6, artifact)), artifactDie)
 }
 
-flPush (keptBase, keptSkill, keptGear, base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
-    ((baseline, throws)->flResult (concat (keptBase, first (throws).rolls), concat (keptSkill, item (1, throws).rolls), concat (keptGear, item (2, throws).rolls), true)))
+flPush (keptBase, keptSkill, keptGear, keptArtifact, base, skill, gear, artifactCount, artifactDie) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }, dice { number = max (0, artifactCount)  sides = max (8, artifactDie)  color = "green"  label = if artifactCount > 0 then "Artifact" else "" }],
+    ((baseline, throws)->flResult (concat (keptBase, first (throws).rolls), concat (keptSkill, item (1, throws).rolls), concat (keptGear, item (2, throws).rolls), concat (keptArtifact, item (3, throws).rolls), artifactDie, true)))
 
-flRoll (base, skill, gear) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }],
-    ((baseline, throws)->flResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, false)))
+flArtifactRoll (base, skill, gear, artifactDie) = ([dice { number = max (0, base)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skill)  sides = 6  color = "red"  label = "Skill" }, dice { number = max (0, gear)  sides = 6  color = "black"  label = "Gear" }, dice { number = if artifactDie > 7 then 1 else 0  sides = max (8, artifactDie)  color = "green"  label = if artifactDie > 7 then "Artifact" else "" }],
+    ((baseline, throws)->flResult (first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, artifactDie, false)))
+
+flRoll (base, skill, gear) = flArtifactRoll (base, skill, gear, 0)
+
+flAsked (base, skill, gear, weaponDie) = ask ("Artifact die (8, 10 or 12)", 0, (n)->flArtifactRoll (base, skill, gear, max (n, weaponDie)))
 
 attribute = custom
 {
@@ -34,7 +50,7 @@ attribute = custom
 skill (attr) = custom
 {
     Level = integer { description = "Skill level from 0 to 5, rolled as extra skill dice." reference = ["yze", 8] default = 0  minvalue = 0  maxvalue = 5 }
-    Roll = integer { description = "Roll the attribute's base dice plus these skill dice. Each 6 is a success." reference = ["yze", 9] value = Level  valuedice = flRoll (attr, Level, 0)  editable = none }
+    Roll = integer { description = "Roll the attribute's base dice plus these skill dice. Each 6 is a success; it asks for an artifact die, such as Pride's D12." reference = ["yze", 9] value = Level  valuedice = flAsked (attr, Level, 0, 0)  editable = none }
 }
 
 levelOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", 0)
@@ -45,24 +61,26 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
 rangeMetres (text) =
     if text == "Arm's length" then 2
-    else if text == "Near" then 25
+    else if text == "Near" then 10
     else if text == "Short" then 25
     else if text == "Long" then 100
     else if text == "Distant" then 1000
     else 2
 
-weaponAttack (name, base, skillDice, gear, damage, kind, distance) = custom
+weaponAttack (name, base, skillDice, gear, weaponDie, damage, kind, distance) = custom
 {
     Name = name
-    Roll = integer { value = skillDice  valuedice = flRoll (base, skillDice, gear)  action = kind  reach = 2  range = distance }
+    Roll = integer { value = skillDice  valuedice = flAsked (base, skillDice, gear, weaponDie)  action = kind  reach = 2  range = distance }
     Damage = damage
 }
 
+weaponDieOf (weapon) = max (artifactSize (weaponStat (weapon, "Artifact")), artifactSize (weaponStat (weapon, "Bonus")))
+
 attackFor (char, weapon) =
     if weaponStat (weapon, "Kind") == "Ranged" then
-        weaponAttack (weapon.Name, char.Attributes.Agility.Current, levelOf (char, "Marksmanship"), toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, char.Attributes.Agility.Current, levelOf (char, "Marksmanship"), toInt (weaponStat (weapon, "Bonus")), weaponDieOf (weapon), weaponStat (weapon, "Damage"), "ranged", rangeMetres (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, char.Attributes.Strength.Current, levelOf (char, "Melee"), toInt (weaponStat (weapon, "Bonus")), weaponStat (weapon, "Damage"), "melee", 2)
+        weaponAttack (weapon.Name, char.Attributes.Strength.Current, levelOf (char, "Melee"), toInt (weaponStat (weapon, "Bonus")), weaponDieOf (weapon), weaponStat (weapon, "Damage"), "melee", 2)
 
 resourceRoll (dieSize) = ([dice { number = if dieSize > 5 then 1 else 0  sides = max (6, dieSize) }],
     ((baseline, throws)->if dieSize < 6 then { Text = "Used up"  Outcome = "Failure" }
@@ -85,7 +103,9 @@ characterTable = ruleset
         Profession = string { keys = ["Druid", "Fighter", "Hunter", "Minstrel", "Peddler", "Rider", "Rogue", "Sorcerer"] }
         Age = string { keys = ["Young", "Adult", "Old"] }
         Reputation = integer { description = "How well known the character is. Others may recognise them." default = 0 }
-        Pride = string { description = "What the character is most proud of. Once per session it can give a free success." reference = ["yze", 6] }
+        Pride = string { description = "What the character is most proud of. Once per session, add a D12 artifact die to a roll where your Pride matters." reference = ["yze", 6] }
+        'Pride used' = bool { description = "Ticked once Pride's D12 has been used this session." default = false  editable = live }
+        'New session' = button { description = "A new session starts: Pride can be used again."  editable = live  onClick = updates { (root.Character.'Pride used') = false } }
         'Dark Secret' = string { description = "Something hidden from the past that may come back." reference = ["yze", 6] multiline = true }
         Appearance = string { multiline = true }
     }
@@ -106,22 +126,22 @@ characterTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Willpower = integer { description = "Willpower points, gained when pushed rolls cost attribute points." reference = ["yze", 9] default = 0  minvalue = 0  maxvalue = 10  editable = live }
         Broken = string { value = if Attributes.Strength.Current < 1 or Attributes.Agility.Current < 1 or Attributes.Wits.Current < 1 or Attributes.Empathy.Current < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
-        Sleepy = bool { description = "Without sleep you cannot heal." reference = ["yze", 25] default = false  editable = live  indicator = "#555555" }
-        Thirsty = bool { description = "Thirst blocks healing and costs Agility over time." default = false  editable = live  indicator = "#d4b106" }
-        Hungry = bool { description = "Hunger blocks healing and costs Strength over time." reference = ["yze", 25] default = false  editable = live  indicator = "#d4b106" }
-        Cold = bool { description = "Cold blocks healing and costs Wits over time." reference = ["yze", 25] default = false  editable = live  indicator = "#3a7bd5" }
+        Sleepy = bool { description = "Sleepy: you cannot recover Wits." reference = ["yze", 25] default = false  editable = live  indicator = "#555555" }
+        Thirsty = bool { description = "Thirsty: you cannot recover Strength or Agility, and thirst costs Agility over time." default = false  editable = live  indicator = "#d4b106" }
+        Hungry = bool { description = "Hungry: you cannot recover Strength, and hunger costs Strength over time." reference = ["yze", 25] default = false  editable = live  indicator = "#d4b106" }
+        Cold = bool { description = "Cold: you cannot recover Strength or Wits, and cold costs Wits over time." reference = ["yze", 25] default = false  editable = live  indicator = "#3a7bd5" }
         'Critical Injuries' = string { description = "Lasting injuries from being broken, with their effects." reference = ["yze", 21] multiline = true  editable = live }
         'Rest a shift' = button
         {
-            description = "A shift of rest heals one point of damage (Strength, then Agility) and one of stress (Wits, then Empathy). Hunger stops damage healing, sleeplessness stops stress healing, and thirst or cold stop both."
+            description = "A shift of rest restores one point to each damaged attribute. Hunger stops Strength, thirst Strength and Agility, sleeplessness Wits, and cold Strength and Wits."
             reference = [["yze", 21], ["yze", 25]]
             editable = live
             onClick = updates
             {
                 (root.Attributes.Strength.Current) = if Hungry or Thirsty or Cold then Attributes.Strength.Current else min (Attributes.Strength.Max, Attributes.Strength.Current + 1)
-                (root.Attributes.Agility.Current) = if Hungry or Thirsty or Cold or Attributes.Strength.Current < Attributes.Strength.Max then Attributes.Agility.Current else min (Attributes.Agility.Max, Attributes.Agility.Current + 1)
-                (root.Attributes.Wits.Current) = if Sleepy or Thirsty or Cold then Attributes.Wits.Current else min (Attributes.Wits.Max, Attributes.Wits.Current + 1)
-                (root.Attributes.Empathy.Current) = if Sleepy or Thirsty or Cold or Attributes.Wits.Current < Attributes.Wits.Max then Attributes.Empathy.Current else min (Attributes.Empathy.Max, Attributes.Empathy.Current + 1)
+                (root.Attributes.Agility.Current) = if Thirsty then Attributes.Agility.Current else min (Attributes.Agility.Max, Attributes.Agility.Current + 1)
+                (root.Attributes.Wits.Current) = if Sleepy or Cold then Attributes.Wits.Current else min (Attributes.Wits.Max, Attributes.Wits.Current + 1)
+                (root.Attributes.Empathy.Current) = min (Attributes.Empathy.Max, Attributes.Empathy.Current + 1)
             }
         }
         Experience = integer { description = "Experience earned in play, spent on skills and talents." reference = ["yze", 7] default = 0  editable = live }
@@ -168,7 +188,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", Attributes.Strength.Current, levelOf (characterTable, "Melee"), 0, "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", Attributes.Strength.Current, levelOf (characterTable, "Melee"), 0, 0, "1", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -191,6 +211,14 @@ characterTable = ruleset
         Water = resource (6)
         Arrows = resource (4)
         Torches = resource (4)
+    }
+
+    Spells = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
     }
 
     Gear = list
@@ -256,6 +284,7 @@ weaponStats = ruleset
         Bonus = string {}
         Damage = string {}
         Range = string { keys = ["Arm's length", "Near", "Short", "Long", "Distant"] }
+        Artifact = string { description = "A legendary weapon's artifact die, rolled with the attack." keys = ["None", "D8", "D10", "D12"]  default = "None" }
         Features = string {}
         Weight = string {}
         Cost = string {}
@@ -283,6 +312,24 @@ talentStats = ruleset
     }
 }
 
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Rank" sort = Stats.Rank }
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }, filter { name = "Rank" prefix = "Rank" filter = Stats.Rank }]
+    }
+    Stats = table
+    {
+        Discipline = string { keys = ["General", "Healing", "Shapeshifting", "Awareness", "Symbolism", "Stone Song", "Blood Magic", "Death Magic"] }
+        Rank = integer { description = "Spell rank: the least power level that casts it." default = 1  minvalue = 1  maxvalue = 3 }
+        Range = string { keys = ["Personal", "Arm's length", "Near", "Short", "Long", "Distant", "Unlimited"] }
+        Duration = string {}
+        Ingredient = string {}
+    }
+}
+
 ForbiddenLands = system
 {
     hints = [
@@ -290,7 +337,7 @@ ForbiddenLands = system
         {
             title = "Rolling dice"
             topic = "Play"
-            text = ["Roll base dice for the attribute, skill dice for the skill and gear dice for the item. Every 6 is a success. One push rerolls everything but 6s and skulls, and skulls on base dice then hurt."]
+            text = ["Roll base dice for the attribute, skill dice for the skill and gear dice for the item. Every 6 is a success; artifact dice (D8 to D12, from legendary weapons and once per session from Pride) count more on high faces. One push rerolls everything but 6s and skulls, and skulls on base dice then hurt."]
         },
         hint
         {
@@ -318,7 +365,8 @@ ForbiddenLands = system
     Weapons = weaponStats
     Gear = gearStats
     Talents = talentStats
-    secondaryTypes = ["Weapons", "Gear", "Talents"]
+    Spells = spellStats
+    secondaryTypes = ["Weapons", "Gear", "Talents", "Spells"]
     description = "Forbidden Lands: Year Zero Engine survival fantasy, hexcrawls and strongholds"
     initiativeCompare (item1, item2) = compare (toInt (item2), toInt (item1))
     initiativeDeck = "Initiative Cards"
