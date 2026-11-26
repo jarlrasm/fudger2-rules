@@ -309,6 +309,7 @@ Fudge = system
 | `quickdice` | Dice buttons shown in sessions |
 | `cssFiles` | Extra stylesheets, loaded for every campaign of the system. See [Styling a sheet](#styling-a-sheet). |
 | `libraries` | Built-in libraries, as paths to JSON files in this repo, e.g. `["/systems/DND/dndsrd2024.json"]`. Every campaign of the system can use their items. |
+| `removedLibraries` | Optional. Paths to drop from `libraries`, so an extension can remove or replace a built-in library of its base system. |
 | `nameSettings` | Optional. Which name generator suggests names for each type, see [Name settings](#name-settings). |
 | `description` | Text shown for the system |
 | `distanceUnit` | Optional. The unit `reach`, `range` and other rule distances are written in, e.g. `"ft"`, `"m"` or `"yd"`. A battlemap in another unit converts them (5 ft = 1.5 m, 1 yd = 0.9 m). |
@@ -706,6 +707,12 @@ Fudge = system { 'Spells' = spellStats  secondaryTypes = ["Spells"] }
 spellStats = ruleset { rulesetConfiguration = { defaultImage = "/images/spell.svg" } }
 
 characterTable = ruleset { Spells = list { source = secondary.Spells  singular = "Spell"  editable = character } }
+```
+
+Lists only grow when they merge, so an extension can't take an item out of a base list. To swap a built-in library for another, list the old path in `removedLibraries` and the new one in `libraries`:
+
+```
+Fudge = system { removedLibraries = ["/systems/Fudge/gear.json"]  libraries = ["/systems/Fudge/extensions/scifi-gear.json"] }
 ```
 
 Register it under its base system in `rules.json`:
