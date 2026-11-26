@@ -74,6 +74,20 @@ attackFor (char, weapon) =
 
 downState (health) = if health <= 0 then "Unconscious" else ""
 
+attributeBand (score) =
+    if score < 1 then 0
+    else if score < 3 then 1
+    else if score < 5 then 2
+    else if score < 7 then 3
+    else if score < 9 then 4
+    else 5
+
+movementFor (score) = item (attributeBand (score), [20, 25, 30, 40, 60, 80])
+
+recoveryDieFor (score) = item (attributeBand (score), ["d4", "d6", "d8", "d10", "d12", "d20"])
+
+sensesFor (score) = item (attributeBand (score), [5, 10, 20, 50, 100, 100])
+
 characterTable = ruleset
 {
     rulesetConfiguration = { important = [Defenses, Resources, Attacks, Conditions] }
@@ -116,12 +130,13 @@ characterTable = ruleset
     Resources = table
     {
         tableLayout = layout { columns = 3 }
-        'Max Health' = integer { default = 10 }
+        'Max Health' = integer { description = "Health when unhurt: 10 plus Strength, plus the health gained at later levels." value = 10 + Attributes.Strength + 'Level health'  editable = none }
+        'Level health' = integer { description = "Health gained from levels after the first and from talents; add it when you level up." default = 0  minvalue = 0 }
         Health = integer { description = "Current health. At 0 the character is unconscious and may suffer an injury." default = 'Max Health'  editable = live  indicator = "#d64545" }
         Down = string { value = downState (Health)  visible = none  indicator = "#d64545" }
         'Max Focus' = integer { value = 2 + Attributes.Willpower  editable = none }
         Focus = integer { description = "Spent on special actions, reactions and some talents. Recovers on rest." default = 'Max Focus'  editable = live  indicator = "#3a7bd5" }
-        'Max Investiture' = integer { default = 0 }
+        'Max Investiture' = integer { description = "0 until invested; then 2 plus the higher of Awareness and Presence." default = 0 }
         Investiture = integer { description = "Stormlight or other power spent to fuel surges and Radiant abilities." default = 0  editable = live }
         'Long rest' = button { description = "A long rest restores all health and focus and lowers exhaustion by one. Injuries heal on their own time."  editable = live  onClick = updates
             {
@@ -130,9 +145,10 @@ characterTable = ruleset
                 (root.Conditions.Exhausted) = max (0, Conditions.Exhausted - 1)
             }
         }
-        Movement = integer { description = "How far the character can move with one move action." default = 25  render = distance (Movement) }
-        'Recovery die' = string { description = "Die rolled to recover health and focus when resting." default = "d4"  keys = ["d4", "d6", "d8", "d10", "d12", "d20"] }
-        'Senses range' = integer { default = 5  render = distance ('Senses range') }
+        Movement = integer { description = "How far the character can move with one move action, from Speed, plus the movement bonus." value = movementFor (Attributes.Speed) + 'Movement bonus'  editable = none  render = distance (Movement) }
+        'Movement bonus' = integer { description = "Extra movement from talents, ancestry or gear." default = 0 }
+        'Recovery die' = string { description = "Die rolled to recover health and focus when resting, from Willpower." value = recoveryDieFor (Attributes.Willpower)  editable = none }
+        'Senses range' = integer { description = "How far the senses reach when sight is obscured, from Awareness. At Awareness 9 or more, obscured senses don't hinder you." value = sensesFor (Attributes.Awareness)  editable = none  render = if Attributes.Awareness >= 9 then "Unaffected" else distance ('Senses range') }
         Turn = string { description = "Fast turns act with fewer actions before enemies; slow turns get more actions after." default = "Slow"  keys = ["Fast", "Slow"]  editable = live }
     }
 

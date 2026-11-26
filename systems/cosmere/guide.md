@@ -19,7 +19,7 @@ Attacks and many talents target one of them.
 No initiative roll. Each round every hero picks a **fast turn** (2 actions, before the adversaries' fast turns) or a **slow turn** (3 actions, after them). Adversaries choose the same way. Reactions cost Focus.
 
 ## Damage
-A hit deals the weapon's damage plus the attribute (Strength for heavy weapons, Speed for light), minus the target's **deflect** (armor). At 0 health a character is unconscious and gains an **injury**. Rest restores health with the recovery die. **Focus** (2 + Willpower) powers reactions and many talents; **Investiture** fuels surges for Radiants.
+A hit deals the weapon's damage plus the attribute (Strength for heavy weapons, Speed for light), minus the target's **deflect** (armor). At 0 health a character is unconscious and gains an **injury**. Rest restores health with the recovery die. The sheet works out max health (10 + Strength, plus Level health for later levels), movement from Speed, the recovery die from Willpower and senses range from Awareness. **Focus** (2 + Willpower) powers reactions and many talents; **Investiture** fuels surges for Radiants.
 
 ## Adversaries
 Adversaries are minions, rivals or bosses with fixed defenses, skills and attacks. Minions fall at the first hit that damages them.
