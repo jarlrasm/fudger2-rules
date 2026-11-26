@@ -1,0 +1,68 @@
+@import url("/systems/sheet.css");
+
+/* TinyD6 / Tiny Dungeon 2e: a small, plain adventurer sheet in black ink
+   on cream paper with heavy rounded boxes, a stone-grey page and brick-red
+   headings; heritage, trade and belief across the top, then Hit Points,
+   the combat actions and the weapon groups side by side, attacks, and the
+   traits, weapons and inventory boxes underneath. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #4a4743;
+    --surface: #fbf6ea;
+    --surface-alt: #f1e9d6;
+    --surface-sunken: #e6dcc4;
+    --surface-muted: #cdbf9f;
+    --text: #1b1916;
+    --text-muted: #45403a;
+    --text-faint: #7a7166;
+    --on-accent: #fbf6ea;
+    --border: #8f8370;
+    --border-strong: #1b1916;
+    --accent: #8c2f1f;
+    --accent-hover: #a33a28;
+    --accent-soft: #f0d9cf;
+    --link: #8c2f1f;
+    --danger: #8c2f1f;
+    --danger-hover: #6f2417;
+    --danger-soft: #f0d9cf;
+    --success: #3c6131;
+    --paper: #fbf6ea;
+    --card-bg: #f1e9d6;
+    --dice-bg: #1b1916;
+    --dice-text: #fbf6ea;
+}
+
+.entityView {
+    --sheet-font: "Alegreya", "Book Antiqua", "Georgia", serif;
+    --title-font: "Alegreya SC", "Copperplate", "Georgia", serif;
+    --block-radius: 10px;
+    --block-border: 3px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 1.15em;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+.entityView .table-hit-points,
+.entityView .table-combat,
+.entityView .table-weapons,
+.entityView .table-traits,
+.entityView .table-weapon-list,
+.entityView .table-inventory,
+.entityView .table-purse { --block: 33.333%; }
+.entityView .table-traits { clear: left; }
+.entityView .table-inventory { float: right; }
+.entityView .table-notes { clear: both; }
+
+.entityView .table-hit-points > table > tbody > tr:first-child > td,
+.entityView .table-hit-points > table > tbody > tr:nth-child(2) > td {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2) { color: var(--text-muted); font-style: italic; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

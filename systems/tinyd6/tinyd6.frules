@@ -1,0 +1,319 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+tinyPool (n) = max (1, min (3, n))
+
+tinyTarget (target) = if target < 1 or target > 6 then 5 else target
+
+tinyHits (rolls, target) = count (filter ((r)->r >= target, rolls))
+
+tinyOutcome (hits) = if hits > 0 then "Success" else "Failure"
+
+tinyText (rolls, target) =
+    tinyOutcome (tinyHits (rolls, target)) + ": "
+    + toString (tinyHits (rolls, target)) + " of " + toString (count (rolls))
+    + (if count (rolls) == 1 then " die" else " dice")
+    + " on " + (if target == 6 then "6" else toString (target) + "-6")
+
+tinyResult (rolls, target) =
+{
+    Text = tinyText (rolls, target)
+    Value = tinyHits (rolls, target)
+    Outcome = tinyOutcome (tinyHits (rolls, target))
+}
+
+tinyDice (pool, target) = ([dice { number = tinyPool (pool)  sides = 6 }], ((baseline, throws)->tinyResult (first (throws).rolls, tinyTarget (target))))
+
+tinyAsked (pool) = ([dice { number = tinyPool (pool)  sides = 6 }], ((baseline, throws)->tinyResult (first (throws).rolls, tinyTarget (asked))))
+
+tinyStart (focused) = if focused then 4 else 5
+
+tinyTest (pool, focused) = ask ("Advantage +1 or Disadvantage -1", 0, (n)->ask ("Succeeds on", tinyStart (focused), tinyAsked (pool + n)))
+
+tinyPlain (pool) = ask ("Advantage +1 or Disadvantage -1", 0, (n)->tinyDice (pool + n, 5))
+
+tinySum = ([2d6], ((baseline, throws)->sum (first (throws).rolls)))
+
+attackPool (proficient, mastered) = if mastered then 3 else if proficient then 2 else 1
+
+noItemStats = { Stats = { Group = "" } }
+
+itemStat (item, rulesetName, field, fallback) = valueOr (valueOr (valueOr (item.data, rulesetName, noItemStats), "Stats", noItemStats.Stats), field, fallback)
+
+groupOr (group) = if group == "" then "Light Melee" else group
+
+weaponGroup (item) = groupOr (itemStat (item, "weaponStats", "Group", "Light Melee"))
+
+weaponRange (item) = max (0, toInt (itemStat (item, "weaponStats", "Range", "0")))
+
+isProficient (char, group) =
+    switch group
+        case "Light Melee" then char.Weapons.'Light Melee'
+        case "Heavy Melee" then char.Weapons.'Heavy Melee'
+        else char.Weapons.Ranged
+
+isMastered (char, name) = name != "" and toLower (char.Weapons.'Mastered Weapon') == toLower (name)
+
+groupKind (group) = if group == "Ranged" then "ranged" else "melee"
+
+groupReach (group) = if group == "Heavy Melee" then 10 else 5
+
+groupRange (group, feet) = if group == "Ranged" then (if feet > 0 then feet else 150) else groupReach (group)
+
+poolWord (pool) = if pool >= 3 then "3d6, Advantage" else if pool == 2 then "2d6" else "1d6, Disadvantage"
+
+weaponAttack (name, group, pool, damage, feet, focused) = custom
+{
+    Name = name
+    Group = group
+    Attack = integer { value = pool  valuedice = tinyTest (pool, focused)  action = groupKind (group)  reach = groupReach (group)  range = groupRange (group, feet)  render = poolWord (pool)  editable = none }
+    Damage = damage
+}
+
+attackFor (char, item) =
+    weaponAttack (item.Name, weaponGroup (item), attackPool (isProficient (char, weaponGroup (item)), isMastered (char, item.Name)),
+        itemStat (item, "weaponStats", "Damage", "1"), weaponRange (item), char.Combat.Focused)
+
+downState (hp, max) =
+    if hp > 0 then ""
+    else "Down"
+
+heritageKeys = ["Human", "Dwarf", "Elf", "Fae", "Goblin", "Karhu", "Salimar", "Treefolk", "Other"]
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { important = ['Hit Points', Combat, Attacks] }
+    Adventurer = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Heritage = string { description = "Your people. It sets your starting Hit Points and gives one heritage trait." keys = heritageKeys }
+        'Family Trade' = string { description = "What your family did. Tests that lean on it are made with Advantage." }
+        Belief = string { description = "What your adventurer believes in or lives by. Acting on it can earn rewards; acting against it has a cost." }
+        Experience = integer { description = "Earned in play and spent on new traits or other improvements." default = 0  minvalue = 0  editable = live }
+    }
+
+    'Hit Points' = table
+    {
+        description = "Every hit takes 1 Hit Point unless a trait or the GM says otherwise. At 0 you drop and are dying."
+        tableLayout = layout { columns = 2 }
+        Max = integer { description = "Set by heritage, usually 6; some traits add more." default = 6  minvalue = 1  maxvalue = 20 }
+        Current = integer { description = "Hit Points left." default = Max  minvalue = 0  maxvalue = Max  editable = live  indicator = "#d64545" }
+        State = string { value = downState (Current, Max)  visible = none  indicator = "#555555" }
+        'Heal 1' = button { description = "Regain one Hit Point, from a healer, a potion or a short rest." editable = live  onClick = updates
+            {
+                (root.'Hit Points'.Current) = min (Max, Current + 1)
+            }
+        }
+        Rest = button { description = "A full night's rest in safety restores all Hit Points." editable = live  onClick = updates
+            {
+                (root.'Hit Points'.Current) = Max
+            }
+        }
+    }
+
+    Combat = table
+    {
+        description = "Two actions a turn: Attack, Evade, Focus, Move or a Test, in any mix."
+        tableLayout = layout { columns = 2 }
+        Initiative = integer { description = "At the start of a fight everyone rolls 2d6; highest goes first, and ties go to the players." value = 0  valuedice = tinySum  render = "2d6"  editable = none }
+        Test = integer { description = "Roll 2d6, 3d6 with Advantage, 1d6 with Disadvantage. Any die on 5 or 6 succeeds." value = 2  valuedice = tinyTest (2, Focused)  render = "2d6"  editable = none }
+        Focused = bool { description = "You took the Focus action: your next attack or test succeeds on 4, 5 or 6. Untick it after that roll." default = false  editable = live  indicator = "#3a7bd5" }
+        Evading = bool { description = "You took the Evade action: until your next turn, roll Evade each time you are hit." default = false  editable = live  indicator = "#e8913a" }
+        Evade = integer { description = "Test 1d6 when hit while evading; a success means the attack misses." value = 1  valuedice = tinyPlain (1)  render = "1d6"  editable = none }
+        Move = integer { description = "One Move action covers about this far." value = 25  render = distance (25)  editable = none }
+    }
+
+    Weapons = table
+    {
+        description = "You are proficient with one weapon group and attack with it on 2d6; other groups on 1d6. Your mastered weapon attacks on 3d6."
+        tableLayout = layout { columns = 2 }
+        'Light Melee' = bool { description = "Daggers, short swords, hand axes, clubs and other one-handed weapons." default = false }
+        'Heavy Melee' = bool { description = "Greatswords, polearms, warhammers and other big weapons; they reach a step further." default = false }
+        Ranged = bool { description = "Bows, crossbows, slings and thrown weapons." default = false }
+        'Mastered Weapon' = string { description = "The one weapon you have trained with for years: attacks with it have Advantage. Write its name as on the weapon." }
+    }
+
+    Attacks = list
+    {
+        description = "Attack with the weapon's dice; any 5 or 6 hits for its damage. Focus makes the next attack hit on 4-6."
+        tableLayout = layout { size = wide }
+        source = map ((item)->attackFor (characterTable, item), characterTable.'Weapon list')
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Traits = list
+    {
+        description = "Your heritage trait and the three traits you chose, plus any bought with experience."
+        source = secondary.Traits
+        singular = "Trait"
+        editable = character
+    }
+
+    'Weapon list' = list
+    {
+        description = "The weapons you carry."
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Inventory = list
+    {
+        description = "What you carry. Keep it short: the GM says when it is too much."
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Purse = table
+    {
+        tableLayout = layout { columns = 2 }
+        Coins = integer { default = 0  minvalue = 0  editable = live }
+        Rations = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Story = string { description = "Where you come from and why you are on the road." multiline = true }
+        Notes = string { multiline = true  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Creature, Attacks] }
+    Creature = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max HP' = integer { description = "Most foes have a few Hit Points; big ones more." default = 3  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = 0  maxvalue = 'Max HP'  editable = live  indicator = "#d64545" }
+        Initiative = integer { value = 0  valuedice = tinySum  render = "2d6"  editable = none }
+        Test = integer { description = "Dice for its other tests: 1, 2 or 3." default = 2  minvalue = 1  maxvalue = 3  render = poolWord (Test)  valuedice = tinyPlain (Test) }
+        Evading = bool { default = false  editable = live  indicator = "#e8913a" }
+        Focused = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        State = string { value = if HP > 0 then "" else "Down"  visible = none  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        description = "Each attack: its dice (1 to 3), damage, and reach or range in feet."
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Dice = integer { default = 2  minvalue = 1  maxvalue = 3  render = poolWord (Dice)  valuedice = tinyTest (Dice, false)  action = if Range > 0 then "ranged" else "melee"  reach = Reach  range = if Range > 0 then Range else Reach }
+            Damage = integer { default = 1  minvalue = 0 }
+            Reach = integer { default = 5  minvalue = 0 }
+            Range = integer { default = 0  minvalue = 0 }
+        }
+    }
+    Traits = list
+    {
+        description = "What makes it dangerous or odd."
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+traitStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Game" prefix = "" filter = Stats.Game }]
+    }
+    Stats = table
+    {
+        Kind = string { description = "A heritage trait comes with the heritage; the others are picked at creation or bought later." keys = ["Heritage", "Trait", "Advanced"]  default = "Trait" }
+        Game = string { keys = ["Tiny Dungeon", "Tiny Frontiers", "Tiny Supers", "Tiny Gunslingers", "Other"]  default = "Tiny Dungeon" }
+        Heritage = string { description = "For a heritage trait: which heritage has it." }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Group }
+        filters = [filter { name = "Group" prefix = "" filter = Stats.Group }]
+    }
+    Stats = table
+    {
+        Group = string { description = "Light Melee, Heavy Melee or Ranged: proficiency in the group gives 2d6 to hit." keys = ["Light Melee", "Heavy Melee", "Ranged"]  default = "Light Melee" }
+        Damage = string { description = "Hit Points a hit takes, normally 1." default = "1" }
+        Range = string { description = "For ranged weapons: how far it shoots, in feet." default = "" }
+        Notes = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Adventuring gear", "Armor", "Scroll", "Potion", "Tool", "Treasure", "Other"]  default = "Adventuring gear" }
+        Cost = string {}
+        Uses = integer { description = "Uses or charges left, where it has them." default = 0  minvalue = 0  editable = live }
+    }
+}
+
+TinyD6 = system
+{
+    hints = [
+        hint
+        {
+            title = "Making an adventurer"
+            topic = "Getting started"
+            text = ["Pick a heritage (it sets Hit Points, usually 6, and gives a heritage trait), then three traits, one proficient weapon group (Light Melee, Heavy Melee or Ranged), a mastered weapon, a family trade and a belief. Write the mastered weapon's name exactly as on the weapon."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll 2d6: any 5 or 6 succeeds. Advantage rolls 3d6 and Disadvantage 1d6; they cancel and never stack. Each roll asks for Advantage (+1) or Disadvantage (-1), then what a die must show to succeed, 5 by default and 4 when Focused."]
+        },
+        hint
+        {
+            title = "Fighting"
+            topic = "Combat"
+            text = ["Two actions a turn: Attack, Evade, Focus, Move or a Test. Proficient weapons attack on 2d6, others on 1d6, the mastered weapon on 3d6. A hit takes 1 Hit Point. Evading lets you test 1d6 against each hit until your next turn."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Everyone rolls 2d6 at the start of the fight and acts from highest to lowest; the players win ties."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Traits = traitStats
+    Weapons = weaponStats
+    Gear = gearStats
+    secondaryTypes = ["Traits", "Weapons", "Gear"]
+    description = "TinyD6 (Tiny Dungeon 2e by default): 2d6 tests where any 5 or 6 succeeds, Advantage and Disadvantage dice, heritages, traits and weapon groups"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 2d6, 3d6]
+    cssFiles = ["/systems/tinyd6/tinyd6.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/scifi.json", "/systems/names/heroes.json", "/systems/names/weirdwest.json"]
+    nameSettings = [fantasyNameSetting, spaceNameSetting, superheroesNameSetting, weirdWestNameSetting]
+}

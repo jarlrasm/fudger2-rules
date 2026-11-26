@@ -1,0 +1,33 @@
+{
+  "values": {
+    "Adventurer": { "Heritage": "Dwarf", "Family Trade": "Brewer", "Belief": "A debt unpaid is a stone in the boot.", "Experience": 4 },
+    "Hit Points": { "Max": 8, "Current": 5 },
+    "Combat": { "Focused": true, "Evading": false },
+    "Weapons": { "Heavy Melee": true, "Mastered Weapon": "Grandfather's maul" },
+    "Purse": { "Coins": 23, "Rations": 3 },
+    "Notes": {
+      "Story": "Third daughter of the Kettleforge brewers. Left the hold when the cellars flooded and something came up with the water.",
+      "Notes": "Owes Mother Hask two barrels. The goblin Pikk knows a way under the old mill. Rat-king seen in the sewers below Vellow."
+    }
+  },
+  "secondary": {
+    "Traits": [
+      { "name": "Deep-born", "description": "Sees in dim light as others do by day.", "values": { "Stats": { "Kind": "Heritage", "Heritage": "Dwarf" } } },
+      { "name": "Hard to Kill", "description": "One more Hit Point.", "values": { "Stats": { "Kind": "Trait" } } },
+      { "name": "Shield Bearer", "description": "Advantage on Evade tests while holding a shield.", "values": { "Stats": { "Kind": "Trait" } } },
+      { "name": "Tough as Rope", "description": "Advantage on tests to endure poison, cold and drink.", "values": { "Stats": { "Kind": "Trait" } } }
+    ],
+    "Weapons": [
+      { "name": "Grandfather's maul", "description": "Iron-shod, older than the hold.", "values": { "Stats": { "Group": "Heavy Melee", "Damage": "1" } } },
+      { "name": "Hand axe", "values": { "Stats": { "Group": "Light Melee", "Damage": "1" } } },
+      { "name": "Sling", "values": { "Stats": { "Group": "Ranged", "Damage": "1", "Range": "100" } } }
+    ],
+    "Gear": [
+      { "name": "Round shield", "values": { "Stats": { "Kind": "Armor" } } },
+      { "name": "Lantern and oil", "values": { "Stats": { "Kind": "Adventuring gear", "Uses": 2 } } },
+      { "name": "Rope, 50 ft", "values": { "Stats": { "Kind": "Adventuring gear" } } },
+      { "name": "Healing draught", "values": { "Stats": { "Kind": "Potion", "Uses": 1 } } },
+      { "name": "Brewer's kit", "values": { "Stats": { "Kind": "Tool" } } }
+    ]
+  }
+}
