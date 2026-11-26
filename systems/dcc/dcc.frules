@@ -50,7 +50,7 @@ dccBackstab (die, deedDie, critRange, crit) = ask ("Target AC", dccAttackRollMod
 
 dccMonsterAttack (die) = ask ("Target AC", dccAttackRollMode (die, 0, 20, "the monster crit table", 0, 2))
 
-actionDie (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 20
+actionDie (text) = if bonusWithValue ([[text]], "^[^d]*d([0-9]+)") > 0 then bonusWithValue ([[text]], "^[^d]*d([0-9]+)") else 20
 
 dccCheckResult (total, natural, dc) =
 {
