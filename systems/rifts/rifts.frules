@@ -23,7 +23,9 @@ strikeResult (roll, plus, kind, critAt) =
     Outcome = if roll + plus <= 4 and roll < critAt then "Miss" else strikeOutcome (roll, critAt)
 }
 
-strikeRoll (plus, critAt) = ([1d20], ((baseline, throws)->strikeResult (first (first (throws).rolls), plus, "Strike", critAt)))
+strikeFrom (plus, critAt) = ([1d20], ((baseline, throws)->strikeResult (first (first (throws).rolls), plus, "Strike", critAt)))
+
+strikeRoll (plus) = strikeFrom (plus, 20)
 
 critFrom (text) = if firstNumber (text) >= 2 and firstNumber (text) <= 20 then firstNumber (text) else 20
 
@@ -64,7 +66,7 @@ weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "riftsWeapo
 attack (name, plus, damageText, extra, kind, distance, critAt) = custom
 {
     Name = name
-    Strike = modifier { value = plus  valuedice = strikeRoll (plus, critAt)  action = kind  reach = 5  range = distance  editable = none }
+    Strike = modifier { value = plus  valuedice = strikeFrom (plus, critAt)  action = kind  reach = 5  range = distance  editable = none }
     Damage = string { value = damageText + (if extra > 0 then " +" + toString (extra) else "")  editable = none }
     Roll = integer { value = 0  render = "Damage"  valuedice = damageRoll (damageText, extra)  editable = none }
 }
@@ -146,7 +148,7 @@ characterTable = ruleset
         'Hand to hand' = string { keys = ["Basic", "Expert", "Martial Arts", "Assassin", "Commando"] }
         'Attacks per melee' = integer { description = "Actions in a 15-second melee round." default = 4 }
         Initiative = modifier { description = "Initiative bonus; roll 1d20 plus it." default = 0  valuedice = initiativeRoll }
-        Strike = modifier { description = "Strike bonus, PP included. A strike above 4 hits unless parried or dodged." default = ppBonus (Attributes.PP)  valuedice = strikeRoll (Strike, critFrom ('Critical range')) }
+        Strike = modifier { description = "Strike bonus, PP included. A strike above 4 hits unless parried or dodged." default = ppBonus (Attributes.PP)  valuedice = strikeFrom (Strike, critFrom ('Critical range')) }
         Parry = modifier { description = "Parry bonus. Equal to or above the strike parries." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Parry, "Parry") }
         Dodge = modifier { description = "Dodge bonus. Dodging uses up an attack." default = ppBonus (Attributes.PP)  valuedice = defenseRoll (Dodge, "Dodge") }
         'Roll with impact' = modifier { default = 0  valuedice = defenseRoll ('Roll with impact', "Roll with impact") }
@@ -259,7 +261,7 @@ creatureTable = ruleset
         keys = ["Claws"]
         valueType = custom
         {
-            Strike = modifier { default = 2  valuedice = strikeRoll (Strike, 20)  action = if Range > 0 then "ranged" else "melee"  reach = 5  range = Range }
+            Strike = modifier { default = 2  valuedice = strikeRoll (Strike)  action = if Range > 0 then "ranged" else "melee"  reach = 5  range = Range }
             Damage = string { default = "2D6 M.D." }
             Range = integer { description = "Feet; 0 for melee." default = 0 }
             Roll = integer { value = 0  render = "Damage"  valuedice = damageRoll (Damage, 0)  editable = none }
