@@ -9,13 +9,14 @@ Roll **d20 + modifier** and meet or beat a **DC**. Skill bonus = ranks + ability
 ## Combat
 - **Initiative**: d20 + Dex + misc; highest first. Each turn has a standard, a move and a swift action, or a full action.
 - **Attacks**: melee is d20 + BAB + Str, ranged d20 + BAB + Dex, thrown d20 + BAB + Str. Energy attacks target **EAC**, kinetic attacks **KAC**. Combat maneuvers target KAC + 8.
-- A **natural 20** that hits is a **critical hit**: double damage plus the weapon's critical effect. A natural 1 misses.
+- A **natural 20** always hits, and is a **critical hit** if the total also beats the target's AC: double damage plus the weapon's critical effect. A natural 1 misses.
+- Creature attacks target EAC for energy damage (acid, cold, electricity, fire, sonic) and KAC otherwise, unless their Target says which. Their melee reach comes from the stat block's Reach.
 - **Full attack**: two attacks, each at -4.
 - Ranged weapons have a range increment; -2 per increment beyond the first.
 - Weapons use charges or rounds: track them under Ammunition.
 
 ## Stamina, Hit Points and Resolve
-Damage comes off **Stamina Points** first, then **Hit Points**. At 0 HP a character is unconscious and **dying**: they lose 1 Resolve Point each round, and die when they have none left. Spending Resolve stabilizes; damage past 0 HP equal to max HP kills outright.
+Damage comes off **Stamina Points** first, then **Hit Points**. At 0 HP a character is unconscious and **dying**: they lose 1 Resolve Point each round, and die when they have none left. Spending Resolve stabilizes (tick Stable on the sheet); damage past 0 HP equal to max HP kills outright.
 
 - **Rest 10 minutes** and spend 1 Resolve to regain all Stamina.
 - A **full night's rest** restores Stamina, Resolve and spells, and Hit Points equal to the character's level.
