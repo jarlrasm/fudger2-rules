@@ -17,7 +17,15 @@ fudgeResult (level, difficulty, known) =
     if known then { Text = ladderWord (level) + " vs " + ladderWord (difficulty + 3) + ": " + fudgeOutcome (level - difficulty - 3)  Value = level  Outcome = if level >= difficulty + 3 then "Success" else "Failure" }
     else level
 
-fudgeRoll = ask ("Difficulty", fudgevalues, -3, ([4df], ((baseline, throws)->fudgeResult (baseline + sum (first (throws).rolls), asked, answered))))
+fudgeDice (penalty) = ask ("Difficulty", fudgevalues, -3, ([4df], ((baseline, throws)->fudgeResult (baseline - penalty + sum (first (throws).rolls), asked, answered))))
+
+fudgeRoll = fudgeDice (0)
+
+woundPenalty (char) = if char.Damage.'Very hurt'.value > 0 then 2 else if char.Damage.Hurt.value > 0 then 1 else 0
+
+woundedRoll (char) = fudgeDice (woundPenalty (char))
+
+fudgeLevel (result) = if toInt (result) != 0 then toInt (result) else intValueFromEnumString (fudgevalues, result)
 
 characterTable = ruleset
 {
@@ -32,7 +40,7 @@ characterTable = ruleset
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
-                valuedice=fudgeRoll
+                valuedice=woundedRoll (characterTable)
             }
         }
     Skills = keyvalues
@@ -45,7 +53,7 @@ characterTable = ruleset
             {
                 default = "Fair"
                 possiblevalues = fudgevalues
-                valuedice=fudgeRoll
+                valuedice=woundedRoll (characterTable)
             }
         }
     Gifts = list
@@ -69,12 +77,14 @@ characterTable = ruleset
             description = "Points to spend on luck: change a roll, avoid a wound or bend the story." reference = ["srd", 16]
             default=0
             minvalue=0
+            editable = live
         }
         Experiencepoints = integer
         {
             description = "Points earned in play and spent to improve attributes and skills." reference = ["srd", 71]
             default=0
             minvalue=0
+            editable = live
         }
     }
     Damage = table
@@ -141,11 +151,11 @@ characterTable = ruleset
 
        'Injury Levels' = table
         {
-            Scratch ="1 - 3"
-            Hurt="4 - 6"
-            'Very hurt'="7 - 9"
-            Incapacitated ="10 - 12"
-            'Near death' ="13 +"
+            Scratch ="1 - 2"
+            Hurt="3 - 4"
+            'Very hurt'="5 - 6"
+            Incapacitated ="7 - 8"
+            'Near death' ="9 +"
         }
     'Melee weapons' = list
     {
@@ -269,7 +279,7 @@ Fudge = system
     description="Simple Fudge rules"
     secondaryTypes = ["Ranged weapons","Melee weapons","Armour","Other items"]
     initiativeRolls = ["Dex"]
-    initiativeCompare(item1,item2) = compare (intValueFromEnumString (fudgevalues,item1), intValueFromEnumString (fudgevalues,item2))
+    initiativeCompare(item1,item2) = compare (fudgeLevel (item1), fudgeLevel (item2))
     quickdice =[4df]
 }
 
