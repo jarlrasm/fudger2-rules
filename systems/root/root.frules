@@ -207,9 +207,8 @@ creatureTable = ruleset
         keys = ["Melee", "Ranged"]
         valueType = custom
         {
-            Harm = string { default = "1 injury" }
+            Harm = string { default = "1 injury"  action = if Key == "Ranged" then "ranged" else "melee"  reach = 2 }
             Range = string { default = "Close" }
-            Use = integer { value = 0  valuedice = rootRoll  action = if Key == "Ranged" then "ranged" else "melee"  reach = 2  editable = none }
         }
     }
     Notes = table
