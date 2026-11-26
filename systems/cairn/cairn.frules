@@ -44,6 +44,8 @@ usedSlots (char) = sum (map ((item)->slotsOf (item), char.Inventory)) + count (c
 
 downState (char) =
     if char.Abilities.STR == 0 then "Dead"
+    else if char.Abilities.DEX == 0 then "Paralysed"
+    else if char.Abilities.WIL == 0 then "Delirious"
     else if char.Status.'Critical Damage' then "Critical damage"
     else if char.Status.HP == 0 then "0 HP"
     else ""
