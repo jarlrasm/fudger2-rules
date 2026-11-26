@@ -5,19 +5,39 @@
 isDouble (roll) = mod (roll, 11) == 0
 
 msOutcome (target, roll) =
-    if roll < target and isDouble (roll) then "Critical success"
+    if roll >= 90 and isDouble (roll) then "Critical failure"
+    else if roll >= 90 then "Failure"
+    else if roll < target and isDouble (roll) then "Critical success"
     else if roll < target then "Success"
     else if isDouble (roll) then "Critical failure"
     else "Failure"
 
 msResult (target, roll) =
 {
-    Text = toString (roll) + " vs " + toString (target) + ": " + msOutcome (target, roll) + (if roll < target then "" else ", +1 Stress")
+    Text = toString (roll) + " vs " + toString (target) + ": " + msOutcome (target, roll) + (if contains (msOutcome (target, roll), "uccess") then "" else ", +1 Stress")
     Value = roll
     Outcome = switch msOutcome (target, roll) case "Critical success" then "Critical" case "Critical failure" then "Fumble" else msOutcome (target, roll)
 }
 
-hundred = ([1d100], ((baseline, throws)->msResult (baseline, mod (first (first (throws).rolls), 100))))
+msPick (mode, a, b) = if mode == "Advantage" then min (a, b) else if mode == "Disadvantage" then max (a, b) else a
+
+msSecond (rolls) = if count (rolls) == 0 then 0 else mod (first (rolls), 100)
+
+msRoll (mode) = ([dice { number = 1  sides = 100 }, dice { number = if mode == "Advantage" or mode == "Disadvantage" then 1 else 0  sides = 100  color = if mode == "Advantage" then "green" else "red"  label = if mode == "Advantage" then "Advantage" else if mode == "Disadvantage" then "Disadvantage" else "" }],
+    ((baseline, throws)->msResult (baseline + asked, msPick (mode, mod (first (first (throws).rolls), 100), msSecond (item (1, throws).rolls)))))
+
+hundred = msRoll ("Normal")
+
+checkRoll (char) = ask ("Skill bonus", 0, msRoll (char.Basics.Roll))
+
+panicResult (stress, roll) =
+{
+    Text = toString (roll) + " vs Stress " + toString (stress) + ": " + (if roll > stress then "Success" else "Failure: panic")
+    Value = roll
+    Outcome = if roll > stress then "Success" else "Failure"
+}
+
+panicRoll = ([1d20], ((baseline, throws)->panicResult (baseline, first (first (throws).rolls))))
 
 
 
@@ -53,7 +73,7 @@ weaponAttack (name, target, damage, kind, distance) = custom
     Attack = integer
     {
         value = target
-        valuedice = hundred
+        valuedice = msRoll (characterTable.Basics.Roll)
         action = kind
         range = distance
     }
@@ -80,6 +100,18 @@ characterTable = ruleset
         rowTitle = hidden
       }
     
+    Roll = selector
+    {
+      description = "Advantage rolls twice and keeps the better result, disadvantage the worse."
+      options = ["Disadvantage", "Normal", "Advantage"]
+      labels = ["Disadvantage", "Normal", "Advantage"]
+      colors = ["red", "white", "green"]
+      hold = ["Ctrl", "", "Shift"]
+      default = "Normal"
+      editable = live
+      save = nosave
+    }
+
     'High Score' = table
     {
       tableLayout = layout
@@ -138,25 +170,25 @@ characterTable = ruleset
     {
       description = "Lifting, pushing and hitting hard."
       default = 0
-      valuedice = hundred
+      valuedice = checkRoll (characterTable)
     }
     Speed = integer
     {
       description = "Quickness, reflexes and acting first."
       default=0
-      valuedice=hundred
+      valuedice = checkRoll (characterTable)
     }
     Intellect = integer
     {
       description = "Knowledge, reasoning and recall."
       default=0
-      valuedice=hundred
+      valuedice = checkRoll (characterTable)
     }
     Combat = integer
     {
       description = "Fighting skill, rolled to hit in combat."
       default=0
-      valuedice = hundred
+      valuedice = checkRoll (characterTable)
     }
   }
 
@@ -167,19 +199,19 @@ characterTable = ruleset
     {
       description = "Resisting hallucinations, delusions and mental strain."
       default=0
-      valuedice=hundred
+      valuedice = checkRoll (characterTable)
     }
     Fear = integer
     {
       description = "Resisting panic and terror."
       default=0
-      valuedice=hundred
+      valuedice = checkRoll (characterTable)
     }
     Body = integer
     {
       description = "Resisting hunger, disease and toxins."
       default=0
-      valuedice=hundred
+      valuedice = checkRoll (characterTable)
     }
   }
 
@@ -236,6 +268,13 @@ characterTable = ruleset
       {
         description = "Stress never goes below this."
         default = 2
+      }
+      'Panic check' = integer
+      {
+        description = "Roll 1d20: over your Stress you hold it together, at or under it you panic."
+        value = Current
+        valuedice = panicRoll
+        editable = none
       }
       'Shore leave' = button
       {
@@ -702,7 +741,13 @@ mothership = system
         {
             title = "Stress and panic"
             topic = "Play"
-            text = ["Failed rolls usually give 1 Stress. When nerves break, roll a Panic check on 1d20 against Stress."]
+            text = ["Failed rolls usually give 1 Stress. When nerves break, click Panic check under Stress: 1d20 over the current Stress holds, at or under it panics."]
+        },
+        hint
+        {
+            title = "Skills and advantage"
+            topic = "Play"
+            text = ["Stat and save rolls ask for a skill bonus: enter 10, 15 or 20 when a trained, expert or master skill applies. The Roll slider under Basics gives advantage or disadvantage."]
         },
         hint
         {
