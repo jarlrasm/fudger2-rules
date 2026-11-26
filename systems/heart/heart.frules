@@ -28,19 +28,29 @@ heartResult (rolls, difficulty) =
 
 heartRoll (pool) = ([dice { number = max (1, min (5, pool))  sides = 10 }], ((baseline, throws)->heartResult (first (throws).rolls, if answered then asked else 0)))
 
-heartTest (pool) = ask ("Extra dice (domain, knack, help)", 0, (n)->ask ("Difficulty", ["Standard", "Risky", "Dangerous"], 0, heartRoll (pool + n)))
+heartTest (pool) = ask ("Extra dice (domain, help)", 0, (n)->ask ("Difficulty", ["Standard", "Risky", "Dangerous"], 0, heartRoll (pool + n)))
 
 dieSides (text) = bonusWithValue ([[text]], "d([0-9]+)")
 
-stressRoll (dieSize) = ([dice { number = 1  sides = max (2, dieSize) }], ((baseline, throws)->{ Text = toString (max (0, first (first (throws).rolls) - asked)) + " stress" + (if answered and asked > 0 then " after " + toString (asked) + " protection" else "")  Value = max (0, first (first (throws).rolls) - asked) }))
+stressResult (roll, brutal, protection, given) =
+{
+    Text = toString (max (0, roll - protection)) + " stress" + (if brutal then ", Brutal: the higher of two" else "") + (if given and protection > 0 then " after " + toString (protection) + " protection" else "")
+    Value = max (0, roll - protection)
+}
 
-stressDie (dieSize) = ask ("Target's protection", 0, stressRoll (dieSize))
+stressRoll (dieSize, brutal) = ([dice { number = if brutal then 2 else 1  sides = max (2, dieSize) }], ((baseline, throws)->stressResult (max (first (throws).rolls), brutal, asked, answered)))
+
+stressDie (dieSize) = ask ("Target's protection", 0, stressRoll (dieSize, false))
+
+weaponStress (dieSize, brutal, piercing) = if piercing then stressRoll (dieSize, brutal) else ask ("Target's protection", 0, stressRoll (dieSize, brutal))
+
+tagText (brutal, piercing) = (if brutal then " Brutal" else "") + (if piercing then " Piercing" else "")
 
 falloutResult (roll, total) =
 {
-    Text = toString (roll) + " vs " + toString (total) + " stress: " + (if roll < total then (if total > 6 then "Major fallout" else "Minor fallout") else "No fallout")
+    Text = toString (roll) + " vs " + toString (total) + " stress: " + (if roll <= total then (if total > 6 then "Major fallout" else "Minor fallout") else "No fallout")
     Value = roll
-    Outcome = if roll < total then "Failure" else "Success"
+    Outcome = if roll <= total then "Failure" else "Success"
 }
 
 falloutRoll = ([1d12], ((baseline, throws)->falloutResult (first (first (throws).rolls), baseline)))
@@ -48,7 +58,7 @@ falloutRoll = ([1d12], ((baseline, throws)->falloutResult (first (first (throws)
 skill = custom
 {
     Has = bool { description = "Ticked if you have the skill: +1 die." default = false }
-    Knack = string { description = "A knack makes the skill's tests one step better within its focus." }
+    Knack = string { description = "A knack gives mastery within its focus: the test is one step less difficult." }
     Roll = integer { value = 1 + (if Has then 1 else 0)  valuedice = heartTest (1 + (if Has then 1 else 0))  render = toString (1 + (if Has then 1 else 0)) + "d10"  editable = none }
 }
 
@@ -74,16 +84,16 @@ hasTag (item, tag) = contains (toLower (itemStat (item, "Tags")), tag)
 
 skillDice (char, name) = 1 + (if valueOr (valueOr (char.Skills, name, { Has = false }), "Has", false) then 1 else 0)
 
-weaponAttack (name, pool, dieSize, kind, distance) = custom
+weaponAttack (name, pool, dieSize, kind, distance, brutal, piercing) = custom
 {
     Name = name
     Attack = integer { value = pool  valuedice = heartTest (pool)  render = toString (pool) + "d10"  action = kind  reach = 2  range = distance  editable = none }
-    Stress = integer { value = dieSize  valuedice = stressDie (dieSize)  render = "d" + toString (dieSize)  editable = none }
+    Stress = integer { description = "Brutal rolls the stress die twice and keeps the higher; Piercing ignores protection." value = dieSize  valuedice = weaponStress (dieSize, brutal, piercing)  render = "d" + toString (dieSize) + tagText (brutal, piercing)  editable = none }
 }
 
 attackFor (char, item) =
-    if hasTag (item, "ranged") then weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "ranged", 30)
-    else weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "melee", 2)
+    if hasTag (item, "ranged") then weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "ranged", 30, hasTag (item, "brutal"), hasTag (item, "piercing"))
+    else weaponAttack (item.Name, skillDice (char, "Kill"), dieSides (itemStat (item, "Damage")), "melee", 2, hasTag (item, "brutal"), hasTag (item, "piercing"))
 
 weapons (char) = filter ((x)->dieSides (itemStat (x, "Damage")) > 0, char.Equipment)
 
@@ -143,7 +153,7 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 3  size = wide }
         'Total Stress' = integer { value = totalStress (characterTable)  editable = none }
-        'Fallout Check' = integer { description = "Roll d12: under your total stress you suffer fallout, major above 6." value = totalStress (characterTable)  valuedice = falloutRoll  render = "d12"  editable = none }
+        'Fallout Check' = integer { description = "Roll d12: equal to or under your total stress you suffer fallout, major when total stress is above 6." value = totalStress (characterTable)  valuedice = falloutRoll  render = "d12"  editable = none }
         'Fallout Taken' = string { multiline = true  editable = live  indicator = "#d64545" }
         'Rest in a haven' = button { description = "Resting in a haven clears all stress." editable = live  onClick = updates
             {
@@ -176,7 +186,7 @@ characterTable = ruleset
     {
         description = "Kill tests with your weapons; the stress die goes to the target's resistance, less its protection."
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Fists and teeth", skillDice (characterTable, "Kill"), 4, "melee", 2)], map ((item)->attackFor (characterTable, item), weapons (characterTable)))
+        source = concat ([weaponAttack ("Fists and teeth", skillDice (characterTable, "Kill"), 4, "melee", 2, false, false)], map ((item)->attackFor (characterTable, item), weapons (characterTable)))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -289,7 +299,7 @@ Heart = system
         {
             title = "Rolling"
             topic = "Play"
-            text = ["Roll 1d10, plus one for a fitting skill and one for a fitting domain (and help), and keep the highest. Risky and Dangerous tasks discard the highest one or two dice first. 8 or 9 succeeds, 10 is a critical, 6 or 7 succeeds at a cost of stress, and lower fails with stress."]
+            text = ["Roll 1d10, plus one for a fitting skill and one for a fitting domain (and help), and keep the highest. Risky and Dangerous tasks discard the highest one or two dice first, and a knack that applies makes the task one step less difficult. 8 or 9 succeeds, 10 is a critical, 6 or 7 succeeds at a cost of stress, and lower fails with stress."]
         },
         hint
         {
