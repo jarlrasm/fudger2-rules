@@ -42,6 +42,10 @@ def cell(fragment):
     return "" if value == "-" else value
 
 
+def plain(fragment):
+    return cell(re.sub(r"<sup>.*?</sup>", "", fragment or "", flags=re.S))
+
+
 def entity(kind, name, description, ruleset, values):
     return {
         "type": kind,
@@ -130,13 +134,13 @@ def armor(db):
         name = cell(cells[0])
         yield entity("Armor", name, descriptions.get(name.lower(), ""), "pf1Armor", {"Stats": {
             "Type": kind,
-            "Armor Bonus": cell(cells[2]).lstrip("+"),
-            "Max Dex": cell(cells[3]).lstrip("+"),
-            "Check Penalty": cell(cells[4]) or "0",
-            "Spell Failure": cell(cells[5]),
-            "Speed": cell(cells[6]) + (" / " + cell(cells[7]) if cell(cells[7]) else ""),
-            "Cost": cell(cells[1]),
-            "Weight": cell(cells[8]),
+            "Armor Bonus": plain(cells[2]).lstrip("+"),
+            "Max Dex": plain(cells[3]).lstrip("+"),
+            "Check Penalty": plain(cells[4]) or "0",
+            "Spell Failure": plain(cells[5]),
+            "Speed": plain(cells[6]) + (" / " + plain(cells[7]) if plain(cells[7]) else ""),
+            "Cost": plain(cells[1]),
+            "Weight": plain(cells[8]),
         }})
 
 

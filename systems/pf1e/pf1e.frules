@@ -25,8 +25,8 @@ pf1Result (total, natural, dc, automatic) =
 
 attackOutcome (total, natural, ac, threat) =
     if natural == 1 then "Miss"
+    else if natural == 20 then "Critical threat"
     else if natural >= threat and (total >= ac or ac == 0) then "Critical threat"
-    else if natural == 20 then "Hit"
     else if ac == 0 then ""
     else if total >= ac then "Hit"
     else "Miss"
@@ -213,7 +213,6 @@ characterTable = ruleset
                 (root.Combat.HP) = min ('Max HP', HP + Character.Level)
                 (root.Combat.Nonlethal) = max (0, Nonlethal - 8 * Character.Level)
                 (root.Conditions.Fatigued) = false
-                (root.Spellcasting.'Level 0'.realvalue) = 0
                 (root.Spellcasting.'Level 1'.realvalue) = 0
                 (root.Spellcasting.'Level 2'.realvalue) = 0
                 (root.Spellcasting.'Level 3'.realvalue) = 0
@@ -355,7 +354,7 @@ characterTable = ruleset
         'Caster level' = integer { description = "Caster level, which sets spell range, duration and power." default = 0 }
         'Casting ability' = string { description = "The ability that powers your spells." default = "Int"  keys = ["Int", "Wis", "Cha"] }
         'Concentration' = modifier { description = "Concentration check: caster level plus casting ability modifier." value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = pf1Check  editable = none }
-        'Level 0' = slots { description = "Cantrips or orisons prepared per day." number = 4  editable = live }
+        'Level 0' = integer { description = "Cantrips or orisons prepared. They are cast at will and not used up." default = 4  minvalue = 0 }
         'Level 1' = slots { number = 0  editable = live }
         'Level 2' = slots { number = 0  editable = live }
         'Level 3' = slots { number = 0  editable = live }
@@ -399,7 +398,7 @@ creatureTable = ruleset
     rulesetConfiguration =
     {
         important = [Defense, Offense]
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/dnd35/monster.svg"
         sortedBy = sort { prefix = "CR" sort = Stats.CR }
         filters = [
             filter { name = "CR" prefix = "CR" filter = Stats.CR },
@@ -453,7 +452,7 @@ creatureTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Attack = modifier { default = 0  valuedice = pf1Attack (20)  action = melee  reach = 5 }
+            Attack = modifier { default = 0  valuedice = pf1Attack (20)  action = melee  reach = max (5, firstNumber (Offense.Reach)) }
             Damage = string {}
         }
     }
@@ -615,7 +614,7 @@ Pathfinder1e = system
         {
             title = "Full attacks"
             topic = "Combat"
-            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits is a critical threat: roll again to confirm."]
+            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits, and every natural 20, is a critical threat: roll again to confirm."]
         },
         hint
         {
