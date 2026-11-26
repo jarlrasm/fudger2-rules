@@ -15,10 +15,14 @@ edgeResult (rolls, mode, difficulty) =
     Outcome = if difficulty > 0 then edgeVerdict (edgeDice (rolls, mode), difficulty) else ""
 }
 
-edgeModeRoll (mode) = ([dice { number = 2  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else if mode == "Penalty" then "Penalty die" else "" }],
+edgeModeRoll (mode) = edgePool (mode, 2)
+
+edgePool (mode, n) = ([dice { number = max (1, n)  sides = 6 }, dice { number = if mode == "Bonus" or mode == "Penalty" then 1 else 0  sides = 6  color = if mode == "Bonus" then "green" else "red"  label = if mode == "Bonus" then "Bonus die" else if mode == "Penalty" then "Penalty die" else "" }],
     ((baseline, throws)-> edgeResult (concat (first (throws).rolls, item (1, throws).rolls), mode, asked)))
 
-edgeRoll (char) = ask ("Difficulty", edgeModeRoll (char.Basics.Roll))
+edgeRoll (char) = edgeTraitRoll (char, 2)
+
+edgeTraitRoll (char, n) = ask ("Difficulty", edgePool (char.Basics.Roll, n))
 
 characterTable = ruleset
 {
@@ -41,9 +45,10 @@ characterTable = ruleset
       {
         Score = integer
         {
-          description = "Bonus added to the 2d6 roll when this trait applies."
-          default = 0
-          valuedice = edgeRoll (characterTable)
+          description = "Dice rolled when this trait applies: 2 is ordinary, 3 good, 4 exceptional."
+          default = 2
+          minvalue = 1
+          valuedice = edgeTraitRoll (characterTable, Score)
         }
       }
     }
@@ -57,9 +62,10 @@ characterTable = ruleset
       {
         Score = integer
         {
-          description = "Bonus added to the 2d6 roll when this trait applies."
-          default = 0
-          valuedice = edgeRoll (characterTable)
+          description = "Dice rolled when this trait applies: 2 is ordinary, 3 good, 4 exceptional."
+          default = 2
+          minvalue = 1
+          valuedice = edgeTraitRoll (characterTable, Score)
         }
       }
     }
@@ -85,22 +91,25 @@ characterTable = ruleset
   {
     Fight = integer
     {
-      description = "Your knack for violence: brawling, shooting and surviving a fight."
-      default=0
-      valuedice = edgeRoll (characterTable)
+      description = "Your knack for violence: brawling, shooting and surviving a fight, in dice."
+      default=2
+      minvalue=1
+      valuedice = edgeTraitRoll (characterTable, Fight)
       action = ranged
     }
     Sway = integer
     {
-      description = "Your knack for persuading, charming, bluffing or bullying people."
-      default=0
-      valuedice = edgeRoll (characterTable)
+      description = "Your knack for persuading, charming, bluffing or bullying people, in dice."
+      default=2
+      minvalue=1
+      valuedice = edgeTraitRoll (characterTable, Sway)
     }
     Weird = integer
     {
-      description = "Your knack for the strange: odd powers, uncanny luck or hidden lore."
-      default=0
-      valuedice = edgeRoll (characterTable)
+      description = "Your knack for the strange: odd powers, uncanny luck or hidden lore, in dice."
+      default=2
+      minvalue=1
+      valuedice = edgeTraitRoll (characterTable, Weird)
     }
     Roll = selector
     {
