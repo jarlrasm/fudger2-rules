@@ -54,21 +54,38 @@ noSkill = { Value = 0 }
 
 skillValue (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Value", 0)
 
-weaponAttack (name, target, damage, kind, distance) = custom
+lethalDamage (tens, units) = (if mod (tens, 10) == 0 then 10 else mod (tens, 10)) + (if mod (units, 10) == 0 then 10 else mod (units, 10))
+
+lethalityResult (target, tens, units) =
+{
+    Text = if dgValue (units, tens) <= target then toString (dgValue (units, tens)) + " vs " + toString (target) + ": Lethal, the target dies" else toString (dgValue (units, tens)) + " vs " + toString (target) + ": not lethal, " + toString (lethalDamage (tens, units)) + " damage"
+    Value = dgValue (units, tens)
+    Outcome = if dgValue (units, tens) <= target then "Lethal hit" else "Damage"
+}
+
+lethalityRoll = ([dice { number = 1  sides = 10  label = "Units" }, dice { number = 1  sides = 10  label = "Tens" }],
+    ((baseline, throws)->lethalityResult (baseline, first (item (1, throws).rolls), first (first (throws).rolls))))
+
+weaponAttack (name, target, damage, kind, distance, ap, lethal) = custom
 {
     Name = name
     Skill = integer { value = target  valuedice = dgDice (characterTable)  action = kind  reach = 2  range = distance }
     Damage = string { value = damage }
-    'Armor Piercing' = string {}
+    'Armor Piercing' = string { value = ap }
+    Lethality = integer { description = "Lethality rating. Roll d100 under it to kill outright; a miss deals the two dice added together." value = lethal  valuedice = lethalityRoll }
 }
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
+weaponAp (weapon) = valueOr (weapon.data.weaponStats.Stats, "Armor Piercing", "")
+
+weaponLethality (weapon) = firstNumber (valueOr (weapon.data.weaponStats.Stats, "Lethality", ""))
+
 attackFor (char, weapon) =
     if firstNumber (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) > 0 then
-        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Firearms")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", firstNumber (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) * 3)
+        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Firearms")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "ranged", firstNumber (valueOr (weapon.data.weaponStats.Stats, "Base Range", "")) * 3, weaponAp (weapon), weaponLethality (weapon))
     else
-        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee Weapons")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "melee", 0)
+        weaponAttack (weapon.Name, skillValue (char, valueOr (weapon.data.weaponStats.Stats, "Skill", "Melee Weapons")), valueOr (weapon.data.weaponStats.Stats, "Damage", ""), "melee", 0, weaponAp (weapon), weaponLethality (weapon))
 
 characterTable = ruleset
 {
@@ -155,7 +172,7 @@ characterTable = ruleset
         valueType = custom
         {
             Name = string {}
-            Score = integer { description = "Strength of the bond. It falls when the bond is used or neglected." default = 10  editable = live }
+            Score = integer { description = "Strength of the bond. It starts at the agent's CHA and falls when the bond is used or neglected." default = Statistics.Charisma.Score  editable = live }
             Damaged = bool { description = "Tick when the bond has been damaged this operation." default = false  editable = live }
         }
     }
@@ -233,7 +250,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, "Unarmed Combat"), "1d4-1", "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", skillValue (characterTable, "Unarmed Combat"), "1d4-1", "melee", 0, "", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
