@@ -1,0 +1,26 @@
+{
+  "values": {
+    "Debtor": { "Failed Career": "Tram Inspector", "Creditor": "The Hollow Syndicate of Tram Line Nine", "Shared debt": 9400 },
+    "Abilities": { "STR": { "Score": 8, "Max": 11 }, "DEX": { "Score": 13, "Max": 13 }, "CHA": { "Score": 7, "Max": 7 } },
+    "Protection": { "Max HP": 4, "HP": 1, "Armour": 1 },
+    "Purse": { "Pounds": 3, "Shillings": 12, "Pence": 6 },
+    "Scars": [ { "Damage": 3, "Scar": "Split eyebrow", "Effect": "A white line through the left brow; strangers remember the face." } ],
+    "Notes": { "Description": "Brass-buttoned coat two sizes too big, a ticket punch on a chain, the habit of asking strangers for their fare. Dismissed after the Line Nine derailment and blamed for every pound of it.", "Followers": "Gillam, a bored conductor's boy: STR 6, lamp and whistle, paid 2s a day.", "Notes": "The Syndicate's collector visits on the first of each month. Lost 3 STR to a Mockery horse under Gasholder Row. The map to the Copper Vault is sewn into the coat lining." }
+  },
+  "secondary": {
+    "Failed Careers": [
+      { "name": "Tram Inspector", "description": "Checked tickets on the electric lines until a derailment took the blame.", "values": { "Stats": { "Index": 42, "Creditor": "The tram syndicate that pinned the derailment on you.", "Kit": "Ticket punch, brass-buttoned coat (Armour 1), revolver.", "By money": "With £3: a pass that opens any tram depot.", "By HP": "With 4 HP: a conductor's boy who still follows you." } } }
+    ],
+    "Equipment": [
+      { "name": "Revolver", "values": { "Stats": { "Kind": "Weapon", "Damage": "d8", "Ranged": true, "Cost": "£4" } } },
+      { "name": "Truncheon", "values": { "Stats": { "Kind": "Weapon", "Damage": "d6", "Cost": "5s" } } },
+      { "name": "Inspector's greatcoat", "values": { "Stats": { "Kind": "Armour", "Armour": 1, "Cost": "£2" } } },
+      { "name": "Ticket punch", "values": { "Stats": { "Kind": "Tool", "Cost": "1s" } } },
+      { "name": "Electric lantern", "values": { "Stats": { "Kind": "Tool", "Bulky": true, "Cost": "15s" } } },
+      { "name": "Tin of boiled sweets", "values": { "Stats": { "Kind": "Consumable", "Cost": "6d" } } }
+    ],
+    "Oddities": [
+      { "name": "Humming Fare Token", "description": "A copper token that warms when the holder walks toward the nearest working tram line, wherever they are.", "values": { "Stats": { "Kind": "Curio" } } }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+@import url("/systems/sheet.css");
+
+/* Electric Bastionland: a cheap printed form on pale newsprint, black
+   rules and condensed capitals, with the book's electric cyan and hot
+   pink as accents; Debtor details across the top, the three abilities
+   as a column of boxes, Hit Protection and the purse beside them, then
+   Scars, attacks and kit in full-width bands. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #15121c;
+    --surface: #f4f1ea;
+    --surface-alt: #e8f4f5;
+    --surface-sunken: #d8e9ec;
+    --surface-muted: #bcd3d8;
+    --text: #121018;
+    --text-muted: #39344a;
+    --text-faint: #6f6a7d;
+    --on-accent: #f4f1ea;
+    --border: #8d8a99;
+    --border-strong: #121018;
+    --accent: #e0287d;
+    --accent-hover: #b81f66;
+    --accent-soft: #fbd7e8;
+    --link: #b81f66;
+    --danger: #b81f2c;
+    --danger-hover: #8c1722;
+    --danger-soft: #f6d3d6;
+    --success: #1c7a72;
+    --paper: #f4f1ea;
+    --card-bg: #e8f4f5;
+    --dice-bg: #00a6b8;
+    --dice-text: #121018;
+}
+
+.entityView {
+    --sheet-font: "Helvetica Neue", "Arial", sans-serif;
+    --title-font: "Oswald", "Bebas Neue", "Arial Narrow", Impact, sans-serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 1.25em;
+    background: var(--border-strong);
+    color: #3ee6f2;
+    border-bottom: 3px solid var(--accent);
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.entityView .table-abilities { --block: 36%; clear: left; }
+.entityView .table-protection { --block: 40%; }
+.entityView .table-purse { --block: 24%; }
+.entityView .table-abilities > table > tbody > tr { font-size: 1.15em; }
+.entityView .table-abilities > table > tbody > tr > td { white-space: nowrap; }
+.entityView .table-abilities > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    font-size: 1.5em;
+    color: var(--accent);
+}
+.entityView .table-abilities > table > tbody > tr > td:nth-child(2)::before { content: "SCORE "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-abilities > table > tbody > tr > td:nth-child(3)::before { content: "MAX "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-abilities > table > tbody > tr > td:nth-child(4)::before { content: "SAVE "; color: var(--text-faint); font-size: 0.6em; letter-spacing: 0.08em; }
+.entityView .table-scars { clear: left; }
+.entityView .table-scars > table > thead th { color: var(--surface); background: var(--accent); border-bottom-color: var(--border-strong); }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "Damage "; color: var(--text-faint); font-size: 0.8em; }

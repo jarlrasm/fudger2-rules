@@ -1,0 +1,441 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+ebSaveOutcome (roll, score) =
+    if roll == 1 then "Success"
+    else if roll == 20 then "Failure"
+    else if roll <= score then "Success"
+    else "Failure"
+
+ebSaveResult (roll, score) =
+{
+    Text = toString (roll) + " vs " + toString (score) + ": " + ebSaveOutcome (roll, score)
+    Value = roll
+    Outcome = ebSaveOutcome (roll, score)
+}
+
+ebSave = ([1d20], ((baseline, throws)->ebSaveResult (first (first (throws).rolls), baseline)))
+
+ebInitiativeText (roll, score) =
+    toString (roll) + " vs DEX " + toString (score) + ": "
+    + (if ebSaveOutcome (roll, score) == "Success" then "acts before the enemy" else "too slow, acts after the enemy")
+
+ebInitiativeResult (roll, score) =
+{
+    Text = ebInitiativeText (roll, score)
+    Value = if ebSaveOutcome (roll, score) == "Success" then 2 else 0
+    Outcome = ebSaveOutcome (roll, score)
+}
+
+ebInitiative = ([1d20], ((baseline, throws)->ebInitiativeResult (first (first (throws).rolls), baseline)))
+
+ebEnemyInitiative = ([1d6], ((baseline, throws)->{ Text = "acts between the quick and the slow"  Value = 1 }))
+
+ebInitiativeRank (text) =
+    if contains (text, "acts before") then 3
+    else if contains (text, "between the quick") then 2
+    else if contains (text, "too slow") then 1
+    else 0
+
+ebAttackSides (mode, die) = if mode < 0 then 4 else if mode == 1 then 12 else die
+
+ebAttackDice (mode) = if mode == 2 then 2 else 1
+
+ebModeText (mode) =
+    if mode < 0 then " (impaired)"
+    else if mode == 1 then " (enhanced)"
+    else if mode == 2 then " (best of two)"
+    else ""
+
+ebDamageText (roll, armour, answered, mode, blast) =
+    toString (max (0, roll - armour)) + " damage" + ebModeText (mode)
+    + (if answered and armour > 0 then " after " + toString (armour) + " Armour" else "")
+    + (if blast then ", Blast: roll for each target" else "")
+    + (if max (0, roll - armour) > 0 then ". Leaves exactly 0 HP: Scar " + toString (max (0, roll - armour)) else "")
+
+ebDamageResult (roll, armour, answered, mode, blast) =
+{
+    Text = ebDamageText (roll, armour, answered, mode, blast)
+    Value = max (0, roll - armour)
+}
+
+ebDamage (dieSides, howMany, mode, blast) = ([dice { number = howMany  sides = dieSides }], ((baseline, throws)->ebDamageResult (max (first (throws).rolls) + baseline, asked, answered, mode, blast)))
+
+ebAttack (die, blast) = ask ("Attack", ["Impaired d4", "Normal", "Enhanced d12", "Two weapons, best of two"], -1, (mode)->ask ("Target's Armour", 0, ebDamage (ebAttackSides (mode, die), ebAttackDice (mode), mode, blast)))
+
+ebMaxHpRoll = ([1d6], ((baseline, throws)->{
+    Text = "d6 " + toString (first (first (throws).rolls)) + " vs Max HP " + toString (baseline) + ": "
+        + (if first (first (throws).rolls) > baseline then "new Max HP " + toString (first (first (throws).rolls)) else "keep " + toString (baseline))
+    Value = max (baseline, first (first (throws).rolls))
+}))
+
+ebDieSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+ebNoStats = { Stats = { Kind = "" } }
+
+ebItemStat (item, field) = valueOr (valueOr (valueOr (item.data, "bastionItem", ebNoStats), "Stats", ebNoStats.Stats), field, "")
+
+ebBulkyCount (char) = count (filter ((item)->ebItemStat (item, "Bulky") == true, char.Equipment)) + count (filter ((odd)->valueOr (valueOr (valueOr (odd.data, "bastionOddity", ebNoStats), "Stats", ebNoStats.Stats), "Bulky", false) == true, char.Oddities))
+
+ebDownState (str, dex, cha, crit, hp) =
+    if str == 0 then "Dead"
+    else if crit then "Critical Damage"
+    else if dex == 0 then "Paralysed"
+    else if cha == 0 then "Delirious"
+    else if hp == 0 then "0 HP"
+    else ""
+
+ebActionKind (kind) = if kind == "Ranged" then "ranged" else "melee"
+
+ebCareerIndex (str, dex, cha) =
+    "lowest " + toString (min (str, dex, cha)) + ", highest " + toString (max (str, dex, cha))
+
+ebWeaponAttack (name, die, kind, blast) = custom
+{
+    Name = name
+    Damage = integer { value = 0  valuedice = ebAttack (die, blast)  action = kind  reach = 2  render = "d" + toString (die)  editable = none }
+}
+
+ebWeaponsOf (char) = filter ((item)->ebItemStat (item, "Kind") == "Weapon" or ebItemStat (item, "Kind") == "Explosive", char.Equipment)
+
+ebAttackFor (item) = ebWeaponAttack (item.Name, max (4, ebDieSize (ebItemStat (item, "Damage"))), if ebItemStat (item, "Ranged") == true then "ranged" else "melee", ebItemStat (item, "Blast") == true)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Abilities, Protection, Attacks] }
+    Debtor = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Failed Career' = string { description = "What you were before you fell into debt. Found on the career table from your lowest and highest ability." }
+        'Career index' = string { description = "Cross-reference these on the Failed Careers table." value = ebCareerIndex (Abilities.STR.Max, Abilities.DEX.Max, Abilities.CHA.Max)  editable = none }
+        Creditor = string { description = "Who the group owes. The youngest player's Failed Career names them." }
+        'Shared debt' = integer { description = "The debt all the Debtors share, usually 10,000 pounds. Paying it off ends the game." default = 10000  minvalue = 0  step = 100  editable = live }
+    }
+
+    Abilities = keyvalues
+    {
+        description = "Saves: roll d20 equal to or under the score. 1 always succeeds, 20 always fails."
+        keys = ["STR", "DEX", "CHA"]
+        descriptions = { STR = "Strength: muscle, endurance, resisting poison and sickness. Damage past HP comes off it; at 0 you are dead." DEX = "Dexterity: speed, stealth, aim and reflexes. Also decides who acts first. At 0 you are paralysed." CHA = "Charisma: persuasion, nerve, command and keeping your mind. At 0 you are delirious." }
+        valueType = custom
+        {
+            Score = integer { default = 10  minvalue = 0  maxvalue = 20  editable = live }
+            Max = integer { default = 10  minvalue = 1  maxvalue = 20 }
+            Save = integer { value = Score  valuedice = ebSave  editable = none }
+        }
+    }
+
+    Protection = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max HP' = integer { description = "Hit Protection: how well you avoid harm, not your health. A d6 to start; Scars can change it." default = 3  minvalue = 1  valuedice = ebMaxHpRoll }
+        HP = integer { description = "Lost first. A hit that leaves exactly 0 HP gives a Scar; damage past 0 comes off STR, and you save STR against Critical Damage." default = 'Max HP'  minvalue = 0  editable = live }
+        Armour = integer { description = "Taken off every hit, at most 3." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        'Critical Damage' = bool { description = "Failed the STR save: you can only crawl until an ally tends you and you rest. Untended for an hour, you die." default = false  editable = live  indicator = "#555555" }
+        Tended = bool { description = "An ally has tended the Critical Damage; the next short rest ends it." default = false  editable = live }
+        Deprived = bool { description = "Lacking food, sleep, warmth or another basic need: rests restore nothing." default = false  editable = live  indicator = "#e8913a" }
+        'Bulky items' = integer { description = "Bulky items need two hands or a pack. Carrying too many leaves you Deprived." value = ebBulkyCount (characterTable)  editable = none }
+        State = string { value = ebDownState (Abilities.STR.Score, Abilities.DEX.Score, Abilities.CHA.Score, 'Critical Damage', HP)  visible = none  indicator = "#d64545" }
+        Initiative = integer { description = "When a fight starts: a DEX save to act before the enemy." value = Abilities.DEX.Score  valuedice = ebInitiative  editable = none }
+        'Short rest' = button
+        {
+            description = "A few minutes and a drink restore all HP and, once tended, end Critical Damage. Not while deprived."
+            editable = live
+            onClick = updates
+            {
+                (root.Protection.HP) = if Deprived then HP else 'Max HP'
+                (root.Protection.'Critical Damage') = if Deprived or not (Tended) then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
+            }
+        }
+        'Full rest' = button
+        {
+            description = "A week of rest somewhere safe, or a paid specialist, restores every ability score. Not while deprived."
+            editable = live
+            onClick = updates
+            {
+                (root.Abilities.STR.Score) = if Deprived then Abilities.STR.Score else Abilities.STR.Max
+                (root.Abilities.DEX.Score) = if Deprived then Abilities.DEX.Score else Abilities.DEX.Max
+                (root.Abilities.CHA.Score) = if Deprived then Abilities.CHA.Score else Abilities.CHA.Max
+                (root.Protection.HP) = if Deprived then HP else 'Max HP'
+                (root.Protection.'Critical Damage') = if Deprived then 'Critical Damage' else false
+                (root.Protection.Tended) = if Deprived then Tended else false
+            }
+        }
+    }
+
+    Purse = table
+    {
+        description = "Money in pounds, with small change in shillings and pence. You start with a d6 pounds."
+        tableLayout = layout { columns = 1 }
+        Pounds = integer { description = "Pounds (£)." default = 0  minvalue = 0  editable = live }
+        Shillings = integer { description = "Shillings (s)." default = 0  minvalue = 0  editable = live }
+        Pence = integer { description = "Pence (d)." default = 0  minvalue = 0  editable = live }
+    }
+
+    Scars = list
+    {
+        description = "A hit that leaves you at exactly 0 HP gives a Scar: look up the damage dealt on the Scars table. Scars are how a Debtor changes."
+        tableLayout = layout { size = wide }
+        singular = "Scar"
+        editable = character
+        valueType = custom
+        {
+            Damage = integer { description = "The damage that caused it: its row on the Scars table." default = 1  minvalue = 1  maxvalue = 12 }
+            Scar = string { description = "What happened." }
+            Effect = string { description = "What it changed: a stat, a new Max HP, a mark people notice." }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Attacks always hit: roll the weapon die, minus the target's Armour. Unarmed is d4."
+        tableLayout = layout { size = wide }
+        source = concat ([ebWeaponAttack ("Unarmed", 4, "melee", false)], map ((item)->ebAttackFor (item), ebWeaponsOf (characterTable)))
+        singular = "Attack"
+        editable = none
+        valueType = ebWeaponAttack
+    }
+
+    'Failed Careers' = list
+    {
+        description = "The career you failed at, with what it gave you."
+        tableLayout = layout { size = wide }
+        source = secondary.'Failed Careers'
+        singular = "Failed Career"
+        editable = character
+    }
+
+    Equipment = list
+    {
+        description = "What you carry: the kit from your Failed Career and whatever you have bought or found."
+        tableLayout = layout { size = wide }
+        source = secondary.Equipment
+        singular = "Item"
+        editable = character
+    }
+
+    Oddities = list
+    {
+        description = "Strange devices and relics. Everyone wants them, nobody understands them."
+        tableLayout = layout { size = wide }
+        source = secondary.Oddities
+        singular = "Oddity"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Description = string { description = "Looks, manner and why you are still in Bastion." multiline = true }
+        Followers = string { description = "Hirelings, followers and beasts." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Stats, Attack]
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "Humans, Mockeries (wooden imitations), Machines, Aliens or Monstrosities." keys = ["Human", "Mockery", "Machine", "Alien", "Monstrosity"] default = "Human" }
+        HP = integer { default = 4  minvalue = 0  editable = live }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        CHA = integer { default = 10  minvalue = 0  editable = live }
+        'STR save' = integer { value = STR  valuedice = ebSave  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = ebSave  editable = none }
+        'CHA save' = integer { description = "Also morale: when it is clearly losing, fail and it flees or gives up." value = CHA  valuedice = ebSave  editable = none }
+        'Critical Damage' = bool { description = "Failed its STR save after damage past HP: out of the fight, or dead." default = false  editable = live  indicator = "#555555" }
+        State = string { value = ebDownState (STR, DEX, CHA, 'Critical Damage', HP)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = 0  valuedice = ebEnemyInitiative  editable = none  visible = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Attacks = string { description = "What it attacks with, such as claws (d6)." default = "claws (d6)" }
+        Damage = string { description = "The die of its main attack." default = "d6" }
+        Kind = string { keys = ["Melee", "Ranged"] default = "Melee" }
+        Strike = integer { value = 0  valuedice = ebAttack (max (4, ebDieSize (Damage)), false)  action = ebActionKind (Kind)  reach = 2  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Special = string { description = "Odd abilities, weaknesses and what it wants." multiline = true }
+    }
+}
+
+detachmentTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/bastionland/detachment.svg"
+        important = [Detachment, Attack]
+    }
+    Detachment = table
+    {
+        description = "Twenty or more fighting as one. Its attacks on individuals are enhanced; individuals' attacks on it are impaired, except Blast."
+        tableLayout = layout { columns = 3  size = wide }
+        Size = integer { description = "How many fight in it." default = 20  minvalue = 1  editable = live }
+        HP = integer { default = 8  minvalue = 0  editable = live }
+        Armour = integer { default = 0  minvalue = 0  maxvalue = 3 }
+        STR = integer { default = 10  minvalue = 0  editable = live }
+        DEX = integer { default = 10  minvalue = 0  editable = live }
+        CHA = integer { default = 10  minvalue = 0  editable = live }
+        'STR save' = integer { value = STR  valuedice = ebSave  editable = none }
+        'DEX save' = integer { value = DEX  valuedice = ebSave  editable = none }
+        Morale = integer { description = "A CHA save, or its leader's, when it has lost half its strength. Fail and it routs." value = CHA  valuedice = ebSave  editable = none }
+        'Critical Damage' = bool { description = "The detachment is broken and scatters." default = false  editable = live  indicator = "#555555" }
+        Routed = bool { description = "Failed morale and fled." default = false  editable = live  indicator = "#8e5cc4" }
+        State = string { value = ebDownState (STR, DEX, CHA, 'Critical Damage', HP)  visible = none  indicator = "#d64545" }
+        Initiative = integer { value = 0  valuedice = ebEnemyInitiative  editable = none  visible = none }
+    }
+    Attack = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Weapons = string { default = "rifles (d8)" }
+        Damage = string { default = "d8" }
+        Kind = string { keys = ["Melee", "Ranged"] default = "Ranged" }
+        Volley = integer { description = "Against an individual, pick Enhanced." value = 0  valuedice = ebAttack (max (4, ebDieSize (Damage)), false)  action = ebActionKind (Kind)  reach = 2  render = Damage  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Leader = string { description = "Who leads it; the leader's CHA can stand for its morale." }
+        Notes = string { multiline = true }
+    }
+}
+
+bastionItem = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Weapon", "Armour", "Explosive", "Consumable", "Tool", "Luxury", "Animal", "Vehicle", "Service"] }
+        Damage = string { description = "Weapon die, such as d6." }
+        Armour = integer { description = "Armour it gives." default = 0  minvalue = 0  maxvalue = 3 }
+        Bulky = bool { description = "Needs two hands or a pack." default = false }
+        Ranged = bool { description = "A missile or firearm." default = false }
+        Blast = bool { description = "Hits everything in an area, each target rolled separately." default = false }
+        Cost = string { description = "In pounds (£), shillings (s) or pence (d)." }
+    }
+}
+
+bastionOddity = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/bastionland/oddity.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Device", "Relic", "Curio", "Weapon"] default = "Device" }
+        Uses = string { description = "Charges or how often it works, if it is limited." }
+        Bulky = bool { default = false }
+        Price = string { description = "What it asks of its user, if anything." multiline = true }
+    }
+}
+
+bastionCareer = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/bastionland/career.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Index }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Index = integer { description = "Its number on the Failed Careers table." default = 0  minvalue = 0 }
+        Creditor = string { description = "Who you owe, if this is the youngest player's career." }
+        Kit = string { description = "The items every Debtor of this career starts with." multiline = true }
+        'By money' = string { description = "What the career gives, by your starting pounds." multiline = true }
+        'By HP' = string { description = "What the career gives, by your starting HP." multiline = true }
+    }
+}
+
+bastionNameSetting = nameSetting
+{
+    name = "Electric Bastion"
+    characters = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    creatures = [generator { library = "Gaslight" variant = "Gentleman" }, generator { library = "Gaslight" variant = "Lady" }, generator { library = "Gaslight" variant = "Urchin" }]
+    Detachments = generator { library = "Gaslight" variant = "Club" }
+    Location = [generator { library = "Gaslight" variant = "Street" }, generator { library = "Gaslight" variant = "Club" }]
+    Oddities = generator { library = "Gaslight" variant = "Invention" }
+    Equipment = generator { library = "Gaslight" variant = "Invention" }
+}
+
+ElectricBastionland = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a Debtor"
+            topic = "Getting started"
+            text = ["Roll 3d6 for STR, DEX and CHA in order (you may swap two), a d6 for HP and a d6 pounds. Your lowest and highest ability find your Failed Career, shown as Career index on the sheet. The career gives starting kit, and its two tables give more by your pounds and your HP. Add the career under Failed Careers and its items under Equipment."]
+        },
+        hint
+        {
+            title = "The debt"
+            topic = "Getting started"
+            text = ["The Debtors share one debt, usually 10,000 pounds, owed to the creditor named by the youngest player's Failed Career. Paying it off ends the game."]
+        },
+        hint
+        {
+            title = "Saves"
+            topic = "Play"
+            text = ["No skills and no checks for ordinary actions: a save only when there is risk. Roll d20 equal to or under STR, DEX or CHA. 1 always succeeds, 20 always fails."]
+        },
+        hint
+        {
+            title = "Attacks always hit"
+            topic = "Combat"
+            text = ["Roll the weapon die and take off the target's Armour. The roll asks whether the attack is impaired (d4), enhanced (d12) or made with two weapons (best of two), and the target's Armour. A hit that leaves exactly 0 HP gives a Scar for the damage dealt. Damage past 0 HP comes off STR and calls for a STR save against Critical Damage."]
+        },
+        hint
+        {
+            title = "Who acts first"
+            topic = "Initiative"
+            text = ["When a fight starts, Call for initiative: each Debtor saves DEX. Those who pass act before the enemy, then the enemy, then those who failed."]
+        },
+        hint
+        {
+            title = "Rest"
+            topic = "Play"
+            text = ["A few minutes' rest restores all HP. A week of rest, or a paid specialist, restores ability scores. Deprived Debtors get nothing from rest."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Detachments = detachmentTable
+    Equipment = bastionItem
+    Oddities = bastionOddity
+    'Failed Careers' = bastionCareer
+    secondaryTypes = ["Failed Careers", "Equipment", "Oddities"]
+    extraEntityTypes = [entityTypeDescription ("Detachments", "detachment", true, "/systems/bastionland/detachment.svg", [])]
+    description = "Electric Bastionland: failed careers and a shared debt in a city of electric weirdness, d20 roll-under saves, attacks that always hit, and Scars"
+    initiativeCompare (item1, item2) = compare (ebInitiativeRank (item1), ebInitiativeRank (item2))
+    quickdice = [1d20, 1d4, 1d6, 1d8, 1d10, 1d12, 3d6]
+    cssFiles = ["/systems/bastionland/bastionland.css"]
+    libraries = ["/systems/names/victorian.json"]
+    nameSettings = [bastionNameSetting, gaslightNameSetting]
+}
