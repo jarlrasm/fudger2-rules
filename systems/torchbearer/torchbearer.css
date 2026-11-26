@@ -1,0 +1,105 @@
+@import url("/systems/sheet.css");
+
+/* Torchbearer 2nd edition: a stark black-on-bone sheet in the manner of the
+   paper record. Heavy black frames, black title bars with spaced capitals,
+   the adventurer and Belief, Creed, Goal and Instinct across the top, the
+   conditions in one long row, abilities beside the skill list, then traits,
+   wises and rewards, the conflict dispositions, and the inventory as boxes
+   for each place on the body. A torch-flame accent marks the dice. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #2b2620;
+    --surface: #f4efe3;
+    --surface-alt: #e9e2d1;
+    --surface-sunken: #ddd4bf;
+    --surface-muted: #c9bea4;
+    --text: #141210;
+    --text-muted: #3b362e;
+    --text-faint: #6f665a;
+    --on-accent: #f4efe3;
+    --border: #7d7464;
+    --border-strong: #141210;
+    --accent: #1b1915;
+    --accent-hover: #3b362e;
+    --accent-soft: #e6dcc4;
+    --link: #8a3b12;
+    --danger: #8a2a12;
+    --danger-hover: #6b200e;
+    --danger-soft: #f0d6c8;
+    --success: #3f5a2c;
+    --paper: #f4efe3;
+    --card-bg: #e9e2d1;
+    --dice-bg: #b4501c;
+    --dice-text: #fff7ea;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --title-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.95em;
+    font-weight: bold;
+}
+.entityView .entityTable .entityTable > table > thead th {
+    background: var(--surface-sunken);
+    color: var(--text);
+    letter-spacing: 0.08em;
+}
+
+/* ---- Conditions in one long row, as on the paper sheet ---- */
+
+.entityView .table-conditions > table > tbody { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.entityView .table-recovery > table > tbody { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+/* ---- Abilities beside skills ---- */
+
+.entityView .table-abilities { --block: 45%; clear: left; }
+.entityView .table-skills { --block: 55%; float: right; }
+.entityView .table-standing { --block: 45%; }
+.entityView .table-abilities .customtype > div:nth-child(2)::before { content: "P "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-abilities .customtype > div:nth-child(3)::before { content: "F "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Rewards, traits and wises under the abilities ---- */
+
+.entityView .table-rewards,
+.entityView .table-traits,
+.entityView .table-wises { --block: 45%; }
+.entityView .table-conditions { clear: both; }
+.entityView .table-level-benefits { --block: 100%; clear: both; }
+
+/* ---- Inventory boxes ---- */
+
+.entityView .table-head,
+.entityView .table-neck,
+.entityView .table-hands-worn,
+.entityView .table-hands-carried { --block: 25%; }
+.entityView .table-head { clear: left; }
+.entityView .table-torso,
+.entityView .table-belt,
+.entityView .table-feet { --block: 33.333%; }
+.entityView .table-torso { clear: left; }
+.entityView .table-pack,
+.entityView .table-ground,
+.entityView .table-stash { --block: 33.333%; }
+.entityView .table-pack { clear: left; }
+
+/* ---- Magic and the library lists ---- */
+
+.entityView .table-magic { --block: 100%; clear: both; }
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-gear,
+.entityView .table-spells,
+.entityView .table-invocations { --block: 50%; }
+.entityView .table-weapons,
+.entityView .table-gear,
+.entityView .table-invocations { clear: left; }

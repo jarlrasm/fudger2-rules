@@ -1,0 +1,759 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+successesIn (rolls) = count (filter ((x)->x >= 4, rolls))
+
+failsIn (rolls) = count (filter ((x)->x < 4, rolls))
+
+sixesIn (rolls) = count (filter ((x)->x == 6, rolls))
+
+plural (n, word, words) = toString (n) + " " + (if n == 1 then word else words)
+
+rewards (fate, persona, fateSpent, personaSpent) = { Fate = fate  Persona = persona  FateSpent = fateSpent  PersonaSpent = personaSpent }
+
+noRewards = rewards (0, 0, 0, 0)
+
+rewardsOf (char) = rewards (char.Rewards.Fate, char.Rewards.Persona, char.Rewards.'Fate Spent', char.Rewards.'Persona Spent')
+
+tbOutcome (successes, ob) = if successes >= ob then "Success" else "Failure"
+
+tbText (successes, ob, known, note) =
+    plural (successes, "success", "successes")
+    + (if known then " vs Ob " + toString (ob) + note + ": " + (if successes >= ob then "Success" + (if successes > ob then ", " + toString (successes - ob) + " extra" else "") else "Failure, the GM gives a twist or a condition") else "")
+
+useFate (rolls, rw) = rw.Fate > 0 and sixesIn (rolls) > 0
+
+useCourse (failed, rw) = rw.Persona > 0 and failed > 0
+
+tbSpend (fateNow, courseNow, rw) =
+    if fateNow then [{ Field = "characterTable.Rewards.Fate"  Value = rw.Fate - 1 }, { Field = "characterTable.Rewards.Fate Spent"  Value = rw.FateSpent + 1 }]
+    else if courseNow then [{ Field = "characterTable.Rewards.Persona"  Value = rw.Persona - 1 }, { Field = "characterTable.Rewards.Persona Spent"  Value = rw.PersonaSpent + 1 }]
+    else []
+
+tbKept (kept, rolls, failedBefore, ob, known, note, rw) =
+{
+    Text = tbText (kept + successesIn (rolls), ob, known, note)
+    Value = kept + successesIn (rolls)
+    Outcome = if known then tbOutcome (kept + successesIn (rolls), ob) else ""
+    Push = if useFate (rolls, rw) then tbFatePush (kept + successesIn (rolls), sixesIn (rolls), failedBefore + failsIn (rolls), ob, known, note, rw)
+        else if useCourse (failedBefore + failsIn (rolls), rw) then tbCoursePush (kept + successesIn (rolls), failedBefore + failsIn (rolls), ob, known, note, rw)
+        else 0
+    PushLabel = if useFate (rolls, rw) then "Luck (1 Fate): reroll the 6s" else "Of Course! (1 Persona, with a wise): reroll the failed dice"
+    PushSets = tbSpend (useFate (rolls, rw), useCourse (failedBefore + failsIn (rolls), rw), rw)
+}
+
+tbFatePush (kept, rerolled, failed, ob, known, note, rw) = ([dice { number = rerolled  sides = 6  explode = 6  label = "Luck" }],
+    ((baseline, throws)->tbKept (kept, first (throws).rolls, failed, ob, known, note, rewards (0, rw.Persona, rw.FateSpent + 1, rw.PersonaSpent))))
+
+tbCoursePush (kept, rerolled, ob, known, note, rw) = ([dice { number = rerolled  sides = 6  label = "Of Course!" }],
+    ((baseline, throws)->tbKept (kept, first (throws).rolls, 0, ob, known, note, noRewards)))
+
+tbRoll (pool, factor, note, rw) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->tbKept (0, first (throws).rolls, 0, asked + factor, answered, note, rw)))
+
+tbFixed (pool, ob, rw) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->tbKept (0, first (throws).rolls, 0, ob, true, "", rw)))
+
+halved (pool, halve) = if halve then (max (0, pool) + 1) / 2 else pool
+
+diceMod (char) = (if char.Conditions.Fresh then 1 else 0) - (if char.Conditions.Injured then 1 else 0) - (if char.Conditions.Sick then 1 else 0)
+
+darkFactor (char) = if char.Conditions.Light == "Dim light" or char.Conditions.Light == "Darkness" then 1 else 0
+
+exhaustedFactor (char) = if char.Conditions.Exhausted then 1 else 0
+
+obFactor (char) = exhaustedFactor (char) + darkFactor (char)
+
+factorNote (exhausted, dark) =
+    if exhausted > 0 and dark > 0 then " (+2 Exhausted, light)"
+    else if exhausted > 0 then " (+1 Exhausted)"
+    else if dark > 0 then " (+1 light)"
+    else ""
+
+obNote (char) = factorNote (exhaustedFactor (char), darkFactor (char))
+
+tbTest (char, pool, halve) = ask ("Bonus or penalty dice (help, gear, traits, Persona)", 0, (n)->ask ("Obstacle", tbRoll (halved (pool + n + diceMod (char), halve), obFactor (char), obNote (char), rewardsOf (char))))
+
+tbTown (char, pool) = ask ("Bonus or penalty dice (help, traits, Persona)", 0, (n)->ask ("Obstacle", tbRoll (pool + n, 0, "", rewardsOf (char))))
+
+tbPlain (pool) = ask ("Bonus or penalty dice", 0, (n)->ask ("Obstacle", tbRoll (pool + n, 0, "", noRewards)))
+
+tbRecovery (char, pool, ob) = ask ("Bonus or penalty dice (traits, Persona, wine, a cloak)", 0, (n)->tbFixed (pool + n, ob, rewardsOf (char)))
+
+abilityTest (char, pool, town) = if town then tbTown (char, pool) else tbTest (char, pool, false)
+
+advanceState (rating, passes, fails) = if passes >= max (1, rating) and fails >= rating - 1 then "Advance" else ""
+
+ability (start, lowest, highest, town) = custom
+{
+    Rating = integer { default = start  minvalue = lowest  maxvalue = highest }
+    Pass = integer { description = "Passed tests toward advancement: you need as many as the rating." default = 0  minvalue = 0  editable = live }
+    Fail = integer { description = "Failed tests toward advancement: you need one less than the rating." default = 0  minvalue = 0  editable = live }
+    Roll = integer { value = Rating  valuedice = abilityTest (characterTable, Rating, town)  render = toString (Rating) + "D"  editable = none }
+    Advance = string { value = advanceState (Rating, Pass, Fail)  editable = none }
+}
+
+luckFor (skill) =
+    switch skill
+        case "Armorer" then "Health"
+        case "Carpenter" then "Health"
+        case "Criminal" then "Health"
+        case "Dungeoneer" then "Health"
+        case "Fighter" then "Health"
+        case "Hunter" then "Health"
+        case "Laborer" then "Health"
+        case "Pathfinder" then "Health"
+        case "Peasant" then "Health"
+        case "Rider" then "Health"
+        case "Sapper" then "Health"
+        case "Scavenger" then "Health"
+        case "Survivalist" then "Health"
+        else "Will"
+
+luckDice (char, abilityName) = if abilityName == "Health" then char.Abilities.Health.Rating else char.Abilities.Will.Rating
+
+noSkill = { Rating = 0 }
+
+rankOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Rating", 0)
+
+beginnersLuck (char, skill) = if rankOf (char, skill) > 0 then false else true
+
+skillDice (char, skill) = if rankOf (char, skill) > 0 then rankOf (char, skill) else luckDice (char, luckFor (skill))
+
+skillPool (char, rating, skill) =
+    if rating > 0 then rating
+    else if char.Conditions.Afraid then 0
+    else (luckDice (char, luckFor (skill)) + 1) / 2
+
+skillTest (char, rating, skill) =
+    if rating > 0 then tbTest (char, rating, false)
+    else if char.Conditions.Afraid then tbTest (char, 0, false)
+    else tbTest (char, luckDice (char, luckFor (skill)), true)
+
+skillRender (char, rating, skill) =
+    if rating > 0 then toString (rating) + "D"
+    else if char.Conditions.Afraid then "Afraid"
+    else toString (skillPool (char, rating, skill)) + "D BL"
+
+skillAdvance (char, rating, passes, fails) =
+    if rating == 0 then (if passes + fails >= max (1, char.Abilities.Nature.Rating) then "Learn" else "")
+    else advanceState (rating, passes, fails)
+
+dispositionResult (rolls, base, baseName) =
+{
+    Text = plural (successesIn (rolls), "success", "successes") + " + " + baseName + " " + toString (base) + " = disposition " + toString (successesIn (rolls) + base)
+    Value = successesIn (rolls) + base
+}
+
+dispositionDice (pool, base, baseName) = ([dice { number = max (0, pool)  sides = 6 }],
+    ((baseline, throws)->dispositionResult (first (throws).rolls, base, baseName)))
+
+dispositionTest (char, skill, baseName) = ask ("Help and bonus dice", 0, (n)->dispositionDice (halved (skillDice (char, skill) + n + diceMod (char), beginnersLuck (char, skill)), luckDice (char, baseName), baseName))
+
+conflictDisposition (skill, baseName) = custom
+{
+    Uses = baseName + " + " + skill
+    Test = integer { value = luckDice (characterTable, baseName)  valuedice = dispositionTest (characterTable, skill, baseName)  render = "Roll " + skill  editable = none }
+}
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+noStats = { Stats = { Attack = "" } }
+
+weaponStat (weapon, field) = valueOr (valueOr (valueOr (weapon.data, "weaponStats", noStats), "Stats", noStats.Stats), field, "")
+
+isMissile (weapon) = weaponStat (weapon, "Range") == "Missile"
+
+fighterPool (char) = skillDice (char, "Fighter")
+
+weaponAttack (name, pool, halve, bonusText, kind, distance) = custom
+{
+    Name = name
+    Attack = integer { value = halved (pool, halve)  valuedice = tbTest (characterTable, pool, halve)  render = toString (halved (pool, halve)) + "D"  action = kind  reach = 2  range = distance  editable = none }
+    Bonus = bonusText
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name, fighterPool (char) + firstNumber (weaponStat (weapon, "Attack Dice")), beginnersLuck (char, "Fighter"), weaponStat (weapon, "Attack"), if isMissile (weapon) then "ranged" else "melee", if isMissile (weapon) then 30 else 2)
+
+conditionState (char) =
+    if char.Conditions.Dead then "Dead"
+    else if char.Conditions.Injured then "Injured"
+    else if char.Conditions.Sick then "Sick"
+    else if char.Conditions.Afraid then "Afraid"
+    else ""
+
+lightState (light) = if light == "Full light" then "" else light
+
+packSize (kind) =
+    switch kind
+        case "Backpack" then 6
+        case "Satchel" then 3
+        else 0
+
+usedIn (items) = sum (map ((x)->x.Size, items))
+
+loadText (items, capacity) = toString (usedIn (items)) + " / " + toString (capacity)
+
+overloaded (char) =
+    (if usedIn (char.Head) > 1 then "Head " else "")
+    + (if usedIn (char.Neck) > 1 then "Neck " else "")
+    + (if usedIn (char.'Hands Worn') > 2 then "Hands worn " else "")
+    + (if usedIn (char.'Hands Carried') > 2 then "Hands carried " else "")
+    + (if usedIn (char.Torso) > 3 then "Torso " else "")
+    + (if usedIn (char.Belt) > 3 then "Belt " else "")
+    + (if usedIn (char.Feet) > 1 then "Feet " else "")
+    + (if usedIn (char.Pack) > packSize (char.Load.'Pack Type') then "Pack " else "")
+
+overloadState (char) = if overloaded (char) == "" then "" else "Overloaded: " + overloaded (char)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/torchbearer/adventurer.svg"  important = [Abilities, Conditions, Rewards, Conflict] }
+    Adventurer = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Stock = string { keys = ["Dwarf", "Elf", "Halfling", "Human", "Changeling", "Other"]  default = "Human" }
+        Class = string { keys = ["Burglar", "Cleric", "Magician", "Outcast", "Ranger", "Theurge", "Warrior", "Other"]  default = "Warrior" }
+        Age = integer { default = 20  minvalue = 1 }
+        Home = string {}
+        Raiment = string { description = "What you wear and how you look." }
+        Parents = string {}
+        Mentor = string {}
+        Friend = string {}
+        Enemy = string {}
+        Epithet = string {}
+    }
+
+    Beliefs = table
+    {
+        description = "Play to these: they earn Fate and Persona at the end of the session."
+        tableLayout = layout { columns = 1  size = wide }
+        Belief = string { description = "How you see the world and your place in it." multiline = true }
+        Creed = string { description = "Your stand on the Immortals and the struggle of Law and Chaos." multiline = true }
+        Goal = string { description = "What you mean to do this session; written at its start." multiline = true }
+        Instinct = string { description = "Always, if or when: what you do without being told." multiline = true }
+    }
+
+    Abilities = table
+    {
+        description = "Roll the rating in d6s: each 4, 5 or 6 is a success. The roll asks for bonus dice and the Obstacle, and counts Fresh, Injured, Sick, Exhausted and the light for you."
+        tableLayout = layout { columns = 1 }
+        Nature = ability (3, 0, 7, false)
+        'Max Nature' = integer { description = "Nature taxed below this comes back in camp and town; at 0 Nature you retire." default = 3  minvalue = 0  maxvalue = 7 }
+        Descriptors = string { description = "What your stock's nature covers, such as Delving, Crafting and Avenging Grudges. Tapping Nature outside them taxes it." }
+        Will = ability (4, 0, 7, false)
+        Health = ability (4, 0, 7, false)
+        Resources = ability (0, 0, 10, true)
+        Circles = ability (1, 0, 10, true)
+    }
+
+    Skills = keyvalues
+    {
+        description = "Skills from 1 to 7. At 0, Beginner's Luck rolls half your Will or Health, rounded up, and tests equal to your Nature learn the skill."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Alchemist", "Arcanist", "Armorer", "Carpenter", "Cartographer", "Commander", "Cook", "Criminal", "Dungeoneer", "Fighter", "Haggler", "Healer", "Hunter", "Laborer", "Lore Master", "Manipulator", "Mentor", "Orator", "Pathfinder", "Peasant", "Persuader", "Rider", "Ritualist", "Sapper", "Scavenger", "Scholar", "Scout", "Survivalist", "Theologian"]
+        valueType = custom
+        {
+            Rating = integer { default = 0  minvalue = 0  maxvalue = 7 }
+            Pass = integer { default = 0  minvalue = 0  editable = live }
+            Fail = integer { default = 0  minvalue = 0  editable = live }
+            BL = string { description = "The ability Beginner's Luck uses." value = luckFor (Key)  editable = none }
+            Roll = integer { value = skillPool (characterTable, Rating, Key)  valuedice = skillTest (characterTable, Rating, Key)  render = skillRender (characterTable, Rating, Key)  editable = none }
+            Advance = string { value = skillAdvance (characterTable, Rating, Pass, Fail)  editable = none }
+        }
+    }
+
+    Standing = table
+    {
+        tableLayout = layout { columns = 3 }
+        Might = integer { description = "Raw power. A side with more Might than its foe wins kill and capture conflicts more easily; most adventurers have 3." default = 3  minvalue = 0  maxvalue = 10 }
+        Precedence = integer { description = "Social rank, for who must defer to whom." default = 0  minvalue = 0  maxvalue = 7 }
+        Lifestyle = integer { description = "Cost of your lifestyle in town; it grows with each visit until you pay it down." default = 0  minvalue = 0  editable = live }
+    }
+
+    Traits = list
+    {
+        description = "Traits at level 1 to 3. Use one for +1D (level 1 once a session, level 2 twice, level 3 for +1s every time), or against yourself to earn checks."
+        singular = "Trait"
+        editable = character
+        valueType = custom
+        {
+            Trait = string {}
+            Level = integer { default = 1  minvalue = 1  maxvalue = 3 }
+            Used = integer { description = "Times used for your benefit this session." default = 0  minvalue = 0  maxvalue = 2  editable = live }
+        }
+    }
+
+    Wises = list
+    {
+        description = "Knowledge of a thing, such as Goblin-wise or Lost Temples-wise. Help with it, and use it for Deeper Understanding (Fate) or Of Course! (Persona). All four marks earn a new wise."
+        singular = "Wise"
+        editable = character
+        valueType = custom
+        {
+            Wise = string {}
+            Pass = bool { description = "Helped on a passed test." default = false  editable = live }
+            Fail = bool { description = "Helped on a failed test." default = false  editable = live }
+            Fate = bool { description = "Spent Fate for Deeper Understanding." default = false  editable = live }
+            Persona = bool { description = "Spent Persona for Of Course!" default = false  editable = live }
+        }
+    }
+
+    Rewards = table
+    {
+        description = "Fate and Persona come at the end of each session for playing your Belief, Creed, Goal and Instinct; spent points count toward your next level."
+        tableLayout = layout { columns = 3 }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+        Fate = integer { description = "Spend after a roll for Luck: reroll the 6s, open-ended. The roll offers it." default = 0  minvalue = 0  editable = live }
+        'Fate Spent' = integer { default = 0  minvalue = 0  editable = live }
+        Checks = integer { description = "Earned by using traits against yourself; spent in camp and town for tests." default = 0  minvalue = 0  editable = live }
+        Persona = integer { description = "Spend for +1D (up to 3), to tap Nature, or after a roll with a wise for Of Course!: reroll the failed dice." default = 0  minvalue = 0  editable = live }
+        'Persona Spent' = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Conditions = table
+    {
+        description = "Fresh until a failed test or the grind gives you a condition. The grind brings them in order: Hungry and Thirsty, Exhausted, Angry, Sick, Injured, Afraid, Dead."
+        tableLayout = layout { columns = 4  size = wide }
+        Fresh = bool { description = "+1D to tests other than Resources and Circles. Lost with the first condition." default = true  editable = live }
+        'Hungry and Thirsty' = bool { description = "-1 disposition in conflicts. Eat and drink to clear it." default = false  editable = live  indicator = "#d4b106" }
+        Angry = bool { description = "No wises and no traits for your benefit. Recover with Will Ob 2." default = false  editable = live  indicator = "#8e5cc4" }
+        Afraid = bool { description = "No help to others and no Beginner's Luck. Recover with Will Ob 3." default = false  editable = live  indicator = "#8e5cc4" }
+        Exhausted = bool { description = "A factor (+1 Ob) in every test but Circles, Resources and recovery. The sheet adds it. Recover with Health Ob 3." default = false  editable = live  indicator = "#d4b106" }
+        Injured = bool { description = "-1D to skills, Nature, Will and Health, but not recovery. The sheet takes it off. Recover with Health Ob 4." default = false  editable = live  indicator = "#d64545" }
+        Sick = bool { description = "-1D to skills, Nature, Will and Health, but not recovery; no practice or learning. Recover with Will Ob 3." default = false  editable = live  indicator = "#3fa34d" }
+        Dead = bool { default = false  editable = live  indicator = "#555555" }
+        Light = string { description = "Who holds the light. Dim light or darkness is a factor (+1 Ob) in tests; the sheet adds it." keys = ["Full light", "Dim light", "Darkness"]  default = "Full light"  editable = live }
+        State = string { value = conditionState (characterTable)  visible = none  indicator = "#d64545" }
+        'Light State' = string { value = lightState (Light)  visible = none  indicator = "#555555" }
+        'Eat and drink' = button { description = "A ration and water clear Hungry and Thirsty." editable = live  onClick = updates
+            {
+                (root.Conditions.'Hungry and Thirsty') = false
+            }
+        }
+        Grind = button { description = "Every fourth turn of the adventure: take the next condition you don't have, in the grind's order." editable = live  onClick = updates
+            {
+                (root.Conditions.Fresh) = false
+                (root.Conditions.'Hungry and Thirsty') = true
+                (root.Conditions.Exhausted) = Exhausted or 'Hungry and Thirsty'
+                (root.Conditions.Angry) = Angry or ('Hungry and Thirsty' and Exhausted)
+                (root.Conditions.Sick) = Sick or ('Hungry and Thirsty' and Exhausted and Angry)
+                (root.Conditions.Injured) = Injured or ('Hungry and Thirsty' and Exhausted and Angry and Sick)
+                (root.Conditions.Afraid) = Afraid or ('Hungry and Thirsty' and Exhausted and Angry and Sick and Injured)
+                (root.Conditions.Dead) = Dead or ('Hungry and Thirsty' and Exhausted and Angry and Sick and Injured and Afraid)
+            }
+        }
+        'Fresh again' = button { description = "Clears every condition but Dead and makes you Fresh, for when the GM rules a full recovery, such as a good stay in town." editable = live  onClick = updates
+            {
+                (root.Conditions.'Hungry and Thirsty') = false
+                (root.Conditions.Angry) = false
+                (root.Conditions.Afraid) = false
+                (root.Conditions.Exhausted) = false
+                (root.Conditions.Injured) = false
+                (root.Conditions.Sick) = false
+                (root.Conditions.Fresh) = not (Dead)
+            }
+        }
+    }
+
+    Recovery = table
+    {
+        description = "Recover in camp or town, one condition at a time in this order. Each roll asks for bonus dice."
+        tableLayout = layout { columns = 5  size = wide }
+        Angry = integer { value = Abilities.Will.Rating  valuedice = tbRecovery (characterTable, Abilities.Will.Rating, 2)  render = "Will Ob 2"  editable = none }
+        Afraid = integer { value = Abilities.Will.Rating  valuedice = tbRecovery (characterTable, Abilities.Will.Rating, 3)  render = "Will Ob 3"  editable = none }
+        Exhausted = integer { value = Abilities.Health.Rating  valuedice = tbRecovery (characterTable, Abilities.Health.Rating, 3)  render = "Health Ob 3"  editable = none }
+        Injured = integer { description = "Failing it, a healer or a priest can treat you." value = Abilities.Health.Rating  valuedice = tbRecovery (characterTable, Abilities.Health.Rating, 4)  render = "Health Ob 4"  editable = none }
+        Sick = integer { description = "Failing it, a healer or a priest can treat you." value = Abilities.Will.Rating  valuedice = tbRecovery (characterTable, Abilities.Will.Rating, 3)  render = "Will Ob 3"  editable = none }
+    }
+
+    'Level Benefits' = list
+    {
+        description = "What your class gained at each level."
+        singular = "Benefit"
+        editable = character
+        valueType = custom
+        {
+            Level = integer { default = 1  minvalue = 1  maxvalue = 10 }
+            Benefit = string {}
+        }
+    }
+
+    Conflict = table
+    {
+        description = "Disposition is the successes on the conflict captain's test plus the ability. Hungry and Thirsty takes 1 off. Script Attack, Defend, Feint or Maneuver for each of three actions a round."
+        tableLayout = layout { columns = 3  size = wide }
+        Disposition = integer { description = "Your share of the team's disposition; at 0 you are out of the conflict." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Kill or Drive Off' = conflictDisposition ("Fighter", "Health")
+        Capture = conflictDisposition ("Fighter", "Will")
+        'Flee or Pursue' = conflictDisposition ("Scout", "Health")
+        Convince = conflictDisposition ("Persuader", "Will")
+        'Convince Crowd' = conflictDisposition ("Orator", "Will")
+        Trick = conflictDisposition ("Manipulator", "Will")
+        Negotiate = conflictDisposition ("Haggler", "Will")
+        Abjure = conflictDisposition ("Ritualist", "Will")
+    }
+
+    Attacks = list
+    {
+        description = "Fighter plus the weapon's extra dice, for Attack actions in a kill, capture or drive off conflict."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Bare hands", fighterPool (characterTable), beginnersLuck (characterTable, "Fighter"), "-1D", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Load = table
+    {
+        description = "Slots used and how many each place holds."
+        tableLayout = layout { columns = 5  size = wide }
+        'Pack Type' = string { keys = ["Backpack", "Satchel", "None"]  default = "Backpack" }
+        Head = loadText (characterTable.Head, 1)
+        Neck = loadText (characterTable.Neck, 1)
+        'Hands Worn' = loadText (characterTable.'Hands Worn', 2)
+        'Hands Carried' = loadText (characterTable.'Hands Carried', 2)
+        Torso = loadText (characterTable.Torso, 3)
+        Belt = loadText (characterTable.Belt, 3)
+        Feet = loadText (characterTable.Feet, 1)
+        Pack = loadText (characterTable.Pack, packSize ('Pack Type'))
+        Overloaded = string { value = overloadState (characterTable)  visible = none  indicator = "#e8913a" }
+    }
+
+    Head = list { description = "1 slot: a helmet or a hood."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Neck = list { description = "1 slot: an amulet or a cloak's clasp."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    'Hands Worn' = list { description = "2 slots, one per hand: gloves, rings, a bracer."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    'Hands Carried' = list { description = "2 slots, one per hand: a weapon, a shield, a torch or a lantern. Two-handed things take both."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Torso = list { description = "3 slots: armor, clothing, a cloak."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Belt = list { description = "3 slots: a sheathed weapon, torches, a pouch, a quiver."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Feet = list { description = "1 slot: boots or shoes."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Pack = list { description = "6 slots in a backpack, 3 in a satchel: rations, rope, tools, loot."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Ground = list { description = "Things set down or dropped, here or in camp."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+    Stash = list { description = "Kept in town, not carried."  singular = "Item"  editable = character  valueType = custom { Item = string {}  Size = integer { description = "Slots it takes here." default = 1  minvalue = 0  maxvalue = 6 } } }
+
+    Magic = table
+    {
+        description = "Magicians keep spells in a memory palace or spellbooks; clerics and theurges carry the burden of their invocations against their Urdr."
+        tableLayout = layout { columns = 3 }
+        'Memory Palace' = integer { description = "Slots for memorized spells." default = 0  minvalue = 0 }
+        Urdr = integer { description = "How much burden of invocations you can carry." default = 0  minvalue = 0 }
+        Burden = integer { description = "Burden from invocations performed." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+    }
+
+    Weapons = list { source = secondary.Weapons  singular = "Weapon"  editable = character }
+    Armor = list { source = secondary.Armor  singular = "Armor"  editable = character }
+    Gear = list { source = secondary.Gear  singular = "Item"  editable = character }
+    Spells = list { source = secondary.Spells  singular = "Spell"  editable = character }
+    Invocations = list { source = secondary.Invocations  singular = "Invocation"  editable = character }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Allies and Enemies' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/torchbearer/denizen.svg"  important = [Monster, Weapons] }
+    Monster = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Beast", "Goblin", "Kobold", "Undead", "Spirit", "Ooze", "Giant", "Dragon", "Person", "Other"]  default = "Beast" }
+        Nature = integer { description = "Rolled for everything the monster does, in and out of conflicts." default = 4  minvalue = 0  valuedice = tbPlain (Nature) }
+        Might = integer { description = "Its raw power against an adventurer's Might, usually 3." default = 3  minvalue = 0 }
+        Precedence = integer { default = 0  minvalue = 0 }
+        Descriptors = string { description = "What its nature covers, such as Lurking, Biting, Hoarding." }
+        Instinct = string {}
+        Disposition = integer { description = "Current disposition in a conflict; at 0 it is beaten." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = string { description = "Protection against Attack and Feint." }
+    }
+    Dispositions = table
+    {
+        description = "Its disposition for each kind of conflict; blank ones it can't take part in."
+        tableLayout = layout { columns = 5  size = wide }
+        Kill = integer { default = 0  minvalue = 0 }
+        Capture = integer { default = 0  minvalue = 0 }
+        'Drive Off' = integer { default = 0  minvalue = 0 }
+        Pursue = integer { default = 0  minvalue = 0 }
+        Trick = integer { default = 0  minvalue = 0 }
+    }
+    Weapons = table
+    {
+        description = "Its weapons and bonuses for each conflict action."
+        tableLayout = layout { columns = 5  size = wide }
+        Attack = string { default = "" }
+        Defend = string { default = "" }
+        Feint = string { default = "" }
+        Maneuver = string { default = "" }
+        Strike = integer { value = Monster.Nature + firstNumber (Attack)  valuedice = tbPlain (Monster.Nature + firstNumber (Attack))  render = toString (Monster.Nature + firstNumber (Attack)) + "D"  action = melee  reach = 2  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Special = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+grindIn (turn) = 4 - mod (turn - 1, 4) - 1
+
+grindText (phase, turn) =
+    if phase != "Adventure" then "No grind in " + toLower (phase)
+    else if mod (turn, 4) == 0 then "The grind hits after this turn's test"
+    else "The grind hits in " + plural (grindIn (turn), "turn", "turns")
+
+expeditionTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/torchbearer/torch.svg"  important = [Expedition, Light] }
+    Expedition = table
+    {
+        description = "The party's adventure: the turn count, the grind and the phase."
+        tableLayout = layout { columns = 4  size = wide }
+        Phase = string { keys = ["Adventure", "Camp", "Town"]  default = "Adventure"  editable = live }
+        Location = string { editable = live }
+        Turn = integer { description = "Each test or conflict takes a turn. The count starts again after camp." default = 1  minvalue = 1  editable = live }
+        Grind = string { value = grindText (Phase, Turn)  editable = none }
+        'Next turn' = button { description = "Count the turn and burn the light down by one." editable = live  onClick = updates
+            {
+                (root.Expedition.Turn) = Turn + 1
+                (root.Light.'Torch Turns') = max (0, Light.'Torch Turns' - 1)
+                (root.Light.'Lantern Turns') = max (0, Light.'Lantern Turns' - 1)
+                (root.Light.'Candle Turns') = max (0, Light.'Candle Turns' - 1)
+            }
+        }
+        'Make camp' = button { description = "Stop in camp: no grind while you rest, recover and spend checks." editable = live  onClick = updates
+            {
+                (root.Expedition.Phase) = "Camp"
+            }
+        }
+        'Break camp' = button { description = "Back to the adventure, with the turn count at 1." editable = live  onClick = updates
+            {
+                (root.Expedition.Phase) = "Adventure"
+                (root.Expedition.Turn) = 1
+            }
+        }
+        'Enter town' = button { description = "The town phase: lifestyle, the market and recovery." editable = live  onClick = updates
+            {
+                (root.Expedition.Phase) = "Town"
+                (root.Expedition.Turn) = 1
+            }
+        }
+    }
+    Light = table
+    {
+        description = "A torch lights two for two turns, a lantern three for three turns per flask of oil, a candle one for four turns. Those just outside the light are in dim light."
+        tableLayout = layout { columns = 3  size = wide }
+        'Torch Turns' = integer { description = "Turns left on the burning torch." default = 0  minvalue = 0  maxvalue = 2  editable = live }
+        'Lantern Turns' = integer { description = "Turns left on the lantern's oil." default = 0  minvalue = 0  maxvalue = 3  editable = live }
+        'Candle Turns' = integer { description = "Turns left on the candle." default = 0  minvalue = 0  maxvalue = 4  editable = live }
+        'Light a torch' = button { editable = live  onClick = updates
+            {
+                (root.Light.'Torch Turns') = 2
+            }
+        }
+        'Fill the lantern' = button { editable = live  onClick = updates
+            {
+                (root.Light.'Lantern Turns') = 3
+            }
+        }
+        'Light a candle' = button { editable = live  onClick = updates
+            {
+                (root.Light.'Candle Turns') = 4
+            }
+        }
+    }
+    Camp = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Site = string { editable = live }
+        Amenities = string { description = "Shelter, concealment, water: each gives the camp events roll a bonus." editable = live }
+        Events = string { description = "The camp events roll and what came of it." multiline = true  editable = live }
+    }
+    Party = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Members = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Range }
+        filters = [filter { name = "Range" prefix = "" filter = Stats.Range }, filter { name = "Hands" prefix = "Hands " filter = Stats.Hands }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Range = string { keys = ["Melee", "Missile"]  default = "Melee" }
+        Hands = integer { default = 1  minvalue = 1  maxvalue = 2 }
+        Conflicts = string { description = "The conflicts it is used in, such as Kill, Capture, Drive Off." default = "Kill, Capture, Drive Off" }
+        'Attack Dice' = string { description = "Extra dice added to Attack actions." default = "0" }
+        Attack = string { description = "Its bonus to Attack, such as +1D or +1s." }
+        Defend = string {}
+        Feint = string {}
+        Maneuver = string {}
+        Slot = string { keys = ["Hands carried", "Belt", "Pack", "Torso"]  default = "Hands carried" }
+        Special = string { multiline = true }
+    }
+}
+
+armorStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Kind = string { keys = ["Leather", "Chain", "Plate", "Helmet", "Shield"]  default = "Leather" }
+        Slot = string { keys = ["Torso", "Head", "Hands carried"]  default = "Torso" }
+        Size = integer { description = "Slots it takes." default = 1  minvalue = 1  maxvalue = 6 }
+        Protection = string { description = "What it stops, such as -1s from an Attack or Feint, and when it is damaged." }
+        Hindrance = string { description = "What it costs you, such as a factor to Scout tests." }
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Slot" prefix = "" filter = Stats.Slot }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Kind = string { keys = ["Light", "Food", "Tool", "Container", "Clothing", "Treasure", "Other"]  default = "Tool" }
+        Slot = string { keys = ["Head", "Neck", "Hands worn", "Hands carried", "Torso", "Belt", "Feet", "Pack"]  default = "Pack" }
+        Size = integer { description = "Slots it takes." default = 1  minvalue = 0  maxvalue = 6 }
+        Uses = string { description = "Portions, turns of light or charges, where it runs out." }
+        Value = string { description = "Its Resources Ob in town." }
+        Use = string { description = "What it does, such as +1D to a skill." multiline = true }
+    }
+}
+
+spellStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "Circle " sort = Stats.Circle }
+        filters = [filter { name = "Circle" prefix = "Circle " filter = Stats.Circle }, filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Circle = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Kind = string { keys = ["Factorum", "Skill swap", "Conflict", "Fixed Ob", "Versus"]  default = "Fixed Ob" }
+        Obstacle = string { description = "Arcanist Ob or how the factors add up." }
+        Duration = string {}
+        Inventory = string { description = "Held in the memory palace, a spellbook or on a scroll." }
+        Memorized = bool { default = false  editable = live }
+        Effect = string { multiline = true }
+    }
+}
+
+invocationStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/torchbearer/relic.svg"
+        sortedBy = sort { prefix = "Circle " sort = Stats.Circle }
+        filters = [filter { name = "Circle" prefix = "Circle " filter = Stats.Circle }, filter { name = "Immortal" prefix = "" filter = Stats.Immortal }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Circle = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Immortal = string { description = "The Immortal Lord it calls on." }
+        Obstacle = string { description = "Ritualist Ob." }
+        Burden = integer { description = "Burden it adds when performed." default = 1  minvalue = 0 }
+        Relic = string { description = "The relic that eases it." }
+        Effect = string { multiline = true }
+    }
+}
+
+Torchbearer = system
+{
+    hints = [
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll your skill or ability in d6s: each 4, 5 or 6 is a success. Meet the Obstacle to pass. On a failure the GM gives you what you wanted with a condition, or a twist. The roll asks for bonus dice and the Obstacle, and adds Fresh, Injured, Sick, Exhausted and dim light for you.", "Without the skill, Beginner's Luck rolls half your Will or Health, rounded up."]
+        },
+        hint
+        {
+            title = "Fate and Persona"
+            topic = "Play"
+            text = ["After a roll with 6s, spend Fate for Luck and reroll them, open-ended: the roll offers it. After a failed roll with a wise, spend Persona for Of Course! and reroll the failed dice. Persona also buys +1D or taps your Nature. Both come at the end of a session for playing your Belief, Creed, Goal and Instinct."]
+        },
+        hint
+        {
+            title = "The grind and light"
+            topic = "Play"
+            text = ["Every test is a turn. After every fourth turn the grind gives each adventurer the next condition: Hungry and Thirsty, Exhausted, Angry, Sick, Injured, Afraid, then Dead. Torches burn two turns, lanterns three, candles four. Add an Expedition to count turns and light, and use each sheet's Grind button."]
+        },
+        hint
+        {
+            title = "Camp and town"
+            topic = "Play"
+            text = ["Spend checks in camp to recover, memorize spells or test; the Recovery rolls are on the sheet. In town, pay your Lifestyle with Resources, shop, and recover. Fresh again clears all conditions when the GM rules it."]
+        },
+        hint
+        {
+            title = "Conflicts"
+            topic = "Combat"
+            text = ["Fights, chases and arguments are conflicts. The captain rolls the conflict's skill; successes plus the ability are the team's disposition. Script three actions a round: Attack, Defend, Feint and Maneuver. Reduce the other side to 0 to win."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["There is no initiative: in a conflict both sides script three actions a round and reveal them one at a time."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Expeditions = expeditionTable
+    Weapons = weaponStats
+    Armor = armorStats
+    Gear = gearStats
+    Spells = spellStats
+    Invocations = invocationStats
+    secondaryTypes = ["Weapons", "Armor", "Gear", "Spells", "Invocations"]
+    extraEntityTypes = [entityTypeDescription ("Expeditions", "expedition", false, "/systems/torchbearer/torch.svg", [])]
+    description = "Torchbearer 2nd edition: desperate adventurers delve for treasure with d6 pools against an Obstacle, conditions, the grind and the light, slot inventory, conflicts, camp and town"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d6, 2d6, 3d6, 4d6, 5d6]
+    cssFiles = ["/systems/torchbearer/torchbearer.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/oldworld.json"]
+    nameSettings = [delversNameSetting, oldWorldNameSetting]
+}
+
+delversNameSetting = nameSetting
+{
+    name = "Delvers"
+    characters = [generator { library = "Fantasy folk" variant = Adventurer.Stock }, generator { library = "Fantasy folk" variant = "Human" }, generator { library = "Fantasy folk" variant = "Dwarf" }, generator { library = "Fantasy folk" variant = "Elf" }, generator { library = "Fantasy folk" variant = "Halfling" }]
+    creatures = [generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Fantasy folk" variant = "Orc" }]
+    Location = [generator { library = "Fantasy places" variant = "Dungeon" }, generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Wilds" }, generator { library = "Fantasy places" variant = "Tavern" }]
+    Expeditions = generator { library = "Fantasy places" variant = "Dungeon" }
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Armor = generator { library = "Fantasy things" variant = "Armour" }
+    Gear = generator { library = "Fantasy things" variant = "Artifact" }
+    Spells = generator { library = "Fantasy things" variant = "Artifact" }
+    Invocations = generator { library = "Fantasy things" variant = "Artifact" }
+}
