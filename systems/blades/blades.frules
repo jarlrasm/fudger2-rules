@@ -28,7 +28,7 @@ bladesResult (pool, rolls, position, effect) =
 bladesRoll (pool, position, effect) = ([dice { number = if pool < 1 then 2 else pool  sides = 6  color = if position == "Desperate" then "red" else if position == "Controlled" then "green" else "" }],
     ((baseline, throws)->bladesResult (pool, first (throws).rolls, position, effect)))
 
-harmPenalty (char) = if char.Harm.'Level 2 A' + "" != "" or char.Harm.'Level 2 B' + "" != "" then 1 else 0
+harmPenalty (char) = if char.Harm.'Level 2 A' != "" or char.Harm.'Level 2 B' != "" then 1 else 0
 
 bladesDice (char, rating) = bladesRoll (rating + char.Scoundrel.'Bonus Dice' - harmPenalty (char), char.Scoundrel.Position, char.Scoundrel.Effect)
 
@@ -103,8 +103,8 @@ characterTable = ruleset
     {
         tableLayout = layout { columns = 2  size = wide }
         'Level 3' = string { description = "Severe harm. You can't act unless someone helps you." editable = live  indicator = "#d64545"  indicatorLabel = "Harm 3: need help" }
-        'Level 2 A' = string { description = "Moderate harm. Action rolls take -1d, which the sheet takes off for you." editable = live  indicator = "#e8913a"  indicatorLabel = "Harm 2: -1d" }
-        'Level 2 B' = string { editable = live }
+        'Level 2 A' = string { description = "Moderate harm. Action rolls take -1d, which the sheet takes off for you." editable = live  indicator = "#e8913a"  indicatorLabel = "Harm 2: -1d"  default = "" }
+        'Level 2 B' = string { default = ""  editable = live }
         'Level 1 A' = string { description = "Lesser harm. Your actions have reduced effect." editable = live  indicator = "#d4b106"  indicatorLabel = "Harm 1: less effect" }
         'Level 1 B' = string { editable = live }
         Healing = clock { description = "Healing progress. Fill it during downtime to reduce harm by one level." segments = 4  editable = live }
