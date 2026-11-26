@@ -48,7 +48,7 @@ flCastResult (wp, rolls, spellRank, talentRank, have) =
     {
         Text = flPowerText (wp + sixes (rolls), sixes (rolls)) + flMishapNote (spellRank > talentRank, skulls (rolls)) + (if wp > have then ", more Willpower than the " + toString (have) + " on the sheet" else "")
         Value = wp + sixes (rolls)
-        Outcome = if spellRank > talentRank or skulls (rolls) > 0 then "Mishap" else "Success"
+        Outcome = if spellRank > talentRank or skulls (rolls) > 0 then "Mishap" else if wp > have then "" else "Success"
         Push = if spellRank > talentRank or skulls (rolls) > 0 then flMishapRoll else flPaid (wp, max (0, have - wp))
         PushLabel = if spellRank > talentRank or skulls (rolls) > 0 then "Spend Willpower, roll mishap" else "Spend Willpower"
         PushSets = [{ Field = "characterTable.Status.Willpower"  Value = max (0, have - wp) }]

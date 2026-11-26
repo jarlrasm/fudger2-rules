@@ -30,13 +30,13 @@ miAttacksOf (char, magicItem) =
     else
         [miAttack (char, magicItem, miNumber (magicItem, "Bonus"), magicItem.Name)]
 
-miAttacksFor (char) = fold ([], (acc, x)->concat (acc, miAttacksOf (char, x)), filter ((x)->miIsWeapon (x), char.'Magic Items'))
+miAttacksFor (char) = fold ([], (acc, x)->concat (acc, miAttacksOf (char, x)), filter ((x)->miIsWeapon (x) and miInUse (x), char.'Magic Items'))
 
 miDiceCount (text) = bonusWithValue ([[text]], "^\s*([0-9]+)d")
 
-miDiceSides (text) = bonusWithValue ([[text]], "d([0-9]+)")
+miDiceSides (text) = bonusWithValue ([[text]], "^[^d]*d([0-9]+)")
 
-miDiceAdd (text) = bonusWithValue ([[text]], "\+\s*([0-9]+)")
+miDiceAdd (text) = bonusWithValue ([[text]], "\+\s*([0-9]+)(?![0-9d])")
 
 miEffectResult (label, total) =
 {
@@ -113,8 +113,7 @@ miScrollType (roll) = miPick (roll, [3, 6, 8, 9, 15, 20, 25, 29, 32, 34, 35, 40,
     ["Cleric Spell Scroll (1 Spell)", "Cleric Spell Scroll (2 Spells)", "Cleric Spell Scroll (3 Spells)", "Cleric Spell Scroll (4 Spells)", "Magic-User Spell Scroll (1 Spell)", "Magic-User Spell Scroll (2 Spells)", "Magic-User Spell Scroll (3 Spells)", "Magic-User Spell Scroll (4 Spells)", "Magic-User Spell Scroll (5 Spells)", "Magic-User Spell Scroll (6 Spells)", "Magic-User Spell Scroll (7 Spells)", "Cursed Scroll", "Protection from Elementals", "Protection from Lycanthropes", "Protection from Magic", "Protection from Undead", "Map to Treasure Type A", "Map to Treasure Type E", "Map to Treasure Type G", "Map to 1d4 Magic Items"])
 
 miScrollSpells (roll) =
-    if roll <= 4 then roll
-    else if roll <= 9 then roll - 4
+    if roll <= 9 then item (count (filter ((b)->b < roll, [3, 6, 8])), [1, 2, 3, 4])
     else if roll <= 35 then item (count (filter ((b)->b < roll, [15, 20, 25, 29, 32, 34, 35])), [1, 2, 3, 4, 5, 6, 7])
     else 0
 

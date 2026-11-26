@@ -2,9 +2,11 @@ toolboxCount (text) = bonusWithValue ([[toLower (text)]], "^[^0-9]*([0-9]+)d[0-9
 
 toolboxSides (text) = bonusWithValue ([[toLower (text)]], "^[^0-9]*[0-9]+d([0-9]+)")
 
-toolboxExtraCount (text) = bonusWithValue ([[toLower (text)]], "\+\s*([0-9]+)d[0-9]")
+toolboxExtraCount (text) = bonusWithValue ([[toLower (text)]], "^[^+]*\+\s*([0-9]+)d[0-9]")
 
-toolboxExtraSides (text) = bonusWithValue ([[toLower (text)]], "\+\s*[0-9]+d([0-9]+)")
+toolboxExtraSides (text) = bonusWithValue ([[toLower (text)]], "^[^+]*\+\s*[0-9]+d([0-9]+)")
+
+toolboxFlat (text) = bonusWithValue ([[toLower (text)]], "\+\s*([0-9]+)(?![0-9d])") - bonusWithValue ([[toLower (text)]], "-\s*([0-9]+)(?![0-9d])")
 
 toolboxSaveNote (total, ability, dc, half) =
     if dc > 0 then
@@ -19,7 +21,7 @@ toolboxDamageResult (total, ability, dc, half) =
 }
 
 toolboxDamage (damageText, ability, dc, half) = ([dice { number = toolboxCount (damageText)  sides = max (2, toolboxSides (damageText)) }, dice { number = toolboxExtraCount (damageText)  sides = max (2, toolboxExtraSides (damageText))  label = "" }],
-    ((baseline, throws)->toolboxDamageResult (sum (first (throws).rolls) + sum (item (1, throws).rolls), ability, dc, half)))
+    ((baseline, throws)->toolboxDamageResult (sum (first (throws).rolls) + sum (item (1, throws).rolls) + toolboxFlat (damageText), ability, dc, half)))
 
 toolboxHasDice (damageText) = if toolboxCount (damageText) > 0 then visible else none
 
@@ -184,7 +186,7 @@ trapStats = ruleset
             Damage = string {}
             'Save DC' = integer { default = 0 }
             Other = string {}
-            Roll = integer { value = 0  valuedice = toolboxDamage (Damage, "", 'Save DC', false)  editable = none }
+            Roll = integer { value = 0  valuedice = toolboxDamage (Damage, Stats.Save, 'Save DC', Stats.'Half on save')  editable = none }
         }
     }
 }

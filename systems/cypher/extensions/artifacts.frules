@@ -2,13 +2,15 @@ artifactCount (dep, regex) = bonusWithValue ([[dep]], regex)
 
 artifactKind (dep) =
     if bonusFrom ([[dep]], "^\s*[0-9]", 1) == 0 then
-        if bonusFrom ([[dep]], "^\s*[Aa]utomatic", 1) > 0 then "Automatic" else "Never"
+        if bonusFrom ([[dep]], "^\s*[Aa]utomatic", 1) > 0 then "Automatic"
+        else if bonusFrom ([[dep]], "[0-9]+\s+in\s+[0-9]*d[0-9]", 1) > 0 then "Roll"
+        else "Never"
     else if bonusFrom ([[dep]], "^\s*[0-9]+\s+[^0-9A-Za-z\s]\s+[A-Za-z]", 1) > 0 then "Multiplied"
     else "Roll"
 
 artifactThreshold (dep) =
     if artifactCount (dep, "^\s*[0-9]+\s*[^0-9A-Za-z\s]\s*([0-9]+)\s+in\b") > 0 then artifactCount (dep, "^\s*[0-9]+\s*[^0-9A-Za-z\s]\s*([0-9]+)\s+in\b")
-    else artifactCount (dep, "^\s*([0-9]+)")
+    else artifactCount (dep, "^[^0-9]*([0-9]+)")
 
 artifactDie (dep) =
     if artifactCount (dep, "^.*?\bin\s+[0-9]*d([0-9]+)") > 0 then artifactCount (dep, "^.*?\bin\s+[0-9]*d([0-9]+)") else 100
