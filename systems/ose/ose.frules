@@ -72,8 +72,17 @@ weaponAttack (name, thac0, bonus, damage, kind, distance) = custom
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
+isLauncher (weapon) = contains (toLower (weapon.Name), "bow") or contains (toLower (weapon.Name), "sling")
+
+hasRange (weapon) = firstNumber (weaponStat (weapon, "Long Range")) > 0
+
+dexInitiative (score) = if score < 4 then -2 else if score < 9 then -1 else if score < 13 then 0 else if score < 18 then 1 else 2
+
+thrownAttack (char, weapon) =
+    weaponAttack (weapon.Name + " (thrown)", char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Long Range")))
+
 attackFor (char, weapon) =
-    if firstNumber (weaponStat (weapon, "Long Range")) > 0 then
+    if isLauncher (weapon) and hasRange (weapon) then
         weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.DEX.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage"), "ranged", firstNumber (weaponStat (weapon, "Long Range")))
     else
         weaponAttack (weapon.Name, char.Combat.THAC0, char.Abilities.STR.Modifier + toInt (weaponStat (weapon, "Attack Bonus")), weaponStat (weapon, "Damage") + (if char.Abilities.STR.Modifier > 0 then "+" + toString (char.Abilities.STR.Modifier) else if char.Abilities.STR.Modifier < 0 then toString (char.Abilities.STR.Modifier) else ""), "melee", 5)
@@ -120,9 +129,8 @@ characterTable = ruleset
         'Attack Bonus' = integer { description = "Attack bonus for ascending AC: 19 minus THAC0." reference = ["bfrpg", 57] value = 19 - THAC0  editable = none }
         'Max HP' = integer { description = "Hit points when unhurt." reference = ["bfrpg", 8] default = 4 }
         HP = integer { description = "Current hit points. At 0 the character dies." reference = ["bfrpg", 62] default = 'Max HP'  editable = live }
-        'Night of rest' = button { description = "A night's sleep heals 1 hit point, or 2 with full bedrest. Spellcasters prepare spells again in the morning."  reference = ["bfrpg", 63]  editable = live  onClick = updates
+        'Day of rest' = button { description = "A full day of rest heals 1d3 hit points: roll it and add them to HP. Spellcasters memorise their spells again after a night's sleep."  editable = live  onClick = updates
             {
-                (root.Combat.HP) = min ('Max HP', HP + 1)
                 (root.'Spell Slots'.'Level 1'.Used) = 0
                 (root.'Spell Slots'.'Level 2'.Used) = 0
                 (root.'Spell Slots'.'Level 3'.Used) = 0
@@ -132,7 +140,7 @@ characterTable = ruleset
             }
         }
         Down = string { value = if HP < 1 then "Dead" else ""  visible = none  indicator = "#d64545" }
-        Initiative = modifier { description = "Roll d6 plus DEX modifier for individual initiative." reference = ["bfrpg", 55] value = Abilities.DEX.Modifier  valuedice = 1d6  editable = none }
+        Initiative = modifier { description = "Roll d6 plus the DEX initiative modifier (-2 to +2) for individual initiative." reference = ["bfrpg", 55] value = dexInitiative (Abilities.DEX.Score)  valuedice = 1d6  editable = none }
         Movement = string { description = "Movement per turn, with the rate per round in brackets." reference = ["bfrpg", 46] default = "120' (40')" }
         'Encounter Movement' = string { description = "Movement per round in an encounter." reference = ["bfrpg", 46] default = "40'" }
     }
@@ -186,7 +194,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        source = concat (map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons), map ((weapon)->thrownAttack (characterTable, weapon), filter ((weapon)->hasRange (weapon) and not (isLauncher (weapon)), characterTable.Weapons)))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -262,7 +270,7 @@ creatureTable = ruleset
     rulesetConfiguration =
     {
         important = [Stats, Attacks]
-        defaultImage = "/images/armour.svg"
+        defaultImage = "/systems/adnd2e/monster.svg"
         sortedBy = sort { prefix = "HD" sort = Stats.'Hit Dice' }
     }
     Stats = table

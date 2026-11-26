@@ -12,9 +12,9 @@
 Time passes in 10-minute **turns** in dungeons. Rest one turn in six. Torches last 6 turns, lanterns 24. Roll for wandering monsters every two turns. Doors are often stuck. Mapping and careful play matter more than rolls.
 
 ## Combat
-1. Each side rolls **initiative** with a d6 (or each character, using the optional rule: roll the Initiative field). The higher side acts first, each round.
+1. Each side rolls **initiative** with a d6 (or each character, using the optional rule: roll the Initiative field, d6 plus the DEX initiative modifier of -2 to +2). The higher side acts first, each round.
 2. Order in a round: morale checks, movement, missile attacks, spells, melee.
-3. Damage comes off HP. At 0 HP a character is dead.
+3. Damage comes off HP. At 0 HP a character is dead. A full day of rest heals 1d3 HP. Daggers, hand axes, spears and warhammers can be thrown: the Attacks list has a thrown row for them.
 4. Spells are memorised each day in the slots shown and are gone once cast.
 
 ## Advancement

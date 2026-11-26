@@ -24,6 +24,9 @@ headings = {}
 SYSTEM = "OldSchoolEssentials"
 URL = "/systems/ose/bfrpg.json"
 SAVES = {"fighter": "F", "magic-user": "MU", "cleric": "C", "thief": "T", "normal man": "NH"}
+# Launchers have no damage of their own in the table, and the spear's is on the rows under it.
+DAMAGE = {"shortbow": "1d6 (arrow)", "longbow": "1d8 (arrow)", "light crossbow": "1d6 (quarrel)", "heavy crossbow": "1d8 (quarrel)",
+          "sling": "1d4 (bullet), 1d3 (stone)", "spear": "1d6"}
 # Monster THAC0 by Hit Dice, as in B/X: up to 1 HD, then each step up to the next whole HD.
 THAC0 = [(1, 19), (2, 18), (3, 17), (4, 16), (5, 15), (6, 14), (7, 13), (9, 12), (11, 11), (13, 10), (15, 9), (17, 8), (19, 7), (21, 6)]
 
@@ -223,7 +226,7 @@ def equipment():
             short, medium, long_ = ranges.get(name.lower(), ["", "", ""])
             size = {"S": "Small", "M": "Medium", "L": "Large"}.get(row[2], "")
             result.append(entity("Weapons", name, description, "weaponStats", {
-                "Damage": row[4],
+                "Damage": row[4] or DAMAGE.get(name.lower(), ""),
                 "Attack Bonus": "",
                 "Qualities": ", ".join(x for x in [size, "Missile" if short else ""] if x),
                 "Short Range": short,
