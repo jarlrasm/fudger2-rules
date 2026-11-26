@@ -7,6 +7,9 @@ daTest = ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color =
 
 daDice = ask ("Target number", daTest)
 
+daPenalized (penalty) = ask ("Target number", ([dice { number = 2  sides = 6 }, dice { number = 1  sides = 6  color = "red"  label = "Dragon" }],
+    ((baseline, throws)->ageResult (first (throws).rolls, first (item (1, throws).rolls), baseline - penalty + sum (first (throws).rolls) + first (item (1, throws).rolls), asked, answered))))
+
 daAttack = ask ("Target's Defense", daTest)
 
 daSpell = ask ("Target number", daTest)
@@ -62,6 +65,8 @@ untrained (char, group) = if trainedIn (char, group) then 0 else -2
 
 isRangedGroup (group) = group == "Bows" or group == "Thrown"
 
+dexPenalty (char, group) = if isRangedGroup (group) or groupAbility (group) == "Dexterity" then armorPenalty (char) else 0
+
 weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 {
     Name = name
@@ -71,11 +76,21 @@ weaponAttack (name, bonus, damageText, damageExtra, kind, rangeMetres) = custom
 
 attackFor (char, weapon) =
     if isRangedGroup (weaponStat (weapon, "Group")) then
-        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), char.Abilities.Dexterity + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long Range")))
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), char.Abilities.Dexterity + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")) - dexPenalty (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Perception, "ranged", firstNumber (weaponStat (weapon, "Long Range")))
     else
-        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), abilityValue (char, groupAbility (weaponStat (weapon, "Group"))) + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
+        weaponAttack (weapon.Name + (if trainedIn (char, weaponStat (weapon, "Group")) then "" else " (untrained, half damage)"), abilityValue (char, groupAbility (weaponStat (weapon, "Group"))) + focusBonus (char, weaponStat (weapon, "Group")) + untrained (char, weaponStat (weapon, "Group")) - dexPenalty (char, weaponStat (weapon, "Group")), weaponStat (weapon, "Damage"), char.Abilities.Strength, "melee", 0)
 
-spellpower (char) = 10 + char.Abilities.Magic + (if hasFocus (char, "Spirit Lore") or hasFocus (char, "Entropy Lore") or hasFocus (char, "Primal Lore") or hasFocus (char, "Creation Lore") then 2 else 0)
+spellStat (spell, field) = valueOr (valueOr (valueOr (spell.data, "spellStats", { Stats = { School = "" } }), "Stats", { School = "" }), field, "")
+
+castingTest (char, school) = char.Abilities.Magic + (if school == "" then 0 else focusBonus (char, school + " Lore"))
+
+spellRoll (name, school, castBonus) = custom
+{
+    Name = name
+    School = string { value = school  editable = none }
+    'Casting Test' = modifier { value = castBonus  valuedice = daSpell  editable = none }
+    Spellpower = integer { value = 10 + castBonus  editable = none }
+}
 
 mageOnly (className) = if className == "Mage" then visible else editor
 
@@ -106,7 +121,7 @@ characterTable = ruleset
         Communication = integer { description = "Dealing with people." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
         Constitution = integer { description = "Stamina and toughness." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
         Cunning = integer { description = "Intelligence, learning and knowledge." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
-        Dexterity = integer { description = "Agility, reflexes and light weapons." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
+        Dexterity = integer { description = "Agility, reflexes and light weapons. Armor penalty comes off its tests." default = 0  minvalue = -2  maxvalue = 8  valuedice = daPenalized (armorPenalty (characterTable)) }
         Magic = integer { description = "Arcane power; sets spellpower." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
         Perception = integer { description = "The senses; adds to ranged damage." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
         Strength = integer { description = "Muscle; heavy weapons and melee damage." default = 0  minvalue = -2  maxvalue = 8  valuedice = daDice }
@@ -122,7 +137,7 @@ characterTable = ruleset
         {
             Ability = string { default = "Dexterity"  keys = abilityNames }
             Focus = string {}
-            Test = modifier { value = abilityValue (characterTable, Ability) + 2  valuedice = daDice  editable = none }
+            Test = modifier { value = abilityValue (characterTable, Ability) + 2 - (if Ability == "Dexterity" then armorPenalty (characterTable) else 0)  valuedice = daDice  editable = none }
         }
     }
 
@@ -162,9 +177,9 @@ characterTable = ruleset
         'Armor Rating' = integer { description = "Taken off damage from each hit." value = armorRating (characterTable)  editable = none }
         'Armor Penalty' = integer { description = "Taken off Speed and Dexterity tests." value = armorPenalty (characterTable)  editable = none }
         Speed = integer { description = "10 plus Dexterity minus the armor penalty, in yards a move. Dwarves have 8." value = 10 + Abilities.Dexterity - armorPenalty (characterTable)  editable = none }
-        Initiative = modifier { description = "A Dexterity test at the start of combat; highest goes first." value = Abilities.Dexterity  valuedice = initiativeRoll  editable = none }
-        'Casting Test' = modifier { description = "Magic plus 2 for a lore focus: roll against the spell's target number." value = spellpower (characterTable) - 10  valuedice = daSpell  editable = none  visible = mageOnly (Character.Class) }
-        Spellpower = integer { description = "10 plus Magic plus 2 for a lore focus: the target number to resist your spells." value = spellpower (characterTable)  editable = none  visible = mageOnly (Character.Class) }
+        Initiative = modifier { description = "A Dexterity test at the start of combat, less the armor penalty; highest goes first." value = Abilities.Dexterity - armorPenalty (characterTable)  valuedice = initiativeRoll  editable = none }
+        'Casting Test' = modifier { description = "Magic alone: roll against the spell's target number. Spell Rolls add the focus for each spell's school." value = Abilities.Magic  valuedice = daSpell  editable = none  visible = mageOnly (Character.Class) }
+        Spellpower = integer { description = "10 plus Magic: the target number to resist your spells. Spell Rolls add 2 for the school's lore focus." value = 10 + Abilities.Magic  editable = none  visible = mageOnly (Character.Class) }
     }
 
     Weapons = list
@@ -179,7 +194,7 @@ characterTable = ruleset
     {
         description = "Each attack asks for the target's Defense. Doubles on a hit give stunt points equal to the Dragon die."
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Fist", characterTable.Abilities.Dexterity + focusBonus (characterTable, "Brawling"), "1d3", characterTable.Abilities.Strength, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Fist", characterTable.Abilities.Dexterity + focusBonus (characterTable, "Brawling") - armorPenalty (characterTable), "1d3", characterTable.Abilities.Strength, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -192,6 +207,17 @@ characterTable = ruleset
         source = secondary.Spells
         singular = "Spell"
         editable = character
+    }
+
+    'Spell Rolls' = list
+    {
+        description = "Casting test and spellpower for each spell, with 2 for a lore focus in the spell's school."
+        tableLayout = layout { size = wide }
+        visible = mageOnly (Character.Class)
+        source = map ((spell)->spellRoll (spell.Name, spellStat (spell, "School"), castingTest (characterTable, spellStat (spell, "School"))), characterTable.Spells)
+        singular = "Spell roll"
+        editable = none
+        valueType = spellRoll
     }
 
     'Weapon Groups' = list
