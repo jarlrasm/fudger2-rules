@@ -171,7 +171,8 @@ characterTable = ruleset
     Harm = table
     {
         tableLayout = layout { columns = 4  size = wide }
-        'Max Stress' = integer { description = "Physical and mental strain you can soak before harm sticks." default = Attributes.Brawn + Attributes.Will + ratingOf (characterTable, "Resilience") }
+        'Max Stress' = integer { description = "Physical and mental strain you can soak before harm sticks: Brawn plus Will plus Resilience, plus bonuses." value = Attributes.Brawn + Attributes.Will + ratingOf (characterTable, "Resilience") + 'Stress bonus'  editable = none }
+        'Stress bonus' = integer { description = "Extra Stress from talents." default = 0 }
         Stress = integer { description = "Damage and horror come off Stress. A hit of 5 or more, or one that empties it, also causes an Injury." default = 'Max Stress'  minvalue = 0  editable = live }
         Protection = integer { description = "Armour or cover taken off each hit." default = 0  minvalue = 0 }
         Courage = integer { description = "Taken off mental damage from fear and the Mythos." default = 0  minvalue = 0 }
