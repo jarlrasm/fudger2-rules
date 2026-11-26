@@ -1,0 +1,753 @@
+#include "/systems/common.frules"
+
+clamp (n, low, high) = max (low, min (high, n))
+
+dxHit (dx) = if dx > 15 then dx - 15 else if dx < 6 then dx - 6 else 0
+
+dxInitiative (dx) = if dx > 15 then dx - 15 else 0
+
+psDamage (ps) = if ps > 15 then ps - 15 else if ps < 6 then ps - 6 else 0
+
+inArtifact (score) = if score > 15 then 15 - score else if score < 7 then 7 - score else 0
+
+chReaction (ch) =
+    if ch < 4 then -3 else if ch < 6 then -2 else if ch < 8 then -1 else if ch < 14 then 0 else if ch < 15 then 1 else if ch < 17 then 2 else 3
+
+chMorale (ch) =
+    if ch < 5 then -3 else if ch < 7 then -2 else if ch < 9 then -1 else if ch < 13 then 0 else if ch < 15 then 1 else if ch < 18 then 2 else 3
+
+chFollowers (ch) =
+    if ch < 5 then 1 else if ch < 7 then 2 else if ch < 9 then 3 else if ch < 12 then 4 else if ch < 14 then 5 else if ch < 15 then 6 else if ch < 16 then 7 else if ch < 17 then 8 else if ch < 18 then 10 else 15
+
+signed (n) = if n < 0 then toString (n) else "+" + toString (n)
+
+diceCount (text) = max (1, bonusWithValue ([[text]], "^ *([0-9]+)d"))
+dieSize (text) = max (1, bonusWithValue ([[text]], "d([0-9]+)"))
+damagePlus (text) = bonusWithValue ([[text]], "d[0-9]+ *\+ *([0-9]+)") - bonusWithValue ([[text]], "d[0-9]+ *- *([0-9]+)")
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+damageText (total) = toString (max (1, total)) + " damage"
+
+damageRoll (text) = ([dice { number = diceCount (text)  sides = dieSize (text) }], ((baseline, throws)->{ Text = damageText (baseline + damagePlus (text) + sum (first (throws).rolls))  Value = max (1, baseline + damagePlus (text) + sum (first (throws).rolls)) }))
+
+weaponNeed (wc, ac) = clamp (20 - ac - (wc - 1) / 2, 2, 20)
+
+hdNeed (hd, ac) = clamp (21 - ac - hd, 2, 20)
+
+bestAC (total, wc) = 20 - (wc - 1) / 2 - total
+
+hdBestAC (total, hd) = 21 - hd - total
+
+unknownACText (total, best) =
+    if best > 10 then toString (total) + ": misses even AC 10"
+    else if best < 2 then toString (total) + ": hits any AC"
+    else toString (total) + ": hits AC " + toString (best) + " or worse"
+
+hitResult (total, need, ac, answered, best) =
+{
+    Text = if answered and ac > 0 then toString (total) + " vs " + toString (need) + " for AC " + toString (ac) + ": " + (if total >= need then "Hit" else "Miss") else unknownACText (total, best)
+    Value = total
+    Outcome = if answered and ac > 0 then (if total >= need then "Hit" else "Miss") else ""
+}
+
+weaponHit (wc, hit, ac, answered, natural) = hitResult (hit + natural, weaponNeed (wc, ac), ac, answered, bestAC (hit + natural, wc))
+
+hdHit (hd, hit, ac, answered, natural) = hitResult (hit + natural, hdNeed (hd, ac), ac, answered, hdBestAC (hit + natural, hd))
+
+weaponRoll (wc) = ([1d20], ((baseline, throws)->weaponHit (wc, baseline, asked, answered, first (first (throws).rolls))))
+
+weaponAttackDice (wc) = ask ("Target's AC", weaponRoll (wc))
+
+hdRoll (hd) = ([1d20], ((baseline, throws)->hdHit (hd, baseline, asked, answered, first (first (throws).rolls))))
+
+hdAttackDice (hd) = ask ("Target's AC", hdRoll (hd))
+
+mentalNeed (attacker, defender) = 10 + defender - attacker
+
+mentalText (attacker, natural, need, defender, answered) =
+    if not (answered) or defender < 1 then "Rolled " + toString (natural) + ": succeeds against MS " + toString (attacker + natural - 10) + " or less"
+    else if need > 20 then "Rolled " + toString (natural) + " vs MS " + toString (defender) + ": no effect possible"
+    else if need < 2 then "Rolled " + toString (natural) + " vs MS " + toString (defender) + ": automatic success"
+    else "Rolled " + toString (natural) + " vs " + toString (need) + " for MS " + toString (defender) + ": " + (if natural >= need then "Success" else "Failure")
+
+mentalOutcome (natural, need, defender, answered) =
+    if not (answered) or defender < 1 then ""
+    else if need > 20 then "Failure"
+    else if need < 2 then "Success"
+    else if natural >= need then "Success"
+    else "Failure"
+
+mentalResult (attacker, defender, answered, natural) =
+{
+    Text = mentalText (attacker, natural, mentalNeed (attacker, defender), defender, answered)
+    Value = natural
+    Outcome = mentalOutcome (natural, mentalNeed (attacker, defender), defender, answered)
+}
+
+mentalRoll = ([1d20], ((baseline, throws)->mentalResult (baseline, asked, answered, first (first (throws).rolls))))
+
+mentalAttackDice = ask ("Defender's Mental Strength", mentalRoll)
+
+radiationDice (resistance, intensity) =
+    if intensity < 1 then 0
+    else if intensity - resistance > 2 then 0
+    else if intensity - resistance < -11 then 0
+    else max (1, (intensity - resistance + 12) / 2)
+
+radiationText (resistance, intensity, damage) =
+    if intensity < 1 then "Enter the radiation intensity, 3 to 18"
+    else if intensity - resistance > 5 then "Intensity " + toString (intensity) + " vs " + toString (resistance) + ": death"
+    else if intensity - resistance > 2 then "Intensity " + toString (intensity) + " vs " + toString (resistance) + ": a new mutation"
+    else if intensity - resistance < -11 then "Intensity " + toString (intensity) + " vs " + toString (resistance) + ": no effect"
+    else "Intensity " + toString (intensity) + " vs " + toString (resistance) + ": " + toString (damage) + " damage"
+
+radiationOutcome (resistance, intensity) =
+    if intensity < 1 then ""
+    else if intensity - resistance > 5 then "Failure"
+    else if intensity - resistance > 2 then "Mutation"
+    else if intensity - resistance < -11 then "Success"
+    else ""
+
+radiationResult (resistance, intensity, damage) =
+{
+    Text = radiationText (resistance, intensity, damage)
+    Value = damage
+    Outcome = radiationOutcome (resistance, intensity)
+}
+
+radiationExposure (resistance, intensity) = ([dice { number = radiationDice (resistance, intensity)  sides = 6 }], ((baseline, throws)->radiationResult (resistance, asked, sum (first (throws).rolls))))
+
+radiationRoll (resistance) = ask ("Radiation intensity", (i)->radiationExposure (resistance, i))
+
+poisonDice (resistance, strength) =
+    if strength < 1 then 0
+    else if strength - resistance > 3 then 0
+    else if strength - resistance < -9 then 0
+    else max (1, (strength - resistance + 11) / 2)
+
+poisonText (resistance, strength, damage) =
+    if strength < 1 then "Enter the poison strength, 3 to 18"
+    else if strength - resistance > 3 then "Strength " + toString (strength) + " vs " + toString (resistance) + ": death"
+    else if strength - resistance < -9 then "Strength " + toString (strength) + " vs " + toString (resistance) + ": no effect"
+    else "Strength " + toString (strength) + " vs " + toString (resistance) + ": " + toString (damage) + " damage"
+
+poisonOutcome (resistance, strength) =
+    if strength < 1 then ""
+    else if strength - resistance > 3 then "Failure"
+    else if strength - resistance < -9 then "Success"
+    else ""
+
+poisonResult (resistance, strength, damage) =
+{
+    Text = poisonText (resistance, strength, damage)
+    Value = damage
+    Outcome = poisonOutcome (resistance, strength)
+}
+
+poisonExposure (resistance, strength) = ([dice { number = poisonDice (resistance, strength)  sides = 6 }], ((baseline, throws)->poisonResult (resistance, asked, sum (first (throws).rolls))))
+
+poisonRoll (resistance) = ask ("Poison strength", (s)->poisonExposure (resistance, s))
+
+artifactWord (total) =
+    if total <= 3 then "figured out, it works"
+    else if total <= 6 then "getting somewhere, try again next turn"
+    else if total <= 9 then "no progress, try again next turn"
+    else if total <= 10 then "lost track, start this chart over"
+    else "mishap: it harms the user or breaks"
+
+artifactOutcome (total) =
+    if total <= 3 then "Success"
+    else if total <= 10 then ""
+    else "Mishap"
+
+artifactResult (modifier, chart, natural) =
+{
+    Text = toString (natural + modifier + chart) + ": " + artifactWord (natural + modifier + chart)
+    Value = natural + modifier + chart
+    Outcome = artifactOutcome (natural + modifier + chart)
+    Push = if natural + modifier + chart > 3 and natural + modifier + chart <= 10 then artifactRoll (modifier, chart) else 0
+    PushLabel = "Try again"
+}
+
+artifactRoll (modifier, chart) = ([1d10], ((baseline, throws)->artifactResult (modifier, chart, first (first (throws).rolls))))
+
+chartNumber (chart) = if chart == "C" then 2 else if chart == "B" then 1 else 0
+
+artifactAskedRoll = ([1d10], ((baseline, throws)->artifactResult (baseline, asked, first (first (throws).rolls))))
+
+artifactDice = ask ("Artifact chart", ["A: simple", "B: complex", "C: very complex"], 0, artifactAskedRoll)
+
+physicalMutationNames = ["Attraction Odor (D)", "Body Structure Change (D)", "Chameleon Powers", "Density Control", "Diminished Sense (D)", "Double Physical Pain (D)", "Electrical Generation", "Fat Cell Accumulation (D)", "Gas Generation: Musk", "Heat Generation", "Heightened Balance", "Heightened Constitution", "Heightened Dexterity", "Heightened Hearing", "Heightened Precision", "Heightened Smell", "Heightened Strength", "Heightened Taste", "Heightened Touch", "Heightened Vision", "Hemophilia (D)", "Increased Metabolism (D)", "Increased Speed", "Infravision", "Light Generation", "Multiple Body Parts", "New Body Parts", "No Resistance to Bacteria (D)", "No Resistance to Poison (D)", "No Sensory Nerve Endings (D)", "Oversized Body Parts", "Partial Carapace", "Photosynthetic Skin", "Physical Reflection", "Poor Respiratory System (D)", "Quills or Spines", "Radiated Eyes", "Regeneration", "Shapechange", "Shorter", "Skin Structure Change (D)", "Sonic Attack Ability", "Symbiotic Attachment", "Taller", "Total Carapace", "Ultravision", "Vision Defect (D)", "Weight Decrease (D)", "Wings", "Roll again, rerolling defects", "Pick any physical mutation"]
+
+physicalHumanoid = [2, 4, 5, 6, 8, 10, 12, 14, 16, 17, 18, 22, 23, 24, 25, 26, 32, 33, 34, 35, 37, 39, 42, 43, 44, 46, 51, 53, 55, 57, 58, 59, 61, 62, 64, 65, 67, 69, 70, 74, 76, 77, 78, 83, 84, 85, 87, 89, 90, 94, 100]
+
+physicalAnimal = [2, 3, 6, 7, 8, 9, 11, 12, 13, 14, 15, 21, 22, 23, 24, 25, 29, 32, 33, 34, 36, 37, 39, 41, 42, 45, 47, 48, 49, 51, 52, 56, 60, 61, 62, 63, 64, 67, 68, 71, 72, 73, 74, 82, 83, 86, 87, 88, 90, 94, 100]
+
+mentalMutationNames = ["Absorption", "Anti-Reflection (D)", "Complete Mental Block (D)", "Cryokinesis", "Death Field Generation", "De-Evolution", "Density Control (Others)", "Directional Sense", "Dual Brain", "Empathy", "Epilepsy (D)", "Fear Impulse (D)", "Force Field Generation", "Genius Capability", "Heightened Brain Talent", "Heightened Intelligence", "Hostility Field (D)", "Illusion Generation", "Intuition", "Life Leech", "Light Wave Manipulation", "Magnetic Control", "Mass Mind", "Mental Blast", "Mental Control", "Mental Control Over Physical State", "Mental Defenselessness (D)", "Mental Defense Shield", "Molecular Disruption", "Molecular Understanding", "Multiple Damage (D)", "Planar Travel", "Poor Dual Brain (D)", "Precognition", "Pyrokinesis", "Radar or Sonar", "Reflection", "Repulsion Field", "Sound Imitation", "Telekinesis", "Telekinetic Arm", "Telekinetic Flight", "Telepathy", "Teleportation", "Thought Imitation", "Time Field Manipulation", "Total Healing", "Weather Manipulation", "Will Force", "Roll again, rerolling defects", "Pick any mental mutation"]
+
+mentalHumanoid = [1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 18, 22, 25, 26, 31, 41, 45, 46, 47, 52, 53, 54, 55, 58, 59, 60, 62, 63, 64, 66, 69, 70, 73, 74, 75, 76, 77, 78, 79, 82, 83, 84, 85, 86, 87, 88, 89, 90, 95, 99, 100]
+
+mentalAnimal = [1, 2, 4, 5, 6, 9, 10, 13, 14, 15, 18, 20, 24, 25, 28, 43, 44, 45, 49, 52, 53, 54, 55, 56, 57, 58, 61, 66, 67, 68, 71, 72, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 95, 99, 100]
+
+tableEntry (roll, uppers, names) = item (count (filter ((u)->u < roll, uppers)), names)
+
+physicalMutation (roll, animal) = tableEntry (roll, if animal then physicalAnimal else physicalHumanoid, physicalMutationNames)
+
+mentalMutation (roll, animal) = tableEntry (roll, if animal then mentalAnimal else mentalHumanoid, mentalMutationNames)
+
+mutationResult (roll, name) =
+{
+    Text = toString (roll) + ": " + name
+    Value = roll
+    Outcome = if contains (name, "(D)") then "Defect" else ""
+}
+
+isAnimal (kind) = kind == "Mutated Animal"
+
+physicalTableRoll (animal) = ([1d100], ((baseline, throws)->mutationResult (first (first (throws).rolls), physicalMutation (first (first (throws).rolls), animal))))
+
+mentalTableRoll (animal) = ([1d100], ((baseline, throws)->mutationResult (first (first (throws).rolls), mentalMutation (first (first (throws).rolls), animal))))
+
+generationText (roll) =
+    if roll <= 50 then "one physical mutation"
+    else if roll <= 80 then "one mental mutation"
+    else if roll <= 85 then "one physical and one mental mutation"
+    else "Heightened Intelligence"
+
+generationRoll = ([1d100], ((baseline, throws)->{ Text = toString (first (first (throws).rolls)) + ": " + generationText (first (first (throws).rolls))  Value = first (first (throws).rolls) }))
+
+mutationCount = ([1d4], ((baseline, throws)->{ Text = toString (first (first (throws).rolls)) + " mutations"  Value = first (first (throws).rolls) }))
+
+levelText (roll) =
+    switch roll
+        case 1 then "+1 Mental Strength"
+        case 2 then "+1 Intelligence"
+        case 3 then "+1 Dexterity"
+        case 4 then "+1 Charisma"
+        case 5 then "+1 Constitution"
+        case 6 then "+1 Physical Strength"
+        case 7 then "+1 to hit"
+        case 8 then "+1 to hit"
+        else "+1 damage with weapons"
+
+levelRoll = ([1d10], ((baseline, throws)->{ Text = toString (first (first (throws).rolls)) + ": " + levelText (first (first (throws).rolls))  Value = first (first (throws).rolls) }))
+
+moraleResult (total, need) =
+{
+    Text = toString (total) + " vs " + toString (need) + ": " + (if total >= need then "stands firm" else "breaks and flees")
+    Value = total
+    Outcome = if total >= need then "Success" else "Failure"
+}
+
+moraleRoll (need) = ([1d10], ((baseline, throws)->moraleResult (baseline + first (first (throws).rolls), need)))
+
+initiativeRoll = ([1d6], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls))  Value = baseline + first (first (throws).rolls) }))
+
+surpriseRoll = ([1d6], ((baseline, throws)->if first (first (throws).rolls) <= 2 then { Text = toString (first (first (throws).rolls)) + ": surprised"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + ": not surprised"  Outcome = "Success" }))
+
+hpRoll (cn, extra) = ([dice { number = clamp (cn, 1, 50)  sides = 6 }], ((baseline, throws)->{ Text = toString (sum (first (throws).rolls) + extra * cn) + " hit points"  Value = sum (first (throws).rolls) + extra * cn }))
+
+downState (hp) = if hp < 1 then "Dead" else ""
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "weaponStats", field)
+
+weaponAttack (name, wc, hit, damage, extra, kind, distance) = custom
+{
+    Name = name
+    WC = integer { description = "Weapon Class, 1 to 16: higher classes hit armour more easily." value = wc  editable = none }
+    'To Hit' = modifier { value = hit  valuedice = weaponAttackDice (wc)  action = kind  reach = 2  range = distance  editable = none }
+    Damage = integer { value = extra  valuedice = damageRoll (damage)  render = damage + (if extra == 0 then "" else signed (extra))  editable = none }
+}
+
+weaponClassOf (weapon) = max (1, toInt (weaponStat (weapon, "Weapon Class")))
+
+meleeAttack (char, weapon) = weaponAttack (weapon.Name, weaponClassOf (weapon), char.Combat.'To Hit', weaponStat (weapon, "Damage"), char.Combat.'Damage Bonus', "melee", 0)
+
+rangedAttack (char, weapon, label) = weaponAttack (weapon.Name + label, weaponClassOf (weapon), char.Combat.'To Hit', weaponStat (weapon, "Damage"), if weaponStat (weapon, "Kind") == "Thrown" then char.Combat.'Damage Bonus' else 0, "ranged", 2 * firstNumber (weaponStat (weapon, "Range")))
+
+attacksFor (char, weapon) =
+    if weaponStat (weapon, "Kind") == "Thrown" then [meleeAttack (char, weapon), rangedAttack (char, weapon, " (thrown)")]
+    else if weaponStat (weapon, "Kind") == "Melee" then [meleeAttack (char, weapon)]
+    else [rangedAttack (char, weapon, "")]
+
+allAttacks (char) = fold ([weaponAttack ("Unarmed", 1, char.Combat.'To Hit', "1d3", char.Combat.'Damage Bonus', "melee", 0)], (acc, weapon)->concat (acc, attacksFor (char, weapon)), char.Weapons)
+
+mutationStat (mutation, field) = itemStat (mutation, "mutationStats", field)
+
+mutationAttack (name, mental, wc, hit, ms, damage, distance) = custom
+{
+    Name = name
+    Attack = modifier { description = "Mental mutations roll Mental Strength against the defender's; physical ones roll on the weapon matrix." value = if mental then ms else hit  valuedice = if mental then mentalAttackDice else weaponAttackDice (wc)  action = ranged  range = distance  editable = none }
+    Damage = integer { value = 0  valuedice = damageRoll (damage)  render = damage  editable = none }
+}
+
+mutationAttackFor (char, mutation, mental) = mutationAttack (mutation.Name, mental, max (1, toInt (mutationStat (mutation, "Weapon Class"))), char.Combat.'To Hit', char.Resistances.'Mental Resistance', mutationStat (mutation, "Damage"), firstNumber (mutationStat (mutation, "Range")))
+
+isMutationAttack (mutation) = mutationStat (mutation, "Attack") == "Yes"
+
+mutationAttacks (char) = concat (map ((m)->mutationAttackFor (char, m, false), filter ((m)->isMutationAttack (m), char.'Physical Mutations')), map ((m)->mutationAttackFor (char, m, true), filter ((m)->isMutationAttack (m), char.'Mental Mutations')))
+
+artifactStat (artifact, field) = itemStat (artifact, "artifactStats", field)
+
+artifactUse (name, chart, tech, modifier) = custom
+{
+    Name = name
+    Chart = chart
+    'Tech Level' = tech
+    'Figure Out' = modifier { description = "Roll d10 plus the Intelligence modifier and the chart's difficulty; 3 or less figures it out." value = modifier  valuedice = artifactRoll (modifier, chartNumber (chart))  editable = none }
+}
+
+artifactUses (char) = map ((a)->artifactUse (a.Name, artifactStat (a, "Chart"), artifactStat (a, "Tech Level"), char.Artifacts.'Artifact Modifier'), filter ((a)->artifactStat (a, "Figured Out") != "Yes", char.'Carried Artifacts'))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, Resistances, Attacks, 'Mutation Attacks'] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { description = "Pure Strain Humans have no mutations, +3 Charisma, and are trusted by the Ancients' robots and computers. Humanoids and mutated animals roll d4 physical and d4 mental mutations."  keys = ["Pure Strain Human", "Humanoid", "Mutated Animal"]  default = "Humanoid" }
+        'Animal Stock' = string { description = "For a mutated animal: the beast it grew from." }
+        Level = integer { description = "Rises with experience points; each new level rolls d10 for a bonus." default = 1  minvalue = 1 }
+        'Experience Points' = integer { description = "One point per hit point of foes beaten, plus points for artifacts figured out." default = 0  minvalue = 0  editable = live }
+        'Level Bonus' = integer { description = "Roll d10 on reaching a new level." default = 0  valuedice = levelRoll  editable = none }
+        'Cryptic Alliance' = string { description = "The secret society the character belongs to, if any." }
+        Height = string {}
+        Weight = string {}
+    }
+
+    Attributes = table
+    {
+        description = "Six attributes, 3d6 each (or 4d6 keeping the best three), in this order."
+        tableLayout = layout { columns = 3  size = wide }
+        MS = custom
+        {
+            Score = integer { description = "Mental Strength: attacks with and defends against mental mutations. Five successful mental attacks or defences raise it by 1." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = "Mental resistance " + toString (Score)  editable = none }
+        }
+        IN = custom
+        {
+            Score = integer { description = "Intelligence: above 15 or below 7 changes rolls to figure out artifacts." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = "Artifacts " + signed (inArtifact (Score))  editable = none }
+        }
+        DX = custom
+        {
+            Score = integer { description = "Dexterity: who strikes first, and above 15 or below 6 changes every attack roll." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = "To hit " + signed (dxHit (Score))  editable = none }
+        }
+        CH = custom
+        {
+            Score = integer { description = "Charisma: reactions, how many followers will serve you, and their morale. Pure Strain Humans add 3." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = "Reaction " + signed (chReaction (Score))  editable = none }
+        }
+        CN = custom
+        {
+            Score = integer { description = "Constitution: a d6 of hit points for each point, and resistance to radiation and poison." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = toString (Score) + "d6 hit points"  editable = none }
+        }
+        PS = custom
+        {
+            Score = integer { description = "Physical Strength: above 15 or below 6 changes the damage of muscle-powered weapons." default = 10  minvalue = 3  maxvalue = 21 }
+            Effect = string { value = "Damage " + signed (psDamage (Score))  editable = none }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armour Class' = integer { description = "Descending: 10 is no protection, 1 is powered assault armour." default = 10  minvalue = 1  maxvalue = 10 }
+        'Max HP' = integer { description = "Roll a d6 for each point of Constitution. Hit points do not rise with level." default = 35  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 the character is dead." default = 'Max HP'  minvalue = -50  editable = live }
+        'Roll HP' = integer { description = "Roll Constitution d6 for starting hit points; Heightened Constitution adds 2 per point." default = 0  valuedice = hpRoll (Attributes.CN.Score, 'HP per CN')  editable = none }
+        'HP per CN' = integer { description = "Extra hit points per point of Constitution, 2 with Heightened Constitution." default = 0  minvalue = 0 }
+        'To Hit' = modifier { description = "Added to every attack roll: the Dexterity modifier plus level bonuses." default = dxHit (Attributes.DX.Score)  editable = live }
+        'Damage Bonus' = modifier { description = "Added to damage with muscle-powered weapons: the Strength modifier plus level bonuses." default = psDamage (Attributes.PS.Score)  editable = live }
+        Movement = string { description = "Metres per 10-second melee turn; 12 for most humanoids." default = "12 m" }
+        Initiative = integer { description = "Roll d6 each round; high Dexterity adds to it. Highest strikes first." value = dxInitiative (Attributes.DX.Score)  valuedice = initiativeRoll  editable = none }
+        Surprise = integer { description = "Roll d6 when meeting: 1 or 2 is surprised." default = 0  valuedice = surpriseRoll  editable = none }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Controlled = bool { description = "Under someone else's mental control." default = false  editable = live  indicator = "#8e5cc4" }
+        Paralysed = bool { default = false  editable = live  indicator = "#555555" }
+        Down = string { value = downState (HP)  visible = none  indicator = "#d64545" }
+        'Day of Rest' = button
+        {
+            description = "A full day of rest heals 1 hit point."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.HP) = min ('Max HP', HP + 1)
+            }
+        }
+    }
+
+    Resistances = table
+    {
+        description = "Radiation and poison are checked against Constitution on a matrix; mental attacks against Mental Strength. Mutations can raise all three."
+        tableLayout = layout { columns = 2  size = wide }
+        'Mental Resistance' = integer { description = "Mental Strength, plus 4 each for Heightened Intelligence or a Mental Defense Shield (at most 18)." default = Attributes.MS.Score  minvalue = 3 }
+        'Radiation Resistance' = integer { description = "Constitution, plus 3 with Heightened Constitution." default = Attributes.CN.Score  minvalue = 3 }
+        'Poison Resistance' = integer { description = "Constitution, or 18 with Heightened Constitution." default = Attributes.CN.Score  minvalue = 3 }
+        'Mental Attack' = integer { description = "Mental Strength against the defender's: roll d20 at or over 10 plus the difference." value = 'Mental Resistance'  valuedice = mentalAttackDice  editable = none }
+        Radiation = integer { description = "Asks the intensity, 3 to 18, and reads the radiation matrix: damage dice, a new mutation, or death." value = 0  valuedice = radiationRoll ('Radiation Resistance')  editable = none }
+        Poison = integer { description = "Asks the poison's strength, 3 to 18, and reads the poison matrix: damage dice or death." value = 0  valuedice = poisonRoll ('Poison Resistance')  editable = none }
+    }
+
+    Charisma = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Reaction Adjustment' = modifier { value = chReaction (Attributes.CH.Score)  editable = none }
+        'Morale Adjustment' = modifier { value = chMorale (Attributes.CH.Score)  editable = none }
+        'Max Followers' = integer { value = chFollowers (Attributes.CH.Score)  editable = none }
+        'Followers Morale' = integer { description = "d10 plus the morale adjustment; 3 or more and intelligent followers hold." value = chMorale (Attributes.CH.Score)  valuedice = moraleRoll (3)  editable = none }
+    }
+
+    'Mutation Tables' = table
+    {
+        description = "Roll d100 for each new mutation; mutated animals use their own column. (D) marks a defect."
+        tableLayout = layout { columns = 3 }
+        'How Many' = integer { description = "Roll d4 for the number of physical mutations, and again for mental ones." default = 0  valuedice = mutationCount  editable = none }
+        Physical = integer { default = 0  valuedice = physicalTableRoll (isAnimal (Character.Type))  editable = none }
+        Mental = integer { default = 0  valuedice = mentalTableRoll (isAnimal (Character.Type))  editable = none }
+    }
+
+    'Physical Mutations' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Physical Mutations'
+        singular = "Physical mutation"
+        editable = character
+    }
+
+    'Mental Mutations' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.'Mental Mutations'
+        singular = "Mental mutation"
+        editable = character
+    }
+
+    'Mutation Attacks' = list
+    {
+        description = "Mutations marked as attacks. Mental attacks ask for the defender's Mental Strength; physical ones for the target's AC."
+        tableLayout = layout { size = wide }
+        source = mutationAttacks (characterTable)
+        singular = "Mutation attack"
+        editable = none
+        valueType = mutationAttack
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Armour = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each attack asks for the target's Armour Class and reads the weapon class against it. Beyond a weapon's range, up to double, the roll is at -5."
+        tableLayout = layout { size = wide }
+        source = allAttacks (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Artifacts = table
+    {
+        description = "Each artifact of the Ancients follows a chart: A simple, B complex, C very complex. Roll d10 each turn of tinkering."
+        tableLayout = layout { columns = 2 }
+        'Artifact Modifier' = modifier { description = "Intelligence above 15 takes 1 off each roll per point, below 7 adds 1. Lower is better." default = inArtifact (Attributes.IN.Score)  editable = live }
+        'Figure Out' = integer { description = "Asks the chart and rolls d10 plus the modifier." value = 'Artifact Modifier'  valuedice = artifactDice  editable = none }
+    }
+
+    'Carried Artifacts' = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+
+    'Artifact Use' = list
+    {
+        description = "Artifacts not figured out yet."
+        tableLayout = layout { size = wide }
+        source = artifactUses (characterTable)
+        singular = "Artifact"
+        editable = none
+        valueType = artifactUse
+    }
+
+    Possessions = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Domars = integer { description = "Coins of the Ancients, the common money of Gamma Terra." default = 0  minvalue = 0  editable = live }
+        Equipment = string { multiline = true  editable = live }
+    }
+
+    Background = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Appearance = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureAttack = custom
+{
+    Name = string {}
+    'Weapon Class' = integer { description = "0 attacks with hit dice; a weapon uses its class." default = 0  minvalue = 0  maxvalue = 16 }
+    Hit = modifier { default = 0  valuedice = if 'Weapon Class' > 0 then weaponAttackDice ('Weapon Class') else hdAttackDice (Stats.'Hit Dice')  action = if Ranged then "ranged" else "melee"  reach = 2  range = Distance }
+    Ranged = bool { default = false }
+    Distance = integer { description = "Range in metres for ranged attacks." default = 0 }
+    Damage = string { default = "1d6" }
+    Roll = integer { value = 0  valuedice = damageRoll (Damage)  editable = none }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/gammaworld/mutant.svg"  important = [Stats, Attacks] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Armour Class' = integer { default = 7  minvalue = 1  maxvalue = 10 }
+        'Hit Dice' = integer { description = "Hit dice, in d6. Creatures without weapons attack on the hit dice matrix." default = 5  minvalue = 1 }
+        'Max HP' = integer { default = 18  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = -50  editable = live }
+        Movement = string { default = "12 m" }
+        MS = integer { description = "Mental Strength, for mental attacks and defence." default = 10  minvalue = 3 }
+        CN = integer { description = "Constitution, for radiation and poison." default = 10  minvalue = 3 }
+        Intelligent = bool { description = "Intelligent creatures hold on 3 or more on the morale roll, animals on 5." default = false }
+        Morale = integer { description = "d10 plus adjustments when the fight turns." default = 0  valuedice = moraleRoll (if Intelligent then 3 else 5)  editable = none }
+        Initiative = integer { default = 0  valuedice = initiativeRoll  editable = none }
+        'Mental Attack' = integer { value = MS  valuedice = mentalAttackDice  editable = none }
+        Radiation = integer { value = 0  valuedice = radiationRoll (CN)  editable = none }
+        Poison = integer { value = 0  valuedice = poisonRoll (CN)  editable = none }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Down = string { value = downState (HP)  visible = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = creatureAttack
+    }
+    Mutations = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Mutations = string { description = "The creature's mutations and what they do." multiline = true }
+        Generation = integer { description = "Roll d100 for each generation a new creature has mutated, 1 to 10." default = 0  valuedice = generationRoll  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+robotTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/gammaworld/robot.svg"  important = [Robot, Weapons] }
+    Robot = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Security", "Police", "Medical", "Engineering", "Ecology", "Household", "Supervisor", "Cyborg", "War", "Death Machine", "Other"]  default = "Security" }
+        'Armour Class' = integer { default = 3  minvalue = 1  maxvalue = 10 }
+        'Hit Dice' = integer { description = "Hit dice, in d6." default = 10  minvalue = 1 }
+        'Max HP' = integer { default = 35  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = -50  editable = live }
+        Movement = string { default = "12 m" }
+        'Power Source' = string { keys = ["Atomic", "Solar", "Broadcast", "Chemical", "Hydrogen cell", "Other"]  default = "Atomic" }
+        'Power Left' = string { description = "Hours or charges of power left." editable = live }
+        Initiative = integer { default = 0  valuedice = initiativeRoll  editable = none }
+        'Serves Pure Strain Humans' = bool { description = "Most robots obey a Pure Strain Human with proper identification." default = true }
+        Disabled = bool { default = false  editable = live  indicator = "#555555" }
+        Down = string { value = if HP < 1 then "Destroyed" else ""  visible = none  indicator = "#d64545" }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = creatureAttack
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Hit Dice' = integer { visible = none  value = Robot.'Hit Dice' }
+        Programming = string { description = "What it was built to do, and its standing orders." multiline = true }
+        Sensors = string { multiline = true }
+        'Other Equipment' = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+allianceTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/gammaworld/alliance.svg"  important = [Alliance] }
+    Alliance = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Goal = string { description = "What the alliance wants for the world." multiline = true }
+        Methods = string { multiline = true }
+        Hates = string { description = "Who the alliance works against." }
+        Allies = string {}
+        Members = string { description = "Who joins: pure strain humans, humanoids, animals, robots." }
+        Strength = string { keys = ["A few cells", "Regional", "Widespread"]  default = "Regional" }
+        Signs = string { description = "Secret signs and symbols members know each other by." }
+        'Attitude to Party' = string { keys = ["Hostile", "Wary", "Neutral", "Friendly", "Allied"]  default = "Neutral"  editable = live }
+        Notes = string { multiline = true }
+    }
+}
+
+techLevels = ["I", "II", "III"]
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Tech Level" prefix = "Tech" filter = Stats.'Tech Level' }]
+        sortedBy = sort { prefix = "Weapon Class" sort = Stats.'Weapon Class' }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Thrown", "Ranged"]  default = "Melee" }
+        'Weapon Class' = integer { description = "1 to 16, from clubs and spears up to fusion rifles and missiles." default = 1  minvalue = 1  maxvalue = 16 }
+        Damage = string { description = "Damage against man-sized or smaller targets." default = "1d6" }
+        'Damage Large' = string { description = "Damage against larger targets." default = "1d6" }
+        Range = string { description = "Range in metres; up to double it at -5 to hit." }
+        'Tech Level' = string { description = "I primitive, II medieval to early industrial, III the Ancients' high technology." keys = techLevels  default = "I" }
+        Charges = string { description = "Shots or charges, and what powers it." }
+        Notes = string { multiline = true }
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Tech Level" prefix = "Tech" filter = Stats.'Tech Level' }]
+        sortedBy = sort { prefix = "AC" sort = Stats.AC }
+    }
+    Stats = table
+    {
+        AC = integer { description = "The Armour Class it gives; a shield improves it by 1." default = 8  minvalue = 1  maxvalue = 10 }
+        'Tech Level' = string { keys = techLevels  default = "I" }
+        Powered = bool { default = false }
+        Notes = string { multiline = true }
+    }
+}
+
+artifactStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/gammaworld/artifact.svg"
+        filters = [filter { name = "Chart" prefix = "Chart" filter = Stats.Chart }, filter { name = "Tech Level" prefix = "Tech" filter = Stats.'Tech Level' }]
+        sortedBy = sort { prefix = "Chart" sort = Stats.Chart }
+    }
+    Stats = table
+    {
+        Chart = string { description = "Which artifact use chart it follows: A simple, B complex, C very complex." keys = ["A", "B", "C"]  default = "A" }
+        'Tech Level' = string { keys = techLevels  default = "III" }
+        'Figured Out' = string { description = "Yes once the owner knows how to work it." keys = ["No", "Yes"]  default = "No" }
+        Charges = string { description = "Charges or hours of power left, and the cell it takes." }
+        Effect = string { multiline = true }
+    }
+}
+
+mutationStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Attack" prefix = "Attack" filter = Stats.Attack }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Beneficial", "Defect"]  default = "Beneficial" }
+        Attack = string { description = "Yes puts it in Mutation Attacks." keys = ["No", "Yes"]  default = "No" }
+        'Weapon Class' = integer { description = "For a physical attack: the weapon class it hits with." default = 0  minvalue = 0  maxvalue = 16 }
+        Damage = string { description = "Damage dice, if it does damage." }
+        Range = string { description = "Range in metres." }
+        Uses = string { description = "How often it can be used, such as every other turn or once a week." }
+        Effect = string { multiline = true }
+    }
+}
+
+GammaWorld = system
+{
+    hints = [
+        hint
+        {
+            title = "Character types"
+            topic = "Getting started"
+            text = ["Pure Strain Humans have no mutations but +3 Charisma, and robots obey them. Humanoids and mutated animals roll d4 physical and d4 mental mutations on the Mutation Tables. Hit points are a d6 for each point of Constitution."]
+        },
+        hint
+        {
+            title = "Matrices"
+            topic = "Combat"
+            text = ["Attacks ask the target's Armour Class and read the weapon class against it on d20. Mental attacks ask the defender's Mental Strength. Radiation and poison ask the intensity and read it against Constitution: damage dice, a mutation, or death."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll d6 for surprise (1-2 surprised), then each combatant rolls d6, plus Dexterity over 15. Highest strikes first."]
+        },
+        hint
+        {
+            title = "Artifacts"
+            topic = "Play"
+            text = ["Add the Ancients' gear as Artifacts with chart A, B or C. Each turn of tinkering rolls d10 plus the Intelligence modifier: 3 or less and it works, 11 or more and something goes wrong."]
+        }
+    ]
+    distanceUnit = "m"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Robots = robotTable
+    'Cryptic Alliances' = allianceTable
+    extraEntityTypes = [entityTypeDescription ("Robots", "robot", true, "/systems/gammaworld/robot.svg", []), entityTypeDescription ("Cryptic Alliances", "cryptic alliance", false, "/systems/gammaworld/alliance.svg", [])]
+    Weapons = weaponStats
+    Armour = armourStats
+    Artifacts = artifactStats
+    'Physical Mutations' = mutationStats
+    'Mental Mutations' = mutationStats
+    secondaryTypes = ["Weapons", "Armour", "Artifacts", "Physical Mutations", "Mental Mutations"]
+    description = "Gamma World 1st edition: mutants, pure strain humans and the Ancients' lost technology in the ruins of Gamma Terra"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d100, 1d10, 1d6, 1d4, 1d8, 1d12]
+    cssFiles = ["/systems/gammaworld/gammaworld.css"]
+    libraries = ["/systems/names/gammaterra.json", "/systems/names/wasteland.json"]
+    nameSettings = [
+        nameSetting
+        {
+            name = "Gamma Terra"
+            characters = [generator { library = "Gamma Terra" variant = "Survivor" }, generator { library = "Gamma Terra" variant = "Mutant animal" }]
+            creatures = [generator { library = "Gamma Terra" variant = "Mutant animal" }, generator { library = "Gamma Terra" variant = "Survivor" }]
+            Location = [generator { library = "Gamma Terra" variant = "Ruin" }, generator { library = "Wasteland" variant = "Settlement" }]
+            Robots = generator { library = "Gamma Terra" variant = "Robot" }
+            'Cryptic Alliances' = generator { library = "Gamma Terra" variant = "Alliance" }
+            Artifacts = generator { library = "Gamma Terra" variant = "Artifact" }
+            Weapons = generator { library = "Wasteland" variant = "Scrap weapon" }
+        }
+    ]
+}
