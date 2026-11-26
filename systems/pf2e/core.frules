@@ -48,12 +48,34 @@ signedText (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n
 
 statusPenalty (char) = max (char.Conditions.Frightened, char.Conditions.Sickened)
 
+attributePenalty (char, attributeName) =
+    switch attributeName
+        case "STR" then char.Conditions.Enfeebled
+        case "DEX" then char.Conditions.Clumsy
+        case "CON" then char.Conditions.Drained
+        case "INT" then char.Conditions.Stupefied
+        case "WIS" then char.Conditions.Stupefied
+        case "CHA" then char.Conditions.Stupefied
+        else 0
+
+penaltyFor (char, attributeName) = max (statusPenalty (char), attributePenalty (char, attributeName))
+
 pf2AskedRoll (fortune) = ([dice { number = if fortune == "Normal" then 1 else 2  sides = 20  color = if fortune == "Fortune" then "green" else if fortune == "Misfortune" then "red" else "" }],
     ((baseline, throws)->pf2Result (baseline, if fortune == "Fortune" then max (first (throws).rolls) else if fortune == "Misfortune" then min (first (throws).rolls) else first (first (throws).rolls), asked)))
 
 pf2Dice (char) = ask ("DC", pf2AskedRoll (char.Character.Roll))
 
 pf2StrikeDice (char) = ask ("Target AC", pf2AskedRoll (char.Character.Roll))
+
+pf2CreatureRoll (penalty) = ([1d20], ((baseline, throws)->pf2Result (baseline + penalty, first (first (throws).rolls), asked)))
+
+creatureMap (attackNumber, agile) =
+    switch attackNumber
+        case "Second" then if agile then -4 else -5
+        case "Third" then if agile then -8 else -10
+        else 0
+
+pf2CreatureStrike (attackNumber, agile) = ask ("Target AC", pf2CreatureRoll (creatureMap (attackNumber, agile)))
 
 plainPf2 = pf2Roll (0, "Normal")
 
@@ -63,12 +85,12 @@ mapPenalty (char, agile) =
         case "Third" then if agile then -8 else -10
         else 0
 
-proficiency (attribute) = custom
+proficiency (attribute, attributeName) = custom
 {
     Attribute = attribute
     Rank = string { description = "Proficiency rank. Trained and above add level plus 2, 4, 6 or 8." default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     Item = integer { description = "Item bonus from gear, from 0 to 4." default = 0  minvalue = 0  maxvalue = 4 }
-    Modifier = modifier { description = "Total: attribute plus proficiency plus item bonus, minus status penalties." value = attribute + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+    Modifier = modifier { description = "Total: attribute plus proficiency plus item bonus, minus status penalties." value = attribute + proficiencyBonus (Rank, Character.Level) + Item - penaltyFor (characterTable, attributeName)  valuedice = pf2Dice (characterTable)  editable = none }
 }
 
 noStats = { Stats = { Damage = "" } }
@@ -84,18 +106,29 @@ weaponRank (char, weapon) =
 
 isRanged (weapon) = toInt (weaponStat (weapon, "Range")) > 0
 
+thrownRange (weapon) = bonusWithValue ([[toLower (weaponStat (weapon, "Traits"))]], "thrown[ -]([0-9]+)")
+
+isThrownMelee (weapon) = not (isRanged (weapon)) and thrownRange (weapon) > 0
+
 isAgile (weapon) = contains (toLower (weaponStat (weapon, "Traits")), "agile")
 
-attackAttribute (char, weapon) =
-    if isRanged (weapon) then char.Attributes.DEX
-    else if contains (toLower (weaponStat (weapon, "Traits")), "finesse") then max (char.Attributes.STR, char.Attributes.DEX)
-    else char.Attributes.STR
+attackAttributeName (char, weapon) =
+    if isRanged (weapon) then "DEX"
+    else if contains (toLower (weaponStat (weapon, "Traits")), "finesse") and char.Attributes.DEX > char.Attributes.STR then "DEX"
+    else "STR"
+
+attackAttribute (char, weapon) = if attackAttributeName (char, weapon) == "DEX" then char.Attributes.DEX else char.Attributes.STR
 
 strikeBonus (char, weapon) =
-    attackAttribute (char, weapon) + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - statusPenalty (char)
+    attackAttribute (char, weapon) + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - penaltyFor (char, attackAttributeName (char, weapon))
+
+strengthDamage (char) = signedText (char.Attributes.STR - char.Conditions.Enfeebled)
 
 strikeDamage (char, weapon) =
-    weaponStat (weapon, "Damage") + (if isRanged (weapon) and not (contains (toLower (weaponStat (weapon, "Traits")), "thrown")) then "" else signedText (char.Attributes.STR)) + " " + weaponStat (weapon, "Damage Type")
+    weaponStat (weapon, "Damage") + (if isRanged (weapon) and not (contains (toLower (weaponStat (weapon, "Traits")), "thrown")) then "" else strengthDamage (char)) + " " + weaponStat (weapon, "Damage Type")
+
+thrownStrikeFor (char, weapon) =
+    strike (weapon.Name + " (thrown)", char.Attributes.DEX + proficiencyBonus (weaponRank (char, weapon), char.Character.Level) + toInt (weaponStat (weapon, "Item Bonus")) + mapPenalty (char, isAgile (weapon)) - penaltyFor (char, "DEX"), weaponStat (weapon, "Damage") + strengthDamage (char) + " " + weaponStat (weapon, "Damage Type"), "ranged", 5, thrownRange (weapon) * 6)
 
 strike (name, bonus, damage, kind, reachFeet, distance) = custom
 {
@@ -116,7 +149,7 @@ conditionFlag (colour) = bool { description = "Mark while the condition lasts." 
 
 pf2Conditions = table
 {
-    description = "Conditions with values and flags. The sheet applies their penalties."
+    description = "Conditions with values and flags. The sheet applies the status penalties of Clumsy, Drained, Enfeebled, Frightened, Sickened and Stupefied (the worst one counts), Drained's HP loss and Off-Guard's -2 AC."
     tableLayout = layout { columns = 5  size = wide }
     Clumsy = conditionValue ("#e8913a")
     Drained = conditionValue ("#d64545")
@@ -198,7 +231,7 @@ pf2Defenses = table
     tableLayout = layout { columns = 4  size = wide }
     'Ancestry HP' = integer { description = "Hit points from your ancestry, gained once." default = 8 }
     'Class HP' = integer { description = "Hit points from your class, gained every level." default = 8 }
-    'Max HP' = integer { description = "Max HP: ancestry HP plus (class HP plus CON) per level." value = 'Ancestry HP' + ('Class HP' + Attributes.CON) * Character.Level  editable = none }
+    'Max HP' = integer { description = "Max HP: ancestry HP plus (class HP plus CON) per level, minus level times Drained." value = 'Ancestry HP' + ('Class HP' + Attributes.CON) * Character.Level - Conditions.Drained * Character.Level  editable = none }
     HP = integer { description = "Current hit points. At 0 you are dying." default = 'Max HP'  editable = live }
     'Temp HP' = integer { description = "Temporary hit points, lost before real HP." default = 0  editable = live }
     Down = string { value = if HP < 1 then "Dying" else ""  visible = none  indicator = "#d64545" }
@@ -218,15 +251,20 @@ pf2Defenses = table
             (root.Spellcasting.'Slots Rank 3'.realvalue) = 0
             (root.Spellcasting.'Slots Rank 4'.realvalue) = 0
             (root.Spellcasting.'Slots Rank 5'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 6'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 7'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 8'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 9'.realvalue) = 0
+            (root.Spellcasting.'Slots Rank 10'.realvalue) = 0
         }
     }
     'Armor Rank' = string { description = "Armor proficiency rank for the armor you wear." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
     'Armor Item Bonus' = integer { default = 0 }
     'Dex Cap' = integer { description = "Highest Dex modifier the armor lets you add to AC." default = 5 }
     'Shield Bonus' = integer { default = 2  minvalue = 0 }
-    AC = integer { description = "Armor Class: 10 plus Dex, proficiency, armor and shield." value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' + (if 'Shield Raised' then 'Shield Bonus' else 0) - (if Conditions.'Off Guard' then 2 else 0) - statusPenalty (characterTable)  editable = none }
+    AC = integer { description = "Armor Class: 10 plus Dex, proficiency, armor and shield." value = 10 + min (Attributes.DEX, 'Dex Cap') + proficiencyBonus ('Armor Rank', Character.Level) + 'Armor Item Bonus' + (if 'Shield Raised' then 'Shield Bonus' else 0) - (if Conditions.'Off Guard' then 2 else 0) - penaltyFor (characterTable, "DEX")  editable = none }
     'Shield Raised' = bool { description = "Raise a shield to add its bonus to AC until your next turn." default = false  editable = live  indicator = "#3a7bd5" }
-    'Class DC' = integer { description = "DC for enemies to resist your class abilities." value = 10 + keyAttribute (characterTable) + proficiencyBonus (Proficiencies.'Class DC', Character.Level) - statusPenalty (characterTable)  editable = none }
+    'Class DC' = integer { description = "DC for enemies to resist your class abilities." value = 10 + keyAttribute (characterTable) + proficiencyBonus (Proficiencies.'Class DC', Character.Level) - penaltyFor (characterTable, Character.'Key Attribute')  editable = none }
     Resistances = string {}
     Weaknesses = string {}
 }
@@ -249,8 +287,8 @@ pf2Spellcasting = table
     Tradition = string { description = "The magical tradition your spells come from." keys = ["", "Arcane", "Divine", "Occult", "Primal"] }
     'Spell Attribute' = string { default = "INT"  keys = ["INT", "WIS", "CHA"] }
     'Spell Rank' = string { default = "Untrained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
-    'Spell Attack' = modifier { description = "Spell attack roll: casting attribute plus proficiency." value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
-    'Spell DC' = integer { description = "DC for targets to resist your spells." value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - statusPenalty (characterTable)  editable = none }
+    'Spell Attack' = modifier { description = "Spell attack roll: casting attribute plus proficiency." value = (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - penaltyFor (characterTable, 'Spell Attribute')  valuedice = pf2StrikeDice (characterTable)  editable = none  action = ranged  range = 120 }
+    'Spell DC' = integer { description = "DC for targets to resist your spells." value = 10 + (switch 'Spell Attribute' case "WIS" then Attributes.WIS case "CHA" then Attributes.CHA else Attributes.INT) + proficiencyBonus ('Spell Rank', Character.Level) - penaltyFor (characterTable, 'Spell Attribute')  editable = none }
     'Focus Points' = slots { description = "Focus points for focus spells. Refocus to regain them." number = 3  editable = live }
     Refocus = button { description = "Ten minutes of Refocus regains one focus point."  editable = live  onClick = updates { (root.Spellcasting.'Focus Points'.realvalue) = max (0, 'Focus Points'.realvalue - 1) } }
     'Slots Rank 1' = slots { number = 0  editable = live }
@@ -258,6 +296,11 @@ pf2Spellcasting = table
     'Slots Rank 3' = slots { number = 0  editable = live }
     'Slots Rank 4' = slots { number = 0  editable = live }
     'Slots Rank 5' = slots { number = 0  editable = live }
+    'Slots Rank 6' = slots { number = 0  editable = live }
+    'Slots Rank 7' = slots { number = 0  editable = live }
+    'Slots Rank 8' = slots { number = 0  editable = live }
+    'Slots Rank 9' = slots { number = 0  editable = live }
+    'Slots Rank 10' = slots { number = 0  editable = live }
 }
 
 pf2Creature = ruleset
@@ -287,6 +330,16 @@ pf2Creature = ruleset
         Resistances = string {}
         Weaknesses = string {}
         Down = string { value = if HP < 1 then "Defeated" else ""  visible = none  indicator = "#d64545" }
+        Attack = selector
+        {
+            description = "Multiple attack penalty for the next Strike: -5 for the second and -10 for the third, less with agile Strikes."
+            options = ["First", "Second", "Third"]
+            labels = ["1st", "2nd MAP", "3rd MAP"]
+            colors = ["white", "yellow", "red"]
+            default = "First"
+            editable = live
+            save = nosave
+        }
     }
     Conditions = table
     {
@@ -308,8 +361,12 @@ pf2Creature = ruleset
         valueType = custom
         {
             Name = string {}
-            Strike = modifier { default = 7  valuedice = plainPf2  action = melee  reach = 5 }
+            Strike = modifier { default = 7  valuedice = pf2CreatureStrike (pf2Creature.Stats.Attack, Agile)  action = if Ranged then "ranged" else "melee"  reach = max (5, Reach)  range = Range * 6 }
             Damage = string {}
+            Agile = bool { description = "Agile Strikes take -4 and -8 for the multiple attack penalty instead of -5 and -10." default = false }
+            Ranged = bool { description = "A ranged or thrown Strike." default = false }
+            Range = integer { description = "Range increment in feet. The Strike reaches six increments; 0 is no limit." default = 0 }
+            Reach = integer { description = "Melee reach in feet." default = 5 }
         }
     }
     Notes = table

@@ -16,10 +16,10 @@ characterTable = ruleset
     {
         description = "Saving throws, Perception and initiative, each with a proficiency rank."
         tableLayout = layout { columns = 4  size = wide }
-        Fortitude = proficiency (Attributes.CON)
-        Reflex = proficiency (Attributes.DEX)
-        Will = proficiency (Attributes.WIS)
-        Perception = proficiency (Attributes.WIS)
+        Fortitude = proficiency (Attributes.CON, "CON")
+        Reflex = proficiency (Attributes.DEX, "DEX")
+        Will = proficiency (Attributes.WIS, "WIS")
+        Perception = proficiency (Attributes.WIS, "WIS")
         Initiative = modifier { description = "Initiative usually rolls Perception." value = Perception.Modifier  valuedice = 1d20  editable = none }
     }
 
@@ -27,22 +27,22 @@ characterTable = ruleset
     {
         description = "Skills, each tied to an attribute and a proficiency rank."
         tableLayout = layout { columns = 2  size = wide }
-        Acrobatics = proficiency (Attributes.DEX)
-        Arcana = proficiency (Attributes.INT)
-        Athletics = proficiency (Attributes.STR)
-        Crafting = proficiency (Attributes.INT)
-        Deception = proficiency (Attributes.CHA)
-        Diplomacy = proficiency (Attributes.CHA)
-        Intimidation = proficiency (Attributes.CHA)
-        Medicine = proficiency (Attributes.WIS)
-        Nature = proficiency (Attributes.WIS)
-        Occultism = proficiency (Attributes.INT)
-        Performance = proficiency (Attributes.CHA)
-        Religion = proficiency (Attributes.WIS)
-        Society = proficiency (Attributes.INT)
-        Stealth = proficiency (Attributes.DEX)
-        Survival = proficiency (Attributes.WIS)
-        Thievery = proficiency (Attributes.DEX)
+        Acrobatics = proficiency (Attributes.DEX, "DEX")
+        Arcana = proficiency (Attributes.INT, "INT")
+        Athletics = proficiency (Attributes.STR, "STR")
+        Crafting = proficiency (Attributes.INT, "INT")
+        Deception = proficiency (Attributes.CHA, "CHA")
+        Diplomacy = proficiency (Attributes.CHA, "CHA")
+        Intimidation = proficiency (Attributes.CHA, "CHA")
+        Medicine = proficiency (Attributes.WIS, "WIS")
+        Nature = proficiency (Attributes.WIS, "WIS")
+        Occultism = proficiency (Attributes.INT, "INT")
+        Performance = proficiency (Attributes.CHA, "CHA")
+        Religion = proficiency (Attributes.WIS, "WIS")
+        Society = proficiency (Attributes.INT, "INT")
+        Stealth = proficiency (Attributes.DEX, "DEX")
+        Survival = proficiency (Attributes.WIS, "WIS")
+        Thievery = proficiency (Attributes.DEX, "DEX")
     }
 
     Lore = keyvalues
@@ -56,7 +56,7 @@ characterTable = ruleset
         {
             Rank = string { description = "Proficiency rank in this lore." default = "Trained"  keys = ["Untrained", "Trained", "Expert", "Master", "Legendary"] }
             Item = integer { default = 0 }
-            Modifier = modifier { description = "Total: INT plus proficiency plus item bonus." value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - statusPenalty (characterTable)  valuedice = pf2Dice (characterTable)  editable = none }
+            Modifier = modifier { description = "Total: INT plus proficiency plus item bonus." value = Attributes.INT + proficiencyBonus (Rank, Character.Level) + Item - penaltyFor (characterTable, "INT")  valuedice = pf2Dice (characterTable)  editable = none }
         }
     }
 
@@ -75,7 +75,7 @@ characterTable = ruleset
     Strikes = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([strike ("Fist", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - statusPenalty (characterTable), "1d4" + signedText (Attributes.STR) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons))
+        source = concat (concat ([strike ("Fist", Attributes.STR + proficiencyBonus (Proficiencies.Unarmed, Character.Level) + mapPenalty (characterTable, true) - penaltyFor (characterTable, "STR"), "1d4" + strengthDamage (characterTable) + " B", "melee", 5, 0)], map ((weapon)->strikeFor (characterTable, weapon), characterTable.Weapons)), map ((weapon)->thrownStrikeFor (characterTable, weapon), filter ((weapon)->isThrownMelee (weapon), characterTable.Weapons)))
         singular = "Strike"
         editable = none
         valueType = strike

@@ -262,6 +262,25 @@ def signed(n):
     return f"+{n}" if n >= 0 else str(n)
 
 
+def trait_number(traits, prefix):
+    for trait in traits:
+        if trait.startswith(prefix) and trait[len(prefix):].isdigit():
+            return int(trait[len(prefix):])
+    return 0
+
+
+def strike_traits(traits):
+    increment = trait_number(traits, "range-increment-")
+    flat = trait_number(traits, "range-")
+    ranged = bool(increment or flat)
+    return {
+        "Agile": "agile" in traits,
+        "Ranged": ranged,
+        "Range": increment or (flat + 5) // 6,
+        "Reach": trait_number(traits, "reach-") or 5,
+    }
+
+
 def creature(r):
     s = r["system"]
     attributes = s.get("attributes") or {}
@@ -272,7 +291,8 @@ def creature(r):
     for i in r.get("items", []):
         if i["type"] == "melee":
             damage = " plus ".join(f"{d.get('damage')} {d.get('damageType', '')}".strip() for d in (i["system"].get("damageRolls") or {}).values())
-            strikes.append({"Name": i["name"], "Strike": int((i["system"].get("bonus") or {}).get("value") or 0), "Damage": damage})
+            traits = (i["system"].get("traits") or {}).get("value") or []
+            strikes.append({"Name": i["name"], "Strike": int((i["system"].get("bonus") or {}).get("value") or 0), "Damage": damage} | strike_traits(traits))
         elif i["type"] == "action":
             abilities.append(f"**{i['name']}.** {text((i['system'].get('description') or {}).get('value'))}")
         elif i["type"] == "spell":

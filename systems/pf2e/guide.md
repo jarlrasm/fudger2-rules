@@ -5,7 +5,7 @@ A check is **d20 + modifier** against a DC. The modifier is an attribute modifie
 
 - **Four degrees:** beat the DC by 10 or more for a **critical success**; meet it for a **success**; miss it for a **failure**; miss it by 10 or more for a **critical failure**. A natural 20 moves the result one degree up, a natural 1 one degree down.
 - **Fortune** rolls twice and keeps the higher, **misfortune** the lower (Shift and Ctrl).
-- Frightened and sickened values come off every check automatically, and off-guard takes 2 from AC.
+- Frightened and sickened values come off every check and DC automatically, clumsy off Dexterity checks, AC and Reflex, enfeebled off Strength checks, melee Strikes and their damage, stupefied off Intelligence, Wisdom and Charisma checks, Will, Perception and spells, and drained off Fortitude, with level times drained off max HP. Status penalties don't stack: only the worst counts. Off-guard takes 2 from AC.
 - Typical DCs by level: 15 at level 1, 20 at level 5, 27 at level 10, 34 at level 15, 40 at level 20. Simple DCs: trained 15, expert 20, master 30, legendary 40.
 
 ## Encounters
@@ -13,7 +13,7 @@ A fight's threat comes from an XP budget for four characters: Trivial 40, Low 60
 
 Roll **Initiative** (usually Perception) to join the tracker. Each turn has **three actions** and one reaction.
 
-1. **Strike** with a weapon from the Strikes list. The second Strike in a turn takes the **multiple attack penalty** (−5, or −4 for agile weapons), the third −10 (−8): pick 2nd or 3rd on the Attack slider before rolling.
+1. **Strike** with a weapon from the Strikes list. The second Strike in a turn takes the **multiple attack penalty** (−5, or −4 for agile weapons), the third −10 (−8): pick 2nd or 3rd on the Attack slider before rolling. Creatures have their own Attack slider, and their Strikes ask for the target's AC too. A melee weapon with the thrown trait also gets a thrown Strike.
 2. A critical hit doubles the damage.
 3. At 0 HP a creature falls **unconscious** and gains **dying 1** (dying 2 from a critical). Each turn it makes a recovery check (flat DC 10 + dying). At dying 4 it dies. Recovering from dying adds 1 to **wounded**, which adds to dying next time.
 4. **Hero Points**: spend one to reroll a check, or all of them to avoid death.
