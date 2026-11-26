@@ -15,11 +15,11 @@ Values are short statements of belief. Invoking one positively, or challenging i
 Players and NPCs alternate: a player acts first, then the initiative passes. Spend Momentum or Threat to keep it.
 
 1. Ranged attacks are Control + Security at Difficulty 2. Melee attacks are Daring + Security, opposed by the defender's Daring + Security.
-2. Damage is rolled on **Challenge dice**: 1 and 2 count as written, 3 and 4 count 0, 5 and 6 count 1 and trigger the weapon's **Effects**. Personal weapons add Security to the dice.
+2. Damage is a fixed number, with no dice: the weapon's **Severity** plus the attacker's Security. Spend Momentum to raise it.
 3. Damage minus Protection is taken as **Stress**. Damage of 5 or more, or past the last point of Stress, is an **Injury**, which takes the character out unless they avoid it with Determination or Momentum.
 
 ## Starships
-Make a Spaceships entity for the crew's ship. Ship tasks use a **system** (Comms, Computers, Engines, Sensors, Structure, Weapons) plus a department. Shield damage drops Shields; damage past them, or a single hit of 5 or more, causes a **breach**. More breaches than Scale destroy the ship.
+Make a Spaceships entity for the crew's ship. Ship tasks use a **system** (Comms, Computers, Engines, Sensors, Structure, Weapons) plus a department; a ship weapon's attack is Weapons plus Security, and its damage is fixed. Shield damage drops Shields; damage past them, or a single hit of 5 or more, causes a **breach**. More breaches than Scale destroy the ship.
 
 ## Style
 Starfleet explores and solves problems. Make the hard choices moral ones, and reward clever science as much as phaser fire.
