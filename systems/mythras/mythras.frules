@@ -136,7 +136,7 @@ actionPoints (intdex) = if intdex <= 12 then 1 else if intdex <= 24 then 2 else 
 
 bandOf (value) = if value <= 6 then 1 else if value <= 12 then 2 else if value <= 18 then 3 else 3 + (value - 13) / 6
 
-dmStep (strsiz) = if strsiz <= 50 then (strsiz - 1) / 5 else 10 + (strsiz - 51) / 10
+dmStep (strsiz) = if strsiz <= 50 then (strsiz - 1) / 5 else if strsiz <= 100 then 10 + (strsiz - 51) / 10 else 15 + (strsiz - 101) / 20
 
 dmSides (strsiz) = if dmStep (strsiz) <= 14 then item (dmStep (strsiz), [8, 6, 4, 2, 0, 2, 4, 6, 8, 10, 12, 6, 8, 10, 12]) else if mod (dmStep (strsiz) - 15, 2) == 0 then 10 else 12
 

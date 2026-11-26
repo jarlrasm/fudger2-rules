@@ -287,7 +287,8 @@ creatureTable = ruleset
         tableLayout = layout { columns = 4  size = wide }
         Kind = string { keys = ["Mortal", "Exalt", "God", "Elemental", "Demon", "Fair Folk", "Undead", "Beast", "Other"] }
         Essence = integer { default = 1 }
-        Initiative = integer { description = "The Join battle pool; successes plus 3 are the starting initiative." default = 4  valuedice = joinBattle (Initiative) }
+        'Join battle' = integer { description = "The Join battle pool; successes plus 3 are the starting initiative." default = 4 }
+        Initiative = integer { description = "Rolls Join battle." value = 'Join battle'  valuedice = joinBattle ('Join battle')  editable = none }
         'Current initiative' = integer { default = 3  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Initiative" }
         'Health levels' = integer { default = 7 }
         Damage = integer { default = 0  minvalue = 0  editable = live  indicator = "#d64545" }

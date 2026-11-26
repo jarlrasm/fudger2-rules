@@ -217,8 +217,8 @@ monsterTable = ruleset
         {
             Name = string {}
             Attack = modifier { default = 2  valuedice = icrpgAttack  action = if 'Range sq' > 1 then "ranged" else "melee"  reach = 1  range = 'Range sq' }
-            'Effort die' = integer { description = "Effort die size: 4, 6, 8, 10 or 12." default = 6  minvalue = 4  maxvalue = 12 }
-            Effort = integer { description = "Roll the effort die for damage." value = 0  valuedice = effortRoll ('Effort die')  render = "d" + toString ('Effort die')  editable = none }
+            Effort = integer { description = "Effort die size: 4, 6, 8, 10 or 12." default = 6  minvalue = 4  maxvalue = 12  render = "d" + toString (Effort) }
+            'Effort roll' = integer { description = "Roll the effort die for damage." value = 0  valuedice = effortRoll (Effort)  render = "d" + toString (Effort)  editable = none }
             'Range sq' = integer { default = 1 }
         }
     }

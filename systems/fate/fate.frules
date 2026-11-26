@@ -105,7 +105,7 @@ characterTable = ruleset
         Shoot = modifier { description = "Shooting and throwing at range." reference = ["core", 65] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  action = ranged  render = ladder (Shoot) }
         Stealth = modifier { description = "Staying hidden and moving quietly." reference = ["core", 65] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Stealth) }
         Will = modifier { description = "Mental strength and resolve. High Will adds stress boxes." reference = ["core", 66] default = 0  minvalue = -2  maxvalue = 8  valuedice = fateDice (characterTable)  render = ladder (Will) }
-        Initiative = modifier { description = "Turn order in physical conflicts, from Notice, with ties broken by Athletics and then Physique." reference = ["core", 83] value = initiativeOrder (Notice, Athletics, Physique)  valuedice = ([1d1], ((baseline, throws)->baseline))  editable = none  render = ladder (Notice) }
+        Initiative = modifier { description = "Turn order in physical conflicts, from Notice, with ties broken by Athletics and then Physique." reference = ["core", 83] value = initiativeOrder (Notice, Athletics, Physique)  valuedice = ([1d1], ((baseline, throws)->{ Text = ladder (Notice)  Value = baseline }))  editable = none  render = ladder (Notice) }
     }
 
     'Other Skills' = keyvalues

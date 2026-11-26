@@ -354,7 +354,7 @@ characterTable = ruleset
         'Caster level' = integer { description = "Caster level, which sets spell range, duration and power." default = 0 }
         'Casting ability' = string { description = "The ability that powers your spells." default = "Int"  keys = ["Int", "Wis", "Cha"] }
         'Concentration' = modifier { description = "Concentration check: caster level plus casting ability modifier." value = 'Caster level' + (switch 'Casting ability' case "Wis" then Abilities.Wis.Modifier case "Cha" then Abilities.Cha.Modifier else Abilities.Int.Modifier)  valuedice = pf1Check  editable = none }
-        'Level 0' = integer { description = "Cantrips or orisons prepared. They are cast at will and not used up." default = 4  minvalue = 0 }
+        Cantrips = integer { description = "Cantrips or orisons prepared. They are cast at will and not used up." default = 4  minvalue = 0 }
         'Level 1' = slots { number = 0  editable = live }
         'Level 2' = slots { number = 0  editable = live }
         'Level 3' = slots { number = 0  editable = live }
