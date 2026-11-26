@@ -1,0 +1,768 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+dieTypes = ["d4", "d6", "d8", "d10", "d12", "d20"]
+
+dieSides (die) =
+    switch die
+        case "d4" then 4
+        case "d6" then 6
+        case "d8" then 8
+        case "d10" then 10
+        case "d20" then 20
+        else 12
+
+startTally = { Best = 0  Run = 0  Ones = 0  Count = 0 }
+
+aces (x, dieSize) = dieSize > 1 and x >= dieSize
+
+tallyStep (acc, x, dieSize) =
+{
+    Best = if aces (x, dieSize) then acc.Best else max (acc.Best, acc.Run + x)
+    Run = if aces (x, dieSize) then acc.Run + x else 0
+    Ones = acc.Ones + (if acc.Run == 0 and x == 1 then 1 else 0)
+    Count = acc.Count + (if acc.Run == 0 then 1 else 0)
+}
+
+tallyEnd (t) = { Best = max (t.Best, t.Run)  Ones = t.Ones  Count = t.Count }
+
+tallyOf (rolls, dieSize) = tallyEnd (fold (startTally, (acc, x)->tallyStep (acc, x, dieSize), rolls))
+
+mergeTally (a, b) = { Best = max (a.Best, b.Best)  Ones = a.Ones + b.Ones  Count = a.Count + b.Count }
+
+isBust (t) = t.Count > 0 and t.Ones * 2 >= t.Count
+
+raisesOf (total, tn) = (total - tn) / 5
+
+raisesSuffix (r) = if r < 1 then "" else if r == 1 then ", 1 raise" else ", " + toString (r) + " raises"
+
+cardsWord (n) = if n == 1 then "1 action card" else toString (n) + " action cards"
+
+dlVerdict (mode, total, tn, bust) =
+    if bust then (switch mode case "cards" then "Bust, draw only 1 action card" case "hex" then "Bust, backlash" else "Bust")
+    else if tn < 1 then ""
+    else if total < tn then (switch mode case "cards" then "Failure, draw 1 action card" case "hex" then "Failure, no hex" else "Failure")
+    else switch mode
+        case "cards" then "Success, draw " + cardsWord (2 + raisesOf (total, tn))
+        case "hex" then "Success, draw " + toString (5 + raisesOf (total, tn)) + " cards for the hand"
+        else "Success" + raisesSuffix (raisesOf (total, tn))
+
+dlText (mode, total, tn, bust) =
+    toString (total) + (if tn > 0 then " vs TN " + toString (tn) else "")
+    + (if dlVerdict (mode, total, tn, bust) == "" then "" else ": " + dlVerdict (mode, total, tn, bust))
+
+dlOutcome (total, tn, bust) =
+    if bust then "Bust"
+    else if tn < 1 then ""
+    else if total < tn then "Failure"
+    else "Success"
+
+chipPile (white, red, blue) = { White = white  Red = red  Blue = blue }
+
+noChips = chipPile (0, 0, 0)
+
+chipsLeft (chips) = chips.White + chips.Red + chips.Blue > 0
+
+chipColor (chips) = if chips.White > 0 then "white" else if chips.Red > 0 then "red" else "blue"
+
+chipLabel (chips) = "Spend a " + chipColor (chips) + " chip"
+
+spendChip (chips) =
+    if chips.White > 0 then { White = chips.White - 1  Red = chips.Red  Blue = chips.Blue }
+    else if chips.Red > 0 then { White = 0  Red = chips.Red - 1  Blue = chips.Blue }
+    else { White = 0  Red = 0  Blue = max (0, chips.Blue - 1) }
+
+chipSets (chips) =
+    if chips.White > 0 then [{ Field = "characterTable.Fate Chips.White"  Value = chips.White - 1 }]
+    else if chips.Red > 0 then [{ Field = "characterTable.Fate Chips.Red"  Value = chips.Red - 1 }]
+    else [{ Field = "characterTable.Fate Chips.Blue"  Value = max (0, chips.Blue - 1) }]
+
+dlResult (mode, t, dieSize, modifier, tn, chips) =
+{
+    Text = dlText (mode, t.Best + modifier, tn, isBust (t))
+    Value = t.Best + modifier
+    Outcome = dlOutcome (t.Best + modifier, tn, isBust (t))
+    Color = if isBust (t) then "red" else ""
+    Push = if chipsLeft (chips) then dlChipRoll (mode, t, dieSize, modifier, tn, chips) else 0
+    PushLabel = chipLabel (chips)
+    PushSets = chipSets (chips)
+}
+
+dlChipRoll (mode, t, dieSize, modifier, tn, chips) = ([dice { number = 1  sides = dieSize  explode = dieSize  label = "Fate chip"  color = chipColor (chips) }],
+    ((baseline, throws)->dlResult (mode, mergeTally (t, tallyOf (first (throws).rolls, dieSize)), dieSize, modifier, tn, spendChip (chips))))
+
+dlDice (mode, n, dieSize, modifier, tn, chips) = ([dice { number = max (0, n)  sides = dieSize  explode = dieSize  label = toString (max (0, n)) + "d" + toString (dieSize) }],
+    ((baseline, throws)->dlResult (mode, tallyOf (first (throws).rolls, dieSize), dieSize, modifier, if tn < 0 then asked else tn, chips)))
+
+dlRoll (n, dieSize, modifier, tn) = dlDice ("check", n, dieSize, modifier, tn, noChips)
+
+dlAsked (n, dieSize, modifier, chips) = ask ("Modifier", 0, (m)->ask ("TN", dlDice ("check", n, dieSize, modifier + m, -1, chips)))
+
+chipsOf (char) = chipPile (char.'Fate Chips'.White, char.'Fate Chips'.Red, char.'Fate Chips'.Blue)
+
+woundPenalty (char) = max (char.Wounds.Head, char.Wounds.Guts, char.Wounds.'Left Arm', char.Wounds.'Right Arm', char.Wounds.'Left Leg', char.Wounds.'Right Leg')
+
+aptDice (level, coordination) = if level > 0 then level else coordination
+
+aptPenalty (level) = if level > 0 then 0 else -4
+
+aptRender (level, coordination, die) = toString (aptDice (level, coordination)) + die + (if level > 0 then "" else "-4")
+
+aptRoll (char, level, coordination, die) = dlAsked (aptDice (level, coordination), dieSides (die), aptPenalty (level) - woundPenalty (char), chipsOf (char))
+
+traitRoll (char, coordination, die) = dlAsked (coordination, dieSides (die), 0 - woundPenalty (char), chipsOf (char))
+
+trait (startDie) = custom
+{
+    Dice = integer { description = "Coordination: how many dice the trait rolls on its own." default = 1  minvalue = 1  maxvalue = 5 }
+    Die = string { description = "The trait's die type. Every aptitude under it rolls this die." default = startDie  keys = dieTypes }
+    Roll = integer { description = "Roll the trait's dice, keep the highest. Dice ace on their top face." value = Dice  valuedice = traitRoll (characterTable, Dice, Die)  render = toString (Dice) + Die  editable = none }
+}
+
+woundWord (n) =
+    switch n
+        case 0 then "None"
+        case 1 then "Light"
+        case 2 then "Heavy"
+        case 3 then "Serious"
+        case 4 then "Critical"
+        else "Maimed"
+
+woundState (char) =
+    if char.Wounds.Head >= 5 or char.Wounds.Guts >= 5 then "Dead"
+    else if char.Wounds.Wind < 1 then "Out cold"
+    else if woundPenalty (char) > 0 then woundWord (woundPenalty (char)) + " wounds"
+    else ""
+
+hucksterOnly (background) = if background == "Huckster" then visible else none
+
+shamanOnly (background) = if background == "Shaman" then visible else none
+
+arcaneOnly (background) = if background == "None" or background == "" then none else visible
+
+hitLocation (n) =
+    if n <= 2 then "Left Leg"
+    else if n <= 4 then "Right Leg"
+    else if n <= 9 then "Guts (lower)"
+    else if n == 10 then "Gizzards"
+    else if n <= 12 then "Left Arm"
+    else if n <= 14 then "Right Arm"
+    else if n <= 19 then "Guts (upper)"
+    else "Noggin"
+
+locationRoll = ([1d20], ((baseline, throws)->{ Text = hitLocation (first (first (throws).rolls))  Value = first (first (throws).rolls) }))
+
+damageText (damage) = toLower (replace (" ", "", damage))
+
+hasStrength (damage) = contains (damageText (damage), "str")
+
+weaponPart (damage) = replace ("str", "", damageText (damage))
+
+weaponDiceParts (damage) = split ("d", weaponPart (damage))
+
+weaponDiceCount (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else max (1, toInt (replace ("+", "", first (weaponDiceParts (damage)))))
+
+weaponDieSides (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else toInt (first (split ("-", first (split ("+", item (1, weaponDiceParts (damage)))))))
+
+flatAfter (text) =
+    if count (split ("+", text)) > 1 then toInt (item (1, split ("+", text)))
+    else if count (split ("-", text)) > 1 then 0 - toInt (item (1, split ("-", text)))
+    else 0
+
+weaponFlat (damage) = if count (weaponDiceParts (damage)) < 2 then 0 else flatAfter (item (1, weaponDiceParts (damage)))
+
+woundsWord (n) = if n == 1 then "1 wound level" else toString (n) + " wound levels"
+
+damageResult (total, size, location) =
+{
+    Text = toString (total) + " damage to the " + hitLocation (location) + (if size > 0 then ": " + woundsWord (total / size) + " (Size " + toString (size) + ")" else "")
+    Value = total
+}
+
+dlDamage (strDice, strDie, damage) = ask ("Target's Size", 6, ([dice { number = if hasStrength (damage) then strDice else 0  sides = dieSides (strDie)  explode = dieSides (strDie)  label = if hasStrength (damage) then "Strength" else "" }, dice { number = weaponDiceCount (damage)  sides = max (4, weaponDieSides (damage))  explode = max (4, weaponDieSides (damage))  label = if weaponDiceCount (damage) > 0 then "Weapon" else "" }, dice { number = 1  sides = 20  label = "Hit location" }],
+    ((baseline, throws)->damageResult (sum (first (throws).rolls) + sum (item (1, throws).rolls) + weaponFlat (damage), asked, first (item (2, throws).rolls)))))
+
+noLevel = { Level = 0 }
+
+aptitudeLevel (apts, name) = valueOr (valueOr (apts, name, noLevel), "Level", 0)
+
+baseAptitude (name) = first (split (" ", name))
+
+weaponLevel (apts, name) = if aptitudeLevel (apts, name) > 0 then aptitudeLevel (apts, name) else aptitudeLevel (apts, baseAptitude (name))
+
+weaponStat (weapon, field) = valueOr (weapon.data.dlWeapon.Stats, field, "")
+
+weaponAptitude (weapon) = if weaponStat (weapon, "Aptitude") == "" then "Fightin' brawlin'" else weaponStat (weapon, "Aptitude")
+
+isMelee (weapon) = contains (toLower (weaponAptitude (weapon)), "fightin")
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+weaponAttack (name, level, coordination, die, damage, kind, reachYards, rangeYards) = custom
+{
+    Name = name
+    Attack = integer { description = "Roll the aptitude: asks for the modifier and the TN." value = aptDice (level, coordination)  valuedice = aptRoll (characterTable, level, coordination, die)  render = aptRender (level, coordination, die)  editable = none  action = kind  reach = reachYards  range = rangeYards }
+    Damage = integer { description = "Roll the damage and the hit location: asks for the target's Size. Each full Size in damage is a wound level." value = 0  valuedice = dlDamage (characterTable.Corporeal.Strength.Trait.Dice, characterTable.Corporeal.Strength.Trait.Die, damage)  render = damage  editable = none }
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, weaponLevel (char.Corporeal.Nimbleness.Aptitudes, weaponAptitude (weapon)), char.Corporeal.Nimbleness.Trait.Dice, char.Corporeal.Nimbleness.Trait.Die, weaponStat (weapon, "Damage"), "melee", if contains (toLower (weaponStat (weapon, "Notes")), "reach") then 2 else 1, 0)
+    else
+        weaponAttack (weapon.Name, weaponLevel (char.Corporeal.Deftness.Aptitudes, weaponAptitude (weapon)), char.Corporeal.Deftness.Trait.Dice, char.Corporeal.Deftness.Trait.Die, weaponStat (weapon, "Damage"), "ranged", 0, max (1, firstNumber (weaponStat (weapon, "Range"))) * 10)
+
+cardRank (n) =
+    switch n
+        case 9 then "Jack"
+        case 10 then "Queen"
+        case 11 then "King"
+        case 12 then "Ace"
+        else toString (n + 2)
+
+cardSuit (n) =
+    switch n
+        case 0 then "Clubs"
+        case 1 then "Diamonds"
+        case 2 then "Hearts"
+        else "Spades"
+
+cardName (n) = if n == 53 then "Red Joker" else if n > 53 then "Black Joker" else cardRank ((n - 1) / 4) + " of " + cardSuit (mod (n - 1, 4))
+
+actionCard = ([1d54], ((baseline, throws)->{ Text = cardName (first (first (throws).rolls))  Value = first (first (throws).rolls)  Outcome = if first (first (throws).rolls) > 52 then "Joker" else "" }))
+
+rankValue (text) =
+    if contains (text, "Red Joker") then 101
+    else if contains (text, "Joker") then 100
+    else if contains (text, "Ace") then 14
+    else if contains (text, "King") then 13
+    else if contains (text, "Queen") then 12
+    else if contains (text, "Jack") then 11
+    else toInt (first (split (" ", text)))
+
+suitValue (text) =
+    if contains (text, "Spades") then 3
+    else if contains (text, "Hearts") then 2
+    else if contains (text, "Diamonds") then 1
+    else 0
+
+cardOrder (text) = rankValue (text) * 4 + suitValue (text)
+
+actionCardsRoll (char) = dlDice ("cards", char.Corporeal.Quickness.Trait.Dice, dieSides (char.Corporeal.Quickness.Trait.Die), 0 - woundPenalty (char), 5, chipsOf (char))
+
+hexRoll (char) = ask ("Modifier", 0, (m)->dlDice ("hex", aptDice (aptitudeLevel (char.Mental.Smarts.Aptitudes, "Hexslingin'"), char.Mental.Smarts.Trait.Dice), dieSides (char.Mental.Smarts.Trait.Die), m + aptPenalty (aptitudeLevel (char.Mental.Smarts.Aptitudes, "Hexslingin'")) - woundPenalty (char), 5, chipsOf (char)))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/deadlands/hombre.svg"  important = [Wounds, 'Fate Chips', Combat, Attacks] }
+
+    Character = table
+    {
+        description = "Who the hombre is."
+        tableLayout = layout { columns = 4  size = wide }
+        Occupation = string { description = "What the character does for a living, such as gunslinger, preacher or huckster." }
+        'Arcane Background' = string { description = "Hucksters cast hexes, the blessed work miracles, mad scientists build gizmos and shamans call on the nature spirits." default = "None"  keys = ["None", "Huckster", "Blessed", "Mad Scientist", "Shaman"] }
+        'Worst Nightmare' = string { description = "What haunts the character's dreams. The Marshal uses it for fear and the Reckoners' tricks." }
+        Grit = integer { description = "Grit grows as the posse beats abominations; it adds to Guts checks." default = 0  minvalue = 0 }
+        Pace = integer { description = "Yards moved in an action: the Nimbleness die type." value = dieSides (Corporeal.Nimbleness.Trait.Die)  editable = none }
+        Size = integer { description = "6 for a grown human. Each full Size in damage is one wound level." default = 6  minvalue = 1 }
+        'Bounty Points' = integer { description = "Experience, spent to raise traits and aptitudes or buy Edges." default = 0  minvalue = 0  editable = live }
+        Money = integer { description = "Dollars on hand." default = 0  editable = live }
+    }
+
+    Corporeal = table
+    {
+        description = "The body's traits. Each is a number of dice of one type, such as 3d8."
+        Deftness = table
+        {
+            description = "Hand-eye coordination: shooting, throwing, picking locks."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Bow", "Filchin'", "Lockpickin'", "Shootin'", "Sleight o' hand", "Speed-load", "Throwin'"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Nimbleness = table
+        {
+            description = "Agility and footwork: fighting, dodging, climbing, riding. Its die type is your Pace."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Climbin'", "Dodge", "Drivin'", "Fightin'", "Horse ridin'", "Sneak", "Swimmin'", "Teamster"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Quickness = table
+        {
+            description = "Reflexes and speed. Its roll each round decides how many action cards you draw."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Quick draw"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Strength = table
+        {
+            description = "Raw muscle. Melee weapons add the Strength dice to their damage."
+            Trait = trait ("d6")
+        }
+        Vigor = table
+        {
+            description = "Toughness and endurance. Its die type adds to Wind."
+            Trait = trait ("d6")
+        }
+    }
+
+    Wounds = table
+    {
+        description = "Wound levels by hit location, and Wind. The worst wound anywhere is the penalty to every roll."
+        Head = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord (Head) }
+        'Left Arm' = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord ('Left Arm') }
+        'Right Arm' = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord ('Right Arm') }
+        Guts = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord (Guts) }
+        'Left Leg' = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord ('Left Leg') }
+        'Right Leg' = integer { description = "Wound level here: Light, Heavy, Serious, Critical, Maimed. The worst level anywhere is the penalty to every roll." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord ('Right Leg') }
+        'Wound Penalty' = integer { description = "Taken off every trait and aptitude roll: the highest wound level anywhere." value = 0 - woundPenalty (characterTable)  editable = none }
+        'Max Wind' = integer { description = "Vigor and Spirit die types added together." value = dieSides (Corporeal.Vigor.Trait.Die) + dieSides (Mental.Spirit.Trait.Die)  editable = none }
+        Wind = integer { description = "Breath and stamina. Lost to wounds, fatigue and some hexes; at 0 the hero drops." default = 'Max Wind'  editable = live }
+        Stunned = bool { description = "Failed a stun check after a wound: no actions until you recover." default = false  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (characterTable)  visible = none  indicator = "#d64545" }
+        'Hit Location' = integer { description = "Roll a d20 for where a hit lands." value = 0  valuedice = locationRoll  editable = none  render = "d20" }
+        'Catch Your Breath' = button
+        {
+            description = "After a rest out of the fight: Wind back to full and no longer stunned. Wounds heal slowly and stay."
+            editable = live
+            onClick = updates
+            {
+                (root.Wounds.Wind) = Wounds.'Max Wind'
+                (root.Wounds.Stunned) = false
+            }
+        }
+    }
+
+    Mental = table
+    {
+        description = "The mind's traits, rated like the body's."
+        Cognition = table
+        {
+            description = "Perception and alertness."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Artillery", "Arts", "Scrutinize", "Search", "Trackin'"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Knowledge = table
+        {
+            description = "Learning and education."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Academia", "Area knowledge", "Demolition", "Disguise", "Language", "Mad science", "Medicine", "Professional", "Science", "Trade"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Mien = table
+        {
+            description = "Presence and force of personality."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Animal wranglin'", "Leadership", "Overawe", "Performin'", "Persuasion", "Tale tellin'"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Smarts = table
+        {
+            description = "Wits and cunning. Hucksters sling hexes with it."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Bluff", "Gamblin'", "Hexslingin'", "Ridicule", "Scroungin'", "Streetwise", "Survival", "Tinkerin'"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+        Spirit = table
+        {
+            description = "Willpower and soul: Guts against fear, Faith for the blessed. Its die type adds to Wind."
+            Trait = trait ("d6")
+            Aptitudes = keyvalues
+            {
+                singular = "Aptitude"
+                editablekeys = character
+                keys = ["Faith", "Guts", "Ritual"]
+                valueType = custom
+                {
+                    Level = integer { description = "Aptitude level: how many of the trait's dice to roll. 0 rolls the trait at -4." default = 0  minvalue = 0  maxvalue = 10 }
+                    Roll = integer { value = aptDice (Level, Trait.Dice)  valuedice = aptRoll (characterTable, Level, Trait.Dice, Trait.Die)  render = aptRender (Level, Trait.Dice, Trait.Die)  editable = none }
+                }
+            }
+        }
+    }
+
+    Combat = table
+    {
+        description = "Action cards and the round."
+        'Action Cards' = integer { description = "Roll Quickness at the start of each round against Fair (5): one card, one more for a success and each raise." value = Corporeal.Quickness.Trait.Dice  valuedice = actionCardsRoll (characterTable)  render = toString (Corporeal.Quickness.Trait.Dice) + Corporeal.Quickness.Trait.Die  editable = none }
+        Initiative = integer { description = "An action card. Highest card acts first; jokers are wild." default = 0  valuedice = actionCard }
+        'Up the Sleeve' = string { description = "One card a hero may keep up his sleeve for a later round." editable = live }
+        Hex = integer { description = "Hucksters: roll Hexslingin' against Fair (5), then draw five cards plus one per raise and make the best poker hand." value = 0  valuedice = hexRoll (characterTable)  render = "Hexslingin'"  editable = none  visible = hucksterOnly (Character.'Arcane Background') }
+        Appeasement = integer { description = "Shamans: points earned from rituals, spent on favors from the spirits." default = 0  minvalue = 0  editable = live  visible = shamanOnly (Character.'Arcane Background') }
+    }
+
+    'Fate Chips' = table
+    {
+        description = "Spend a chip after a roll to roll one more die; the roll window offers it. Chips also buy off wounds."
+        tableLayout = layout { columns = 2 }
+        White = integer { description = "Adds a die to a roll or buys off one wound level. Worth 1 bounty point." default = 0  minvalue = 0  editable = live }
+        Red = integer { description = "Adds a die, but the Marshal draws a chip too. Buys off two wound levels. Worth 2 bounty points." default = 0  minvalue = 0  editable = live }
+        Blue = integer { description = "Adds a die or buys off three wound levels. Worth 3 bounty points." default = 0  minvalue = 0  editable = live }
+        Legend = integer { description = "Rare chips from great deeds: like a blue chip, or a permanent bounty." default = 0  minvalue = 0  editable = live }
+        'Cash In' = button
+        {
+            description = "At the end of a session: turn white, red and blue chips into bounty points (1, 2 and 3 each). Legend chips stay."
+            editable = live
+            onClick = updates
+            {
+                (root.Character.'Bounty Points') = Character.'Bounty Points' + 'Fate Chips'.White + 'Fate Chips'.Red * 2 + 'Fate Chips'.Blue * 3
+                (root.'Fate Chips'.White) = 0
+                (root.'Fate Chips'.Red) = 0
+                (root.'Fate Chips'.Blue) = 0
+            }
+        }
+    }
+
+    Attacks = list
+    {
+        description = "Every weapon with its aptitude roll and damage."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fists", weaponLevel (characterTable.Corporeal.Nimbleness.Aptitudes, "Fightin' brawlin'"), characterTable.Corporeal.Nimbleness.Trait.Dice, characterTable.Corporeal.Nimbleness.Trait.Die, "STR", "melee", 1, 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Edges = list
+    {
+        description = "Advantages bought with points at creation or bounty later."
+        source = secondary.Edges
+        singular = "Edge"
+        editable = character
+    }
+
+    Hindrances = list
+    {
+        description = "Flaws that give points at creation and trouble in play."
+        source = secondary.Hindrances
+        singular = "Hindrance"
+        editable = character
+    }
+
+    'Arcane Powers' = list
+    {
+        description = "Hexes, miracles, favors and gizmos."
+        visible = arcaneOnly (Character.'Arcane Background')
+        source = secondary.'Arcane Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Background = table
+    {
+        tableLayout = layout { size = wide }
+        History = string { multiline = true }
+        Notes = string { multiline = true  editable = live }
+    }
+}
+
+creatureTrait (startDice, startDie) = custom
+{
+    Dice = integer { default = startDice  minvalue = 1  maxvalue = 12 }
+    Die = string { default = startDie  keys = dieTypes }
+    Roll = integer { value = Dice  valuedice = creatureRoll (Dice, Die, Stats.'Wound Level', Stats.Fearless)  render = toString (Dice) + Die  editable = none }
+}
+
+creaturePenalty (wounds, fearless) = if fearless then 0 else wounds
+
+creatureRoll (n, die, wounds, fearless) = dlAsked (n, dieSides (die), 0 - creaturePenalty (wounds, fearless), noChips)
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/deadlands/abomination.svg"  important = [Stats, Attacks] }
+    Traits = table
+    {
+        description = "The creature's ten traits as dice."
+        tableLayout = layout { columns = 5  size = wide }
+        Deftness = creatureTrait (2, "d6")
+        Nimbleness = creatureTrait (2, "d6")
+        Quickness = creatureTrait (2, "d6")
+        Strength = creatureTrait (2, "d6")
+        Vigor = creatureTrait (2, "d6")
+        Cognition = creatureTrait (2, "d6")
+        Knowledge = creatureTrait (1, "d4")
+        Mien = creatureTrait (2, "d6")
+        Smarts = creatureTrait (2, "d6")
+        Spirit = creatureTrait (2, "d6")
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Pace = integer { description = "Yards per action." default = 6 }
+        Size = integer { description = "Damage per wound level; 6 for a man." default = 6  minvalue = 1 }
+        Terror = integer { description = "TN of the Guts check for those who see it." default = 5 }
+        Armor = integer { description = "Armor levels: each lowers incoming damage dice by one type." default = 0 }
+        Wind = integer { description = "Wind left. At 0 it drops." default = 12  editable = live }
+        'Wound Level' = integer { description = "Worst wound level, the penalty to its rolls." default = 0  minvalue = 0  maxvalue = 5  editable = live  render = woundWord ('Wound Level')  indicator = "#d64545" }
+        Fearless = bool { description = "Undead and many abominations ignore wound penalties." default = false }
+        Initiative = integer { description = "Action card drawn each round." default = 0  valuedice = actionCard }
+    }
+    Aptitudes = keyvalues
+    {
+        description = "Its aptitudes, each a number of dice of a type."
+        singular = "Aptitude"
+        editablekeys = character
+        keys = ["Dodge", "Guts", "Sneak"]
+        tableLayout = layout { columns = 3  size = wide }
+        valueType = custom
+        {
+            Dice = integer { default = 2  minvalue = 1  maxvalue = 12 }
+            Die = string { default = "d6"  keys = dieTypes }
+            Roll = integer { value = Dice  valuedice = creatureRoll (Dice, Die, Stats.'Wound Level', Stats.Fearless)  render = toString (Dice) + Die  editable = none }
+        }
+    }
+    Attacks = keyvalues
+    {
+        description = "Claws, bites and weapons: Increment 0 is melee, otherwise the range increment in yards."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Claws"]
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Dice = integer { default = 3  minvalue = 1  maxvalue = 12 }
+            Die = string { default = "d8"  keys = dieTypes }
+            Increment = integer { description = "Range increment in yards; 0 for melee." default = 0  minvalue = 0 }
+            Attack = integer { value = Dice  valuedice = creatureRoll (Dice, Die, Stats.'Wound Level', Stats.Fearless)  render = toString (Dice) + Die  editable = none  action = if Increment > 0 then "ranged" else "melee"  reach = 1  range = Increment * 10 }
+            Damage = string { default = "STR+2d6" }
+            'Roll Damage' = integer { value = 0  valuedice = dlDamage (Traits.Strength.Dice, Traits.Strength.Die, Damage)  render = Damage  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Special Abilities' = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+vehicleState (durability, damage) = if durability > 0 and damage >= durability then "Wrecked" else if damage > 0 then "Damaged" else ""
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/deadlands/vehicle-entity.svg"  important = [Vehicle] }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Stagecoach"  keys = ["Buckboard", "Stagecoach", "Covered wagon", "Steam wagon", "Velocipede", "Locomotive", "Rail car", "Riverboat", "Ornithopter", "Other"] }
+        Pace = integer { description = "Yards per action at a run." default = 12 }
+        'Top Speed' = integer { description = "Miles per hour flat out." default = 10 }
+        Handling = modifier { description = "Added to Drivin' or Teamster rolls." default = 0 }
+        Durability = integer { description = "Damage it takes before it is wrecked." default = 30 }
+        Damage = integer { description = "Damage taken so far." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Armor = integer { default = 0 }
+        State = string { value = vehicleState (Durability, Damage)  visible = none  indicator = "#555555" }
+        Crew = integer { default = 1 }
+        Passengers = integer { default = 0 }
+        Cargo = string {}
+        Fuel = string { description = "Coal, ghost rock or oats left." editable = live }
+    }
+    Armament = table
+    {
+        tableLayout = layout { size = wide }
+        Weapons = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+dlWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Aptitude }
+        filters = [filter { name = "Aptitude" prefix = "" filter = Stats.Aptitude }]
+    }
+    Stats = table
+    {
+        Aptitude = string { description = "The aptitude the weapon uses." default = "Shootin' pistol"  keys = ["Shootin' pistol", "Shootin' rifle", "Shootin' shotgun", "Shootin' automatics", "Fightin' brawlin'", "Fightin' knife", "Fightin' sword", "Fightin' club", "Fightin' whip", "Throwin'", "Bow", "Artillery"] }
+        Damage = string { description = "Damage dice; STR adds the Strength dice." default = "3d6" }
+        Range = string { description = "Range increment in yards: -1 to hit for each beyond the first." }
+        Shots = string {}
+        ROF = string {}
+        Speed = string {}
+        Defense = string { description = "Bonus to parry in melee." }
+        Price = string {}
+        Notes = string {}
+    }
+}
+
+dlGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Price = string {}
+        Weight = string {}
+        Notes = string {}
+    }
+}
+
+dlEdge = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/deadlands/badge.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Points }
+        filters = [filter { name = "Points" prefix = "" filter = Stats.Points }]
+    }
+    Stats = table
+    {
+        Points = string { description = "Points it costs (Edge) or gives (Hindrance)." }
+        Notes = string {}
+    }
+}
+
+dlPower = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/deadlands/hexcard.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { default = "Hex"  keys = ["Hex", "Miracle", "Favor", "Gizmo", "Other"] }
+        Trait = string { description = "The trait or aptitude it uses." }
+        Requirement = string { description = "Poker hand for a hex, TN for a miracle, appeasement for a favor." }
+        Speed = string {}
+        Duration = string {}
+        Range = string {}
+    }
+}
+
+DeadlandsClassic = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a hombre"
+            topic = "Getting started"
+            text = ["Deal each player twelve cards; they keep ten and the cards set their traits' dice. Spread aptitude points over the aptitudes, pick Edges and Hindrances, a worst nightmare and some gear. Start every session by drawing three fate chips from the pot."]
+        },
+        hint
+        {
+            title = "Rolls"
+            topic = "Play"
+            text = ["An aptitude rolls as many dice as its level, of its trait's die type, and keeps the highest. A die that shows its top face aces and adds another roll. Each roll asks for a modifier and the TN: Foolproof 3, Fair 5, Onerous 7, Hard 9, Incredible 11. Every 5 over is a raise.", "Half or more dice showing 1 is a bust. Spend a fate chip in the roll window to add a die."]
+        },
+        hint
+        {
+            title = "Action cards"
+            topic = "Initiative"
+            text = ["Each round everyone rolls Quickness (Action Cards on the sheet) and draws one card, plus one for a success and each raise. Cards go from Ace down; a joker is wild. Add the 54-card deck and use Deal initiative for a single card each."]
+            deck = "54-card deck"
+        },
+        hint
+        {
+            title = "Wounds and Wind"
+            topic = "Combat"
+            text = ["Damage dice ace too. Each full Size (6 for a man) in damage is a wound level in the hit location, from Light to Maimed; the Damage roll gives the d20 location too. The worst wound is the penalty to every roll. Wounds also cost Wind; at 0 Wind the hero drops."]
+        },
+        hint
+        {
+            title = "Hucksters"
+            topic = "Arcane"
+            text = ["A huckster rolls Hexslingin', then draws a poker hand; the better the hand, the stronger the hex. A bust is backlash from the manitou."]
+            deck = "52-card deck"
+        }
+    ]
+    distanceUnit = "yd"
+    squareSize = 1
+    characters = characterTable
+    creatures = creatureTable
+    Vehicles = vehicleTable
+    Weapons = dlWeapon
+    Gear = dlGear
+    Edges = dlEdge
+    Hindrances = dlEdge
+    'Arcane Powers' = dlPower
+    secondaryTypes = ["Weapons", "Gear", "Edges", "Hindrances", "Arcane Powers"]
+    extraEntityTypes = [entityTypeDescription ("Vehicles", "vehicle", true, "/systems/deadlands/vehicle-entity.svg", [])]
+    description = "Deadlands Classic: Weird West horror with trait dice, aces and busts, hit locations, fate chips and action cards"
+    initiativeCompare (item1, item2) = compare (cardOrder (item1), cardOrder (item2))
+    initiativeDeck = "54-card deck"
+    quickdice = [1d4, 1d6, 1d8, 1d10, 1d12, 1d20]
+    cssFiles = ["/systems/deadlands/deadlands.css"]
+    libraries = ["/systems/cards/standard.json", "/systems/names/weirdwest.json", "/systems/names/victorian.json"]
+    nameSettings = [weirdWestNameSetting, gaslightNameSetting]
+}

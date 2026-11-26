@@ -1,0 +1,195 @@
+@import url("/systems/sheet.css");
+
+/* Deadlands Classic: a yellowed handbill with black woodtype headings and
+   dried-blood red rules. The hombre's line across the top, the corporeal
+   traits down the left with their aptitudes under each, the wound boxes,
+   Wind and fate chips in the middle column, the mental traits down the
+   right, then attacks, weapons, edges and hindrances, arcane powers and
+   gear, and the back story last. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #3b2a1e;
+    --surface: #f1e4c4;
+    --surface-alt: #e8d6ad;
+    --surface-sunken: #dcc797;
+    --surface-muted: #c9b07c;
+    --text: #1d140d;
+    --text-muted: #3e2e20;
+    --text-faint: #7a634a;
+    --on-accent: #f1e4c4;
+    --border: #a2875c;
+    --border-strong: #1d140d;
+    --accent: #7a1712;
+    --accent-hover: #961e17;
+    --accent-soft: #ecc9b8;
+    --link: #7a1712;
+    --danger: #7a1712;
+    --danger-hover: #5c110d;
+    --danger-soft: #ecc9b8;
+    --success: #3f5a26;
+    --paper: #f1e4c4;
+    --card-bg: #e8d6ad;
+    --dice-bg: #1d140d;
+    --dice-text: #f1e4c4;
+}
+
+.entityView {
+    --sheet-font: "Georgia", "Book Antiqua", "Times New Roman", serif;
+    --title-font: "Rockwell Extra Bold", "Rockwell", "Clarendon", "Egyptienne", "Courier New", serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-weight: 900;
+    background: var(--border-strong);
+    color: var(--surface);
+    border-bottom: 3px double var(--accent);
+}
+
+/* ---- The three columns: body, wounds, mind ---- */
+
+.entityView .table-corporeal,
+.entityView .table-wounds,
+.entityView .table-mental,
+.entityView .table-fate-chips,
+.entityView .table-combat { --block: 33.333%; }
+
+.entityView .table-mental { float: right; }
+.entityView .table-corporeal > table > tbody > tr > :first-child:not(:only-child),
+.entityView .table-mental > table > tbody > tr > :first-child:not(:only-child),
+.entityView .table-corporeal > table > tbody > tr > td > .entityTable > table > tbody > tr:nth-child(2) > :first-child:not(:only-child),
+.entityView .table-mental > table > tbody > tr > td > .entityTable > table > tbody > tr:nth-child(2) > :first-child:not(:only-child) {
+    display: none;
+}
+.entityView .table-corporeal .entityTable,
+.entityView .table-mental .entityTable {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+}
+.entityView .table-corporeal .entityTable > table > thead th,
+.entityView .table-mental .entityTable > table > thead th {
+    background: none;
+    color: var(--accent);
+    font-size: 1em;
+    letter-spacing: 0.12em;
+    text-align: left;
+    border-bottom: 2px solid var(--accent);
+}
+/* The trait's own dice sit on the heading line, the aptitudes as a ledger. */
+.entityView .table-corporeal .entityTable > table > tbody > tr:first-child > td:first-child,
+.entityView .table-mental .entityTable > table > tbody > tr:first-child > td:first-child {
+    font-style: italic;
+    color: var(--text-faint);
+}
+.entityView .table-corporeal .entityTable .entityTable,
+.entityView .table-mental .entityTable .entityTable {
+    border: none;
+    background: none;
+}
+.entityView .table-corporeal .entityTable .entityTable > table > thead,
+.entityView .table-mental .entityTable .entityTable > table > thead {
+    display: none;
+}
+.entityView .table-corporeal .entityTable .entityTable > table > tbody > tr > td,
+.entityView .table-mental .entityTable .entityTable > table > tbody > tr > td {
+    border-top: none;
+    border-bottom: 1px dotted var(--border);
+    padding: 1px 4px;
+}
+.entityView .table-corporeal .entityTable .entityTable > table > tbody > tr > td:first-child,
+.entityView .table-mental .entityTable .entityTable > table > tbody > tr > td:first-child {
+    font-style: normal;
+    color: var(--text);
+}
+
+.entityView .table-corporeal > table > tbody > tr > td > .entityTable > table > tbody,
+.entityView .table-mental > table > tbody > tr > td > .entityTable > table > tbody {
+    display: block;
+}
+.entityView .table-corporeal > table > tbody > tr > td > .entityTable > table > tbody > tr,
+.entityView .table-mental > table > tbody > tr > td > .entityTable > table > tbody > tr {
+    display: flex;
+    align-items: center;
+}
+.entityView .table-corporeal > table > tbody > tr > td > .entityTable > table > tbody > tr > td,
+.entityView .table-mental > table > tbody > tr > td > .entityTable > table > tbody > tr > td {
+    flex: 1 1 auto;
+}
+.entityView .table-aptitudes > table > tbody > tr > td:nth-child(2) {
+    width: 3em;
+    text-align: center;
+}
+.entityView .table-aptitudes > table > tbody > tr > td:last-child {
+    width: 4.5em;
+}
+
+/* ---- Wounds: the hit locations as a column of boxes ---- */
+
+.entityView .table-wounds > table > tbody > tr:nth-child(-n+6) > td:first-child {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}
+.entityView .table-wounds > table > tbody > tr:nth-child(-n+6) > td + td {
+    font-weight: 700;
+}
+.entityView .table-wounds > table > tbody > tr:nth-child(7) > td,
+.entityView .table-wounds > table > tbody > tr:nth-child(8) > td,
+.entityView .table-wounds > table > tbody > tr:nth-child(9) > td {
+    background: var(--surface-alt);
+}
+
+/* ---- Fate chips as coloured counters ---- */
+
+.entityView .table-fate-chips > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-fate-chips > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+.entityView .table-fate-chips > table > tbody > tr:nth-child(1) > td:first-child::before,
+.entityView .table-fate-chips > table > tbody > tr:nth-child(2) > td:first-child::before,
+.entityView .table-fate-chips > table > tbody > tr:nth-child(3) > td:first-child::before,
+.entityView .table-fate-chips > table > tbody > tr:nth-child(4) > td:first-child::before {
+    content: "";
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    margin-right: 4px;
+    vertical-align: -0.1em;
+    border-radius: 50%;
+    border: 2px dashed var(--border-strong);
+}
+.entityView .table-fate-chips > table > tbody > tr:nth-child(1) > td:first-child::before { background: #fbf8f0; }
+.entityView .table-fate-chips > table > tbody > tr:nth-child(2) > td:first-child::before { background: #a3221b; }
+.entityView .table-fate-chips > table > tbody > tr:nth-child(3) > td:first-child::before { background: #2f5f8c; }
+.entityView .table-fate-chips > table > tbody > tr:nth-child(4) > td:first-child::before { background: #c79a2b; }
+
+.entityView .table-combat > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---- The rest two to a row ---- */
+
+.entityView .table-edges,
+.entityView .table-hindrances,
+.entityView .table-arcane-powers,
+.entityView .table-gear { --block: 50%; }
+.entityView .table-edges,
+.entityView .table-arcane-powers { clear: left; }
+
+/* ---- Creatures: only the rolls show in play; the dice behind them stay in the editor ---- */
+
+.entityView > .table-aptitudes > table > tbody > tr > td:is(:nth-child(2), :nth-child(3)):not(:has(input, select, button)),
+.entityView > .table-attacks > table > tbody > tr > td:is(:nth-child(2), :nth-child(3), :nth-child(6)):not(:has(input, select, button)) {
+    display: none;
+}
