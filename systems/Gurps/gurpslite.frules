@@ -19,6 +19,10 @@ gurpsCheck = ([3d6], ((baseline, throws)->gurpsResult (baseline, sum (first (thr
 
 gurpsCheckAgainst (target) = ([3d6], ((baseline, throws)->gurpsResult (target, sum (first (throws).rolls))))
 
+gurpsAsked = ask ("Modifier", 0, ([3d6], ((baseline, throws)->gurpsResult (baseline + asked, sum (first (throws).rolls)))))
+
+gurpsAskedAgainst (target) = ask ("Modifier", 0, ([3d6], ((baseline, throws)->gurpsResult (target + asked, sum (first (throws).rolls)))))
+
 bonus(points,difficulty)=
      (if points < 1 then -4
       else
@@ -149,7 +153,7 @@ skillLevel(name, level, points) = custom
     Level = integer {
         description = "Effective skill level. Roll 3d6 at or under it to succeed."
         value = level
-        valuedice = gurpsCheck
+        valuedice = gurpsAsked
     }
     Points = points
 }
@@ -277,7 +281,7 @@ attack(name, level, mode, parry, reach, kind, distance) = custom
         description = "Effective skill with this attack. Roll 3d6 at or under it to hit."
         value = level
         render = "To hit: " + toString (level)
-        valuedice = gurpsCheck
+        valuedice = gurpsAsked
         action = kind
         reach = distance
         range = distance
@@ -343,25 +347,25 @@ characterTable = ruleset
             description = "The four basic attributes. Roll 3d6 at or under one to succeed."
             ST = integer {
                 description = "Strength: physical power and size. Sets HP, damage and lift."
-                valuedice=gurpsCheckAgainst (ST/10+10)
+                valuedice=gurpsAskedAgainst (ST/10+10)
                 render=toString(ST/10+10)
                 step=10
             }
             DX=integer{
                 description = "Dexterity: agility and coordination. The base for most physical skills."
-                valuedice=gurpsCheckAgainst (DX/20+10)
+                valuedice=gurpsAskedAgainst (DX/20+10)
                 render=toString(DX/20+10)
                 step=20
             }
             IQ=integer{
                 description = "Intelligence: brainpower and wits. Sets Will and Perception."
-                valuedice=gurpsCheckAgainst (IQ/20+10)
+                valuedice=gurpsAskedAgainst (IQ/20+10)
                 render=toString(IQ/20+10)
                 step=20
             }
             HT=integer{
                 description = "Health: energy and vitality. Sets Fatigue Points and resists illness."
-                valuedice=gurpsCheckAgainst (HT/10+10)
+                valuedice=gurpsAskedAgainst (HT/10+10)
                 render=toString(HT/10+10)
                 step=10
             }
@@ -388,12 +392,14 @@ characterTable = ruleset
                     {
                         description = "Willpower, from IQ. Rolled to resist fear and mental pressure."
                         value=fromAttribute("Will")
+                        valuedice=gurpsAsked
                         editable=none
                     }
             Perception=integer
                     {
                         description = "Perception, from IQ. Rolled to notice things."
                         value=fromAttribute("Per")
+                        valuedice=gurpsAsked
                         editable=none
                     }
         'Fatigue Points' = table
@@ -467,14 +473,14 @@ characterTable = ruleset
         {
             description = "Dodge: Basic speed + 3, minus encumbrance."
             value = dodge (characterTable)
-            valuedice = gurpsCheck
+            valuedice = gurpsAsked
         }
         Block = integer
         {
             description = "Block with a shield: half the shield skill + 3."
             visible = hasShield (characterTable)
             value = block (characterTable)
-            valuedice = gurpsCheck
+            valuedice = gurpsAsked
         }
     }
     'Damage resistance' = table
@@ -633,10 +639,10 @@ creatureTable = ruleset
     Attributes = table
     {
         tableLayout = layout { columns = 4 }
-        ST = integer { description = "Strength: physical power and size." default = 10  valuedice = gurpsCheck }
-        DX = integer { description = "Dexterity: agility and coordination." default = 10  valuedice = gurpsCheck }
-        IQ = integer { description = "Intelligence: brainpower and wits." default = 10  valuedice = gurpsCheck }
-        HT = integer { description = "Health: energy and vitality." default = 10  valuedice = gurpsCheck }
+        ST = integer { description = "Strength: physical power and size." default = 10  valuedice = gurpsAsked }
+        DX = integer { description = "Dexterity: agility and coordination." default = 10  valuedice = gurpsAsked }
+        IQ = integer { description = "Intelligence: brainpower and wits." default = 10  valuedice = gurpsAsked }
+        HT = integer { description = "Health: energy and vitality." default = 10  valuedice = gurpsAsked }
     }
     'Secondary characteristics' = table
     {
@@ -647,8 +653,8 @@ creatureTable = ruleset
         FP = integer { description = "Fatigue points when rested." default = 10 }
         'Current FP' = integer { description = "Current fatigue points." default = FP  editable = live }
         Rest = button { description = "Rest restores fatigue points."  editable = live  onClick = updates { (root.'Secondary characteristics'.'Current FP') = FP } }
-        Will = integer { description = "Willpower, rolled to resist fear and mental pressure." default = 10  valuedice = gurpsCheck }
-        Per = integer { description = "Perception, rolled to notice things." default = 10  valuedice = gurpsCheck }
+        Will = integer { description = "Willpower, rolled to resist fear and mental pressure." default = 10  valuedice = gurpsAsked }
+        Per = integer { description = "Perception, rolled to notice things." default = 10  valuedice = gurpsAsked }
         'Basic speed' = integer { description = "Basic speed, which sets turn order." default = 500  step = 25  render = hundredthsText ('Basic speed') }
         'Basic move' = integer { description = "Yards moved per second." default = 5 }
         Initiative = integer
@@ -658,7 +664,7 @@ creatureTable = ruleset
             editable = none
             visible = none
         }
-        Dodge = integer { description = "Roll 3d6 at or under this to dodge." default = 8  valuedice = gurpsCheck }
+        Dodge = integer { description = "Roll 3d6 at or under this to dodge." default = 8  valuedice = gurpsAsked }
         Parry = string {}
         DR = integer { description = "Damage resistance from armour or tough hide." default = 0 }
         SM = integer { description = "Size modifier. Bigger creatures are easier to hit." default = 0  render = signedText (SM) }
@@ -675,7 +681,7 @@ creatureTable = ruleset
             'To hit' = integer
             {
                 default = 10
-                valuedice = gurpsCheck
+                valuedice = gurpsAsked
                 action = creatureAttackKind (Reach)
                 reach = creatureAttackDistance (Reach)
                 range = creatureAttackDistance (Reach)

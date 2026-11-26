@@ -1,7 +1,7 @@
 # Playing GURPS Lite
 
 ## Success rolls
-Roll 3d6 and try to roll **at or under** the skill or attribute. 3 or 4 is always a critical success, and 17 or 18 a critical failure. Modifiers raise or lower the target, not the roll. Each roll shows the target, the result and the margin. Margin of success is how far under the target the roll was.
+Roll 3d6 and try to roll **at or under** the skill or attribute. 3 or 4 is always a critical success, 5 is one at skill 15 and 6 at skill 16 or more. 18 is always a critical failure, 17 is one when the skill is 15 or less, and so is any roll 10 or more over the skill. Modifiers raise or lower the target, not the roll: each roll asks for the total modifier (range, hit location, difficulty and the like), so enter -2 for a -2 penalty, or leave it at 0. Each roll shows the target, the result and the margin. Margin of success is how far under the target the roll was.
 
 Attributes: ST (strength), DX (dexterity), IQ (intelligence), HT (health), with Will and Perception based on IQ.
 
