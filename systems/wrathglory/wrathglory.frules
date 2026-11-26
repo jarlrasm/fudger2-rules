@@ -24,25 +24,45 @@ wgOutcome (icons, dn, wrath) =
     else if icons >= dn then "Success"
     else "Failure"
 
-wgResult (normal, wrath, dn) =
+failedIn (rolls) = count (filter ((x)->x < 4, rolls))
+
+wgResult (normal, wrath, dn, canReroll, spend) =
 {
     Text = wgText (iconsIn (normal) + iconsIn (wrath), sixesIn (normal) + sixesIn (wrath), dn, wrath)
     Value = iconsIn (normal) + iconsIn (wrath)
     Outcome = wgOutcome (iconsIn (normal) + iconsIn (wrath), dn, wrath)
+    Push = if canReroll and failedIn (normal) + failedIn (wrath) > 0 then wgReroll (filter ((x)->x > 3, normal), filter ((x)->x > 3, wrath), failedIn (normal), failedIn (wrath), dn) else 0
+    PushLabel = "Spend Wrath to reroll failures"
+    PushSets = spend
 }
 
+wgReroll (keptNormal, keptWrath, normalRerolls, wrathRerolls, dn) = ([dice { number = normalRerolls  sides = 6  label = "Reroll" }, dice { number = wrathRerolls  sides = 6  color = "red"  label = if wrathRerolls > 0 then "Wrath" else "" }],
+    ((baseline, throws)->wgResult (concat (keptNormal, first (throws).rolls), concat (keptWrath, item (1, throws).rolls), dn, false, [])))
+
 wgPool (pool, dn) = ([dice { number = max (0, pool - 1)  sides = 6 }, dice { number = min (1, max (0, pool))  sides = 6  color = "red"  label = "Wrath" }],
-    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, dn)))
+    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, dn, false, [])))
 
-wgAsked (pool) = ([dice { number = max (0, pool - 1)  sides = 6 }, dice { number = min (1, max (0, pool))  sides = 6  color = "red"  label = "Wrath" }],
-    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, asked)))
+wgAsked (pool, canReroll, spend) = ([dice { number = max (0, pool - 1)  sides = 6 }, dice { number = min (1, max (0, pool))  sides = 6  color = "red"  label = "Wrath" }],
+    ((baseline, throws)->wgResult (first (throws).rolls, item (1, throws).rolls, asked, canReroll, spend)))
 
-wgDice (pool) = ask ("DN", wgAsked (pool))
+wgDice (pool) = ask ("DN", wgAsked (pool, false, []))
+
+wrathSpend (char) = [{ Field = "characterTable.Traits.Wrath"  Value = char.Traits.Wrath - 1 }]
+
+wgHeroDice (char, pool) = ask ("DN", wgAsked (pool, char.Traits.Wrath > 0, wrathSpend (char)))
+
+edDamage (rolls) = sum (map ((x)->if x == 6 then 2 else if x > 3 then 1 else 0, rolls))
+
+edRoll (base, extra) = ([dice { number = max (0, extra)  sides = 6  label = "ED" }],
+    ((baseline, throws)->{
+        Text = toString (base + edDamage (first (throws).rolls)) + " damage"
+        Value = base + edDamage (first (throws).rolls)
+    }))
 
 skill (attr) = custom
 {
     Rating = integer { description = "Skill rating from 0 to 8, added to the attribute for the dice pool." default = 0  minvalue = 0  maxvalue = 8 }
-    Pool = integer { description = "Dice pool: attribute plus skill. Each 4 or 5 is one icon, each 6 two." value = attr + Rating  valuedice = wgDice (attr + Rating)  editable = none }
+    Pool = integer { description = "Dice pool: attribute plus skill. Each 4 or 5 is one icon, each 6 two." value = attr + Rating  valuedice = wgHeroDice (characterTable, attr + Rating)  editable = none }
 }
 
 poolOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Pool", 0)
@@ -53,18 +73,18 @@ weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
 
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
-weaponAttack (name, pool, damage, kind, distance) = custom
+weaponAttack (name, pool, damage, extra, kind, distance) = custom
 {
     Name = name
-    Pool = integer { value = pool  valuedice = wgDice (pool)  action = kind  reach = 2  range = distance }
-    Damage = damage
+    Pool = integer { value = pool  valuedice = wgHeroDice (characterTable, pool)  action = kind  reach = 2  range = distance }
+    Damage = integer { description = "The weapon's damage plus its extra damage dice: 4 or 5 adds 1, 6 adds 2." value = damage  valuedice = edRoll (damage, extra)  render = toString (damage) + " ED " + toString (extra)  editable = none }
 }
 
 attackFor (char, weapon) =
     if weaponStat (weapon, "Kind") == "Ranged" then
-        weaponAttack (weapon.Name, poolOf (char, "Ballistic Skill"), weaponStat (weapon, "Damage") + " ED " + weaponStat (weapon, "ED"), "ranged", firstNumber (weaponStat (weapon, "Range")))
+        weaponAttack (weapon.Name, poolOf (char, "Ballistic Skill"), toInt (weaponStat (weapon, "Damage")), toInt (weaponStat (weapon, "ED")), "ranged", firstNumber (weaponStat (weapon, "Range")))
     else
-        weaponAttack (weapon.Name, poolOf (char, "Weapon Skill"), toString (toInt (weaponStat (weapon, "Damage")) + char.Attributes.Strength) + " ED " + weaponStat (weapon, "ED"), "melee", 2)
+        weaponAttack (weapon.Name, poolOf (char, "Weapon Skill"), toInt (weaponStat (weapon, "Damage")) + char.Attributes.Strength, toInt (weaponStat (weapon, "ED")), "melee", 2)
 
 characterTable = ruleset
 {
@@ -85,13 +105,13 @@ characterTable = ruleset
     {
         description = "The seven attributes, rolled as dice pools."
         tableLayout = layout { columns = 7  size = wide }
-        Strength = integer { description = "Muscle, lifting and melee damage." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Strength) }
-        Toughness = integer { description = "Endurance and resisting harm. Sets resilience and wounds." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Toughness) }
-        Agility = integer { description = "Speed, coordination and shooting." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Agility) }
+        Strength = integer { description = "Muscle, lifting and melee damage." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Strength) }
+        Toughness = integer { description = "Endurance and resisting harm. Sets resilience and wounds." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Toughness) }
+        Agility = integer { description = "Speed, coordination and shooting." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Agility) }
         Initiative = integer { description = "Reflexes and close combat. Sets defence." default = 2  minvalue = 1  maxvalue = 12 }
-        Willpower = integer { description = "Mental strength and faith. Sets shock and resolve." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Willpower) }
-        Intellect = integer { description = "Reasoning, knowledge and technical skill." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Intellect) }
-        Fellowship = integer { description = "Charisma and dealing with people. Sets influence." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgDice (Fellowship) }
+        Willpower = integer { description = "Mental strength and faith. Sets shock and resolve." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Willpower) }
+        Intellect = integer { description = "Reasoning, knowledge and technical skill." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Intellect) }
+        Fellowship = integer { description = "Charisma and dealing with people. Sets influence." default = 2  minvalue = 1  maxvalue = 12  valuedice = wgHeroDice (characterTable, Fellowship) }
     }
 
     Traits = table
@@ -101,16 +121,16 @@ characterTable = ruleset
         Defence = integer { description = "What attackers must reach to hit you: Initiative minus 1." value = Attributes.Initiative - 1  editable = none }
         Resilience = integer { description = "What damage must beat to wound you: Toughness plus 1 plus armour." value = Attributes.Toughness + 1 + Armour.Rating  editable = none }
         'Max Wounds' = integer { description = "Wounds you can take: twice the tier plus Toughness." value = Character.Tier * 2 + Attributes.Toughness  editable = none }
-        Wounds = integer { description = "Wounds taken. Beyond the maximum you are dying." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
+        Wounds = integer { description = "Wounds taken. At the maximum you are dying." default = 0  minvalue = 0  editable = live  indicator = "#d64545" }
         'Max Shock' = integer { description = "Shock you can take: Willpower plus tier." value = Attributes.Willpower + Character.Tier  editable = none }
-        Shock = integer { description = "Shock taken. Beyond the maximum you are exhausted." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
-        Down = string { value = if Wounds > 'Max Wounds' then "Dying" else if Shock > 'Max Shock' then "Exhausted" else ""  visible = none  indicator = "#d64545" }
+        Shock = integer { description = "Shock taken. At the maximum you are exhausted." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Down = string { value = if Wounds >= 'Max Wounds' then "Dying" else if Shock >= 'Max Shock' then "Exhausted" else ""  visible = none  indicator = "#d64545" }
         Respite = button { description = "A respite of an hour or so recovers all shock. Wounds need medical care or a long rest."  editable = live  onClick = updates { (root.Traits.Shock) = 0 } }
         Determination = integer { description = "Roll Toughness to turn wounds into shock." value = Attributes.Toughness  valuedice = wgPool (Attributes.Toughness, 0)  editable = none }
         Conviction = integer { description = "Resistance to corruption and the warp, from Willpower." value = Attributes.Willpower  editable = none }
         Resolve = integer { description = "Resistance to fear and terror: Willpower minus 1." value = Attributes.Willpower - 1  editable = none }
         Influence = integer { description = "Social weight and reach: Fellowship minus 1." value = Attributes.Fellowship - 1  editable = none }
-        'Passive Awareness' = integer { description = "Your awareness when not looking: half the Awareness pool." value = poolOf (characterTable, "Awareness") / 2  editable = none }
+        'Passive Awareness' = integer { description = "Your awareness when not looking: half the Awareness pool, rounded up." value = (poolOf (characterTable, "Awareness") + 1) / 2  editable = none }
         Speed = integer { description = "Metres moved in a turn." default = 6 }
         Wealth = integer { description = "Wealth, set by tier." value = Character.Tier  editable = none }
         Wrath = integer { description = "Wrath points: spend to reroll failures or resist death. Earned from wrath dice." default = 2  minvalue = 0  editable = live }
@@ -224,7 +244,8 @@ creatureTable = ruleset
         {
             Name = string {}
             Pool = integer { default = 6  valuedice = wgDice (Pool)  action = melee  reach = 2 }
-            Damage = string {}
+            Damage = integer { description = "Damage before extra damage dice." default = 10  valuedice = edRoll (Damage, ED) }
+            ED = integer { description = "Extra damage dice: 4 or 5 adds 1, 6 adds 2." default = 1  minvalue = 0 }
             Traits = string {}
         }
     }
@@ -303,7 +324,7 @@ WrathAndGlory = system
         {
             title = "Wrath die"
             topic = "Play"
-            text = ["A 6 on the Wrath die is a Wrath Critical and gains Glory. A 1 is a complication, even on a success."]
+            text = ["A 6 on the Wrath die is a Wrath Critical and gains Glory. A 1 is a complication, even on a success.", "Spend a Wrath point from the result to reroll every die that scored no icon."]
         },
         hint
         {
@@ -315,7 +336,7 @@ WrathAndGlory = system
         {
             title = "Damage"
             topic = "Combat"
-            text = ["Attack DN is the target's Defence. Damage is the weapon's value plus extra damage dice; above Resilience it deals wounds, and Determination can soak them as Shock."]
+            text = ["Attack DN is the target's Defence. Roll Damage for the weapon's value plus extra damage dice; above Resilience it deals wounds, and Determination can soak them as Shock."]
         }
     ]
     distanceUnit = "m"

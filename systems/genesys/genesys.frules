@@ -2,14 +2,20 @@
 #include "/systems/names/settings.frules"
 #include "/systems/genesys/dice.frules"
 
-checkPool (char, characteristic, ranks) =
+checkPool (char, characteristic, ranks, difficulty, setback) =
     genesysPool (
         upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), char.Check.Upgrades).Yellow,
         upgradedPool (min (characteristic, ranks), max (characteristic, ranks) - min (characteristic, ranks), char.Check.Upgrades).Green,
-        char.Check.Boost,
-        char.Check.Challenge,
-        char.Check.Difficulty,
-        char.Check.Setback)
+        max (0, 0 - setback),
+        upgradedPool (0, max (0, difficulty), char.Check.Challenge).Yellow,
+        upgradedPool (0, max (0, difficulty), char.Check.Challenge).Green,
+        max (0, setback))
+
+genesysCheck (char, characteristic, ranks) =
+    ask ("Difficulty dice", 2, (d)->ask ("Setback dice (negative for boost)", 0, (s)->checkPool (char, characteristic, ranks, d, s)))
+
+genesysAttack (char, characteristic, ranks, startDifficulty) =
+    ask ("Difficulty dice", startDifficulty, (d)->ask ("Target's Defense", 0, (s)->checkPool (char, characteristic, ranks, d, s)))
 
 characteristicValue (char, name) =
     switch name
@@ -27,7 +33,7 @@ skill (usual) = custom
     Career = bool { description = "Career skills cost less experience to raise." default = false }
     Rank = integer { description = "Skill ranks from 0 to 5. Ranks upgrade green ability dice to yellow proficiency dice." default = 0  minvalue = 0  maxvalue = 5 }
     Characteristic = string { description = "The characteristic used for this check, normally the usual one." default = usual  keys = characteristicNames  editable = live }
-    Pool = integer { description = "Dice pool: the higher of rank and characteristic in dice, the lower of them upgraded." value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = checkPool (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = toString (min (Rank, characteristicValue (characterTable, Characteristic))) + "Y " + toString (max (Rank, characteristicValue (characterTable, Characteristic)) - min (Rank, characteristicValue (characterTable, Characteristic))) + "G" }
+    Pool = integer { description = "Dice pool: the higher of rank and characteristic in dice, the lower of them upgraded." value = max (Rank, characteristicValue (characterTable, Characteristic))  valuedice = genesysCheck (characterTable, characteristicValue (characterTable, Characteristic), Rank)  editable = none  render = toString (min (Rank, characteristicValue (characterTable, Characteristic))) + "Y " + toString (max (Rank, characteristicValue (characterTable, Characteristic)) - min (Rank, characteristicValue (characterTable, Characteristic))) + "G" }
 }
 
 noSkill = { Rank = 0 }
@@ -45,10 +51,24 @@ rangeMetres (band) =
         case "Extreme" then 1000
         else 2
 
-weaponAttack (name, characteristic, ranks, damage, kind, distance) = custom
+bandDifficulty (band) =
+    switch band
+        case "Engaged" then 2
+        case "Short" then 1
+        case "Medium" then 2
+        case "Long" then 3
+        case "Extreme" then 4
+        else 2
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+damageText (char, damage) =
+    if contains (damage, "+") then toString (char.Characteristics.Brawn + firstNumber (damage)) else damage
+
+weaponAttack (name, characteristic, ranks, damage, kind, distance, startDifficulty) = custom
 {
     Name = name
-    Check = integer { value = max (characteristic, ranks)  valuedice = checkPool (characterTable, characteristic, ranks)  action = kind  reach = 2  range = distance }
+    Check = integer { value = max (characteristic, ranks)  valuedice = genesysAttack (characterTable, characteristic, ranks, startDifficulty)  action = kind  reach = 2  range = distance }
     Damage = damage
     Critical = string {}
 }
@@ -61,9 +81,10 @@ attackFor (char, weapon) =
     weaponAttack (weapon.Name,
         characteristicValue (char, weaponSkillCharacteristic (weaponStat (weapon, "Skill"))),
         rankOf (char, weaponStat (weapon, "Skill")),
-        weaponStat (weapon, "Damage") + " (Crit " + weaponStat (weapon, "Critical") + ")",
+        damageText (char, weaponStat (weapon, "Damage")) + " (Crit " + weaponStat (weapon, "Critical") + ")",
         if weaponStat (weapon, "Range") == "Engaged" or weaponStat (weapon, "Range") == "" then "melee" else "ranged",
-        rangeMetres (weaponStat (weapon, "Range")))
+        rangeMetres (weaponStat (weapon, "Range")),
+        if weaponStat (weapon, "Skill") == "Melee" or weaponStat (weapon, "Skill") == "Brawl" then 2 else bandDifficulty (weaponStat (weapon, "Range")))
 
 characterTable = ruleset
 {
@@ -83,24 +104,21 @@ characterTable = ruleset
 
     Check = table
     {
-        description = "Extra dice for the next check: purple difficulty, red challenge, black setback, blue boost."
-        tableLayout = layout { columns = 5  size = wide }
-        Difficulty = integer { description = "Purple difficulty dice, from 1 for easy to 5 for formidable." default = 2  minvalue = 0  maxvalue = 5  editable = live }
-        Challenge = integer { description = "Red challenge dice: difficulty dice upgraded by the GM." default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Setback = integer { description = "Black setback dice from bad conditions." default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Boost = integer { description = "Blue boost dice from good conditions." default = 0  minvalue = 0  maxvalue = 5  editable = live }
-        Upgrades = integer { description = "How many dice in your pool to upgrade." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        description = "Upgrades for the next checks, from Story Points, talents or the GM. Difficulty and setback dice are asked when you roll."
+        tableLayout = layout { columns = 2 }
+        Upgrades = integer { description = "Green ability dice upgraded to yellow proficiency dice." default = 0  minvalue = 0  maxvalue = 5  editable = live }
+        Challenge = integer { description = "Purple difficulty dice upgraded to red challenge dice." default = 0  minvalue = 0  maxvalue = 5  editable = live }
     }
 
     Characteristics = table
     {
         tableLayout = layout { columns = 6  size = wide }
-        Brawn = integer { description = "Physical strength and toughness." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Brawn, 0) }
-        Agility = integer { description = "Speed, coordination and aim." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Agility, 0) }
-        Intellect = integer { description = "Intelligence and learning." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Intellect, 0) }
-        Cunning = integer { description = "Cleverness, street smarts and guile." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Cunning, 0) }
-        Willpower = integer { description = "Discipline and self-control." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Willpower, 0) }
-        Presence = integer { description = "Charisma and leadership." default = 2  minvalue = 1  maxvalue = 6  valuedice = checkPool (characterTable, Presence, 0) }
+        Brawn = integer { description = "Physical strength and toughness." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Brawn, 0) }
+        Agility = integer { description = "Speed, coordination and aim." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Agility, 0) }
+        Intellect = integer { description = "Intelligence and learning." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Intellect, 0) }
+        Cunning = integer { description = "Cleverness, street smarts and guile." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Cunning, 0) }
+        Willpower = integer { description = "Discipline and self-control." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Willpower, 0) }
+        Presence = integer { description = "Charisma and leadership." default = 2  minvalue = 1  maxvalue = 6  valuedice = genesysCheck (characterTable, Presence, 0) }
     }
 
     Status = table
@@ -118,8 +136,8 @@ characterTable = ruleset
                 (root.Status.Strain) = 0
             }
         }
-        'Melee Defense' = integer { description = "Upgrades the difficulty of melee attacks against you." default = 0 }
-        'Ranged Defense' = integer { description = "Upgrades the difficulty of ranged attacks against you." default = 0 }
+        'Melee Defense' = integer { description = "Setback dice added to melee attacks against you." default = 0  minvalue = 0  maxvalue = 4 }
+        'Ranged Defense' = integer { description = "Setback dice added to ranged attacks against you." default = 0  minvalue = 0  maxvalue = 4 }
         Incapacitated = string { value = if Wounds > 'Wound Threshold' then "Incapacitated" else if Strain > 'Strain Threshold' then "Incapacitated by strain" else ""  visible = none  indicator = "#d64545" }
         'Critical Injuries' = string { description = "Lasting injuries from critical hits, with their effects." multiline = true  editable = live }
         'Initiative Cool' = integer { description = "Initiative check when you are ready for a fight: Cool plus Presence." value = rankOf (characterTable, "Cool")  valuedice = initiativePool (Characteristics.Presence, rankOf (characterTable, "Cool"))  editable = none }
@@ -185,7 +203,7 @@ characterTable = ruleset
     Attacks = list
     {
         tableLayout = layout { size = wide }
-        source = concat ([weaponAttack ("Unarmed", Characteristics.Brawn, rankOf (characterTable, "Brawl"), toString (Characteristics.Brawn) + " (Crit 5)", "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        source = concat ([weaponAttack ("Unarmed", Characteristics.Brawn, rankOf (characterTable, "Brawl"), toString (Characteristics.Brawn) + " (Crit 5)", "melee", 2, 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
         singular = "Attack"
         editable = none
         valueType = weaponAttack
@@ -223,9 +241,9 @@ creatureTable = ruleset
         Soak = integer { description = "Damage stopped from each hit." default = 3 }
         'Wound Threshold' = integer { description = "Wounds beyond this defeat the adversary." default = 12 }
         Wounds = integer { description = "Wounds taken." default = 0  editable = live  indicator = "#d64545" }
-        'Melee Defense' = integer { default = 0 }
-        'Ranged Defense' = integer { default = 0 }
-        Initiative = integer { default = 0  valuedice = initiativePool (2, 1) }
+        'Melee Defense' = integer { description = "Setback dice added to melee attacks against it." default = 0  minvalue = 0  maxvalue = 4 }
+        'Ranged Defense' = integer { description = "Setback dice added to ranged attacks against it." default = 0  minvalue = 0  maxvalue = 4 }
+        Initiative = integer { description = "Ranks in Vigilance (or Cool) for initiative, rolled with Willpower." default = 1  minvalue = 0  valuedice = initiativePool (Willpower, Initiative) }
     }
     'Skill Pools' = keyvalues
     {
@@ -236,7 +254,7 @@ creatureTable = ruleset
         {
             Yellow = integer { default = 1  minvalue = 0 }
             Green = integer { default = 1  minvalue = 0 }
-            Roll = integer { value = Yellow + Green  valuedice = genesysPool (Yellow, Green, 0, 0, 2, 0)  editable = none  action = if Key == "Ranged" then "ranged" else if Key == "Vigilance" then "" else "melee"  reach = 2 }
+            Roll = integer { value = Yellow + Green  valuedice = ask ("Difficulty dice", 2, (d)->ask ("Target's Defense", 0, (s)->genesysPool (Yellow, Green, max (0, 0 - s), 0, max (0, d), max (0, s))))  editable = none  action = if Key == "Ranged" then "ranged" else if Key == "Vigilance" then "" else "melee"  reach = 2 }
         }
     }
     Notes = table
@@ -304,7 +322,7 @@ Genesys = system
         {
             title = "Narrative dice"
             topic = "Play"
-            text = ["Set Difficulty, Challenge, Setback, Boost and Upgrades in the Check row, then roll. Successes cancel failures and advantages cancel threats."]
+            text = ["Click a pool, then give the purple difficulty dice (1 easy to 5 formidable) and the setback dice; a negative number adds blue boost dice instead. Upgrades and Challenge in the Check row upgrade dice before you roll. Successes cancel failures and advantages cancel threats."]
         },
         hint
         {

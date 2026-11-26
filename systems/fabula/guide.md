@@ -8,7 +8,7 @@ Characters have four attributes rated as dice: **Dexterity**, **Insight**, **Mig
 - **Critical success**: both dice show the same number, 6 or more. It always succeeds and grants an opportunity.
 - **Fumble**: both dice show 1. It always fails; the GM gets an opportunity and the player gains a Fabula Point.
 
-Fudger keeps a Checks list on the sheet; add any pair you need.
+Fudger keeps a Checks list on the sheet; add any pair you need. A failed check offers to invoke a Trait: it spends a Fabula Point and rerolls both dice. A fumble can't be rerolled.
 
 ## Statuses
 Status effects step attribute dice down (never below d6): **Slow** (Dex), **Dazed** (Ins), **Weak** (Mig), **Shaken** (Wlp), **Enraged** (Dex and Ins), **Poisoned** (Mig and Wlp). The sheet shows the current die.

@@ -20,15 +20,23 @@ fabulaOutcome (total, a, b, dl) =
     else if total >= dl then "Success"
     else "Failure"
 
-fabulaResult (bonus, a, b, dl, damage) =
+canInvoke (total, a, b, dl, points) = points > 0 and not (a == 1 and b == 1) and not (a == b and a >= 6) and (dl == 0 or total < dl)
+
+fabulaResult (bonus, a, b, dl, damage, firstSides, secondSides, points) =
 {
     Text = fabulaText (bonus + a + b, a, b, dl, damage)
     Value = bonus + a + b
     Outcome = fabulaOutcome (bonus + a + b, a, b, dl)
+    Push = if canInvoke (bonus + a + b, a, b, dl, points) then fabulaPush (firstSides, secondSides, bonus, dl, damage, points - 1) else 0
+    PushLabel = "Invoke a Trait (1 Fabula Point)"
+    PushSets = [{ Field = "characterTable.Character.Fabula"  Value = points - 1 }]
 }
 
-fabulaRoll (firstSides, secondSides, dl, damage) = ([dice { number = 1  sides = firstSides }, dice { number = 1  sides = secondSides }],
-    ((baseline, throws)->fabulaResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), if dl < 0 then asked else dl, damage)))
+fabulaRoll (firstSides, secondSides, dl, damage, points) = ([dice { number = 1  sides = firstSides }, dice { number = 1  sides = secondSides }],
+    ((baseline, throws)->fabulaResult (baseline, first (first (throws).rolls), first (item (1, throws).rolls), if dl < 0 then asked else dl, damage, firstSides, secondSides, points)))
+
+fabulaPush (firstSides, secondSides, checkBonus, dl, damage, points) = ([dice { number = 1  sides = firstSides }, dice { number = 1  sides = secondSides }],
+    ((baseline, throws)->fabulaResult (checkBonus, first (first (throws).rolls), first (item (1, throws).rolls), dl, damage, firstSides, secondSides, points)))
 
 short (name) =
     switch toLower (name)
@@ -53,9 +61,9 @@ firstOf (text) = first (pairOf (text))
 
 secondOf (text) = if count (pairOf (text)) > 1 then item (1, pairOf (text)) else first (pairOf (text))
 
-fabulaCheck (char, pair) = ask ("Difficulty", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, -1))
+fabulaCheck (char, pair) = ask ("Difficulty", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, -1, char.Character.Fabula))
 
-fabulaAttack (char, pair, damage) = ask ("Defense", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, damage))
+fabulaAttack (char, pair, damage) = ask ("Defense", fabulaRoll (currentSides (char, firstOf (pair)), currentSides (char, secondOf (pair)), -1, damage, char.Character.Fabula))
 
 attribute (base, steps) = custom
 {
@@ -136,7 +144,7 @@ characterTable = ruleset
         'MP bonus' = integer { default = 0 }
         Defense = integer { description = "What an attack must reach to hit you: Dexterity die plus bonuses." value = Attributes.Dexterity.Current + 'Defense bonus'  editable = none }
         'Magic Defense' = integer { description = "What a spell must reach to affect you: Insight die plus bonuses." value = Attributes.Insight.Current + 'Magic Defense bonus'  editable = none }
-        Initiative = modifier { description = "Bonus to the Dexterity plus Insight initiative check." value = 'Initiative bonus'  valuedice = fabulaRoll (Attributes.Dexterity.Current, Attributes.Insight.Current, 0, -1)  editable = none }
+        Initiative = modifier { description = "Bonus to the Dexterity plus Insight initiative check." value = 'Initiative bonus'  valuedice = fabulaRoll (Attributes.Dexterity.Current, Attributes.Insight.Current, 0, -1, 0)  editable = none }
         'Defense bonus' = integer { default = 0 }
         'Magic Defense bonus' = integer { default = 0 }
         'Initiative bonus' = integer { default = 0 }
@@ -306,7 +314,7 @@ npcTable = ruleset
             Bonus = integer { default = 0 }
             Damage = integer { default = 5 }
             Type = string { default = "physical" }
-            Roll = modifier { value = Bonus  valuedice = ask ("Defense", fabulaRoll (npcSides (npcTable, firstOf (Check)), npcSides (npcTable, secondOf (Check)), -1, Damage))  action = melee  reach = 1  editable = none }
+            Roll = modifier { value = Bonus  valuedice = ask ("Defense", fabulaRoll (npcSides (npcTable, firstOf (Check)), npcSides (npcTable, secondOf (Check)), -1, Damage, 0))  action = melee  reach = 1  editable = none }
         }
     }
     Notes = table

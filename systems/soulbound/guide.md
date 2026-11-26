@@ -6,7 +6,7 @@ A test rolls a pool of d6s: the attribute (Body, Mind or Soul) plus the skill's 
 ## Combat
 Initiative is a fixed number (Mind plus Awareness and Reflexes Training); highest acts first, and players and foes alternate. Each turn a character can move and take an action; Mettle buys extra actions and heroic feats and refills each round.
 
-Attacks compare the attacker's **Melee** (or **Accuracy** at range) with the target's **Defence**, each rated Poor, Average, Good, Great, Superb or Extraordinary. Equal ratings give DN 4:1; one step better 3:1, two or more 2:1; one step worse 5:1, two or more 6:1. A hit deals the weapon's damage plus 1 per extra success, less the target's Armour. Damage comes off **Toughness**; at 0 Toughness hits cause wounds (minor, serious, deadly), and too many wounds take a character out or kill them. Minions fall to any damage.
+Attacks compare the attacker's **Melee** (or **Accuracy** at range) with the target's **Defence**, each rated Poor, Average, Good, Great, Superb or Extraordinary. Equal ratings give DN 4:1; one step better 3:1, two or more 2:1; one step worse 5:1, two or more 6:1. A hit deals the weapon's damage plus 1 per extra success, less the target's Armour. Damage comes off **Toughness**; at 0 Toughness hits cause wounds (minor, serious, deadly), and when the wounds carried (minor 1, serious 2, deadly 3 each) reach Max Wounds, half of Body + Mind + Soul rounded up, the character falls. Minions fall to any damage.
 
 Ranges are zones: Close is the same zone, Short the next one, then Medium and Long.
 
