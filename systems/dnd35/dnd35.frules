@@ -25,8 +25,8 @@ d35Result (total, natural, dc, automatic) =
 
 attackOutcome (total, natural, ac, threat) =
     if natural == 1 then "Miss"
+    else if natural == 20 then "Critical threat"
     else if natural >= threat and (total >= ac or ac == 0) then "Critical threat"
-    else if natural == 20 then "Hit"
     else if ac == 0 then ""
     else if total >= ac then "Hit"
     else "Miss"
@@ -637,7 +637,7 @@ DnD35 = system
         {
             title = "Full attacks"
             topic = "Combat"
-            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits is a critical threat: roll again to confirm."]
+            text = ["Set the Attack slider to the second, third or fourth iterative attack for the -5, -10 or -15. A natural roll in the threat range that hits, and every natural 20, is a critical threat: roll again to confirm."]
         },
         hint
         {

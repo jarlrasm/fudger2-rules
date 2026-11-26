@@ -9,7 +9,7 @@ Roll **d20 + modifier** against a **DC** set by the GM: meet or beat it to succe
 - **Initiative**: d20 + Dex + misc (Improved Initiative gives +4). Highest acts first.
 - Each turn: a standard action and a move action, or one full-round action, plus free actions; five-foot steps when you don't otherwise move.
 - **Attacks**: d20 + base attack bonus + Str (melee) or Dex (ranged) + size, against the target's AC. A natural 20 always hits and a 1 always misses. A full attack gives extra attacks at −5 each once BAB reaches +6: set the Attack slider. Ranged attacks take −2 per range increment past the first.
-- A natural roll in the weapon's threat range that hits is a **critical threat**; roll again to confirm, and on a hit multiply the damage.
+- A natural roll in the weapon's threat range that hits (a natural 20 always does) is a **critical threat**; roll again to confirm, and on a hit multiply the damage.
 - **Touch AC** ignores armor, shield and natural armor; **flat-footed AC** loses the Dex and dodge bonuses.
 - **Grapple**: touch attack to grab, then opposed grapple checks (BAB + Str + grapple size modifier: Small −4, Large +4).
 - Attacks of opportunity: moving out of a threatened square, casting, or ranged attacks next to an enemy provoke one.
