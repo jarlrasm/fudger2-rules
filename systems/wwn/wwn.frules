@@ -1,0 +1,824 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+shownIf (flag) = if flag then visible else none
+
+attributeModifier (score) =
+    if score < 4 then -2
+    else if score < 8 then -1
+    else if score < 14 then 0
+    else if score < 18 then 1
+    else 2
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+lastNumber (text) = bonusWithValue ([[text]], "([0-9]+)[^0-9]*$")
+
+diceCount (text) = bonusWithValue ([[text]], "^([0-9]+)d")
+
+diceSize (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+diceBonus (text) = bonusWithValue ([[text]], "d[0-9]+\+([0-9]+)") - bonusWithValue ([[text]], "d[0-9]+-([0-9]+)")
+
+shockPoints (text) = if contains (text, "/") then bonusWithValue ([[text]], "^([0-9]+)/") else 0
+
+shockArmor (text) = if not (contains (text, "/")) then 0 else if contains (text, "/-") then 99 else lastNumber (text)
+
+longRange (text) = bonusWithValue ([[replace (",", "", text)]], "/([0-9]+)")
+
+checkOutcome (total, difficulty) = if difficulty < 1 then "" else if total >= difficulty then "Success" else "Failure"
+
+checkResult (total, difficulty, note) =
+{
+    Text = toString (total) + (if difficulty > 0 then " vs " + toString (difficulty) + (if total >= difficulty then ": success" else ": failure") else "") + note
+    Value = total
+    Outcome = checkOutcome (total, difficulty)
+}
+
+expertResult (total, difficulty, reroll, bonus) =
+{
+    Text = toString (total) + (if difficulty > 0 then " vs " + toString (difficulty) + (if total >= difficulty then ": success" else ": failure") else "")
+    Value = total
+    Outcome = checkOutcome (total, difficulty)
+    Push = if reroll and difficulty > 0 and total < difficulty then expertReroll (total, difficulty, bonus) else 0
+    PushLabel = "Masterful Expertise"
+    PushSets = [{ Field = "characterTable.Scene.Expertise used"  Value = true }]
+}
+
+expertReroll (firstTotal, difficulty, bonus) = ([2d6], ((baseline, throws)->checkResult (max (firstTotal, bonus + sum (first (throws).rolls)), difficulty, " (Masterful Expertise, best of two)")))
+
+expertCheck (difficulty, reroll) = ([2d6], ((baseline, throws)->expertResult (baseline + sum (first (throws).rolls), if difficulty > 0 then difficulty else asked, reroll, baseline)))
+
+skillRoll (reroll) = expertCheck (0, reroll)
+
+skillCheck (difficulty) = ([2d6], ((baseline, throws)->checkResult (baseline + sum (first (throws).rolls), if difficulty > 0 then difficulty else asked, "")))
+
+canReroll (char) = char.Character.Class == "Expert" and not (char.Scene.'Expertise used')
+
+skillDice (char) = ask ("Difficulty", skillRoll (canReroll (char)))
+
+plainSkillDice = ask ("Difficulty", skillCheck (0))
+
+shockNote (ac, points, armorLimit) =
+    if points < 1 or armorLimit < 1 then ""
+    else if ac > 0 and ac > armorLimit then ""
+    else ", " + toString (points) + " Shock"
+
+attackText (total, ac, points, armorLimit) =
+    toString (total)
+    + (if ac > 0 then " vs AC " + toString (ac) + (if total >= ac then ": hit" else ": miss" + shockNote (ac, points, armorLimit)) else ": hits AC " + toString (total) + " or less" + (if points > 0 and armorLimit > 0 then " (" + toString (points) + " Shock on a miss)" else ""))
+
+attackResult (total, ac, points, armorLimit, dieCount, dieSize, damageBonus, luck) =
+{
+    Text = attackText (total, ac, points, armorLimit)
+    Value = total
+    Outcome = if ac < 1 then "" else if total >= ac then "Hit" else "Miss"
+    Push = if luck and ac > 0 and total < ac then veteransLuck (dieCount, dieSize, damageBonus, points) else 0
+    PushLabel = "Veteran's Luck"
+    PushSets = [{ Field = "characterTable.Scene.Veterans Luck used"  Value = true }]
+}
+
+veteransLuck (dieCount, dieSize, damageBonus, points) = ([dice { number = dieCount  sides = dieSize  label = "Damage" }],
+    ((baseline, throws)->{
+        Text = "Hit by Veteran's Luck: " + toString (max (points, damageBonus + sum (first (throws).rolls))) + " damage"
+        Value = max (points, damageBonus + sum (first (throws).rolls))
+        Outcome = "Hit"
+    }))
+
+attackRoll (ac, points, armorLimit, dieCount, dieSize, damageBonus, luck) = ([1d20], ((baseline, throws)->attackResult (baseline + first (first (throws).rolls), if ac > 0 then ac else asked, points, armorLimit, dieCount, dieSize, damageBonus, luck)))
+
+attackDice (points, armorLimit, dieCount, dieSize, damageBonus, luck) = ask ("Target AC", attackRoll (0, points, armorLimit, dieCount, dieSize, damageBonus, luck))
+
+damageDice (dieCount, dieSize) = ([dice { number = dieCount  sides = max (1, dieSize) }], ((baseline, throws)->max (0, baseline + sum (first (throws).rolls))))
+
+saveResult (natural, target) =
+{
+    Text = toString (natural) + " vs " + toString (target) + (if natural == 20 then ": natural 20, saved" else if natural == 1 then ": natural 1, failed" else if natural >= target then ": saved" else ": failed")
+    Value = natural
+    Outcome = if natural == 20 then "Success" else if natural == 1 then "Failure" else if natural >= target then "Success" else "Failure"
+}
+
+saveDice = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline)))
+
+initiativeDice = ([1d8], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls))  Value = baseline + first (first (throws).rolls) }))
+
+moraleDice = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs ML " + toString (baseline) + ": breaks and flees"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs ML " + toString (baseline) + ": holds"  Outcome = "Success" }))
+
+instinctDice = ([1d10], ((baseline, throws)->if first (first (throws).rolls) <= baseline then { Text = toString (first (first (throws).rolls)) + " vs Instinct " + toString (baseline) + ": acts on instinct"  Outcome = "Failure" } else { Text = toString (first (first (throws).rolls)) + " vs Instinct " + toString (baseline) + ": keeps its head"  Outcome = "Success" }))
+
+attribute = custom
+{
+    Score = integer { description = "Attribute score from 3 to 18." default = 10  minvalue = 3  maxvalue = 18 }
+    Modifier = modifier { description = "Modifier from the score: 3 is -2, 4-7 -1, 8-13 +0, 14-17 +1, 18 +2." value = attributeModifier (Score)  editable = none }
+}
+
+noAttribute = { Modifier = 0 }
+
+noSkill = { Level = -1 }
+
+modOf (char, name) = valueOr (valueOr (char.Attributes, name, noAttribute), "Modifier", 0)
+
+bestOf (char, a, b) = max (modOf (char, a), modOf (char, b))
+
+bestAttribute (char) = max (modOf (char, "STR"), modOf (char, "DEX"), modOf (char, "CON"), modOf (char, "INT"), modOf (char, "WIS"), modOf (char, "CHA"))
+
+skill (attr) = custom
+{
+    Level = integer { description = "Skill level from 0 to 4. -1 means untrained, a -1 on the check." default = -1  minvalue = -1  maxvalue = 4 }
+    Attribute = string { description = "The attribute that fits this use of the skill." default = attr  keys = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+    Check = modifier { description = "Roll 2d6 plus skill level and attribute modifier against the difficulty." value = Level + modOf (characterTable, Attribute)  valuedice = skillDice (characterTable)  editable = none }
+}
+
+skillLevel (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", -1)
+
+trained (char, name) = max (0, skillLevel (char, name))
+
+combatSkill (char, name) = if skillLevel (char, name) < 0 then -2 else skillLevel (char, name)
+
+fullTraditions = ["High Mage", "Elementalist", "Necromancer", "Invoker"]
+
+partialClasses = ["Warrior", "Expert", "High Mage", "Elementalist", "Necromancer", "Invoker", "Healer", "Vowed", "Bard", "Thought Noble", "Accursed", "Wise", "Mageslayer", "Skinshifter", "Duelist", "Beastmaster", "Blood Priest"]
+
+warriorPartial (p) = p == "Warrior" or p == "Mageslayer"
+
+expertPartial (p) = p == "Expert" or p == "Bard" or p == "Wise"
+
+casterPartial (p) = p == "High Mage" or p == "Elementalist" or p == "Necromancer" or p == "Invoker"
+
+isAdventurer (char) = char.Character.Class == "Adventurer"
+
+hasPartial (char, p) = isAdventurer (char) and (char.Character.'First Partial' == p or char.Character.'Second Partial' == p)
+
+attackBonusFor (cls, p1, p2, level) =
+    if cls == "Warrior" then level
+    else if cls == "Expert" then level / 2
+    else if cls == "Mage" then level / 5
+    else if cls != "Adventurer" then 0
+    else if warriorPartial (p1) or warriorPartial (p2) then level / 2 + (if level >= 5 then 2 else 1)
+    else if expertPartial (p1) or expertPartial (p2) then level / 2
+    else level / 5
+
+hitDiceFor (cls, p1, p2, level) =
+    if cls == "Warrior" or (cls == "Adventurer" and (p1 == "Warrior" or p2 == "Warrior")) then toString (level) + "d6+" + toString (2 * level)
+    else if cls == "Expert" or (cls == "Adventurer" and (warriorPartial (p1) or warriorPartial (p2) or expertPartial (p1) or expertPartial (p2) or p1 == "Vowed" or p2 == "Vowed")) then toString (level) + "d6"
+    else toString (level) + "d6-" + toString (level)
+
+killingBlow (char) = if char.Character.Class == "Warrior" then (char.Character.Level + 1) / 2 else 0
+
+hasLuck (char) = char.Character.Class == "Warrior" and not (char.Scene.'Veterans Luck used')
+
+fullEffort (n, partial) = max (1, if partial then n - 1 else n)
+
+effortFor (char, trad, partial) = switch trad
+    case "High Mage" then fullEffort (1 + trained (char, "Magic") + bestOf (char, "INT", "CHA"), partial)
+    case "Elementalist" then fullEffort (1 + trained (char, "Magic") + bestOf (char, "INT", "CHA"), partial)
+    case "Necromancer" then fullEffort (1 + trained (char, "Magic") + bestOf (char, "INT", "CHA"), partial)
+    case "Invoker" then max (1, trained (char, "Magic"))
+    case "Accursed" then max (1, trained (char, "Magic") + bestOf (char, "INT", "CHA"))
+    case "Bard" then max (1, trained (char, "Perform") + modOf (char, "CHA"))
+    case "Beastmaster" then max (1, trained (char, "Survive") + bestOf (char, "WIS", "CHA"))
+    case "Blood Priest" then max (1, trained (char, "Pray") + bestOf (char, "WIS", "CHA"))
+    case "Duelist" then max (1, trained (char, "Stab") + bestOf (char, "DEX", "INT"))
+    case "Healer" then max (1, trained (char, "Heal") + bestOf (char, "INT", "CHA"))
+    case "Mageslayer" then max (1, trained (char, "Magic") + bestOf (char, "INT", "CON"))
+    case "Skinshifter" then max (1, trained (char, "Survive") + bestOf (char, "CON", "CHA"))
+    case "Thought Noble" then max (1, trained (char, "Notice") + bestOf (char, "INT", "WIS"))
+    case "Vowed" then max (1, trained (char, char.Effort.'Vowed Skill') + bestAttribute (char))
+    else 0
+
+firstEffort (char) = effortFor (char, firstTradition (char), isAdventurer (char))
+
+secondEffort (char) = effortFor (char, secondTradition (char), true)
+
+firstUsesEffort (char) = effortFor (char, char.Character.'First Partial', true) > 0
+
+firstTradition (char) = if char.Character.Class == "Mage" then char.Character.Tradition else if not (isAdventurer (char)) then "" else if firstUsesEffort (char) then char.Character.'First Partial' else char.Character.'Second Partial'
+
+secondTradition (char) = if isAdventurer (char) and firstUsesEffort (char) then char.Character.'Second Partial' else ""
+
+casterMode (char) =
+    if char.Character.Class == "Mage" then (if char.Character.Tradition == "Invoker" then "invoker" else if casterPartial (char.Character.Tradition) then "full" else "none")
+    else if not (isAdventurer (char)) then "none"
+    else if casterPartial (char.Character.'First Partial') and casterPartial (char.Character.'Second Partial') then "dual"
+    else if char.Character.'First Partial' == "Invoker" or char.Character.'Second Partial' == "Invoker" then "partialInvoker"
+    else if casterPartial (char.Character.'First Partial') or casterPartial (char.Character.'Second Partial') then "partial"
+    else "none"
+
+atLevel (level, values) = item (max (0, min (9, level - 1)), values)
+
+maxSpellLevel (mode, level) = switch mode
+    case "full" then atLevel (level, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5])
+    case "invoker" then atLevel (level, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5])
+    case "partial" then atLevel (level, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3])
+    case "partialInvoker" then atLevel (level, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3])
+    case "dual" then atLevel (level, [1, 1, 1, 2, 2, 2, 3, 3, 3, 4])
+    else 0
+
+spellsPerDay (mode, level, intMod) = switch mode
+    case "full" then atLevel (level, [1, 1, 2, 2, 3, 3, 4, 4, 5, 6])
+    case "invoker" then max (1, atLevel (level, [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]) + intMod)
+    case "partial" then atLevel (level, [1, 1, 1, 2, 2, 3, 3, 3, 4, 4])
+    case "partialInvoker" then max (1, atLevel (level, [1, 1, 2, 2, 3, 3, 4, 4, 5, 6]) + intMod)
+    case "dual" then atLevel (level, [1, 1, 2, 2, 2, 3, 3, 4, 4, 5])
+    else 0
+
+spellsPrepared (mode, level, intMod) = switch mode
+    case "full" then atLevel (level, [3, 3, 4, 5, 6, 7, 8, 9, 10, 12])
+    case "invoker" then max (1, atLevel (level, [2, 3, 4, 4, 5, 6, 7, 7, 8, 9]) + intMod)
+    case "partial" then atLevel (level, [2, 3, 3, 4, 5, 6, 7, 7, 8, 9])
+    case "partialInvoker" then max (1, atLevel (level, [1, 3, 3, 4, 4, 5, 5, 6, 6, 7]) + intMod)
+    case "dual" then atLevel (level, [3, 4, 5, 6, 8, 9, 10, 12, 13, 15])
+    else 0
+
+nextLevel (level) = if level >= 10 then "-" else toString (atLevel (level, [3, 6, 12, 18, 27, 39, 54, 72, 93, 93])) + " fast / " + toString (atLevel (level, [6, 15, 24, 36, 51, 69, 87, 105, 139, 139])) + " slow"
+
+downState (hp, frail) = if hp < 1 then (if frail then "Dead" else "Mortally wounded") else ""
+
+weaponStat (weapon, field) = valueOr (weapon.data.wwnWeapon.Stats, field, "")
+
+armorStat (armor, field, fallback) = valueOr (armor.data.wwnArmor.Stats, field, fallback)
+
+encOf (stats) = toInt (valueOr (stats, "Enc", "0"))
+
+baseArmor (char) = max (10, map ((a)->armorStat (a, "AC", 0), filter ((a)->armorStat (a, "Category", "") != "Shield", char.Armor)))
+
+shieldArmor (char) = max (0, map ((a)->armorStat (a, "AC", 0), filter ((a)->armorStat (a, "Category", "") == "Shield", char.Armor)))
+
+armorClass (char) =
+    (if shieldArmor (char) > baseArmor (char) then shieldArmor (char) else if shieldArmor (char) > 0 then baseArmor (char) + 1 else baseArmor (char))
+    + modOf (char, "DEX")
+
+listedEnc (char) =
+    sum (map ((w)->encOf (w.data.wwnWeapon.Stats), char.Weapons))
+    + sum (map ((a)->encOf (a.data.wwnArmor.Stats), char.Armor))
+    + sum (map ((g)->encOf (g.data.wwnGear.Stats), char.Gear))
+
+weaponMod (char, attrs) =
+    if contains (attrs, "/") then max (modOf (char, first (split ("/", attrs))), modOf (char, item (1, split ("/", attrs))))
+    else modOf (char, attrs)
+
+isLong (traits) = contains (", " + traits + ",", " L,")
+
+weaponAttack (name, toHit, damageText, dieCount, dieSize, damageBonus, points, armorLimit, luck, kind, reachFeet, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = toHit  valuedice = attackDice (points, armorLimit, dieCount, dieSize, damageBonus, luck)  action = kind  reach = reachFeet  range = rangeFeet }
+    Damage = modifier { value = damageBonus  valuedice = damageDice (dieCount, dieSize)  render = damageText }
+    Shock = if points > 0 then toString (points) + (if armorLimit == 99 then " vs any AC" else " vs AC " + toString (armorLimit)) else "-"
+}
+
+signed (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n) else ""
+
+weaponDamageText (weapon, bonus) = toString (diceCount (weaponStat (weapon, "Damage"))) + "d" + toString (diceSize (weaponStat (weapon, "Damage"))) + signed (bonus)
+
+meleeAttackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        char.Combat.'Attack Bonus' + combatSkill (char, weaponStat (weapon, "Skill")) + weaponMod (char, weaponStat (weapon, "Attribute")),
+        weaponDamageText (weapon, diceBonus (weaponStat (weapon, "Damage")) + weaponMod (char, weaponStat (weapon, "Attribute")) + killingBlow (char)),
+        diceCount (weaponStat (weapon, "Damage")),
+        diceSize (weaponStat (weapon, "Damage")),
+        diceBonus (weaponStat (weapon, "Damage")) + weaponMod (char, weaponStat (weapon, "Attribute")) + killingBlow (char),
+        if shockPoints (weaponStat (weapon, "Shock")) > 0 then max (0, shockPoints (weaponStat (weapon, "Shock")) + weaponMod (char, weaponStat (weapon, "Attribute")) + killingBlow (char)) else 0,
+        shockArmor (weaponStat (weapon, "Shock")),
+        hasLuck (char),
+        if weaponStat (weapon, "Skill") == "Shoot" then "ranged" else "melee",
+        if isLong (weaponStat (weapon, "Traits")) then 10 else 5,
+        longRange (weaponStat (weapon, "Range")))
+
+thrownAttackFor (char, weapon) =
+    weaponAttack (weapon.Name + " (thrown)",
+        char.Combat.'Attack Bonus' + max (combatSkill (char, "Shoot"), combatSkill (char, "Stab")) + weaponMod (char, weaponStat (weapon, "Attribute")),
+        weaponDamageText (weapon, diceBonus (weaponStat (weapon, "Damage")) + weaponMod (char, weaponStat (weapon, "Attribute")) + killingBlow (char)),
+        diceCount (weaponStat (weapon, "Damage")),
+        diceSize (weaponStat (weapon, "Damage")),
+        diceBonus (weaponStat (weapon, "Damage")) + weaponMod (char, weaponStat (weapon, "Attribute")) + killingBlow (char),
+        0,
+        0,
+        hasLuck (char),
+        "ranged",
+        5,
+        longRange (weaponStat (weapon, "Range")))
+
+unarmedBonus (char) = trained (char, "Punch") + max (modOf (char, "STR"), modOf (char, "DEX")) + killingBlow (char)
+
+unarmedAttack (char) =
+    weaponAttack ("Unarmed",
+        char.Combat.'Attack Bonus' + combatSkill (char, "Punch") + max (modOf (char, "STR"), modOf (char, "DEX")),
+        "1d2" + signed (unarmedBonus (char)),
+        1, 2, unarmedBonus (char), 0, 0, hasLuck (char), "melee", 5, 0)
+
+attacksFor (char) =
+    concat ([unarmedAttack (char)],
+        concat (map ((w)->meleeAttackFor (char, w), char.Weapons),
+            map ((w)->thrownAttackFor (char, w), filter ((w)->weaponStat (w, "Skill") == "Stab" and weaponStat (w, "Range") != "", char.Weapons))))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, 'Saving Throws', Attacks, Effort, Scene] }
+
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Class = string { description = "Warrior, Expert, Mage, or an Adventurer who mixes two partial classes." default = "Warrior"  keys = ["Warrior", "Expert", "Mage", "Adventurer"] }
+        Tradition = string { description = "The Mage's arcane tradition." default = "High Mage"  keys = fullTraditions  visible = shownIf (Class == "Mage") }
+        'First Partial' = string { description = "The Adventurer's first partial class." default = "Warrior"  keys = partialClasses  visible = shownIf (Class == "Adventurer") }
+        'Second Partial' = string { description = "The Adventurer's second partial class." default = "Expert"  keys = partialClasses  visible = shownIf (Class == "Adventurer") }
+        Background = string { description = "The life before adventuring, which gave the first skills." }
+        Level = integer { description = "Character level, from 1 to 10." default = 1  minvalue = 1  maxvalue = 10 }
+        XP = integer { description = "Experience points. About three for a successful adventure." default = 0  editable = live }
+        'Next Level' = string { description = "Total XP needed for the next level, on the fast and slow tracks." value = nextLevel (Level)  editable = none }
+        Goal = string { description = "What the hero is after right now. Reaching it can earn experience." multiline = true }
+    }
+
+    Attributes = table
+    {
+        description = "The six attributes: roll 3d6 in order, and one score can become 14."
+        tableLayout = layout { columns = 5  size = wide }
+        STR = attribute { description = "Strength: melee, carrying gear, brute force." }
+        DEX = attribute { description = "Dexterity: speed, evasion, aim, initiative." }
+        CON = attribute { description = "Constitution: hardiness, enduring injury, System Strain." }
+        INT = attribute { description = "Intelligence: memory, reasoning, learning, much sorcery." }
+        WIS = attribute { description = "Wisdom: noticing things, judgement, intuition." }
+        CHA = attribute { description = "Charisma: commanding, charming, being taken seriously." }
+    }
+
+    'Saving Throws' = table
+    {
+        description = "Roll d20 equal to or over the save. A natural 1 always fails, a natural 20 always succeeds."
+        tableLayout = layout { columns = 4 }
+        Physical = integer { description = "Poison, disease, exhaustion: 16 minus level minus the better of STR and CON modifiers." value = 16 - Character.Level - max (Attributes.STR.Modifier, Attributes.CON.Modifier)  valuedice = saveDice  editable = none }
+        Evasion = integer { description = "Traps, blasts, sudden peril: 16 minus level minus the better of DEX and INT modifiers." value = 16 - Character.Level - max (Attributes.DEX.Modifier, Attributes.INT.Modifier)  valuedice = saveDice  editable = none }
+        Mental = integer { description = "Mind magic and dread: 16 minus level minus the better of WIS and CHA modifiers." value = 16 - Character.Level - max (Attributes.WIS.Modifier, Attributes.CHA.Modifier)  valuedice = saveDice  editable = none }
+        Luck = integer { description = "Blind chance: 16 minus level." value = 16 - Character.Level  valuedice = saveDice  editable = none }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max HP' = integer { description = "Hit points when unhurt: roll the hit dice, adding the CON modifier to each die." default = 6  minvalue = 1 }
+        HP = integer { description = "Current hit points. At 0 a lethal hit leaves you Mortally Wounded: dead in six rounds unless stabilised." default = 'Max HP'  minvalue = 0  editable = live }
+        'Hit Dice' = string { description = "The class's hit dice at this level." value = hitDiceFor (Character.Class, Character.'First Partial', Character.'Second Partial', Character.Level)  editable = none }
+        Down = string { value = downState (HP, Frail)  visible = none  indicator = "#d64545" }
+        Frail = bool { description = "Stabilised after a mortal wound: back to 0 HP while Frail and you die. No natural healing; a week of care removes it." default = false  editable = live  indicator = "#555555" }
+        AC = integer { description = "Armor Class: the best armor, a shield's AC or +1, and the DEX modifier. Attacks hit on a total equal or over it." value = armorClass (characterTable) + 'AC Bonus'  editable = none }
+        'AC Bonus' = modifier { description = "Extra AC from foci, arts or magic." default = 0 }
+        'Attack Bonus' = modifier { description = "Base attack bonus from class and level." value = attackBonusFor (Character.Class, Character.'First Partial', Character.'Second Partial', Character.Level)  editable = none }
+        Initiative = integer { description = "Initiative: d8 plus DEX modifier. Highest side acts first." value = Attributes.DEX.Modifier  valuedice = initiativeDice  editable = none }
+        'System Strain' = integer { description = "Strain from magical healing and powerful magic. It can't exceed CON; it drops by one each night's rest." default = 0  minvalue = 0  maxvalue = Attributes.CON.Score  editable = live  indicator = "#3fa34d" }
+        'Max Strain' = integer { description = "Most System Strain you can carry: your CON score." value = Attributes.CON.Score  editable = none }
+    }
+
+    Skills = table
+    {
+        description = "Skills: roll 2d6 plus skill level and attribute modifier. Untrained is -1."
+        tableLayout = layout { columns = 3  size = wide }
+        Administer = skill ("INT")
+        Connect = skill ("CHA")
+        Convince = skill ("CHA")
+        Craft = skill ("INT")
+        Exert = skill ("STR")
+        Heal = skill ("INT")
+        Know = skill ("INT")
+        Lead = skill ("CHA")
+        Magic = skill ("INT")
+        Notice = skill ("WIS")
+        Perform = skill ("CHA")
+        Pray = skill ("WIS")
+        Punch = skill ("STR")
+        Ride = skill ("DEX")
+        Sail = skill ("WIS")
+        Shoot = skill ("DEX")
+        Sneak = skill ("DEX")
+        Stab = skill ("STR")
+        Survive = skill ("WIS")
+        Trade = skill ("CHA")
+        Work = skill ("INT")
+    }
+
+    Weapons = list
+    {
+        description = "Weapons carried. Each one adds a row to Attacks."
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Armor = list
+    {
+        description = "Armor worn and shields carried. The best counts towards AC."
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Foci = list
+    {
+        description = "Foci: special talents in one or two levels. The second pick of a focus adds its level 2."
+        source = secondary.Foci
+        singular = "Focus"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "d20 plus attack bonus, combat skill and attribute against the target's AC. A miss still deals Shock to a target whose AC is at or under the weapon's Shock AC."
+        tableLayout = layout { size = wide }
+        source = attacksFor (characterTable)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Scene = table
+    {
+        description = "Once-per-scene class abilities, and the rest buttons."
+        tableLayout = layout { columns = 2 }
+        'Expertise used' = bool { description = "Masterful Expertise: once per scene a full Expert rerolls a failed non-combat skill check." default = false  editable = live  visible = shownIf (Character.Class == "Expert") }
+        'Veterans Luck used' = bool { description = "Veteran's Luck: once per scene a full Warrior turns their miss into a hit, or a hit on them into a miss." default = false  editable = live  visible = shownIf (Character.Class == "Warrior") }
+        'End of Scene' = button { description = "Frees Effort committed for the scene and the once-per-scene abilities."  editable = live  onClick = updates
+            {
+                (root.Effort.'Committed Scene') = 0
+                (root.Effort.'Second Committed Scene') = 0
+                (root.Scene.'Expertise used') = false
+                (root.Scene.'Veterans Luck used') = false
+            }
+        }
+        'Night of Rest' = button { description = "A warm, fed night's sleep: HP back equal to level (not while Frail), one less System Strain, all Effort and spells back."  editable = live  onClick = updates
+            {
+                (root.Combat.HP) = if Combat.Frail then Combat.HP else min (Combat.'Max HP', Combat.HP + Character.Level)
+                (root.Combat.'System Strain') = max (0, Combat.'System Strain' - 1)
+                (root.Effort.'Committed Scene') = 0
+                (root.Effort.'Committed Day') = 0
+                (root.Effort.'Second Committed Scene') = 0
+                (root.Effort.'Second Committed Day') = 0
+                (root.Spellcasting.'Cast Today') = 0
+                (root.Scene.'Expertise used') = false
+                (root.Scene.'Veterans Luck used') = false
+            }
+        }
+    }
+
+    Effort = table
+    {
+        description = "Effort fuels arts. Commit it for the scene, the day, or as long as a power lasts. Adventurers keep one pool per partial class."
+        tableLayout = layout { columns = 2 }
+        Pool = string { value = firstTradition (characterTable)  editable = none  visible = shownIf (firstEffort (characterTable) > 0) }
+        'Max Effort' = integer { description = "Effort for this class, from its skill and attribute." value = firstEffort (characterTable)  editable = none  visible = shownIf (firstEffort (characterTable) > 0) }
+        'Committed Scene' = integer { description = "Effort committed until the scene ends." default = 0  minvalue = 0  maxvalue = 'Max Effort'  editable = live  visible = shownIf (firstEffort (characterTable) > 0) }
+        'Committed Day' = integer { description = "Effort committed until a night's rest." default = 0  minvalue = 0  maxvalue = 'Max Effort'  editable = live  visible = shownIf (firstEffort (characterTable) > 0) }
+        'Second Pool' = string { value = secondTradition (characterTable)  editable = none  visible = shownIf (secondEffort (characterTable) > 0) }
+        'Second Max Effort' = integer { description = "Effort for the second partial class." value = secondEffort (characterTable)  editable = none  visible = shownIf (secondEffort (characterTable) > 0) }
+        'Second Committed Scene' = integer { default = 0  minvalue = 0  maxvalue = 'Second Max Effort'  editable = live  visible = shownIf (secondEffort (characterTable) > 0) }
+        'Second Committed Day' = integer { default = 0  minvalue = 0  maxvalue = 'Second Max Effort'  editable = live  visible = shownIf (secondEffort (characterTable) > 0) }
+        'Vowed Skill' = string { description = "The skill the Vowed's order studies, which sets their Effort." default = "Exert"  keys = ["Exert", "Know", "Magic", "Pray"]  visible = shownIf (hasPartial (characterTable, "Vowed")) }
+    }
+
+    Spellcasting = table
+    {
+        description = "Spells prepared after a night's rest, and how many can be cast each day."
+        tableLayout = layout { columns = 2 }
+        'Max Spell Level' = integer { value = maxSpellLevel (casterMode (characterTable), Character.Level)  editable = none }
+        'Spells per Day' = integer { description = "Castings each day. Invokers count spell points instead." value = spellsPerDay (casterMode (characterTable), Character.Level, Attributes.INT.Modifier)  editable = none }
+        'Spells Prepared' = integer { description = "How many known spells can be prepared at once." value = spellsPrepared (casterMode (characterTable), Character.Level, Attributes.INT.Modifier)  editable = none }
+        'Cast Today' = integer { description = "Castings used since the last night's rest." default = 0  minvalue = 0  maxvalue = 'Spells per Day'  editable = live }
+    }
+
+    Spells = list
+    {
+        description = "Spells known. A mage casts only spells they have prepared."
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Arts = list
+    {
+        description = "Arts of the hero's traditions."
+        tableLayout = layout { size = wide }
+        source = secondary.Arts
+        singular = "Art"
+        editable = character
+    }
+
+    Gear = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Encumbrance = table
+    {
+        description = "Readied gear is at hand; Stowed gear takes a Main Action to pull out."
+        tableLayout = layout { columns = 3 }
+        'Readied' = integer { description = "Encumbrance of the gear you keep ready, armor included." default = 0  minvalue = 0  editable = live }
+        'Readied Limit' = integer { description = "Half STR, rounded down." value = Attributes.STR.Score / 2  editable = none }
+        'Stowed' = integer { description = "Encumbrance of the gear packed away." default = 0  minvalue = 0  editable = live }
+        'Stowed Limit' = integer { description = "Your STR score." value = Attributes.STR.Score  editable = none }
+        'Listed Items' = integer { description = "Encumbrance of the weapons, armor and gear on this sheet, to split between Readied and Stowed." value = listedEnc (characterTable)  editable = none }
+        Overloaded = string { value = if Readied > 'Readied Limit' or Stowed > 'Stowed Limit' then "Overloaded" else ""  visible = none  indicator = "#e8913a" }
+        Silver = integer { description = "Silver pieces. 10 cp to the sp, 10 sp to the gp." default = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Level 2 Foci' = string { description = "Foci picked a second time, which add their level 2." }
+        Languages = string {}
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Stats]
+        filters = [filter { name = "Hit dice" prefix = "HD " filter = Stats.HD }]
+        sortedBy = sort { prefix = "HD " sort = Stats.HD }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        HD = integer { description = "Hit dice: d8s of hit points, and usually the attack bonus." default = 1  minvalue = 0 }
+        'Max HP' = integer { default = 4  minvalue = 1 }
+        HP = integer { default = 'Max HP'  minvalue = 0  editable = live }
+        Down = string { value = if HP < 1 then "Down" else ""  visible = none  indicator = "#d64545" }
+        AC = integer { description = "Armor Class." default = 10 }
+        Atk = modifier { description = "Total attack bonus. d20 plus this against the target's AC." default = 1  valuedice = attackDice (shockPoints (Shock), shockArmor (Shock), diceCount (Dmg), diceSize (Dmg), diceBonus (Dmg), false)  action = melee  reach = 5 }
+        Attacks = integer { description = "Attacks with one Main Action (x2, x3)." default = 1  minvalue = 1 }
+        Dmg = string { description = "Damage on a hit, or Wpn for the weapon's." default = "1d6" }
+        Damage = modifier { value = diceBonus (Dmg)  valuedice = damageDice (diceCount (Dmg), diceSize (Dmg))  render = Dmg  editable = none }
+        Shock = string { description = "Shock damage on a miss / highest AC it affects, - for any AC." default = "None" }
+        Move = string { default = "30 ft" }
+        ML = integer { description = "Morale: roll 2d6; above ML it breaks and flees." default = 8  valuedice = moraleDice }
+        Inst = integer { description = "Instinct: roll d10; at or under it acts rashly." default = 5  minvalue = 0  maxvalue = 10  valuedice = instinctDice }
+        Skill = modifier { description = "Bonus for skill checks in its line." default = 1  valuedice = plainSkillDice }
+        Save = integer { description = "One save target for everything: 15 minus half HD." default = 15  valuedice = saveDice }
+        Initiative = integer { description = "d8, usually with no bonus." default = 0  valuedice = initiativeDice }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+assetAttribute (faction, text) =
+    bonusFrom ([[text]], "^C", 1) * faction.Faction.Cunning
+    + bonusFrom ([[text]], "^F", 1) * faction.Faction.Force
+    + bonusFrom ([[text]], "^W", 1) * faction.Faction.Wealth
+
+afterSlash (text) = if contains (text, "/") then item (1, split ("/", text)) else ""
+
+factionResult (attacker, defenderDie, damageText, defense, given) =
+{
+    Text = toString (attacker) + (if given then " vs " + toString (defense + defenderDie) + (if attacker > defense + defenderDie then ": success" + (if damageText == "" then "" else ", " + damageText) else ": failure, defender wins") else " vs defender's d10 " + toString (defenderDie) + " + attribute")
+    Value = attacker
+    Outcome = if not (given) then "" else if attacker > defense + defenderDie then "Success" else "Failure"
+}
+
+factionCheck (damageText) = ([dice { number = 1  sides = 10  label = "Attacker" }, dice { number = 1  sides = 10  color = "red"  label = "Defender" }],
+    ((baseline, throws)->factionResult (baseline + first (first (throws).rolls), first (item (1, throws).rolls), damageText, asked, answered)))
+
+factionDice (damageText) = ask ("Defender's attribute", factionCheck (damageText))
+
+hpValue (rating) = atLevel (rating, [1, 2, 4, 6, 9, 12, 16, 20, 20, 20])
+
+factionTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/wwn/faction-entity.svg"  important = [Faction, Assets] }
+    Faction = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Cunning = integer { description = "Guile and subterfuge, 1 to 8. Rolls d10 plus Cunning against the defender." default = 1  minvalue = 1  maxvalue = 8  valuedice = factionDice ("") }
+        Force = integer { description = "Military might, 1 to 8." default = 1  minvalue = 1  maxvalue = 8  valuedice = factionDice ("") }
+        Wealth = integer { description = "Riches and trade, 1 to 8." default = 1  minvalue = 1  maxvalue = 8  valuedice = factionDice ("") }
+        Magic = string { description = "Access to magic, which some assets need." default = "None"  keys = ["None", "Low", "Medium", "High"] }
+        HP = integer { description = "The faction collapses at 0. Damage to a Base of Influence also comes off here." default = 'Max HP'  minvalue = 0  editable = live }
+        'Max HP' = integer { description = "From the three attributes: 1, 2, 4, 6, 9, 12, 16 or 20 each." value = hpValue (Cunning) + hpValue (Force) + hpValue (Wealth)  editable = none }
+        Collapsed = string { value = if HP < 1 then "Collapsed" else ""  visible = none  indicator = "#d64545" }
+        Treasure = integer { description = "Treasure points to buy and repair assets." default = 0  minvalue = 0  editable = live }
+        Income = integer { description = "Treasure each turn: half Wealth plus a quarter of Force and Cunning, rounded up." value = (2 * Wealth + Force + Cunning + 3) / 4  editable = none }
+        'Collect Income' = button { description = "Start of the faction's turn: add its income to Treasure."  editable = live  onClick = updates
+            {
+                (root.Faction.Treasure) = Faction.Treasure + Faction.Income
+            }
+        }
+        XP = integer { description = "Experience from goals, spent to raise attributes." default = 0  minvalue = 0  editable = live }
+        'Turn Order' = integer { description = "Each faction turn, roll d8; highest goes first." default = 0  valuedice = initiativeDice  editable = none }
+        Goal = string { description = "The current goal. Its difficulty is the XP it earns." }
+        'Goal Difficulty' = integer { default = 1  minvalue = 0 }
+        Tags = string { description = "Faction tags such as Martial, Rich or Machiavellian." multiline = true }
+    }
+    Assets = list
+    {
+        description = "Assets and Bases of Influence. Attack rolls d10 plus the attribute named first against the defender's d10 plus the second; the defender wins ties."
+        tableLayout = layout { size = wide }
+        singular = "Asset"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Type = string { default = "Force"  keys = ["Cunning", "Force", "Wealth", "Base of Influence"] }
+            HP = integer { default = 4  minvalue = 0  editable = live }
+            'Max HP' = integer { default = 4  minvalue = 1 }
+            Attack = string { default = "None" }
+            Roll = modifier { value = assetAttribute (factionTable, Attack)  valuedice = factionDice (afterSlash (Attack))  editable = none }
+            Counter = string { default = "None" }
+            Location = string {}
+            Qualities = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Description = string { multiline = true }
+    }
+}
+
+wwnWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Skill = string { description = "Stab for melee and thrown weapons, Shoot for bows and hurlants." keys = ["Stab", "Shoot", "Punch"] }
+        Damage = string {}
+        Shock = string { description = "Damage on a miss / highest AC it affects." }
+        Attribute = string { keys = ["STR", "DEX", "STR/DEX"] }
+        Range = string { description = "Normal / long range in feet. Long range is -2 to hit." }
+        Traits = string {}
+        Cost = string {}
+        Enc = string {}
+    }
+}
+
+wwnArmor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+        sortedBy = sort { prefix = "AC " sort = Stats.AC }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Category = string { keys = ["Light", "Medium", "Heavy", "Shield"] }
+        AC = integer { default = 10 }
+        Cost = string {}
+        Enc = string {}
+    }
+}
+
+wwnGear = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/armour.svg" }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Cost = string {}
+        Enc = string {}
+    }
+}
+
+wwnFocus = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        tableLayout = layout { size = wide }
+        'Level 1' = string { multiline = true }
+        'Level 2' = string { multiline = true }
+    }
+}
+
+wwnSpell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Level" prefix = "Level " filter = Stats.Level }, filter { name = "Tradition" prefix = "" filter = Stats.Tradition }]
+        sortedBy = sort { prefix = "Level " sort = Stats.Level }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Level = integer { default = 1  minvalue = 1  maxvalue = 5 }
+        Tradition = string { keys = ["High Magic", "Elementalist", "Necromancer"] }
+    }
+}
+
+wwnArt = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Tradition" prefix = "" filter = Stats.Tradition }]
+        sortedBy = sort { prefix = "" sort = Stats.Tradition }
+    }
+    Stats = table
+    {
+        Tradition = string { keys = partialClasses }
+    }
+}
+
+wwnAsset = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/wwn/faction-entity.svg"
+        filters = [filter { name = "Attribute" prefix = "" filter = Stats.Attribute }, filter { name = "Rating" prefix = "Rating " filter = Stats.Rating }]
+        sortedBy = sort { prefix = "Rating " sort = Stats.Rating }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4 }
+        Attribute = string { keys = ["Cunning", "Force", "Wealth"] }
+        Rating = integer { description = "The attribute rating needed to buy it." default = 1 }
+        Cost = integer { description = "Treasure to buy it." default = 1 }
+        HP = integer { default = 1 }
+        Magic = string { keys = ["None", "Low", "Medium", "High"] }
+        Attack = string {}
+        Counter = string {}
+        Qualities = string {}
+    }
+}
+
+WorldsWithoutNumber = system
+{
+    hints = [
+        hint
+        {
+            title = "Making a hero"
+            topic = "Getting started"
+            text = ["Roll 3d6 in order for the six attributes (one may become 14), pick a background for the first skills, then a class: Warrior, Expert, Mage with a tradition, or an Adventurer with two partial classes. Add a focus or two, and buy gear with the starting silver."]
+        },
+        hint
+        {
+            title = "Skill checks"
+            topic = "Play"
+            text = ["Roll 2d6 + skill + attribute modifier against 6 easy, 8 typical, 10 hard, 12 very hard or 14 nearly impossible. Untrained is -1. A full Expert may reroll one failed non-combat check each scene."]
+        },
+        hint
+        {
+            title = "Attacks and Shock"
+            topic = "Combat"
+            text = ["Roll d20 + attack bonus + combat skill + attribute modifier, equal to or over the target's AC. Untrained is -2. Many melee weapons deal Shock on a miss to targets whose AC is at or under the weapon's Shock AC."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Each side rolls d8 plus its best DEX modifier; highest acts first, PCs win ties. Individual initiative is an option."]
+        },
+        hint
+        {
+            title = "Factions"
+            topic = "Getting started"
+            text = ["Make a Factions entity for each power in the region. Between adventures each faction collects income, takes one action with all its assets, and works towards its goal."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Factions = factionTable
+    Weapons = wwnWeapon
+    Armor = wwnArmor
+    Gear = wwnGear
+    Foci = wwnFocus
+    Spells = wwnSpell
+    Arts = wwnArt
+    Assets = wwnAsset
+    secondaryTypes = ["Weapons", "Armor", "Gear", "Foci", "Spells", "Arts"]
+    otherLibararyTypes = ["Assets"]
+    extraEntityTypes = [entityTypeDescription ("Factions", "faction", false, "/systems/wwn/faction-entity.svg", [])]
+    description = "Worlds Without Number: old-school sandbox fantasy with 2d6 skills, Shock, Effort-fuelled arts and factions"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 2d6, 1d8, 1d4, 1d6, 1d10, 1d12]
+    cssFiles = ["/systems/wwn/wwn.css"]
+    libraries = ["/systems/wwn/wwn.json", "/systems/names/fantasy.json", "/systems/names/oldworld.json", "/systems/names/barbarian.json"]
+    nameSettings = [fallenAgesNameSetting, fantasyNameSetting, swordAndSorceryNameSetting]
+}
+
+fallenAgesNameSetting = nameSetting
+{
+    name = "Fallen ages"
+    characters = [generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }, generator { library = "Fantasy folk" variant = "Human" }]
+    creatures = [generator { library = "Sword and sorcery" variant = "Demon" }, generator { library = "Fantasy folk" variant = "Monster" }, generator { library = "Old world" variant = "Rogue" }]
+    Location = [generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Town" }, generator { library = "Sword and sorcery" variant = "Ruin" }, generator { library = "Fantasy places" variant = "Dungeon" }, generator { library = "Fantasy places" variant = "Wilds" }]
+    Factions = [generator { library = "Sword and sorcery" variant = "Kingdom" }, generator { library = "Fantasy places" variant = "Kingdom" }]
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Armor = generator { library = "Fantasy things" variant = "Armour" }
+    Gear = generator { library = "Fantasy things" variant = "Artifact" }
+}
