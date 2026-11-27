@@ -1,0 +1,716 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+sixes (rolls) = count (filter ((x)->x == 6, rolls))
+
+ones (rolls) = count (filter ((x)->x == 1, rolls))
+
+plural (n, one, many) = toString (n) + " " + (if n == 1 then one else many)
+
+traumaWord (attr) = switch attr
+    case "Strength" then "damage"
+    case "Agility" then "fatigue"
+    case "Wits" then "confusion"
+    case "Empathy" then "doubt"
+    else "trauma"
+
+myzTotal (b, s, g, n) = max (0, sixes (b) + sixes (s) + sixes (g) - sixes (n))
+
+myzText (attr, b, s, g, n, pushed) =
+    plural (myzTotal (b, s, g, n), "success", "successes")
+    + (if sixes (n) > 0 then ", " + toString (sixes (n)) + " cancelled by negative dice" else "")
+    + (if pushed and ones (b) > 0 and attr != "" then ", " + toString (ones (b)) + " " + traumaWord (attr) + ": " + attr + " -" + toString (ones (b)) + " and +" + plural (ones (b), "Mutation Point", "Mutation Points") else "")
+    + (if pushed and ones (b) > 0 and attr == "" then ", " + plural (ones (b), "base die", "base dice") + " at 1: that much trauma to the attribute and +" + plural (ones (b), "Mutation Point", "Mutation Points") else "")
+    + (if pushed and ones (g) > 0 then ", " + plural (ones (g), "gear die", "gear dice") + " at 1: the gear bonus drops by " + toString (ones (g)) else "")
+
+rerollable (b, s, g) = count (filter ((x)->x > 1 and x < 6, b)) + count (filter ((x)->x < 6, s)) + count (filter ((x)->x > 1 and x < 6, g))
+
+myzResult (attr, b, s, g, n, pushed) =
+{
+    Text = myzText (attr, b, s, g, n, pushed)
+    Value = myzTotal (b, s, g, n)
+    Outcome = if myzTotal (b, s, g, n) > 0 then "Success" else "Failure"
+    Push = if pushed or rerollable (b, s, g) == 0 then 0 else myzPush (attr, filter ((x)->x == 6 or x == 1, b), filter ((x)->x == 6, s), filter ((x)->x == 6 or x == 1, g), n, count (filter ((x)->x > 1 and x < 6, b)), count (filter ((x)->x < 6, s)), count (filter ((x)->x > 1 and x < 6, g)))
+}
+
+myzPush (attr, keptBase, keptSkill, keptGear, negative, baseCount, skillCount, gearCount) = ([dice { number = baseCount  sides = 6  color = "yellow"  label = "Base" }, dice { number = skillCount  sides = 6  color = "green"  label = "Skill" }, dice { number = gearCount  sides = 6  color = "black"  label = "Gear" }],
+    ((baseline, throws)->myzResult (attr, concat (keptBase, first (throws).rolls), concat (keptSkill, item (1, throws).rolls), concat (keptGear, item (2, throws).rolls), negative, true)))
+
+myzRoll (attr, baseDice, skillDice, gearDice) = ([dice { number = max (0, baseDice)  sides = 6  color = "yellow"  label = "Base" }, dice { number = max (0, skillDice)  sides = 6  color = "green"  label = "Skill" }, dice { number = max (0, gearDice)  sides = 6  color = "black"  label = "Gear" }, dice { number = max (0, 0 - skillDice)  sides = 6  color = "red"  label = if skillDice < 0 then "Negative" else "" }],
+    ((baseline, throws)->myzResult (attr, first (throws).rolls, item (1, throws).rolls, item (2, throws).rolls, item (3, throws).rolls, false)))
+
+myzAsked (attr, baseDice, skillDice, gearDice) = ask ("Modifier", 0, (m)->myzRoll (attr, baseDice, skillDice + m, gearDice))
+
+armourResult (rolls) =
+{
+    Text = plural (sixes (rolls), "damage", "damage") + " stopped"
+    Value = sixes (rolls)
+    Outcome = if sixes (rolls) > 0 then "Success" else "Failure"
+}
+
+armourRoll (rating) = ([dice { number = max (0, rating)  sides = 6  color = "black"  label = "Armour" }],
+    ((baseline, throws)->armourResult (first (throws).rolls)))
+
+mutationResult (spent, rolls) =
+{
+    Text = plural (spent, "Mutation Point", "Mutation Points") + " spent: " + (if ones (rolls) > 0 then plural (ones (rolls), "die", "dice") + " at 1, the mutation misfires" else "no misfire")
+    Value = ones (rolls)
+    Outcome = if ones (rolls) > 0 then "Misfire" else "Success"
+}
+
+mutationDice (spent) = ([dice { number = max (0, spent)  sides = 6  color = "yellow"  label = "Mutation" }],
+    ((baseline, throws)->mutationResult (spent, first (throws).rolls)))
+
+mutationRoll = ask ("Mutation Points spent", 1, (spent)->mutationDice (spent))
+
+rotResult (rolls) =
+{
+    Text = if ones (rolls) > 0 then plural (ones (rolls), "damage", "damage") + " from the Rot" else "no damage from the Rot"
+    Value = ones (rolls)
+    Outcome = if ones (rolls) > 0 then "Failure" else "Success"
+}
+
+rotRoll (total) = ([dice { number = max (0, total)  sides = 6  color = "yellow"  label = "Rot" }],
+    ((baseline, throws)->rotResult (first (throws).rolls)))
+
+d66Roll = ([dice { number = 1  sides = 6  label = "Tens" }, dice { number = 1  sides = 6  label = "Units" }],
+    ((baseline, throws)->{ Text = "D66: " + toString (10 * first (first (throws).rolls) + first (item (1, throws).rolls))  Value = 10 * first (first (throws).rolls) + first (item (1, throws).rolls) }))
+
+roles = ["Enforcer", "Gearhead", "Stalker", "Fixer", "Dog Handler", "Chronicler", "Boss", "Slave"]
+
+specialistName (role) = switch role
+    case "Enforcer" then "Intimidate"
+    case "Gearhead" then "Jury-Rig"
+    case "Stalker" then "Find the Path"
+    case "Fixer" then "Make a Deal"
+    case "Dog Handler" then "Sic a Dog"
+    case "Chronicler" then "Inspire"
+    case "Boss" then "Command"
+    case "Slave" then "Shake It Off"
+    else "Pick a role"
+
+keyAttribute (role) = switch role
+    case "Enforcer" then "Strength"
+    case "Gearhead" then "Wits"
+    case "Stalker" then "Agility"
+    case "Fixer" then "Empathy"
+    case "Dog Handler" then "Agility"
+    case "Chronicler" then "Empathy"
+    case "Boss" then "Wits"
+    case "Slave" then "Strength"
+    else ""
+
+attributeCurrent (char, attr) = switch attr
+    case "Strength" then char.Attributes.Strength.Current
+    case "Agility" then char.Attributes.Agility.Current
+    case "Wits" then char.Attributes.Wits.Current
+    case "Empathy" then char.Attributes.Empathy.Current
+    else 0
+
+attribute = custom
+{
+    Max = integer { description = "The attribute's score unharmed, 2 to 4, or up to 5 for the role's key attribute." reference = ["yze", 4] default = 3  minvalue = 1  maxvalue = 5 }
+    Current = integer { description = "The score left after trauma. At 0 you are broken." reference = ["yze", 21] default = Max  minvalue = 0  editable = live }
+    Roll = integer { description = "Roll the attribute's base dice alone." reference = ["yze", 9] value = Current  valuedice = myzAsked ("", Current, 0, 0)  editable = none }
+}
+
+skill (attr, attrName) = custom
+{
+    Level = integer { description = "Skill level from 0 to 5, rolled as green skill dice." reference = ["yze", 8] default = 0  minvalue = 0  maxvalue = 5 }
+    Roll = integer { description = "Base dice for the attribute plus skill dice. Each 6 is a success; it asks for a modifier, which adds or takes away skill dice." reference = ["yze", 9] value = attr + Level  valuedice = myzAsked (attrName, attr, Level, 0)  editable = none }
+}
+
+specialist (role, char) = custom
+{
+    Skill = specialistName (role)
+    Level = integer { description = "The role's specialist skill, at least 1 for a new character." default = 1  minvalue = 0  maxvalue = 5 }
+    Roll = integer { description = "Roll the specialist skill with the role's key attribute." value = attributeCurrent (char, keyAttribute (role)) + Level  valuedice = myzAsked (keyAttribute (role), attributeCurrent (char, keyAttribute (role)), Level, 0)  editable = none }
+}
+
+levelOf (char, name) = valueOr (valueOr (char.Skills, name, noSkill), "Level", 0)
+
+noSkill = { Level = 0 }
+
+weaponStat (weapon, field, fallback) = valueOr (weapon.data.weaponStats.Stats, field, fallback)
+
+rangeMetres (text) = switch text
+    case "Arm's Length" then 2
+    case "Near" then 10
+    case "Short" then 25
+    case "Long" then 100
+    case "Distant" then 1000
+    else 2
+
+ranges = ["Arm's Length", "Near", "Short", "Long", "Distant"]
+
+weaponAttack (name, attrName, baseDice, skillDice, gearDice, dmg, kind, distance) = custom
+{
+    Name = name
+    Roll = integer { description = "Fight with Strength or Shoot with Agility, plus the weapon's bonus as gear dice. Each extra 6 adds one damage." value = baseDice + skillDice + gearDice  valuedice = myzAsked (attrName, baseDice, skillDice, gearDice)  action = kind  reach = 2  range = distance }
+    Bonus = "Gear +" + toString (gearDice)
+    Damage = "Damage " + toString (dmg)
+}
+
+attackFor (char, weapon) =
+    if weaponStat (weapon, "Kind", "Melee") == "Ranged" then
+        weaponAttack (weapon.Name, "Agility", char.Attributes.Agility.Current, levelOf (char, "Shoot"), weaponStat (weapon, "Bonus", 0), weaponStat (weapon, "Damage", 1), "ranged", rangeMetres (weaponStat (weapon, "Range", "Short")))
+    else
+        weaponAttack (weapon.Name, "Strength", char.Attributes.Strength.Current, levelOf (char, "Fight"), weaponStat (weapon, "Bonus", 0), weaponStat (weapon, "Damage", 1), "melee", rangeMetres (weaponStat (weapon, "Range", "Arm's Length")))
+
+brokenState (char) =
+    if char.Attributes.Strength.Current < 1 then "Broken by damage"
+    else if char.Attributes.Agility.Current < 1 then "Broken by fatigue"
+    else if char.Attributes.Wits.Current < 1 then "Broken by confusion"
+    else if char.Attributes.Empathy.Current < 1 then "Broken by doubt"
+    else ""
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Attributes, Conditions, Combat, Attacks, 'Mutation Points', Mutations] }
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Role = string { description = "Your job in the Ark: it sets your key attribute, specialist skill, talents and starting gear." keys = roles }
+        'Key Attribute' = keyAttribute (Role)
+        Experience = integer { description = "Experience points, earned at the end of each session. Five buy a skill level or a talent." reference = ["yze", 7] default = 0  minvalue = 0  editable = live }
+        Face = string {}
+        Body = string {}
+        Clothing = string {}
+        'My Den' = string { description = "Where in the Ark you sleep and keep your stash." }
+    }
+
+    Attributes = table
+    {
+        description = "Strength takes damage, Agility fatigue, Wits confusion and Empathy doubt. At 0 in any of them you are broken." reference = ["yze", 4]
+        tableLayout = layout { columns = 4  size = wide }
+        Strength = attribute { description = "Muscle and toughness. Damage lowers it." }
+        Agility = attribute { description = "Speed, balance and quick hands. Fatigue lowers it." }
+        Wits = attribute { description = "Senses, reason and know-how. Confusion lowers it." }
+        Empathy = attribute { description = "Reading and swaying others. Doubt lowers it." }
+    }
+
+    Skills = table
+    {
+        description = "Twelve basic skills, three for each attribute, and your role's specialist skill." reference = ["yze", 8]
+        tableLayout = layout { columns = 4  size = wide }
+        Endure = skill (Attributes.Strength.Current, "Strength")
+        Force = skill (Attributes.Strength.Current, "Strength")
+        Fight = skill (Attributes.Strength.Current, "Strength")
+        Sneak = skill (Attributes.Agility.Current, "Agility")
+        Move = skill (Attributes.Agility.Current, "Agility")
+        Shoot = skill (Attributes.Agility.Current, "Agility")
+        Scout = skill (Attributes.Wits.Current, "Wits")
+        Comprehend = skill (Attributes.Wits.Current, "Wits")
+        'Know the Zone' = skill (Attributes.Wits.Current, "Wits")
+        'Sense Emotion' = skill (Attributes.Empathy.Current, "Empathy")
+        Manipulate = skill (Attributes.Empathy.Current, "Empathy")
+        Heal = skill (Attributes.Empathy.Current, "Empathy")
+        Specialist = specialist (Character.Role, characterTable)
+    }
+
+    Conditions = table
+    {
+        description = "Starving, dehydrated, sleepless and hypothermic mutants cannot heal the trauma those needs guard." reference = ["yze", 25]
+        tableLayout = layout { columns = 2 }
+        Starving = bool { description = "No grub for a day: you cannot heal damage." default = false  editable = live  indicator = "#d4b106" }
+        Dehydrated = bool { description = "No water for a day: you cannot heal damage or fatigue." default = false  editable = live  indicator = "#d4b106" }
+        Sleepless = bool { description = "No sleep for a day: you cannot heal confusion." default = false  editable = live  indicator = "#555555" }
+        Hypothermic = bool { description = "Freezing cold: you cannot heal damage or confusion." default = false  editable = live  indicator = "#3a7bd5" }
+        Broken = string { value = brokenState (characterTable)  visible = none  indicator = "#d64545" }
+        Rest = button
+        {
+            description = "A rest with food heals one point of damage and one of fatigue, unless a need blocks it."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.Strength.Current) = if Starving or Dehydrated or Hypothermic then Attributes.Strength.Current else min (Attributes.Strength.Max, Attributes.Strength.Current + 1)
+                (root.Attributes.Agility.Current) = if Dehydrated then Attributes.Agility.Current else min (Attributes.Agility.Max, Attributes.Agility.Current + 1)
+            }
+        }
+        Sleep = button
+        {
+            description = "A good sleep heals one point of confusion and ends sleeplessness; cold blocks the healing."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.Wits.Current) = if Hypothermic then Attributes.Wits.Current else min (Attributes.Wits.Max, Attributes.Wits.Current + 1)
+                (root.Conditions.Sleepless) = false
+            }
+        }
+        Closeness = button
+        {
+            description = "A moment of closeness with another person heals one point of doubt."
+            editable = live
+            onClick = updates
+            {
+                (root.Attributes.Empathy.Current) = min (Attributes.Empathy.Max, Attributes.Empathy.Current + 1)
+            }
+        }
+    }
+
+    'Mutation Points' = table
+    {
+        description = "Mutation Points power your mutations. Pushed rolls give one for each 1 on the base dice."
+        tableLayout = layout { columns = 2 }
+        Points = integer { description = "Points to spend on mutations, 0 to 10." default = 0  minvalue = 0  maxvalue = 10  editable = live }
+        'Use Mutation' = integer { description = "Roll a die for each Mutation Point spent. Any 1 and the mutation misfires." value = Points  valuedice = mutationRoll  editable = none }
+    }
+
+    Rot = table
+    {
+        description = "Rot Points from the Zone and rotten grub or water. Each time you gain one, roll a die for each point you have: every 1 is a point of damage."
+        tableLayout = layout { columns = 2 }
+        'Rot Points' = integer { description = "Rot Points that can be washed off in the Ark." default = 0  minvalue = 0  maxvalue = 10  editable = live  indicator = "#3fa34d"  indicatorLabel = "Rot" }
+        'Permanent Rot' = integer { description = "Rot that has settled in the body for good." default = 0  minvalue = 0  maxvalue = 10  editable = live }
+        'Rot Roll' = integer { value = 'Rot Points' + 'Permanent Rot'  valuedice = rotRoll ('Rot Points' + 'Permanent Rot')  editable = none }
+        'Wash Off' = button
+        {
+            description = "Wash off the Rot in the Ark: temporary Rot Points go, permanent rot stays."
+            editable = live
+            onClick = updates
+            {
+                (root.Rot.'Rot Points') = 0
+            }
+        }
+    }
+
+    Mutations = list
+    {
+        source = secondary.Mutations
+        singular = "Mutation"
+        editable = character
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Relationships = table
+    {
+        description = "How you see the other player characters, and who matters to you in the Ark."
+        tableLayout = layout { columns = 3  size = wide }
+        'I Hate' = string { description = "An NPC you hate." }
+        'I Need to Protect' = string { description = "An NPC you need to protect." }
+        'My Big Dream' = string { description = "What you dream of, beyond the Zone." }
+    }
+
+    'The Others' = list
+    {
+        description = "What you think of each of the other player characters. Tick your buddy."
+        singular = "Player character"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Relationship = string {}
+            Buddy = bool { default = false }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 3 }
+        Initiative = integer { description = "D6 plus Agility; highest acts first." value = Attributes.Agility.Current  valuedice = 1d6  editable = none }
+        'Armour Rating' = integer { description = "Armour dice rolled when hit. Each 6 stops one point of damage." reference = ["yze", 21] default = 0  minvalue = 0  editable = live }
+        'Armour Roll' = integer { value = 'Armour Rating'  valuedice = armourRoll ('Armour Rating')  editable = none }
+        'Critical Injury' = integer { description = "Roll D66 for a critical injury when broken by damage." value = 0  valuedice = d66Roll  editable = none }
+    }
+
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", "Strength", Attributes.Strength.Current, levelOf (characterTable, "Fight"), 0, 1, "melee", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Critical Injuries' = list
+    {
+        description = "Injuries from being broken by damage. Lethal ones kill unless healed in time."
+        tableLayout = layout { size = wide }
+        singular = "Critical injury"
+        editable = live
+        valueType = custom
+        {
+            Injury = string {}
+            Lethal = bool { default = false }
+            'Time Limit' = string {}
+            Effect = string {}
+            'Healing Time' = string {}
+        }
+    }
+
+    Weapons = list
+    {
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Armour = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Artifacts = list
+    {
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+
+    Consumables = table
+    {
+        description = "Grub, water and bullets are counted in units. Bullets are also the Zone's money."
+        tableLayout = layout { columns = 4 }
+        Grub = integer { description = "Rations of food; eat one a day." default = 0  minvalue = 0  editable = live }
+        Water = integer { description = "Rations of water; drink one a day." default = 0  minvalue = 0  editable = live }
+        Bullets = integer { description = "Bullets for guns, and the coin of the Zone." default = 0  minvalue = 0  editable = live }
+        Booze = integer { default = 0  minvalue = 0  editable = live }
+        'Tiny Items' = string { multiline = true }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureSkill = custom
+{
+    Name = string {}
+    Dice = integer { description = "Attribute plus skill level." default = 3  minvalue = 0  valuedice = myzAsked ("", Dice, 0, 0) }
+}
+
+creatureAttack = custom
+{
+    Name = string {}
+    Dice = integer { description = "Base dice for the attack, attribute plus skill." default = 4  minvalue = 0  valuedice = myzAsked ("", Dice, 0, Bonus)  action = if Band == "Arm's Length" then "melee" else "ranged"  reach = 2  range = rangeMetres (Band) }
+    Bonus = integer { description = "Gear dice from the weapon." default = 0  minvalue = 0 }
+    Damage = integer { default = 1  minvalue = 0 }
+    Band = string { description = "Range band." keys = ranges  default = "Arm's Length" }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Threat, Attacks] }
+    Threat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Humanoid", "Monster", "Phenomenon"]  default = "Monster" }
+        Strength = integer { description = "Strength unharmed. Damage lowers it." default = 4  minvalue = 0 }
+        'Current Strength' = integer { description = "At 0 the threat is broken." default = Strength  minvalue = 0  editable = live }
+        Agility = integer { default = 3  minvalue = 0  valuedice = myzAsked ("", Agility, 0, 0) }
+        Wits = integer { default = 2  minvalue = 0  valuedice = myzAsked ("", Wits, 0, 0) }
+        Empathy = integer { default = 1  minvalue = 0  valuedice = myzAsked ("", Empathy, 0, 0) }
+        'Armour Rating' = integer { default = 0  minvalue = 0  valuedice = armourRoll ('Armour Rating') }
+        Initiative = integer { description = "D6 plus Agility." value = Agility  valuedice = 1d6  editable = none }
+        'Mutation Points' = integer { default = 0  minvalue = 0  editable = live }
+        Down = string { value = if 'Current Strength' < 1 then "Broken" else ""  visible = none  indicator = "#d64545" }
+    }
+    Skills = list
+    {
+        singular = "Skill"
+        editable = character
+        valueType = creatureSkill
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = creatureAttack
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Abilities = string { description = "Mutations, monster powers and special attacks." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+arkTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/myz/ark.svg"  important = [Ark, 'Development Levels'] }
+    Ark = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Population = integer { description = "How many people live in the Ark." default = 200  minvalue = 0  editable = live }
+        'Water Source' = string {}
+        Location = string { description = "Where the Ark stands, and the sector on the Zone map." }
+        Threats = string { description = "What threatens the Ark from inside and outside." multiline = true }
+    }
+    'Development Levels' = table
+    {
+        description = "The Ark's four development levels. Projects and artifacts raise them, and each opens new projects."
+        tableLayout = layout { columns = 4  size = wide }
+        'Food Supply' = integer { description = "How well the Ark feeds itself." default = 1  minvalue = 0  maxvalue = 100  editable = live }
+        Culture = integer { description = "Shared beliefs, stories and order among the people." default = 1  minvalue = 0  maxvalue = 100  editable = live }
+        Technology = integer { description = "What the people can build and repair." default = 1  minvalue = 0  maxvalue = 100  editable = live }
+        Warfare = integer { description = "How well the Ark can fight off its enemies." default = 1  minvalue = 0  maxvalue = 100  editable = live }
+    }
+    Bosses = list
+    {
+        description = "The bosses who rule the Ark, and their gangs."
+        tableLayout = layout { size = wide }
+        singular = "Boss"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Gang = integer { description = "Members of the boss's gang." default = 10  minvalue = 0 }
+            Wants = string {}
+            'Feels about the PCs' = string {}
+        }
+    }
+    Projects = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Projects
+        singular = "Project"
+        editable = character
+    }
+    Artifacts = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+vehicleWeapon = custom
+{
+    Name = string {}
+    Dice = integer { description = "The gunner's Agility plus Shoot." default = 4  minvalue = 0  valuedice = myzAsked ("", Dice, 0, Bonus)  action = ranged  range = rangeMetres (Band) }
+    Bonus = integer { default = 0  minvalue = 0 }
+    Damage = integer { default = 2  minvalue = 0 }
+    Band = string { description = "Range band." keys = ranges  default = "Short" }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/myz/vehicle.svg"  important = [Vehicle, Weapons] }
+    Vehicle = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { keys = ["Boat", "Car", "Truck", "Motorcycle", "Bicycle", "Cart", "Other"]  default = "Car" }
+        Occupants = integer { default = 4  minvalue = 1 }
+        'Gear Bonus' = integer { description = "Gear dice the vehicle adds to Move rolls when driving." default = 1  minvalue = 0  editable = live }
+        Drive = integer { description = "Asks for the driver's Agility plus Move, and adds the gear bonus." value = 'Gear Bonus'  valuedice = ask ("Driver's Agility plus Move", 0, (driver)->myzRoll ("", driver, 0, 'Gear Bonus'))  editable = none }
+        Resilience = integer { description = "How much damage the vehicle takes before it breaks down." default = 3  minvalue = 1 }
+        'Current Resilience' = integer { default = Resilience  minvalue = 0  editable = live }
+        'Armour Rating' = integer { default = 3  minvalue = 0  valuedice = armourRoll ('Armour Rating') }
+        Fuel = integer { description = "Units of fuel left." default = 5  minvalue = 0  editable = live }
+        'Fuel Type' = string {}
+        Down = string { value = if 'Current Resilience' < 1 then "Broken down" else ""  visible = none  indicator = "#d64545" }
+    }
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Weapon"
+        editable = character
+        valueType = vehicleWeapon
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Range" prefix = "" filter = Stats.Range }]
+        sortedBy = sort { prefix = "Damage" sort = Stats.Damage }
+    }
+    Stats = table
+    {
+        Kind = string { keys = ["Melee", "Ranged"]  default = "Melee" }
+        Bonus = integer { description = "Gear dice added to the attack." default = 1  minvalue = 0 }
+        Damage = integer { description = "Damage on a hit; each extra 6 adds one." default = 1  minvalue = 0 }
+        Range = string { keys = ranges  default = "Arm's Length" }
+        Bullets = bool { description = "Uses a bullet each time it fires." default = false }
+        Weight = string {}
+        Comment = string {}
+    }
+}
+
+armourStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Rating" sort = Stats.Rating }
+    }
+    Stats = table
+    {
+        Rating = integer { description = "Armour dice rolled when hit." default = 1  minvalue = 0 }
+        Weight = string {}
+        Comment = string {}
+    }
+}
+
+gearStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/icons/pack.svg" }
+    Stats = table
+    {
+        Bonus = string { description = "Gear dice it adds, and to which skill." }
+        Weight = string {}
+        Cost = string { description = "Its price in bullets." }
+    }
+}
+
+devLevels = ["None", "Food Supply", "Culture", "Technology", "Warfare"]
+
+artifactStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/myz/artifact.svg"
+        filters = [filter { name = "DEV Bonus" prefix = "" filter = Stats.'DEV Bonus' }]
+    }
+    Stats = table
+    {
+        'DEV Requirement' = string { description = "The development level the Ark needs before anyone can use it." }
+        'DEV Bonus' = string { description = "The development level it raises when brought to the Ark." keys = devLevels  default = "None" }
+        'Bonus Points' = integer { description = "How much it raises that level." default = 0  minvalue = 0 }
+        'Gear Bonus' = string {}
+        Effect = string { multiline = true }
+    }
+}
+
+mutationStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Use" prefix = "" filter = Stats.Use }]
+    }
+    Stats = table
+    {
+        Use = string { keys = ["Action", "Reaction", "Always on"]  default = "Action" }
+        Cost = string { description = "Mutation Points it takes, per use or per effect." default = "1 MP" }
+        Misfire = string { description = "What happens when it misfires." multiline = true }
+    }
+}
+
+talentStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Role" prefix = "" filter = Stats.Role }]
+    }
+    Stats = table
+    {
+        Role = string { keys = ["General", "Enforcer", "Gearhead", "Stalker", "Fixer", "Dog Handler", "Chronicler", "Boss", "Slave"]  default = "General" }
+    }
+}
+
+projectStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/myz/project.svg"
+        filters = [filter { name = "DEV Bonus" prefix = "" filter = Stats.'DEV Bonus' }]
+        sortedBy = sort { prefix = "Work" sort = Stats.'Work Points' }
+    }
+    Stats = table
+    {
+        'DEV Requirement' = string { description = "Development levels the Ark needs before the project can start." }
+        'Other Requirements' = string {}
+        'Work Points' = integer { description = "Successes needed to finish the project." default = 3  minvalue = 1 }
+        Progress = integer { description = "Work points gathered so far." default = 0  minvalue = 0  editable = live }
+        Skills = string { description = "Skills rolled to work on it." }
+        'DEV Bonus' = string { keys = devLevels  default = "None" }
+        'Bonus Points' = integer { default = 1  minvalue = 0 }
+        Done = bool { default = false  editable = live }
+        Special = string { multiline = true }
+    }
+}
+
+MutantYearZero = system
+{
+    hints = [
+        hint
+        {
+            title = "Rolling dice"
+            topic = "Play"
+            text = ["Roll yellow base dice for the attribute, green skill dice for the skill and black gear dice for the weapon or tool. Every 6 is a success. Modifiers add or remove skill dice; below zero you roll red negative dice, and each 6 on them takes away a success."]
+        },
+        hint
+        {
+            title = "Pushing"
+            topic = "Play"
+            text = ["Once per roll you may push: reroll every die that is not a 6 or a 1 on base or gear dice. After the push, each 1 on base dice is a point of trauma to the attribute and a Mutation Point, and each 1 on gear dice lowers the gear bonus."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Each combatant rolls the Initiative field, a D6 plus Agility. Highest acts first. Each round you get an action and a maneuver."]
+        },
+        hint
+        {
+            title = "The Ark"
+            topic = "Getting started"
+            text = ["Make an Ark for the group. Its four development levels, Food Supply, Culture, Technology and Warfare, grow with projects and with artifacts found in the Zone."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Arks = arkTable
+    Vehicles = vehicleTable
+    extraEntityTypes = [entityTypeDescription ("Arks", "ark", false, "/systems/myz/ark.svg", ["Projects", "Artifacts"]), entityTypeDescription ("Vehicles", "vehicle", true, "/systems/myz/vehicle.svg", [])]
+    Weapons = weaponStats
+    Armour = armourStats
+    Gear = gearStats
+    Artifacts = artifactStats
+    Mutations = mutationStats
+    Talents = talentStats
+    Projects = projectStats
+    secondaryTypes = ["Weapons", "Armour", "Gear", "Artifacts", "Mutations", "Talents", "Projects"]
+    description = "Mutant: Year Zero: mutants of the Ark scavenge the Zone after the fall, with base, skill and gear dice, pushing, mutations and Ark projects"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d6, 2d6, 3d6, 4d6]
+    cssFiles = ["/systems/myz/myz.css"]
+    libraries = ["/systems/yze/yze.json", "/systems/names/thezone.json", "/systems/names/wasteland.json"]
+    nameSettings = [
+        nameSetting
+        {
+            name = "The Zone"
+            characters = [generator { library = "The Zone" variant = "Mutant" }, generator { library = "Wasteland" variant = "Mutant" }]
+            creatures = [generator { library = "Wasteland" variant = "Mutant" }, generator { library = "Wasteland" variant = "Raiders" }]
+            Location = [generator { library = "The Zone" variant = "Sector" }, generator { library = "Wasteland" variant = "Ruin" }, generator { library = "Wasteland" variant = "Settlement" }]
+            Arks = generator { library = "The Zone" variant = "Ark" }
+            Vehicles = generator { library = "The Zone" variant = "Vehicle" }
+            Artifacts = generator { library = "The Zone" variant = "Artifact" }
+            Weapons = generator { library = "Wasteland" variant = "Scrap weapon" }
+        }
+    ]
+}
