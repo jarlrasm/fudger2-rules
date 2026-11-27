@@ -1,0 +1,76 @@
+@import url("/systems/sheet.css");
+
+/* Legend of the Five Rings 4th edition: aged washi paper, sumi-ink frames and
+   a deep crimson for titles. The five rings stand side by side, each a framed
+   box with its two traits and the ring in a circle beneath them, as on the
+   paper sheet; honor, glory, status and taint run under them. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ded2b8;
+    --surface: #f7f0df;
+    --surface-alt: #efe5cd;
+    --surface-sunken: #e6d9bc;
+    --surface-muted: #d3c4a2;
+    --text: #1c1410;
+    --text-muted: #45372b;
+    --text-faint: #7f6d58;
+    --on-accent: #f7f0df;
+    --border: #a8936f;
+    --border-strong: #1c1410;
+    --accent: #7d1414;
+    --accent-hover: #9c1c1c;
+    --accent-soft: #edd2c8;
+    --link: #7d1414;
+    --danger: #7d1414;
+    --danger-hover: #5c0e0e;
+    --danger-soft: #edd2c8;
+    --success: #355e3b;
+    --paper: #f7f0df;
+    --card-bg: #efe5cd;
+    --dice-bg: #7d1414;
+    --dice-text: #f7f0df;
+}
+
+.entityView {
+    --sheet-font: "EB Garamond", Georgia, "Times New Roman", serif;
+    --title-font: "Cinzel", "Trajan Pro", Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--on-accent);
+    background: var(--accent);
+    font-weight: 700;
+}
+.entityView .table-rings .entityTable {
+    border-width: 3px;
+    text-align: center;
+}
+.entityView .table-rings .entityTable > table > thead th { background: var(--text); }
+.entityView .table-rings .table-air { border-color: #6f8fa8; }
+.entityView .table-rings .table-earth { border-color: #5a6b35; }
+.entityView .table-rings .table-fire { border-color: #a8331f; }
+.entityView .table-rings .table-water { border-color: #2f557a; }
+.entityView .table-rings .table-void { border-color: #3b2f52; }
+.entityView .table-rings .table-air > table > thead th { background: #6f8fa8; }
+.entityView .table-rings .table-earth > table > thead th { background: #5a6b35; }
+.entityView .table-rings .table-fire > table > thead th { background: #a8331f; }
+.entityView .table-rings .table-water > table > thead th { background: #2f557a; }
+.entityView .table-rings .table-void > table > thead th { background: #3b2f52; }
+.entityView .table-status { clear: left; }
+.entityView .table-combat { --block: 33.333%; clear: left; }
+.entityView .table-wounds { --block: 66.666%; }
+.entityView .table-iaijutsu-duel { --block: 50%; }
+.entityView .table-rings > table > tbody > tr > th.row-header { display: none; }
+.entityView .table-conditions,
+.entityView .table-kata,
+.entityView .table-kiho,
+.entityView .table-advantages,
+.entityView .table-disadvantages { --block: 50%; }
+.entityView .table-kata { clear: left; }
+.entityView .table-conditions { clear: left; }
+.entityView .table-skills .customtype > div:nth-child(4) { font-weight: 700; }
