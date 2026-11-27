@@ -1,0 +1,74 @@
+{
+  "values": {
+    "Samurai": {
+      "Clan": "Lion",
+      "Family": "Akodo",
+      "School": "Akodo Bushi",
+      "School rank": 2,
+      "Experience": 7,
+      "Stance": "Attack"
+    },
+    "Rings": {
+      "Air.Reflexes": 3,
+      "Air.Awareness": 3,
+      "Earth.Stamina": 3,
+      "Earth.Willpower": 4,
+      "Fire.Agility": 4,
+      "Fire.Intelligence": 3,
+      "Water.Strength": 3,
+      "Water.Perception": 2,
+      "Void.Ring": 3,
+      "Void.Void points.realvalue": 1
+    },
+    "Status": {
+      "Honor": { "Rank": 6, "Points": 5 },
+      "Glory": { "Rank": 2, "Points": 3 },
+      "Status": { "Rank": 2, "Points": 0 },
+      "Taint": { "Rank": 0, "Points": 0 }
+    },
+    "Wounds": { "Wounds taken": 17 },
+    "Skills": [
+      { "Name": "Kenjutsu", "Rank": 4, "Emphases": "Katana" },
+      { "Name": "Iaijutsu", "Rank": 3, "Emphases": "Focus" },
+      { "Name": "Battle", "Rank": 3, "Emphases": "Mass Combat" },
+      { "Name": "Kyujutsu", "Rank": 2 },
+      { "Name": "Defense", "Rank": 2 },
+      { "Name": "Athletics", "Rank": 2 },
+      { "Name": "Lore: Bushido", "Rank": 2 },
+      { "Name": "Lore: History", "Rank": 2 },
+      { "Name": "Etiquette", "Rank": 1 },
+      { "Name": "Sincerity", "Rank": 1, "Emphases": "Honesty" }
+    ],
+    "Techniques": [
+      { "Rank": 1, "Name": "The Way of the Lion", "Effect": "Reads the flow of battle: a bonus on attacks against a foe the Lion has studied this skirmish." },
+      { "Rank": 2, "Name": "Second technique", "Effect": "Inspires allies who fight beside him; write the school's rank 2 technique here." }
+    ],
+    "Equipment": {
+      "Koku": 4,
+      "Bu": 3,
+      "Zeni": 20,
+      "Gear": "Daisho, yumi and quiver of 20 willow-leaf arrows, light armor in Matsu gold, traveling pack, the scroll of his grandfather's victories.",
+      "Notes": "Akodo Tadashi, 19, gempukku two winters past. Sworn to recover the banner lost at Beiden Pass. Distrusts the Scorpion envoy in his lord's court."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Katana", "values": { "Stats": { "Skill": "Kenjutsu", "Damage": "3k2", "Keywords": "Samurai, Swords" } } },
+      { "name": "Wakizashi", "values": { "Stats": { "Skill": "Kenjutsu", "Damage": "2k2", "Size": "Small", "Keywords": "Samurai, Swords" } } },
+      { "name": "Yumi", "values": { "Stats": { "Skill": "Kyujutsu", "Damage": "2k2", "Range": "250", "Bow strength": "3", "Size": "Large", "Keywords": "Bow, willow-leaf arrows" } } }
+    ],
+    "Armor": [
+      { "name": "Light armor", "values": { "Stats": { "TN bonus": "5", "Reduction": "3" } } }
+    ],
+    "Kata": [
+      { "name": "Striking as Fire", "values": { "Stats": { "Ring": "Fire", "Mastery": "3", "Schools": "Bushi", "Effect": "Trades defence for hitting harder while in the Attack stance." } } }
+    ],
+    "Advantages": [
+      { "name": "Strength of the Earth", "values": { "Stats": { "Type": "Physical", "Points": "3", "Effect": "Shrugs off the first penalties of being wounded." } } },
+      { "name": "Leadership", "values": { "Stats": { "Type": "Social", "Points": "6", "Effect": "Others follow his lead in battle." } } }
+    ],
+    "Disadvantages": [
+      { "name": "Rash", "values": { "Stats": { "Type": "Mental", "Points": "3", "Effect": "Leaps into action before thinking." } } }
+    ]
+  }
+}
