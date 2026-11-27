@@ -1,0 +1,44 @@
+{
+  "values": {
+    "Hero": {
+      "Archetype": "Maverick Cop",
+      "Juncture": "Contemporary",
+      "Concept": "Hong Kong detective who plays by her own rules",
+      "Wealth": "Working Stiff",
+      "Melodramatic Hook": "Her old partner was killed in a warehouse raid that went wrong. The man who sold them out now runs a bank tower in Central, and she means to bring him down."
+    },
+    "Action Values": {
+      "Main Attack.Skill": "Guns",
+      "Main Attack.AV": 14,
+      "Backup Attack.Skill": "Martial Arts",
+      "Backup Attack.AV": 12,
+      "Defense": 13,
+      "Toughness": 7,
+      "Speed": 6
+    },
+    "Fortune": { "Type": "Fortune", "Max": 7, "Current": 5 },
+    "Combat": { "Wound Points": 18, "Shot": 9, "Marks of Death.realvalue": 0 },
+    "Skills": {
+      "Driving": { "AV": 13 },
+      "Police": { "AV": 15 },
+      "Intimidation": { "AV": 12 },
+      "Info": { "AV": 11 }
+    },
+    "Gear and Notes": {
+      "Gear": "Badge, handcuffs, police radio, a battered sedan with a siren she isn't supposed to have.",
+      "Notes": "Owes Uncle Kwok at the noodle shop a favour. Suspended twice this year."
+    }
+  },
+  "secondary": {
+    "Schticks": [
+      { "name": "Two-Gun Fury", "description": "Fire a pistol in each hand: one attack roll, the higher Damage of the two guns, plus 1.", "values": { "Stats": { "Category": "Guns", "Path": "Gunplay", "Shot Cost": "3" } } },
+      { "name": "Badge Says Back Off", "description": "Once a session, spend 1 Fortune to have the police on the scene take your side.", "values": { "Stats": { "Category": "Core", "Fuel": "Fortune" } } },
+      { "name": "Car Through the Window", "description": "+2 to Driving checks when the chase goes through a building.", "values": { "Stats": { "Category": "Driving", "Path": "Stunt Driving" } } }
+    ],
+    "Weapons": [
+      { "name": "Service pistol (9mm)", "values": { "Stats": { "Category": "Guns", "Damage": 10, "Concealment": 1, "Reload": "1" } } },
+      { "name": "Snub revolver", "values": { "Stats": { "Category": "Guns", "Damage": 9, "Concealment": 1, "Reload": "5" } } },
+      { "name": "Tonfa", "values": { "Stats": { "Category": "Martial Arts", "Damage": 8, "Concealment": 1, "Reload": "-" } } }
+    ]
+  }
+}

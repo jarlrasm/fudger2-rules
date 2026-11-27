@@ -1,0 +1,163 @@
+@import url("/systems/sheet.css");
+
+/* Feng Shui 2: the archetype sheet. White paper, rounded boxes with red
+   title bars on the left, the stat block in a deep red column on the right
+   with white value boxes, orange schtick bars on beige, and the Wound Point
+   track as a red band along the bottom. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-alt: #fbeee0;
+    --surface-sunken: #f4e1cc;
+    --surface-muted: #ead2b8;
+    --text: #1a1a1a;
+    --text-muted: #3a2a2a;
+    --text-faint: #7a6a6a;
+    --on-accent: #ffffff;
+    --border: #c9a9a0;
+    --border-strong: #9e1b1f;
+    --accent: #9e1b1f;
+    --accent-hover: #bf2328;
+    --accent-soft: #f6dcdc;
+    --link: #9e1b1f;
+    --danger: #c62828;
+    --danger-hover: #9c1f1f;
+    --danger-soft: #f7dcdc;
+    --success: #2e7d32;
+    --paper: #ffffff;
+    --card-bg: #fbeee0;
+    --dice-bg: #9e1b1f;
+    --dice-text: #ffffff;
+    --fs-red: #9e1b1f;
+    --fs-orange: #e0812a;
+    --fs-beige: #f8e2c8;
+}
+
+.entityView {
+    --sheet-font: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    --title-font: "Bebas Neue", "Oswald", "Impact", "Arial Black", sans-serif;
+    --block-radius: 10px;
+    --block-border: 2px solid var(--fs-red);
+    background: var(--bg);
+}
+
+.entityView .entityTable > table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--fs-red);
+    color: var(--on-accent);
+    padding: 2px 10px;
+    font-size: 1.05em;
+    border-bottom: none;
+}
+
+/* Left column: name, concept and hook; right: the red stat block. */
+.entityView .table-hero { --block: 62%; }
+.entityView .table-action-values { --block: 38%; }
+.entityView .table-combat { --block: 62%; }
+.entityView .table-fortune { --block: 38%; }
+.entityView .table-skills { --block: 38%; }
+.entityView .table-schticks { --block: 62%; }
+
+.entityView .table-action-values,
+.entityView .table-fortune {
+    background: var(--fs-red);
+    color: var(--on-accent);
+}
+.entityView .table-action-values > table > tbody > tr > td,
+.entityView .table-fortune > table > tbody > tr > td {
+    color: var(--on-accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.entityView .table-action-values > table > tbody > tr > td + td,
+.entityView .table-fortune > table > tbody > tr > td + td {
+    text-transform: none;
+}
+.entityView .table-action-values input,
+.entityView .table-action-values select,
+.entityView .table-fortune input,
+.entityView .table-fortune select {
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    font-weight: 700;
+}
+.entityView .table-action-values .customtype {
+    background: #ffffff;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+.entityView .table-action-values button.dicethrow,
+.entityView .table-fortune button.dicethrow {
+    background: #ffffff;
+    color: var(--fs-red);
+}
+.entityView .table-action-values > table > tbody > tr + tr > td,
+.entityView .table-fortune > table > tbody > tr + tr > td {
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* The hook runs across the whole box, as on the sheet. */
+.entityView .table-hero > table > tbody > tr:nth-child(5) {
+    grid-column: 1 / -1;
+}
+
+/* Schticks: orange bars on beige, like the schtick boxes on the sheet. */
+.entityView .table-schticks > table > thead th {
+    background: var(--fs-orange);
+}
+.entityView .table-schticks {
+    border-color: var(--fs-orange);
+    background: var(--fs-beige);
+}
+.entityView .table-schticks .namedescription {
+    background: #fff4e8;
+    border-left: 4px solid var(--fs-orange);
+}
+
+/* Skills: red names, values on the right. */
+.entityView .table-skills > table > tbody > tr > td:first-child {
+    color: var(--fs-red);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* The Wound Point band. */
+.entityView .table-combat > table > thead th {
+    background: var(--fs-red);
+}
+.entityView .table-combat .slots .used {
+    color: var(--fs-red);
+}
+
+.entityView .table-attacks > table > thead th,
+.entityView .table-weapons > table > thead th {
+    background: #1a1a1a;
+}
+.entityView .table-attacks,
+.entityView .table-weapons {
+    border-color: #1a1a1a;
+}
+
+/* Foes, vehicles and sites. */
+.entityView .table-foe,
+.entityView .table-stats,
+.entityView .table-vehicle,
+.entityView .table-chase,
+.entityView .table-site { --block: 100%; }
+.entityView .table-attacks,
+.entityView .table-notes,
+.entityView .table-details,
+.entityView .table-gear-and-notes { --block: 100%; }
+
+@media (max-width: 700px) {
+    .entityView > .entityTable {
+        clear: both;
+    }
+}
