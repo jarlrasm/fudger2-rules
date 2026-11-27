@@ -1,0 +1,84 @@
+{
+  "values": {
+    "Character": { "Race": "Human", "Current Career": "Rat Catcher", "Previous Careers": "None" },
+    "Personal Details": {
+      "Age": "23",
+      "Gender": "Male",
+      "Eye Colour": "Grey",
+      "Hair Colour": "Mousy brown",
+      "Star Sign": "Gnuthus the Ox",
+      "Weight": "135 lbs",
+      "Height": "5 ft 7 in",
+      "Siblings": "3",
+      "Birthplace": "Altdorf, Reikland",
+      "Distinguishing Marks": "Bite scars on both hands"
+    },
+    "Main Profile": {
+      "WS.Starting": 31, "WS.Advance": 5, "WS.Taken": 5,
+      "BS.Starting": 34, "BS.Advance": 10, "BS.Taken": 5,
+      "S.Starting": 29,
+      "T.Starting": 33, "T.Advance": 5,
+      "Ag.Starting": 36, "Ag.Advance": 10, "Ag.Taken": 5,
+      "Int.Starting": 28,
+      "WP.Starting": 30, "WP.Advance": 10,
+      "Fel.Starting": 26
+    },
+    "Secondary Profile": {
+      "A.Starting": 1,
+      "W.Starting": 11, "W.Advance": 2, "W.Taken": 1,
+      "M.Starting": 4,
+      "Mag.Starting": 0,
+      "IP": 2,
+      "FP": 3
+    },
+    "Status": { "Wounds": 8, "Fortune Points": 2 },
+    "Conditions": { "Critical Effects": "Arm numb last round (sewer fight)" },
+    "Basic Skills": {
+      "Animal Care.Level": "Taken",
+      "Concealment.Level": "Taken",
+      "Perception.Level": "Taken",
+      "Search.Level": "+10%",
+      "Silent Move.Level": "Taken",
+      "Gossip.Level": "Taken",
+      "Consume Alcohol.Level": "Taken"
+    },
+    "Advanced Skills": {
+      "Animal Training.Level": "Taken",
+      "Set Trap.Level": "Taken",
+      "Dodge Blow.Level": "Taken",
+      "Speak Language.Level": "Taken",
+      "Specialities": "Speak Language (Reikspiel)"
+    },
+    "Experience": { "Current": 60, "Total": 360 },
+    "Armour": { "Body 56 80": 1, "Right Arm 16 35": 1, "Left Arm 36 55": 1 },
+    "Money": { "Gold Crowns": 0, "Shillings": 14, "Pennies": 7 },
+    "Insanities": [],
+    "Notes": {
+      "Background": "Learned the trade from his uncle in the cellars under the Altdorf docks. Swears he saw a rat the size of a man walking upright beneath the Street of a Hundred Taverns, and nobody believes him.",
+      "Mutations": ""
+    }
+  },
+  "secondary": {
+    "Talents": [
+      { "name": "Resistance to Disease", "values": { "Stats": { "Type": "General", "Effect": "+10% to Toughness tests against disease" } } },
+      { "name": "Tunnel Rat", "values": { "Stats": { "Type": "General", "Effect": "+10% to Concealment and Silent Move underground" } } },
+      { "name": "Specialist Weapon Group (Sling)", "values": { "Stats": { "Type": "Combat", "Effect": "Use slings without penalty" } } },
+      { "name": "Coolheaded", "values": { "Stats": { "Type": "General", "Effect": "+5% Will Power" } } }
+    ],
+    "Weapons": [
+      { "name": "Hand Weapon (Club)", "values": { "Stats": { "Group": "Ordinary", "Damage": "SB", "Enc": "35", "Cost": "3s" } } },
+      { "name": "Sling", "values": { "Stats": { "Group": "Sling", "Damage": "3", "Range": "16/32", "Reload": "Half", "Enc": "10", "Cost": "4s" } } }
+    ],
+    "Armour": [
+      { "name": "Leather Jack", "values": { "Stats": { "Kind": "Leather", "Locations": "Body, Arms", "AP": 1, "Enc": "50", "Cost": "12s" } } }
+    ],
+    "Trappings": [
+      { "name": "Small but vicious dog", "values": { "Stats": { "Category": "Animals and Transport" } } },
+      { "name": "Pole with dead rats", "values": { "Stats": { "Category": "Miscellanea", "Enc": "20" } } },
+      { "name": "Animal traps (4)", "values": { "Stats": { "Category": "Tools", "Enc": "40" } } }
+    ],
+    "Careers": [
+      { "name": "Rat Catcher", "values": { "Stats": { "Kind": "Basic", "Race": "Human, Halfling" }, "Advance Scheme": { "WS": 5, "BS": 10, "T": 5, "Ag": 10, "WP": 10, "W": 2 }, "Career": { "Exits": "Cat Burglar, Charcoal-Burner, Militiaman, Shieldbreaker, Tomb Robber, Vagabond" } } }
+    ]
+  }
+}
