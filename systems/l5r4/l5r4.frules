@@ -165,8 +165,6 @@ skillTrait (name) =
 
 skillNames = ["Acting", "Artisan: Painting", "Artisan: Poetry", "Calligraphy", "Courtier", "Divination", "Etiquette", "Games: Go", "Games: Shogi", "Games: Letters", "Investigation", "Lore: Bushido", "Lore: History", "Lore: Theology", "Lore: Shugenja", "Lore: Shadowlands", "Medicine", "Meditation", "Perform: Storytelling", "Sincerity", "Spellcraft", "Tea Ceremony", "Athletics", "Battle", "Defense", "Horsemanship", "Hunting", "Iaijutsu", "Jiujutsu", "Chain Weapons", "Heavy Weapons", "Kenjutsu", "Knives", "Kyujutsu", "Ninjutsu", "Polearms", "Spears", "Staves", "War Fan", "Animal Handling", "Commerce", "Craft: Weaponsmithing", "Engineering", "Sailing", "Forgery", "Intimidation", "Sleight of Hand", "Stealth", "Temptation"]
 
-traitNames = ["Stamina", "Willpower", "Strength", "Perception", "Agility", "Intelligence", "Reflexes", "Awareness", "Void"]
-
 traitValue (char, name) =
     switch name
         case "Stamina" then char.Rings.Earth.Stamina
@@ -187,13 +185,9 @@ usedTrait (name, picked) = if picked == "" then skillTrait (name) else picked
 
 skillRank (char, name) = sum (map ((s)->s.Rank, filter ((s)->s.Name == name, char.Skills)))
 
-skillCheck (char, name, extraR, extraK) = charCheck (char, traitValue (char, skillTrait (name)) + skillRank (char, name) + extraR, traitValue (char, skillTrait (name)) + extraK, 0, skillRank (char, name) > 0)
-
-traitWithSkill (char, trait, name) = charCheck (char, traitValue (char, trait) + skillRank (char, name), traitValue (char, trait), 0, skillRank (char, name) > 0)
-
 firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
 
-rolledOf (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+rolledOf (text) = firstNumber (text)
 
 keptOf (text) = bonusWithValue ([[text]], "k([0-9]+)")
 
@@ -548,10 +542,6 @@ characterTable = ruleset
         Notes = string { multiline = true }
     }
 }
-
-npcIndex (wounds, perRank, ranks, earth) =
-    if perRank > 0 then min (max (1, ranks), wounds / perRank)
-    else woundIndex (wounds, earth)
 
 npcDead (wounds, perRank, ranks, earth) = if perRank > 0 then wounds >= perRank * max (1, ranks) else woundIndex (wounds, earth) >= 8
 
