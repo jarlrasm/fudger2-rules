@@ -1,0 +1,44 @@
+{
+  "name": "The Zone",
+  "description": "Names for a world after the fall: short, worn-down names for mutants of an Ark, the Arks themselves, ruined sectors of the Zone, scrap vehicles and old-world artifacts the survivors no longer understand.",
+  "url": "/systems/names/thezone.json",
+  "gamemaster": "",
+  "entities": [
+    {
+      "type": "Names",
+      "name": "The Zone",
+      "description": "Mutants of the Ark, Arks, Zone sectors, scrap vehicles and misunderstood artifacts.",
+      "images": {},
+      "rulesets": [],
+      "generator": {
+        "kinds": ["Person", "Place", "Item", "Arks", "Vehicles"],
+        "variants": ["Mutant", "Ark", "Sector", "Vehicle", "Artifact"],
+        "parts": {
+          "mutant": {
+            "markov": ["Grubb", "Orla", "Krem", "Delva", "Tiffo", "Brinna", "Hask", "Muddy", "Velka", "Pontus", "Joss", "Ilma", "Rask", "Sumpa", "Kodder", "Nella", "Wibb", "Tarma", "Fenk", "Glora", "Bossa", "Ludd", "Mirka", "Sotto"],
+            "order": 2,
+            "length": [3, 7]
+          },
+          "nick": ["the Hand", "Two-Teeth", "Rustbelly", "the Quiet", "Longarm", "Squint", "Eight", "the Bald", "Dogface", "Fishlips", "Ashes", "Splinter", "the Mole", "Halfway", "Crow"],
+          "arkFirst": ["Old", "Black", "Grey", "Rust", "Stone", "Low", "Deep", "Iron", "Last", "Cold", "High", "Long"],
+          "arkThing": ["Silo", "Bunker", "Mill", "Dome", "Depot", "Hall", "Works", "Tower", "Station", "Yard", "Market", "Cellar", "Dam", "Plant"],
+          "arkKind": ["Ark", "Hold", "Den", "Nest", "Fort"],
+          "place": ["Car Park", "Bridge", "Mall", "Tunnel", "Rail Yard", "Overpass", "Pumping Station", "Hospital", "Shipyard", "Church", "Motorway", "Water Tower", "Swimming Hall", "School", "Gas Station", "Harbour", "Cinema", "Stadium", "Power Line", "Allotments"],
+          "placeAdj": ["Sunken", "Burnt", "Drowned", "Singing", "Broken", "Rotten", "Silent", "Melted", "Crooked", "Glowing", "Leaning", "Empty", "Hollow", "Twisted"],
+          "sectorCode": { "pattern": "LD" },
+          "vehicleAdj": ["Rusty", "Old", "Screaming", "Lucky", "Smoking", "Patched", "Thunder", "Slow", "Bone", "Grumbling", "Red", "Leaky"],
+          "vehicleThing": ["Bucket", "Beetle", "Sow", "Wagon", "Rattler", "Hog", "Tub", "Kettle", "Mule", "Crate", "Barge", "Coffin"],
+          "artifactAdj": ["Singing", "Talking", "Shining", "Humming", "Ticking", "Warm", "Blinking", "Dead", "Bitter", "Holy", "Cold"],
+          "artifactThing": ["Box", "Stick", "Eye", "Wheel", "Rope", "Cup", "Book", "Bell", "Plate", "Ring", "Mask", "Egg", "Flute", "Brick"]
+        },
+        "templates": {
+          "Mutant": ["{mutant|cap}:6", "{mutant|cap} {nick}:2", "{nick|cap}:1"],
+          "Ark": ["The {arkFirst} {arkThing}:5", "{arkThing} {arkKind}:2", "{mutant|cap}'s {arkKind}:1"],
+          "Sector": ["The {placeAdj} {place}:5", "{place} {sectorCode}:2", "{mutant|cap}'s {place}:1"],
+          "Vehicle": ["The {vehicleAdj} {vehicleThing}:5", "{mutant|cap}'s {vehicleThing}:2"],
+          "Artifact": ["The {artifactAdj} {artifactThing}:5", "{artifactThing} of the Ancients:1"]
+        }
+      }
+    }
+  ]
+}

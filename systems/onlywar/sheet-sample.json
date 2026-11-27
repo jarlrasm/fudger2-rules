@@ -1,0 +1,33 @@
+{
+  "values": {
+    "Guardsman": { "Regiment": "Cadmus 14th Rifles", "Home world": "Hive World", "Speciality": "Weapon Specialist", "Rank": "Trooper", "Demeanour": "Gallows humour under the barrage", "Total XP": 1100, "XP to spend": 150, "Description": "Lean hiver, flak greatcoat patched at both elbows, regimental number inked on the knuckles", "Aptitudes": "Ballistic Skill, Finesse, Fieldcraft, Agility, Perception, Weapon Skill, General" },
+    "Characteristics": {
+      "Weapon Skill.Value": 33, "Ballistic Skill.Value": 41, "Ballistic Skill.Advances": 1, "Strength.Value": 30, "Toughness.Value": 34, "Agility.Value": 38,
+      "Intelligence.Value": 29, "Perception.Value": 36, "Perception.Advances": 1, "Willpower.Value": 31, "Fellowship.Value": 27
+    },
+    "Skills": {
+      "Athletics.Rank": "Known", "Awareness.Rank": "Trained", "Common Lore.Rank": "Known", "Dodge.Rank": "Known", "Linguistics.Rank": "Known", "Navigate.Rank": "Known",
+      "Operate.Rank": "Known", "Stealth.Rank": "Trained", "Survival.Rank": "Known", "Tech Use.Rank": "Known", "Sleight of Hand.Rank": "Known",
+      "Specialisations": "Common Lore (Imperial Guard, War); Linguistics (Low Gothic, Hive Cant); Navigate (Surface); Operate (Surface)"
+    },
+    "Status": { "Max Wounds": 13, "Wounds": 9, "Fatigue": 1, "Fate threshold": 2, "Fate": 1 },
+    "Comrade": { "Name": "Trooper Vell Haskin", "Notes": "Carries the spare charge packs. Hums hab-shanties when he is scared, which is always." },
+    "Armour": { "Head": 2, "Body": 4, "Right Arm": 4, "Left Arm": 4, "Right Leg": 4, "Left Leg": 4 },
+    "Traits": [ { "Name": "Hive-born", "Description": "At home in crowds and close quarters; uneasy under an open sky." } ],
+    "Ammunition": [ { "Name": "Lasgun charge packs", "Shots": 34, "Magazines": 3 }, { "Name": "Long-las hot-shot packs", "Shots": 20, "Magazines": 1 } ],
+    "Mental state": { "Insanity": 7, "Corruption": 2, "Disorders": "", "Critical injuries": "Shrapnel scar along the left ribs" },
+    "Notes": { "Background": "Raised in the under-tiers of Cadmus Primus, drafted at the tithe of 812.M41 and shipped to the Spinward Front. Two years in the trenches of Kallos have made her the best shot in the platoon and the last of her original section. She trusts the Emperor, her long-las and Haskin, in that order." }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Long-las", "values": { "Stats": { "Class": "Basic", "Range": "150m", "RoF": "S/-/-", "Damage": "1d10+3", "Type": "E", "Pen": "1", "Clip": "40", "Reload": "Full", "Special": "Accurate, Felling (1), Reliable", "Availability": "Scarce" } } },
+      { "name": "Lasgun", "values": { "Stats": { "Class": "Basic", "Range": "100m", "RoF": "S/3/-", "Damage": "1d10+3", "Type": "E", "Pen": "0", "Clip": "60", "Reload": "Full", "Special": "Reliable", "Availability": "Common" } } },
+      { "name": "Guard knife", "values": { "Stats": { "Class": "Melee", "Damage": "1d5", "Type": "R", "Pen": "0", "Availability": "Plentiful" } } },
+      { "name": "Frag grenade", "values": { "Stats": { "Class": "Thrown", "Range": "9m", "RoF": "S/-/-", "Damage": "2d10", "Type": "X", "Pen": "0", "Special": "Blast (3)", "Availability": "Common" } } }
+    ],
+    "Armour": [ { "name": "Guard flak armour", "values": { "Stats": { "Locations": "All", "AP": "4", "Availability": "Common", "Effect": "Helmet 2" } } } ],
+    "Talents": [ { "name": "Deadeye Shot", "values": { "Stats": { "Kind": "Talent", "Tier": 1 } } }, { "name": "Weapon Training (Las)", "values": { "Stats": { "Kind": "Talent", "Tier": 1 } } }, { "name": "Sharpshooter", "values": { "Stats": { "Kind": "Talent", "Tier": 2 } } } ],
+    "Orders": [ { "name": "Ranged Volley", "values": { "Stats": { "Action": "Half Action", "Speciality": "Standard" } } }, { "name": "Take Cover", "values": { "Stats": { "Action": "Full Action", "Speciality": "Standard", "Cohesion": "Not needed" } } }, { "name": "Close Quarters", "values": { "Stats": { "Action": "Half Action", "Speciality": "Standard" } } } ],
+    "Gear": [ { "name": "Magnoculars", "values": { "Stats": { "Availability": "Average" } } }, { "name": "Uplifting Primer" }, { "name": "Rebreather", "values": { "Stats": { "Availability": "Common" } } } ]
+  }
+}

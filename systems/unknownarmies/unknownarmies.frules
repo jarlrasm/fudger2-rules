@@ -1,0 +1,623 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+uaValue (tens, units) =
+    if mod (tens, 10) == 0 and mod (units, 10) == 0 then 100
+    else mod (tens, 10) * 10 + mod (units, 10)
+
+pad (roll) = if roll == 100 then "00" else if roll < 10 then "0" + toString (roll) else toString (roll)
+
+isMatched (roll) = roll < 100 and mod (roll, 10) == roll / 10
+
+dieFace (digit) = if mod (digit, 10) == 0 then 10 else mod (digit, 10)
+
+uaLevel (target, roll) =
+    if roll == 1 then "Crit"
+    else if roll == 100 then "Fumble"
+    else if roll <= target and isMatched (roll) then "Matched success"
+    else if roll <= target then "Success"
+    else if isMatched (roll) then "Matched failure"
+    else "Failure"
+
+isSuccess (level) = level == "Crit" or level == "Success" or level == "Matched success"
+
+fistsEffect (level, total) =
+    switch level
+        case "Crit" then ", the opponent is unconscious or dead"
+        case "Fumble" then ", something goes wrong: you take up to 5 wounds"
+        case "Matched failure" then ": -10% on your next roll, or the opponent gets +10% on their attack"
+        case "Failure" then ""
+        else ", " + toString (total) + " wounds"
+
+meleeEffect (level, roll, total, extra, cleave) =
+    switch level
+        case "Crit" then ", the opponent dies"
+        case "Fumble" then ": you hit yourself for 20 wounds"
+        case "Matched failure" then ": you are disarmed"
+        case "Matched success" then ", " + toString (roll) + " wounds"
+        case "Success" then ", " + toString (total + extra) + " wounds"
+        else if cleave then ", the cleave still deals 1 wound" else ""
+
+gunEffect (level, roll, cap) =
+    switch level
+        case "Crit" then ", " + toString (cap) + " wounds, the damage cap"
+        case "Fumble" then ": the gun jams and must be cleared"
+        case "Failure" then ""
+        case "Matched failure" then ""
+        else ", " + toString (min (roll, cap)) + " wounds"
+
+attackEffect (kind, level, roll, total, extra, cleave, cap) =
+    switch kind
+        case "Fists" then fistsEffect (level, total)
+        case "Melee" then meleeEffect (level, roll, total, extra, cleave)
+        case "Gun" then gunEffect (level, roll, cap)
+        else ""
+
+flipDice = dice { number = 1  sides = 1  label = "Flip-flop" }
+
+uaShow (target, tens, units, kind, extra, cleave, cap, flipped) =
+{
+    Text = (if flipped then "Flip-flopped to " else "Rolled ") + pad (uaValue (tens, units)) + " vs " + toString (target) + ": " + uaLevel (target, uaValue (tens, units)) + attackEffect (kind, uaLevel (target, uaValue (tens, units)), uaValue (tens, units), dieFace (tens) + dieFace (units), extra, cleave, cap)
+    Value = uaValue (tens, units)
+    Outcome = uaLevel (target, uaValue (tens, units))
+    Push = if flipped or uaValue (units, tens) == uaValue (tens, units) then 0 else ([flipDice], ((baseline, throws)->uaShow (target, units, tens, kind, extra, cleave, cap, true)))
+    PushLabel = "Flip-flop to " + pad (uaValue (units, tens))
+}
+
+dodgePenalty (answer) = if answer > 0 then answer * 10 else 0
+
+uaRoll (modifier, kind, extra, cleave, cap) = ([dice { number = 1  sides = 10  label = "Tens" }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->uaShow (max (0, baseline + modifier - dodgePenalty (asked)), first (first (throws).rolls), first (item (1, throws).rolls), kind, extra, cleave, cap, false)))
+
+modifierOf (char) =
+    switch char.Character.Modifier
+        case "Minus 30" then -30
+        case "Minus 20" then -20
+        case "Minus 10" then -10
+        case "Plus 10" then 10
+        case "Plus 20" then 20
+        case "Plus 30" then 30
+        else 0
+
+uaDice (char) = uaRoll (modifierOf (char), "", 0, false, 0)
+
+plainRoll = uaRoll (0, "", 0, false, 0)
+
+dodgeLevels = ["Not dodging", "Dodging, lower Dodge (-10%)", "Dodging, Dodge as high or higher (-20%)"]
+
+attackDice (char, kind, extra, cleave, cap) = ask ("Target", dodgeLevels, 0, uaRoll (modifierOf (char), kind, extra, cleave, cap))
+
+npcAttack (kind, extra, cap) = ask ("Target", dodgeLevels, 0, uaRoll (0, kind, extra, false, cap))
+
+rankLevels = ["Rank 1", "Rank 2", "Rank 3", "Rank 4", "Rank 5", "Rank 6", "Rank 7", "Rank 8", "Rank 9", "Rank 10"]
+
+stressText (level) =
+    if isSuccess (level) then ": you hold, mark a hardened notch"
+    else ": mark a failed notch, then fight, flee or freeze"
+
+stressResult (target, roll, hardened, rank, answered) =
+    if answered and rank <= hardened then
+    {
+        Text = "Rank " + toString (rank) + " against " + toString (hardened) + " hardened notches: unfazed, no check needed"
+        Value = roll
+        Outcome = "Hardened"
+    }
+    else
+    {
+        Text = (if answered then "Rank " + toString (rank) + ": rolled " else "Rolled ") + pad (roll) + " vs " + toString (target) + ": " + uaLevel (target, roll) + stressText (uaLevel (target, roll))
+        Value = roll
+        Outcome = uaLevel (target, roll)
+    }
+
+stressDice (modifier, hardened) = ([dice { number = 1  sides = 10  label = "Tens" }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->stressResult (max (0, baseline + modifier), uaValue (first (first (throws).rolls), first (item (1, throws).rolls)), hardened, asked, answered)))
+
+stressCheck (char, hardened) = ask ("Rank", rankLevels, 1, stressDice (modifierOf (char), hardened))
+
+objectiveResult (progress, roll) =
+{
+    Text = "Rolled " + pad (roll) + " vs " + toString (progress) + ": " + (if roll <= progress then "the objective is achieved now" else "the push fails and the progress is lost")
+    Value = roll
+    Outcome = if roll <= progress then "Success" else "Failure"
+}
+
+objectiveRoll = ([dice { number = 1  sides = 10  label = "Tens" }, dice { number = 1  sides = 10  label = "Units" }],
+    ((baseline, throws)->objectiveResult (baseline, uaValue (first (first (throws).rolls), first (item (1, throws).rolls)))))
+
+initiativeRoll = ([1d1], ((baseline, throws)->baseline))
+
+upper (hardened) = 60 - 5 * min (8, max (0, hardened))
+
+lower (hardened) = 20 + 5 * min (8, max (0, hardened))
+
+woundState (wounds, threshold) =
+    if wounds >= threshold then "Dead"
+    else if wounds * 10 >= threshold * 9 then "Unconscious"
+    else if wounds * 4 >= threshold * 3 then "Badly hurt"
+    else if wounds * 2 >= threshold then "Sore and exhausted"
+    else ""
+
+identityWith (char, word) = fold (0, (acc, row)->if contains (toLower (valueOr (row, "Features", "")), word) then max (acc, valueOr (row, "Percent", 0)) else acc, char.Identities)
+
+substituteFor (char, ability) = fold (0, (acc, row)->if valueOr (row, "Substitutes for", "") == ability then max (acc, valueOr (row, "Percent", 0)) else acc, char.Identities)
+
+threshold (char) = max (50, identityWith (char, "wound threshold"))
+
+initiativeOf (char) = max (lower (char.Shock.Helplessness.Hardened), substituteFor (char, "Dodge"), identityWith (char, "initiative"))
+
+struggleOf (char) = max (lower (char.Shock.Violence.Hardened), substituteFor (char, "Struggle"))
+
+kindAction (kind) = if kind == "Gun" then "ranged" else "melee"
+
+damageNote (kind, extra, cleave, cap) =
+    switch kind
+        case "Fists" then "Sum of the dice"
+        case "Melee" then "Sum of the dice" + (if extra > 0 then " +" + toString (extra) else "") + (if cleave then ", 1 on a miss" else "") + ", the roll on a matched success"
+        case "Gun" then "The roll, up to " + toString (cap)
+        else ""
+
+weaponAttack (name, target, kind, extra, cleave, cap, distance) = custom
+{
+    Name = name
+    Attack = integer { value = target  valuedice = attackDice (characterTable, kind, extra, cleave, cap)  action = kindAction (kind)  reach = 2  range = distance }
+    Damage = string { value = damageNote (kind, extra, cleave, cap) }
+}
+
+flag (stats, key) = if valueOr (stats, key, false) then 3 else 0
+
+attackFor (char, weapon) =
+    if valueOr (weapon.data.weaponStats.Stats, "Kind", "Melee") == "Gun" then
+        weaponAttack (weapon.Name, if identityWith (char, "firearm") > 0 then identityWith (char, "firearm") else struggleOf (char), "Gun", 0, false, valueOr (weapon.data.weaponStats.Stats, "Damage cap", 30), valueOr (weapon.data.weaponStats.Stats, "Distance", 50))
+    else
+        weaponAttack (weapon.Name, struggleOf (char), valueOr (weapon.data.weaponStats.Stats, "Kind", "Melee"), flag (weapon.data.weaponStats.Stats, "Cleaves") + flag (weapon.data.weaponStats.Stats, "Big") + flag (weapon.data.weaponStats.Stats, "Heavy"), valueOr (weapon.data.weaponStats.Stats, "Cleaves", false), 0, 0)
+
+showFor (kind, wanted) = if kind == wanted then visible else none
+
+passion = custom
+{
+    Stimulus = string { description = "What sets the passion off." }
+    Used = bool { description = "Tick when the passion has given its flip-flop or reroll this session." default = false  editable = live }
+}
+
+relationship = custom
+{
+    Who = string { description = "The person this relationship is with." }
+    Percent = integer { description = "Roll this in place of the linked ability when dealing with that person." default = 0  valuedice = uaDice (characterTable) }
+}
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Character.Initiative, Wounds, Passions, Identities, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 2 }
+        Cabal = string {}
+        'Current Objective' = string { description = "What the cabal is working towards right now." }
+        'Distinguishing Characteristics' = string { multiline = true }
+        Kind = string { description = "Whether the character is an adept, an avatar, has a supernatural ability, or is an ordinary person." keys = ["Ordinary", "Adept", "Avatar", "Supernatural ability"]  default = "Ordinary" }
+        Modifier = selector
+        {
+            description = "Bonus or penalty to the next percentile roll, such as +10% for aiming or -20% for a hard shot."
+            options = ["Minus 30", "Minus 20", "Minus 10", "Normal", "Plus 10", "Plus 20", "Plus 30"]
+            labels = ["-30", "-20", "-10", "Normal", "+10", "+20", "+30"]
+            colors = ["red", "red", "red", "white", "green", "green", "green"]
+            hold = ["", "", "Ctrl", "", "Shift", "", ""]
+            default = "Normal"
+            editable = live
+            save = nosave
+        }
+        Initiative = integer { description = "Acting order in a fight: Dodge, or an identity that substitutes for Dodge or provides initiative. Highest acts first." value = initiativeOf (characterTable)  valuedice = initiativeRoll  editable = none }
+    }
+
+    Passions = table
+    {
+        description = "Rage, Noble and Fear: what drives the character. Each can give a flip-flop or reroll once a session when its stimulus is in play."
+        tableLayout = layout { }
+        Rage = passion {}
+        Noble = passion {}
+        Fear = passion {}
+        'New session' = button { description = "Clear the used marks on all three passions."  editable = live  onClick = updates {
+            (root.Passions.Rage.Used) = false
+            (root.Passions.Noble.Used) = false
+            (root.Passions.Fear.Used) = false
+        } }
+    }
+
+    Relationships = table
+    {
+        description = "Five relationships, each standing in for an ability when dealing with that person: Favorite for Status, Guru for Notice, Mentor for Connect, Responsibility for Knowledge, Protege for Fitness."
+        tableLayout = layout { columns = 5  size = wide }
+        Favorite = relationship {}
+        Guru = relationship {}
+        Mentor = relationship {}
+        Responsibility = relationship {}
+        Protege = relationship {}
+    }
+
+    Shock = table
+    {
+        description = "The five shock meters. Hardened notches move points from the upper ability to the lower one; failed notches are trauma that has not healed."
+        tableLayout = layout { size = wide }
+        Helplessness = table
+        {
+            description = "Shocks of being powerless. Defend with Status, attack with Connect."
+            tableLayout = layout { columns = 5 }
+            Fitness = integer { description = "Strength, endurance and physical work." value = upper (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Hardened = integer { description = "Hardened notches, 0 to 9." default = 0  minvalue = 0  maxvalue = 9  editable = live }
+            Dodge = integer { description = "Getting out of the way of harm." value = lower (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Failures = slots { description = "Failed notches." number = 5  editable = live }
+            'Stress check' = integer { description = "Roll Status against a Helplessness shock." value = upper (Shock.Isolation.Hardened)  valuedice = stressCheck (characterTable, Hardened)  editable = none }
+        }
+        Isolation = table
+        {
+            description = "Shocks of being alone and cut off. Defend with Connect, attack with Status."
+            tableLayout = layout { columns = 5 }
+            Status = integer { description = "Standing, money and influence." value = upper (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Hardened = integer { description = "Hardened notches, 0 to 9." default = 0  minvalue = 0  maxvalue = 9  editable = live }
+            Pursuit = integer { description = "Chasing, tracking and running away." value = lower (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Failures = slots { description = "Failed notches." number = 5  editable = live }
+            'Stress check' = integer { description = "Roll Connect against an Isolation shock." value = upper (Shock.Violence.Hardened)  valuedice = stressCheck (characterTable, Hardened)  editable = none }
+        }
+        Self = table
+        {
+            description = "Shocks to who you think you are. Defend with Notice, attack with Knowledge."
+            tableLayout = layout { columns = 5 }
+            Knowledge = integer { description = "Education and knowing things." value = upper (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Hardened = integer { description = "Hardened notches, 0 to 9." default = 0  minvalue = 0  maxvalue = 9  editable = live }
+            Lie = integer { description = "Deceiving others." value = lower (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Failures = slots { description = "Failed notches." number = 5  editable = live }
+            'Stress check' = integer { description = "Roll Notice against a Self shock." value = upper (Shock.Unnatural.Hardened)  valuedice = stressCheck (characterTable, Hardened)  editable = none }
+        }
+        Unnatural = table
+        {
+            description = "Shocks of the impossible. Defend with Knowledge, attack with Secrecy."
+            tableLayout = layout { columns = 5 }
+            Notice = integer { description = "Spotting things and paying attention." value = upper (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Hardened = integer { description = "Hardened notches, 0 to 9." default = 0  minvalue = 0  maxvalue = 9  editable = live }
+            Secrecy = integer { description = "Hiding things, and yourself." value = lower (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Failures = slots { description = "Failed notches." number = 5  editable = live }
+            'Stress check' = integer { description = "Roll Knowledge against an Unnatural shock." value = upper (Shock.Self.Hardened)  valuedice = stressCheck (characterTable, Hardened)  editable = none }
+        }
+        Violence = table
+        {
+            description = "Shocks of harm done or suffered. Defend with Fitness, attack with Struggle."
+            tableLayout = layout { columns = 5 }
+            Connect = integer { description = "Making friends and getting along." value = upper (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Hardened = integer { description = "Hardened notches, 0 to 9." default = 0  minvalue = 0  maxvalue = 9  editable = live }
+            Struggle = integer { description = "Fighting and wrestling." value = lower (Hardened)  valuedice = uaDice (characterTable)  editable = none }
+            Failures = slots { description = "Failed notches." number = 5  editable = live }
+            'Stress check' = integer { description = "Roll Fitness against a Violence shock." value = upper (Shock.Helplessness.Hardened)  valuedice = stressCheck (characterTable, Hardened)  editable = none }
+        }
+    }
+
+    Identities = list
+    {
+        description = "Who the character is: each identity has a percentage, can stand in for one ability, and has features."
+        singular = "Identity"
+        editable = character
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Name = string { description = "I'm a ..." }
+            'Of course I can' = string { description = "What anyone with this identity can obviously do." }
+            Percent = integer { description = "Roll at or under it." default = 15  valuedice = uaDice (characterTable) }
+            'Substitutes for' = string { description = "The ability this identity can be rolled in place of." keys = ["", "Connect", "Dodge", "Fitness", "Knowledge", "Lie", "Notice", "Pursuit", "Secrecy", "Status", "Struggle"] }
+            Features = string { description = "Features such as Uses firearms, Provides initiative, Provides wound threshold, Protects a meter." }
+        }
+    }
+
+    Wounds = table
+    {
+        description = "Damage taken, against the wound threshold. Sore at half, badly hurt at three quarters, unconscious at nine tenths, dead at the threshold."
+        tableLayout = layout { }
+        Taken = integer { description = "Wounds taken." default = 0  minvalue = 0  editable = live }
+        'Wound Threshold' = integer { description = "50, or an identity that provides a wound threshold." value = threshold (characterTable)  editable = none }
+        State = string { value = woundState (Taken, 'Wound Threshold')  editable = none  indicator = "#d64545" }
+        'Fully healed' = button { description = "Clear all wounds, once time and care have healed them. Enter partial healing by hand."  editable = live  onClick = updates { (root.Wounds.Taken) = 0 } }
+    }
+
+    Adept = table
+    {
+        description = "An adept's school of magick: charges gained by acting on the paradigm, spent on spells."
+        visible = showFor (Character.Kind, "Adept")
+        tableLayout = layout { columns = 2 }
+        'Adept School' = string {}
+        Percentage = integer { description = "The school's identity percentage, rolled for casting." default = 30  valuedice = uaDice (characterTable) }
+        Taboos = string { multiline = true }
+        Domain = string { multiline = true }
+        'Minor Charges' = integer { description = "Minor charges held." default = 0  minvalue = 0  editable = live }
+        'Significant Charges' = integer { description = "Significant charges held." default = 0  minvalue = 0  editable = live }
+        'Major Charges' = integer { description = "Major charges held." default = 0  minvalue = 0  editable = live }
+        'Charge Notes' = string { description = "How the school gains each kind of charge." multiline = true }
+    }
+
+    Spells = list
+    {
+        visible = showFor (Character.Kind, "Adept")
+        tableLayout = layout { size = wide }
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Avatar = table
+    {
+        description = "An avatar's archetype: channels open at 1-50%, 51-70%, 71-90% and 91% and up."
+        visible = showFor (Character.Kind, "Avatar")
+        tableLayout = layout { columns = 2 }
+        Archetype = string {}
+        Percentage = integer { description = "The archetype identity's percentage." default = 30  valuedice = uaDice (characterTable) }
+        Taboos = string { multiline = true }
+        Symbols = string { multiline = true }
+        'Channel 1 to 50' = string { multiline = true }
+        'Channel 51 to 70' = string { multiline = true }
+        'Channel 71 to 90' = string { multiline = true }
+        'Channel 91 plus' = string { multiline = true }
+    }
+
+    'Supernatural Ability' = table
+    {
+        description = "A single supernatural ability, rated as a percentage."
+        visible = showFor (Character.Kind, "Supernatural ability")
+        tableLayout = layout { columns = 2 }
+        Ability = string {}
+        Percentage = integer { default = 30  valuedice = uaDice (characterTable) }
+        Scope = string { keys = ["Vague", "Specific"] }
+        Effect = string { keys = ["Harm", "Information", "Protection"] }
+        Extra = string { keys = ["", "Influence", "Versatility"] }
+        Notes = string { multiline = true }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Fists and weapons use Struggle or an identity that substitutes for it; guns need an identity that uses firearms."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Fists and feet", struggleOf (characterTable), "Fists", 0, false, 0, 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Rituals and Artifacts' = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Rituals = list { source = secondary.Rituals  singular = "Ritual"  editable = character }
+        Artifacts = list { source = secondary.Artifacts  singular = "Artifact"  editable = character }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Gear = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, Attacks, Identities] }
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Initiative = integer { description = "Dodge or an initiative identity. Highest acts first." default = 40  valuedice = initiativeRoll }
+        Wounds = integer { default = 0  minvalue = 0  editable = live }
+        'Wound Threshold' = integer { default = 50 }
+        State = string { value = woundState (Wounds, 'Wound Threshold')  editable = none  indicator = "#d64545" }
+    }
+    Abilities = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Fitness = integer { default = 40  valuedice = plainRoll }
+        Status = integer { default = 40  valuedice = plainRoll }
+        Knowledge = integer { default = 40  valuedice = plainRoll }
+        Notice = integer { default = 40  valuedice = plainRoll }
+        Connect = integer { default = 40  valuedice = plainRoll }
+        Dodge = integer { default = 40  valuedice = plainRoll }
+        Pursuit = integer { default = 40  valuedice = plainRoll }
+        Lie = integer { default = 40  valuedice = plainRoll }
+        Secrecy = integer { default = 40  valuedice = plainRoll }
+        Struggle = integer { default = 40  valuedice = plainRoll }
+    }
+    Identities = list
+    {
+        singular = "Identity"
+        editable = character
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Name = string {}
+            Percent = integer { default = 50  valuedice = plainRoll }
+            Features = string {}
+        }
+    }
+    Attacks = list
+    {
+        singular = "Attack"
+        editable = character
+        tableLayout = layout { size = wide }
+        valueType = custom
+        {
+            Name = string {}
+            Attack = integer { default = 40  valuedice = npcAttack (Kind, Extra, Cap)  action = kindAction (Kind)  reach = 2  range = Distance }
+            Kind = string { keys = ["Fists", "Melee", "Gun"]  default = "Melee" }
+            Extra = integer { description = "Extra wounds for a big, heavy or cleaving weapon, 3 each." default = 0 }
+            Cap = integer { description = "A gun's damage cap." default = 0 }
+            Distance = integer { description = "A gun's range in metres." default = 0 }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Passions = string { multiline = true }
+        'Magick and Notes' = string { multiline = true }
+    }
+}
+
+cabalTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/unknownarmies/cabal.svg"  important = [Objective] }
+    Objective = table
+    {
+        description = "What the cabal means to change in the world, and how far it has come."
+        tableLayout = layout { columns = 2  size = wide }
+        Objective = string { multiline = true }
+        Scale = string { keys = ["Local", "Weighty", "Cosmic"]  default = "Local" }
+        Progress = integer { description = "Percent done. At 100 the objective happens." default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Push for it' = integer { description = "Roll under the progress to finish now; a failure loses the progress." value = Progress  valuedice = objectiveRoll  editable = none }
+        Closure = string { description = "What it looks like when the objective is done." multiline = true }
+    }
+    Path = list { description = "Milestones on the way to the objective." singular = "Milestone"  editable = character  valueType = string }
+    Cabal = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Members = string { multiline = true }
+        Coordinates = string { description = "Where the cabal stands: its base, contacts, resources and reach." multiline = true }
+        Opposition = string { description = "Rival cabals and objectives working against this one." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/unknownarmies/weapon.svg"  sortedBy = sort { prefix = "" sort = Stats.Kind }  filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }] }
+    Stats = table
+    {
+        Kind = string { keys = ["Fists", "Melee", "Gun"]  default = "Melee" }
+        Cleaves = bool { description = "+3 wounds, and 1 wound even on a miss." default = false }
+        Big = bool { description = "+3 wounds." default = false }
+        Heavy = bool { description = "+3 wounds." default = false }
+        'Damage cap' = integer { description = "Most wounds a gun deals on a hit." default = 0 }
+        Distance = integer { description = "Useful range in metres." default = 0 }
+        Notes = string { multiline = true }
+    }
+}
+
+chargeOrder (charge) = switch charge case "Minor" then 1 case "Significant" then 2 else 3
+
+spellStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg"  sortedBy = sort { prefix = "" sort = chargeOrder (Stats.Charge) }  filters = [filter { name = "School" prefix = "" filter = Stats.School }, filter { name = "Charge" prefix = "" filter = Stats.Charge }] }
+    Stats = table
+    {
+        School = string {}
+        Charge = string { keys = ["Minor", "Significant", "Major"]  default = "Minor" }
+        Cost = integer { description = "Charges spent." default = 1 }
+        Effect = string { multiline = true }
+    }
+}
+
+ritualStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Requirements = string { multiline = true }
+        Effect = string { multiline = true }
+    }
+}
+
+artifactStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/unknownarmies/artifact.svg"  filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }] }
+    Stats = table
+    {
+        Kind = string { keys = ["Minor", "Significant", "Major"]  default = "Minor" }
+        Power = string { multiline = true }
+        Percentage = integer { default = 0 }
+    }
+}
+
+schoolStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Paradigm = string { multiline = true }
+        Taboos = string { multiline = true }
+        Domain = string { multiline = true }
+        'Minor Charges' = string { multiline = true }
+        'Significant Charges' = string { multiline = true }
+        'Major Charges' = string { multiline = true }
+    }
+}
+
+archetypeStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg" }
+    Stats = table
+    {
+        Taboos = string { multiline = true }
+        Symbols = string { multiline = true }
+        'Channel 1 to 50' = string { multiline = true }
+        'Channel 51 to 70' = string { multiline = true }
+        'Channel 71 to 90' = string { multiline = true }
+        'Channel 91 plus' = string { multiline = true }
+    }
+}
+
+unknownArmiesNameSetting = nameSetting
+{
+    name = "Occult underground"
+    characters = [generator { library = "Night world" variant = "Mortal" }, generator { library = "Spy thriller" variant = "Codename" }]
+    creatures = [generator { library = "Night world" variant = "Mortal" }, generator { library = "Night world" variant = "Undying" }, generator { library = "Cosmic horror" variant = "Entity" }]
+    Location = [generator { library = "Night world" variant = "Club" }, generator { library = "Spy thriller" variant = "Safehouse" }]
+    Cabals = generator { library = "Night world" variant = "Coterie" }
+    Artifacts = generator { library = "Cosmic horror" variant = "Tome" }
+}
+
+UnknownArmies = system
+{
+    hints = [
+        hint
+        {
+            title = "Objectives first"
+            topic = "Getting started"
+            text = ["Build the cabal before the characters: agree on an objective the group wants to force on the world, then make a Cabal sheet to track its progress.", "Each character has identities with percentages, three passions, five relationships and five shock meters."]
+        },
+        hint
+        {
+            title = "Rolling"
+            topic = "Play"
+            text = ["Roll d100 at or under the ability or identity. Doubles under are matched successes, doubles over matched failures, 01 a crit and 00 a fumble.", "When a passion or feature allows it, use the Flip-flop button to swap the dice."]
+        },
+        hint
+        {
+            title = "Shock"
+            topic = "Characters"
+            text = ["When a shock hits, roll the meter's stress check and pick its rank. A rank at or below the hardened notches needs no roll; otherwise success marks a hardened notch and failure a failed notch."]
+        },
+        hint
+        {
+            title = "Fights"
+            topic = "Initiative"
+            text = ["Fighters act from the highest Initiative down. Attacks ask whether the target is dodging and show the wounds."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Cabals = cabalTable
+    Weapons = weaponStats
+    Spells = spellStats
+    Rituals = ritualStats
+    Artifacts = artifactStats
+    Schools = schoolStats
+    Archetypes = archetypeStats
+    secondaryTypes = ["Weapons", "Spells", "Rituals", "Artifacts"]
+    otherLibararyTypes = ["Schools", "Archetypes"]
+    extraEntityTypes = [entityTypeDescription ("Cabals", "cabal", false, "/systems/unknownarmies/cabal.svg", [])]
+    description = "Unknown Armies 3rd edition: identities, shock meters, passions and cabals in the occult underground"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d100, 1d10]
+    cssFiles = ["/systems/unknownarmies/unknownarmies.css"]
+    libraries = ["/systems/names/nightworld.json", "/systems/names/spies.json", "/systems/names/cosmic.json", "/systems/tables/modern.json"]
+    nameSettings = [unknownArmiesNameSetting, nightWorldNameSetting, cosmicHorrorNameSetting]
+}

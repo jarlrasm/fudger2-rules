@@ -1,0 +1,155 @@
+/* Unknown Armies: a scrapbook of paper scraps on grey card. Stencilled
+   black capitals, yellow sticky notes for relationships, worn green paper
+   for identities and a blue government form for the supernatural. */
+@import url("/systems/sheet.css");
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #c9c9c4;
+    --surface: #f7f7f2;
+    --surface-alt: #ebebe4;
+    --surface-sunken: #e2e2da;
+    --surface-muted: #cfcfc6;
+    --text: #151515;
+    --text-muted: #383838;
+    --text-faint: #6b6b66;
+    --on-accent: #f7f7f2;
+    --border: #8d8d86;
+    --border-strong: #151515;
+    --accent: #151515;
+    --accent-hover: #3a3a3a;
+    --accent-soft: #e0e0d8;
+    --link: #1d3f7a;
+    --danger: #9b1b1b;
+    --danger-hover: #761414;
+    --danger-soft: #f0d3d3;
+    --success: #2d4d2d;
+    --paper: #f7f7f2;
+    --card-bg: #f1f1ea;
+    --dice-bg: #151515;
+    --dice-text: #f7f7f2;
+}
+
+.entityView {
+    --sheet-font: "Courier Prime", "Courier New", Courier, "Nimbus Mono PS", monospace;
+    --title-font: Impact, "Arial Black", "Haettenschweiler", sans-serif;
+    --block-radius: 0;
+    --block-border: 1px solid var(--border);
+    --label-color: var(--text);
+    background: var(--bg);
+    font-size: 0.95em;
+}
+.entityView > .entityTable {
+    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.18);
+}
+.entityView > .entityTable > table > thead th {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 1.05em;
+    font-weight: 400;
+    background: transparent;
+    color: var(--text);
+    border-bottom: 2px solid var(--border-strong);
+}
+.entityView .entityTable .entityTable > table > thead th {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 400;
+    background: transparent;
+}
+
+/* ---- Top: the name card beside the torn passions strip ---- */
+
+.entityView .table-character { --block: 50%; }
+.entityView .table-passions {
+    --block: 50%;
+    background: #ecebe5;
+}
+.entityView .table-passions > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 1.05em;
+}
+
+/* ---- Relationships: five yellow sticky notes ---- */
+
+.entityView .table-relationships {
+    clear: left;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+.entityView .table-relationships > table > tbody > tr {
+    background: #f3eea0;
+    border: none;
+    box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
+    margin: 4px;
+}
+.entityView .table-relationships > table > tbody > tr > td:first-child {
+    font-size: 0.8em;
+    text-align: center;
+}
+
+/* ---- Shock meters: one row per meter, the upper ability, the notches,
+   the lower ability, the failure boxes and the stress check ---- */
+
+.entityView .table-shock { clear: left; }
+.entityView .table-shock .entityTable > table > thead th {
+    font-size: 1.15em;
+    text-align: left;
+}
+.entityView .table-shock .entityTable > table > tbody {
+    border-bottom: 3px solid var(--border-strong);
+}
+.entityView .table-shock .slots .used {
+    background: var(--border-strong);
+}
+
+/* ---- Identities on worn green paper, the wound threshold on tape ---- */
+
+.entityView .table-identities {
+    background: #e4e8d2;
+    border: 2px solid #3a3a30;
+}
+.entityView .table-wounds {
+    --block: 50%;
+    clear: left;
+    background: #dcdcd2;
+}
+.entityView .table-adept,
+.entityView .table-avatar,
+.entityView .table-supernatural-ability {
+    --block: 50%;
+    background: #f5f7fb;
+    border: 2px solid #2d5aa0;
+}
+.entityView .table-adept { border-color: #6b3fa0; }
+.entityView .table-avatar { border-color: #2a8a80; }
+.entityView .table-adept > table > thead th { color: #6b3fa0; }
+.entityView .table-avatar > table > thead th { color: #2a8a80; }
+.entityView .table-supernatural-ability > table > thead th { color: #2d5aa0; }
+
+.entityView .table-attacks > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}
+
+/* Each sticky note: the role on top, the person and the percentage below. */
+.entityView .table-relationships > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+}
+.entityView .table-relationships > table > tbody > tr > td {
+    width: auto;
+    text-align: center;
+}
+.entityView .table-relationships .customtype {
+    justify-content: space-between;
+}
+
+/* The meters carry their own titles, so drop the row names beside them. */
+.entityView .table-shock > table > tbody > tr > :not(:has(.entityTable)) {
+    display: none;
+}

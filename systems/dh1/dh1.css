@@ -1,0 +1,130 @@
+@import url("/systems/sheet.css");
+
+/* Dark Heresy 1st edition: the acolyte's record of the Calixis Sector. Pale
+   grey-green vellum on black, iron-black title bars with a crimson rule and
+   a gothic serif, the nine characteristics as a row of framed boxes, basic
+   and advanced skills side by side with wounds, fate, insanity and
+   corruption, then weapons, armour by location, gear and psychic powers. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #101210;
+    --surface: #e3e2d3;
+    --surface-alt: #d4d3c1;
+    --surface-sunken: #c3c2ad;
+    --surface-muted: #aaa991;
+    --text: #15140f;
+    --text-muted: #3a3a2e;
+    --text-faint: #6b6a58;
+    --on-accent: #e3e2d3;
+    --border: #807f6a;
+    --border-strong: #15140f;
+    --accent: #1d1e1a;
+    --accent-hover: #34352e;
+    --accent-soft: #d2d1c1;
+    --link: #7b1012;
+    --danger: #8a1214;
+    --danger-hover: #680d0f;
+    --danger-soft: #ead0c8;
+    --success: #39502c;
+    --paper: #e3e2d3;
+    --card-bg: #d4d3c1;
+    --dice-bg: #7b1012;
+    --dice-text: #e3e2d3;
+    --crimson: #8a1214;
+    --brass: #a08a4c;
+}
+
+.entityView {
+    --sheet-font: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --title-font: "UnifrakturCook", "Old English Text MT", "Cinzel", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable {
+    box-shadow: inset 0 0 0 1px var(--brass);
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1.2em;
+    letter-spacing: 0.06em;
+    background: linear-gradient(180deg, #2c2d27, var(--accent));
+    color: var(--on-accent);
+    padding: 2px 10px;
+    border-bottom: 3px solid var(--crimson);
+}
+
+/* ---- Characteristics: nine framed boxes ---- */
+
+.entityView .table-characteristics > table > tbody,
+.entityView .table-profile > table > tbody { grid-template-columns: repeat(9, minmax(0, 1fr)); column-gap: 6px; padding: 6px; }
+.entityView .table-characteristics > table > tbody > tr,
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    outline: 1px solid var(--brass);
+    outline-offset: -5px;
+    padding: 7px 4px;
+    background: var(--surface-alt);
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child,
+.entityView .table-profile > table > tbody > tr > td:first-child { font-weight: 700; font-variant: small-caps; font-size: 0.95em; }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "\00D7"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(5)::before { content: "bonus "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Skills in two columns beside the status column ---- */
+
+.entityView .table-basic-skills,
+.entityView .table-advanced-skills { --block: 33.333%; }
+.entityView .table-basic-skills { clear: left; }
+.entityView .table-basic-skills th.row-header,
+.entityView .table-advanced-skills th.row-header { white-space: nowrap; }
+.entityView .table-basic-skills .customtype > div:first-child,
+.entityView .table-advanced-skills .customtype > div:first-child { font-size: 0.85em; }
+.entityView .table-basic-skills .customtype > div:nth-child(2)::before,
+.entityView .table-advanced-skills .customtype > div:nth-child(2)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-status,
+.entityView .table-conditions,
+.entityView .table-insanity,
+.entityView .table-corruption,
+.entityView .table-experience { --block: 33.333%; }
+.entityView .table-insanity > table > thead th,
+.entityView .table-corruption > table > thead th { background: linear-gradient(180deg, #5a1012, var(--crimson)); border-bottom-color: var(--accent); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-movement,
+.entityView .table-armour,
+.entityView .table-thrones { --block: 33.333%; }
+.entityView .table-movement { clear: left; }
+.entityView .table-talents,
+.entityView .table-traits { --block: 50%; }
+.entityView .table-talents { clear: left; }
+.entityView .table-ammunition,
+.entityView .table-armour-worn,
+.entityView .table-gear { --block: 33.333%; }
+.entityView .table-ammunition { clear: left; }
+.entityView .table-psychic,
+.entityView .table-psychic-powers,
+.entityView .table-power-uses { --block: 33.333%; }
+.entityView .table-psychic { clear: left; }
+
+/* ---- Labels for list columns ---- */
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "test "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "pen "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(5)::before { content: "RoF "; color: var(--text-faint); font-size: 0.8em; }
+
+.entityView .table-ammunition > table > tbody > tr > td:nth-child(2)::before { content: "shots "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-ammunition > table > tbody > tr > td:nth-child(3)::before { content: "clips "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-power-uses > table > tbody > tr > td:nth-child(2)::before { content: "threshold "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-power-uses > table > tbody > tr > td:nth-child(3)::before { content: "roll "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Acolyte cells ---- */
+
+.entityView .table-cell > table > thead th { border-bottom-color: var(--brass); }

@@ -1,0 +1,205 @@
+{
+  "values": {
+    "Character": {
+      "Level": 3,
+      "XP": 7,
+      "Goal": "Break the chains of the salt-mines of Hollow Vey and set its slaves free.",
+      "Origin": "Gladiator of the drowned arena"
+    },
+    "Attributes": {
+      "STR.Score": 18,
+      "DEX.Score": 14,
+      "CON.Score": 16,
+      "INT.Score": 9,
+      "WIS.Score": 12,
+      "CHA.Score": 13
+    },
+    "Combat": {
+      "HP": 17,
+      "Armor": "Divine",
+      "Divine Fury used": false
+    },
+    "Saves": {
+      "Evasion.Penalty": 0
+    },
+    "Effort": {
+      "Bonus Effort": 1,
+      "Scene": 1,
+      "Day": 1
+    },
+    "Facts": [
+      "Won his freedom in forty bouts in the drowned arena",
+      "Sworn brother to the smugglers of the Ninefold Canals",
+      "Cannot read, but remembers every face he has fought"
+    ],
+    "Influence": {
+      "Committed": 2
+    },
+    "Dominion": {
+      "Earned": 9,
+      "Spent": 4,
+      "Wealth": 3
+    },
+    "Projects": [
+      {
+        "Change": "The village of Ashgrove grows wheat in its salt fields",
+        "Scope": "Village",
+        "Plausibility": "Implausible",
+        "Dominion": 2,
+        "Influence": 1
+      },
+      {
+        "Change": "Slavers in the city of Vey are shunned by every guild",
+        "Scope": "City",
+        "Plausibility": "Plausible",
+        "Dominion": 2,
+        "Influence": 1
+      }
+    ],
+    "Notes": {
+      "Cults": "The Unchained, freed miners who leave broken shackles at his shrines.",
+      "Details": "Carries the iron collar he wore for twelve years. Owes a favour to the Lady of Lamps."
+    }
+  },
+  "secondary": {
+    "Words": [
+      {
+        "name": "Sword",
+        "values": {
+          "Stats": {
+            "Attribute": "STR",
+            "Domain": "Blades, duels, soldiers and the art of killing."
+          }
+        }
+      },
+      {
+        "name": "Endurance",
+        "values": {
+          "Stats": {
+            "Attribute": "CON",
+            "Domain": "Toughness, stamina, resisting harm and hardship."
+          }
+        }
+      },
+      {
+        "name": "Sun",
+        "values": {
+          "Stats": {
+            "Attribute": "CHA",
+            "Domain": "Light, fire of the day, revelation and warmth."
+          }
+        }
+      }
+    ],
+    "Gifts": [
+      {
+        "name": "Edge That Never Dulls",
+        "values": {
+          "Stats": {
+            "Word": "Sword",
+            "Rank": "Lesser",
+            "Type": "Constant",
+            "Effort": "None",
+            "Damage": "1d10"
+          }
+        }
+      },
+      {
+        "name": "Unbroken Flesh",
+        "values": {
+          "Stats": {
+            "Word": "Endurance",
+            "Rank": "Lesser",
+            "Type": "Constant",
+            "Effort": "None"
+          }
+        }
+      },
+      {
+        "name": "Dawn's Rebuke",
+        "values": {
+          "Stats": {
+            "Word": "Sun",
+            "Rank": "Greater",
+            "Type": "Action",
+            "Effort": "Scene",
+            "Range": "200 ft",
+            "Damage": "1d10"
+          }
+        }
+      },
+      {
+        "name": "Stand Against the Tide",
+        "values": {
+          "Stats": {
+            "Word": "Endurance",
+            "Rank": "Lesser",
+            "Type": "Instant",
+            "Effort": "Day"
+          }
+        }
+      }
+    ],
+    "Weapons": [
+      {
+        "name": "Chain-sword of the arena",
+        "values": {
+          "Stats": {
+            "Kind": "Melee",
+            "Damage": "1d10",
+            "Attribute": "STR",
+            "Notes": "Heavy"
+          }
+        }
+      },
+      {
+        "name": "Throwing spear",
+        "values": {
+          "Stats": {
+            "Kind": "Thrown",
+            "Damage": "1d6",
+            "Attribute": "STR",
+            "Range": "30 ft",
+            "Notes": "Light"
+          }
+        }
+      }
+    ],
+    "Artifacts": [
+      {
+        "name": "The Collar of Twelve Years",
+        "values": {
+          "Stats": {
+            "Kind": "Minor item",
+            "Effort": 1,
+            "Dominion": 2,
+            "Shards": 1,
+            "Bound": true
+          }
+        }
+      }
+    ],
+    "Techniques": [
+      {
+        "name": "Shackle-Breaker's Stance",
+        "values": {
+          "Stats": {
+            "Strife": "Way of the Broken Chain",
+            "Step": "Entrance",
+            "Effort": "Scene"
+          }
+        }
+      },
+      {
+        "name": "Iron Rebuttal",
+        "values": {
+          "Stats": {
+            "Strife": "Way of the Broken Chain",
+            "Step": "Technique",
+            "Effort": "None"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,133 @@
+@import url("/systems/sheet.css");
+
+/* Black Crusade: a heretic's record on scorched vellum. Black ground, title
+   bars of dried blood with tarnished brass lettering, bone-coloured panels
+   edged in iron. The header with race and archetype, then the nine
+   characteristics as a row of brass-studded plates, the skill list beside
+   wounds, Infamy, Corruption and movement, then the alignment to the Dark
+   Gods, armour, talents, weapons and the gifts the gods have given. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #0e0a09;
+    --surface: #e2d7c1;
+    --surface-alt: #d2c4a8;
+    --surface-sunken: #bfae8e;
+    --surface-muted: #a8977a;
+    --text: #1a0f0b;
+    --text-muted: #45302a;
+    --text-faint: #75604f;
+    --on-accent: #d9b76a;
+    --border: #7a5d47;
+    --border-strong: #24120e;
+    --accent: #5a0d0d;
+    --accent-hover: #741515;
+    --accent-soft: #e8cfc4;
+    --link: #7a1010;
+    --danger: #8c1010;
+    --danger-hover: #6a0b0b;
+    --danger-soft: #efcdc6;
+    --success: #3e4d23;
+    --paper: #e2d7c1;
+    --card-bg: #d2c4a8;
+    --dice-bg: #3b0808;
+    --dice-text: #e5c67c;
+    --brass: #a8843f;
+    --blood: #5a0d0d;
+}
+
+.entityView {
+    --sheet-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --title-font: "UnifrakturMaguntia", "Old English Text MT", "Cinzel", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: radial-gradient(ellipse at top, #24100c, var(--bg) 70%);
+}
+.entityView .entityTable {
+    box-shadow: inset 0 0 0 1px var(--brass), 0 0 0 1px #000;
+}
+.entityView .entityTable > table > thead th {
+    font-family: var(--title-font);
+    font-size: 1.1em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #7a1414, var(--blood) 60%, #3a0606);
+    color: var(--on-accent);
+    padding: 3px 10px;
+    border-bottom: 2px solid var(--brass);
+    text-shadow: 0 1px 0 #000;
+}
+
+/* ---- Header ---- */
+
+.entityView .table-heretic > table > tbody > tr > td:first-child { font-variant: small-caps; color: var(--text-muted); }
+
+/* ---- Characteristics: nine brass-studded plates ---- */
+
+.entityView .table-characteristics > table > tbody,
+.entityView .table-profile > table > tbody { grid-template-columns: repeat(9, minmax(0, 1fr)); column-gap: 6px; padding: 6px; }
+.entityView .table-characteristics > table > tbody > tr,
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+    outline: 1px solid var(--brass);
+    outline-offset: -4px;
+    padding: 6px 4px;
+    background: radial-gradient(circle at 6px 6px, var(--brass) 1.5px, transparent 2px), radial-gradient(circle at calc(100% - 6px) 6px, var(--brass) 1.5px, transparent 2px), var(--surface-alt);
+}
+.entityView .table-characteristics > table > tbody > tr > td:first-child,
+.entityView .table-profile > table > tbody > tr > td:first-child { font-weight: 700; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.06em; color: var(--blood); }
+.entityView .table-characteristics .customtype { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; }
+.entityView .table-characteristics .customtype > div:nth-child(2)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(3)::before { content: "\00D7"; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-characteristics .customtype > div:nth-child(5)::before { content: "bonus "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Skills beside wounds, Infamy and Corruption ---- */
+
+.entityView .table-skills { --block: 66.666%; }
+.entityView .table-skills .customtype > div:nth-child(2)::before { content: "misc "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-status,
+.entityView .table-infamy,
+.entityView .table-corruption,
+.entityView .table-movement { --block: 33.333%; }
+.entityView .table-infamy > table > thead th,
+.entityView .table-corruption > table > thead th { border-bottom-color: #c9a24c; }
+
+/* ---- The Dark Gods ---- */
+
+.entityView .table-chaos-alignment,
+.entityView .table-advances-by-god { --block: 50%; }
+.entityView .table-chaos-alignment { clear: left; }
+.entityView .table-advances-by-god .customtype > div:nth-child(1)::before { content: "adv "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-advances-by-god .customtype > div:nth-child(2)::before { content: "xp "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-advances-by-god .customtype > div:nth-child(3) { font-style: italic; color: var(--blood); }
+
+/* ---- Lower half ---- */
+
+.entityView .table-armour,
+.entityView .table-talents,
+.entityView .table-traits { --block: 33.333%; }
+.entityView .table-armour { clear: left; }
+.entityView .table-ammunition,
+.entityView .table-gear,
+.entityView .table-armour-worn { --block: 33.333%; }
+.entityView .table-ammunition { clear: left; }
+.entityView .table-psychic,
+.entityView .table-psychic-powers,
+.entityView .table-gifts-of-the-gods { --block: 33.333%; }
+.entityView .table-psychic { clear: left; }
+
+/* ---- Labels for list columns ---- */
+
+.entityView .table-attacks > table > tbody > tr > td:nth-child(2)::before { content: "test "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(3)::before { content: "dmg "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(4)::before { content: "pen "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attacks > table > tbody > tr > td:nth-child(5)::before { content: "RoF "; color: var(--text-faint); font-size: 0.8em; }
+
+/* ---- Hordes and compacts ---- */
+
+.entityView .table-horde > table > thead th,
+.entityView .table-compact > table > thead th,
+.entityView .table-objectives > table > thead th { border-bottom-color: #c9a24c; }

@@ -1,0 +1,60 @@
+{
+  "name": "Dolores 'Lola' Vance",
+  "values": {
+    "Character": {
+      "Cabal": "The Night Shift",
+      "Current Objective": "Get the Hollow Saint's ledger out of the evidence locker before the feds find it.",
+      "Distinguishing Characteristics": "Forties, nurse's clogs, a burn scar on the left hand she never explains. Smokes menthols she can't afford.",
+      "Kind": "Adept"
+    },
+    "Passions": {
+      "Rage": { "Stimulus": "Doctors who treat the poor like meat" },
+      "Noble": { "Stimulus": "Nobody dies alone on my ward", "Used": true },
+      "Fear": { "Stimulus": "Ending up like her mother, forgotten in a care home" }
+    },
+    "Relationships": {
+      "Favorite": { "Who": "Marcus, her teenage son", "Percent": 45 },
+      "Guru": { "Who": "Old Benny, the orderly who taught her", "Percent": 30 },
+      "Mentor": { "Who": "Sister Agnes", "Percent": 20 },
+      "Responsibility": { "Who": "Room 412, the coma patient", "Percent": 25 },
+      "Protege": { "Who": "Danny, the new paramedic", "Percent": 15 }
+    },
+    "Shock": {
+      "Helplessness": { "Hardened": 4, "Failures.realvalue": 1 },
+      "Isolation": { "Hardened": 2 },
+      "Self": { "Hardened": 1 },
+      "Unnatural": { "Hardened": 3, "Failures.realvalue": 2 },
+      "Violence": { "Hardened": 2 }
+    },
+    "Identities": [
+      { "Name": "Night-shift nurse", "Of course I can": "stitch a wound and read a chart", "Percent": 55, "Substitutes for": "Knowledge", "Features": "Provides wound threshold" },
+      { "Name": "Born in the projects", "Of course I can": "spot a cop and a hustle", "Percent": 40, "Substitutes for": "Pursuit", "Features": "Provides initiative" },
+      { "Name": "Mediciner", "Of course I can": "feel what ails a body", "Percent": 35, "Substitutes for": "Notice", "Features": "Magick school identity" }
+    ],
+    "Wounds": { "Taken": 12 },
+    "Adept": {
+      "Adept School": "Mediciner (homebrew healing school)",
+      "Percentage": 35,
+      "Taboos": "Never refuse care to anyone who asks for it.",
+      "Domain": "Bodies, sickness and the line between them.",
+      "Minor Charges": 3,
+      "Significant Charges": 1,
+      "Major Charges": 0,
+      "Charge Notes": "Minor: a double shift without sleep. Significant: sit with a stranger until they die. Major: trade your own health for a patient's."
+    },
+    "Notes": {
+      "Gear": "Scrubs, penlight, a hospital keycard that should have been cancelled, a bottle of stolen morphine, a beat-up Corolla.",
+      "Notes": "Owes Sister Agnes for a favour she still won't name. The ledger was last seen in Detective Ruiz's car."
+    }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Scalpel", "values": { "Stats": { "Kind": "Melee", "Notes": "Small and easy to hide." } } },
+      { "name": "Fire axe", "values": { "Stats": { "Kind": "Melee", "Cleaves": true, "Big": true, "Notes": "From the stairwell cabinet." } } }
+    ],
+    "Spells": [
+      { "name": "Feel the fever", "values": { "Stats": { "School": "Mediciner", "Charge": "Minor", "Cost": 1, "Effect": "Touch someone to learn what is wrong with their body." } } },
+      { "name": "Close the wound", "values": { "Stats": { "School": "Mediciner", "Charge": "Significant", "Cost": 1, "Effect": "Heal 2d10 wounds on a patient you have cared for." } } }
+    ]
+  }
+}

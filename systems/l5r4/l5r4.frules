@@ -1,0 +1,834 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+plural (n, word) = toString (n) + " " + word + (if n == 1 then "" else "s")
+
+signed (n) = if n > 0 then "+" + toString (n) else if n < 0 then toString (n) else ""
+
+chainDone (acc) = if acc.Cur > 0 then concat (acc.Done, [acc.Cur]) else acc.Done
+
+dieTotals (rolls, ex) = chainDone (fold ({ Done = []  Cur = 0  Open = false }, (acc, x)->
+    if acc.Open then { Done = acc.Done  Cur = acc.Cur + x  Open = x >= ex }
+    else { Done = if acc.Cur > 0 then concat (acc.Done, [acc.Cur]) else acc.Done  Cur = x  Open = x >= ex }, rolls))
+
+keepSum (totals, keep) = fold ({ N = 0  Sum = 0 }, (acc, x)->if acc.N < keep then { N = acc.N + 1  Sum = acc.Sum + x } else acc, reverse (sort (totals))).Sum
+
+rkR (r) = max (1, r)
+
+rkK0 (r, k) = if rkR (r) < 10 and max (1, k) > rkR (r) then rkR (r) else max (1, k)
+
+rkExtras (r) = max (rkR (r) - 10, 0)
+
+rkConv (r, k) = min (rkExtras (r) / 2, max (0, 10 - rkK0 (r, k)))
+
+rkK2 (r, k) = rkK0 (r, k) + rkConv (r, k)
+
+tenRolled (r) = min (10, rkR (r))
+
+tenKept (r, k) = min (10, rkK2 (r, k))
+
+tenBonus (r, k) = if rkK2 (r, k) >= 10 then (rkK2 (r, k) - 10) * 2 + (rkExtras (r) - 2 * rkConv (r, k)) * 2 else 0
+
+poolText (r, k, flat) = toString (tenRolled (r)) + "k" + toString (tenKept (r, k)) + signed (tenBonus (r, k) + flat)
+
+rkTotal (totals, r, k, flat) = keepSum (totals, tenKept (r, k)) + tenBonus (r, k) + flat
+
+explodeFor (skilled) = if skilled then 10 else 11
+
+rkTn (tn, asked, answered) =
+    if tn == -1 then (if answered then asked else 0)
+    else if tn == -2 then (if answered then 10 + 5 * asked else 0)
+    else if tn == -3 then (if answered then 5 + 5 * asked else 0)
+    else tn
+
+effectiveTn (tn, raises, pen) = tn + 5 * max (0, raises) + pen
+
+tnDetail (tn, raises, pen) =
+    if raises > 0 or pen > 0 then
+        " (" + toString (tn) + (if raises > 0 then " + " + plural (raises, "raise") else "") + (if pen > 0 then " + wounds " + toString (pen) else "") + ")"
+    else ""
+
+rkText (total, r, k, flat, tn, raises, pen, cap) =
+    toString (total) + " (" + poolText (r, k, flat) + ")"
+    + (if tn > 0 then " vs TN " + toString (effectiveTn (tn, raises, pen)) + tnDetail (tn, raises, pen) + ": "
+        + (if total >= effectiveTn (tn, raises, pen) then "Success" + (if total > effectiveTn (tn, raises, pen) then " by " + toString (total - effectiveTn (tn, raises, pen)) else "") else "Failure by " + toString (effectiveTn (tn, raises, pen) - total))
+        else (if raises > 0 then ", " + plural (raises, "raise") + " called" else ""))
+    + (if raises > cap then ", more raises than allowed (" + toString (cap) + ")" else "")
+
+onesOf (totals) = count (filter ((x)->x == 1, totals))
+
+rkResult (totals, r, k, flat, ex, tn, raises, pen, cap, note, canPush) =
+{
+    Text = rkText (rkTotal (totals, r, k, flat), r, k, flat, tn, raises, pen, cap) + note
+    Value = rkTotal (totals, r, k, flat)
+    Outcome = if tn > 0 then (if rkTotal (totals, r, k, flat) >= effectiveTn (tn, raises, pen) then "Success" else "Failure") else ""
+    Push = if canPush and onesOf (totals) > 0 then emphasisDice (filter ((x)->x != 1, totals), onesOf (totals), r, k, flat, ex, tn, raises, pen, cap, note) else 0
+    PushLabel = "Emphasis: reroll 1s"
+}
+
+emphasisDice (kept, ones, r, k, flat, ex, tn, raises, pen, cap, note) = ([dice { number = ones  sides = 10  explode = ex  label = "Emphasis" }],
+    ((baseline, throws)->rkResult (concat (kept, dieTotals (first (throws).rolls, ex)), r, k, flat, ex, tn, raises, pen, cap, note + " (emphasis: 1s rerolled)", false)))
+
+rkDice (r, k, flat, ex, tn, raises, pen, cap, note) = ([dice { number = tenRolled (r)  sides = 10  explode = ex }],
+    ((baseline, throws)->rkResult (dieTotals (first (throws).rolls, ex), r, k, flat, ex, rkTn (tn, asked, answered), raises, pen, cap, note, true)))
+
+rkRoll (r, k, tn) = rkDice (r, k, 0, 10, tn, 0, 0, 10, "")
+
+checkAsk (r, k, flat, ex, pen, cap, note) = ask ("Raises", 0, (n)->ask ("TN", rkDice (r, k, flat, ex, -1, n, pen, cap, note)))
+
+initDice (r, k, flat) = ([dice { number = tenRolled (r)  sides = 10  explode = 10 }],
+    ((baseline, throws)->rkTotal (dieTotals (first (throws).rolls, 10), r, k, flat)))
+
+damageDice (r, k, flat) = ([dice { number = tenRolled (r)  sides = 10  explode = 10  color = "red"  label = "Damage" }],
+    ((baseline, throws)->
+    {
+        Text = toString (rkTotal (dieTotals (first (throws).rolls, 10), r, k, flat)) + " damage (" + poolText (r, k, flat) + ")"
+            + (if answered and asked > 0 then ", " + toString (max (0, rkTotal (dieTotals (first (throws).rolls, 10), r, k, flat) - asked)) + " after Reduction " + toString (asked) else "")
+        Value = rkTotal (dieTotals (first (throws).rolls, 10), r, k, flat)
+    }))
+
+damageAsk (r, k, flat) = ask ("Raises for extra damage dice", 0, (n)->ask ("Target's Reduction", damageDice (r + n, k, flat)))
+
+spellDice (r, k, mastery, raises, pen, cap, note) = rkDice (r, k, 0, 10, 5 + 5 * mastery, raises, pen, cap, note)
+
+spellAsk (r, k, mastery, pen, cap, note) = ask ("Raises", 0, (n)->spellDice (r, k, mastery, n, pen, cap, note))
+
+woundIndex (wounds, earth) =
+    if wounds <= 5 * max (1, earth) then 0
+    else min (8, (wounds - 5 * max (1, earth) + 2 * max (1, earth) - 1) / (2 * max (1, earth)))
+
+woundNames = ["Healthy", "Nicked", "Grazed", "Hurt", "Injured", "Crippled", "Down", "Out", "Dead"]
+
+woundPenalties = [0, 3, 5, 10, 15, 20, 40, 40, 40]
+
+woundRankName (wounds, earth) = item (woundIndex (wounds, earth), woundNames)
+
+woundPenalty (wounds, earth) = item (woundIndex (wounds, earth), woundPenalties)
+
+woundState (wounds, earth) = if woundIndex (wounds, earth) == 0 then "" else woundRankName (wounds, earth)
+
+threshold (earth, step) = 5 * max (1, earth) + 2 * max (1, earth) * step
+
+insightRank (insight) = if insight < 150 then 1 else 2 + (insight - 150) / 25
+
+masteryInsight (name, rank) = if name == "Courtier" or name == "Etiquette" then (if rank >= 7 then 10 else if rank >= 3 then 3 else 0) else 0
+
+skillInsight (skills) = sum (map ((s)->s.Rank + masteryInsight (s.Name, s.Rank), skills))
+
+ringsOf (char) = char.Rings.Air.Ring + char.Rings.Earth.Ring + char.Rings.Fire.Ring + char.Rings.Water.Ring + char.Rings.Void.Ring
+
+charInsight (char) = ringsOf (char) * 10 + skillInsight (char.Skills) + char.Samurai.'Insight bonus'
+
+charInsightRank (char) = insightRank (charInsight (char))
+
+charPen (char) = woundPenalty (char.Wounds.'Wounds taken', char.Rings.Earth.Ring)
+
+voidDie (char) = if char.Samurai.'Spend Void' == "Spend" and max (0, char.Rings.Void.'Void points'.realvalue) < char.Rings.Void.Ring then 1 else 0
+
+voidNote (char) = if voidDie (char) > 0 then " (Void point: +1k1)" else ""
+
+raiseCap (char, skilled) = if skilled then char.Rings.Void.Ring else 0
+
+charCheck (char, r, k, flat, skilled) = checkAsk (r + voidDie (char), k + voidDie (char), flat, explodeFor (skilled), charPen (char), raiseCap (char, skilled), voidNote (char))
+
+traitCheck (char, trait) = charCheck (char, trait, trait, 0, true)
+
+skillTrait (name) =
+    if contains (name, "Lore") or contains (name, "Craft") or contains (name, "Shogi") or contains (name, "Go") then "Intelligence"
+    else if contains (name, "Artisan") or contains (name, "Letters") or contains (name, "Sadane") or contains (name, "Fortunes") then "Awareness"
+    else if contains (name, "Oratory") or contains (name, "Song") or contains (name, "Storytelling") then "Awareness"
+    else if contains (name, "Perform") or contains (name, "Kemari") then "Agility"
+    else switch name
+        case "Acting" then "Awareness"
+        case "Calligraphy" then "Intelligence"
+        case "Courtier" then "Awareness"
+        case "Divination" then "Intelligence"
+        case "Etiquette" then "Awareness"
+        case "Investigation" then "Perception"
+        case "Medicine" then "Intelligence"
+        case "Meditation" then "Void"
+        case "Sincerity" then "Awareness"
+        case "Spellcraft" then "Intelligence"
+        case "Tea Ceremony" then "Void"
+        case "Athletics" then "Strength"
+        case "Battle" then "Perception"
+        case "Defense" then "Reflexes"
+        case "Hunting" then "Perception"
+        case "Iaijutsu" then "Reflexes"
+        case "Kyujutsu" then "Reflexes"
+        case "Animal Handling" then "Awareness"
+        case "Commerce" then "Intelligence"
+        case "Engineering" then "Intelligence"
+        case "Intimidation" then "Awareness"
+        case "Temptation" then "Awareness"
+        else "Agility"
+
+skillNames = ["Acting", "Artisan: Painting", "Artisan: Poetry", "Calligraphy", "Courtier", "Divination", "Etiquette", "Games: Go", "Games: Shogi", "Games: Letters", "Investigation", "Lore: Bushido", "Lore: History", "Lore: Theology", "Lore: Shugenja", "Lore: Shadowlands", "Medicine", "Meditation", "Perform: Storytelling", "Sincerity", "Spellcraft", "Tea Ceremony", "Athletics", "Battle", "Defense", "Horsemanship", "Hunting", "Iaijutsu", "Jiujutsu", "Chain Weapons", "Heavy Weapons", "Kenjutsu", "Knives", "Kyujutsu", "Ninjutsu", "Polearms", "Spears", "Staves", "War Fan", "Animal Handling", "Commerce", "Craft: Weaponsmithing", "Engineering", "Sailing", "Forgery", "Intimidation", "Sleight of Hand", "Stealth", "Temptation"]
+
+traitValue (char, name) =
+    switch name
+        case "Stamina" then char.Rings.Earth.Stamina
+        case "Willpower" then char.Rings.Earth.Willpower
+        case "Strength" then char.Rings.Water.Strength
+        case "Perception" then char.Rings.Water.Perception
+        case "Intelligence" then char.Rings.Fire.Intelligence
+        case "Reflexes" then char.Rings.Air.Reflexes
+        case "Awareness" then char.Rings.Air.Awareness
+        case "Void" then char.Rings.Void.Ring
+        case "Air" then char.Rings.Air.Ring
+        case "Earth" then char.Rings.Earth.Ring
+        case "Fire" then char.Rings.Fire.Ring
+        case "Water" then char.Rings.Water.Ring
+        else char.Rings.Fire.Agility
+
+usedTrait (name, picked) = if picked == "" then skillTrait (name) else picked
+
+skillRank (char, name) = sum (map ((s)->s.Rank, filter ((s)->s.Name == name, char.Skills)))
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+rolledOf (text) = firstNumber (text)
+
+keptOf (text) = bonusWithValue ([[text]], "k([0-9]+)")
+
+flatOf (text) = bonusWithValue ([[text]], "k[0-9]+ *[+] *([0-9]+)")
+
+stanceRolled (char) = if char.Samurai.Stance == "Full Attack" then 2 else 0
+
+stanceKept (char) = if char.Samurai.Stance == "Full Attack" then 1 else 0
+
+wStat (weapon, field) = valueOr (weapon.data.l5r4Weapon.Stats, field, "")
+
+aStat (armor, field) = valueOr (armor.data.l5r4Armor.Stats, field, "")
+
+armorBonus (char) = max (0, map ((a)->toInt (aStat (a, "TN bonus")), char.Armor))
+
+armorReduction (char) = max (0, map ((a)->toInt (aStat (a, "Reduction")), char.Armor))
+
+stanceArmor (char) =
+    switch char.Samurai.Stance
+        case "Full Attack" then -10
+        case "Defense" then char.Rings.Air.Ring + skillRank (char, "Defense")
+        case "Full Defense" then char.Combat.'Full Defense roll' / 2
+        else 0
+
+attackTrait (char, skill) = if skill == "Kyujutsu" then char.Rings.Air.Reflexes else char.Rings.Fire.Agility
+
+weaponKind (skill) = if skill == "Kyujutsu" then "ranged" else "melee"
+
+orDefault (n, fallback) = if n > 0 then n else fallback
+
+weaponStrength (char, weapon) = if toInt (wStat (weapon, "Bow strength")) > 0 then toInt (wStat (weapon, "Bow strength")) else char.Rings.Water.Strength
+
+weaponAttack (name, atkR, atkK, skilled, pen, cap, note, dmgR, dmgK, dmgFlat, kind, reachFeet, rangeFeet) = custom
+{
+    Name = name
+    Attack = integer { description = "Weapon skill plus Agility (Reflexes for bows), keep Agility, against the target's Armor TN." value = atkK  render = poolText (atkR, atkK, 0)  valuedice = checkAsk (atkR, atkK, 0, explodeFor (skilled), pen, cap, note)  action = kind  reach = reachFeet  range = rangeFeet  editable = none }
+    Damage = integer { description = "Weapon damage plus Strength rolled, keep the weapon's kept dice. Raises on the attack add rolled dice." value = dmgK  render = poolText (dmgR, dmgK, dmgFlat)  valuedice = damageAsk (dmgR, dmgK, dmgFlat)  editable = none }
+}
+
+attackFor (char, weapon) =
+    weaponAttack (
+        weapon.Name,
+        attackTrait (char, wStat (weapon, "Skill")) + skillRank (char, wStat (weapon, "Skill")) + stanceRolled (char) + voidDie (char),
+        attackTrait (char, wStat (weapon, "Skill")) + stanceKept (char) + voidDie (char),
+        skillRank (char, wStat (weapon, "Skill")) > 0,
+        charPen (char),
+        raiseCap (char, skillRank (char, wStat (weapon, "Skill")) > 0),
+        voidNote (char) + (if stanceRolled (char) > 0 then " (Full Attack: +2k1)" else ""),
+        rolledOf (wStat (weapon, "Damage")) + weaponStrength (char, weapon),
+        keptOf (wStat (weapon, "Damage")),
+        flatOf (wStat (weapon, "Damage")),
+        weaponKind (wStat (weapon, "Skill")),
+        orDefault (firstNumber (wStat (weapon, "Reach")), 5),
+        orDefault (firstNumber (wStat (weapon, "Range")), 10000))
+
+sStat (spell, field) = valueOr (spell.data.l5r4Spell.Stats, field, "")
+
+castRing (char, ring) = if ring == "All" or ring == "" then max (char.Rings.Air.Ring, char.Rings.Earth.Ring, char.Rings.Fire.Ring, char.Rings.Water.Ring, char.Rings.Void.Ring) else traitValue (char, ring)
+
+spellKind (range) = if contains (toLower (range), "touch") then "melee" else "ranged"
+
+spellCast (name, ring, mastery, castR, castK, pen, cap, note, kind, rangeFeet) = custom
+{
+    Name = name
+    Cast = integer { description = "Ring plus School Rank, keep the Ring, against TN 5 + 5 x Mastery Level." value = 5 + 5 * mastery  render = poolText (castR, castK, 0) + " vs TN " + toString (5 + 5 * mastery)  valuedice = spellAsk (castR, castK, mastery, pen, cap, note)  action = kind  reach = 5  range = rangeFeet  editable = none }
+    Ring = ring
+    Mastery = mastery
+}
+
+castFor (char, spell) =
+    spellCast (
+        spell.Name,
+        sStat (spell, "Ring"),
+        toInt (sStat (spell, "Mastery")),
+        castRing (char, sStat (spell, "Ring")) + char.Samurai.'School rank' + voidDie (char),
+        castRing (char, sStat (spell, "Ring")) + voidDie (char),
+        charPen (char),
+        char.Rings.Void.Ring,
+        voidNote (char),
+        spellKind (sStat (spell, "Range")),
+        orDefault (firstNumber (sStat (spell, "Range")), 10000))
+
+assessmentAsk (char) = ask ("Opponent's Insight Rank", rkDice (char.Rings.Air.Awareness + skillRank (char, "Iaijutsu") + voidDie (char), char.Rings.Air.Awareness + voidDie (char), 0, explodeFor (skillRank (char, "Iaijutsu") > 0), -2, 0, charPen (char), 0, voidNote (char) + ". Beat the opponent's total by 10 or more for +1k1 on Focus"))
+
+focusDice (char) = rkDice (char.Rings.Void.Ring + skillRank (char, "Iaijutsu") + voidDie (char), char.Rings.Void.Ring + voidDie (char), 0, explodeFor (skillRank (char, "Iaijutsu") > 0), 0, 0, 0, 0, voidNote (char) + ". Contested: beat the opponent by 5 or more to strike first, with a free raise for each further 5")
+
+strikeAsk (char) = charCheck (char, char.Rings.Air.Reflexes + skillRank (char, "Iaijutsu"), char.Rings.Air.Reflexes, 0, skillRank (char, "Iaijutsu") > 0)
+
+fearAsk (char) = ask ("Fear rank", rkDice (char.Rings.Earth.Willpower + voidDie (char), char.Rings.Earth.Willpower + voidDie (char), char.Status.Honor.Rank, 10, -3, 0, charPen (char), 0, voidNote (char) + " (Honor Rank added)"))
+
+casterOnly (flag) = if flag then visible else none
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Rings, Combat, Wounds, Attacks, 'Iaijutsu duel'] }
+    Samurai = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Clan = string { keys = ["Crab", "Crane", "Dragon", "Lion", "Mantis", "Phoenix", "Scorpion", "Spider", "Unicorn", "Minor Clan", "Imperial", "Ronin"] }
+        Family = string {}
+        School = string { description = "The school that trained you, with its techniques by rank." }
+        'School rank' = integer { description = "Your rank in your school: it sets your techniques and, for shugenja, the spell casting roll." default = 1  minvalue = 1  maxvalue = 8 }
+        Insight = integer { description = "Rings x 10 plus every skill rank, plus mastery bonuses for Courtier and Etiquette." value = charInsight (characterTable)  editable = none }
+        'Insight Rank' = integer { description = "Rank 1 below 150 Insight, rank 2 at 150 and one more for every 25 after that." value = charInsightRank (characterTable)  editable = none }
+        'Insight bonus' = integer { description = "Extra Insight from advantages or the GM." default = 0 }
+        Experience = integer { description = "Unspent experience points." default = 0  editable = live }
+        Spellcaster = bool { description = "Tick for shugenja and other casters: shows spell slots and spell casting." default = false }
+        Affinity = string { description = "A shugenja's element of affinity. Apply its effect by hand." keys = ["", "Air", "Earth", "Fire", "Water", "Void"] }
+        Deficiency = string { description = "A shugenja's element of deficiency. Apply its effect by hand." keys = ["", "Air", "Earth", "Fire", "Water", "Void"] }
+        Stance = selector { description = "Your combat stance this round. Full Attack gives +2k1 on attacks and -10 Armor TN; Defense adds Air and Defense to Armor TN; Full Defense adds half your Defense roll." options = ["Attack", "Full Attack", "Defense", "Full Defense", "Center"]  labels = ["Attack", "Full Atk", "Defense", "Full Def", "Center"]  colors = ["", "red", "blue", "blue", "green"]  default = "Attack"  editable = live }
+        'Spend Void' = selector { description = "Hold Shift while rolling, or switch it on, to spend a Void point for +1k1; then tick a spent Void point." options = ["No", "Spend"]  labels = ["No", "Spend"]  colors = ["", "purple"]  hold = ["", "Shift"]  default = "No"  editable = live  save = nosave }
+    }
+
+    Rings = table
+    {
+        description = "Each ring is the lower of its two traits. Rolls roll trait plus skill in d10s and keep the trait."
+        tableLayout = layout { columns = 5  size = wide }
+        Air = table
+        {
+            Reflexes = integer { description = "Speed of reaction: Armor TN, initiative, bows and the iaijutsu strike." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Reflexes) }
+            Awareness = integer { description = "Social and emotional perception: courtly skills and the duel's assessment." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Awareness) }
+            Ring = integer { description = "Air: the lower of Reflexes and Awareness." value = min (Reflexes, Awareness)  valuedice = traitCheck (characterTable, min (Reflexes, Awareness))  editable = none }
+        }
+        Earth = table
+        {
+            Stamina = integer { description = "Physical endurance: natural healing and resisting poison and fatigue." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Stamina) }
+            Willpower = integer { description = "Mental endurance: resisting fear, intimidation and temptation." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Willpower) }
+            Ring = integer { description = "Earth: the lower of Stamina and Willpower. It sets your wound ranks." value = min (Stamina, Willpower)  valuedice = traitCheck (characterTable, min (Stamina, Willpower))  editable = none }
+        }
+        Fire = table
+        {
+            Agility = integer { description = "Coordination: most weapon attacks and many crafts and arts." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Agility) }
+            Intelligence = integer { description = "Reason and memory: lore, crafts and spellcraft." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Intelligence) }
+            Ring = integer { description = "Fire: the lower of Agility and Intelligence." value = min (Agility, Intelligence)  valuedice = traitCheck (characterTable, min (Agility, Intelligence))  editable = none }
+        }
+        Water = table
+        {
+            Strength = integer { description = "Raw power: added to the rolled dice of melee damage, and athletics." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Strength) }
+            Perception = integer { description = "The senses: investigation, hunting and battle." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Perception) }
+            Ring = integer { description = "Water: the lower of Strength and Perception. It sets how far you move." value = min (Strength, Perception)  valuedice = traitCheck (characterTable, min (Strength, Perception))  editable = none }
+        }
+        Void = table
+        {
+            Ring = integer { description = "Void: the ring of the soul. It sets your Void points and how many raises you may call." default = 2  minvalue = 1  maxvalue = 10  valuedice = traitCheck (characterTable, Ring) }
+            'Void points' = slots { description = "Void points spent, one box each: spend one for +1k1, +10 Armor TN for a round, or to reduce wounds by 10. A night of rest restores them." number = Ring  editable = live }
+        }
+    }
+
+    Status = keyvalues
+    {
+        description = "Honor, Glory and Status run from 0 to 10 in ranks and points; Shadowlands Taint corrupts body and soul."
+        tableLayout = layout { columns = 4  size = wide }
+        keys = ["Honor", "Glory", "Status", "Taint"]
+        descriptions = { Honor = "Devotion to bushido. Its rank is added to rolls against fear and temptation."  Glory = "Fame and reputation across the Empire."  Status = "Social rank in the Celestial Order."  Taint = "Shadowlands Taint: corruption from the Shadowlands, which slowly turns the samurai into a monster." }
+        valueType = custom
+        {
+            Rank = integer { default = 0  minvalue = 0  maxvalue = 10 }
+            Points = integer { default = 0  minvalue = 0  maxvalue = 9  editable = live }
+        }
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 2 }
+        Initiative = integer { description = "Roll Insight Rank plus Reflexes, keep Reflexes. Highest acts first." value = charInsightRank (characterTable) + Rings.Air.Reflexes  render = poolText (charInsightRank (characterTable) + Rings.Air.Reflexes, Rings.Air.Reflexes, 0)  valuedice = initDice (charInsightRank (characterTable) + Rings.Air.Reflexes, Rings.Air.Reflexes, 0)  editable = none }
+        'Armor TN' = integer { description = "5 + Reflexes x 5, plus the best armor worn and the stance." value = 5 + 5 * Rings.Air.Reflexes + armorBonus (characterTable) + stanceArmor (characterTable) + 'Other Armor TN'  editable = none }
+        Reduction = integer { description = "Taken off the damage of every hit, from armor." value = armorReduction (characterTable)  editable = none }
+        'Other Armor TN' = integer { description = "Bonuses from techniques, spells or a Void point (+10 for a round)." default = 0  editable = live }
+        'Full Defense roll' = integer { description = "In Full Defense stance, roll Defense with Reflexes and write the total here: half of it is added to Armor TN." default = 0  minvalue = 0  editable = live }
+        'Defense roll' = integer { description = "Defense with Reflexes, for the Full Defense stance." value = Rings.Air.Reflexes + skillRank (characterTable, "Defense")  render = poolText (Rings.Air.Reflexes + skillRank (characterTable, "Defense"), Rings.Air.Reflexes, 0)  valuedice = initDice (Rings.Air.Reflexes + skillRank (characterTable, "Defense"), Rings.Air.Reflexes, 0)  editable = none }
+        Move = string { description = "Feet per Move action: Water x 5." value = toString (Rings.Water.Ring * 5) + " ft"  editable = none }
+        'Fear test' = integer { description = "Raw Willpower plus Honor Rank against TN 5 + 5 x the Fear rank." value = Rings.Earth.Willpower  render = poolText (Rings.Earth.Willpower, Rings.Earth.Willpower, Status.Honor.Rank)  valuedice = fearAsk (characterTable)  editable = none }
+    }
+
+    Wounds = table
+    {
+        description = "Healthy holds Earth x 5 wounds, every later rank Earth x 2 more: each shows the most wounds it holds and its TN penalty."
+        tableLayout = layout { columns = 4 }
+        'Wounds taken' = integer { description = "Wounds suffered so far." default = 0  minvalue = 0  editable = live }
+        'Wound rank' = string { value = woundRankName ('Wounds taken', Rings.Earth.Ring)  editable = none }
+        'TN penalty' = integer { description = "Added to the TN of every roll you make." value = woundPenalty ('Wounds taken', Rings.Earth.Ring)  render = "+" + toString (woundPenalty ('Wounds taken', Rings.Earth.Ring))  editable = none }
+        Healthy = integer { value = threshold (Rings.Earth.Ring, 0)  render = toString (threshold (Rings.Earth.Ring, 0)) + " (+0)"  editable = none }
+        Nicked = integer { value = threshold (Rings.Earth.Ring, 1)  render = toString (threshold (Rings.Earth.Ring, 1)) + " (+3)"  editable = none }
+        Grazed = integer { value = threshold (Rings.Earth.Ring, 2)  render = toString (threshold (Rings.Earth.Ring, 2)) + " (+5)"  editable = none }
+        Hurt = integer { value = threshold (Rings.Earth.Ring, 3)  render = toString (threshold (Rings.Earth.Ring, 3)) + " (+10)"  editable = none }
+        Injured = integer { value = threshold (Rings.Earth.Ring, 4)  render = toString (threshold (Rings.Earth.Ring, 4)) + " (+15)"  editable = none }
+        Crippled = integer { value = threshold (Rings.Earth.Ring, 5)  render = toString (threshold (Rings.Earth.Ring, 5)) + " (+20)"  editable = none }
+        Down = integer { description = "Only Simple actions with a Void point; no Complex actions." value = threshold (Rings.Earth.Ring, 6)  render = toString (threshold (Rings.Earth.Ring, 6)) + " (+40)"  editable = none }
+        Out = integer { description = "Unconscious. Any more wounds kill." value = threshold (Rings.Earth.Ring, 7)  render = toString (threshold (Rings.Earth.Ring, 7))  editable = none }
+        'Heal rate' = integer { description = "Wounds healed by a day of rest: Stamina x 2 + Insight Rank." value = Rings.Earth.Stamina * 2 + charInsightRank (characterTable)  editable = none }
+        State = string { value = woundState ('Wounds taken', Rings.Earth.Ring)  visible = none  indicator = "#d64545" }
+        'Night of rest' = button
+        {
+            description = "A night of rest heals Stamina x 2 + Insight Rank wounds and restores every Void point and spell slot."
+            editable = live
+            onClick = updates
+            {
+                (root.Wounds.'Wounds taken') = max (0, 'Wounds taken' - 'Heal rate')
+                (root.Rings.Void.'Void points'.realvalue) = 0
+                (root.'Spell slots'.Air.realvalue) = 0
+                (root.'Spell slots'.Earth.realvalue) = 0
+                (root.'Spell slots'.Fire.realvalue) = 0
+                (root.'Spell slots'.Water.realvalue) = 0
+                (root.'Spell slots'.Void.realvalue) = 0
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 4 }
+        Dazed = bool { description = "Reeling from a blow; a dazed samurai cannot fight an iaijutsu duel." default = false  editable = live  indicator = "#d4b106" }
+        Fatigued = bool { description = "Worn out from exertion or lack of sleep; no Full Attack stance." default = false  editable = live  indicator = "#555555" }
+        Grappled = bool { default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { description = "Lying on the ground; standing up takes an action." default = false  editable = live  indicator = "#e8913a" }
+        Mounted = bool { default = false  editable = live }
+        Stunned = bool { description = "Unable to act until it passes." default = false  editable = live  indicator = "#d4b106" }
+        Blinded = bool { default = false  editable = live  indicator = "#555555" }
+        Entangled = bool { default = false  editable = live  indicator = "#e8913a" }
+    }
+
+    'Iaijutsu duel' = table
+    {
+        description = "Assessment with Awareness, Focus with Void, Strike with Reflexes, all with Iaijutsu."
+        tableLayout = layout { columns = 3 }
+        Assessment = integer { description = "Iaijutsu with Awareness against TN 10 + 5 x the opponent's Insight Rank." value = skillRank (characterTable, "Iaijutsu")  render = poolText (Rings.Air.Awareness + skillRank (characterTable, "Iaijutsu"), Rings.Air.Awareness, 0)  valuedice = assessmentAsk (characterTable)  editable = none }
+        Focus = integer { description = "Iaijutsu with Void, contested: beat the opponent by 5 to strike first." value = skillRank (characterTable, "Iaijutsu")  render = poolText (Rings.Void.Ring + skillRank (characterTable, "Iaijutsu"), Rings.Void.Ring, 0)  valuedice = focusDice (characterTable)  editable = none }
+        Strike = integer { description = "Iaijutsu with Reflexes against the opponent's Armor TN; then roll the sword's damage." value = skillRank (characterTable, "Iaijutsu")  render = poolText (Rings.Air.Reflexes + skillRank (characterTable, "Iaijutsu"), Rings.Air.Reflexes, 0)  valuedice = strikeAsk (characterTable)  action = melee  reach = 5  editable = none }
+    }
+
+    Skills = list
+    {
+        description = "Roll skill plus trait, keep the trait. 10s explode, but not for a skill you have no rank in, and an unskilled roll may call no raises. An emphasis rerolls 1s."
+        tableLayout = layout { size = wide }
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string { autocomplete = skillNames }
+            Rank = integer { default = 1  minvalue = 0  maxvalue = 10 }
+            Trait = string { description = "Leave empty for the skill's usual trait." default = ""  keys = ["", "Stamina", "Willpower", "Strength", "Perception", "Agility", "Intelligence", "Reflexes", "Awareness", "Void"] }
+            Roll = integer { value = Rank  render = usedTrait (Name, Trait) + " " + poolText (traitValue (characterTable, usedTrait (Name, Trait)) + Rank, traitValue (characterTable, usedTrait (Name, Trait)), 0)  valuedice = charCheck (characterTable, traitValue (characterTable, usedTrait (Name, Trait)) + Rank, traitValue (characterTable, usedTrait (Name, Trait)), 0, Rank > 0)  editable = none }
+            Emphases = string {}
+        }
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "One row per weapon: the attack against Armor TN, and the damage."
+        tableLayout = layout { size = wide }
+        source = map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons)
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Armor = list
+    {
+        source = secondary.Armor
+        singular = "Armor"
+        editable = character
+    }
+
+    Techniques = list
+    {
+        description = "Your school's techniques, one per school rank."
+        tableLayout = layout { size = wide }
+        singular = "Technique"
+        editable = character
+        valueType = custom
+        {
+            Rank = integer { default = 1  minvalue = 1  maxvalue = 8 }
+            Name = string {}
+            Effect = string { multiline = true }
+        }
+    }
+
+    'Spell slots' = table
+    {
+        description = "Spells cast today, per element: as many as the ring. Void slots can cast a spell of any element."
+        visible = casterOnly (Samurai.Spellcaster)
+        tableLayout = layout { columns = 5  size = wide }
+        Air = slots { number = Rings.Air.Ring  editable = live }
+        Earth = slots { number = Rings.Earth.Ring  editable = live }
+        Fire = slots { number = Rings.Fire.Ring  editable = live }
+        Water = slots { number = Rings.Water.Ring  editable = live }
+        Void = slots { number = Rings.Void.Ring  editable = live }
+    }
+
+    Spells = list
+    {
+        visible = casterOnly (Samurai.Spellcaster)
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    'Spell casting' = list
+    {
+        visible = casterOnly (Samurai.Spellcaster)
+        description = "Ring plus School Rank, keep the Ring, against TN 5 + 5 x the spell's Mastery Level."
+        tableLayout = layout { size = wide }
+        source = map ((spell)->castFor (characterTable, spell), characterTable.Spells)
+        singular = "Spell"
+        editable = none
+        valueType = spellCast
+    }
+
+    Kata = list
+    {
+        source = secondary.Kata
+        singular = "Kata"
+        editable = character
+    }
+
+    Kiho = list
+    {
+        source = secondary.Kiho
+        singular = "Kiho"
+        editable = character
+    }
+
+    Advantages = list
+    {
+        source = secondary.Advantages
+        singular = "Advantage"
+        editable = character
+    }
+
+    Disadvantages = list
+    {
+        source = secondary.Disadvantages
+        singular = "Disadvantage"
+        editable = character
+    }
+
+    Equipment = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Koku = integer { description = "Gold koku: five bu to a koku." default = 0 }
+        Bu = integer { description = "Silver bu: ten zeni to a bu." default = 0 }
+        Zeni = integer { description = "Copper zeni." default = 0 }
+        Gear = string { multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+npcDead (wounds, perRank, ranks, earth) = if perRank > 0 then wounds >= perRank * max (1, ranks) else woundIndex (wounds, earth) >= 8
+
+npcPenalty (wounds, perRank, ranks, step, earth) =
+    if perRank > 0 then min (max (1, ranks) - 1, wounds / perRank) * step
+    else woundPenalty (wounds, earth)
+
+npcState (wounds, perRank, ranks, earth) =
+    if npcDead (wounds, perRank, ranks, earth) then "Dead"
+    else if perRank > 0 then (if wounds >= perRank then "Wounded" else "")
+    else woundState (wounds, earth)
+
+npcPen (npc) = npcPenalty (npc.Wounds.'Wounds taken', npc.Wounds.'Wounds per rank', npc.Wounds.Ranks, npc.Wounds.'Penalty step', npc.Rings.Earth.Ring)
+
+npcCheck (npc, r, k, flat, skilled) = checkAsk (r, k, flat, explodeFor (skilled), npcPen (npc), if skilled then npc.Rings.Void.Ring else 0, "")
+
+npcTrait (npc, value) = npcCheck (npc, value, value, 0, true)
+
+npcTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Rings, Combat, Wounds, Attacks] }
+    NPC = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Type = string { keys = ["Samurai", "Ronin", "Peasant", "Bandit", "Ninja", "Monk", "Shugenja", "Animal", "Spirit", "Shadowlands creature", "Undead"] }
+        Clan = string {}
+        Honor = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Glory = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Status = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Taint = integer { default = 0  minvalue = 0  maxvalue = 10 }
+        Fear = integer { description = "Fear rank: who sees it tests Willpower against TN 5 + 5 x Fear." default = 0  minvalue = 0 }
+        'Insight Rank' = integer { default = 1  minvalue = 1 }
+    }
+    Rings = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Air = table
+        {
+            Reflexes = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Reflexes) }
+            Awareness = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Awareness) }
+            Ring = integer { value = min (Reflexes, Awareness)  editable = none }
+        }
+        Earth = table
+        {
+            Stamina = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Stamina) }
+            Willpower = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Willpower) }
+            Ring = integer { value = min (Stamina, Willpower)  editable = none }
+        }
+        Fire = table
+        {
+            Agility = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Agility) }
+            Intelligence = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Intelligence) }
+            Ring = integer { value = min (Agility, Intelligence)  editable = none }
+        }
+        Water = table
+        {
+            Strength = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Strength) }
+            Perception = integer { default = 2  minvalue = 1  valuedice = npcTrait (npcTable, Perception) }
+            Ring = integer { value = min (Strength, Perception)  editable = none }
+        }
+        Void = table
+        {
+            Ring = integer { default = 2  minvalue = 0  valuedice = npcTrait (npcTable, Ring) }
+            'Void points' = slots { number = Ring  editable = live }
+        }
+    }
+    Combat = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Initiative dice' = string { description = "As in the stat block, such as 5k3." default = "4k2" }
+        Initiative = integer { value = keptOf ('Initiative dice')  render = 'Initiative dice'  valuedice = initDice (rolledOf ('Initiative dice'), keptOf ('Initiative dice'), flatOf ('Initiative dice'))  editable = none }
+        'Armor TN' = integer { default = 15  minvalue = 0 }
+        Reduction = integer { default = 0  minvalue = 0 }
+    }
+    Wounds = table
+    {
+        description = "Leave Wounds per rank at 0 for a human with wound ranks from Earth. For a stat block like 15: +5, 30: +10, 45: Dead, set 15 per rank, 3 ranks, a step of 5."
+        tableLayout = layout { columns = 4  size = wide }
+        'Wounds taken' = integer { default = 0  minvalue = 0  editable = live }
+        'Wounds per rank' = integer { default = 0  minvalue = 0 }
+        Ranks = integer { description = "Wound ranks before death, with Wounds per rank." default = 3  minvalue = 1 }
+        'Penalty step' = integer { description = "TN penalty added per wound rank, with Wounds per rank." default = 5  minvalue = 0 }
+        'TN penalty' = integer { value = npcPenalty ('Wounds taken', 'Wounds per rank', Ranks, 'Penalty step', Rings.Earth.Ring)  render = "+" + toString (npcPenalty ('Wounds taken', 'Wounds per rank', Ranks, 'Penalty step', Rings.Earth.Ring))  editable = none }
+        State = string { value = npcState ('Wounds taken', 'Wounds per rank', Ranks, Rings.Earth.Ring)  editable = none  indicator = "#d64545" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Attack = integer { value = keptOf ('Attack dice')  render = 'Attack dice'  valuedice = npcCheck (npcTable, rolledOf ('Attack dice'), keptOf ('Attack dice'), flatOf ('Attack dice'), true)  action = Kind  reach = Distance  range = Distance  editable = none }
+            'Attack dice' = string { description = "Attack roll, such as 6k3." default = "5k3" }
+            Damage = integer { value = keptOf ('Damage dice')  render = 'Damage dice'  valuedice = damageAsk (rolledOf ('Damage dice'), keptOf ('Damage dice'), flatOf ('Damage dice'))  editable = none }
+            'Damage dice' = string { description = "Damage roll with Strength in it, such as 5k2." default = "5k2" }
+            Kind = string { keys = ["melee", "ranged"]  default = "melee" }
+            Distance = integer { description = "Reach or range in feet." default = 5 }
+        }
+    }
+    Skills = list
+    {
+        singular = "Skill"
+        editable = character
+        valueType = custom
+        {
+            Name = string { autocomplete = skillNames }
+            Rank = integer { default = 1  minvalue = 0 }
+            Trait = string { default = ""  keys = ["", "Stamina", "Willpower", "Strength", "Perception", "Agility", "Intelligence", "Reflexes", "Awareness", "Void"] }
+            Roll = integer { value = Rank  render = usedTrait (Name, Trait) + " " + poolText (traitValue (npcTable, usedTrait (Name, Trait)) + Rank, traitValue (npcTable, usedTrait (Name, Trait)), 0)  valuedice = npcCheck (npcTable, traitValue (npcTable, usedTrait (Name, Trait)) + Rank, traitValue (npcTable, usedTrait (Name, Trait)), 0, Rank > 0)  editable = none }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        'Special abilities' = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+l5r4Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Skill" prefix = "" filter = Stats.Skill }]
+        sortedBy = sort { prefix = "" sort = Stats.Skill }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Skill = string { default = "Kenjutsu"  keys = ["Kenjutsu", "Chain Weapons", "Heavy Weapons", "Knives", "Kyujutsu", "Ninjutsu", "Polearms", "Spears", "Staves", "War Fan", "Jiujutsu"] }
+        Damage = string { description = "Damage roll, such as 3k2 for a katana. Strength is added to the rolled dice." default = "3k2" }
+        Reach = string { description = "Melee reach in feet." default = "5" }
+        Range = string { description = "Range in feet, for bows and thrown weapons." }
+        'Bow strength' = string { description = "A bow's Strength, used in place of the archer's." default = "0" }
+        Size = string { keys = ["Small", "Medium", "Large"]  default = "Medium" }
+        Keywords = string {}
+        Special = string { multiline = true }
+    }
+}
+
+l5r4Armor = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "TN +" sort = Stats.'TN bonus' }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        'TN bonus' = string { description = "Added to Armor TN." default = "5" }
+        Reduction = string { description = "Taken off every hit's damage." default = "1" }
+        Special = string {}
+    }
+}
+
+l5r4Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Ring" prefix = "" filter = Stats.Ring }, filter { name = "Mastery" prefix = "Mastery " filter = Stats.Mastery }]
+        sortedBy = sort { prefix = "Mastery " sort = Stats.Mastery }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Ring = string { keys = ["Air", "Earth", "Fire", "Water", "Void", "All"]  default = "Fire" }
+        Mastery = string { description = "Mastery Level: the casting TN is 5 + 5 x Mastery." default = "1" }
+        Keywords = string {}
+        Range = string { description = "Range in feet, Touch or Personal." }
+        Area = string {}
+        Duration = string {}
+        Raises = string { description = "What raises on the casting roll do." }
+        Effect = string { multiline = true }
+    }
+}
+
+l5r4Kata = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/l5r4/kata.svg"
+        filters = [filter { name = "Ring" prefix = "" filter = Stats.Ring }]
+        sortedBy = sort { prefix = "Mastery " sort = Stats.Mastery }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Ring = string { keys = ["Air", "Earth", "Fire", "Water", "Void"] }
+        Mastery = string { description = "The ring and school rank needed to learn it." default = "3" }
+        Schools = string {}
+        Effect = string { multiline = true }
+    }
+}
+
+l5r4Kiho = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/l5r4/kiho.svg"
+        filters = [filter { name = "Ring" prefix = "" filter = Stats.Ring }, filter { name = "Type" prefix = "" filter = Stats.Type }]
+        sortedBy = sort { prefix = "Mastery " sort = Stats.Mastery }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Ring = string { keys = ["Air", "Earth", "Fire", "Water", "Void"] }
+        Mastery = string { default = "3" }
+        Type = string { keys = ["Internal", "Kharmic", "Martial", "Mystic"] }
+        Effect = string { multiline = true }
+    }
+}
+
+l5r4Trait = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/l5r4/scroll.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+        sortedBy = sort { prefix = "" sort = Stats.Points }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Type = string { keys = ["Mental", "Physical", "Social", "Spiritual", "Material"] }
+        Points = string { description = "Experience cost or gain at character creation." default = "3" }
+        Effect = string { multiline = true }
+    }
+}
+
+rokugan4NameSetting = nameSetting
+{
+    name = "Rokugan"
+    characters = [generator { library = "Feudal Japan" variant = "Male" }, generator { library = "Feudal Japan" variant = "Female" }, generator { library = "Feudal Japan" variant = "Ronin" }]
+    creatures = [generator { library = "Feudal Japan" variant = "Ronin" }, generator { library = "Feudal Japan" variant = "Male" }, generator { library = "Feudal Japan" variant = "Female" }]
+    Location = [generator { library = "Feudal Japan" variant = "Castle" }, generator { library = "Feudal Japan" variant = "Village" }, generator { library = "Feudal Japan" variant = "Shrine" }, generator { library = "Feudal Japan" variant = "Clan" }]
+}
+
+LegendOfTheFiveRings4e = system
+{
+    hints = [
+        hint
+        {
+            title = "Roll and keep"
+            topic = "Getting started"
+            text = ["Every roll is written XkY: roll X ten-sided dice and add up the best Y. A skill roll is skill plus trait, keep the trait. 10s roll again and add, except on a skill you have no rank in. Beat the TN: 5 is very easy, 15 average, 25 very hard, 40 legendary.", "Above ten dice, every two extra rolled dice become a kept die, and kept dice above ten add +2 each."]
+        },
+        hint
+        {
+            title = "Raises and Void"
+            topic = "Play"
+            text = ["Before a roll you may call raises: each one adds 5 to the TN for a better result. You may call as many as your Void ring. Leave the TN empty when only the GM knows it.", "Hold Shift (Spend Void) to spend a Void point for +1k1, then tick the box. An emphasis lets you reroll 1s: use the Emphasis button on the result."]
+        },
+        hint
+        {
+            title = "Wounds"
+            topic = "Combat"
+            text = ["Attacks roll weapon skill plus Agility (Reflexes for bows) against the target's Armor TN; raises add damage dice. Damage minus Reduction is added to Wounds taken. Each wound rank adds its penalty to the TN of every roll. A night of rest heals Stamina x 2 + Insight Rank."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Initiative rolls Insight Rank plus Reflexes, keep Reflexes, once at the start of the skirmish. Highest acts first. Choose a stance each round on the sheet."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = npcTable
+    entityTypeNames = [entityTypeName ("Creature", "NPC", "NPCs")]
+    Weapons = l5r4Weapon
+    Armor = l5r4Armor
+    Spells = l5r4Spell
+    Kata = l5r4Kata
+    Kiho = l5r4Kiho
+    Advantages = l5r4Trait
+    Disadvantages = l5r4Trait
+    secondaryTypes = ["Weapons", "Armor", "Spells", "Kata", "Kiho", "Advantages", "Disadvantages"]
+    description = "Legend of the Five Rings 4th edition: roll and keep d10s, raises, wound ranks, honor and the iaijutsu duel"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d10, 5d10]
+    cssFiles = ["/systems/l5r4/l5r4.css"]
+    libraries = ["/systems/names/samurai.json", "/systems/names/chinese.json"]
+    nameSettings = [rokugan4NameSetting, feudalJapanNameSetting, easternNameSetting]
+}

@@ -1,0 +1,124 @@
+@import url("/systems/sheet.css");
+
+/* Mutant: Year Zero: a sheet scrawled on grimy scrap paper. Off-white
+   paper on a soot grey ground, heavy black frames, black title bars with
+   stencil-like condensed capitals, a rust orange accent and typewriter text.
+   The four attributes are framed boxes with their three skills under them,
+   conditions, Mutation Points and Rot sit in a row, gear goes to the end. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #4b4a43;
+    --surface: #e9e5d6;
+    --surface-alt: #ddd8c4;
+    --surface-sunken: #d1cbb3;
+    --surface-muted: #bdb69b;
+    --text: #1c1b17;
+    --text-muted: #3e3b31;
+    --text-faint: #6f6a58;
+    --on-accent: #f3efe1;
+    --border: #8d8771;
+    --border-strong: #1c1b17;
+    --accent: #b8431c;
+    --accent-hover: #d0582c;
+    --accent-soft: #ecd2bf;
+    --link: #a13a17;
+    --danger: #a12a17;
+    --danger-hover: #84220f;
+    --danger-soft: #ecd2bf;
+    --success: #5a7a2a;
+    --paper: #e9e5d6;
+    --card-bg: #ddd8c4;
+    --dice-bg: #1c1b17;
+    --dice-text: #e9c84a;
+}
+
+.entityView {
+    --sheet-font: "Courier Prime", "Courier New", "Nimbus Mono PS", monospace;
+    --title-font: "Stencil", "Impact", "Haettenschweiler", "Arial Narrow", sans-serif;
+    --block-radius: 0;
+    --block-border: 3px solid var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--border-strong);
+    color: var(--surface);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 1.15em;
+    padding: 3px 8px;
+}
+.entityView .entityTable > table > tbody > tr > td:first-child {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 0.85em;
+}
+
+/* ---- Attributes over their skills ---- */
+
+.entityView .table-attributes > table > tbody,
+.entityView .table-skills > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 14px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    border: 3px solid var(--border-strong);
+    padding: 4px 6px;
+    text-align: center;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    color: var(--accent);
+    font-family: var(--title-font);
+    font-size: 1.15em;
+    letter-spacing: 0.1em;
+}
+.entityView .table-attributes .customtype > div:nth-child(1)::before { content: "max "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-attributes .customtype > div:nth-child(2)::before { content: "now "; color: var(--text-faint); font-size: 0.8em; }
+.entityView .table-skills > table > tbody {
+    grid-auto-flow: column;
+    grid-template-rows: repeat(3, auto);
+}
+.entityView .table-skills > table > tbody > tr:last-child {
+    grid-row: 4;
+    grid-column: 1 / -1;
+    border-top: 3px solid var(--border-strong);
+    border-bottom: none;
+    margin-top: 4px;
+}
+.entityView .table-skills > table > tbody > tr {
+    border-bottom: 1px dashed var(--border);
+}
+.entityView .table-skills .customtype > div:nth-child(2) { color: var(--text-faint); }
+
+/* ---- Conditions, Mutation Points and Rot in a row ---- */
+
+.entityView .table-mutation-points,
+.entityView .table-rot { --block: 33.333%; }
+.entityView .table-rot > table > thead th { background: #3f5a1e; }
+
+/* ---- Mutations, talents and relationships ---- */
+
+.entityView .table-mutations { --block: 50%; clear: left; }
+.entityView .table-talents { --block: 50%; }
+.entityView .table-mutations > table > thead th { background: var(--accent); }
+.entityView .table-the-others { --block: 50%; clear: left; }
+.entityView .table-combat { --block: 50%; }
+
+/* ---- Gear ---- */
+
+.entityView .table-weapons,
+.entityView .table-armour,
+.entityView .table-gear,
+.entityView .table-artifacts { --block: 50%; }
+.entityView .table-weapons { clear: left; }
+.entityView .table-consumables { --block: 100%; clear: left; }
+.entityView .table-consumables > table > tbody { grid-template-columns: repeat(4, minmax(0, 1fr)) 2fr; }
+
+/* ---- Arks, threats and vehicles ---- */
+
+.entityView .table-development-levels > table > tbody > tr {
+    border: 3px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}

@@ -1,0 +1,536 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+junctures = ["Ancient", "Past", "Contemporary", "Future", "Netherworld"]
+
+attackSkills = ["Guns", "Martial Arts", "Sorcery", "Creature", "Mutant", "Scroungetech"]
+
+fsSigned (n) = if n >= 0 then "+" + toString (n) else toString (n)
+
+fsSwerve (pos, neg) = sum (pos) - sum (neg)
+
+fsBoxcars (pos, neg) = first (pos) == 6 and first (neg) == 6
+
+fsVerdict (result, target, answered, boxcars, hurtWord) =
+    if result < 0 then "Way-awful failure"
+    else if not (answered) then (if boxcars then "Boxcars" else "")
+    else if result < target then (if boxcars then "Way-awful failure" else if hurtWord == "" then "Failure" else "Miss")
+    else if boxcars then (if hurtWord == "" then "Boxcars success" else "Boxcars hit")
+    else if hurtWord == "" then "Success"
+    else "Hit"
+
+fsVerdictText (verdict) = if verdict == "" then "" else ": " + verdict
+
+fsHurtText (result, target, answered, damage, hurtWord) =
+    if hurtWord == "" then ""
+    else if not (answered) then (if hurtWord == "Smackdown" then ", Damage " + toString (damage) else "")
+    else if result < target then ""
+    else ", " + hurtWord + " " + toString (max (0, result - target + damage))
+
+fsText (result, target, answered, boxcars, damage, hurtWord) =
+    toString (result)
+    + (if answered then " vs " + toString (target) else "")
+    + fsVerdictText (fsVerdict (result, target, answered, boxcars, hurtWord))
+    + (if answered then ", Outcome " + fsSigned (result - target) else "")
+    + fsHurtText (result, target, answered, damage, hurtWord)
+    + (if boxcars then ", something remarkable happens" else "")
+
+fsResult (result, target, answered, boxcars, damage, hurtWord, fortune) =
+{
+    Text = fsText (result, target, answered, boxcars, damage, hurtWord)
+    Value = result
+    Outcome = fsVerdict (result, target, answered, boxcars, hurtWord)
+    Push = if fortune > 0 then fsFortuneDie (result, target, answered, boxcars, damage, hurtWord) else 0
+    PushLabel = "Fortune die (+1d6)"
+    PushSets = [{ Field = "characterTable.Fortune.Current"  Value = fortune - 1 }]
+}
+
+fsFortuneDie (result, target, answered, boxcars, damage, hurtWord) = ([dice { number = 1  sides = 6  label = "Fortune"  color = "yellow" }],
+    ((baseline, throws)->fsResult (result + sum (first (throws).rolls), target, answered, boxcars, damage, hurtWord, 0)))
+
+fsRoll (av, damage, hurtWord, fortune) = ([dice { number = 1  sides = 6  explode = 6  label = "Positive"  color = "green" }, dice { number = 1  sides = 6  explode = 6  label = "Negative"  color = "red" }],
+    ((baseline, throws)->fsResult (av + fsSwerve (first (throws).rolls, item (1, throws).rolls), asked, answered, fsBoxcars (first (throws).rolls, item (1, throws).rolls), damage, hurtWord, fortune)))
+
+fsCheck (av, target, fortune) = ([dice { number = 1  sides = 6  explode = 6  label = "Positive"  color = "green" }, dice { number = 1  sides = 6  explode = 6  label = "Negative"  color = "red" }],
+    ((baseline, throws)->fsResult (av + fsSwerve (first (throws).rolls, item (1, throws).rolls), target, true, fsBoxcars (first (throws).rolls, item (1, throws).rolls), 0, "", fortune)))
+
+fsSkill (av, fortune) = ask ("Difficulty", fsRoll (av, 0, "", fortune))
+
+fsAttackRoll (av, damage, fortune) = ask ("Target's Defense", fsRoll (av, damage, "Smackdown", fortune))
+
+fsChase (av, bonusPoints, fortune) = ask ("Opponent's Handling or Frame", 0, (frame)->ask ("Opponent's Driving", fsRoll (av, bonusPoints - frame, "Chase Points", fortune)))
+
+fsInitiative (speed, gmc) = ([dice { number = 1  sides = 6  label = "Initiative" }],
+    ((baseline, throws)->{
+        Text = "Shot " + toString (speed + first (first (throws).rolls)) + (if gmc then ", GMC" else "")
+        Value = speed + first (first (throws).rolls)
+    }))
+
+fsShotRank (text) = bonusWithValue ([[text]], "([0-9]+)") * 2 + (if contains (text, "GMC") then 0 else 1)
+
+fsImpairment (wp, firstAt, secondAt) = if wp >= secondAt then 2 else if wp >= firstAt then 1 else 0
+
+fsFoeImpairment (kind, wp) =
+    switch kind
+        case "Mook" then 0
+        case "Boss" then fsImpairment (wp, 40, 45)
+        case "Uber-Boss" then fsImpairment (wp, 40, 45)
+        else fsImpairment (wp, 25, 30)
+
+fsHeroState (wp, upAt) = if wp >= upAt then "Up Checks" else ""
+
+fsFoeState (kind, wp, mooks) =
+    if kind == "Mook" then (if mooks <= 0 then "Wiped out" else "")
+    else if kind == "Boss" or kind == "Uber-Boss" then (if wp >= 50 then "Keeling over" else "")
+    else if wp >= 35 then "Out of the fight"
+    else ""
+
+fsAttackAV (char, skill) =
+    if char.'Action Values'.'Main Attack'.Skill == skill then char.'Action Values'.'Main Attack'.AV
+    else if char.'Action Values'.'Backup Attack'.Skill == skill then char.'Action Values'.'Backup Attack'.AV
+    else 7
+
+fsPowerAction (skill) =
+    switch skill
+        case "Sorcery" then "ranged"
+        case "Mutant" then "ranged"
+        case "Scroungetech" then "ranged"
+        case "Creature" then "melee"
+        else ""
+
+attackValue (startSkill, startAV) = custom
+{
+    Skill = string { description = "The attack skill: Guns, Martial Arts, Sorcery, Creature, Mutant or Scroungetech." default = startSkill  keys = attackSkills }
+    AV = integer { description = "The Action Value for attacks with this skill." default = startAV }
+    Attack = modifier { description = "Roll the attack against the target's Defense, less Impairment. Weapons have their own rows under Attacks." value = AV - Combat.Impairment  valuedice = fsAttackRoll (AV - Combat.Impairment, 0, Fortune.Current)  editable = none  action = fsPowerAction (Skill)  reach = 2 }
+}
+
+weaponStat (weapon, field, fallback) = valueOr (weapon.data.weaponStats.Stats, field, fallback)
+
+fsAttack (name, av, damage, kind, metres, fortune) = custom
+{
+    Name = name
+    Attack = integer { description = "Roll against the target's Defense: Outcome plus Damage is the Smackdown." value = av  valuedice = fsAttackRoll (av, damage, fortune)  editable = none  action = kind  reach = metres  range = metres }
+    Damage = integer { description = "The weapon's Damage Value." value = damage  render = "Damage " + toString (damage)  editable = none }
+}
+
+fsAttackFor (char, weapon) =
+    if weaponStat (weapon, "Category", "Guns") == "Guns" then
+        fsAttack (weapon.Name, fsAttackAV (char, "Guns") - char.Combat.Impairment, weaponStat (weapon, "Damage", 9), "ranged", 160, char.Fortune.Current)
+    else if weaponStat (weapon, "Category", "Guns") == "Thrown" then
+        fsAttack (weapon.Name, fsAttackAV (char, "Martial Arts") - char.Combat.Impairment, weaponStat (weapon, "Damage", 5), "ranged", 20, char.Fortune.Current)
+    else
+        fsAttack (weapon.Name, fsAttackAV (char, "Martial Arts") - char.Combat.Impairment, weaponStat (weapon, "Damage", 7), "melee", 2, char.Fortune.Current)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = ['Action Values', Combat, Fortune, Attacks] }
+
+    Hero = table
+    {
+        description = "Who the hero is: the archetype, the juncture they come from and what drives them."
+        tableLayout = layout { columns = 2 }
+        Archetype = string { description = "The action-movie type the hero is built from, such as Big Bruiser, Killer, Old Master or Sorcerer. It sets the starting Action Values, schticks and skills." }
+        Juncture = string { description = "The time the hero comes from: Ancient, Past, Contemporary or Future." default = "Contemporary"  keys = junctures }
+        Concept = string { description = "One line on who this hero is." }
+        Wealth = string { description = "How much money the hero has to hand." default = "Working Stiff"  keys = ["Poor", "Working Stiff", "Rich"] }
+        'Melodramatic Hook' = string { description = "The personal story that drags the hero into trouble: revenge, a lost love, a debt of honour." multiline = true }
+    }
+
+    'Action Values' = table
+    {
+        description = "The hero's ratings. A check is the Action Value plus the Swerve: a positive d6 minus a negative d6, with sixes rolling again."
+        'Main Attack' = attackValue ("Guns", 13)
+        'Backup Attack' = attackValue ("Martial Arts", 11)
+        Defense = integer { description = "What attacks against the hero must reach. Lowered by Impairment, raised by dodging." default = 13 }
+        Toughness = integer { description = "Taken off every Smackdown before it becomes Wound Points." default = 6 }
+        Speed = integer { description = "Added to a d6 for the first shot each sequence. Also used for chases on foot." default = 6 }
+    }
+
+    Combat = table
+    {
+        description = "Wound Points, Impairment, Marks of Death and the shot counter."
+        tableLayout = layout { columns = 3 }
+        'Wound Points' = integer { description = "Smackdown less Toughness, added up. Heals at the start of a session." default = 0  minvalue = 0  editable = live }
+        Impairment = integer { description = "-1 at the first threshold, -2 at the second: taken off attacks, Defense and skill checks." value = fsImpairment ('Wound Points', 'First Impairment', 'Second Impairment')  editable = none  indicator = "#d64545" }
+        'Marks of Death' = slots { description = "One for each hit taken past the Up Check threshold." number = 6  editable = live  indicator = "#d64545" }
+        Shot = integer { description = "The shot you act on next. The shot counter counts down; most actions cost 3 shots." default = 0  editable = live }
+        Initiative = integer { description = "Speed plus a d6, less any initiative penalty: your first shot in a sequence. Sixes don't roll again." value = 'Action Values'.Speed - 'Initiative Penalty'  valuedice = fsInitiative ('Action Values'.Speed - 'Initiative Penalty', false)  editable = none }
+        'Initiative Penalty' = integer { description = "From armour, arriving late or overrunning the last sequence." default = 0  editable = live }
+        Dodging = bool { description = "Dodged for 1 shot: +3 Defense against the next attack." default = false  editable = live  indicator = "#3a7bd5" }
+        'Defense Now' = integer { description = "Defense less Impairment, plus 3 while dodging." value = 'Action Values'.Defense - Impairment + (if Dodging then 3 else 0)  editable = none }
+        'Defense Check' = modifier { description = "Avoid falling rocks, traps and other harm that isn't an attack." value = 'Defense Now'  valuedice = fsSkill ('Defense Now', Fortune.Current)  editable = none }
+        'Toughness Now' = integer { description = "Toughness less the penalty from partial recovery." value = 'Action Values'.Toughness - 'Toughness Penalty'  editable = none }
+        'Toughness Penalty' = integer { description = "Each partial recovery during a session costs 1 Toughness until you are fully healed." default = 0  minvalue = 0  editable = live }
+        'Constitution Check' = modifier { description = "A Toughness check against poison, illness or shock." value = 'Toughness Now'  valuedice = fsSkill ('Toughness Now', Fortune.Current)  editable = none }
+        'Up Check' = modifier { description = "Once past the Up Check threshold, each hit takes a Mark of Death and a Toughness check against 5. Fail and you are out." value = 'Toughness Now'  valuedice = fsCheck ('Toughness Now', 5, Fortune.Current)  editable = none }
+        'Death Check' = modifier { description = "After the fight: a Toughness check against 4 plus your Marks of Death, without Fortune dice. Fail and the hero dies." value = 'Toughness Now'  valuedice = fsCheck ('Toughness Now', 4 + max (0, 'Marks of Death'.realvalue), 0)  editable = none }
+        'Up Checks At' = integer { description = "Wound Points where Up Checks and Marks of Death start: 35 for most heroes." default = 35 }
+        'First Impairment' = integer { description = "Wound Points for -1 Impairment: 25 for most heroes." default = 25 }
+        'Second Impairment' = integer { description = "Wound Points for -2 Impairment: 30 for most heroes." default = 30 }
+        State = string { value = fsHeroState ('Wound Points', 'Up Checks At')  visible = none  indicator = "#555555" }
+        'Standard Action' = button { description = "An attack, a stunt or most other actions: 3 shots."  editable = live  onClick = updates { (root.Combat.Shot) = Shot - 3 } }
+        Dodge = button { description = "A 1-shot interrupt: +3 Defense against one attack."  editable = live  onClick = updates
+            {
+                (root.Combat.Shot) = Shot - 1
+                (root.Combat.Dodging) = true
+            }
+        }
+        'End of Fight' = button
+        {
+            description = "No longer dodging, the shot counter back to 0, and Marks of Death cleared once the Death Checks are made."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.Dodging) = false
+                (root.Combat.Shot) = 0
+                (root.Combat.'Marks of Death'.realvalue) = 0
+            }
+        }
+        'Partial Recovery' = button
+        {
+            description = "Between fights in a session: Wound Points down to 10 and half your spent Fortune back, for 1 Toughness until fully healed."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.'Wound Points') = min ('Wound Points', 10)
+                (root.Fortune.Current) = Fortune.Current + (Fortune.Max - Fortune.Current) / 2
+                (root.Combat.'Toughness Penalty') = 'Toughness Penalty' + 1
+            }
+        }
+        'Full Recovery' = button
+        {
+            description = "At the start of a session: no Wound Points, all Fortune back, Toughness whole again."
+            editable = live
+            onClick = updates
+            {
+                (root.Combat.'Wound Points') = 0
+                (root.Fortune.Current) = Fortune.Max
+                (root.Combat.'Toughness Penalty') = 0
+                (root.Combat.Dodging) = false
+            }
+        }
+    }
+
+    Fortune = table
+    {
+        description = "Fortune points, or the Chi, Magic or Genome points of heroes whose schticks run on them. Spend one for a Fortune die: +1d6 to a check or to Defense."
+        tableLayout = layout { columns = 2 }
+        Type = string { description = "Chi fuels Fu schticks, Magic fuels Sorcery and Creature schticks, Genome fuels Mutant schticks. They also buy Fortune dice." default = "Fortune"  keys = ["Fortune", "Chi", "Magic", "Genome"] }
+        Max = integer { description = "Points regained at the start of each session." default = 7 }
+        Current = integer { description = "Points left to spend." default = Max  minvalue = 0  editable = live  indicator = "#d4b106"  indicatorLabel = "Fortune" }
+        'Fortune Check' = modifier { description = "A check of pure luck, rated by the points you have left." value = Current  valuedice = fsSkill (Current, 0)  editable = none }
+    }
+
+    Skills = keyvalues
+    {
+        description = "Skills the hero has. Any other skill is checked at 7."
+        singular = "Skill"
+        editablekeys = character
+        keys = ["Driving", "Info", "Intimidation"]
+        descriptions =
+        {
+            Deceit = "Lying, disguise and spotting lies."
+            Detective = "Finding clues and noticing things."
+            Driving = "Cars, bikes and chases; also boats and planes the hero knows."
+            'Fix It' = "Repairing and building machines."
+            Gambling = "Games of chance and reading other players."
+            Info = "Knowledge of one field, such as Info: Politics."
+            Intimidation = "Scaring people into doing what you want."
+            Leadership = "Getting a group to act together."
+            Medicine = "Healing Wound Points and treating poison."
+            Police = "Procedures, contacts and noticing crime."
+            Sabotage = "Bombs, traps and breaking things on purpose."
+            Seduction = "Charm with intent."
+        }
+        valueType = custom
+        {
+            AV = integer { default = 7 }
+            Check = modifier { value = AV - Combat.Impairment  valuedice = fsSkill (AV - Combat.Impairment, Fortune.Current)  editable = none }
+        }
+    }
+
+    Schticks = list
+    {
+        description = "The hero's special tricks: Fu, Guns, Sorcery, Creature, Mutant, Scroungetech, Driving and core archetype schticks."
+        tableLayout = layout { size = wide }
+        source = secondary.Schticks
+        singular = "Schtick"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Each weapon as an attack, less Impairment. Hit when the Action Result reaches the target's Defense."
+        tableLayout = layout { size = wide }
+        source = concat ([fsAttack ("Unarmed", fsAttackAV (characterTable, "Martial Arts") - characterTable.Combat.Impairment, 7, "melee", 2, characterTable.Fortune.Current)], map ((weapon)->fsAttackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = fsAttack
+    }
+
+    Weapons = list
+    {
+        description = "Damage / Concealment / Reload for each weapon carried."
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    'Gear and Notes' = table
+    {
+        tableLayout = layout { size = wide }
+        Gear = string { description = "Other gear and additional schticks written in by hand." multiline = true }
+        Notes = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Foe, Stats, Attacks] }
+
+    Foe = table
+    {
+        description = "What kind of gamemaster character this is. Mooks go down from any hit; featured foes, bosses and uber-bosses take Wound Points."
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "Mooks drop when hit. Featured foes are out at 35 Wound Points. Bosses and uber-bosses have Impairment at 40 and 45 and start keeling over at 50." default = "Featured Foe"  keys = ["Mook", "Featured Foe", "Boss", "Uber-Boss", "Supporting Character"] }
+        Juncture = string { default = "Contemporary"  keys = junctures }
+        Faction = string { description = "The faction the foe serves, if any." }
+    }
+
+    Stats = table
+    {
+        description = "The foe's Action Values and wounds."
+        tableLayout = layout { columns = 4  size = wide }
+        Defense = integer { description = "What attacks against the foe must reach. Mooks have 13." default = 13 }
+        Toughness = integer { description = "Taken off each Smackdown. Mooks have none." default = 6 }
+        Speed = integer { description = "Added to a d6 for the first shot. Mooks have 5." default = 6 }
+        Initiative = integer { description = "Speed plus a d6: the foe's first shot. Heroes act first on a tie." value = Speed  valuedice = fsInitiative (Speed, true)  editable = none }
+        Shot = integer { description = "The shot the foe acts on next." default = 0  editable = live }
+        'Wound Points' = integer { default = 0  minvalue = 0  editable = live }
+        Impairment = integer { value = fsFoeImpairment (Foe.Kind, 'Wound Points')  editable = none  indicator = "#d64545" }
+        'Mooks Left' = integer { description = "For a group of mooks: how many are still standing." default = 1  minvalue = 0  editable = live }
+        Dodging = bool { default = false  editable = live  indicator = "#3a7bd5" }
+        State = string { value = fsFoeState (Foe.Kind, 'Wound Points', 'Mooks Left')  visible = none  indicator = "#555555" }
+    }
+
+    Attacks = keyvalues
+    {
+        description = "The foe's attacks, rolled against the target's Defense."
+        singular = "Attack"
+        editablekeys = character
+        keys = ["Guns", "Martial Arts"]
+        valueType = custom
+        {
+            AV = integer { default = 13 }
+            Damage = integer { default = 9 }
+            Roll = modifier { value = AV - Stats.Impairment  valuedice = fsAttackRoll (AV - Stats.Impairment, Damage, 0)  editable = none  action = if Key == "Martial Arts" or Key == "Creature" then "melee" else "ranged"  reach = 2  range = 160 }
+        }
+    }
+
+    Skills = keyvalues
+    {
+        description = "Skills the foe has. Anything else is checked at 7."
+        singular = "Skill"
+        editablekeys = character
+        keys = []
+        valueType = custom
+        {
+            AV = integer { default = 13 }
+            Check = modifier { value = AV - Stats.Impairment  valuedice = fsSkill (AV - Stats.Impairment, 0)  editable = none }
+        }
+    }
+
+    Schticks = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Schticks
+        singular = "Schtick"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Foe Schticks' = string { description = "Schticks written into the stat block, such as Auto Re-Arm or Back to the Wall." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+vehicleTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/fengshui/vehicle.svg"  important = [Vehicle, Chase] }
+
+    Vehicle = table
+    {
+        description = "The vehicle's ratings."
+        tableLayout = layout { columns = 3  size = wide }
+        Kind = string { description = "Car, bike, truck, boat or aircraft." default = "Car" }
+        Juncture = string { default = "Contemporary"  keys = junctures }
+        Mook = bool { description = "A mook vehicle crashes when a hero's Driving Outcome is 5 or more." default = false }
+        Acceleration = integer { description = "Added to a d6 for the driver's first shot in a chase." default = 7 }
+        Handling = integer { description = "Taken off the Chase Points of gap moves against this vehicle." default = 8 }
+        Squeal = integer { description = "Added to the Chase Points when this vehicle closes or widens the gap." default = 9 }
+        Frame = integer { description = "Taken off the Chase Points of rams and sideswipes against this vehicle." default = 7 }
+        Crunch = integer { description = "Added to the Chase Points when this vehicle rams or sideswipes." default = 8 }
+    }
+
+    Chase = table
+    {
+        description = "Chase Points work like Wound Points for the vehicle: Impairment at 25 and 30, and at 35 it crashes or is boxed in."
+        tableLayout = layout { columns = 3  size = wide }
+        'Driver AV' = integer { description = "The Driving Action Value of whoever is at the wheel." default = 7 }
+        'Driving Check' = modifier { description = "Driving against the opponent's Driving." value = 'Driver AV' - Impairment  valuedice = ask ("Opponent's Driving", fsRoll ('Driver AV' - Impairment, 0, "", 0))  editable = none }
+        Initiative = integer { description = "Acceleration plus a d6: the driver's first shot. Their first action must be a Driving check." value = Vehicle.Acceleration  valuedice = fsInitiative (Vehicle.Acceleration, false)  editable = none }
+        'Close or Widen Gap' = modifier { description = "3 shots. On success: Chase Points equal to Outcome plus Squeal less the opponent's Handling." value = 'Driver AV' - Impairment  valuedice = fsChase ('Driver AV' - Impairment, Vehicle.Squeal, 0)  editable = none }
+        'Ram or Sideswipe' = modifier { description = "3 shots. On success: Chase Points equal to Outcome plus Crunch less the opponent's Frame." value = 'Driver AV' - Impairment  valuedice = fsChase ('Driver AV' - Impairment, Vehicle.Crunch, 0)  editable = none }
+        Gap = string { description = "Near or far from the other side." default = "Far"  keys = ["Near", "Far"]  editable = live }
+        'Chase Points' = integer { default = 0  minvalue = 0  editable = live }
+        'Condition Points' = integer { description = "Chase Points from rams, sideswipes and weapons; they carry over to the next chase until repaired." default = 0  minvalue = 0  editable = live }
+        Impairment = integer { value = fsImpairment ('Chase Points', 25, 30)  editable = none  indicator = "#d64545" }
+        State = string { value = if 'Chase Points' >= 35 then "Crashed" else ""  visible = none  indicator = "#555555" }
+        'New Chase' = button
+        {
+            description = "A damaged vehicle starts the next chase with its Condition Points as Chase Points."
+            editable = live
+            onClick = updates { (root.Chase.'Chase Points') = 'Condition Points' }
+        }
+        Repair = button
+        {
+            description = "Repaired between sessions: no Condition Points."
+            editable = live
+            onClick = updates
+            {
+                (root.Chase.'Condition Points') = 0
+                (root.Chase.'Chase Points') = 0
+            }
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Mounted Weapons' = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+siteTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/fengshui/site.svg"  important = [Site] }
+
+    Site = table
+    {
+        description = "A place of chi power. Whoever is attuned to it gains luck and the power to change history."
+        tableLayout = layout { columns = 2  size = wide }
+        Juncture = string { default = "Contemporary"  keys = junctures }
+        Place = string { description = "Where it is: a temple, a bank tower, a noodle shop." }
+        'Controlled By' = string { description = "The faction or person that holds the site." }
+        Attuned = string { description = "Who is attuned to it. Attuning takes a day spent at the site by members of the group that holds it." }
+        Burned = bool { description = "A burned site has been spent by the heroes and gives no more power." default = false  editable = live  indicator = "#555555" }
+        Secret = bool { description = "Not yet known to the heroes." default = true }
+    }
+
+    Details = table
+    {
+        tableLayout = layout { size = wide }
+        Benefits = string { description = "What attunement to this site gives, beyond the luck." multiline = true }
+        Guardians = string { description = "Who protects it and how." multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "Damage" sort = Stats.Damage }
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }, filter { name = "Juncture" prefix = "" filter = Stats.Juncture }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string { description = "Guns use the Guns Action Value; Martial Arts and Thrown weapons use Martial Arts." default = "Guns"  keys = ["Guns", "Martial Arts", "Thrown"] }
+        Damage = integer { description = "Damage Value, added to the Outcome to make the Smackdown." default = 9 }
+        Concealment = integer { description = "How hard it is to hide, 0 to 7." default = 2 }
+        Reload = string { description = "Reload Value: after the first sequence, roll a d6 after each attack; at or under it, you must reload." default = "-" }
+        Juncture = string { default = "Contemporary"  keys = junctures }
+        Notes = string {}
+    }
+}
+
+schtickStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Category }
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }, filter { name = "Path" prefix = "" filter = Stats.Path }]
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Category = string { default = "Core"  keys = ["Core", "Fu", "Guns", "Sorcery", "Creature", "Transformed Animal", "Mutant", "Scroungetech", "Driving", "Foe", "Disadvantage"] }
+        Path = string { description = "The path of schticks it belongs to, such as a Fu path or a Guns style." }
+        'Shot Cost' = string { description = "Shots it takes to use, if any." }
+        Fuel = string { description = "Points it costs to use." default = "None"  keys = ["None", "Fortune", "Chi", "Magic", "Genome"] }
+        Prerequisite = string {}
+    }
+}
+
+fengShuiNameSetting = nameSetting
+{
+    name = "Chi War"
+    characters = [generator { library = "Chinese" variant = "Male" }, generator { library = "Chinese" variant = "Female" }, generator { library = "Spy thriller" variant = "Agent" }]
+    creatures = [generator { library = "Chinese" variant = "Male" }, generator { library = "Chinese" variant = "Female" }, generator { library = "Spy thriller" variant = "Codename" }]
+    'Feng Shui Sites' = [generator { library = "Chinese" variant = "Temple" }, generator { library = "Chinese" variant = "Place" }, generator { library = "Chinese" variant = "Shop" }]
+    Location = [generator { library = "Chinese" variant = "Place" }, generator { library = "Chinese" variant = "Shop" }, generator { library = "Spy thriller" variant = "Safehouse" }]
+}
+
+FengShui2 = system
+{
+    hints = [
+        hint
+        {
+            title = "Heroes"
+            topic = "Getting started"
+            text = ["Each hero starts from an archetype: its Action Values, schticks, skills and weapons. Pick a juncture, a name and a melodramatic hook. Add schticks and weapons to the campaign library as you need them."]
+        },
+        hint
+        {
+            title = "Checks"
+            topic = "Play"
+            text = ["Roll a positive and a negative d6 and take one from the other: the Swerve. Sixes roll again and add. Action Value plus Swerve is the Action Result; less the Difficulty or Defense it is the Outcome, and 0 or more succeeds. Double sixes are boxcars: something remarkable happens, and a failure is way-awful.", "Each roll asks the Difficulty or the target's Defense. Spend a Fortune point after the roll for a Fortune die, +1d6, with the button in the roll window."]
+        },
+        hint
+        {
+            title = "Shot counter"
+            topic = "Initiative"
+            text = ["Each sequence, everyone rolls Speed plus a d6 and starts on that shot. Count down: an attack or most actions cost 3 shots, a dodge 1. Heroes go before gamemaster characters on the same shot. When nobody has shots left, start a new sequence."]
+        },
+        hint
+        {
+            title = "Damage"
+            topic = "Combat"
+            text = ["A hit's Outcome plus the weapon's Damage is the Smackdown; less the target's Toughness it is Wound Points. Heroes are Impaired at 25 and 30 and make Up Checks from 35. Any hit drops a mook. Featured foes fall at 35, bosses start keeling over at 50."]
+        }
+    ]
+    characters = characterTable
+    creatures = creatureTable
+    Vehicles = vehicleTable
+    'Feng Shui Sites' = siteTable
+    Weapons = weaponStats
+    Schticks = schtickStats
+    secondaryTypes = ["Weapons", "Schticks"]
+    extraEntityTypes = [entityTypeDescription ("Vehicles", "vehicle", true, "/systems/fengshui/vehicle.svg", []), entityTypeDescription ("Feng Shui Sites", "feng shui site", false, "/systems/fengshui/site.svg", [])]
+    entityTypeNames = [entityTypeName ("Creature", "Foe", "Foes")]
+    initiativeCompare (item1, item2) = compare (fsShotRank (item1), fsShotRank (item2))
+    description = "Feng Shui 2: Hong Kong action across four junctures, with the Swerve of a positive and a negative d6, the shot counter, Fortune, schticks, mooks and bosses"
+    distanceUnit = "m"
+    quickdice = [1d6, 2d6]
+    cssFiles = ["/systems/fengshui/fengshui.css"]
+    libraries = ["/systems/names/chinese.json", "/systems/names/spies.json", "/systems/tables/modern.json"]
+    nameSettings = [fengShuiNameSetting, easternNameSetting, spyThrillerNameSetting]
+}

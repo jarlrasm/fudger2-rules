@@ -1,0 +1,108 @@
+@import url("/systems/sheet.css");
+
+/* Worlds Without Number: a plain printed record sheet. Cream paper, black
+   ink, serif type, ruled boxes with black title bars; the six attributes as
+   boxes across the top, the four saves beside hit points and AC, skills in
+   three columns, then weapons, foci, Effort and spells, and the pack. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e9e2d0;
+    --surface: #f8f4e8;
+    --surface-alt: #efe9d8;
+    --surface-sunken: #e4dcc6;
+    --surface-muted: #d3c9ae;
+    --text: #1d1a15;
+    --text-muted: #4a4338;
+    --text-faint: #7a705f;
+    --on-accent: #f8f4e8;
+    --border: #8a7f69;
+    --border-strong: #1d1a15;
+    --accent: #1d1a15;
+    --accent-hover: #6b2a1a;
+    --accent-soft: #e4dcc6;
+    --link: #6b2a1a;
+    --danger: #8f2a1c;
+    --danger-hover: #6b2a1a;
+    --danger-soft: #f0d9cf;
+    --success: #44613a;
+    --paper: #f8f4e8;
+    --card-bg: #efe9d8;
+    --dice-bg: #6b2a1a;
+    --dice-text: #f8f4e8;
+}
+
+.entityView {
+    --sheet-font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --title-font: "Trajan Pro", "Cinzel", "Palatino Linotype", Georgia, serif;
+    --block-radius: 0;
+    --block-border: 2px solid var(--border-strong);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    background: var(--accent);
+    color: var(--on-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.95em;
+    padding: 2px 8px;
+}
+
+/* ---- Attributes: six boxes, score over modifier ---- */
+
+.entityView .table-attributes > table > tbody {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 8px;
+    padding: 8px;
+}
+.entityView .table-attributes > table > tbody > tr {
+    flex-direction: column;
+    border: 1px solid var(--border-strong);
+    text-align: center;
+    padding: 4px;
+}
+.entityView .table-attributes > table > tbody > tr > td:first-child {
+    font-family: var(--title-font);
+    font-weight: 700;
+    font-size: 1.15em;
+}
+.entityView .table-attributes .customtype > div:nth-child(2)::before {
+    content: "mod ";
+    color: var(--text-faint);
+    font-size: 0.8em;
+}
+
+/* ---- Saves beside the combat box ---- */
+
+.entityView .table-saving-throws { --block: 33.333%; clear: left; }
+.entityView .table-combat { --block: 66.666%; }
+.entityView .table-saving-throws > table > tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entityView .table-saving-throws > table > tbody > tr > td:first-child,
+.entityView .table-combat > table > tbody > tr > td:first-child {
+    font-variant: small-caps;
+    font-weight: 700;
+}
+
+/* ---- Skills: three columns, the attribute in grey ---- */
+
+.entityView .table-skills .customtype > div:nth-child(2) { color: var(--text-faint); }
+
+/* ---- Thirds: weapons, armor, foci; then scene, Effort, spellcasting ---- */
+
+.entityView .table-weapons,
+.entityView .table-scene { clear: left; }
+.entityView .table-weapons,
+.entityView .table-armor,
+.entityView .table-foci,
+.entityView .table-scene,
+.entityView .table-effort,
+.entityView .table-spellcasting { --block: 33.333%; }
+
+/* ---- Halves: the pack ---- */
+
+.entityView .table-gear { clear: left; }
+.entityView .table-gear,
+.entityView .table-encumbrance { --block: 50%; }

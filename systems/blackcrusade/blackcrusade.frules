@@ -1,0 +1,994 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+difficulties = ["Hellish -60", "Punishing -50", "Arduous -40", "Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Ordinary +10", "Routine +20", "Easy +30", "Simple +40", "Elementary +50", "Trivial +60"]
+
+floorTens (n) = if n >= 0 then n / 10 else 0 - ((9 - n) / 10)
+
+bcSuccess (target, roll) = roll == 1 or (roll <= target and roll != 100)
+
+bcDegrees (target, roll) =
+    if bcSuccess (target, roll) then max (1, 1 + floorTens (target) - roll / 10)
+    else max (1, 1 + roll / 10 - floorTens (target))
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+bcText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if bcSuccess (target, roll) then "Success, " + degreeWords (bcDegrees (target, roll), "success") else "Failure, " + degreeWords (bcDegrees (target, roll), "failure"))
+
+bcResult (target, roll, reroll, spend) =
+{
+    Text = bcText (target, roll)
+    Value = roll
+    Outcome = if bcSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (bcSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Infamy: reroll"
+    PushSets = spend
+}
+
+infamySpend (char) = if char.Infamy.'Infamy points' > 0 then [{ Field = "characterTable.Infamy.Infamy points"  Value = char.Infamy.'Infamy points' - 1 }] else []
+
+bcRoll (modifier) = ([1d100], ((baseline, throws)->bcResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+bcAskedRoll (spend) = ([1d100], ((baseline, throws)->bcResult (baseline + asked * 10, first (first (throws).rolls), bcAskedRoll ([]), spend)))
+
+bcTest = ask ("Difficulty", difficulties, -6, bcAskedRoll ([]))
+
+bcInfamyTest (char) = ask ("Difficulty", difficulties, -6, bcAskedRoll (infamySpend (char)))
+
+availabilities = ["Ubiquitous +70", "Abundant +50", "Plentiful +30", "Common +20", "Average +10", "Scarce +0", "Rare -10", "Very Rare -20", "Extremely Rare -30", "Near Unique -50", "Unique -70"]
+
+availabilityBonus (n) =
+    switch n
+        case 0 then 70
+        case 1 then 50
+        case 2 then 30
+        case 3 then 20
+        case 4 then 10
+        case 5 then 0
+        case 6 then -10
+        case 7 then -20
+        case 8 then -30
+        case 9 then -50
+        else -70
+
+craftsmanships = ["Poor +10", "Common +0", "Good -10", "Best -20"]
+
+craftBonus (n) = switch n case 0 then 10 case 2 then -10 case 3 then -20 else 0
+
+acquisitionResult (target, roll) =
+{
+    Text = bcText (target, roll) + (if bcSuccess (target, roll) then ": the item is found" else ": not to be had, for now")
+    Value = roll
+    Outcome = if bcSuccess (target, roll) then "Success" else "Failure"
+}
+
+acquisitionDice (availability) = ([1d100], ((baseline, throws)->acquisitionResult (baseline + availabilityBonus (availability) + craftBonus (asked), first (first (throws).rolls))))
+
+bcAcquisition = ask ("Availability", availabilities, 0, (availability)->ask ("Craftsmanship", craftsmanships, 0, acquisitionDice (availability)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+locationOf (n) =
+    if n <= 10 then "Head"
+    else if n <= 20 then "Right Arm"
+    else if n <= 30 then "Left Arm"
+    else if n <= 70 then "Body"
+    else if n <= 85 then "Right Leg"
+    else "Left Leg"
+
+meleeModes = ["Standard attack +10", "All-out attack +30", "Charge +20", "Guarded attack -10", "Swift attack +0", "Lightning attack -10", "Called shot -20"]
+
+rangedModes = ["Standard attack +10", "Semi-auto burst +0", "Full auto burst -10", "Called shot -20"]
+
+attackModes (kind) = if kind == "melee" then meleeModes else rangedModes
+
+modeBonus (kind, mode) =
+    if kind == "melee" then (switch mode case 1 then 30 case 2 then 20 case 3 then -10 case 4 then 0 case 5 then -10 case 6 then -20 else 10)
+    else (switch mode case 1 then 0 case 2 then -10 case 3 then -20 else 10)
+
+isBurst (kind, mode) = kind == "ranged" and (mode == 1 or mode == 2)
+
+isFlurry (kind, mode) = kind == "melee" and (mode == 4 or mode == 5)
+
+halfRate (kind, mode) = (kind == "ranged" and mode == 1) or (kind == "melee" and mode == 4)
+
+jams (roll, kind, mode) = kind == "ranged" and roll >= (if isBurst (kind, mode) then 94 else 96)
+
+rofCap (rof, mode) = if count (split ("/", rof)) > mode then toInt (item (mode, split ("/", rof))) else 0
+
+lacksMode (kind, mode, rof) = isBurst (kind, mode) and rof != "" and rofCap (rof, mode) == 0
+
+capHits (n, cap) = if cap > 0 then min (n, cap) else n
+
+extraDegrees (kind, mode, degrees) = if halfRate (kind, mode) then (degrees - 1) / 2 else degrees - 1
+
+hitsFor (kind, mode, rof, degrees) =
+    if isBurst (kind, mode) then capHits (1 + extraDegrees (kind, mode, degrees), rofCap (rof, mode))
+    else if isFlurry (kind, mode) then 1 + extraDegrees (kind, mode, degrees)
+    else 1
+
+bcHit (target, roll, kind, mode) = bcSuccess (target, roll) and not (jams (roll, kind, mode))
+
+blastOf (special) = bonusWithValue ([[special]], "[Bb]last *\(([0-9]+)\)")
+
+hitText (hits, roll) =
+    if hits == 1 then "1 hit on the " + hitLocation (roll)
+    else toString (hits) + " hits, the first on the " + hitLocation (roll)
+
+hordeText (hits, special) = ", " + toString (hits + blastOf (special)) + " Magnitude against a horde"
+
+bcAttackResult (target, roll, kind, mode, rof, special, reroll, spend) =
+{
+    Text = if lacksMode (kind, mode, rof) then "The weapon can't fire " + (if mode == 1 then "semi-auto bursts" else "full auto bursts") + " (RoF " + rof + ")"
+           else if jams (roll, kind, mode) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+           else bcText (target, roll) + (if bcHit (target, roll, kind, mode) then ": " + hitText (hitsFor (kind, mode, rof, bcDegrees (target, roll)), roll) + hordeText (hitsFor (kind, mode, rof, bcDegrees (target, roll)), special) else "")
+    Value = roll
+    Outcome = if lacksMode (kind, mode, rof) then "Miss" else if jams (roll, kind, mode) then "Jam" else if bcHit (target, roll, kind, mode) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (lacksMode (kind, mode, rof)) and not (bcHit (target, roll, kind, mode)) then reroll else 0
+    PushLabel = "Spend Infamy: reroll"
+    PushSets = spend
+}
+
+bcAttackDice (kind, mode, rof, special, spend) = ([1d100], ((baseline, throws)->bcAttackResult (baseline + modeBonus (kind, mode) + asked * 10, first (first (throws).rolls), kind, mode, rof, special, bcAttackDice (kind, mode, rof, special, []), spend)))
+
+bcAttack (kind, rof, special, spend) = ask ("Attack", attackModes (kind), 0, (mode)->ask ("Difficulty", difficulties, -6, bcAttackDice (kind, mode, rof, special, spend)))
+
+bcInfamyAttack (char, kind, rof, special) = bcAttack (kind, rof, special, infamySpend (char))
+
+hasHatred (rolls) = count (filter ((x)->x == 10, rolls)) > 0
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after armour and Toughness" else ""
+
+hatredDice = ([1d5], ((baseline, throws)->hatredResult (first (first (throws).rolls))))
+
+hatredResult (n) =
+{
+    Text = "Zealous Hatred " + toString (n) + ": apply critical effect " + toString (n) + " for the hit location and damage type, even if no damage got through"
+    Value = n
+    Outcome = "Critical"
+}
+
+damageResult (total, soak, hatred) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + (if hatred then ", Zealous Hatred: roll 1d5 on the critical table; a horde loses 1 more Magnitude" else "")
+    Value = total
+    Outcome = if hatred then "Critical" else ""
+    Push = if hatred then hatredDice else 0
+    PushLabel = "Zealous Hatred: roll 1d5"
+}
+
+keptSum (rolls, tearing) = sum (rolls) - (if tearing and count (rolls) > 1 then min (rolls) else 0)
+
+damageDice (diceCount, dieSize, armourLeft, tearing) = ([dice { number = diceCount + (if tearing then 1 else 0)  sides = dieSize }],
+    ((baseline, throws)->damageResult (baseline + keptSum (first (throws).rolls, tearing), armourLeft + asked, hasHatred (first (throws).rolls))))
+
+bcDamage (diceCount, dieSize, pen, tearing) =
+    ask ("Target's armour", 0, (armour)->ask ("Target's Toughness bonus", 0, damageDice (diceCount, dieSize, max (0, armour - pen), tearing)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
+
+characteristic (unnat, boost) = custom
+{
+    Value = integer { description = "The characteristic as rolled at creation: 2d10 + 25 for a human, 2d10 + 30 for a Chaos Space Marine." default = 35  minvalue = 0  maxvalue = 100 }
+    Advances = integer { description = "Advances bought with experience: Simple, Intermediate, Trained and Expert, each +5. Their cost depends on whether the characteristic's god is True, Allied or Opposed to yours." default = 0  minvalue = 0  maxvalue = 4 }
+    Unnatural = integer { description = "The Unnatural multiplier of the bonus. Chaos Space Marines have Unnatural Strength and Toughness (x2)." default = unnat  minvalue = 1  maxvalue = 5 }
+    Total = integer { description = "Value plus 5 per advance, plus power armour's boost to Strength, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 + boost - fatiguePenalty (characterTable)  valuedice = bcInfamyTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, times the Unnatural multiplier." value = ((Value + Advances * 5 + boost) / 10) * Unnatural  editable = none }
+}
+
+skillTarget (base, level, untrained) =
+    switch level
+        case "Known" then base
+        case "Trained" then base + 10
+        case "Experienced" then base + 20
+        case "Veteran" then base + 30
+        else if untrained then base - 20 else 0
+
+skill (base, untrained) = custom
+{
+    Level = string { description = "Untrained skills test at -20; Forbidden Lore and some Operate fields can't be used untrained. Known tests at the characteristic, Trained +10, Experienced +20, Veteran +30." default = "Untrained"  keys = ["Untrained", "Known", "Trained", "Experienced", "Veteran"] }
+    Misc = integer { default = 0 }
+    Target = integer { description = "The characteristic plus the skill's rank, or -20 untrained. Roll d100 at or under it." value = skillTarget (base, Level, untrained) + Misc  valuedice = bcInfamyTest (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "bcWeapon", field)
+
+isMelee (weapon) = weaponStat (weapon, "Class") == "Melee" or weaponStat (weapon, "Class") == ""
+
+dieCount (text) = max (1, firstNumber (text))
+
+dieSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+isTearing (special) = contains (toLower (special), "tearing")
+
+weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, rof, special) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = bcInfamyAttack (characterTable, kind, rof, special)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = bcDamage (dieCount (damage), dieSides (damage), pen, isTearing (special))  editable = none }
+    Pen = pen
+    RoF = rof
+    Special = special
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total, "melee", 0, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + char.Characteristics.Strength.Bonus, toInt (weaponStat (weapon, "Pen")), "", weaponStat (weapon, "Special"))
+    else
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (weaponStat (weapon, "Range")) * 3, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + (if weaponStat (weapon, "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), toInt (weaponStat (weapon, "Pen")), weaponStat (weapon, "RoF"), weaponStat (weapon, "Special"))
+
+woundState (wounds, critical, fatigue, toughness) =
+    if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
+    else if fatigue > toughness then "Unconscious"
+    else if fatigue > 0 then "Fatigued"
+    else ""
+
+lightlyDamaged (wounds, maxWounds, toughness) = maxWounds - wounds <= toughness * 2
+
+restHeal (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then wounds
+    else if lightlyDamaged (wounds, maxWounds, toughness) then min (maxWounds, wounds + 1)
+    else wounds
+
+gods = ["Unaligned", "Khorne", "Nurgle", "Slaanesh", "Tzeentch"]
+
+leads (n, a, b, c) = n - max (a, b, c) >= 5
+
+alignmentFrom (k, n, s, t) =
+    if leads (k, n, s, t) then "Khorne"
+    else if leads (n, k, s, t) then "Nurgle"
+    else if leads (s, k, n, t) then "Slaanesh"
+    else if leads (t, k, n, s) then "Tzeentch"
+    else "Unaligned"
+
+alliedGods (a, b) = (a == "Khorne" and b == "Nurgle") or (a == "Nurgle" and b == "Khorne") or (a == "Slaanesh" and b == "Tzeentch") or (a == "Tzeentch" and b == "Slaanesh")
+
+patronStatus (alignment, god) =
+    if god == "Unaligned" or alignment == "Unaligned" or alignment == "" then "Allied"
+    else if alignment == god then "True"
+    else if alliedGods (alignment, god) then "Allied"
+    else "Opposed"
+
+advancesOf (char, god) =
+    switch god
+        case "Khorne" then char.'Advances by god'.Khorne.Advances
+        case "Nurgle" then char.'Advances by god'.Nurgle.Advances
+        case "Slaanesh" then char.'Advances by god'.Slaanesh.Advances
+        case "Tzeentch" then char.'Advances by god'.Tzeentch.Advances
+        else char.'Advances by god'.Unaligned.Advances
+
+leaningOf (char) = alignmentFrom (advancesOf (char, "Khorne"), advancesOf (char, "Nurgle"), advancesOf (char, "Slaanesh"), advancesOf (char, "Tzeentch"))
+
+checkDue (corruption, lastCheck) = (corruption / 10) * 10 > lastCheck
+
+isMarine (race) = race == "Chaos Space Marine"
+
+giftStep (race) = if isMarine (race) then 30 else 20
+
+giftsDue (corruption, race) = if corruption < 10 then 0 else 1 + (corruption - 10) / giftStep (race)
+
+nextGift (corruption, race) = if corruption < 10 then 10 else 10 + ((corruption - 10) / giftStep (race) + 1) * giftStep (race)
+
+apotheosis (corruption, infamy, target) =
+    if corruption < 100 then ""
+    else if infamy >= target then "Daemon Prince"
+    else "Chaos Spawn"
+
+isDouble (roll) = roll < 100 and mod (roll, 10) == mod (roll, 100) / 10
+
+psyModes = ["Fettered", "Unfettered", "Push +1", "Push +2", "Push +3", "Push +4", "Push +5"]
+
+effectivePR (rating, mode) =
+    switch mode
+        case 0 then (rating + 1) / 2
+        case 1 then rating
+        else rating + mode - 1
+
+phenomenaTriggered (mode, roll) = mode >= 2 or (mode == 1 and isDouble (roll))
+
+perilsResult (n) =
+{
+    Text = "Perils of the Warp " + toString (n) + ": read the Perils of the Warp table"
+    Value = n
+    Outcome = "Mishap"
+}
+
+perilsDice = ([1d100], ((baseline, throws)->perilsResult (first (first (throws).rolls))))
+
+phenomenaResult (n) =
+{
+    Text = "Psychic Phenomena " + toString (n) + (if n >= 75 then ": Perils of the Warp, roll on the Perils table" else ": read the Psychic Phenomena table")
+    Value = n
+    Outcome = if n >= 75 then "Mishap" else ""
+    Push = if n >= 75 then perilsDice else 0
+    PushLabel = "Roll Perils of the Warp"
+}
+
+phenomenaDice (modifier) = ([1d100], ((baseline, throws)->phenomenaResult (first (first (throws).rolls) + modifier)))
+
+phenomenaRoll = ask ("Phenomena modifier", 0, ([1d100], ((baseline, throws)->phenomenaResult (first (first (throws).rolls) + asked))))
+
+sustainPenalty (sustained) = max (0, sustained - 1) * 10
+
+powerResult (target, roll, rating, mode, blocked) =
+{
+    Text = if blocked then "A champion of Khorne cannot manifest psychic powers"
+           else bcText (target, roll) + ", Psy rating " + toString (effectivePR (rating, mode)) + (if phenomenaTriggered (mode, roll) then ", Psychic Phenomena: roll it" else "")
+    Value = roll
+    Outcome = if blocked then "Failure" else if bcSuccess (target, roll) then "Success" else "Failure"
+    Push = if not (blocked) and phenomenaTriggered (mode, roll) then phenomenaDice (0) else 0
+    PushLabel = "Roll Psychic Phenomena"
+}
+
+powerDice (rating, mode, sustained, blocked) = ([1d100], ((baseline, throws)->powerResult (baseline + effectivePR (rating, mode) * 5 + asked * 10 - sustainPenalty (sustained), first (first (throws).rolls), rating, mode, blocked)))
+
+bcPower (rating, sustained, blocked) = ask ("Manifest", psyModes, 0, (mode)->ask ("Difficulty", difficulties, -6, powerDice (rating, mode, sustained, blocked)))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Status, Characteristics, Infamy, Corruption, Attacks] }
+    Heretic = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Race = string { description = "Human heretics start their characteristics at 25, Chaos Space Marines at 30, and gain Gifts of the Gods at different Corruption." keys = ["Human", "Chaos Space Marine"] default = "Human" }
+        Archetype = string { description = "The heretic's archetype, which gives starting skills, talents, gear and wounds." keys = ["Apostate", "Heretek", "Renegade", "Psyker", "Chosen", "Forsaken", "Sorcerer", "Champion", "Other"] }
+        Pride = string { description = "What the heretic is proud of: a human's origin choice that grants a benefit." }
+        Disgrace = string { description = "The shame that set the heretic apart from the Imperium, with its drawback." }
+        Motivation = string { description = "Why the heretic fights: what drives them toward the Dark Gods' favour." }
+        'Total XP' = integer { description = "Experience earned in all, starting XP included." default = 1000  minvalue = 0 }
+        'XP to spend' = integer { default = 0  minvalue = 0  editable = live }
+        Description = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total. Strength is Khorne's, Toughness Nurgle's, Fellowship Slaanesh's and Willpower Tzeentch's; the rest are unaligned."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic (1, 0)
+        'Ballistic Skill' = characteristic (1, 0)
+        Strength = characteristic (1, Armour.'Strength boost')
+        Toughness = characteristic (1, 0)
+        Agility = characteristic (1, 0)
+        Intelligence = characteristic (1, 0)
+        Perception = characteristic (1, 0)
+        Willpower = characteristic (1, 0)
+        Fellowship = characteristic (1, 0)
+    }
+
+    Skills = table
+    {
+        description = "Untrained skills test at -20 (Forbidden Lore not at all). Ranks: Known +0, Trained +10, Experienced +20, Veteran +30. Each skill may be aligned to a god, which sets its cost."
+        tableLayout = layout { columns = 2 }
+        Acrobatics = skill (Characteristics.Agility.Total, true)
+        Athletics = skill (Characteristics.Strength.Total, true)
+        Awareness = skill (Characteristics.Perception.Total, true)
+        Charm = skill (Characteristics.Fellowship.Total, true)
+        Command = skill (Characteristics.Fellowship.Total, true)
+        'Common Lore' = skill (Characteristics.Intelligence.Total, true)
+        Deceive = skill (Characteristics.Fellowship.Total, true)
+        Dodge = skill (Characteristics.Agility.Total, true)
+        'Forbidden Lore' = skill (Characteristics.Intelligence.Total, false)
+        Inquiry = skill (Characteristics.Fellowship.Total, true)
+        Interrogation = skill (Characteristics.Willpower.Total, true)
+        Intimidate = skill (Characteristics.Strength.Total, true)
+        Linguistics = skill (Characteristics.Intelligence.Total, true)
+        Logic = skill (Characteristics.Intelligence.Total, true)
+        Medicae = skill (Characteristics.Intelligence.Total, true)
+        Navigate = skill (Characteristics.Intelligence.Total, true)
+        Operate = skill (Characteristics.Agility.Total, true)
+        Parry = skill (Characteristics.'Weapon Skill'.Total, true)
+        Psyniscience = skill (Characteristics.Perception.Total, true)
+        'Scholastic Lore' = skill (Characteristics.Intelligence.Total, true)
+        Scrutiny = skill (Characteristics.Perception.Total, true)
+        Security = skill (Characteristics.Agility.Total, true)
+        'Sleight of Hand' = skill (Characteristics.Agility.Total, true)
+        Stealth = skill (Characteristics.Agility.Total, true)
+        Survival = skill (Characteristics.Perception.Total, true)
+        'Tech Use' = skill (Characteristics.Intelligence.Total, true)
+        Trade = skill (Characteristics.Intelligence.Total, true)
+        Specialities = string { description = "Which lores, languages, Operate fields, Navigate fields and trades the skills above cover." multiline = true }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Wounds when unhurt, from the archetype and Toughness bonus." default = 14 }
+        Wounds = integer { description = "Wounds left. Damage past 0 is critical damage." default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage taken past 0 wounds, read on the critical tables by location and damage type." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { description = "Levels of fatigue: -10 on all tests. More than your Toughness bonus and you pass out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (Wounds, 'Critical damage', Fatigue, Characteristics.Toughness.Bonus)  visible = none  indicator = "#d64545" }
+        Initiative = modifier { description = "1d10 + Agility bonus, highest first." value = Characteristics.Agility.Bonus  valuedice = initiativeRoll  editable = none }
+        'Night of rest' = button
+        {
+            description = "A night's rest clears fatigue, and a lightly damaged heretic heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = 0
+                (root.Status.Wounds) = restHeal (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)
+            }
+        }
+    }
+
+    Infamy = table
+    {
+        description = "Infamy takes the place of Fate: the heretic's renown in the eyes of the Dark Gods and their followers."
+        tableLayout = layout { columns = 2 }
+        Infamy = integer { description = "The Infamy characteristic. Test it to acquire gear, call on followers and win a god's reward. Raised by completing compacts, or 5 at a time with XP up to 40." default = 20  minvalue = 0  maxvalue = 100  valuedice = bcInfamyTest (characterTable) }
+        'Infamy bonus' = integer { description = "The tens digit of Infamy: the Infamy points the heretic has each session." value = Infamy / 10  editable = none }
+        'Infamy points' = integer { description = "Spend one to reroll a test, add a degree of success, heal 1d5 wounds, shake off fatigue or Stunning, or act first. Burning Infamy saves the heretic from death." default = 'Infamy bonus'  minvalue = 0  editable = live }
+        Acquisition = integer { description = "An Infamy test to get hold of an item, modified by its Availability and Craftsmanship." value = Infamy  valuedice = bcAcquisition  editable = none }
+        'Daemon Prince at' = integer { description = "The Infamy the gamemaster set for apotheosis: reach 100 Corruption with this much Infamy and the heretic becomes a Daemon Prince." default = 90  minvalue = 0 }
+        'New session' = button
+        {
+            description = "At the start of a session, Infamy points return to the Infamy bonus."
+            editable = live
+            onClick = updates
+            {
+                (root.Infamy.'Infamy points') = 'Infamy bonus'
+            }
+        }
+    }
+
+    Corruption = table
+    {
+        description = "Corruption from deeds and the Warp. At 10, and every 20 after (30 for a Chaos Space Marine), the gods grant a Gift. At 100 the heretic is claimed."
+        tableLayout = layout { columns = 2 }
+        Corruption = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Gifts earned' = integer { description = "How many Gifts of the Gods the heretic's Corruption has brought." value = giftsDue (Corruption, Heretic.Race)  editable = none }
+        'Next gift at' = integer { value = nextGift (Corruption, Heretic.Race)  editable = none }
+        Fate = string { description = "At 100 Corruption: Daemon Prince if Infamy has reached the gamemaster's target, otherwise Chaos Spawn." value = apotheosis (Corruption, Infamy.Infamy, Infamy.'Daemon Prince at')  editable = none  indicator = "#8e5cc4" }
+    }
+
+    Movement = table
+    {
+        description = "Metres moved per action, from the Agility bonus."
+        tableLayout = layout { columns = 2 }
+        'Half move' = integer { value = Characteristics.Agility.Bonus  render = distance (Characteristics.Agility.Bonus)  editable = none }
+        'Full move' = integer { value = Characteristics.Agility.Bonus * 2  render = distance (Characteristics.Agility.Bonus * 2)  editable = none }
+        Charge = integer { value = Characteristics.Agility.Bonus * 3  render = distance (Characteristics.Agility.Bonus * 3)  editable = none }
+        Run = integer { value = Characteristics.Agility.Bonus * 6  render = distance (Characteristics.Agility.Bonus * 6)  editable = none }
+    }
+
+    'Chaos Alignment' = table
+    {
+        description = "The god the heretic is Aligned to. Check it each time Corruption reaches a new multiple of 10: a god whose advances lead every other god's by 5 or more claims the heretic."
+        tableLayout = layout { columns = 2 }
+        Alignment = string { description = "True advances of your god are cheapest, Allied cost the normal price, Opposed the most. A champion of Khorne cannot use psychic powers." keys = gods  default = "Unaligned"  editable = live }
+        'Advances favour' = string { description = "The alignment a check would give now, from the advances bought for each god." value = leaningOf (characterTable)  editable = none }
+        'Last check' = integer { description = "The Corruption at the last alignment check, rounded down to 10." default = 0  minvalue = 0 }
+        'Check due' = string { value = if checkDue (Corruption.Corruption, 'Last check') then "Check alignment" else ""  editable = none }
+        'XP spent' = integer { description = "Experience spent on advances of every god and none." value = 'Advances by god'.Khorne.'XP spent' + 'Advances by god'.Nurgle.'XP spent' + 'Advances by god'.Slaanesh.'XP spent' + 'Advances by god'.Tzeentch.'XP spent' + 'Advances by god'.Unaligned.'XP spent'  editable = none }
+        'Check alignment' = button
+        {
+            description = "Sets the alignment from the advances bought, and notes the Corruption of this check."
+            editable = live
+            onClick = updates
+            {
+                (root.'Chaos Alignment'.Alignment) = leaningOf (characterTable)
+                (root.'Chaos Alignment'.'Last check') = (Corruption.Corruption / 10) * 10
+            }
+        }
+    }
+
+    'Advances by god' = keyvalues
+    {
+        description = "Advances bought for each god's characteristics, skills, talents and powers, and the experience spent on them. Archetype advances don't count."
+        singular = "God"
+        keys = ["Khorne", "Nurgle", "Slaanesh", "Tzeentch", "Unaligned"]
+        descriptions = { Khorne = "The Blood God: Strength, war and slaughter."  Nurgle = "The Plague Lord: Toughness, decay and endurance."  Slaanesh = "The Prince of Pleasure: Fellowship, excess and perfection."  Tzeentch = "The Changer of Ways: Willpower, sorcery and schemes."  Unaligned = "Advances of no god, which never count toward an alignment." }
+        valueType = custom
+        {
+            Advances = integer { default = 0  minvalue = 0 }
+            'XP spent' = integer { default = 0  minvalue = 0 }
+            Patron = string { value = patronStatus (characterTable.'Chaos Alignment'.Alignment, Key)  editable = none }
+        }
+    }
+
+    Armour = table
+    {
+        description = "Armour points by hit location. The Toughness bonus also soaks damage."
+        tableLayout = layout { columns = 2 }
+        Head = integer { default = 0 }
+        Body = integer { default = 0 }
+        'Right Arm' = integer { default = 0 }
+        'Left Arm' = integer { default = 0 }
+        'Right Leg' = integer { default = 0 }
+        'Left Leg' = integer { default = 0 }
+        'Strength boost' = integer { description = "Power armour's servos add to Strength (before any Unnatural multiplier)." default = 0  minvalue = 0 }
+        Size = string { keys = ["Average", "Hulking", "Enormous"] default = "Average" }
+        'Toughness bonus' = integer { value = Characteristics.Toughness.Bonus  editable = none }
+    }
+
+    Talents = list
+    {
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack tests and damage for each weapon. Attacks ask the kind of attack and the difficulty; damage asks the target's armour and Toughness bonus."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, 0, "", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Shots = integer { default = 24  minvalue = 0  editable = live }
+            Magazines = integer { default = 2  minvalue = 0  editable = live }
+        }
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    'Armour worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Psychic = table
+    {
+        description = "Psykers and sorcerers: psy rating and the Focus Power test."
+        tableLayout = layout { columns = 2 }
+        'Psy rating' = integer { default = 0  minvalue = 0 }
+        'Sustained powers' = integer { description = "Every power sustained beyond the first gives -10 to Focus Power tests." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5" }
+        'Focus Power' = integer { description = "Willpower plus 5 per psy rating used. Fettered halves the rating and is safe; Unfettered brings Psychic Phenomena on doubles; Pushing adds to the rating and always brings them." value = Characteristics.Willpower.Total  valuedice = bcPower ('Psy rating', 'Sustained powers', 'Chaos Alignment'.Alignment == "Khorne")  editable = none }
+        Phenomena = integer { description = "Roll d100 on the Psychic Phenomena table; 75 or more brings Perils of the Warp." value = 0  valuedice = phenomenaRoll  editable = none }
+    }
+
+    'Psychic powers' = list
+    {
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Gifts of the Gods' = list
+    {
+        description = "Gifts, mutations, marks and rewards the Dark Gods have granted."
+        source = secondary.Gifts
+        singular = "Gift"
+        editable = character
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/blackcrusade/daemon.svg"
+    }
+    Profile = table
+    {
+        description = "Characteristics. Unnatural characteristics multiply the bonus; note them under Traits."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 35  valuedice = bcTest }
+        BS = integer { default = 35  valuedice = bcTest }
+        S = integer { default = 35  valuedice = bcTest }
+        T = integer { default = 35  valuedice = bcTest }
+        Ag = integer { default = 35  valuedice = bcTest }
+        Int = integer { default = 30  valuedice = bcTest }
+        Per = integer { default = 35  valuedice = bcTest }
+        WP = integer { default = 35  valuedice = bcTest }
+        Fel = integer { default = 25  valuedice = bcTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Wounds' = integer { default = 12 }
+        Wounds = integer { default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Armour = string { description = "Armour points by location, such as All 4 or Body 6, Head 3." default = "All 3" }
+        'Toughness bonus' = integer { description = "With any Unnatural multiplier." default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { description = "Half, full, charge and run in metres." default = "3/6/9/18" }
+        Size = string { keys = ["Miniscule", "Puny", "Scrawny", "Average", "Hulking", "Enormous", "Massive", "Immense"] default = "Average" }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Psy rating' = integer { default = 0  minvalue = 0 }
+        'Focus Power' = integer { description = "Willpower plus 5 per psy rating used." value = Profile.WP  valuedice = bcPower ('Psy rating', 0, false)  editable = none }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 35  valuedice = bcAttack ("melee", "", Special, [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = bcDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 35  valuedice = bcAttack ("ranged", RoF, Special, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 30 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = bcDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+hordeDice (magnitude) = min (2, max (0, magnitude) / 10)
+
+hordeState (magnitude, maxMagnitude) =
+    if magnitude <= 0 then "Destroyed"
+    else if magnitude * 4 <= maxMagnitude * 3 then "Test morale"
+    else ""
+
+hordeTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Horde, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/blackcrusade/horde.svg"
+    }
+    Profile = table
+    {
+        description = "The characteristics of a single member of the horde."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = bcTest }
+        BS = integer { default = 30  valuedice = bcTest }
+        S = integer { default = 30  valuedice = bcTest }
+        T = integer { default = 30  valuedice = bcTest }
+        Ag = integer { default = 30  valuedice = bcTest }
+        Int = integer { default = 20  valuedice = bcTest }
+        Per = integer { default = 30  valuedice = bcTest }
+        WP = integer { default = 30  valuedice = bcTest }
+        Fel = integer { default = 15  valuedice = bcTest }
+    }
+    Horde = table
+    {
+        description = "A horde has Magnitude instead of Wounds: each hit that gets past armour and Toughness takes 1 off, Blast adds hits, and Zealous Hatred takes 1 more."
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Magnitude' = integer { default = 30  minvalue = 1 }
+        Magnitude = integer { default = 'Max Magnitude'  minvalue = 0  editable = live  indicator = "#d64545" }
+        State = string { value = hordeState (Magnitude, 'Max Magnitude')  visible = none  indicator = "#e8913a" }
+        'Extra damage dice' = integer { description = "A horde's attacks add 1d10 per 10 Magnitude, up to 2d10." value = hordeDice (Magnitude)  editable = none }
+        Armour = string { default = "All 3" }
+        'Toughness bonus' = integer { default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { default = "3/6/9/18" }
+        Fearless = bool { description = "A fearless horde never breaks; others test Willpower once they lose a quarter of their Magnitude." default = false }
+        Morale = integer { description = "Willpower test to hold when a quarter of the horde has fallen." value = Profile.WP  valuedice = bcTest  editable = none }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = bcAttack ("melee", "", Special, [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = bcDamage (dieCount (Damage) + hordeDice (hordeTable.Horde.Magnitude), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = bcAttack ("ranged", RoF, Special, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 30 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = bcDamage (dieCount (Damage) + hordeDice (hordeTable.Horde.Magnitude), dieSides (Damage), Pen, isTearing (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+infamyDone (rows) = sum (map ((o)->if o.Done then o.'Infamy reward' else 0, rows))
+
+xpDone (rows) = sum (map ((o)->if o.Done then o.'XP reward' else 0, rows))
+
+compactTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/blackcrusade/compact.svg"  important = [Compact, Objectives] }
+    Compact = table
+    {
+        description = "A compact is the warband's pact for an endeavour: its goals, who leads it, what each heretic puts in and what they stand to win."
+        tableLayout = layout { columns = 3  size = wide }
+        Anointed = string { description = "The heretic chosen to lead the compact, whose word decides when the warband disagrees." }
+        Dedication = string { description = "A compact may be dedicated to one of the Dark Gods, whose favour then rides on it." keys = gods  default = "Unaligned" }
+        Status = string { keys = ["Planned", "Under way", "Completed", "Failed"] default = "Planned"  editable = live }
+        'Infamy earned' = integer { description = "Infamy from the objectives done so far." value = infamyDone (compactTable.Objectives)  editable = none }
+        'XP earned' = integer { description = "Experience from the objectives done so far." value = xpDone (compactTable.Objectives)  editable = none }
+        Warband = string { multiline = true }
+        Resources = string { description = "What each heretic brings to the compact: followers, ships, weapons, favours." multiline = true }
+    }
+    Objectives = list
+    {
+        description = "Primary objectives are the compact's purpose, secondary ones serve it, tertiary ones are a heretic's own ambition. The gamemaster sets the rewards."
+        tableLayout = layout { size = wide }
+        singular = "Objective"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Kind = string { keys = ["Primary", "Secondary", "Tertiary"] default = "Primary" }
+            'Infamy reward' = integer { default = 1  minvalue = 0 }
+            'XP reward' = integer { default = 100  minvalue = 0 }
+            Done = bool { default = false  editable = live }
+        }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Log = string { multiline = true  editable = live }
+    }
+}
+
+bcWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Class }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Melee", "Pistol", "Basic", "Heavy", "Thrown"] }
+        Range = string { description = "Range in metres. Long range is double, extreme triple." }
+        RoF = string { description = "Rate of fire: single, semi-auto and full auto, such as S/3/-." default = "S/-/-" }
+        Damage = string { default = "1d10" }
+        Type = string { description = "Energy, Impact, Rending or Explosive." keys = ["E", "I", "R", "X"] }
+        Pen = string { default = "0" }
+        Clip = string {}
+        Reload = string {}
+        Special = string { description = "Weapon qualities such as Tearing, Blast (3), Reliable or Daemonic." }
+        Weight = string {}
+        Availability = string { keys = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"] default = "Average" }
+    }
+}
+
+bcArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Locations = string { default = "All" }
+        AP = string { description = "Armour points by location, such as Head 8, Body 8, Arms 8, Legs 8." default = "4" }
+        Availability = string { keys = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"] default = "Average" }
+        Effect = string {}
+    }
+}
+
+bcTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Tier" prefix = "Tier" filter = Stats.Tier }, filter { name = "Alignment" prefix = "" filter = Stats.Alignment }]
+        sortedBy = sort { prefix = "Tier" sort = Stats.Tier }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Tier = integer { description = "Talents come in three tiers, dearer as they rise." default = 1  minvalue = 1  maxvalue = 3 }
+        Alignment = string { description = "The god the talent belongs to, which sets its cost for the heretic." keys = gods  default = "Unaligned" }
+        Prerequisites = string {}
+    }
+}
+
+bcPowerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "" sort = Stats.Discipline }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Minor", "Divination", "Telekinesis", "Telepathy", "Sorcery", "Nurgle", "Slaanesh", "Tzeentch"] default = "Minor" }
+        Value = string { description = "The experience it costs to learn." default = "100" }
+        Prerequisites = string {}
+        Action = string {}
+        'Focus Power' = string { description = "The characteristic tested and its modifier, such as Challenging (+0) Willpower." }
+        Range = string {}
+        Sustained = string { keys = ["No", "Yes"] default = "No" }
+    }
+}
+
+bcGear = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weight = string {}
+        Availability = string { keys = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"] default = "Average" }
+        Craftsmanship = string { keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+    }
+}
+
+bcGift = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/blackcrusade/gift.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "God" prefix = "" filter = Stats.God }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Gift of the Gods", "Mutation", "Mark of Chaos", "Reward"] default = "Gift of the Gods" }
+        God = string { description = "A god whose heretics get more from it." keys = gods  default = "Unaligned" }
+        'Gained at' = integer { description = "The Corruption at which it came." default = 10  minvalue = 0 }
+    }
+}
+
+blackCrusadeNameSetting = nameSetting
+{
+    name = "Black Crusade"
+    characters = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    Hordes = generator { library = "Grimdark imperium" variant = "Heretic" }
+    Compacts = generator { library = "Grimdark imperium" variant = "Order" }
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Voidship" }]
+}
+
+BlackCrusade = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Heretics"
+            topic = "Getting started"
+            text = ["Pick a race and an archetype: Apostate, Heretek, Renegade or Psyker for humans; Chosen, Forsaken, Sorcerer or Champion for Chaos Space Marines. Roll the nine characteristics, 2d10 + 25 for humans and 2d10 + 30 for Chaos Space Marines (who also have Unnatural Strength and Toughness x2).", "Humans start with 1,000 XP to spend, Chaos Space Marines with 500. Note each advance under the god it belongs to: that decides the heretic's alignment."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target after the difficulty (Challenging +0, Hard -20, Easy +30). 01 always succeeds and 100 always fails. A pass is one degree of success, plus one for each step the target's tens digit is above the roll's; failures count the same way.", "Untrained skills test at -20; Forbidden Lore can't be tried untrained. A failed test offers to spend an Infamy point for a reroll."]
+        },
+        hint
+        {
+            title = "Infamy and the gods"
+            topic = "Play"
+            text = ["Infamy takes the place of Fate: the Infamy bonus is the points the heretic has each session, and the Acquisition roll is an Infamy test by Availability and Craftsmanship.", "When Corruption reaches a new multiple of 10, press Check alignment: a god whose advances lead all others by 5 claims the heretic. Gifts of the Gods come at 10 Corruption and every 20 after (30 for Chaos Space Marines). At 100 Corruption the heretic becomes a Daemon Prince if Infamy has reached the target, otherwise a Chaos Spawn."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask the kind of attack (standard +10, all-out +30, charge +20, guarded -10, swift, lightning, bursts, called shot) and the difficulty. Bursts and swift or lightning attacks add hits from degrees of success. The roll's digits reversed give the hit location; ranged attacks jam on 96 or more (94 for bursts).", "Damage asks the target's armour and Toughness bonus. A 10 on a damage die is Zealous Hatred: roll 1d5 on the critical table for the location, even if no damage got through."]
+        },
+        hint
+        {
+            title = "Compacts and hordes"
+            topic = "Play"
+            text = ["Make a Compact for each endeavour of the warband: its Anointed leader, its dedication, and objectives with their Infamy and XP rewards.", "A Horde has Magnitude instead of Wounds. Every hit that gets through takes 1 Magnitude (the attack result counts them, with Blast), and Zealous Hatred 1 more. Its attacks add 1d10 damage per 10 Magnitude, up to 2d10."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: 1d10 + Agility bonus, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    Hordes = hordeTable
+    Compacts = compactTable
+    Weapons = bcWeapon
+    Armour = bcArmour
+    Talents = bcTalent
+    'Psychic Powers' = bcPowerStats
+    Gear = bcGear
+    Gifts = bcGift
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Psychic Powers", "Gear", "Gifts"]
+    extraEntityTypes = [entityTypeDescription ("Hordes", "horde", true, "/systems/blackcrusade/horde.svg", []), entityTypeDescription ("Compacts", "compact", false, "/systems/blackcrusade/compact.svg", [])]
+    description = "Warhammer 40,000 Black Crusade: heretics and Chaos Space Marines in service of the Dark Gods, with d100 tests, alignment from advances, Infamy, Corruption and Gifts of the Gods, compacts, psychic powers and hordes"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 1d5]
+    cssFiles = ["/systems/blackcrusade/blackcrusade.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [blackCrusadeNameSetting, grimdarkNameSetting]
+}
