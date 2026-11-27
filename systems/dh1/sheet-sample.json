@@ -1,0 +1,39 @@
+{
+  "values": {
+    "Acolyte": { "Home world": "Hive World", "Career path": "Imperial Psyker", "Rank title": "Psykana Adept", "Divination": "The Emperor protects, but a loaded bolter never hurts.", "Gender": "Female", "Age": "23", "Build": "Wiry", "Complexion": "Pale, grey-ringed eyes", "Hair": "Shaved, sanctioning brand at the temple", "Eyes": "Violet", "Quirks": "Counts under her breath when the warp stirs" },
+    "Characteristics": {
+      "Weapon Skill.Value": 28, "Ballistic Skill.Value": 31, "Strength.Value": 29, "Toughness.Value": 33, "Agility.Value": 34,
+      "Intelligence.Value": 36, "Perception.Value": 38, "Willpower.Value": 43, "Willpower.Advances": 1, "Fellowship.Value": 31
+    },
+    "Basic skills": { "Awareness.Level": "Trained", "Inquiry.Level": "Trained", "Scrutiny.Level": "Trained", "Dodge.Level": "Trained" },
+    "Advanced skills": {
+      "Common Lore.Level": "Trained", "Forbidden Lore.Level": "Trained", "Invocation.Level": "Trained", "Literacy.Level": "Trained", "Psyniscience.Level": "+10",
+      "Scholastic Lore.Level": "Trained", "Speak Language.Level": "Trained",
+      "Specialities": "Common Lore (Imperium, Hive Sibellus); Forbidden Lore (The Warp); Scholastic Lore (Cryptology); Speak Language (Low Gothic, Hive Dialect)"
+    },
+    "Status": { "Max Wounds": 11, "Wounds": 8, "Fatigue": 0, "Fate threshold": 2, "Fate": 1, "Critical effects": "" },
+    "Insanity": { "Insanity points": 7, "Disorders": "" },
+    "Corruption": { "Corruption points": 4, "Malignancies": "" },
+    "Experience": { "Total XP": 900, "XP to spend": 150 },
+    "Armour": { "Body 31 to 70": 3, "Right Arm 11 to 20": 3, "Left Arm 21 to 30": 3 },
+    "Traits": [ { "Name": "Hive bred", "Description": "Wary of open spaces and the unfiltered sky; at home in the crowds and the dark." }, { "Name": "Sanctioned", "Description": "Soul-bound at the Scholastica Psykana; carries the black ship's mark." } ],
+    "Ammunition": [ { "Name": "Laspistol charge packs", "Shots": 22, "Clips": 2 } ],
+    "Thrones": { "Throne gelt": 34, "Income": "70 thrones a month" },
+    "Psychic": { "Psy Rating": 2, "Sustained powers": "" },
+    "Notes": { "Background": "Mira Vost was pulled from the lower spires of Hive Sibellus after her nightmares set a hab-block alight. She came back from Terra sanctioned and quiet, and now reads the warp's tides for Inquisitor Halloran's cell, hoping her gift burns out before it burns her.", "Advances taken": "Willpower Simple; Psyniscience +10; Sense Presence; Resistance (Psychic Powers)", "Contacts": "Sergeant Durn of the Magistratum, Precinct 17; Lexmechanic Ollan Vey, Tricorn archives" }
+  },
+  "secondary": {
+    "Weapons": [
+      { "name": "Laspistol", "values": { "Stats": { "Class": "Pistol", "Range": "30m", "RoF": "S/-/-", "Damage": "1d10+2", "Type": "E", "Pen": "0", "Clip": "30", "Reload": "Full", "Special": "Reliable", "Craftsmanship": "Common", "Weight": "1.5kg", "Cost": "50", "Availability": "Common" } } },
+      { "name": "Psyker's staff", "values": { "Stats": { "Class": "Melee", "Damage": "1d10", "Type": "I", "Pen": "0", "Special": "Primitive, Balanced", "Craftsmanship": "Good", "Weight": "3kg", "Cost": "10", "Availability": "Plentiful" } } }
+    ],
+    "Armour": [ { "name": "Flak cloak", "values": { "Stats": { "Type": "Flak", "Locations": "Arms, Body", "AP": "3", "Weight": "4kg", "Cost": "70", "Availability": "Common" } } } ],
+    "Talents": [ { "name": "Psy Rating 2", "values": { "Stats": { "Kind": "Talent", "Career": "Imperial Psyker" } } }, { "name": "Pistol Training (Las)", "values": { "Stats": { "Kind": "Talent", "Career": "Any" } } }, { "name": "Melee Weapon Training (Primitive)", "values": { "Stats": { "Kind": "Talent", "Career": "Any" } } }, { "name": "Resistance (Psychic Powers)", "values": { "Stats": { "Kind": "Talent", "Career": "Imperial Psyker" } } } ],
+    "Psychic Powers": [
+      { "name": "Sense Presence", "values": { "Stats": { "Discipline": "Minor", "Threshold": "5", "Focus time": "Half Action", "Range": "Self, 10m per Psy Rating", "Sustained": "No" } } },
+      { "name": "Dull Pain", "values": { "Stats": { "Discipline": "Minor", "Threshold": "6", "Focus time": "Half Action", "Range": "Touch", "Sustained": "Yes" } } },
+      { "name": "Flash Bang", "values": { "Stats": { "Discipline": "Minor", "Threshold": "7", "Focus time": "Half Action", "Range": "20m", "Sustained": "No" } } }
+    ],
+    "Gear": [ { "name": "Psy focus", "values": { "Stats": { "Weight": "0.5kg", "Availability": "Scarce" } } }, { "name": "Injector with two doses of De-Tox", "values": { "Stats": { "Availability": "Average" } } }, { "name": "Aquila pendant" }, { "name": "Glow-globe" } ]
+  }
+}

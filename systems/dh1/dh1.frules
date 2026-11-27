@@ -1,0 +1,922 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+difficulties = ["Very Hard -30", "Hard -20", "Difficult -10", "Challenging +0", "Ordinary +10", "Routine +20", "Easy +30"]
+
+fearLevels = ["Terrifying -30", "Horrifying -20", "Frightening -10", "Disturbing +0"]
+
+dhSuccess (target, roll) = roll <= target and roll != 100
+
+dhDegrees (target, roll) = if dhSuccess (target, roll) then (target - roll) / 10 else (roll - target) / 10
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+dhText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if dhSuccess (target, roll) then "Success" else "Failure")
+    + (if dhDegrees (target, roll) > 0 then ", " + degreeWords (dhDegrees (target, roll), if dhSuccess (target, roll) then "success" else "failure") else "")
+
+dhResult (target, roll, reroll, spend) =
+{
+    Text = dhText (target, roll)
+    Value = roll
+    Outcome = if dhSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (dhSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+fateSpend (char) = if char.Status.Fate > 0 then [{ Field = "characterTable.Status.Fate"  Value = char.Status.Fate - 1 }] else []
+
+dhRoll (modifier) = ([1d100], ((baseline, throws)->dhResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+dhAskedRoll (spend) = ([1d100], ((baseline, throws)->dhResult (baseline + asked * 10, first (first (throws).rolls), dhAskedRoll ([]), spend)))
+
+dhTest = ask ("Difficulty", difficulties, -3, dhAskedRoll ([]))
+
+dhFateTest (char) = ask ("Difficulty", difficulties, -3, dhAskedRoll (fateSpend (char)))
+
+fearText (target, roll) =
+    dhText (target, roll)
+    + (if dhSuccess (target, roll) then "" else ": roll on the Shock table, +10 per degree of failure" + (if roll - target >= 30 then "; out of combat also gain 1d5 Insanity" else ""))
+
+fearResult (target, roll, reroll, spend) =
+{
+    Text = fearText (target, roll)
+    Value = roll
+    Outcome = if dhSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (dhSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+fearDice (spend) = ([1d100], ((baseline, throws)->fearResult (baseline + asked * 10, first (first (throws).rolls), fearDice ([]), spend)))
+
+fearTest (char) = ask ("Fear", fearLevels, -3, fearDice (fateSpend (char)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+locationOf (n) =
+    if n <= 10 then "Head"
+    else if n <= 20 then "Right Arm"
+    else if n <= 30 then "Left Arm"
+    else if n <= 70 then "Body"
+    else if n <= 85 then "Right Leg"
+    else "Left Leg"
+
+meleeModes = ["Standard attack +0", "Charge +10", "All-out attack +20", "Called shot -20", "Swift attack +0 (2 attacks)", "Lightning attack -10 (3 attacks)"]
+
+rangedModes = ["Standard attack +0", "Semi-auto burst +10", "Full auto burst +20", "Called shot -20", "Suppressing fire -20"]
+
+attackModes (kind) = if kind == "melee" then meleeModes else rangedModes
+
+modeBonus (kind, mode) =
+    if kind == "melee" then (switch mode case 1 then 10 case 2 then 20 case 3 then -20 case 5 then -10 else 0)
+    else (switch mode case 1 then 10 case 2 then 20 case 3 then -20 case 4 then -20 else 0)
+
+isBurst (kind, mode) = kind == "ranged" and (mode == 1 or mode == 2 or mode == 4)
+
+rofIndex (mode) = if mode == 1 then 1 else 2
+
+modeName (mode) = if mode == 1 then "semi-auto bursts" else if mode == 2 then "full auto bursts" else "suppressing fire"
+
+hasQuality (special, quality) = contains (toLower (special), quality)
+
+jamFrom (kind, mode, special) =
+    if hasQuality (special, "never jams") then 101
+    else if hasQuality (special, "unreliable") then 91
+    else if hasQuality (special, "reliable") then 100
+    else if isBurst (kind, mode) then 94
+    else 96
+
+jams (roll, kind, mode, special) = kind == "ranged" and roll >= jamFrom (kind, mode, special)
+
+rofCap (rof, index) = if count (split ("/", rof)) > index then toInt (item (index, split ("/", rof))) else 0
+
+lacksMode (kind, mode, rof) = isBurst (kind, mode) and rof != "" and rofCap (rof, rofIndex (mode)) == 0
+
+capHits (n, cap) = if cap > 0 then min (n, cap) else n
+
+hitsFor (kind, mode, rof, degrees) =
+    if isBurst (kind, mode) then capHits (1 + (if mode == 1 then degrees / 2 else degrees), rofCap (rof, rofIndex (mode)))
+    else 1
+
+dhHit (target, roll, kind, mode, special) = dhSuccess (target, roll) and not (jams (roll, kind, mode, special))
+
+hitText (hits, roll) =
+    if hits == 1 then "1 hit on the " + hitLocation (roll)
+    else toString (hits) + " hits, the first on the " + hitLocation (roll)
+
+modeNote (kind, mode) =
+    if kind == "melee" and mode == 4 then "; test again for the second attack"
+    else if kind == "melee" and mode == 5 then "; test again for each of the other two attacks"
+    else if kind == "ranged" and mode == 4 then "; everyone in the arc tests Willpower or is Pinned"
+    else ""
+
+dhAttackResult (target, roll, kind, mode, rof, special, reroll, spend) =
+{
+    Text = if lacksMode (kind, mode, rof) then "The weapon can't fire " + modeName (mode) + " (RoF " + rof + ")"
+           else if jams (roll, kind, mode, special) then "Rolled " + toString (roll) + " vs " + toString (target) + ": the weapon jams and the attack misses"
+           else dhText (target, roll) + (if dhHit (target, roll, kind, mode, special) then ": " + hitText (hitsFor (kind, mode, rof, dhDegrees (target, roll)), roll) else "") + modeNote (kind, mode)
+    Value = roll
+    Outcome = if lacksMode (kind, mode, rof) then "Miss" else if jams (roll, kind, mode, special) then "Jam" else if dhHit (target, roll, kind, mode, special) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (lacksMode (kind, mode, rof)) and not (dhHit (target, roll, kind, mode, special)) then reroll else 0
+    PushLabel = "Spend Fate: reroll"
+    PushSets = spend
+}
+
+dhAttackDice (kind, mode, rof, special, spend) = ([1d100], ((baseline, throws)->dhAttackResult (baseline + modeBonus (kind, mode) + asked * 10, first (first (throws).rolls), kind, mode, rof, special, dhAttackDice (kind, mode, rof, special, []), spend)))
+
+dhAttack (kind, rof, special, spend) = ask ("Attack", attackModes (kind), 0, (mode)->ask ("Difficulty", difficulties, -3, dhAttackDice (kind, mode, rof, special, spend)))
+
+dhFateAttack (char, kind, rof, special) = dhAttack (kind, rof, special, fateSpend (char))
+
+hasFury (rolls) = count (filter ((x)->x == 10, rolls)) > 0
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after armour and Toughness" else ""
+
+furyDice (total, soak) = ([1d10], ((baseline, throws)->furyResult (total + first (first (throws).rolls), soak, first (first (throws).rolls))))
+
+furyResult (total, soak, extra) =
+{
+    Text = "Righteous Fury adds " + toString (extra) + ": " + toString (total) + " damage" + afterSoak (total, soak) + (if extra == 10 then ", another 10: add 1d10 again" else "")
+    Value = total
+    Outcome = "Critical"
+    Push = if extra == 10 then furyDice (total, soak) else 0
+    PushLabel = "Righteous Fury: add 1d10"
+}
+
+damageResult (total, soak, fury) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + (if fury then ", Righteous Fury: test the attack again, and if it hits add 1d10" else "")
+    Value = total
+    Outcome = if fury then "Critical" else ""
+    Push = if fury then furyDice (total, soak) else 0
+    PushLabel = "Righteous Fury: add 1d10"
+}
+
+keptSum (rolls, tearing) = sum (rolls) - (if tearing and count (rolls) > 1 then min (rolls) else 0)
+
+damageDice (diceCount, dieSize, armourLeft, tearing) = ([dice { number = diceCount + (if tearing then 1 else 0)  sides = dieSize }],
+    ((baseline, throws)->damageResult (baseline + keptSum (first (throws).rolls, tearing), armourLeft + asked, hasFury (first (throws).rolls))))
+
+armourAgainst (armour, pen, primitive) = max (0, armour * (if primitive then 2 else 1) - pen)
+
+dhDamage (diceCount, dieSize, pen, tearing, primitive) =
+    ask ("Target's armour", 0, (armour)->ask ("Target's Toughness bonus", 0, damageDice (diceCount, dieSize, armourAgainst (armour, pen, primitive), tearing)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+nines (rolls) = count (filter ((x)->x == 9, rolls))
+
+perilsResult (roll) =
+{
+    Text = "Perils of the Warp " + toString (roll) + ": read it on the Perils of the Warp table"
+    Value = roll
+    Outcome = "Mishap"
+}
+
+perilsDice = ([1d100], ((baseline, throws)->perilsResult (first (first (throws).rolls))))
+
+phenomenaResult (roll) =
+{
+    Text = "Psychic Phenomena " + toString (roll) + (if roll >= 75 then ": Perils of the Warp, roll on the Perils table" else ": read it on the Psychic Phenomena table")
+    Value = roll
+    Outcome = if roll >= 75 then "Mishap" else ""
+    Push = if roll >= 75 then perilsDice else 0
+    PushLabel = "Roll Perils of the Warp"
+}
+
+phenomenaDice = ([1d100], ((baseline, throws)->phenomenaResult (first (first (throws).rolls))))
+
+powerText (total, threshold, nineCount) =
+    "Power roll " + toString (total)
+    + (if threshold > 0 then " vs threshold " + toString (threshold) + (if total >= threshold then ": the power manifests" else ": the power fails") else "")
+    + (if nineCount > 0 then (if nineCount == 1 then ", a 9" else ", " + toString (nineCount) + " nines") + ": Psychic Phenomena" else "")
+
+powerResult (total, threshold, nineCount) =
+{
+    Text = powerText (total, threshold, nineCount)
+    Value = total
+    Outcome = if threshold > 0 then (if total >= threshold then "Success" else "Failure") else ""
+    Push = if nineCount > 0 then phenomenaDice else 0
+    PushLabel = "Roll Psychic Phenomena"
+}
+
+powerDice (diceCount, threshold) = ([dice { number = max (1, diceCount)  sides = 10 }],
+    ((baseline, throws)->powerResult (baseline + sum (first (throws).rolls), if threshold < 0 then asked else threshold, nines (first (throws).rolls))))
+
+dhPower (psyRating) = ask ("Dice to roll (up to Psy Rating)", psyRating, (n)->ask ("Threshold", powerDice (min (n, max (1, psyRating)), -1)))
+
+dhKnownPower (psyRating, threshold) = ask ("Dice to roll (up to Psy Rating)", psyRating, (n)->powerDice (min (n, max (1, psyRating)), threshold))
+
+fatiguePenalty (char) = if char.Status.Fatigue > 0 then 10 else 0
+
+characteristic (unnat) = custom
+{
+    Value = integer { description = "The characteristic as rolled at creation: 2d10 + 20 or + 25 by home world, before advances." default = 30  minvalue = 0  maxvalue = 100 }
+    Advances = integer { description = "Advances bought with experience: Simple, Intermediate, Trained and Expert, each +5." default = 0  minvalue = 0  maxvalue = 4 }
+    Unnatural = integer { description = "The Unnatural multiplier of the bonus, from a trait or mutation. 1 for most acolytes." default = unnat  minvalue = 1  maxvalue = 5 }
+    Total = integer { description = "Value plus 5 per advance, minus 10 while fatigued. Roll d100 at or under it." value = Value + Advances * 5 - fatiguePenalty (characterTable)  valuedice = dhFateTest (characterTable)  editable = none }
+    Bonus = integer { description = "The tens digit of the characteristic, times the Unnatural multiplier." value = ((Value + Advances * 5) / 10) * Unnatural  editable = none }
+}
+
+skillTarget (base, level, basic) =
+    switch level
+        case "Trained" then base
+        case "+10" then base + 10
+        case "+20" then base + 20
+        else if basic then base / 2 else 0
+
+skill (base, basic) = custom
+{
+    Level = string { description = "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained." default = "Untrained"  keys = ["Untrained", "Trained", "+10", "+20"] }
+    Misc = integer { default = 0 }
+    Target = integer { description = "The characteristic, halved when an untrained basic skill, plus 10 or 20 for mastery. Roll d100 at or under it." value = skillTarget (base, Level, basic) + Misc  valuedice = dhFateTest (characterTable)  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "dhWeapon", field)
+
+isMelee (weapon) = weaponStat (weapon, "Class") == "Melee" or weaponStat (weapon, "Class") == ""
+
+dieCount (text) = max (1, firstNumber (text))
+
+dieSides (text) = if bonusWithValue ([[text]], "d([0-9]+)") > 0 then bonusWithValue ([[text]], "d([0-9]+)") else 10
+
+damageBonus (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+isTearing (special) = hasQuality (special, "tearing")
+
+isPrimitive (special) = hasQuality (special, "primitive")
+
+meleeCraft (craft) = switch craft case "Poor" then -10 case "Good" then 5 case "Best" then 10 else 0
+
+craftDamage (craft) = if craft == "Best" then 1 else 0
+
+rangedCraft (craft, special) =
+    switch craft
+        case "Poor" then special + ", Unreliable"
+        case "Good" then special + ", Reliable"
+        case "Best" then special + ", Never jams"
+        else special
+
+weaponAttack (name, target, kind, rangeMetres, damage, damageBase, pen, rof, special) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = dhFateAttack (characterTable, kind, rof, special)  action = kind  reach = 2  range = rangeMetres  editable = none }
+    Damage = integer { value = damageBase  valuedice = dhDamage (dieCount (damage), dieSides (damage), pen, isTearing (special), isPrimitive (special))  editable = none }
+    Pen = pen
+    RoF = rof
+    Special = special
+}
+
+attackFor (char, weapon) =
+    if isMelee (weapon) then
+        weaponAttack (weapon.Name, char.Characteristics.'Weapon Skill'.Total + meleeCraft (weaponStat (weapon, "Craftsmanship")), "melee", 0, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + craftDamage (weaponStat (weapon, "Craftsmanship")) + char.Characteristics.Strength.Bonus, toInt (weaponStat (weapon, "Pen")), "", weaponStat (weapon, "Special"))
+    else
+        weaponAttack (weapon.Name, char.Characteristics.'Ballistic Skill'.Total, "ranged", firstNumber (weaponStat (weapon, "Range")) * 3, weaponStat (weapon, "Damage"), damageBonus (weaponStat (weapon, "Damage")) + (if weaponStat (weapon, "Class") == "Thrown" then char.Characteristics.Strength.Bonus else 0), toInt (weaponStat (weapon, "Pen")), weaponStat (weapon, "RoF"), rangedCraft (weaponStat (weapon, "Craftsmanship"), weaponStat (weapon, "Special")))
+
+woundState (wounds, critical, fatigue, toughness) =
+    if wounds <= 0 and critical > 0 then "Critical damage " + toString (critical)
+    else if fatigue > toughness then "Unconscious"
+    else if fatigue > 0 then "Fatigued"
+    else ""
+
+damageLevel (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then "Critically damaged"
+    else if wounds >= maxWounds then "Unhurt"
+    else if maxWounds - wounds <= toughness * 2 then "Lightly damaged"
+    else "Heavily damaged"
+
+lightlyDamaged (wounds, maxWounds, toughness) = maxWounds - wounds <= toughness * 2
+
+restHeal (wounds, maxWounds, critical, toughness) =
+    if critical > 0 then wounds
+    else if lightlyDamaged (wounds, maxWounds, toughness) then min (maxWounds, wounds + 1)
+    else wounds
+
+dhRank (xp) =
+    if xp < 500 then 1
+    else if xp < 1000 then 2
+    else if xp < 2000 then 3
+    else if xp < 3000 then 4
+    else if xp < 5000 then 5
+    else if xp < 7000 then 6
+    else if xp < 10000 then 7
+    else 8
+
+madness (ip) =
+    if ip < 10 then "Stable"
+    else if ip < 40 then "Unsettled"
+    else if ip < 60 then "Disturbed"
+    else if ip < 80 then "Unhinged"
+    else if ip < 100 then "Deranged"
+    else "Terminally insane"
+
+taint (cp) =
+    if cp <= 0 then "Untainted"
+    else if cp <= 30 then "Tainted"
+    else if cp <= 60 then "Soiled"
+    else if cp <= 90 then "Debased"
+    else if cp < 100 then "Profane"
+    else "Damned"
+
+nextTest (points) = if points >= 100 then "Lost to the Emperor" else "Next test at " + toString ((points / 10 + 1) * 10)
+
+powerStat (power, field) = itemStat (power, "dhPowerStats", field)
+
+powerUse (name, threshold, rangeMetres, psyRating, wpBonus) = custom
+{
+    Name = name
+    Threshold = threshold
+    Manifest = integer { value = wpBonus  valuedice = dhKnownPower (psyRating, threshold)  action = ranged  range = rangeMetres  editable = none }
+}
+
+powerFor (char, power) = powerUse (power.Name, toInt (powerStat (power, "Threshold")), firstNumber (powerStat (power, "Range")), char.Psychic.'Psy Rating', char.Characteristics.Willpower.Bonus)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Status, Characteristics, Conditions, Attacks] }
+    Acolyte = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Home world' = string { description = "Where the acolyte was born: it sets the starting characteristics, wounds, fate and a few skills and traits." keys = ["Feral World", "Hive World", "Imperial World", "Void Born", "Forge World", "Noble Born", "Schola Progenium", "Mind Cleansed", "Other"] }
+        'Career path' = string { description = "The career followed through the eight ranks, which sets the skills and talents on offer." keys = ["Adept", "Arbitrator", "Assassin", "Cleric", "Guardsman", "Imperial Psyker", "Scum", "Tech Priest", "Sister of Battle", "Other"] }
+        Rank = integer { description = "Career rank from total experience: 1 below 500 XP, rising to 8 from 10,000." value = dhRank (Experience.'Total XP')  editable = none }
+        'Rank title' = string { description = "The name of the current rank in the career path." }
+        Divination = string { description = "The Emperor's Tarot or other omen drawn at creation." }
+        Gender = string {}
+        Age = string {}
+        Build = string {}
+        Complexion = string {}
+        Hair = string {}
+        Eyes = string {}
+        Quirks = string {}
+    }
+
+    Characteristics = table
+    {
+        description = "The nine characteristics. A test rolls d100 at or under the total; the bonus is the tens digit."
+        tableLayout = layout { columns = 5  size = wide }
+        'Weapon Skill' = characteristic (1)
+        'Ballistic Skill' = characteristic (1)
+        Strength = characteristic (1)
+        Toughness = characteristic (1)
+        Agility = characteristic (1)
+        Intelligence = characteristic (1)
+        Perception = characteristic (1)
+        Willpower = characteristic (1)
+        Fellowship = characteristic (1)
+    }
+
+    'Basic skills' = table
+    {
+        description = "Basic skills can be tried untrained at half the characteristic. Mastery adds +10 or +20."
+        Awareness = skill (Characteristics.Perception.Total, true)
+        Barter = skill (Characteristics.Fellowship.Total, true)
+        Carouse = skill (Characteristics.Toughness.Total, true)
+        Charm = skill (Characteristics.Fellowship.Total, true)
+        Climb = skill (Characteristics.Strength.Total, true)
+        Command = skill (Characteristics.Fellowship.Total, true)
+        Concealment = skill (Characteristics.Agility.Total, true)
+        Contortionist = skill (Characteristics.Agility.Total, true)
+        Deceive = skill (Characteristics.Fellowship.Total, true)
+        Disguise = skill (Characteristics.Fellowship.Total, true)
+        Dodge = skill (Characteristics.Agility.Total, true)
+        Evaluate = skill (Characteristics.Intelligence.Total, true)
+        Gamble = skill (Characteristics.Intelligence.Total, true)
+        Inquiry = skill (Characteristics.Fellowship.Total, true)
+        Intimidate = skill (Characteristics.Strength.Total, true)
+        Logic = skill (Characteristics.Intelligence.Total, true)
+        Scrutiny = skill (Characteristics.Perception.Total, true)
+        Search = skill (Characteristics.Perception.Total, true)
+        'Silent Move' = skill (Characteristics.Agility.Total, true)
+        Swim = skill (Characteristics.Strength.Total, true)
+    }
+
+    'Advanced skills' = table
+    {
+        description = "Advanced skills need training: untrained they cannot be used and show 0."
+        Acrobatics = skill (Characteristics.Agility.Total, false)
+        Blather = skill (Characteristics.Fellowship.Total, false)
+        'Chem Use' = skill (Characteristics.Intelligence.Total, false)
+        Ciphers = skill (Characteristics.Intelligence.Total, false)
+        'Common Lore' = skill (Characteristics.Intelligence.Total, false)
+        Demolition = skill (Characteristics.Intelligence.Total, false)
+        Drive = skill (Characteristics.Agility.Total, false)
+        'Forbidden Lore' = skill (Characteristics.Intelligence.Total, false)
+        Interrogation = skill (Characteristics.Willpower.Total, false)
+        Invocation = skill (Characteristics.Willpower.Total, false)
+        'Lip Reading' = skill (Characteristics.Perception.Total, false)
+        Literacy = skill (Characteristics.Intelligence.Total, false)
+        Medicae = skill (Characteristics.Intelligence.Total, false)
+        Navigation = skill (Characteristics.Intelligence.Total, false)
+        Performer = skill (Characteristics.Fellowship.Total, false)
+        Pilot = skill (Characteristics.Agility.Total, false)
+        Psyniscience = skill (Characteristics.Perception.Total, false)
+        'Scholastic Lore' = skill (Characteristics.Intelligence.Total, false)
+        'Secret Tongue' = skill (Characteristics.Intelligence.Total, false)
+        Security = skill (Characteristics.Agility.Total, false)
+        Shadowing = skill (Characteristics.Agility.Total, false)
+        'Sleight of Hand' = skill (Characteristics.Agility.Total, false)
+        'Speak Language' = skill (Characteristics.Intelligence.Total, false)
+        Survival = skill (Characteristics.Intelligence.Total, false)
+        'Tech Use' = skill (Characteristics.Intelligence.Total, false)
+        Tracking = skill (Characteristics.Intelligence.Total, false)
+        Trade = skill (Characteristics.Intelligence.Total, false)
+        Wrangling = skill (Characteristics.Intelligence.Total, false)
+        Specialities = string { description = "Which lores, languages, trades, ciphers, drives and pilot fields the skills cover." multiline = true }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Max Wounds' = integer { description = "Wounds when unhurt, from the home world and the career." default = 10 }
+        Wounds = integer { description = "Wounds left. Damage past 0 is critical damage." default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        'Critical damage' = integer { description = "Damage taken past 0 wounds, read on the critical tables by location and damage type." default = 0  minvalue = 0  editable = live }
+        Damage = string { description = "Lightly damaged up to twice the Toughness bonus, heavily damaged beyond, critically damaged past 0 wounds." value = damageLevel (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)  editable = none }
+        Fatigue = integer { description = "Levels of fatigue: -10 on all tests. More than your Toughness bonus and you pass out." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        State = string { value = woundState (Wounds, 'Critical damage', Fatigue, Characteristics.Toughness.Bonus)  visible = none  indicator = "#d64545" }
+        'Fate threshold' = integer { description = "Fate points the acolyte has each session, rolled by home world." default = 2 }
+        Fate = integer { description = "Spend one to reroll a test, add a degree of success, count initiative as 10, heal 1d5 damage, shake off stunning or fatigue. Burn one to cheat death." default = 'Fate threshold'  minvalue = 0  editable = live }
+        Initiative = modifier { description = "1d10 + Agility bonus, highest first." value = Characteristics.Agility.Bonus  valuedice = initiativeRoll  editable = none }
+        'Critical effects' = string { description = "Lasting effects from the critical damage tables." multiline = true  editable = live }
+        'New session' = button
+        {
+            description = "At the start of a session, fate points return to the threshold."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fate) = 'Fate threshold'
+            }
+        }
+        'Night of rest' = button
+        {
+            description = "A night's rest clears fatigue, and a lightly damaged acolyte heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Fatigue) = 0
+                (root.Status.Wounds) = restHeal (Wounds, 'Max Wounds', 'Critical damage', Characteristics.Toughness.Bonus)
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        tableLayout = layout { columns = 3 }
+        Stunned = bool { description = "Loses its actions and is hit more easily until it recovers." default = false  editable = live  indicator = "#d4b106" }
+        Pinned = bool { description = "Under suppressing fire: keeps to cover and only fires back at -20." default = false  editable = live  indicator = "#e8913a" }
+        Prone = bool { default = false  editable = live  indicator = "#e8913a" }
+    }
+
+    Insanity = table
+    {
+        description = "Insanity points from horror and the warp. Each 10 brings a Trauma test; the degree of madness brings disorders."
+        tableLayout = layout { columns = 1 }
+        'Insanity points' = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Degree of madness' = string { value = madness ('Insanity points')  editable = none }
+        'Trauma test' = string { value = nextTest ('Insanity points')  editable = none }
+        'Fear test' = integer { description = "Willpower against the fear of the sight: a failure rolls on the Shock table." value = Characteristics.Willpower.Total  valuedice = fearTest (characterTable)  editable = none }
+        Disorders = string { multiline = true  editable = live }
+    }
+
+    Corruption = table
+    {
+        description = "Corruption points from the warp, daemons and forbidden things. Each 10 brings a Malignancy test; at 100 the acolyte is damned."
+        tableLayout = layout { columns = 1 }
+        'Corruption points' = integer { default = 0  minvalue = 0  maxvalue = 100  editable = live }
+        'Degree of corruption' = string { value = taint ('Corruption points')  editable = none }
+        'Malignancy test' = string { value = nextTest ('Corruption points')  editable = none }
+        Malignancies = string { multiline = true  editable = live }
+        Mutations = string { multiline = true  editable = live }
+    }
+
+    Experience = table
+    {
+        description = "Experience buys characteristic advances, skills and talents from the career's ranks."
+        tableLayout = layout { columns = 1 }
+        'Total XP' = integer { description = "Experience earned in all. A new acolyte starts with 400 to spend." default = 400  minvalue = 0 }
+        'XP to spend' = integer { default = 400  minvalue = 0  editable = live }
+        'XP spent' = integer { value = 'Total XP' - 'XP to spend'  editable = none }
+    }
+
+    Movement = table
+    {
+        description = "Metres moved per action, from the Agility bonus."
+        tableLayout = layout { columns = 2 }
+        'Half move' = integer { value = Characteristics.Agility.Bonus  render = distance (Characteristics.Agility.Bonus)  editable = none }
+        'Full move' = integer { value = Characteristics.Agility.Bonus * 2  render = distance (Characteristics.Agility.Bonus * 2)  editable = none }
+        Charge = integer { value = Characteristics.Agility.Bonus * 3  render = distance (Characteristics.Agility.Bonus * 3)  editable = none }
+        Run = integer { value = Characteristics.Agility.Bonus * 6  render = distance (Characteristics.Agility.Bonus * 6)  editable = none }
+    }
+
+    Armour = table
+    {
+        description = "Armour points by hit location (the d100 ranges of the reversed attack roll). The Toughness bonus also soaks damage."
+        tableLayout = layout { columns = 2 }
+        'Head 01 to 10' = integer { default = 0 }
+        'Body 31 to 70' = integer { default = 0 }
+        'Right Arm 11 to 20' = integer { default = 0 }
+        'Left Arm 21 to 30' = integer { default = 0 }
+        'Right Leg 71 to 85' = integer { default = 0 }
+        'Left Leg 86 to 00' = integer { default = 0 }
+        'Toughness bonus' = integer { value = Characteristics.Toughness.Bonus  editable = none }
+        Primitive = bool { description = "Primitive armour (hides, plate, mail) counts half against modern weapons." default = false }
+    }
+
+    Thrones = table
+    {
+        description = "Money in Imperial thrones, and the monthly income the career pays."
+        tableLayout = layout { columns = 2 }
+        'Throne gelt' = integer { default = 0  minvalue = 0  editable = live }
+        Income = string { description = "Thrones a month from the career and rank." }
+    }
+
+    Talents = list
+    {
+        description = "Talents and traits from the home world, the career ranks and the campaign."
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Traits = list
+    {
+        singular = "Trait"
+        editable = character
+        valueType = nameAndDescription
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attack tests and damage for each weapon. Attacks ask the kind of attack and the difficulty; damage asks the target's armour and Toughness bonus."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", Characteristics.'Weapon Skill'.Total, "melee", 0, "1d5-3", Characteristics.Strength.Bonus - 3, 0, "", "Primitive")], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Ammunition = list
+    {
+        singular = "Magazine"
+        editable = live
+        valueType = custom
+        {
+            Name = string {}
+            Shots = integer { default = 20  minvalue = 0  editable = live }
+            Clips = integer { default = 2  minvalue = 0  editable = live }
+        }
+    }
+
+    'Armour worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Gear = list
+    {
+        source = secondary.Gear
+        singular = "Item"
+        editable = character
+    }
+
+    Psychic = table
+    {
+        description = "Psykers: Psy Rating and the power roll. Roll up to Psy Rating d10s and add the Willpower bonus; reach the power's threshold. Any 9 brings Psychic Phenomena, and 75 or more on that roll Perils of the Warp."
+        tableLayout = layout { columns = 3 }
+        'Psy Rating' = integer { default = 0  minvalue = 0 }
+        'Power roll' = integer { description = "The Willpower bonus plus the d10s rolled. Asks how many dice and the power's threshold." value = Characteristics.Willpower.Bonus  valuedice = dhPower ('Psy Rating')  editable = none }
+        'Sustained powers' = string { editable = live }
+    }
+
+    'Psychic powers' = list
+    {
+        source = secondary.'Psychic Powers'
+        singular = "Power"
+        editable = character
+    }
+
+    'Power uses' = list
+    {
+        description = "A power roll for each psychic power, against its threshold."
+        source = map ((power)->powerFor (characterTable, power), characterTable.'Psychic powers')
+        singular = "Power"
+        editable = none
+        valueType = powerUse
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+        Contacts = string { multiline = true }
+        'Advances taken' = string { description = "Characteristic advances, skills and talents bought, in order." multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        important = [Profile, Status, Attacks, 'Ranged attacks']
+        defaultImage = "/systems/dh1/heretic.svg"
+    }
+    Profile = table
+    {
+        description = "Characteristics. Unnatural characteristics multiply the bonus; note them under Traits."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = dhTest }
+        BS = integer { default = 30  valuedice = dhTest }
+        S = integer { default = 30  valuedice = dhTest }
+        T = integer { default = 30  valuedice = dhTest }
+        Ag = integer { default = 30  valuedice = dhTest }
+        Int = integer { default = 30  valuedice = dhTest }
+        Per = integer { default = 30  valuedice = dhTest }
+        WP = integer { default = 30  valuedice = dhTest }
+        Fel = integer { default = 30  valuedice = dhTest }
+    }
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        'Max Wounds' = integer { default = 10 }
+        Wounds = integer { default = 'Max Wounds'  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = if Wounds <= 0 then "Down" else ""  visible = none  indicator = "#d64545" }
+        Armour = string { description = "Armour points by location, such as All 3 or Body 4, Head 2." default = "All 2" }
+        'Toughness bonus' = integer { description = "With any Unnatural multiplier." default = 3 }
+        Initiative = modifier { description = "1d10 + Agility bonus." default = 3  valuedice = initiativeRoll }
+        Movement = string { description = "Half, full, charge and run in metres." default = "3/6/9/18" }
+        Fear = integer { description = "Fear rating 1 to 4: those who see it test Willpower at +0, -10, -20 or -30." default = 0  minvalue = 0  maxvalue = 4 }
+        Fate = integer { description = "Only major villains have Fate points." default = 0  minvalue = 0  editable = live }
+        Fatigue = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        Stunned = bool { default = false  editable = live  indicator = "#d4b106" }
+        Pinned = bool { default = false  editable = live  indicator = "#e8913a" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = dhAttack ("melee", "", Special, [])  action = melee  reach = 2 }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dhDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special), isPrimitive (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    'Ranged attacks' = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Ranged attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = dhAttack ("ranged", RoF, Special, [])  action = ranged  range = 'Range in m' * 3 }
+            'Range in m' = integer { default = 30 }
+            RoF = string { default = "S/3/-" }
+            Damage = string { default = "1d10+3" }
+            Pen = integer { default = 0 }
+            Roll = integer { value = damageBonus (Damage)  valuedice = dhDamage (dieCount (Damage), dieSides (Damage), Pen, isTearing (Special), isPrimitive (Special))  editable = none }
+            Special = string {}
+        }
+    }
+    Psychic = table
+    {
+        tableLayout = layout { columns = 3 }
+        'Psy Rating' = integer { default = 0  minvalue = 0 }
+        'Power roll' = integer { description = "Willpower bonus plus up to Psy Rating d10s, against the power's threshold." value = Profile.WP / 10  valuedice = dhPower ('Psy Rating')  editable = none }
+        Powers = string { multiline = true }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Traits = string { multiline = true }
+        Gear = string { multiline = true }
+    }
+}
+
+cellTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/dh1/cell.svg"  important = [Cell, Investigation] }
+    Cell = table
+    {
+        description = "The acolyte cell: the agents an Inquisitor sends out together."
+        tableLayout = layout { columns = 3  size = wide }
+        Inquisitor = string { description = "The Inquisitor the cell serves, and the Ordo." }
+        Ordo = string { keys = ["Ordo Hereticus", "Ordo Malleus", "Ordo Xenos", "Other"] }
+        Contact = string { description = "The Interrogator, Throne Agent or other go-between who briefs the cell." }
+        Base = string { description = "Safehouse or base of operations." }
+        Acolytes = string { multiline = true }
+        'Shared thrones' = integer { default = 0  minvalue = 0  editable = live }
+    }
+    Investigation = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Mission = string {}
+        Objectives = string { multiline = true  editable = live }
+        Leads = string { multiline = true  editable = live }
+        Suspects = string { multiline = true  editable = live }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        'Mission log' = string { multiline = true  editable = live }
+    }
+}
+
+availabilities = ["Ubiquitous", "Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare", "Extremely Rare", "Near Unique", "Unique"]
+
+dhWeapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/gun.svg"
+        filters = [filter { name = "Class" prefix = "" filter = Stats.Class }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Class }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Class = string { keys = ["Melee", "Pistol", "Basic", "Heavy", "Thrown"] }
+        Range = string { description = "Range in metres. Under half is short range (+10), more than double long range (-10)." }
+        RoF = string { description = "Rate of fire: single, semi-auto and full auto, such as S/3/-." default = "S/-/-" }
+        Damage = string { default = "1d10" }
+        Type = string { description = "Energy, Impact, Rending or Explosive." keys = ["E", "I", "R", "X"] }
+        Pen = string { default = "0" }
+        Clip = string {}
+        Reload = string {}
+        Special = string { description = "Weapon qualities such as Tearing, Primitive, Reliable, Unreliable, Blast or Scatter." }
+        Craftsmanship = string { description = "Poor, Common, Good or Best. Melee: -10, +5 or +10 to hit, Best +1 damage. Ranged: Poor is Unreliable, Good Reliable, Best never jams." keys = ["Poor", "Common", "Good", "Best"] default = "Common" }
+        Weight = string {}
+        Cost = string { description = "Price in thrones." }
+        Availability = string { keys = availabilities  default = "Common" }
+    }
+}
+
+dhArmour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }, filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Type = string { keys = ["Primitive", "Flak", "Mesh", "Carapace", "Power", "Other"] default = "Flak" }
+        Locations = string { default = "Body" }
+        AP = string { default = "3" }
+        Weight = string {}
+        Cost = string {}
+        Availability = string { keys = availabilities  default = "Common" }
+    }
+}
+
+dhTalent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }, filter { name = "Career" prefix = "" filter = Stats.Career }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Talent", "Trait"] default = "Talent" }
+        Prerequisites = string {}
+        Career = string { description = "The career that offers it, or Any." default = "Any" }
+    }
+}
+
+dhPowerStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Discipline" prefix = "" filter = Stats.Discipline }]
+        sortedBy = sort { prefix = "Threshold" sort = Stats.Threshold }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Discipline = string { keys = ["Minor", "Biomancy", "Divination", "Pyromancy", "Telekinesis", "Telepathy", "Daemonology", "Other"] default = "Minor" }
+        Threshold = string { description = "The power roll must reach this to manifest the power." default = "6" }
+        'Focus time' = string { default = "Half Action" }
+        Range = string { description = "Range in metres, or Self or Touch." }
+        Sustained = string { keys = ["No", "Yes"] default = "No" }
+        Overbleed = string { description = "What the power gains for every few points the roll beats the threshold by." }
+    }
+}
+
+dhGear = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Availability" prefix = "" filter = Stats.Availability }]
+        sortedBy = sort { prefix = "" sort = Stats.Availability }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Weight = string {}
+        Cost = string {}
+        Availability = string { keys = availabilities  default = "Common" }
+    }
+}
+
+calixisNameSetting = nameSetting
+{
+    name = "Calixis Sector"
+    characters = generator { library = "Grimdark imperium" variant = "Imperial" }
+    creatures = [generator { library = "Grimdark imperium" variant = "Heretic" }, generator { library = "Grimdark imperium" variant = "Imperial" }]
+    'Acolyte Cells' = generator { library = "Grimdark imperium" variant = "Order" }
+    Location = [generator { library = "Grimdark imperium" variant = "Hive world" }, generator { library = "Grimdark imperium" variant = "Order" }]
+}
+
+DarkHeresyFirst = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Acolytes"
+            topic = "Getting started"
+            text = ["Pick a home world (Feral, Hive, Imperial or Void Born) and a career (Adept, Arbitrator, Assassin, Cleric, Guardsman, Imperial Psyker, Scum or Tech-Priest). Roll the nine characteristics, 2d10 + 20 each (+25 for the ones the home world favours), then wounds and fate by home world.", "A new acolyte starts at Rank 1 with 400 XP to spend on the career's first-rank advances. Make an Acolyte Cell for the Inquisitor, the mission and its leads."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target, after the difficulty (Easy +30 to Very Hard -30). Every full 10 under the target is a degree of success; every full 10 over is a degree of failure.", "Untrained basic skills test at half the characteristic; advanced skills cannot be used untrained. A failed test offers to spend a Fate point for a reroll."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks ask the kind of attack (standard, charge, all-out, called shot, semi-auto +10, full auto +20, suppressing fire) and the difficulty, which holds aim, range and cover. Bursts add hits from degrees of success up to the rate of fire. The roll's digits reversed give the hit location; ranged attacks jam on 96 or more (94 for bursts).", "Damage asks the target's armour and Toughness bonus. A 10 on a damage die is Righteous Fury: test the attack again, and if it hits add 1d10."]
+        },
+        hint
+        {
+            title = "Psychic powers"
+            topic = "Combat"
+            text = ["A psyker rolls up to Psy Rating d10s plus the Willpower bonus, against the power's threshold. Any 9 brings Psychic Phenomena (the roll offers it), and 75 or more on Phenomena means Perils of the Warp."]
+        },
+        hint
+        {
+            title = "Insanity and corruption"
+            topic = "Play"
+            text = ["Fear tests are Willpower tests at the creature's fear rating; failure rolls on the Shock table. Insanity points bring Trauma tests and disorders, Corruption points Malignancy tests and mutations, each at every 10 points."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: 1d10 + Agility bonus, highest first."]
+        }
+    ]
+    distanceUnit = "m"
+    characters = characterTable
+    creatures = creatureTable
+    'Acolyte Cells' = cellTable
+    Weapons = dhWeapon
+    Armour = dhArmour
+    Talents = dhTalent
+    'Psychic Powers' = dhPowerStats
+    Gear = dhGear
+    secondaryTypes = ["Weapons", "Armour", "Talents", "Psychic Powers", "Gear"]
+    extraEntityTypes = [entityTypeDescription ("Acolyte Cells", "acolyte cell", false, "/systems/dh1/cell.svg", [])]
+    description = "Dark Heresy 1st edition: acolytes of the Inquisition in the Calixis Sector, with d100 tests and degrees of success, careers and ranks, Fate, Insanity and Corruption, psychic powers with Psychic Phenomena and Perils of the Warp, and critical damage by location"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 1d5]
+    cssFiles = ["/systems/dh1/dh1.css"]
+    libraries = ["/systems/names/grimdark.json"]
+    nameSettings = [calixisNameSetting, grimdarkNameSetting]
+}
