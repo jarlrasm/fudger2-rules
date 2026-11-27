@@ -1,0 +1,658 @@
+#include "/systems/common.frules"
+
+attributeModifier (score) =
+    if score < 4 then -3
+    else if score < 6 then -2
+    else if score < 9 then -1
+    else if score < 13 then 0
+    else if score < 16 then 1
+    else if score < 18 then 2
+    else if score < 19 then 3
+    else 4
+
+halfUp (n) = if n >= 0 then (n + 1) / 2 else 0 - ((0 - n) / 2)
+
+signed (n) = if n >= 0 then " + " + toString (n) else " - " + toString (abs (n))
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+diceCount (text) = if bonusWithValue ([[text]], "^([0-9]+)d") > 0 then bonusWithValue ([[text]], "^([0-9]+)d") else 1
+
+diceSides (text) = bonusWithValue ([[text]], "d([0-9]+)")
+
+diceBonus (text) = bonusWithValue ([[text]], "d[0-9]+\+([0-9]+)") - bonusWithValue ([[text]], "d[0-9]+-([0-9]+)")
+
+checkResult (natural, extra, target) =
+{
+    Text = toString (natural) + (if extra != 0 then signed (extra) + " = " + toString (natural + extra) else "") + " vs " + toString (target) + (if natural + extra >= target then ": success" else ": failure")
+    Value = natural + extra
+    Outcome = if natural + extra >= target then "Success" else "Failure"
+}
+
+checkRoll = ([1d20], ((baseline, throws)->checkResult (first (first (throws).rolls), asked, baseline)))
+
+checkDice = ask ("Fact bonus or penalty", 0, checkRoll)
+
+effortPush (dayEffort) = ([dice { number = 0  sides = 20  label = "" }], ((baseline, throws)->{ Text = "Effort committed for the day: the save succeeds"  Outcome = "Success" }))
+
+saveResult (natural, target, canSpend, dayEffort) =
+{
+    Text = toString (natural) + " vs " + toString (target) + (if natural >= target then ": saved" else ": failed")
+    Value = natural
+    Outcome = if natural >= target then "Success" else "Failure"
+    Push = if natural < target and canSpend then effortPush (dayEffort) else 0
+    PushLabel = "Commit Effort for the day: succeed"
+    PushSets = if natural < target and canSpend then [{ Field = "characterTable.Effort.Day"  Value = dayEffort + 1 }] else []
+}
+
+saveDice (char) = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline, char.Effort.Free > 0, char.Effort.Day)))
+
+plainSaveDice = ([1d20], ((baseline, throws)->saveResult (first (first (throws).rolls), baseline, false, 0)))
+
+attackResult (natural, total, ac, known) =
+{
+    Text = toString (total) + (if known then " + AC " + toString (ac) + " = " + toString (total + ac) + (if natural == 20 or (natural != 1 and total + ac >= 20) then ": hit" else ": miss") else "") + (if natural == 20 then " (natural 20)" else if natural == 1 then " (natural 1)" else "")
+    Value = total
+    Outcome = if natural == 20 then "Hit" else if natural == 1 then "Miss" else if not (known) then "" else if total + ac >= 20 then "Hit" else "Miss"
+}
+
+attackRoll = ([1d20], ((baseline, throws)->attackResult (first (first (throws).rolls), baseline + first (first (throws).rolls), asked, answered)))
+
+attackDice = ask ("Target AC", attackRoll)
+
+chart (n) = if n < 2 then 0 else if n < 6 then 1 else if n < 10 then 2 else 4
+
+chartTotal (rolls, extra) = sum (map ((r)->chart (r), rolls)) - chart (max (rolls)) + chart (max (rolls) + extra)
+
+damageResult (rolls, extra, straight, what) =
+{
+    Text = if straight then what + toString (max (0, sum (rolls) + extra)) + " straight damage" else what + toString (chartTotal (rolls, extra)) + " damage (straight " + toString (max (0, sum (rolls) + extra)) + ")"
+    Value = if straight then max (0, sum (rolls) + extra) else chartTotal (rolls, extra)
+}
+
+damageDice (howMany, dieSize, straight, what) = ([dice { number = howMany  sides = dieSize }], ((baseline, throws)->damageResult (first (throws).rolls, baseline, straight, what)))
+
+initiativeRoll = ([1d8], ((baseline, throws)->{ Text = toString (baseline + first (first (throws).rolls))  Value = baseline + first (first (throws).rolls) }))
+
+moraleRoll = ([2d6], ((baseline, throws)->if sum (first (throws).rolls) > baseline then { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": breaks"  Outcome = "Failure" } else { Text = toString (sum (first (throws).rolls)) + " vs " + toString (baseline) + ": holds"  Outcome = "Success" }))
+
+armorBase (armor) = switch armor
+    case "Light" then 7
+    case "Medium" then 5
+    case "Heavy" then 3
+    case "Divine" then 3
+    else 9
+
+maxHitPoints (level, conMod, extra) = 8 + conMod + (level - 1) * (4 + halfUp (conMod)) + extra
+
+downState (hp) = if hp < 1 then "Down" else ""
+
+scopeCost (scope) = switch scope
+    case "Village" then 1
+    case "City" then 2
+    case "Region" then 4
+    case "Nation" then 8
+    case "Realm" then 16
+    else 0
+
+plausibilityFactor (plausibility) = switch plausibility
+    case "Plausible" then 1
+    case "Implausible" then 2
+    case "Impossible" then 4
+    else 1
+
+attribute = custom
+{
+    Score = integer { description = "Attribute score, 3 to 18 (19 with some gifts)." default = 10  minvalue = 3  maxvalue = 19 }
+    Mod = modifier { description = "Modifier from the score, -3 to +4." value = attributeModifier (Score)  editable = none }
+    Check = integer { description = "Attribute check: roll d20 and reach 21 minus the score. A fitting fact adds a bonus." value = 21 - Score  valuedice = checkDice  editable = none }
+}
+
+noAttribute = { Mod = 0 }
+
+modOf (char, name) = valueOr (valueOr (char.Attributes, name, noAttribute), "Mod", 0)
+
+saveLine (bestMod) = custom
+{
+    Target = integer { description = "Roll d20 at or over this: 15 minus the better modifier minus one per level after the first, plus any penalty." value = 15 - (Character.Level - 1) - bestMod + Penalty  valuedice = saveDice (characterTable)  editable = none }
+    Penalty = integer { description = "Raises the target, such as 4 for a save hampered by armor." default = 0  minvalue = -10  maxvalue = 10 }
+}
+
+weaponStat (weapon, field) = valueOr (weapon.data.weaponStats.Stats, field, "")
+
+weaponAttack (name, tohit, dmg, dmgBonus, kind, rangeFeet) = custom
+{
+    Name = name
+    Attack = modifier { value = tohit  valuedice = attackDice  action = kind  reach = 5  range = rangeFeet }
+    Damage = modifier { value = dmgBonus  valuedice = damageDice (diceCount (dmg), diceSides (dmg), false, "")  editable = none }
+    Dice = dmg
+}
+
+attackFor (char, weapon) =
+    weaponAttack (weapon.Name,
+        min (10, char.Character.Level) + modOf (char, weaponStat (weapon, "Attribute")) + toInt (weaponStat (weapon, "Hit bonus")),
+        weaponStat (weapon, "Damage"),
+        modOf (char, weaponStat (weapon, "Attribute")) + diceBonus (weaponStat (weapon, "Damage")),
+        if weaponStat (weapon, "Kind") == "Melee" then "melee" else "ranged",
+        firstNumber (weaponStat (weapon, "Range")))
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = [Combat, Effort, Saves, Attacks, 'Divine Powers'] }
+
+    Character = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Level = integer { description = "Character level, from 1 to 10. It is also your attack bonus." default = 1  minvalue = 1  maxvalue = 10 }
+        XP = integer { description = "Experience points: up to three a session, for pursuing worthy goals against real opposition." default = 0  editable = live }
+        Goal = string { description = "What the Godbound means to achieve. Working toward it earns experience." }
+        Origin = string { description = "Where the Godbound came from before the Words found them." }
+    }
+
+    Attributes = table
+    {
+        description = "The six attributes: score, modifier and the check target (21 minus the score)."
+        tableLayout = layout { columns = 5  size = wide }
+        STR = attribute {}
+        DEX = attribute {}
+        CON = attribute {}
+        INT = attribute {}
+        WIS = attribute {}
+        CHA = attribute {}
+    }
+
+    Combat = table
+    {
+        tableLayout = layout { columns = 4 }
+        'Max HP' = integer { description = "8 plus CON modifier at first level, then 4 plus half the CON modifier (rounded up) each level." value = maxHitPoints (Character.Level, Attributes.CON.Mod, 'HP bonus')  editable = none }
+        HP = integer { description = "Current hit points. At 0 you are out of the fight; struck again before you recover, you die." default = 'Max HP'  minvalue = 0  maxvalue = 'Max HP'  editable = live }
+        Down = string { value = downState (HP)  visible = none  indicator = "#d64545" }
+        'HP bonus' = integer { description = "Extra hit points from gifts or artifacts." default = 0 }
+        Armor = string { description = "Armor worn: none AC 9, light 7, medium 5, heavy 3, or divine armor from a gift." default = "None"  keys = ["None", "Light", "Medium", "Heavy", "Divine"] }
+        Shield = bool { description = "A shield improves AC by one." default = false }
+        'AC bonus' = integer { description = "Other improvements to AC; each point lowers it." default = 0 }
+        AC = integer { description = "Armor class, lower is better. Attackers add it to their d20 roll and need 20." value = armorBase (Armor) - (if Shield then 1 else 0) - Attributes.DEX.Mod - 'AC bonus'  editable = none }
+        'Attack bonus' = modifier { description = "Your level, at most +10." value = min (10, Character.Level)  editable = none }
+        Initiative = modifier { description = "Roll 1d8 plus DEX modifier; highest acts first." value = Attributes.DEX.Mod  valuedice = initiativeRoll  editable = none }
+        'Divine Fury used' = bool { description = "Once per level, a Godbound brought to 0 HP can fight on in divine fury. Untick when you gain a level." default = false  editable = live  indicator = "#d4b106"  indicatorLabel = "Divine Fury" }
+        'New day' = button { description = "A night's rest: all committed Effort comes back and hit points return to full."  editable = live  onClick = updates
+            {
+                (root.Combat.HP) = 'Max HP'
+                (root.Effort.Scene) = 0
+                (root.Effort.Day) = 0
+            }
+        }
+    }
+
+    Saves = table
+    {
+        description = "Saving throws: roll d20 at or over the target. A failed save can be turned into a success by committing Effort for the day."
+        tableLayout = layout { columns = 3 }
+        Hardiness = saveLine (max (Attributes.STR.Mod, Attributes.CON.Mod))
+        Evasion = saveLine (max (Attributes.DEX.Mod, Attributes.INT.Mod))
+        Spirit = saveLine (max (Attributes.WIS.Mod, Attributes.CHA.Mod))
+    }
+
+    Effort = table
+    {
+        description = "Effort powers gifts and miracles. Commit it for the scene or for the day; it comes back when that ends."
+        tableLayout = layout { columns = 3 }
+        'Bonus Effort' = integer { description = "Extra Effort, such as from Effort of the Word." default = 0  minvalue = 0 }
+        Max = integer { description = "Your level plus one, plus any bonus." value = Character.Level + 1 + 'Bonus Effort'  editable = none }
+        Free = integer { description = "Effort not yet committed." value = Max - Scene - Day  editable = none }
+        Scene = integer { description = "Effort committed until the end of the scene." default = 0  minvalue = 0  editable = live  indicator = "#3a7bd5"  indicatorLabel = "Effort (scene)" }
+        Day = integer { description = "Effort committed until the next morning." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4"  indicatorLabel = "Effort (day)" }
+        'End of scene' = button { description = "Effort committed for the scene comes back."  editable = live  onClick = updates
+            {
+                (root.Effort.Scene) = 0
+            }
+        }
+    }
+
+    'Divine Powers' = table
+    {
+        description = "Powers every Godbound has: the Fray die each round, and Divine Wrath or Corona of Fury for Effort."
+        tableLayout = layout { columns = 4 }
+        'Fray die' = string { description = "Damage you deal each round, free and without a roll to hit, to a lesser foe in sight." default = "1d8" }
+        Fray = modifier { description = "Roll the Fray die on the damage chart against a lesser foe or a mob." value = 0  valuedice = damageDice (diceCount ('Fray die'), diceSides ('Fray die'), false, "Fray: ")  action = ranged  editable = none }
+        'Divine Wrath' = modifier { description = "Commit Effort to smite one foe in sight with your level in d8s, read on the damage chart." value = 0  valuedice = damageDice (Character.Level, 8, false, "Divine Wrath: ")  action = ranged  editable = none }
+        'Corona of Fury' = modifier { description = "Commit Effort to strike every foe within 30 feet of a point in sight with half your level (rounded up) in d8s." value = 0  valuedice = damageDice (halfUp (Character.Level), 8, false, "Corona of Fury: ")  action = ranged  editable = none }
+    }
+
+    Facts = list
+    {
+        description = "Three facts about the Godbound's past. One that fits a check gives a bonus to it."
+        tableLayout = layout { size = wide }
+        singular = "Fact"
+        editable = character
+        valueType = string
+    }
+
+    Words = list
+    {
+        description = "The Words of Creation the Godbound is bound to."
+        tableLayout = layout { size = wide }
+        source = secondary.Words
+        singular = "Word"
+        editable = character
+    }
+
+    Gifts = list
+    {
+        description = "Gifts of your Words. Lesser cost one point, greater two, and gifts of unbound Words one more."
+        tableLayout = layout { size = wide }
+        source = secondary.Gifts
+        singular = "Gift"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Attacks: d20 plus level plus attribute modifier plus the target's AC, 20 or more hits. Damage is read on the damage chart."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", min (10, Character.Level) + Attributes.STR.Mod, "1d2", Attributes.STR.Mod, "melee", 0)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    Strife = list
+    {
+        description = "Techniques of a Strife, a martial art of the gods. Only one Strife can be used in a fight."
+        tableLayout = layout { size = wide }
+        source = secondary.Techniques
+        singular = "Technique"
+        editable = character
+    }
+
+    Invocations = list
+    {
+        description = "Theurgic invocations learned: Gate, Way and Throne."
+        tableLayout = layout { size = wide }
+        source = secondary.Invocations
+        singular = "Invocation"
+        editable = character
+    }
+
+    Artifacts = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Artifacts
+        singular = "Artifact"
+        editable = character
+    }
+
+    Influence = table
+    {
+        description = "Influence: your level plus one. Commit it to keep a change in the world in place by your presence and work."
+        tableLayout = layout { columns = 4 }
+        'Bonus Influence' = integer { description = "Extra Influence, such as from Influence of the Word." default = 0  minvalue = 0 }
+        Max = integer { value = Character.Level + 1 + 'Bonus Influence'  editable = none }
+        Committed = integer { default = 0  minvalue = 0  editable = live }
+        Free = integer { value = Max - Committed  editable = none }
+    }
+
+    Dominion = table
+    {
+        description = "Dominion: earned by deeds and worship, spent to make lasting changes in the world."
+        tableLayout = layout { columns = 4 }
+        Earned = integer { description = "All the Dominion you have earned." default = 0  minvalue = 0  editable = live }
+        Spent = integer { description = "Dominion spent on changes and artifacts." default = 0  minvalue = 0  editable = live }
+        Available = integer { value = Earned - Spent  editable = none }
+        Wealth = integer { description = "Wealth from 0 to 10: 1 is the richest villager, 10 an emperor." default = 0  minvalue = 0  maxvalue = 10  editable = live }
+    }
+
+    Projects = list
+    {
+        description = "Changes to the world. The cost is the scope (village 1 up to realm 16) times 1, 2 or 4 for how unlikely it is."
+        tableLayout = layout { size = wide }
+        singular = "Project"
+        editable = character
+        valueType = custom
+        {
+            Change = string {}
+            Scope = string { default = "Village"  keys = ["Village", "City", "Region", "Nation", "Realm"] }
+            Plausibility = string { default = "Plausible"  keys = ["Plausible", "Implausible", "Impossible"] }
+            Cost = integer { value = scopeCost (Scope) * plausibilityFactor (Plausibility)  editable = none }
+            Dominion = integer { default = 0  editable = live }
+            Influence = integer { default = 0  editable = live }
+        }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Cults = string { description = "Cults and churches that worship you, and the Dominion they bring." multiline = true }
+        Details = string { multiline = true }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/monster.svg"  important = [Stats, Effort] }
+    Stats = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { description = "A single creature, a mob that fights as one, or an army." default = "Individual"  keys = ["Individual", "Mob", "Army"] }
+        'Max HD' = integer { description = "Hit dice. Godbound damage takes away hit dice; a foe with more HD than a Godbound's level is worthy and ignores the Fray die." default = 1  minvalue = 1 }
+        HD = integer { description = "Hit dice left." default = 'Max HD'  minvalue = 0  editable = live }
+        Down = string { value = downState (HD)  visible = none  indicator = "#d64545" }
+        AC = integer { description = "Armor class, lower is better: 9 unarmored, 3 heavy armor, 0 at best." default = 9 }
+        Move = string { default = "30 ft" }
+        Save = integer { description = "Roll d20 at or over this to save." default = 15  valuedice = plainSaveDice }
+        Attack = modifier { description = "d20 plus this plus the target's AC; 20 hits." default = 1  valuedice = attackDice  action = melee  reach = 5 }
+        Damage = string { description = "The damage dice of one attack, such as 1d8 or 1d10+2." default = "1d8" }
+        'Damage roll' = modifier { description = "Damage read on the damage chart, or straight if ticked." value = diceBonus (Damage)  valuedice = damageDice (diceCount (Damage), diceSides (Damage), 'Straight damage', "")  editable = none }
+        'Straight damage' = bool { description = "The attack deals straight damage: the dice as rolled, not read on the chart." default = false }
+        Attacks = string { description = "Attacks or actions each round, such as x2 or 3 automatic hits." default = "x1" }
+        Morale = integer { description = "Roll 2d6; above morale and the creature breaks." default = 8  valuedice = moraleRoll }
+        Initiative = modifier { default = 0  valuedice = initiativeRoll }
+    }
+    Effort = table
+    {
+        tableLayout = layout { columns = 3 }
+        Max = integer { description = "Effort for powers and for shrugging off a Godbound's save-or-suffer effects." default = 0  minvalue = 0 }
+        Committed = integer { default = 0  minvalue = 0  editable = live }
+        Free = integer { value = Max - Committed  editable = none }
+    }
+    Mob = table
+    {
+        description = "For mobs: small, large or vast, built from the hit dice of one member."
+        tableLayout = layout { columns = 3 }
+        Size = string { default = "None"  keys = ["None", "Small", "Large", "Vast"] }
+        'Base HD' = integer { description = "Hit dice of one member, for lesser foe checks." default = 1  minvalue = 1 }
+        'Mob HD' = integer { description = "Suggested hit dice: small 10 plus twice the base, large double that, vast triple." value = if Size == "Small" then 10 + 2 * 'Base HD' else if Size == "Large" then 2 * (10 + 2 * 'Base HD') else if Size == "Vast" then 3 * (10 + 2 * 'Base HD') else 0  editable = none }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Powers = string { multiline = true }
+        Tactics = string { multiline = true }
+        Description = string { multiline = true }
+    }
+}
+
+actionDieSides (power) = switch power
+    case 1 then 6
+    case 2 then 8
+    case 3 then 10
+    case 4 then 12
+    else 20
+
+factionRoll (dieSize, hampered) = ([dice { number = if hampered then 2 else 1  sides = dieSize }], ((baseline, throws)->{
+    Text = (if hampered then "Lower of two: " else "") + toString (min (first (throws).rolls))
+    Value = min (first (throws).rolls)
+}))
+
+troubleRoll (dieSize, trouble) = ([dice { number = 1  sides = dieSize }], ((baseline, throws)->{
+    Text = toString (first (first (throws).rolls)) + " vs Trouble " + toString (trouble) + (if first (first (throws).rolls) > trouble then ": the faction holds" else ": trouble strikes")
+    Outcome = if first (first (throws).rolls) > trouble then "Success" else "Failure"
+}))
+
+factionState (cohesion, trouble, dieSize) = if cohesion < 1 then "Collapsed" else if trouble >= dieSize then "Collapsing" else ""
+
+factionTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/godbound/faction-entity.svg"  important = [Faction] }
+    Faction = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Kind = string { default = "Nation"  keys = ["Nation", "Cult", "Church", "Guild", "Army", "Secret society", "Noble house", "Other"] }
+        Power = integer { description = "Power from 1 to 5. It sets the Action Die and the most Cohesion." default = 1  minvalue = 1  maxvalue = 5 }
+        'Action Die' = string { description = "d6 at Power 1, d8, d10, d12, and d20 at Power 5." value = "d" + toString (actionDieSides (Power))  editable = none }
+        Cohesion = integer { description = "How well the faction holds together, up to its Power. At 0 it collapses." default = Power  minvalue = 0  maxvalue = Power  editable = live }
+        Trouble = integer { description = "The points of all its Problems." value = sum (map ((p)->p.Points, Problems))  editable = none }
+        State = string { value = factionState (Cohesion, Trouble, actionDieSides (Power))  visible = none  indicator = "#d64545" }
+        'Action roll' = modifier { description = "Roll the Action Die for a contest." value = 0  valuedice = factionRoll (actionDieSides (Power), false)  editable = none }
+        'Hampered roll' = modifier { description = "Roll twice and take the lower, when no Feature fits the action." value = 0  valuedice = factionRoll (actionDieSides (Power), true)  editable = none }
+        'Trouble check' = modifier { description = "Roll the Action Die above Trouble, or the problems bite." value = 0  valuedice = troubleRoll (actionDieSides (Power), Trouble)  editable = none }
+        Goal = string { multiline = true }
+    }
+    Features = list
+    {
+        description = "What the faction is good at. An action without a fitting Feature is hampered."
+        tableLayout = layout { size = wide }
+        singular = "Feature"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Problems = list
+    {
+        description = "Problems that trouble the faction, each worth points of Trouble."
+        tableLayout = layout { size = wide }
+        singular = "Problem"
+        editable = character
+        valueType = custom { Name = string {}  Points = integer { default = 1  minvalue = 0  editable = live } }
+    }
+    Interest = list
+    {
+        description = "Interest held in other factions, up to twice their highest Action Die result."
+        tableLayout = layout { size = wide }
+        singular = "Interest"
+        editable = character
+        valueType = custom { Faction = string {}  Points = integer { default = 1  minvalue = 0  editable = live } }
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Details = string { multiline = true }
+    }
+}
+
+pantheonTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/systems/godbound/pantheon-entity.svg"  important = [Pantheon, Members] }
+    Pantheon = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Realm = string { description = "The realm the pantheon claims or wants to rule." }
+        Archgods = bool { description = "The pantheon rules its realm as arch-gods." default = false }
+        Dominion = integer { description = "Dominion the pantheon has pooled for shared works." default = 0  minvalue = 0  editable = live }
+        'Celestial Shards' = integer { description = "Shards of the broken heavens, used to forge artifacts." default = 0  minvalue = 0  editable = live }
+        Ethos = string { description = "What the pantheon stands for." multiline = true }
+    }
+    Members = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Member"
+        editable = character
+        valueType = custom { Name = string {}  Words = string {}  Level = integer { default = 1  minvalue = 1  maxvalue = 10 } }
+    }
+    Holdings = list
+    {
+        description = "Cults, cities, artifacts and works the pantheon holds together."
+        tableLayout = layout { size = wide }
+        singular = "Holding"
+        editable = character
+        valueType = nameAndDescription
+    }
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Rivals = string { multiline = true }
+        Details = string { multiline = true }
+    }
+}
+
+weaponStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { default = "Melee"  keys = ["Melee", "Ranged", "Thrown"] }
+        Damage = string { description = "Damage dice: light weapons 1d6, heavy 1d10." default = "1d8" }
+        Attribute = string { default = "STR"  keys = ["STR", "DEX"] }
+        Range = string { description = "Range in feet for ranged and thrown weapons." }
+        'Hit bonus' = string { default = "0" }
+        Notes = string {}
+    }
+}
+
+wordStats = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/spell.svg" }
+    Stats = table
+    {
+        Attribute = string { description = "The attribute the Word raises, if any." keys = ["", "STR", "DEX", "CON", "INT", "WIS", "CHA"] }
+        Domain = string { multiline = true }
+    }
+}
+
+giftStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Word }
+        filters = [
+            filter { name = "Word" prefix = "" filter = Stats.Word },
+            filter { name = "Rank" prefix = "" filter = Stats.Rank },
+            filter { name = "Type" prefix = "" filter = Stats.Type },
+            filter { name = "Effort" prefix = "" filter = Stats.Effort }
+        ]
+    }
+    Stats = table
+    {
+        Word = string {}
+        Rank = string { default = "Lesser"  keys = ["Lesser", "Greater"] }
+        Type = string { default = "Action"  keys = ["Constant", "Instant", "On Turn", "Action", "Smite"] }
+        Effort = string { default = "None"  keys = ["None", "Scene", "Day", "Varies"] }
+        Range = string {}
+        Damage = string {}
+    }
+}
+
+techniqueStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Strife }
+        filters = [filter { name = "Strife" prefix = "" filter = Stats.Strife }, filter { name = "Step" prefix = "" filter = Stats.Step }]
+    }
+    Stats = table
+    {
+        Strife = string {}
+        Step = string { default = "Technique"  keys = ["Entrance", "Technique", "Capstone"] }
+        Effort = string { default = "None"  keys = ["None", "Scene", "Day", "Varies"] }
+    }
+}
+
+invocationStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        sortedBy = sort { prefix = "" sort = Stats.Tier }
+        filters = [filter { name = "Tier" prefix = "" filter = Stats.Tier }]
+    }
+    Stats = table
+    {
+        Tier = string { default = "Gate"  keys = ["Gate", "Way", "Throne"] }
+        Casting = string { description = "How long a ritual casting takes." }
+    }
+}
+
+artifactStats = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+    }
+    Stats = table
+    {
+        Kind = string { default = "Artifact"  keys = ["Artifact", "Minor item", "Relic"] }
+        Effort = integer { description = "The artifact's own Effort, only for its own gifts." default = 0  minvalue = 0 }
+        Committed = integer { default = 0  minvalue = 0  editable = live }
+        Dominion = integer { description = "Dominion it cost to make." default = 0 }
+        Shards = integer { description = "Celestial Shards it cost: a sixth of the Dominion, rounded up." default = 0 }
+        Bound = bool { description = "Bound to its wielder for the day, by committing Effort." default = false  editable = live }
+    }
+}
+
+godboundNameSetting = nameSetting
+{
+    name = "Shattered realms"
+    characters = [generator { library = "Fantasy folk" variant = "Human" }, generator { library = "Mythic Greece" variant = "Hero" }, generator { library = "Mythic Greece" variant = "Heroine" }, generator { library = "Desert realms" variant = "Man" }, generator { library = "Desert realms" variant = "Woman" }]
+    creatures = [generator { library = "Sword and sorcery" variant = "Demon" }, generator { library = "Mythic Greece" variant = "Monster" }, generator { library = "Sword and sorcery" variant = "Sorcerer" }, generator { library = "Fantasy folk" variant = "Human" }]
+    Location = [generator { library = "Fantasy places" variant = "Kingdom" }, generator { library = "Fantasy places" variant = "Village" }, generator { library = "Fantasy places" variant = "Temple" }, generator { library = "Desert realms" variant = "City-state" }, generator { library = "Sword and sorcery" variant = "Ruin" }]
+    Factions = [generator { library = "Sword and sorcery" variant = "Kingdom" }, generator { library = "Fantasy places" variant = "Kingdom" }]
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Artifacts = generator { library = "Fantasy things" variant = "Artifact" }
+}
+
+Godbound = system
+{
+    hints = [
+        hint
+        {
+            title = "Attribute checks"
+            topic = "Play"
+            text = ["Roll d20 and reach 21 minus the attribute score; the sheet shows that target as Check. A fact that fits gives a bonus, asked before the roll. Most of what Godbound do with their Words needs no roll at all."]
+        },
+        hint
+        {
+            title = "Saves"
+            topic = "Play"
+            text = ["Hardiness, Evasion and Spirit: roll d20 at or over the target. A failed save can still succeed by committing Effort for the day; the roll offers it."]
+        },
+        hint
+        {
+            title = "Attacks and damage"
+            topic = "Combat"
+            text = ["Roll d20 plus level plus attribute modifier plus the target's AC; 20 hits. Each damage die is read on the chart: 1 or less 0, 2 to 5 is 1, 6 to 9 is 2, 10 or more 4. Straight damage uses the dice as rolled."]
+        },
+        hint
+        {
+            title = "Fray and Divine Wrath"
+            topic = "Combat"
+            text = ["Each round a Godbound's Fray die hits one lesser foe in sight for free. Divine Wrath and Corona of Fury cost Effort and hit any foe."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Everyone rolls 1d8 plus DEX modifier; highest acts first."]
+        },
+        hint
+        {
+            title = "Changing the world"
+            topic = "Getting started"
+            text = ["Godbound earn Dominion and spend it to change villages, cities and nations. Make Factions for the powers of the realm and a Pantheon for the player characters."]
+        }
+    ]
+    distanceUnit = "ft"
+    squareSize = 5
+    characters = characterTable
+    creatures = creatureTable
+    Factions = factionTable
+    Pantheons = pantheonTable
+    Weapons = weaponStats
+    Words = wordStats
+    Gifts = giftStats
+    Techniques = techniqueStats
+    Invocations = invocationStats
+    Artifacts = artifactStats
+    secondaryTypes = ["Weapons", "Words", "Gifts", "Techniques", "Invocations", "Artifacts"]
+    extraEntityTypes = [entityTypeDescription ("Factions", "faction", true, "/systems/godbound/faction-entity.svg", []), entityTypeDescription ("Pantheons", "pantheon", false, "/systems/godbound/pantheon-entity.svg", [])]
+    description = "Godbound: demigods of the shattered heavens wielding the Words of Creation"
+    initiativeCompare (item1, item2) = compare (toInt (item1), toInt (item2))
+    quickdice = [1d20, 1d8, 1d10, 1d6, 2d6, 1d12, 1d4]
+    cssFiles = ["/systems/godbound/godbound.css"]
+    libraries = ["/systems/names/fantasy.json", "/systems/names/mythicgreece.json", "/systems/names/desert.json", "/systems/names/barbarian.json", "/systems/tables/fantasy.json"]
+    nameSettings = [godboundNameSetting]
+}
