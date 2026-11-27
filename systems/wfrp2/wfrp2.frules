@@ -1,0 +1,935 @@
+#include "/systems/common.frules"
+#include "/systems/names/settings.frules"
+
+firstNumber (text) = bonusWithValue ([[text]], "^[^0-9]*([0-9]+)")
+
+wfDifficulties = ["Very Hard -30", "Hard -20", "Challenging -10", "Average +0", "Routine +10", "Easy +20", "Very Easy +30"]
+
+wfSuccess (target, roll) = roll <= target
+
+wfDegrees (target, roll) = if wfSuccess (target, roll) then (target - roll) / 10 else (roll - target) / 10
+
+degreeWords (n, kind) = toString (n) + (if n == 1 then " degree of " else " degrees of ") + kind
+
+wfText (target, roll) =
+    "Rolled " + toString (roll) + " vs " + toString (target) + ": "
+    + (if wfSuccess (target, roll) then "Success" else "Failure")
+    + (if wfDegrees (target, roll) > 0 then ", " + degreeWords (wfDegrees (target, roll), if wfSuccess (target, roll) then "success" else "failure") else "")
+
+wfResult (target, roll, reroll, spend) =
+{
+    Text = wfText (target, roll)
+    Value = roll
+    Outcome = if wfSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (wfSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fortune: reroll"
+    PushSets = spend
+}
+
+fortuneSpend (char) = if char.Status.'Fortune Points' > 0 then [{ Field = "characterTable.Status.Fortune Points"  Value = char.Status.'Fortune Points' - 1 }] else []
+
+wfRoll (modifier) = ([1d100], ((baseline, throws)->wfResult (baseline + modifier, first (first (throws).rolls), 0, [])))
+
+wfAskedRoll (spend) = ([1d100], ((baseline, throws)->wfResult (baseline + asked * 10, first (first (throws).rolls), wfAskedRoll ([]), spend)))
+
+wfTest = ask ("Difficulty", wfDifficulties, -3, wfAskedRoll ([]))
+
+wfFortuneTest (char) = ask ("Difficulty", wfDifficulties, -3, wfAskedRoll (fortuneSpend (char)))
+
+reversed (roll) = mod (roll, 10) * 10 + mod (roll, 100) / 10
+
+locationOf (n) =
+    if n <= 15 then "Head"
+    else if n <= 35 then "Right Arm"
+    else if n <= 55 then "Left Arm"
+    else if n <= 80 then "Body"
+    else if n <= 90 then "Right Leg"
+    else "Left Leg"
+
+hitLocation (roll) = locationOf (if reversed (roll) == 0 then 100 else reversed (roll))
+
+attackResult (target, roll, reroll, spend) =
+{
+    Text = wfText (target, roll) + (if wfSuccess (target, roll) then ": hit on the " + hitLocation (roll) else "")
+    Value = roll
+    Outcome = if wfSuccess (target, roll) then "Hit" else "Miss"
+    Push = if count (spend) > 0 and not (wfSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fortune: reroll"
+    PushSets = spend
+}
+
+attackDice (spend) = ([1d100], ((baseline, throws)->attackResult (baseline + asked * 10, first (first (throws).rolls), attackDice ([]), spend)))
+
+wfAttack (spend) = ask ("Difficulty", wfDifficulties, -3, attackDice (spend))
+
+wfFortuneAttack (char) = wfAttack (fortuneSpend (char))
+
+afterSoak (total, soak) = if soak > 0 then ", " + toString (max (0, total - soak)) + " after Toughness Bonus and armour" else ""
+
+furyDice (total, soak, target) = ([1d100, 1d10], ((baseline, throws)->furyResult (total, soak, target, first (first (throws).rolls), first (item (1, throws).rolls))))
+
+furyResult (total, soak, target, confirm, extra) =
+{
+    Text = if wfSuccess (target, confirm) then
+               "Ulric's Fury: rolled " + toString (confirm) + " vs " + toString (target) + ", adds " + toString (extra) + ": " + toString (total + extra) + " damage" + afterSoak (total + extra, soak) + (if extra == 10 then ", another 10: test again" else "")
+           else "Ulric's Fury: rolled " + toString (confirm) + " vs " + toString (target) + ", no extra damage: " + toString (total) + " damage" + afterSoak (total, soak)
+    Value = if wfSuccess (target, confirm) then total + extra else total
+    Outcome = if wfSuccess (target, confirm) then "Critical" else ""
+    Push = if wfSuccess (target, confirm) and extra == 10 then furyDice (total + extra, soak, target) else 0
+    PushLabel = "Ulric's Fury: test again"
+}
+
+damageResult (total, soak, fury, target) =
+{
+    Text = toString (total) + " damage" + afterSoak (total, soak) + (if fury then ", Ulric's Fury: test the attack again for 1d10 more" else "")
+    Value = total
+    Outcome = if fury then "Critical" else ""
+    Push = if fury then furyDice (total, soak, target) else 0
+    PushLabel = "Ulric's Fury: test the attack again"
+}
+
+keptDie (rolls) = if count (rolls) == 0 then 0 else max (rolls)
+
+damageDice (impact, target, apTimes, apLess, tb) = ([dice { number = if impact then 2 else 1  sides = 10 }],
+    ((baseline, throws)->damageResult (baseline + keptDie (first (throws).rolls), tb + max (0, asked - apLess) * apTimes, keptDie (first (throws).rolls) == 10, target)))
+
+wfDamage (impact, target, apTimes, apLess) =
+    ask ("Target's Toughness Bonus", 0, (tb)->ask ("Armour points", 0, damageDice (impact, target, apTimes, apLess, tb)))
+
+critColumns = [
+    [5, 5, 4, 4, 3, 3, 2, 2, 1, 1],
+    [7, 6, 6, 5, 5, 4, 4, 3, 3, 2],
+    [9, 8, 8, 7, 7, 6, 6, 5, 5, 4],
+    [10, 9, 9, 8, 8, 7, 7, 6, 6, 5],
+    [10, 10, 9, 9, 8, 8, 7, 7, 6, 6],
+    [10, 10, 10, 9, 9, 8, 8, 7, 7, 6],
+    [10, 10, 10, 10, 9, 9, 8, 8, 7, 7],
+    [10, 10, 10, 10, 10, 9, 9, 8, 8, 7],
+    [10, 10, 10, 10, 10, 10, 9, 9, 8, 8],
+    [10, 10, 10, 10, 10, 10, 10, 9, 9, 8]
+]
+
+critEffect (critValue, roll) = item ((min (100, max (1, roll)) - 1) / 10, item (min (10, max (1, critValue)) - 1, critColumns))
+
+critLocations = ["Head", "Arm", "Body", "Leg"]
+
+armEffect (n) =
+    switch n
+        case 1 then "drops whatever is held in that hand (not a strapped shield)"
+        case 2 then "arm numb and useless for 1 round"
+        case 3 then "hand useless until treated, drops what it holds"
+        case 4 then "armour there loses 1 AP until repaired (unarmoured: arm numb for 1 round)"
+        case 5 then "arm useless until treated, drops what it holds"
+        case 6 then "arm smashed: drops what it holds, 20% chance of death each round until treated, further criticals use Sudden Death"
+        case 7 then "hand ruined: as 6, and a Toughness test after the fight or lose the hand"
+        case 8 then "arm ruined: as 6, and a Toughness test after the fight or lose the arm below the elbow"
+        else "an artery is cut: dead"
+
+legEffect (n) =
+    switch n
+        case 1 then "stumbles: only a half action next turn"
+        case 2 then "leg numb: Movement 1 for a round, no dodging, -20% to Agility tests"
+        case 3 then "leg useless until treated: Movement 1, no dodging"
+        case 4 then "armour there loses 1 AP until repaired (unarmoured: leg numb for a round)"
+        case 5 then "knocked down and dazed: -30% to everything for a round, must stand up"
+        case 6 then "leg smashed: helpless, 20% chance of death each round until treated, further criticals use Sudden Death"
+        case 7 then "foot ruined: as 6, and a Toughness test after the fight or lose the foot"
+        case 8 then "leg ruined: as 6, and a Toughness test after the fight or lose the leg below the knee"
+        else "an artery is cut: dead"
+
+bodyEffect (n) =
+    switch n
+        case 1 then "winded: -20% to tests and attacks for a round"
+        case 2 then "a low blow: no actions for a round"
+        case 3 then "ribs cracked: -10% to Weapon Skill until treated"
+        case 4 then "armour there loses 1 AP until repaired (unarmoured: knocked down, -30% for a round)"
+        case 5 then "knocked down and stunned for 1d10 rounds"
+        case 6 then "bleeding inside: helpless, 20% chance of death each round until treated"
+        case 7 then "spine struck: helpless, 20% chance of death each round until treated, Toughness test or crippled"
+        case 8 then "organs burst: helpless, 20% chance of death each round until treated"
+        else "a mortal wound: dead"
+
+headEffect (n) =
+    switch n
+        case 1 then "dazed: only a half action next turn"
+        case 2 then "ears ringing: no actions for a round"
+        case 3 then "scalp cut, blood in the eyes: -10% to Weapon Skill until treated"
+        case 4 then "armour there loses 1 AP until repaired (unarmoured: knocked down, -30% for a round)"
+        case 5 then "knocked down: -30% to everything for a round, must stand up"
+        case 6 then "stunned for 1d10 rounds"
+        case 7 then "knocked out for 1d10 minutes"
+        case 8 then "face smashed: helpless, 20% chance of death each round until treated, Toughness test or lose an eye"
+        else "skull broken: dead"
+
+effectText (location, n) =
+    switch location
+        case 0 then headEffect (n)
+        case 1 then armEffect (n)
+        case 2 then bodyEffect (n)
+        else legEffect (n)
+
+suddenDeath (critValue, n) = if critValue >= 5 or n >= 6 then "slain" else "no further effect"
+
+critResult (critValue, location, roll) =
+{
+    Text = "Rolled " + toString (roll) + " at +" + toString (critValue) + ": Critical Effect " + toString (critEffect (critValue, roll)) + " on the " + item (min (3, max (0, location)), critLocations) + ": " + effectText (location, critEffect (critValue, roll)) + ". Gain 1 Insanity Point. Sudden Death: " + suddenDeath (critValue, critEffect (critValue, roll))
+    Value = critEffect (critValue, roll)
+    Outcome = if critEffect (critValue, roll) >= 9 then "Critical" else ""
+}
+
+critDice (critValue) = ([1d100], ((baseline, throws)->critResult (critValue, asked, first (first (throws).rolls))))
+
+critLevels = ["+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10"]
+
+wfCritical = ask ("Critical Value", critLevels, 1, (cv)->ask ("Location", critLocations, 0, critDice (cv)))
+
+faceCounts (rolls) = map ((face)->count (filter ((x)->x == face, rolls)), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+setsOf (rolls, size) = count (filter ((c)->c == size, faceCounts (rolls)))
+
+bigSets (rolls) = count (filter ((c)->c >= 4, faceCounts (rolls)))
+
+anySets (rolls) = setsOf (rolls, 2) + setsOf (rolls, 3) + bigSets (rolls) > 0
+
+allOnes (rolls) = count (rolls) > 0 and count (filter ((x)->x == 1, rolls)) == count (rolls)
+
+manifestations (n, kind) = if n == 0 then [] else [toString (n) + " " + kind]
+
+curseList (rolls) = concat (concat (manifestations (setsOf (rolls, 2), "minor"), manifestations (setsOf (rolls, 3), "major")), manifestations (bigSets (rolls), "catastrophic"))
+
+joinAnd (parts) = if count (parts) == 0 then "" else if count (parts) == 1 then first (parts) else if count (parts) == 2 then first (parts) + " and " + item (1, parts) else first (parts) + ", " + item (1, parts) + " and " + item (2, parts)
+
+curseText (rolls, arcane) =
+    if not (anySets (rolls)) then ""
+    else if arcane then ", Tzeentch's Curse: " + joinAnd (curseList (rolls)) + " Chaos manifestation" + (if count (curseList (rolls)) > 1 or setsOf (rolls, 2) > 1 or setsOf (rolls, 3) > 1 then "s" else "")
+    else ", doubles: roll on the Wrath of the Gods"
+
+castTotal (rolls, adjust) = sum (rolls) + adjust
+
+castOutcome (rolls, adjust, cn) =
+    if allOnes (rolls) then "Failure"
+    else if cn <= 0 then ""
+    else if castTotal (rolls, adjust) >= cn then "Success"
+    else "Failure"
+
+castText (rolls, adjust, cn, arcane) =
+    if allOnes (rolls) then "All ones: the spell fails; test Will Power or gain 1 Insanity Point" + curseText (rolls, arcane)
+    else "Casting roll " + toString (castTotal (rolls, adjust)) + (if cn > 0 then " vs CN " + toString (cn) + ": " + castOutcome (rolls, adjust, cn) else "") + curseText (rolls, arcane)
+
+castResult (rolls, adjust, cn, arcane) =
+{
+    Text = castText (rolls, adjust, cn, arcane)
+    Value = castTotal (rolls, adjust)
+    Outcome = if anySets (rolls) and arcane then "Mishap" else castOutcome (rolls, adjust, cn)
+}
+
+castDice (diceCount, cn, arcane, penalty) = ([dice { number = diceCount  sides = 10 }],
+    ((baseline, throws)->castResult (first (throws).rolls, asked - penalty, cn, arcane)))
+
+openCastDice (diceCount, arcane, penalty) = ([dice { number = diceCount  sides = 10 }],
+    ((baseline, throws)->castResult (first (throws).rolls, 0 - penalty, asked, arcane)))
+
+castDiceCount (n, mag) = max (1, min (n, max (1, mag)))
+
+wfCast (mag, cn, arcane, penalty) = ask ("Dice to roll", max (1, mag), (n)->ask ("Bonus", 0, castDice (castDiceCount (n, mag), cn, arcane, penalty)))
+
+wfOpenCast (mag, arcane, penalty) = ask ("Dice to roll", max (1, mag), (n)->ask ("Casting Number", openCastDice (castDiceCount (n, mag), arcane, penalty)))
+
+initiativeRoll = ([1d10], ((baseline, throws)->baseline + first (first (throws).rolls)))
+
+insanityResult (target, roll, ip) =
+{
+    Text = if ip < 6 then "Rolled " + toString (roll) + ": below 6 Insanity Points there is nothing to test"
+           else wfText (target, roll) + (if wfSuccess (target, roll) then ": holds on, test again when you next gain Insanity Points" else ": gain an insanity and lose 6 Insanity Points")
+    Value = roll
+    Outcome = if ip < 6 then "" else if wfSuccess (target, roll) then "Success" else "Failure"
+}
+
+insanityDice (ip) = ([1d100], ((baseline, throws)->insanityResult (baseline, first (first (throws).rolls), ip)))
+
+fearResult (target, roll, terror, reroll, spend) =
+{
+    Text = wfText (target, roll) + (if wfSuccess (target, roll) then ": stands firm" else if terror then ": gain 1 Insanity Point and cower or flee; test again each round" else ": frozen with fear; test again each round")
+    Value = roll
+    Outcome = if wfSuccess (target, roll) then "Success" else "Failure"
+    Push = if count (spend) > 0 and not (wfSuccess (target, roll)) then reroll else 0
+    PushLabel = "Spend Fortune: reroll"
+    PushSets = spend
+}
+
+fearDice (terror, spend) = ([1d100], ((baseline, throws)->fearResult (baseline + asked * 10, first (first (throws).rolls), terror, fearDice (terror, []), spend)))
+
+wfFear (char, terror) = ask ("Difficulty", wfDifficulties, -3, fearDice (terror, fortuneSpend (char)))
+
+skillTarget (base, level, basic) =
+    switch level
+        case "Taken" then base
+        case "+10%" then base + 10
+        case "+20%" then base + 20
+        else if basic then (base + 1) / 2 else 0
+
+skill (base, basic) = custom
+{
+    Level = string { description = "Untrained basic skills test at half the characteristic; advanced skills can't be used untrained. Taking a skill again gives +10% and then +20%." default = "Untrained"  keys = ["Untrained", "Taken", "+10%", "+20%"] }
+    Bonus = integer { description = "Bonuses from talents, such as +20% from Acute Hearing." default = 0 }
+    Target = integer { description = "Roll d100 at or under it. Every full 10 under is a degree of success." value = skillTarget (base, Level, basic) + Bonus  valuedice = wfFortuneTest (characterTable)  editable = none }
+}
+
+mainStat = custom
+{
+    Starting = integer { description = "Rolled at creation: 2d10 plus the race's base." default = 30  minvalue = 0  maxvalue = 100 }
+    Advance = integer { description = "The current career's advance scheme: how far it lets this characteristic grow." default = 0  minvalue = 0  step = 5 }
+    Taken = integer { description = "Advances taken, 5% each, at 100 experience points apiece." default = 0  minvalue = 0  step = 5 }
+    Current = integer { description = "Starting plus advances taken. Roll d100 at or under it." value = Starting + Taken  valuedice = wfFortuneTest (characterTable)  editable = none }
+}
+
+attacksStat = custom
+{
+    Starting = integer { description = "Attacks at creation: 1 for every race." default = 1  minvalue = 0 }
+    Advance = integer { description = "The current career's advance scheme for it." default = 0  minvalue = 0 }
+    Taken = integer { description = "Advances taken, +1 each." default = 0  minvalue = 0 }
+    Current = integer { value = Starting + Taken  editable = none }
+}
+
+woundsStat = custom
+{
+    Starting = integer { description = "Wounds at creation, rolled on the race table: Human 10 to 13, Dwarf 11 to 14, Elf 9 to 12, Halfling 8 to 11." default = 10  minvalue = 0 }
+    Advance = integer { description = "The current career's advance scheme for it." default = 0  minvalue = 0 }
+    Taken = integer { description = "Advances taken, +1 each." default = 0  minvalue = 0 }
+    Current = integer { value = Starting + Taken  editable = none }
+}
+
+moveStat = custom
+{
+    Starting = integer { description = "Movement at creation: Human 4, Dwarf 3, Elf 5, Halfling 4." default = 4  minvalue = 0 }
+    Advance = integer { description = "The current career's advance scheme for it." default = 0  minvalue = 0 }
+    Taken = integer { description = "Advances taken, +1 each." default = 0  minvalue = 0 }
+    Current = integer { value = Starting + Taken  editable = none }
+}
+
+magicStat = custom
+{
+    Starting = integer { description = "Magic at creation: 0 unless the career grants it." default = 0  minvalue = 0 }
+    Advance = integer { description = "The current career's advance scheme for it." default = 0  minvalue = 0 }
+    Taken = integer { description = "Advances taken, +1 each." default = 0  minvalue = 0 }
+    Current = integer { value = Starting + Taken  editable = none }
+}
+
+noStats = { Stats = { Damage = "" } }
+
+itemStat (item, rulesetName, field) = valueOr (valueOr (valueOr (item.data, rulesetName, noStats), "Stats", noStats.Stats), field, "")
+
+weaponStat (weapon, field) = itemStat (weapon, "wf2Weapon", field)
+
+offsetOf (text) = bonusWithValue ([[text]], "\+([0-9]+)") - bonusWithValue ([[text]], "-([0-9]+)")
+
+damageBonus (text, sb) = if contains (text, "SB") then sb + offsetOf (text) else toInt (text)
+
+hasQuality (qualities, name) = contains (toLower (qualities), name)
+
+longRange (text) = if count (split ("/", text)) > 1 then firstNumber (item (1, split ("/", text))) else firstNumber (text)
+
+isRanged (weapon) = firstNumber (weaponStat (weapon, "Range")) > 0
+
+weaponAttack (name, target, kind, rangeYards, damage, qualities, apTimes) = custom
+{
+    Name = name
+    Test = integer { value = target  valuedice = wfFortuneAttack (characterTable)  action = kind  reach = 2  range = rangeYards  editable = none }
+    Damage = integer { value = damage  valuedice = wfDamage (hasQuality (qualities, "impact"), target, apTimes, if hasQuality (qualities, "armour piercing") then 1 else 0)  editable = none }
+    Qualities = qualities
+}
+
+attackFor (char, weapon) =
+    if isRanged (weapon) then
+        weaponAttack (weapon.Name, char.'Main Profile'.BS.Current, "ranged", longRange (weaponStat (weapon, "Range")), damageBonus (weaponStat (weapon, "Damage"), char.'Secondary Profile'.SB), weaponStat (weapon, "Qualities"), 1)
+    else
+        weaponAttack (weapon.Name, char.'Main Profile'.WS.Current, "melee", 0, damageBonus (weaponStat (weapon, "Damage"), char.'Secondary Profile'.SB), weaponStat (weapon, "Qualities"), 1)
+
+spellStat (spell, field) = itemStat (spell, "wf2Spell", field)
+
+isArcane (kind) = not (contains (kind, "Divine"))
+
+castRow (name, cn, arcane, mag, penalty) = custom
+{
+    Name = name
+    CN = cn
+    Cast = integer { value = cn  valuedice = wfCast (mag, cn, arcane, penalty)  editable = none }
+}
+
+castFor (char, spell) = castRow (spell.Name, toInt (spellStat (spell, "CN")), isArcane (spellStat (spell, "Kind")), char.'Secondary Profile'.Mag.Current, if isArcane (spellStat (spell, "Kind")) then char.Magic.'Armour penalty' else 0)
+
+woundState (left) =
+    if left <= 0 then "Wounds 0"
+    else if left <= 3 then "Heavily wounded"
+    else ""
+
+dayHeal (left, maxWounds) = if left > 3 then min (maxWounds, left + 1) else left
+
+weekHeal (left, maxWounds) = if left > 3 then min (maxWounds, left + 7) else min (maxWounds, left + 1)
+
+characterTable = ruleset
+{
+    rulesetConfiguration = { defaultImage = "/images/character.svg"  important = ['Main Profile', 'Secondary Profile', Status, Conditions, Attacks] }
+    Character = table
+    {
+        tableLayout = layout { columns = 3  size = wide }
+        Race = string { description = "Human, Dwarf, Elf or Halfling. It sets the base of each characteristic, the starting Wounds, Fate Points and Movement." keys = ["Human", "Dwarf", "Elf", "Halfling"] default = "Human" }
+        'Current Career' = string { description = "The career the character is in now. Its advance scheme says how far each characteristic can grow." }
+        'Previous Careers' = string { description = "Careers completed or left behind." }
+    }
+
+    'Personal Details' = table
+    {
+        tableLayout = layout { columns = 5  size = wide }
+        Age = string {}
+        Gender = string {}
+        'Eye Colour' = string {}
+        'Hair Colour' = string {}
+        'Star Sign' = string { description = "The star the character was born under." }
+        Weight = string {}
+        Height = string {}
+        Siblings = string {}
+        Birthplace = string {}
+        'Distinguishing Marks' = string {}
+    }
+
+    'Main Profile' = table
+    {
+        description = "The eight characteristics, as percentages. A test rolls d100 at or under the current value, after the difficulty."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = mainStat { description = "Weapon Skill: fighting hand to hand, and parrying." }
+        BS = mainStat { description = "Ballistic Skill: shooting and throwing." }
+        S = mainStat { description = "Strength: muscle. Its tens digit is the Strength Bonus, which most melee weapons deal as damage." }
+        T = mainStat { description = "Toughness: resisting harm. Its tens digit, the Toughness Bonus, comes off every hit." }
+        Ag = mainStat { description = "Agility: speed and nimbleness, and the base of Initiative." }
+        Int = mainStat { description = "Intelligence: wits, learning and noticing things." }
+        WP = mainStat { description = "Will Power: courage, magic and holding on to sanity." }
+        Fel = mainStat { description = "Fellowship: charm, leadership and dealing with people." }
+    }
+
+    'Secondary Profile' = table
+    {
+        description = "Attacks, Wounds, the Strength and Toughness Bonuses, Movement, Magic, Insanity Points and Fate Points."
+        tableLayout = layout { columns = 5  size = wide }
+        A = attacksStat { description = "Attacks: how many blows a swift attack gives." }
+        W = woundsStat { description = "Wounds: how much damage the character can take before critical hits." }
+        SB = integer { description = "Strength Bonus: the tens digit of Strength." value = 'Main Profile'.S.Current / 10  editable = none }
+        TB = integer { description = "Toughness Bonus: the tens digit of Toughness, taken off every hit." value = 'Main Profile'.T.Current / 10  editable = none }
+        M = moveStat { description = "Movement: Human 4, Dwarf 3, Elf 5, Halfling 4. Twice this in yards is a move." }
+        Mag = magicStat { description = "Magic: how many d10 a spellcaster rolls for a casting roll." }
+        IP = integer { description = "Insanity Points, from critical hits, terror and horrors. At 6 or more, test Will Power or gain an insanity." default = 0  minvalue = 0  editable = live  indicator = "#8e5cc4" }
+        FP = integer { description = "Fate Points: spend one, for good, to escape death. Fortune Points each day equal them." default = 2  minvalue = 0  editable = live }
+    }
+
+    Status = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Wounds = integer { description = "Wounds left. More than 3 is lightly wounded, 3 or fewer heavily wounded; damage past 0 is a critical hit." default = 'Secondary Profile'.W.Current  minvalue = 0  editable = live  indicator = "#d64545" }
+        State = string { value = woundState (Wounds)  visible = none  indicator = "#d64545" }
+        'Fortune Points' = integer { description = "Spend one to reroll a failed test, parry or dodge again, add 1d10 to initiative or take an extra half action. They refill each day." default = 'Secondary Profile'.FP  minvalue = 0  editable = live }
+        Initiative = modifier { description = "Agility + 1d10, highest first." value = 'Main Profile'.Ag.Current  valuedice = initiativeRoll  editable = none }
+        'Critical hit' = integer { description = "When damage takes Wounds below 0, roll d100 against the Critical Value (the damage past 0) and the hit location." value = 0  valuedice = wfCritical  editable = none }
+        'New day' = button
+        {
+            description = "Fortune Points refill to your Fate Points, and a lightly wounded character heals 1 wound."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.'Fortune Points') = 'Secondary Profile'.FP
+                (root.Status.Wounds) = dayHeal (Wounds, 'Secondary Profile'.W.Current)
+            }
+        }
+        'Week of rest' = button
+        {
+            description = "A heavily wounded character heals 1 wound a week; a lightly wounded one heals 1 a day."
+            editable = live
+            onClick = updates
+            {
+                (root.Status.Wounds) = weekHeal (Wounds, 'Secondary Profile'.W.Current)
+            }
+        }
+    }
+
+    Conditions = table
+    {
+        description = "States from critical hits and combat."
+        tableLayout = layout { columns = 4  size = wide }
+        Stunned = integer { description = "Rounds stunned: no actions, and others hit you more easily." default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Knocked Down' = bool { description = "On the ground: stand up as a half action." default = false  editable = live  indicator = "#e8913a" }
+        Helpless = bool { description = "Helpless: any melee attack hits and does extra damage." default = false  editable = live  indicator = "#555555" }
+        Unconscious = bool { default = false  editable = live  indicator = "#555555" }
+        'Blood Loss' = bool { description = "20% chance of death each round until treated." default = false  editable = live  indicator = "#d64545" }
+        'On Fire' = bool { description = "Lose 1d10 wounds a round, past armour and Toughness, until put out." default = false  editable = live  indicator = "#d64545" }
+        Fatigued = bool { default = false  editable = live  indicator = "#d4b106" }
+        'Critical Effects' = string { description = "Critical effects taken and still in force." multiline = true  editable = live }
+    }
+
+    'Basic Skills' = table
+    {
+        description = "Basic skills anyone can try. Untrained, the characteristic is halved."
+        tableLayout = layout { columns = 1 }
+        'Animal Care' = skill ('Main Profile'.Int.Current, true)
+        Charm = skill ('Main Profile'.Fel.Current, true)
+        Command = skill ('Main Profile'.Fel.Current, true)
+        Concealment = skill ('Main Profile'.Ag.Current, true)
+        'Consume Alcohol' = skill ('Main Profile'.T.Current, true)
+        Disguise = skill ('Main Profile'.Fel.Current, true)
+        Drive = skill ('Main Profile'.S.Current, true)
+        Evaluate = skill ('Main Profile'.Int.Current, true)
+        Gamble = skill ('Main Profile'.Int.Current, true)
+        Gossip = skill ('Main Profile'.Fel.Current, true)
+        Haggle = skill ('Main Profile'.Fel.Current, true)
+        Intimidate = skill ('Main Profile'.S.Current, true)
+        'Outdoor Survival' = skill ('Main Profile'.Int.Current, true)
+        Perception = skill ('Main Profile'.Int.Current, true)
+        Ride = skill ('Main Profile'.Ag.Current, true)
+        Row = skill ('Main Profile'.S.Current, true)
+        'Scale Sheer Surface' = skill ('Main Profile'.S.Current, true)
+        Search = skill ('Main Profile'.Int.Current, true)
+        'Silent Move' = skill ('Main Profile'.Ag.Current, true)
+        Swim = skill ('Main Profile'.S.Current, true)
+    }
+
+    'Advanced Skills' = table
+    {
+        description = "Advanced skills need training: without them the target is 0."
+        tableLayout = layout { columns = 1 }
+        'Academic Knowledge' = skill ('Main Profile'.Int.Current, false)
+        'Animal Training' = skill ('Main Profile'.Fel.Current, false)
+        Blather = skill ('Main Profile'.Fel.Current, false)
+        Channelling = skill ('Main Profile'.WP.Current, false)
+        'Charm Animal' = skill ('Main Profile'.Fel.Current, false)
+        'Common Knowledge' = skill ('Main Profile'.Int.Current, false)
+        'Dodge Blow' = skill ('Main Profile'.Ag.Current, false)
+        'Follow Trail' = skill ('Main Profile'.Int.Current, false)
+        Heal = skill ('Main Profile'.Int.Current, false)
+        Hypnotism = skill ('Main Profile'.WP.Current, false)
+        'Lip Reading' = skill ('Main Profile'.Int.Current, false)
+        'Magical Sense' = skill ('Main Profile'.WP.Current, false)
+        Navigation = skill ('Main Profile'.Int.Current, false)
+        Performer = skill ('Main Profile'.Fel.Current, false)
+        'Pick Lock' = skill ('Main Profile'.Ag.Current, false)
+        'Prepare Poison' = skill ('Main Profile'.Int.Current, false)
+        'Read and Write' = skill ('Main Profile'.Int.Current, false)
+        Sail = skill ('Main Profile'.Ag.Current, false)
+        'Secret Language' = skill ('Main Profile'.Int.Current, false)
+        'Secret Signs' = skill ('Main Profile'.Int.Current, false)
+        'Set Trap' = skill ('Main Profile'.Ag.Current, false)
+        Shadowing = skill ('Main Profile'.Ag.Current, false)
+        'Sleight of Hand' = skill ('Main Profile'.Ag.Current, false)
+        'Speak Arcane Language' = skill ('Main Profile'.Int.Current, false)
+        'Speak Language' = skill ('Main Profile'.Int.Current, false)
+        Torture = skill ('Main Profile'.Fel.Current, false)
+        Trade = skill ('Main Profile'.Ag.Current, false)
+        Ventriloquism = skill ('Main Profile'.Fel.Current, false)
+        Specialities = string { description = "Which knowledges, languages, trades, performances and secret signs the skills above cover." multiline = true }
+    }
+
+    Talents = list
+    {
+        description = "Talents from race and careers."
+        source = secondary.Talents
+        singular = "Talent"
+        editable = character
+    }
+
+    Experience = table
+    {
+        description = "Each advance, skill or talent costs 100 experience points."
+        tableLayout = layout { columns = 2 }
+        Current = integer { description = "Experience left to spend." default = 0  minvalue = 0  editable = live }
+        Total = integer { description = "Experience earned in all." default = 0  minvalue = 0  editable = live }
+    }
+
+    'Combat Movement' = table
+    {
+        description = "Yards per action, from Movement. A square is 2 yards."
+        tableLayout = layout { columns = 3 }
+        'Move or Disengage' = integer { value = 'Secondary Profile'.M.Current * 2  render = distance ('Secondary Profile'.M.Current * 2)  editable = none }
+        Charge = integer { value = 'Secondary Profile'.M.Current * 4  render = distance ('Secondary Profile'.M.Current * 4)  editable = none }
+        Run = integer { value = 'Secondary Profile'.M.Current * 6  render = distance ('Secondary Profile'.M.Current * 6)  editable = none }
+    }
+
+    Armour = table
+    {
+        description = "Armour points by hit location. The Toughness Bonus also comes off every hit."
+        tableLayout = layout { columns = 2 }
+        'Head 01 15' = integer { default = 0  minvalue = 0 }
+        'Right Arm 16 35' = integer { default = 0  minvalue = 0 }
+        'Left Arm 36 55' = integer { default = 0  minvalue = 0 }
+        'Body 56 80' = integer { default = 0  minvalue = 0 }
+        'Right Leg 81 90' = integer { default = 0  minvalue = 0 }
+        'Left Leg 91 00' = integer { default = 0  minvalue = 0 }
+    }
+
+    'Armour Worn' = list
+    {
+        source = secondary.Armour
+        singular = "Armour"
+        editable = character
+    }
+
+    Weapons = list
+    {
+        tableLayout = layout { size = wide }
+        source = secondary.Weapons
+        singular = "Weapon"
+        editable = character
+    }
+
+    Attacks = list
+    {
+        description = "Weapon Skill or Ballistic Skill tests for each weapon, with the hit location, and damage: 1d10 plus the weapon's damage, less the target's Toughness Bonus and armour. A 10 on the damage die is Ulric's Fury."
+        tableLayout = layout { size = wide }
+        source = concat ([weaponAttack ("Unarmed", 'Main Profile'.WS.Current, "melee", 0, 'Secondary Profile'.SB - 4, "Armour counts double", 2)], map ((weapon)->attackFor (characterTable, weapon), characterTable.Weapons))
+        singular = "Attack"
+        editable = none
+        valueType = weaponAttack
+    }
+
+    'Fear and Insanity' = table
+    {
+        description = "Will Power tests against fear and terror, and the insanity test at 6 or more Insanity Points."
+        tableLayout = layout { columns = 3 }
+        'Fear test' = integer { value = 'Main Profile'.WP.Current  valuedice = wfFear (characterTable, false)  editable = none }
+        'Terror test' = integer { value = 'Main Profile'.WP.Current  valuedice = wfFear (characterTable, true)  editable = none }
+        'Insanity test' = integer { value = 'Main Profile'.WP.Current  valuedice = insanityDice ('Secondary Profile'.IP)  editable = none }
+    }
+
+    Insanities = list
+    {
+        singular = "Insanity"
+        editable = live
+        valueType = nameAndDescription
+    }
+
+    Magic = table
+    {
+        description = "Spellcasting: roll as many d10 as your Magic characteristic and beat the Casting Number. Doubles bring Tzeentch's Curse on arcane casters."
+        tableLayout = layout { columns = 3 }
+        Kind = string { description = "Arcane wizards and witches suffer Tzeentch's Curse; divine priests risk the Wrath of the Gods." keys = ["Arcane", "Divine"] default = "Arcane" }
+        'Armour penalty' = integer { description = "Taken off arcane casting rolls: leather -1, mail -3, plate or a helmet -5, a shield -1 more." default = 0  minvalue = 0 }
+        'Casting roll' = integer { description = "A casting roll for any spell: asks the dice and the Casting Number." value = 'Secondary Profile'.Mag.Current  valuedice = wfOpenCast ('Secondary Profile'.Mag.Current, Kind == "Arcane", if Kind == "Arcane" then 'Armour penalty' else 0)  editable = none }
+    }
+
+    Spells = list
+    {
+        source = secondary.Spells
+        singular = "Spell"
+        editable = character
+    }
+
+    Casting = list
+    {
+        description = "A casting roll for each spell: it asks how many dice (up to Mag) and any bonus from channelling or ingredients."
+        tableLayout = layout { size = wide }
+        source = map ((spell)->castFor (characterTable, spell), characterTable.Spells)
+        singular = "Spell"
+        editable = none
+        valueType = castRow
+    }
+
+    Careers = list
+    {
+        description = "The career path, from the starting career to the current one."
+        source = secondary.Careers
+        singular = "Career"
+        editable = character
+    }
+
+    Trappings = list
+    {
+        source = secondary.Trappings
+        singular = "Trapping"
+        editable = character
+    }
+
+    Money = table
+    {
+        description = "One gold crown is 20 silver shillings; a shilling is 12 brass pennies."
+        tableLayout = layout { columns = 3 }
+        'Gold Crowns' = integer { default = 0  minvalue = 0  editable = live }
+        Shillings = integer { default = 0  minvalue = 0  editable = live }
+        Pennies = integer { default = 0  minvalue = 0  editable = live }
+    }
+
+    Notes = table
+    {
+        tableLayout = layout { size = wide }
+        Background = string { multiline = true }
+        Mutations = string { description = "Marks of Chaos." multiline = true  editable = live }
+    }
+}
+
+creatureTable = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/monster.svg"
+        important = [Profile, State, Attacks]
+    }
+    Profile = table
+    {
+        description = "Main and secondary profile, as in the bestiary."
+        tableLayout = layout { columns = 5  size = wide }
+        WS = integer { default = 30  valuedice = wfTest }
+        BS = integer { default = 30  valuedice = wfTest }
+        S = integer { default = 30  valuedice = wfTest }
+        T = integer { default = 30  valuedice = wfTest }
+        Ag = integer { default = 30  valuedice = wfTest }
+        Int = integer { default = 25  valuedice = wfTest }
+        WP = integer { default = 30  valuedice = wfTest }
+        Fel = integer { default = 25  valuedice = wfTest }
+        A = integer { default = 1  minvalue = 0 }
+        W = integer { default = 10  minvalue = 1 }
+        SB = integer { value = S / 10  editable = none }
+        TB = integer { value = T / 10  editable = none }
+        M = integer { default = 4  minvalue = 0 }
+        Mag = integer { default = 0  minvalue = 0 }
+        IP = integer { default = 0  minvalue = 0 }
+        FP = integer { default = 0  minvalue = 0 }
+    }
+    State = table
+    {
+        tableLayout = layout { columns = 4  size = wide }
+        Wounds = integer { description = "Wounds left." default = Profile.W  minvalue = 0  editable = live  indicator = "#d64545" }
+        Down = string { value = woundState (Wounds)  visible = none  indicator = "#d64545" }
+        Initiative = modifier { description = "Agility + 1d10." value = Profile.Ag  valuedice = initiativeRoll  editable = none }
+        'Critical hit' = integer { value = 0  valuedice = wfCritical  editable = none }
+        Armour = string { description = "Armour points by location." default = "None" }
+        Stunned = integer { default = 0  minvalue = 0  editable = live  indicator = "#d4b106" }
+        'Knocked Down' = bool { default = false  editable = live  indicator = "#e8913a" }
+        Helpless = bool { default = false  editable = live  indicator = "#555555" }
+    }
+    Attacks = list
+    {
+        tableLayout = layout { size = wide }
+        singular = "Attack"
+        editable = character
+        valueType = custom
+        {
+            Name = string {}
+            Test = integer { default = 30  valuedice = wfAttack ([])  action = if 'Range yd' > 0 then "ranged" else "melee"  reach = 2  range = 'Range yd' }
+            'Range yd' = integer { description = "Long range in yards; 0 for melee." default = 0  minvalue = 0 }
+            Damage = integer { description = "The damage before the d10, usually the Strength Bonus." default = 3 }
+            Roll = integer { value = Damage  valuedice = wfDamage (hasQuality (Qualities, "impact"), Test, 1, if hasQuality (Qualities, "armour piercing") then 1 else 0)  editable = none }
+            Qualities = string {}
+        }
+    }
+    Magic = table
+    {
+        tableLayout = layout { columns = 2 }
+        'Casting roll' = integer { value = Profile.Mag  valuedice = wfOpenCast (Profile.Mag, true, 0)  editable = none }
+        Spells = string { multiline = true }
+    }
+    Notes = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        'Special Rules' = string { multiline = true }
+        Trappings = string { multiline = true }
+    }
+}
+
+wf2Weapon = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/sword.svg"
+        filters = [filter { name = "Group" prefix = "" filter = Stats.Group }]
+        sortedBy = sort { prefix = "" sort = Stats.Group }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Group = string { description = "Ordinary weapons anyone can use; the others need the matching Specialist Weapon talent." keys = ["Ordinary", "Cavalry", "Fencing", "Flail", "Parrying", "Two-handed", "Crossbow", "Engineer", "Entangling", "Gunpowder", "Longbow", "Sling", "Throwing"] default = "Ordinary" }
+        Damage = string { description = "Damage before the d10: SB, SB-1, SB+1, or a number for missile weapons." default = "SB" }
+        Range = string { description = "Short and long range in yards, such as 24/48. Empty for melee weapons." }
+        Reload = string { description = "Half, Full or more actions to reload." }
+        Qualities = string { description = "Armour Piercing, Balanced, Defensive, Fast, Impact, Precise, Pummelling, Shrapnel, Slow, Snare, Special, Tiring, Unreliable or Experimental." }
+        Enc = string {}
+        Cost = string {}
+        Availability = string { keys = ["Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare"] }
+    }
+}
+
+wf2Armour = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/armour.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "AP" sort = Stats.AP }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Leather", "Mail", "Plate", "Other"] default = "Leather" }
+        Locations = string { description = "The hit locations it covers, such as Body, Arms." }
+        AP = integer { description = "Armour points on each location it covers." default = 1  minvalue = 0 }
+        Enc = string {}
+        Cost = string {}
+    }
+}
+
+wf2Trapping = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/systems/icons/pack.svg"
+        filters = [filter { name = "Category" prefix = "" filter = Stats.Category }]
+        sortedBy = sort { prefix = "" sort = Stats.Category }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Category = string { keys = ["Clothing", "Food and Drink", "Tools", "Containers", "Lighting", "Animals and Transport", "Medicine", "Miscellanea"] default = "Miscellanea" }
+        Enc = string {}
+        Cost = string {}
+        Availability = string { keys = ["Abundant", "Plentiful", "Common", "Average", "Scarce", "Rare", "Very Rare"] }
+    }
+}
+
+wf2Talent = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Type" prefix = "" filter = Stats.Type }]
+        sortedBy = sort { prefix = "" sort = Stats.Type }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Type = string { keys = ["General", "Combat", "Magic", "Racial"] default = "General" }
+        Effect = string { description = "The bonus it gives, such as +5% Weapon Skill or +20% to Perception tests to hear." }
+    }
+}
+
+wf2Spell = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/spell.svg"
+        filters = [filter { name = "Lore" prefix = "" filter = Stats.Lore }, filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "CN" sort = Stats.CN }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 3 }
+        Kind = string { keys = ["Petty Arcane", "Arcane", "Dark", "Petty Divine", "Divine", "Hedge"] default = "Arcane" }
+        Lore = string { description = "The lore the spell belongs to, such as Lore of Fire or Lore of Sigmar." }
+        CN = integer { description = "Casting Number: the total the casting roll must reach." default = 5  minvalue = 0 }
+        'Casting Time' = string {}
+        Ingredient = string { description = "An ingredient used while casting adds to the roll." }
+        Range = string {}
+        Duration = string {}
+    }
+}
+
+wf2Career = ruleset
+{
+    rulesetConfiguration =
+    {
+        defaultImage = "/images/character.svg"
+        filters = [filter { name = "Kind" prefix = "" filter = Stats.Kind }]
+        sortedBy = sort { prefix = "" sort = Stats.Kind }
+    }
+    Stats = table
+    {
+        tableLayout = layout { columns = 2 }
+        Kind = string { description = "Basic careers can be started at creation; advanced careers need an entry career." keys = ["Basic", "Advanced"] default = "Basic" }
+        Race = string { description = "Races that can start in it, for basic careers." }
+    }
+    'Advance Scheme' = table
+    {
+        description = "How far each characteristic can grow in this career: +5% per advance in the main profile, +1 in the secondary."
+        tableLayout = layout { columns = 4  size = wide }
+        WS = integer { default = 0  step = 5 }
+        BS = integer { default = 0  step = 5 }
+        S = integer { default = 0  step = 5 }
+        T = integer { default = 0  step = 5 }
+        Ag = integer { default = 0  step = 5 }
+        Int = integer { default = 0  step = 5 }
+        WP = integer { default = 0  step = 5 }
+        Fel = integer { default = 0  step = 5 }
+        A = integer { default = 0 }
+        W = integer { default = 0 }
+        M = integer { default = 0 }
+        Mag = integer { default = 0 }
+    }
+    Career = table
+    {
+        tableLayout = layout { columns = 2  size = wide }
+        Skills = string { multiline = true }
+        Talents = string { multiline = true }
+        Trappings = string { multiline = true }
+        Entries = string { multiline = true }
+        Exits = string { multiline = true }
+    }
+}
+
+wfrp2NameSetting = nameSetting
+{
+    name = "The Empire"
+    characters = [generator { library = "Old world" variant = "Man" }, generator { library = "Old world" variant = "Woman" }, generator { library = "Fantasy folk" variant = Character.Race }, generator { library = "Old world" variant = "Rogue" }]
+    creatures = [generator { library = "Old world" variant = "Rogue" }, generator { library = "Fantasy folk" variant = "Orc" }, generator { library = "Fantasy folk" variant = "Monster" }]
+    Location = [generator { library = "Old world" variant = "Town" }, generator { library = "Old world" variant = "Inn" }]
+    Weapons = generator { library = "Fantasy things" variant = "Weapon" }
+    Armour = generator { library = "Fantasy things" variant = "Armour" }
+}
+
+WarhammerFantasy2 = system
+{
+    lowRollsAreLucky = [100]
+    hints = [
+        hint
+        {
+            title = "Characters"
+            topic = "Getting started"
+            text = ["Pick a race (Human, Dwarf, Elf or Halfling), roll each characteristic as 2d10 plus the race's base, and start in a basic career such as Rat Catcher, Soldier or Apprentice Wizard.", "Write the career's advance scheme in each characteristic's Advance box. Each advance costs 100 experience and adds 5% (or 1 to a secondary characteristic)."]
+        },
+        hint
+        {
+            title = "Tests"
+            topic = "Play"
+            text = ["Roll d100 at or under the target, after the difficulty (Very Easy +30 to Very Hard -30). Every full 10 under the target is a degree of success.", "Untrained basic skills test at half the characteristic; advanced skills need training. A failed test offers to spend a Fortune Point for a reroll; New day refills them to your Fate Points."]
+        },
+        hint
+        {
+            title = "Combat"
+            topic = "Combat"
+            text = ["Attacks test Weapon Skill or Ballistic Skill; the roll's digits reversed give the hit location. Damage is 1d10 plus the weapon's damage, less the target's Toughness Bonus and armour, which the damage roll asks.", "A 10 on the damage die is Ulric's Fury: the button tests the attack again and adds another d10 if it hits. Damage past 0 Wounds is a critical hit: roll Critical hit with the Critical Value and the location."]
+        },
+        hint
+        {
+            title = "Magic"
+            topic = "Play"
+            text = ["Casting rolls throw up to Mag d10 against the spell's Casting Number. Doubles, triples and quadruples bring Tzeentch's Curse on wizards, minor to catastrophic; priests risk the Wrath of the Gods instead."]
+        },
+        hint
+        {
+            title = "Initiative"
+            topic = "Initiative"
+            text = ["Roll Initiative: Agility + 1d10, highest first."]
+        }
+    ]
+    distanceUnit = "yd"
+    squareSize = 2
+    characters = characterTable
+    creatures = creatureTable
+    Weapons = wf2Weapon
+    Armour = wf2Armour
+    Trappings = wf2Trapping
+    Talents = wf2Talent
+    Spells = wf2Spell
+    Careers = wf2Career
+    secondaryTypes = ["Weapons", "Armour", "Trappings", "Talents", "Spells", "Careers"]
+    description = "Warhammer Fantasy Roleplay 2nd edition: careers, d100 tests and degrees of success, critical hits, Fortune and Insanity Points, and magic with Tzeentch's Curse"
+    initiativeCompare (item1, item2) = compare (item1, item2)
+    quickdice = [1d100, 1d10, 2d10, 3d10]
+    cssFiles = ["/systems/wfrp2/wfrp2.css"]
+    libraries = ["/systems/names/oldworld.json", "/systems/names/gothic.json", "/systems/names/fantasy.json", "/systems/tables/fantasy.json"]
+    nameSettings = [wfrp2NameSetting, gothicHorrorNameSetting, fantasyNameSetting]
+}

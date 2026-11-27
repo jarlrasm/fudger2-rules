@@ -1,0 +1,206 @@
+@import url("/systems/sheet.css");
+
+/* Warhammer Fantasy Roleplay 2nd edition: the character record. Aged
+   parchment, heavy black boxes with blackletter-style red titles, the main
+   and secondary profiles as two rows of eight columns with Starting,
+   Advance and Current stacked, and the skills as one long ruled list. */
+
+:root:is(*, [data-theme="light"], [data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #cdbb93;
+    --surface: #efe3c4;
+    --surface-alt: #e6d6b0;
+    --surface-sunken: #ddcba1;
+    --surface-muted: #c4b084;
+    --text: #1b130c;
+    --text-muted: #3f3224;
+    --text-faint: #75644a;
+    --on-accent: #efe3c4;
+    --border: #876f4a;
+    --border-strong: #1b130c;
+    --accent: #6b1410;
+    --accent-hover: #8a1d17;
+    --accent-soft: #e6cbbd;
+    --link: #6b1410;
+    --danger: #6b1410;
+    --danger-hover: #500e0b;
+    --danger-soft: #e6cbbd;
+    --success: #34502a;
+    --paper: #efe3c4;
+    --card-bg: #e9dcba;
+    --dice-bg: #1b130c;
+    --dice-text: #efe3c4;
+}
+
+.entityView {
+    --sheet-font: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
+    --title-font: "Old English Text MT", "UnifrakturMaguntia", "Book Antiqua", Palatino, Georgia, serif;
+    --block-radius: 2px;
+    --block-border: 3px double var(--border-strong);
+    --label-color: var(--text);
+    background: var(--bg);
+}
+.entityView .entityTable > table > thead th {
+    color: var(--accent);
+    font-size: 1.15em;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+/* ---- Character and personal details ---- */
+
+.entityView .table-personal-details > table > tbody {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* ---- Main and secondary profile: eight columns each ---- */
+
+.entityView .table-main-profile > table > tbody,
+.entityView .table-secondary-profile > table > tbody {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 0;
+    padding: 0;
+}
+.entityView .table-main-profile > table > tbody > tr,
+.entityView .table-secondary-profile > table > tbody > tr {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border-left: 1px solid var(--border-strong);
+}
+.entityView .table-main-profile > table > tbody > tr:first-child,
+.entityView .table-secondary-profile > table > tbody > tr:first-child {
+    border-left: none;
+}
+.entityView .table-main-profile > table > tbody > tr > td:first-child,
+.entityView .table-secondary-profile > table > tbody > tr > td:first-child {
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .table-main-profile > table > tbody > tr > td + td,
+.entityView .table-secondary-profile > table > tbody > tr > td + td {
+    border-bottom: none;
+    text-align: center;
+    justify-content: center;
+}
+.entityView .table-main-profile .customtype,
+.entityView .table-secondary-profile .customtype {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+.entityView .table-main-profile .customtype > div,
+.entityView .table-secondary-profile .customtype > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1px 5px;
+    margin: 0;
+    border-bottom: 1px dotted var(--border);
+}
+.entityView .table-main-profile .customtype > div::before,
+.entityView .table-secondary-profile .customtype > div::before {
+    font-size: 0.68em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+}
+.entityView .table-main-profile .customtype > div:nth-child(1)::before,
+.entityView .table-secondary-profile .customtype > div:nth-child(1)::before { content: "Start"; }
+.entityView .table-main-profile .customtype > div:nth-child(2)::before,
+.entityView .table-secondary-profile .customtype > div:nth-child(2)::before { content: "Adv"; }
+.entityView .table-main-profile .customtype > div:nth-child(3)::before,
+.entityView .table-secondary-profile .customtype > div:nth-child(3)::before { content: "Taken"; }
+.entityView .table-main-profile .customtype > div:nth-child(4)::before,
+.entityView .table-secondary-profile .customtype > div:nth-child(4)::before { content: "Cur"; }
+.entityView .table-main-profile .customtype > div:nth-child(4),
+.entityView .table-secondary-profile .customtype > div:nth-child(4) {
+    border-bottom: none;
+    font-weight: 700;
+}
+.entityView .table-main-profile input[type="number"],
+.entityView .table-secondary-profile input[type="number"] {
+    width: 3em;
+}
+
+/* ---- Status and conditions ---- */
+
+.entityView .table-status > table > tbody,
+.entityView .table-conditions > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ---- Skills: basic and advanced side by side ---- */
+
+.entityView .table-basic-skills,
+.entityView .table-advanced-skills { --block: 50%; }
+.entityView .table-basic-skills { clear: left; }
+.entityView .table-basic-skills > table > tbody,
+.entityView .table-advanced-skills > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+}
+.entityView .table-basic-skills > table > tbody > tr,
+.entityView .table-advanced-skills > table > tbody > tr {
+    border-bottom: 1px dotted var(--border);
+}
+.entityView .table-basic-skills > table > tbody > tr > td + td,
+.entityView .table-advanced-skills > table > tbody > tr > td + td {
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.entityView .table-basic-skills .customtype,
+.entityView .table-advanced-skills .customtype {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- The rest: halves and quarters ---- */
+
+.entityView .table-talents,
+.entityView .table-armour,
+.entityView .table-armour-worn,
+.entityView .table-fear-and-insanity,
+.entityView .table-insanities,
+.entityView .table-magic,
+.entityView .table-spells,
+.entityView .table-careers,
+.entityView .table-trappings { --block: 50%; }
+.entityView .table-experience,
+.entityView .table-combat-movement,
+.entityView .table-money { --block: 25%; }
+.entityView .table-experience > table > tbody,
+.entityView .table-combat-movement > table > tbody,
+.entityView .table-money > table > tbody {
+    grid-template-columns: minmax(0, 1fr);
+}
+.entityView .table-armour > table > tbody {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.entityView .table-attacks > table > tbody > tr > td:first-child,
+.entityView .table-casting > table > tbody > tr > td:first-child {
+    font-weight: 700;
+}
+
+/* ---- Creatures: the bestiary profile in two rows of eight ---- */
+
+.entityView .table-profile > table > tbody {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 0;
+}
+.entityView .table-profile > table > tbody > tr {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    border-left: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+}
+.entityView .table-profile > table > tbody > tr > td:first-child {
+    font-weight: 700;
+    color: var(--accent);
+}
+.entityView .table-state > table > tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
